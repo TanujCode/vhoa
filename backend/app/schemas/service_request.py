@@ -1,0 +1,118 @@
+from datetime import datetime
+from pydantic import BaseModel, field_validator
+
+
+# ══════════════════════════════════════════════
+#  STATUS
+# ══════════════════════════════════════════════
+class ServiceRequestStatusOut(BaseModel):
+    status_id:   int
+    status_name: str
+    model_config = {"from_attributes": True}
+
+
+# ══════════════════════════════════════════════
+#  TYPE
+# ══════════════════════════════════════════════
+class ServiceRequestTypeCreate(BaseModel):
+    type_name:    str
+    description:  str | None = None
+    community_id: int
+
+
+class ServiceRequestTypeOut(BaseModel):
+    type_id:      int
+    type_name:    str
+    description:  str | None
+    community_id: int
+    active_status: bool
+    model_config = {"from_attributes": True}
+
+
+# ══════════════════════════════════════════════
+#  SERVICE REQUEST
+# ══════════════════════════════════════════════
+class ServiceRequestCreate(BaseModel):
+    community_id: int
+    type_id:      int
+    title:        str
+    description:  str
+    priority:     str = "NORMAL"
+
+    @field_validator("priority")
+    @classmethod
+    def priority_valid(cls, v):
+        allowed = {"LOW", "NORMAL", "HIGH", "URGENT"}
+        if v.upper() not in allowed:
+            raise ValueError(f"Priority in mein se hona chahiye: {allowed}")
+        return v.upper()
+
+    @field_validator("title")
+    @classmethod
+    def title_valid(cls, v):
+        if len(v.strip()) < 5:
+            raise ValueError("Title kam se kam 5 characters ka hona chahiye.")
+        return v.strip()
+
+
+class StatusUpdateRequest(BaseModel):
+    """
+    Status change karo।
+    Document ke rules:
+    - Open → Cancelled     = Resident
+    - Open → Approved      = Board/Admin
+    - Any  → In Progress   = Board/Admin
+    - In Progress → Vendor Assigned = Board/Admin
+    - Any  → Closed        = Board/Admin
+    - Any  → On Hold       = Board/Admin
+    """
+    status_id:  int
+    note:       str | None = None
+    vendor_id:  int | None = None
+    payment_id: int | None = None
+
+
+class ServiceRequestNoteCreate(BaseModel):
+    note: str
+
+    @field_validator("note")
+    @classmethod
+    def note_valid(cls, v):
+        if len(v.strip()) < 3:
+            raise ValueError("Note kam se kam 3 characters ka hona chahiye.")
+        return v.strip()
+
+
+# ══════════════════════════════════════════════
+#  RESPONSE
+# ══════════════════════════════════════════════
+class NoteOut(BaseModel):
+    note_id:      int
+    note:         str
+    added_by_id:  int
+    added_by_name: str | None = None
+    created_date: datetime
+    model_config = {"from_attributes": True}
+
+
+class ServiceRequestOut(BaseModel):
+    request_id:       int
+    community_id:     int
+    community_name:   str | None = None
+    type_id:          int
+    type_name:        str | None = None
+    title:            str
+    description:      str
+    priority:         str
+    status_id:        int
+    status_name:      str | None = None
+    submitted_by_id:  int
+    submitted_by_name: str | None = None
+    vendor_id:        int | None
+    payment_id:       int | None
+    active_status:    bool
+    created_date:     datetime
+    modified_date:    datetime | None
+    closed_date:      datetime | None
+    notes:            list[NoteOut] = []
+    model_config = {"from_attributes": True}

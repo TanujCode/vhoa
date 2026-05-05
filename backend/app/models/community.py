@@ -1,0 +1,152 @@
+from sqlalchemy import (
+    Column, Integer, String, Boolean,
+    DateTime, Date, ForeignKey, Text
+)
+from sqlalchemy.orm import relationship
+from sqlalchemy.sql import func
+
+from app.database import Base
+
+
+# ══════════════════════════════════════════════
+#  COUNTRIES TABLE
+#  Country list — USA, India etc.
+# ══════════════════════════════════════════════
+class Country(Base):
+    __tablename__ = "countries"
+
+    country_id    = Column(Integer, primary_key=True, index=True)
+    country_name  = Column(String(100), unique=True, nullable=False)
+    country_code  = Column(String(10), nullable=True)   # "US", "IN" etc.
+    active_status = Column(Boolean, default=True)
+
+    states        = relationship("State", back_populates="country")
+    addresses     = relationship("Address", back_populates="country")
+
+
+# ══════════════════════════════════════════════
+#  STATES TABLE
+#  US States — California, Texas etc.
+# ══════════════════════════════════════════════
+class State(Base):
+    __tablename__ = "states"
+
+    state_id      = Column(Integer, primary_key=True, index=True)
+    state_name    = Column(String(100), nullable=False)
+    state_code    = Column(String(10), nullable=True)   # "CA", "TX" etc.
+    country_id    = Column(Integer, ForeignKey("countries.country_id"), nullable=False)
+    active_status = Column(Boolean, default=True)
+
+    country       = relationship("Country", back_populates="states")
+    addresses     = relationship("Address", back_populates="state")
+
+
+# ══════════════════════════════════════════════
+#  ADDRESSES TABLE
+#  Exact Java entity fields
+# ══════════════════════════════════════════════
+class Address(Base):
+    __tablename__ = "addresses"
+
+    address_id    = Column(Integer, primary_key=True, index=True)
+    address       = Column(String(255), nullable=False)   # street address
+    city          = Column(String(100), nullable=False)
+    state_id      = Column(Integer, ForeignKey("states.state_id"), nullable=True)
+    country_id    = Column(Integer, ForeignKey("countries.country_id"), nullable=True)
+    zip_code      = Column(String(20), nullable=True)     # String — "90210-1234" bhi ho sakta
+    active_status = Column(Boolean, default=True)
+
+    state         = relationship("State", back_populates="addresses")
+    country       = relationship("Country", back_populates="addresses")
+    communities   = relationship("Community", back_populates="address")
+
+
+# ══════════════════════════════════════════════
+#  COMMUNITIES TABLE
+#  Exact Java entity fields
+# ══════════════════════════════════════════════
+class Community(Base):
+    __tablename__ = "communities"
+
+    community_id   = Column(Integer, primary_key=True, index=True)
+    name           = Column(String(255), nullable=False)
+    community_code = Column(String(50), unique=True, nullable=False)
+    # Unique short code jaise "SH001", "GV002"
+
+    # ── Address ──────────────────────────────
+    address_id     = Column(Integer, ForeignKey("addresses.address_id"), nullable=True)
+    address        = relationship("Address", back_populates="communities")
+
+    # ── Board Members (President, Secretary, Treasurer) ──
+    # Invite flow: email daalo → status PENDING → accept karo → user linked
+    president_email_id      = Column(String(255), nullable=True)
+    president_invite_status = Column(String(20), default="PENDING")
+    # "PENDING" | "ACCEPTED" | "REJECTED"
+    president_user_id       = Column(Integer, ForeignKey("users.user_id"), nullable=True)
+
+    secretary_email_id      = Column(String(255), nullable=True)
+    secretary_invite_status = Column(String(20), default="PENDING")
+    secretary_user_id       = Column(Integer, ForeignKey("users.user_id"), nullable=True)
+
+    treasurer_email_id      = Column(String(255), nullable=True)
+    treasurer_invite_status = Column(String(20), default="PENDING")
+    treasurer_user_id       = Column(Integer, ForeignKey("users.user_id"), nullable=True)
+
+    # ── Admin (Property Manager) ──────────────
+    admin_email_id      = Column(String(255), nullable=True)
+    admin_invite_status = Column(String(20), default="PENDING")
+    admin_user_id       = Column(Integer, ForeignKey("users.user_id"), nullable=True)
+
+    # ── Plan / Subscription ───────────────────
+    plan_id          = Column(Integer, nullable=True)
+    # ForeignKey plans table se — baad mein add karenge
+    plan_expire_date = Column(Date, nullable=True)
+    license_status   = Column(String(20), default="ACTIVE")
+    # "ACTIVE" | "EXPIRED" | "SUSPENDED"
+
+    # ── Community Info ────────────────────────
+    community_size = Column(Integer, nullable=True)   # total units/homes
+    total_owners   = Column(Integer, nullable=True)   # total registered owners
+    contact_person = Column(String(255), nullable=True)
+    time_zone      = Column(String(50), default="America/New_York")
+    # USA timezones: America/New_York, America/Chicago, America/Denver, America/Los_Angeles
+
+    # ── Contract ─────────────────────────────
+    contract_id    = Column(Integer, nullable=True)
+    # ForeignKey vendor contracts se — baad mein add karenge
+
+    # ── Status & Audit ────────────────────────
+    active_status  = Column(Boolean, default=True)
+    created_by_id  = Column(Integer, ForeignKey("users.user_id"), nullable=True)
+    created_date   = Column(DateTime(timezone=True), server_default=func.now())
+    modified_by_id = Column(Integer, ForeignKey("users.user_id"), nullable=True)
+    modified_date  = Column(DateTime(timezone=True), onupdate=func.now())
+
+    # ── Relationships ─────────────────────────
+    president  = relationship("User", foreign_keys=[president_user_id])
+    secretary  = relationship("User", foreign_keys=[secretary_user_id])
+    treasurer  = relationship("User", foreign_keys=[treasurer_user_id])
+    admin      = relationship("User", foreign_keys=[admin_user_id])
+    created_by = relationship("User", foreign_keys=[created_by_id])
+    documents  = relationship("CommunityDocument", back_populates="community")
+
+
+# ══════════════════════════════════════════════
+#  COMMUNITY DOCUMENTS TABLE
+#  CC&Rs, Bylaws, Rules PDFs etc.
+# ══════════════════════════════════════════════
+class CommunityDocument(Base):
+    __tablename__ = "community_documents"
+
+    document_id    = Column(Integer, primary_key=True, index=True)
+    community_id   = Column(Integer, ForeignKey("communities.community_id"), nullable=False)
+    document_name  = Column(String(255), nullable=False)
+    document_type  = Column(String(50), nullable=False)
+    # "CC&R" | "BYLAWS" | "RULES" | "BUDGET" | "MEETING_MINUTES" | "OTHER"
+    document_url   = Column(Text, nullable=False)   # file path ya S3 URL
+    uploaded_by_id = Column(Integer, ForeignKey("users.user_id"), nullable=True)
+    active_status  = Column(Boolean, default=True)
+    created_date   = Column(DateTime(timezone=True), server_default=func.now())
+
+    community      = relationship("Community", back_populates="documents")
+    uploaded_by    = relationship("User", foreign_keys=[uploaded_by_id])
