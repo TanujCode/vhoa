@@ -24,10 +24,7 @@ class Country(Base):
     addresses     = relationship("Address", back_populates="country")
 
 
-# ══════════════════════════════════════════════
 #  STATES TABLE
-#  US States — California, Texas etc.
-# ══════════════════════════════════════════════
 class State(Base):
     __tablename__ = "states"
 
@@ -41,10 +38,7 @@ class State(Base):
     addresses     = relationship("Address", back_populates="state")
 
 
-# ══════════════════════════════════════════════
 #  ADDRESSES TABLE
-#  Exact Java entity fields
-# ══════════════════════════════════════════════
 class Address(Base):
     __tablename__ = "addresses"
 
@@ -53,7 +47,7 @@ class Address(Base):
     city          = Column(String(100), nullable=False)
     state_id      = Column(Integer, ForeignKey("states.state_id"), nullable=True)
     country_id    = Column(Integer, ForeignKey("countries.country_id"), nullable=True)
-    zip_code      = Column(String(20), nullable=True)     # String — "90210-1234" bhi ho sakta
+    zip_code      = Column(String(20), nullable=True)     # String — "90210-1234"
     active_status = Column(Boolean, default=True)
 
     state         = relationship("State", back_populates="addresses")
@@ -61,24 +55,21 @@ class Address(Base):
     communities   = relationship("Community", back_populates="address")
 
 
-# ══════════════════════════════════════════════
 #  COMMUNITIES TABLE
-#  Exact Java entity fields
-# ══════════════════════════════════════════════
 class Community(Base):
     __tablename__ = "communities"
 
     community_id   = Column(Integer, primary_key=True, index=True)
     name           = Column(String(255), nullable=False)
     community_code = Column(String(50), unique=True, nullable=False)
-    # Unique short code jaise "SH001", "GV002"
+   # Unique short codes such as "Sah001", "Gav002"
 
-    # ── Address ──────────────────────────────
+    # ── Address 
     address_id     = Column(Integer, ForeignKey("addresses.address_id"), nullable=True)
     address        = relationship("Address", back_populates="communities")
 
     # ── Board Members (President, Secretary, Treasurer) ──
-    # Invite flow: email daalo → status PENDING → accept karo → user linked
+    # Invite flow: email fill → status PENDING → accepted → user linked
     president_email_id      = Column(String(255), nullable=True)
     president_invite_status = Column(String(20), default="PENDING")
     # "PENDING" | "ACCEPTED" | "REJECTED"
@@ -92,14 +83,14 @@ class Community(Base):
     treasurer_invite_status = Column(String(20), default="PENDING")
     treasurer_user_id       = Column(Integer, ForeignKey("users.user_id"), nullable=True)
 
-    # ── Admin (Property Manager) ──────────────
+    # ── Admin (Property Manager) 
     admin_email_id      = Column(String(255), nullable=True)
     admin_invite_status = Column(String(20), default="PENDING")
     admin_user_id       = Column(Integer, ForeignKey("users.user_id"), nullable=True)
 
-    # ── Plan / Subscription ───────────────────
+    # ── Plan / Subscription 
     plan_id          = Column(Integer, nullable=True)
-    # ForeignKey plans table se — baad mein add karenge
+    # From the Foreign key Plans Table — Will add later.
     plan_expire_date = Column(Date, nullable=True)
     license_status   = Column(String(20), default="ACTIVE")
     # "ACTIVE" | "EXPIRED" | "SUSPENDED"
@@ -113,7 +104,7 @@ class Community(Base):
 
     # ── Contract ─────────────────────────────
     contract_id    = Column(Integer, nullable=True)
-    # ForeignKey vendor contracts se — baad mein add karenge
+   
 
     # ── Status & Audit ────────────────────────
     active_status  = Column(Boolean, default=True)
@@ -131,10 +122,7 @@ class Community(Base):
     documents  = relationship("CommunityDocument", back_populates="community")
 
 
-# ══════════════════════════════════════════════
 #  COMMUNITY DOCUMENTS TABLE
-#  CC&Rs, Bylaws, Rules PDFs etc.
-# ══════════════════════════════════════════════
 class CommunityDocument(Base):
     __tablename__ = "community_documents"
 
@@ -143,7 +131,7 @@ class CommunityDocument(Base):
     document_name  = Column(String(255), nullable=False)
     document_type  = Column(String(50), nullable=False)
     # "CC&R" | "BYLAWS" | "RULES" | "BUDGET" | "MEETING_MINUTES" | "OTHER"
-    document_url   = Column(Text, nullable=False)   # file path ya S3 URL
+    document_url   = Column(Text, nullable=False)   
     uploaded_by_id = Column(Integer, ForeignKey("users.user_id"), nullable=True)
     active_status  = Column(Boolean, default=True)
     created_date   = Column(DateTime(timezone=True), server_default=func.now())

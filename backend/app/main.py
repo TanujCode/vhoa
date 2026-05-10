@@ -6,7 +6,7 @@ import os
 from app.config import settings
 from app.database import Base, engine, SessionLocal
 from app.models import *  # noqa
-from app.routers import auth, community, violation, audit_log, location, service_request
+from app.routers import auth, community, violation, audit_log, location, service_request, amenity
 from app.routers import user
 
 Base.metadata.create_all(bind=engine)
@@ -30,7 +30,7 @@ def seed_roles():
             if not db.query(Role).filter(Role.role_name == r["role_name"]).first():
                 db.add(Role(**r))
         db.commit()
-        print("Roles seeded.")
+        print("✅ Roles seeded.")
     finally:
         db.close()
 
@@ -40,7 +40,7 @@ def seed_violation_statuses():
     db = SessionLocal()
     try:
         _seed(db)
-        print("Violation statuses seeded.")
+        print("✅ Violation statuses seeded.")
     finally:
         db.close()
 
@@ -92,8 +92,9 @@ app.include_router(violation.router,       prefix="/api")
 app.include_router(audit_log.router,       prefix="/api")
 app.include_router(location.router,        prefix="/api")
 app.include_router(service_request.router, prefix="/api")
+app.include_router(amenity.router,         prefix="/api")
 
 
-'''@app.get("/", tags=["Health"])
+@app.get("/", tags=["Health"])
 def health():
-    return {"status": "running", "app": settings.APP_NAME}'''
+    return {"status": "running", "app": settings.APP_NAME}

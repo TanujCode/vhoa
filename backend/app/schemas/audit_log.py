@@ -13,6 +13,6 @@ class AuditLogOut(BaseModel):
     old_value:    str | None
     new_value:    str | None
     created_at:   datetime
-    user_name:    str | None = None   # user ka naam
+    user_name:    str | None = None   
 
     model_config = {"from_attributes": True}

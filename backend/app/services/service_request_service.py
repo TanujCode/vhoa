@@ -73,7 +73,7 @@ def create_service_request(
         ServiceRequestStatus.status_name == "OPEN"
     ).first()
     if not open_status:
-        raise ValueError("OPEN status nahi mila.")
+        raise ValueError("Open status not found.")
 
     request = ServiceRequest(
         community_id    = data.community_id,
@@ -124,7 +124,7 @@ def get_request_by_id(request_id: int, db: Session) -> ServiceRequest:
         ServiceRequest.active_status == True,
     ).first()
     if not r:
-        raise ValueError(f"Service Request {request_id} nahi mila.")
+        raise ValueError(f"Service Request {request_id} does not exist.")
     return r
 
 
@@ -144,30 +144,30 @@ def update_status(
         ServiceRequestStatus.status_id == data.status_id
     ).first()
     if not new_status:
-        raise ValueError("Status exist nahi karta.")
+        raise ValueError("Status does not exist.")
 
     current_status = request.status.status_name
     new_status_name = new_status.status_name
 
     # ── Document rules enforce karo ───────────
-    # Resident sirf OPEN → CANCELLED kar sakta hai
+    # Resident sirf OPEN → CANCELLED 
     if user_role == "resident":
         if not (current_status == "OPEN" and new_status_name == "CANCELLED"):
             raise ValueError(
-                "Resident sirf Open request Cancel kar sakta hai।"
+                "A resident can only cancel open requests."
             )
         # Sirf apni request cancel kar sakta hai
         if request.submitted_by_id != user_id:
-            raise ValueError("Aap sirf apni request cancel kar sakte hain।")
+            raise ValueError("You can only cancel your request.")
 
     # Board/Admin ke liye restricted transitions
     if user_role not in {"resident"}:
         # CANCELLED request ko reopen nahi kar sakte
         if current_status == "CANCELLED":
-            raise ValueError("Cancelled request ka status change nahi ho sakta।")
+            raise ValueError("The status of a cancelled request cannot be changed.")
         # CLOSED request ko reopen nahi kar sakte
         if current_status == "CLOSED" and new_status_name not in {"CLOSED"}:
-            raise ValueError("Closed request ko reopen nahi kar sakte।")
+            raise ValueError("You cannot reopen a closed request.")
 
     # Status update
     request.status_id      = data.status_id

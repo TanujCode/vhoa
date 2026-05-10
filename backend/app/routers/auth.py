@@ -12,11 +12,16 @@ from app.schemas.auth import (
     TokenResponse, UserOut, VerifyOtpRequest,
 )
 from app.services.auth_service import (
-    generate_otp, login_user, register_user,
-    reset_password, verify_otp,
+    generate_otp, 
+    login_user, 
+    register_user,
+    reset_password, 
+    verify_otp,
+    send_otp_for_password_reset,   
 )
 from app.services.token_service import create_access_token, decode_session_token
 from app.services.audit_service import log_action
+from app.services.email_service import send_otp_email   
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
 
@@ -44,7 +49,6 @@ def login(request: Request, body: LoginRequest, db: Session = Depends(get_db)):
     try:
         result = login_user(body.email_id, body.password, db)
     except ValueError as e:
-        # Failed login bhi log karo
         user = db.query(User).filter(User.email_id == body.email_id.lower()).first()
         log_action(
             db          = db,
@@ -81,11 +85,11 @@ def refresh(body: RefreshRequest, db: Session = Depends(get_db)):
     except ValueError as e:
         raise HTTPException(status_code=401, detail=str(e))
     except JWTError:
-        raise HTTPException(status_code=401, detail="Session token expired. Please log in again.")
+        raise HTTPException(status_code=401, detail="Session token expire। Dobara login karo।")
 
     user = db.query(User).filter(User.user_id == int(payload["sub"])).first()
     if not user or not user.active_status:
-        raise HTTPException(status_code=401, detail="User not found or is inactive.")
+        raise HTTPException(status_code=401, detail="User nahi mila ya inactive hai।")
 
     role_name = user.role.role_name if user.role else None
     return NewAccessTokenResponse(
@@ -102,32 +106,47 @@ def get_me(current_user: User = Depends(get_current_user)):
     return _to_out(current_user)
 
 
+#  OTP SEND (UPDATED)
 @router.post("/otp/send")
 def send_otp(request: Request, body: SendOtpRequest, db: Session = Depends(get_db)):
     valid_types = {"email_verify", "mobile_verify", "password_reset"}
     if body.otp_type not in valid_types:
-        raise HTTPException(status_code=400, detail=f"otp_type in mein se: {valid_types}")
+        raise HTTPException(status_code=400, detail=f"otp_type must be one of: {valid_types}")
 
-    user = db.query(User).filter(User.email_id == body.email_id.lower()).first()
-    if not user:
-        return {"message": "If the email is registered, the OTP has been sent."}
+    try:
+        if body.otp_type == "password_reset":
+            # Yeh naya function email check karta hai
+            otp_code, user = send_otp_for_password_reset(body.email_id, db)
+        else:
+            user = db.query(User).filter(User.email_id == body.email_id.lower()).first()
+            if not user:
+                raise ValueError("This email is not registered with us.")
+            otp_code = generate_otp(user.user_id, body.otp_type, db)
 
-    otp_code = generate_otp(user.user_id, body.otp_type, db)
+        # Email bhejo
+        success = send_otp_email(user.email_id, otp_code, body.otp_type)
 
-    log_action(
-        db          = db,
-        action      = "OTP_SENT",
-        module      = "auth",
-        description = f"OTP send kiya: {body.otp_type} → {user.email_id}",
-        user_id     = user.user_id,
-        ip_address  = request.client.host,
-    )
+        if success:
+            log_action(
+                db          = db,
+                action      = "OTP_SENT",
+                module      = "auth",
+                description = f"OTP sent: {body.otp_type} to {user.email_id}",
+                user_id     = user.user_id,
+                ip_address  = request.client.host,
+            )
+            return {
+                "message": "OTP sent successfully. Please check your email.",
+                "expires_in": "10 minutes"
+            }
+        else:
+            raise HTTPException(status_code=500, detail="Failed to send email")
 
-    return {
-        "message":    "OTP generate ho gaya।",
-        "otp_code":   otp_code,   #  TESTING ONLY
-        "expires_in": "10 minutes"
-    }
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        print(f"OTP Send Error: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.post("/otp/verify", response_model=UserOut)
@@ -141,7 +160,7 @@ def verify_otp_endpoint(request: Request, body: VerifyOtpRequest, db: Session = 
         db          = db,
         action      = "OTP_VERIFIED",
         module      = "auth",
-        description = f"OTP verify: {body.otp_type} → {user.email_id}",
+        description = f"OTP verified: {body.otp_type} for {user.email_id}",
         user_id     = user.user_id,
         ip_address  = request.client.host,
     )
@@ -160,11 +179,11 @@ def password_reset(request: Request, body: PasswordResetRequest, db: Session = D
         db          = db,
         action      = "PASSWORD_RESET",
         module      = "auth",
-        description = f"Password reset: {body.email_id}",
+        description = f"Password reset successful for {body.email_id}",
         user_id     = user.user_id if user else None,
         ip_address  = request.client.host,
     )
-    return {"message": "Your password has been reset. Now, log in."}
+    return {"message": "Password reset successful. Please login again."}
 
 
 @router.post("/logout")
@@ -177,7 +196,7 @@ def logout(request: Request, current_user: User = Depends(get_current_user), db:
         user_id     = current_user.user_id,
         ip_address  = request.client.host,
     )
-    return {"message": "Logged out. Delete both tokens."}
+    return {"message": "Logged out successfully."}
 
 
 def _to_out(user: User) -> UserOut:
@@ -199,7 +218,7 @@ def _to_out(user: User) -> UserOut:
         is_client            = user.is_client,
         active_status        = user.active_status,
         account_status       = user.account_status or "PENDING_VERIFICATION",
-        time_zone            = user.time_zone or "America/New_York",
+        time_zone            = user.time_zone or "Asia/Kolkata",
         role_id              = user.role_id,
         role_name            = user.role.role_name if user.role else None,
         user_profile_url     = user.user_profile_url,

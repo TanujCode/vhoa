@@ -45,7 +45,7 @@ def register_user(data: RegisterRequest, db: Session) -> User:
         Role.active_status == True
     ).first()
     if not role:
-        raise ValueError(f"Role '{data.role}' exist nahi karta.")
+        raise ValueError(f"Role '{data.role}' does not exist.")
 
     first_name, middle_name, last_name = split_full_name(data.full_name)
 
@@ -72,120 +72,136 @@ def register_user(data: RegisterRequest, db: Session) -> User:
     return new_user
 
 
+# ══════════════════════════════════════════════
 #  LOGIN
+# ══════════════════════════════════════════════
 def login_user(email_id: str, password: str, db: Session) -> dict:
-    user = db.query(User).filter(
-        User.email_id == email_id.lower().strip()
-    ).first()
+    user = db.query(User).filter(User.email_id == email_id.lower().strip()).first()
 
     if not user:
         raise ValueError("Incorrect email or password.")
 
-    # ── Lock check
+    # Lock Check
     if user.account_locked_until:
-        now          = datetime.now(timezone.utc)
+        now = datetime.now(timezone.utc)
         locked_until = user.account_locked_until
         if locked_until.tzinfo is None:
             locked_until = locked_until.replace(tzinfo=timezone.utc)
 
         if now < locked_until:
             remaining = int((locked_until - now).total_seconds() / 60)
-            raise ValueError(
-                f"Account is locked. {remaining} tries remaining."
-            )
+            raise ValueError(f"Account is locked. Try after {remaining} minutes.")
         else:
-            # Lock expire — reset
-            user.login_attempts       = 0
+            user.login_attempts = 0
             user.account_locked_until = None
-            user.account_status       = (
-                "ACTIVE" if user.email_id_is_verified else "PENDING_VERIFICATION"
-            )
+            user.account_status = "ACTIVE" if user.email_id_is_verified else "PENDING_VERIFICATION"
             db.commit()
 
-    #Active check
     if not user.active_status:
-        raise ValueError("The account is inactive. Contact the admin.")
+        raise ValueError("Account is inactive. Contact admin.")
 
-    #Password check
     if not verify_password(password, user.password):
-        user.login_attempts    = (user.login_attempts or 0) + 1
-        user.last_failed_login = datetime.now(timezone.utc)
+        user.login_attempts = (user.login_attempts or 0) + 1
 
         if user.login_attempts >= MAX_LOGIN_ATTEMPTS:
-            user.account_locked_until = datetime.now(timezone.utc) + timedelta(
-                minutes=LOCK_DURATION_MINUTES
-            )
+            user.account_locked_until = datetime.now(timezone.utc) + timedelta(minutes=LOCK_DURATION_MINUTES)
             user.account_status = "LOCKED"
             db.commit()
-            raise ValueError(
-                f"Incorrect password 3 times. Account. {LOCK_DURATION_MINUTES} "
-                f"It got locked for a minute."
-            )
+            raise ValueError(f"Account locked for {LOCK_DURATION_MINUTES} minutes due to multiple failed attempts.")
 
         db.commit()
         remaining = MAX_LOGIN_ATTEMPTS - user.login_attempts
-        raise ValueError(f"Incorrect email or password.। {remaining} And there are still chances left.")
+        raise ValueError(f"Incorrect email or password. {remaining} attempts left.")
 
-    # ── Successful login ──────────────────────
-    user.login_attempts       = 0
+    # Successful Login
+    user.login_attempts = 0
     user.account_locked_until = None
-    user.last_login           = datetime.now(timezone.utc)
+    user.last_login = datetime.now(timezone.utc)
 
     if user.email_id_is_verified and user.account_status == "PENDING_VERIFICATION":
         user.account_status = "ACTIVE"
 
     db.commit()
 
-    role_name      = user.role.role_name if user.role else None
+    role_name = user.role.role_name if user.role else None
     email_verified = user.email_id_is_verified
 
     return {
-        "access_token":       create_access_token(
-                                  user.user_id, user.email_id,
-                                  role_name, email_verified
-                              ),
-        "session_token":      create_session_token(
-                                  user.user_id, user.email_id,
-                                  role_name, email_verified
-                              ),
-        "access_expires_in":  settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+        "access_token": create_access_token(user.user_id, user.email_id, role_name, email_verified),
+        "session_token": create_session_token(user.user_id, user.email_id, role_name, email_verified),
+        "access_expires_in": settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
         "session_expires_in": settings.SESSION_TOKEN_EXPIRE_HOURS * 3600,
-        "email_verified":     email_verified,
-        "user":               user,
+        "email_verified": email_verified,
+        "user": user,
     }
 
 
-#  OTP — GENERATE
+# ══════════════════════════════════════════════
+#  SEND OTP FOR PASSWORD RESET (with email validation)
+# ══════════════════════════════════════════════
+def send_otp_for_password_reset(email_id: str, db: Session):
+    """Checks email for the password reset OTP."""
+    user = db.query(User).filter(User.email_id == email_id.lower().strip()).first()
+    
+    if not user:
+        raise ValueError("This email is not registered with us.")
+
+    # Purane OTP invalidate kar do
+    db.query(OtpToken).filter(
+        OtpToken.user_id == user.user_id,
+        OtpToken.otp_type == "password_reset",
+        OtpToken.is_used == False,
+    ).update({"is_used": True})
+
+    otp_code = "".join(random.choices(string.digits, k=6))
+
+    db.add(OtpToken(
+        user_id=user.user_id,
+        otp_code=otp_code,
+        otp_type="password_reset",
+        is_used=False,
+        expires_at=datetime.now(timezone.utc) + timedelta(minutes=10),
+    ))
+    db.commit()
+
+    return otp_code, user
+
+
+# ══════════════════════════════════════════════
+#  GENERAL OTP GENERATOR
+# ══════════════════════════════════════════════
 def generate_otp(user_id: int, otp_type: str, db: Session) -> str:
     db.query(OtpToken).filter(
-        OtpToken.user_id  == user_id,
+        OtpToken.user_id == user_id,
         OtpToken.otp_type == otp_type,
-        OtpToken.is_used  == False,
+        OtpToken.is_used == False,
     ).update({"is_used": True})
 
     otp_code = "".join(random.choices(string.digits, k=6))
     db.add(OtpToken(
-        user_id    = user_id,
-        otp_code   = otp_code,
-        otp_type   = otp_type,
-        is_used    = False,
-        expires_at = datetime.now(timezone.utc) + timedelta(minutes=10),
+        user_id=user_id,
+        otp_code=otp_code,
+        otp_type=otp_type,
+        is_used=False,
+        expires_at=datetime.now(timezone.utc) + timedelta(minutes=10),
     ))
     db.commit()
     return otp_code
 
 
-#  OTP — VERIFY
+# ══════════════════════════════════════════════
+#  VERIFY OTP
+# ══════════════════════════════════════════════
 def verify_otp(email_id: str, otp_code: str, otp_type: str, db: Session) -> User:
     user = db.query(User).filter(User.email_id == email_id.lower()).first()
     if not user:
         raise ValueError("User Not Found.")
 
     otp_record = db.query(OtpToken).filter(
-        OtpToken.user_id  == user.user_id,
+        OtpToken.user_id == user.user_id,
         OtpToken.otp_code == otp_code,
         OtpToken.otp_type == otp_type,
-        OtpToken.is_used  == False,
+        OtpToken.is_used == False,
     ).first()
 
     if not otp_record:
@@ -198,7 +214,7 @@ def verify_otp(email_id: str, otp_code: str, otp_type: str, db: Session) -> User
 
     if otp_type == "email_verify":
         user.email_id_is_verified = True
-        user.account_status       = "ACTIVE"
+        user.account_status = "ACTIVE"
     elif otp_type == "mobile_verify":
         user.mobile_is_verified = True
 
@@ -207,17 +223,19 @@ def verify_otp(email_id: str, otp_code: str, otp_type: str, db: Session) -> User
     return user
 
 
+# ══════════════════════════════════════════════
 #  PASSWORD RESET
+# ══════════════════════════════════════════════
 def reset_password(email_id: str, otp_code: str, new_password: str, db: Session) -> bool:
     user = db.query(User).filter(User.email_id == email_id.lower()).first()
     if not user:
         raise ValueError("User Not Found.")
 
     otp_record = db.query(OtpToken).filter(
-        OtpToken.user_id  == user.user_id,
+        OtpToken.user_id == user.user_id,
         OtpToken.otp_code == otp_code,
         OtpToken.otp_type == "password_reset",
-        OtpToken.is_used  == False,
+        OtpToken.is_used == False,
     ).first()
 
     if not otp_record:
@@ -225,10 +243,11 @@ def reset_password(email_id: str, otp_code: str, new_password: str, db: Session)
     if datetime.now(timezone.utc) > otp_record.expires_at:
         raise ValueError("The OTP has expired.")
 
-    otp_record.is_used        = True
-    user.password             = hash_password(new_password)
-    user.login_attempts       = 0
+    otp_record.is_used = True
+    user.password = hash_password(new_password)
+    user.login_attempts = 0
     user.account_locked_until = None
-    user.account_status       = "ACTIVE" if user.email_id_is_verified else "PENDING_VERIFICATION"
+    user.account_status = "ACTIVE" if user.email_id_is_verified else "PENDING_VERIFICATION"
+
     db.commit()
     return True

@@ -56,11 +56,11 @@ class ServiceRequest(Base):
 
     #Vendor Link (optional)
     vendor_id     = Column(Integer, nullable=True)
-    # ForeignKey vendors table se — baad mein add karenge
+ 
 
     #Payment Link (optional)
     payment_id    = Column(Integer, nullable=True)
-    # ForeignKey payments table se — baad mein add karenge
+
 
     #Priority
     priority      = Column(String(20), default="NORMAL")

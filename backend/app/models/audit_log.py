@@ -5,20 +5,17 @@ from sqlalchemy.sql import func
 from app.database import Base
 
 
-# ══════════════════════════════════════════════
 #  AUDIT_LOGS TABLE
-#  Har action ka record
-# ══════════════════════════════════════════════
 class AuditLog(Base):
     __tablename__ = "audit_logs"
 
     audit_id     = Column(Integer, primary_key=True, index=True)
 
-    # ── Kaun ne kiya ─────────────────────────
+   # ── Who did it?
     user_id      = Column(Integer, ForeignKey("users.user_id"), nullable=True)
-    # Nullable — login fail pe user_id nahi hoga
+    # Nalbali — User ID will not be available on login failure.
 
-    # ── Kya kiya ─────────────────────────────
+    #What did you do?
     action       = Column(String(100), nullable=False)
     # "LOGIN" | "LOGOUT" | "REGISTER"
     # "CREATE_COMMUNITY" | "UPDATE_COMMUNITY"
@@ -32,20 +29,20 @@ class AuditLog(Base):
     # "amenity" | "payment" | "vendor" | "user"
 
     description  = Column(Text, nullable=True)
-    # Detail mein kya hua — human readable
+    # What Happened in Detail — Human Redbull
 
-    # ── Kis HOA ka ───────────────────────────
+    # ── Which HOA
     community_id = Column(Integer, nullable=True)
-    # HOA Admin sirf apna dekh sakta hai
-    # Super Admin sab dekh sakta hai
+   # An Admin can only view their own data.
+# A Super Admin can view everything.
 
     # ── Request info ─────────────────────────
     ip_address   = Column(String(50), nullable=True)
     user_agent   = Column(String(255), nullable=True)
 
     # ── Extra data ───────────────────────────
-    old_value    = Column(Text, nullable=True)   # update se pehle kya tha
-    new_value    = Column(Text, nullable=True)   # update ke baad kya hua
+    old_value    = Column(Text, nullable=True)   
+    new_value    = Column(Text, nullable=True) 
 
     # ── Timestamp ────────────────────────────
     created_at   = Column(DateTime(timezone=True), server_default=func.now())

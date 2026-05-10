@@ -19,21 +19,21 @@ class ViolationTypeCreate(BaseModel):
     description:  str | None = None
     amount:       float = 0.0
     late_charge:  float = 0.0
-    due_days:     int   = 30      # kitne din mein pay karna hai
+    due_days:     int   = 30      
     community_id: int
 
     @field_validator("amount", "late_charge")
     @classmethod
     def positive(cls, v):
         if v < 0:
-            raise ValueError("Amount negative nahi ho sakta.")
+            raise ValueError("The amount cannot be negative..")
         return v
 
     @field_validator("due_days")
     @classmethod
     def days_valid(cls, v):
         if v < 1 or v > 365:
-            raise ValueError("Due days 1 se 365 ke beech hona chahiye.")
+            raise ValueError("The payable days must be between 1 and 365.")
         return v
 
 
@@ -74,7 +74,7 @@ class ViolationCreate(BaseModel):
     @classmethod
     def positive(cls, v):
         if v < 0:
-            raise ValueError("Amount negative nahi ho sakta.")
+            raise ValueError("The amount cannot be negative..")
         return v
 
 
@@ -86,8 +86,8 @@ class ViolationStatusUpdate(BaseModel):
 # ── Dispute — Member karta hai ────────────────
 class DisputeCreate(BaseModel):
     """
-    Member 30 din ke andar dispute kar sakta hai।
-    Description mandatory hai — kya issue hai batao।
+    The Member shall file a dispute within 30 days.
+    The description is mandatory — please specify the issue.
     """
     dispute_description: str
 
@@ -95,15 +95,15 @@ class DisputeCreate(BaseModel):
     @classmethod
     def desc_valid(cls, v):
         if len(v.strip()) < 10:
-            raise ValueError("Dispute description kam se kam 10 characters ki honi chahiye.")
+            raise ValueError("The dispute description must be at least 10 characters long.")
         return v.strip()
 
 
 # ── Dispute Resolve — Board karta hai ─────────
 class DisputeResolve(BaseModel):
     """
-    Board 30 din ke andar dispute resolve karega।
-    Resolution mandatory hai।
+    The Board shall resolve the dispute within 30 days.
+Resolution is mandatory.
     """
     dispute_resolution: str
     new_status_id:      int | None = None
@@ -113,7 +113,7 @@ class DisputeResolve(BaseModel):
     @classmethod
     def res_valid(cls, v):
         if len(v.strip()) < 10:
-            raise ValueError("Resolution kam se kam 10 characters ka hona chahiye.")
+            raise ValueError("The resolution must be at least 10 characters long.")
         return v.strip()
 
 

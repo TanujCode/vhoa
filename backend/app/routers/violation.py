@@ -33,10 +33,10 @@ def create_type(
     db: Session = Depends(get_db),
     current_user: User = Depends(require_role("super_admin", "property_manager", "board_member")),
 ):
-    """Naya violation type banao — e.g. Lawn Violation $50, 30 din"""
+    """Create a new violation type — e.g. Lawn Violation $50, 30 days"""
     vtype = create_violation_type(body, current_user.user_id, db)
     log_action(db, "CREATE_VIOLATION_TYPE", "violation",
-               f"Violation type '{vtype.name}' banaya",
+               f"Violation type '{vtype.name}' created",
                current_user.user_id, body.community_id)
     return vtype
 
@@ -47,7 +47,7 @@ def get_types(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_verified_user),
 ):
-    """Community ke saare violation types"""
+    """Community all violation types"""
     return get_violation_types(community_id, db)
 
 
@@ -58,7 +58,7 @@ def update_type(
     db: Session = Depends(get_db),
     current_user: User = Depends(require_role("super_admin", "property_manager", "board_member")),
 ):
-    """Violation type update karo"""
+    """Violation type update"""
     try:
         return update_violation_type(violation_type_id, body, current_user.user_id, db)
     except ValueError as e:
@@ -73,7 +73,7 @@ def get_statuses(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_verified_user),
 ):
-    """Saare statuses — OPEN, IN_PROGRESS, RESOLVED, CLOSED, PAID, CANCELLED, APPEALED"""
+    """All statuses — OPEN, IN_PROGRESS, RESOLVED, CLOSED, PAID, CANCELLED, APPEALED"""
     return db.query(ViolationStatus).all()
 
 
@@ -90,9 +90,9 @@ def create(
     ),
 ):
     """
-    Nai violation issue karo।
-    Due date auto calculate hogi: violation_date + due_days (violation type se)
-    Dispute deadline = violation_date + 30 days
+    Please issue violation. 
+Due date will auto calculate: violation_date + due_days (by violation type) 
+Dispute deadline = violation_date + 30 days
     """
     try:
         violation = create_violation(body, current_user.user_id, db)
@@ -101,10 +101,28 @@ def create(
 
     log_action(
         db, "CREATE_VIOLATION", "violation",
-        f"Violation issue ki resident {body.client_id} ko — Amount: ${violation.amount}",
+        f"Violation issue  resident {body.client_id} — Amount: ${violation.amount}",
         current_user.user_id, body.community_id,
         request.client.host,
     )
+
+    # Resident ko email bhejo
+    try:
+        from app.services.email_service import send_violation_email
+        from app.models.user import User
+        client = db.query(User).filter(User.user_id == body.client_id).first()
+        if client:
+            send_violation_email(
+                to_email       = client.email_id,
+                resident_name  = f"{client.first_name} {client.last_name}",
+                violation_type = violation.violation_type.name if violation.violation_type else "Violation",
+                amount         = violation.amount,
+                due_date       = str(violation.violation_due_date),
+                remarks        = violation.remarks or "",
+            )
+    except Exception as e:
+        print(f"Violation email failed: {e}")
+
     return _to_out(violation)
 
 
@@ -136,7 +154,7 @@ def get_one(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_verified_user),
 ):
-    """Ek violation ki detail"""
+    """One violation detail"""
     try:
         violation = get_violation_by_id(violation_id, db)
     except ValueError as e:
@@ -159,7 +177,7 @@ def update_status(
         require_role("super_admin", "property_manager", "board_member")
     ),
 ):
-    """Status update karo — OPEN → IN_PROGRESS → RESOLVED/PAID/CLOSED"""
+    """Status updated — OPEN → IN_PROGRESS → RESOLVED/PAID/CLOSED"""
     try:
         violation = update_violation_status(violation_id, body, current_user.user_id, db)
     except ValueError as e:
@@ -180,7 +198,7 @@ def delete(
     db: Session = Depends(get_db),
     current_user: User = Depends(require_role("super_admin", "property_manager")),
 ):
-    """Violation delete karo (soft delete)"""
+    """Violation deleted (soft delete)"""
     try:
         delete_violation(violation_id, current_user.user_id, db)
     except ValueError as e:
@@ -200,9 +218,9 @@ def dispute_violation(
     current_user: User = Depends(require_role("resident")),
 ):
     """
-    Resident violation dispute kar sakta hai।
-    Sirf 30 din ke andar।
-    Ek baar resolve hone ke baad dobara nahi।
+    A resident may dispute a violation:
+Only within 30 days. 
+Not again once it has been resolved.
     """
     try:
         violation = create_dispute(violation_id, body, current_user.user_id, db)
@@ -211,7 +229,7 @@ def dispute_violation(
 
     log_action(
         db, "DISPUTE_VIOLATION", "violation",
-        f"Resident {current_user.user_id} ne violation {violation_id} dispute kiya",
+        f"Resident {current_user.user_id} disputed violation {violation_id}.",
         current_user.user_id, violation.community_id,
         request.client.host,
     )
@@ -229,9 +247,9 @@ def resolve_violation_dispute(
     ),
 ):
     """
-    Board dispute resolve karega।
-    30 din ke andar karna hai।
-    Resolve hone ke baad member dobara dispute nahi kar sakta।
+    The Board will resolve the dispute.
+This must be done within 30 days.
+Once resolved, the member cannot raise the dispute again.
     """
     try:
         violation = resolve_dispute(violation_id, body, current_user.user_id, db)
@@ -240,7 +258,7 @@ def resolve_violation_dispute(
 
     log_action(
         db, "RESOLVE_DISPUTE", "violation",
-        f"Dispute resolve kiya violation {violation_id}",
+        f"Dispute resolved violation {violation_id}",
         current_user.user_id, violation.community_id,
         request.client.host,
     )
@@ -261,8 +279,8 @@ async def upload_document(
     current_user: User = Depends(get_verified_user),
 ):
     """
-    Document attach karo।
-    doc_type: VIOLATION (admin) | DISPUTE (member)
+   Attach the document. 
+doc_type: VIOLATION (admin) | DISPUTES (members)
     """
     try:
         get_violation_by_id(violation_id, db)

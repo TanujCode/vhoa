@@ -130,7 +130,7 @@ def update_community(
     if data.president_email_id is not None:
         community.president_email_id      = data.president_email_id
         community.president_invite_status = "PENDING"
-        community.president_user_id       = None  # naya invite — purana user reset
+        community.president_user_id       = None  
 
     if data.secretary_email_id is not None:
         community.secretary_email_id      = data.secretary_email_id
@@ -153,7 +153,9 @@ def update_community(
     return community
 
 
+# ══════════════════════════════════════════════
 #  COMMUNITY — DELETE (soft delete)
+# ══════════════════════════════════════════════
 def delete_community(community_id: int, modified_by_id: int, db: Session) -> bool:
     community = get_community_by_id(community_id, db)
     community.active_status  = False
@@ -162,7 +164,9 @@ def delete_community(community_id: int, modified_by_id: int, db: Session) -> boo
     return True
 
 
+# ══════════════════════════════════════════════
 #  DOCUMENT — UPLOAD
+# ══════════════════════════════════════════════
 def add_document(
     community_id:  int,
     document_name: str,
@@ -173,7 +177,7 @@ def add_document(
 ) -> CommunityDocument:
     valid_types = {"CC&R", "BYLAWS", "RULES", "BUDGET", "MEETING_MINUTES", "OTHER"}
     if document_type not in valid_types:
-        raise ValueError(f"The document type must be one of these.e: {valid_types}")
+        raise ValueError(f"The document type must be one of these.: {valid_types}")
 
     doc = CommunityDocument(
         community_id   = community_id,
@@ -197,3 +201,37 @@ def get_community_documents(community_id: int, db: Session) -> list[CommunityDoc
         CommunityDocument.community_id  == community_id,
         CommunityDocument.active_status == True,
     ).all()
+
+
+# ══════════════════════════════════════════════
+#  COMMUNITY STATS — Real counts from DB
+# ══════════════════════════════════════════════
+def get_community_stats(community_id: int, db: Session) -> dict:
+    from app.models.violation import Violation, ViolationStatus
+    from app.models.service_request import ServiceRequest, ServiceRequestStatus
+
+    community = get_community_by_id(community_id, db)
+
+    # Active violations count
+    active_violations = db.query(Violation).join(ViolationStatus).filter(
+        Violation.community_id  == community_id,
+        Violation.active_status == True,
+        ViolationStatus.violation_status.in_(["OPEN", "IN_PROGRESS", "APPEALED"]),
+    ).count()
+
+    # Open service requests count
+    open_requests = db.query(ServiceRequest).join(ServiceRequestStatus).filter(
+        ServiceRequest.community_id  == community_id,
+        ServiceRequest.active_status == True,
+        ServiceRequestStatus.status_name.in_(["OPEN", "APPROVED", "IN_PROGRESS", "VENDOR_ASSIGNED"]),
+    ).count()
+
+    return {
+        "community_id":      community.community_id,
+        "name":              community.name,
+        "total_owners":      community.total_owners,
+        "community_size":    community.community_size,
+        "active_violations": active_violations,
+        "open_requests":     open_requests,
+        "pending_payments":  0,  # Payment module ke baad update hoga
+    }

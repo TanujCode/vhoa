@@ -1,0 +1,7 @@
+@import "tailwindcss";
+/* Light mode overrides */
+.light body,
+html:not(.dark) body {
+  background-color: #f8fafc;
+  color: #0f172a;
+}

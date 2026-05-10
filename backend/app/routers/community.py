@@ -16,11 +16,7 @@ from app.utils.file_service import save_document
 
 router = APIRouter(prefix="/community", tags=["Community"])
 
-
-# ══════════════════════════════════════════════
 #  POST /api/community
-#  Nai community banao
-# ══════════════════════════════════════════════
 @router.post("", response_model=CommunityOut, status_code=201)
 def create(
     body: CommunityCreate,
@@ -28,8 +24,8 @@ def create(
     current_user: User = Depends(require_role("super_admin", "property_manager")),
 ):
     """
-    Nai community banao.
-    Sirf super_admin aur property_manager kar sakte hain.
+   Create a New Community. 
+Only Super Admins and Property Managers can do this.
     """
     try:
         community = create_community(body, current_user.user_id, db)
@@ -38,10 +34,7 @@ def create(
     return _to_out(community)
 
 
-# ══════════════════════════════════════════════
 #  GET /api/community
-#  Saari communities
-# ══════════════════════════════════════════════
 @router.get("", response_model=list[CommunityOut])
 def get_all(
     skip: int = Query(default=0, ge=0),
@@ -49,22 +42,19 @@ def get_all(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """Saari active communities dekho — pagination supported"""
+    """View all active communities — pagination supported"""
     communities = get_all_communities(db, skip, limit)
     return [_to_out(c) for c in communities]
 
-
-# ══════════════════════════════════════════════
 #  GET /api/community/{id}
 #  Ek community detail
-# ══════════════════════════════════════════════
 @router.get("/{community_id}", response_model=CommunityOut)
 def get_one(
     community_id: int,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """Ek community ki detail dekho"""
+    """View details of a specific community"""
     try:
         community = get_community_by_id(community_id, db)
     except ValueError as e:
@@ -72,10 +62,9 @@ def get_one(
     return _to_out(community)
 
 
-# ══════════════════════════════════════════════
 #  PUT /api/community/{id}
 #  Community update karo
-# ══════════════════════════════════════════════
+
 @router.put("/{community_id}", response_model=CommunityOut)
 def update(
     community_id: int,
@@ -83,7 +72,7 @@ def update(
     db: Session = Depends(get_db),
     current_user: User = Depends(require_role("super_admin", "property_manager")),
 ):
-    """Community info update karo"""
+    """Update Community info"""
     try:
         community = update_community(community_id, body, current_user.user_id, db)
     except ValueError as e:
@@ -91,10 +80,8 @@ def update(
     return _to_out(community)
 
 
-# ══════════════════════════════════════════════
 #  DELETE /api/community/{id}
 #  Community deactivate karo
-# ══════════════════════════════════════════════
 @router.delete("/{community_id}")
 def delete(
     community_id: int,
@@ -106,41 +93,28 @@ def delete(
         delete_community(community_id, current_user.user_id, db)
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
-    return {"message": f"Community {community_id} has been deactivated.."}
+    return {"message": f"Community {community_id} deactivated."}
 
 
 #  GET /api/community/{id}/stats
-#  Community stats
+
 @router.get("/{community_id}/stats", response_model=CommunityStatsOut)
 def get_stats(
     community_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(
-        require_role("super_admin", "property_manager", "board_member")
-    ),
+    current_user: User = Depends(get_current_user),
 ):
-    """View community status — violations, requests, payments"""
+    """View community stats — violations, requests, payments"""
+    from app.services.community_service import get_community_stats
     try:
-        community = get_community_by_id(community_id, db)
+        stats = get_community_stats(community_id, db)
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
 
-    # Baad mein actual counts aayenge jab violation/payment modules banenge
-    return CommunityStatsOut(
-        community_id      = community.community_id,
-        name              = community.name,
-        total_owners      = community.total_owners,
-        community_size    = community.community_size,
-        active_violations = 0,   # TODO: violation module ke baad update
-        open_requests     = 0,   # TODO: service request module ke baad update
-        pending_payments  = 0,   # TODO: payment module ke baad update
-    )
+    return CommunityStatsOut(**stats)
 
 
-# ══════════════════════════════════════════════
 #  POST /api/community/{id}/document
-#  Document upload karo
-# ══════════════════════════════════════════════
 @router.post("/{community_id}/document", response_model=DocumentOut, status_code=201)
 async def upload_document(
     community_id:  int,
@@ -153,7 +127,7 @@ async def upload_document(
     ),
 ):
     """
-    Uploading community documents.
+    Upload a community document.
     document_type: CC&R | BYLAWS | RULES | BUDGET | MEETING_MINUTES | OTHER
     """
     try:
@@ -168,10 +142,7 @@ async def upload_document(
     return doc
 
 
-# ══════════════════════════════════════════════
 #  GET /api/community/{id}/document
-#  Saare documents dekho
-# ══════════════════════════════════════════════
 @router.get("/{community_id}/document", response_model=list[DocumentOut])
 def get_documents(
     community_id: int,
@@ -186,9 +157,7 @@ def get_documents(
     return get_community_documents(community_id, db)
 
 
-# ══════════════════════════════════════════════
 #  HELPER
-# ══════════════════════════════════════════════
 def _to_out(c) -> CommunityOut:
     address_out = None
     if c.address:

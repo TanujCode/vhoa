@@ -19,7 +19,7 @@ def get_current_user(
 ) -> User:
     """
     Validate the token — email verification is not checked here.
-    Only /me, /otp/send, /otp/verify pe use karo।
+    Only /me, /otp/send, /otp/verify।
     """
     token = credentials.credentials
 
@@ -89,7 +89,6 @@ def create(user = Depends(get_verified_user)):
         )
 
     # ── Email verify check TOKEN mein ─────────
-    # DB hit nahi karte — token mein hi flag hai
     email_verified = payload.get("email_verified", False)
     if not email_verified:
         raise HTTPException(
@@ -100,7 +99,7 @@ def create(user = Depends(get_verified_user)):
             }
         )
 
-    # ── DB se user lo ─────────────────────────
+    # ── DB se user ─────────────────────────
     user_id = int(payload.get("sub"))
     user    = db.query(User).filter(User.user_id == user_id).first()
 

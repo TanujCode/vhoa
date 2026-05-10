@@ -26,24 +26,21 @@ def get_logs(
     current_user: User       = Depends(get_verified_user),
 ):
     """
-    Audit logs dekho।
-
     Super Admin:
-    → community_id diye bina sab dekh sakta hai
-    → ya specific community ka bhi dekh sakta hai
+→ Can view everything without providing a `community_id`
+→ Alternatively, can also view data for a specific community
 
-    HOA Admin / Property Manager:
-    → sirf apni community ka dekh sakta hai
-    → community_id mandatory hai
+HOA Admin / Property Manager:
+→ Can view data only for their own community
+→ `community_id` is mandatory
 
-    Resident / Board:
-    → access nahi
+Resident / Board:
+→ No access
     """
     role = current_user.role.role_name
 
     # ── Role based access ─────────────────────
     if role == "super_admin":
-        # Sab dekh sakta hai
         pass
 
     elif role in {"property_manager", "board_member"}:
@@ -51,24 +48,22 @@ def get_logs(
         if community_id is None:
             raise HTTPException(
                 status_code=400,
-                detail="community_id required hai। Apni HOA ID daalo।"
+                detail="community_id is required. Please provide your HOA ID."
             )
 
     else:
         # Resident → access nahi
         raise HTTPException(
             status_code=403,
-            detail="Audit logs dekhne ki permission nahi hai।"
+            detail="You do not have permission to view audit logs."
         )
 
     logs = get_audit_logs(db, community_id, None, module, action, skip, limit)
     return [_to_out(log) for log in logs]
 
 
-# ══════════════════════════════════════════════
 #  GET /api/audit/my
-#  Apne actions ka log dekho
-# ══════════════════════════════════════════════
+
 @router.get("/my", response_model=list[AuditLogOut])
 def get_my_logs(
     skip:  int     = Query(default=0, ge=0),
@@ -76,7 +71,7 @@ def get_my_logs(
     db:    Session = Depends(get_db),
     current_user: User = Depends(get_verified_user),
 ):
-    """Apne khud ke actions ka history dekho — sabhi users kar sakte hain"""
+    """View the history of your own actions — all users can do this."""
     logs = get_audit_logs(
         db,
         user_id = current_user.user_id,
@@ -86,9 +81,7 @@ def get_my_logs(
     return [_to_out(log) for log in logs]
 
 
-# ══════════════════════════════════════════════
 #  HELPER
-# ══════════════════════════════════════════════
 def _to_out(log) -> AuditLogOut:
     user_name = None
     if log.user:

@@ -19,20 +19,20 @@ def log_action(
     new_value:    str | None = None,
 ) -> None:
     """
-    Koi bhi action log karo।
+   Log any action. 
 
-    Usage — auth mein:
-        log_action(db, "LOGIN", "auth", f"User {email} logged in", user_id=1)
+Usage – in auth: 
+log_action(db, "LOGIN", "auth", f"User {email} logged in", user_id=1) 
 
-    Usage — community mein:
-        log_action(db, "CREATE_COMMUNITY", "community",
-                   f"Community '{name}' create ki",
-                   user_id=1, community_id=5)
+Usage – in the community: 
+log_action(db, "CREATE_COMMUNITY", "community", 
+f"Community '{name}' created", 
+user_id=1, community_id=5) 
 
-    Usage — violation mein:
-        log_action(db, "CREATE_VIOLATION", "violation",
-                   f"Violation issue ki resident {client_id} ko",
-                   user_id=1, community_id=2)
+Usage – violation in: 
+log_action(db, "CREATE_VIOLATION", "violation", 
+f"Violation issue ki resident {client_id} ko", 
+user_id=1, community_id=2)
     """
     try:
         log = AuditLog(
@@ -49,7 +49,6 @@ def log_action(
         db.add(log)
         db.commit()
     except Exception:
-        # Log fail hone se main flow affect na ho
         db.rollback()
 
 
@@ -66,10 +65,10 @@ def get_audit_logs(
     limit:        int = 50,
 ) -> list[AuditLog]:
     """
-    Audit logs fetch karo।
+   Fetch the audit logs. 
 
-    Super Admin → community_id = None → sab milega
-    HOA Admin   → community_id = apni HOA ID → sirf apna
+Super Admin → community_id = None → Retrieves everything
+HOA Admin   → community_id = their HOA ID → Retrieves only their own
     """
     query = db.query(AuditLog)
 

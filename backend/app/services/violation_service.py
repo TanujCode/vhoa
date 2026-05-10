@@ -61,7 +61,7 @@ def update_violation_type(
         ViolationType.violation_type_id == violation_type_id
     ).first()
     if not vtype:
-        raise ValueError("Violation type nahi mila.")
+        raise ValueError("Violation type not found.")
 
     if data.name is not None:         vtype.name = data.name.strip()
     if data.description is not None:  vtype.description = data.description
@@ -85,17 +85,17 @@ def create_violation(data: ViolationCreate, created_by_id: int, db: Session) -> 
         ViolationType.active_status     == True,
     ).first()
     if not vtype:
-        raise ValueError("Violation type nahi mila.")
+        raise ValueError("Violation type not found.")
 
     client = db.query(User).filter(User.user_id == data.client_id).first()
     if not client:
-        raise ValueError("Resident nahi mila.")
+        raise ValueError("Resident Not Found.")
 
     open_status = db.query(ViolationStatus).filter(
         ViolationStatus.violation_status == "OPEN"
     ).first()
     if not open_status:
-        raise ValueError("OPEN status nahi mila.")
+        raise ValueError("Open status not found.")
 
     amount = data.amount if data.amount > 0 else vtype.amount
 
@@ -176,7 +176,7 @@ def update_violation_status(
         ViolationStatus.violation_status_id == data.violation_status_id
     ).first()
     if not new_status:
-        raise ValueError("Status exist nahi karta.")
+        raise ValueError("Status does not exist.")
 
     # Late charge check — agar due date nikal gayi aur PAID kar rahe hain
     if new_status.violation_status == "PAID":
@@ -203,31 +203,31 @@ def create_dispute(
     user_id: int, db: Session,
 ) -> Violation:
     """
-    Member 30 din ke andar dispute kar sakta hai।
-    Ek baar dispute resolve ho jaye toh dobara nahi ho sakta।
+    A member may raise a dispute within 30 days.
+Once a dispute has been resolved, it cannot be raised again.
     """
     violation = get_violation_by_id(violation_id, db)
 
     # Sirf apni violation dispute kar sakte hain
     if violation.client_id != user_id:
-        raise ValueError("Aap sirf apni violation dispute kar sakte hain।")
+        raise ValueError("You can only dispute your own violations.")
 
     # Already disputed check
     if violation.is_disputed and violation.dispute_resolved:
         raise ValueError(
-            "Yeh violation pehle se resolve ho chuki hai। "
-            "Dobara dispute ke liye HOA board se seedha contact karo।"
+            "This violation has already been resolved."
+            "Please contact the HOA board for further assistance."
         )
 
     if violation.is_disputed and not violation.dispute_resolved:
-        raise ValueError("Yeh violation pehle se disputed hai। Board ka response awaited hai।")
+        raise ValueError("This violation is already under dispute. The Board's response is awaited.")
 
     # 30 din ka deadline check
     today = date.today()
     if violation.dispute_deadline and today > violation.dispute_deadline:
         raise ValueError(
-            f"Dispute deadline {violation.dispute_deadline} nikal gayi। "
-            "Ab dispute nahi kar sakte।"
+            f"The dispute deadline ({violation.dispute_deadline}) has passed."
+            "You can no longer file a dispute."
         )
 
     # Appealed status set karo
@@ -248,20 +248,20 @@ def create_dispute(
 
 
 # ══════════════════════════════════════════════
-#  VIOLATION — DISPUTE RESOLVE (Board karta hai)
+#  VIOLATION — DISPUTE RESOLVE 
 # ══════════════════════════════════════════════
 def resolve_dispute(
     violation_id: int, data: DisputeResolve,
     resolved_by_id: int, db: Session,
 ) -> Violation:
-    """Board 30 din ke andar dispute resolve karega"""
+    """The Board will resolve the dispute within 30 days."""
     violation = get_violation_by_id(violation_id, db)
 
     if not violation.is_disputed:
-        raise ValueError("Yeh violation disputed nahi hai।")
+        raise ValueError("This violation is not disputed.")
 
     if violation.dispute_resolved:
-        raise ValueError("Yeh dispute pehle se resolve ho chuka hai।")
+        raise ValueError("This dispute has already been resolved.")
 
     violation.dispute_resolved      = True
     violation.dispute_resolved_date = datetime.now(timezone.utc)

@@ -44,21 +44,21 @@ class ServiceRequestCreate(BaseModel):
     def priority_valid(cls, v):
         allowed = {"LOW", "NORMAL", "HIGH", "URGENT"}
         if v.upper() not in allowed:
-            raise ValueError(f"Priority in mein se hona chahiye: {allowed}")
+            raise ValueError(f"The priority should be one of these.: {allowed}")
         return v.upper()
 
     @field_validator("title")
     @classmethod
     def title_valid(cls, v):
         if len(v.strip()) < 5:
-            raise ValueError("Title kam se kam 5 characters ka hona chahiye.")
+            raise ValueError("The title must be at least 5 characters long.")
         return v.strip()
 
 
 class StatusUpdateRequest(BaseModel):
     """
-    Status change karo।
-    Document ke rules:
+    Changed Status।
+    Documents rules:
     - Open → Cancelled     = Resident
     - Open → Approved      = Board/Admin
     - Any  → In Progress   = Board/Admin
@@ -79,7 +79,7 @@ class ServiceRequestNoteCreate(BaseModel):
     @classmethod
     def note_valid(cls, v):
         if len(v.strip()) < 3:
-            raise ValueError("Note kam se kam 3 characters ka hona chahiye.")
+            raise ValueError("The note must be at least 3 characters long.")
         return v.strip()
 
 
