@@ -111,7 +111,7 @@ const BookModal = ({ amenity, communityId, onClose, onSuccess }) => {
           <div className="flex gap-3 pt-2">
             <button type="button" onClick={onClose} className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 text-slate-700 dark:text-white rounded-xl text-sm font-medium transition">Cancel</button>
             <button type="submit" disabled={loading || !form.slot_number}
-              className="flex-1 py-2.5 bg-teal-600 hover:bg-teal-50 text-white rounded-xl text-sm font-medium transition disabled:opacity-50">
+              className="flex-1 py-2.5 bg-teal-600 hover:bg-teal-500 text-white rounded-xl text-sm font-medium transition disabled:opacity-50">
               {loading ? 'Booking...' : 'Confirm Booking'}
             </button>
           </div>
@@ -249,7 +249,9 @@ const CreateAmenityModal = ({ communityId, onClose, onSuccess }) => {
           </div>
           <div className="flex gap-3 pt-2">
             <button type="button" onClick={onClose} className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-white/10 rounded-xl text-sm font-medium text-slate-700 dark:text-white">Cancel</button>
-            <button type="submit" disabled={loading} className="flex-1 py-2.5 bg-teal-600 hover:bg-teal-500 text-white rounded-xl text-sm font-medium transition-colors">Create</button>
+            <button type="submit" disabled={loading} className="flex-1 py-2.5 bg-teal-600 hover:bg-teal-500 text-white rounded-xl text-sm font-medium transition-colors disabled:opacity-50">
+              {loading ? 'Creating...' : 'Create'}
+            </button>
           </div>
         </form>
       </div>
@@ -300,23 +302,23 @@ const EditAmenityModal = ({ amenity, onClose, onSuccess }) => {
           <div>
             <label className="text-xs text-slate-500 dark:text-gray-400 mb-1 block">Name</label>
             <input type="text" required value={form.name} onChange={e => setForm({...form, name: e.target.value})}
-              className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl px-3 py-2 text-sm text-slate-950 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500" />
+              className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500" />
           </div>
           <div>
             <label className="text-xs text-slate-500 dark:text-gray-400 mb-1 block">Description</label>
             <textarea rows={2} value={form.description} onChange={e => setForm({...form, description: e.target.value})}
-              className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl px-3 py-2 text-sm text-slate-950 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500 resize-none" />
+              className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500 resize-none" />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="text-xs text-slate-500 dark:text-gray-400 mb-1 block">Location</label>
               <input type="text" value={form.location} onChange={e => setForm({...form, location: e.target.value})}
-                className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl px-3 py-2 text-sm text-slate-950 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500" />
+                className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-teal-500" />
             </div>
             <div>
               <label className="text-xs text-slate-500 dark:text-gray-400 mb-1 block">Capacity</label>
               <input type="number" min="1" value={form.capacity} onChange={e => setForm({...form, capacity: e.target.value})}
-                className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl px-3 py-2 text-sm text-slate-955 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500" />
+                className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500" />
             </div>
           </div>
           <div className="bg-slate-50 dark:bg-[#1e3248] p-3 rounded-2xl space-y-3">
@@ -329,7 +331,7 @@ const EditAmenityModal = ({ amenity, onClose, onSuccess }) => {
               <div>
                 <label className="text-xs text-slate-500 dark:text-gray-400 mb-1 block">Booking Fee ($)</label>
                 <input type="number" min="0" step="0.01" value={form.booking_fee} onChange={e => setForm({...form, booking_fee: e.target.value})}
-                  className="w-full bg-white dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl px-3 py-2 text-sm text-slate-950 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500" />
+                  className="w-full bg-white dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500" />
               </div>
             )}
           </div>
@@ -340,7 +342,9 @@ const EditAmenityModal = ({ amenity, onClose, onSuccess }) => {
           </div>
           <div className="flex gap-3 pt-2">
             <button type="button" onClick={onClose} className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-white/10 rounded-xl text-sm font-medium text-slate-700 dark:text-white">Cancel</button>
-            <button type="submit" disabled={loading} className="flex-1 py-2.5 bg-teal-600 hover:bg-teal-500 text-white rounded-xl text-sm font-medium transition-colors">Save Changes</button>
+            <button type="submit" disabled={loading} className="flex-1 py-2.5 bg-teal-600 hover:bg-teal-500 text-white rounded-xl text-sm font-medium transition-colors disabled:opacity-50">
+              {loading ? 'Saving...' : 'Save Changes'}
+            </button>
           </div>
         </form>
       </div>
@@ -420,12 +424,12 @@ const Amenity = ({ community, user, setActivePage, setPaymentState }) => {
 
   return (
     <div className="text-slate-900 dark:text-white">
-      <div className="flex justify-between items-center mb-8">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
         <div>
           <h1 className="text-3xl font-semibold text-slate-900 dark:text-white">Amenity Booking</h1>
           <p className="text-slate-500 dark:text-gray-400 mt-1">{community?.name}</p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex flex-wrap gap-2 w-full md:w-auto">
           <button 
             onClick={() => activeTab === 'amenities' ? fetchAmenities() : fetchBookings()}
             disabled={loading}
@@ -456,7 +460,7 @@ const Amenity = ({ community, user, setActivePage, setPaymentState }) => {
 
       {activeTab === 'amenities' && (
         <div>
-          {loading ? (
+          {loading && amenities.length === 0 ? (
             <div className="text-center py-20 text-slate-500 dark:text-gray-400">
               <div className="w-8 h-8 border-2 border-teal-500 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
             </div>
@@ -541,7 +545,7 @@ const Amenity = ({ community, user, setActivePage, setPaymentState }) => {
           </div>
 
           <div className="bg-gradient-to-br from-slate-50 to-blue-50/40 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl overflow-hidden shadow-sm">
-            {loading ? (
+            {loading && bookings.length === 0 ? (
               <div className="p-16 text-center text-slate-500 dark:text-gray-400">
                 <div className="w-8 h-8 border-2 border-teal-500 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
               </div>

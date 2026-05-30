@@ -801,7 +801,7 @@ const DetailDrawer = ({
 
         {/* Vendor Access & Codes */}
         {request.vendor_id && (
-          <div className="bg-slate-50 dark:bg-white/5 rounded-2xl p-4 border border-slate-200/80 dark:border-white/10 space-y-3.5">
+          <div className="bg-slate-50 dark:bg-white/5 rounded-2xl p-4 border border-slate-200 dark:border-white/5 space-y-3.5">
             <div className="flex justify-between items-center border-b border-slate-200 dark:border-white/5 pb-2">
               <h4 className="text-xs text-slate-500 dark:text-gray-400 font-semibold uppercase tracking-wider">Vendor Codes</h4>
               <span className="text-[10px] bg-blue-500/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400 px-2 py-0.5 rounded-full font-semibold">SECURITY</span>
@@ -1317,7 +1317,7 @@ const ServiceRequests = ({ community, user, setActivePage, setPaymentState }) =>
 
   return (
     <div className="text-slate-900 dark:text-white">
-      <div className="flex justify-between items-center mb-8">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
         <div>
           <h1 className="text-3xl font-semibold text-slate-900 dark:text-white">Service Requests</h1>
           <p className="text-slate-500 dark:text-gray-400 mt-1 flex items-center gap-2">
@@ -1326,7 +1326,7 @@ const ServiceRequests = ({ community, user, setActivePage, setPaymentState }) =>
             {isAdmin && <span className="text-xs bg-teal-500/10 text-teal-600 dark:bg-teal-500/20 dark:text-teal-400 px-2 py-0.5 rounded-full font-medium">All Requests</span>}
           </p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex flex-wrap gap-2 w-full md:w-auto">
           <button 
             onClick={handleRefreshAll} 
             disabled={loading}
@@ -1375,7 +1375,7 @@ const ServiceRequests = ({ community, user, setActivePage, setPaymentState }) =>
           </div>
         </div>
 
-        {loading ? (
+        {loading && requests.length === 0 ? (
           <div className="p-16 text-center text-slate-500 dark:text-gray-400">
             <div className="w-8 h-8 border-2 border-teal-500 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
             Loading...

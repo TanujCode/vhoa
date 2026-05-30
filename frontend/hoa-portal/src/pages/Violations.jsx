@@ -182,13 +182,24 @@ const SubmitModal = ({ communityId, onClose, onSuccess }) => {
 // ── Create Violation Type Modal ───────────────
 const CreateTypeModal = ({ communityId, onClose, onSuccess }) => {
   const [formData, setFormData] = useState({ name: '', description: '', amount: 0, late_charge: 0, due_days: 30 });
+  const [loading, setLoading] = useState(false);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!formData.name.trim()) {
+      alert("Name is required.");
+      return;
+    }
+    setLoading(true);
     try {
       await API.post('/violation/type', { ...formData, community_id: communityId });
       onSuccess();
       onClose();
-    } catch (err) { alert("Error: " + err.message); }
+    } catch (err) {
+      alert(err.response?.data?.detail || "Error: " + err.message);
+    } finally {
+      setLoading(false);
+    }
   };
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
@@ -198,12 +209,14 @@ const CreateTypeModal = ({ communityId, onClose, onSuccess }) => {
         <input 
           className="w-full p-2 mb-3 bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500" 
           placeholder="Name" 
+          value={formData.name}
           onChange={e => setFormData({...formData, name: e.target.value})} 
         />
         
         <input 
           className="w-full p-2 mb-3 bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500" 
           placeholder="Description" 
+          value={formData.description}
           onChange={e => setFormData({...formData, description: e.target.value})} 
         />
         
@@ -211,6 +224,7 @@ const CreateTypeModal = ({ communityId, onClose, onSuccess }) => {
           className="w-full p-2 mb-3 bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500" 
           placeholder="Amount" 
           type="number" 
+          value={formData.amount}
           onChange={e => setFormData({...formData, amount: parseFloat(e.target.value) || 0})} 
         />
         
@@ -218,6 +232,7 @@ const CreateTypeModal = ({ communityId, onClose, onSuccess }) => {
           className="w-full p-2 mb-3 bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500" 
           placeholder="Late Charge" 
           type="number" 
+          value={formData.late_charge}
           onChange={e => setFormData({...formData, late_charge: parseFloat(e.target.value) || 0})} 
         />
         
@@ -225,12 +240,15 @@ const CreateTypeModal = ({ communityId, onClose, onSuccess }) => {
           className="w-full p-2 mb-3 bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500" 
           placeholder="Due Days" 
           type="number" 
+          value={formData.due_days}
           onChange={e => setFormData({...formData, due_days: parseInt(e.target.value) || 30})} 
         />
 
         <div className="flex gap-2 mt-4">
-          <button onClick={onClose} className="px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-white/10 rounded-xl flex-1 text-slate-700 dark:text-white">Cancel</button>
-          <button onClick={handleSubmit} className="px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-xl flex-1 text-white font-medium">Save</button>
+          <button type="button" disabled={loading} onClick={onClose} className="px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-white/10 rounded-xl flex-1 text-slate-700 dark:text-white disabled:opacity-50">Cancel</button>
+          <button type="button" disabled={loading} onClick={handleSubmit} className="px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-xl flex-1 text-white font-medium disabled:opacity-50">
+            {loading ? 'Saving...' : 'Save'}
+          </button>
         </div>
       </div>
     </div>
@@ -379,8 +397,8 @@ const ResolveDisputeModal = ({ violationId, statuses, onClose, onSuccess }) => {
           </div>
           <div className="flex gap-3 pt-2">
             <button type="button" onClick={onClose} className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-white/10 rounded-xl text-sm font-medium text-slate-700 dark:text-white">Cancel</button>
-            <button type="submit" disabled={loading} className="flex-1 py-2.5 bg-teal-600 hover:bg-teal-500 rounded-xl text-sm font-medium text-white">
-              Resolve Dispute
+            <button type="submit" disabled={loading} className="flex-1 py-2.5 bg-teal-600 hover:bg-teal-500 rounded-xl text-sm font-medium text-white disabled:opacity-50">
+              {loading ? 'Resolving...' : 'Resolve Dispute'}
             </button>
           </div>
         </form>
@@ -729,14 +747,14 @@ const Violations = ({ community, user, setActivePage, setPaymentState }) => {
   return (
     <div className="text-slate-900 dark:text-white">
       {/* Header */}
-      <div className="flex justify-between items-center mb-8">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
         <div>
           <h1 className="text-3xl font-semibold text-slate-900 dark:text-white">Violations</h1>
           <p className="text-slate-500 dark:text-gray-400 mt-1">
             {community?.name} • Manage violations, disputes, and fines
           </p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex flex-wrap gap-2 w-full md:w-auto">
           <button
             onClick={fetchViolations}
             disabled={loading}
@@ -798,8 +816,6 @@ const Violations = ({ community, user, setActivePage, setPaymentState }) => {
                 type="text"
                 placeholder="Search violations..."
                 className="w-72 bg-slate-50 dark:bg-[#1e3248] border border-slate-200 dark:border-white/10 rounded-2xl pl-10 pr-4 py-2.5 text-sm text-slate-900 dark:text-white focus:border-teal-500 outline-none placeholder-slate-400 dark:placeholder-gray-500"
-                value={search}
-                onChange={e => setSearch(e.target.value)}
               />
             </div>
 
@@ -819,7 +835,7 @@ const Violations = ({ community, user, setActivePage, setPaymentState }) => {
         </div>
 
         <div className="overflow-x-auto">
-          {loading ? (
+          {loading && violations.length === 0 ? (
             <div className="p-10 text-center text-slate-500 dark:text-gray-400">
               <div className="w-8 h-8 border-2 border-teal-500 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
               Loading violations...

@@ -50,7 +50,7 @@ const DocumentModal = ({ communityId, onClose, onSuccess }) => {
           <h3 className="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2">
             <Plus size={18} className="text-teal-500" /> Upload HOA Document
           </h3>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 dark:hover:text-white font-semibold text-sm">✕</button>
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-655 dark:hover:text-white font-semibold text-sm">✕</button>
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
@@ -113,7 +113,7 @@ const DocumentModal = ({ communityId, onClose, onSuccess }) => {
             <button
               type="submit"
               disabled={loading}
-              className="px-6 py-2.5 bg-teal-600 hover:bg-teal-500 text-white rounded-xl text-sm font-medium transition disabled:opacity-50"
+              className="px-6 py-2.5 bg-teal-600 hover:bg-teal-505 text-white rounded-xl text-sm font-medium transition disabled:opacity-50"
             >
               {loading ? 'Uploading...' : 'Upload'}
             </button>
@@ -259,7 +259,7 @@ const Documents = ({ community, user }) => {
           </span>
         </div>
 
-        {loading ? (
+        {loading && documents.length === 0 ? (
           <div className="p-20 text-center text-slate-500 dark:text-gray-400">
             <div className="w-10 h-10 border-4 border-teal-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
             Loading repository files...
@@ -317,7 +317,7 @@ const Documents = ({ community, user }) => {
                         {isManagement && (
                           <button
                             onClick={() => handleDelete(doc.document_id)}
-                            className="p-2 bg-red-500/10 hover:bg-red-500/20 dark:bg-[#3B1C1C] dark:hover:bg-[#5C2323] text-red-600 dark:text-red-400 rounded-xl transition-all"
+                            className="p-2 bg-red-500/10 hover:bg-red-500/20 dark:bg-[#3B1C1C] dark:hover:bg-[#5C2323] text-red-655 dark:text-red-400 rounded-xl transition-all"
                             title="Delete"
                           >
                             <Trash2 size={16} />

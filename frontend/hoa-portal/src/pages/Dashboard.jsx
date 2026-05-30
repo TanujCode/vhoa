@@ -126,7 +126,7 @@ const Dashboard = ({ community, user, setActivePage }) => {
             {community.name} • {community.time_zone || 'EST'}
           </p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex flex-wrap gap-2 w-full sm:w-auto">
           <button
             onClick={() => fetchDashboardData(community.community_id)}
             disabled={loading}
@@ -206,7 +206,7 @@ const Dashboard = ({ community, user, setActivePage }) => {
       </div>
 
       {/* ── Stats Grid ───────────────────────── */}
-      {loading ? (
+      {loading && !stats ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
           {[...Array(4)].map((_, i) => (
             <div key={i} className="bg-gradient-to-br from-slate-50 to-blue-50/40 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 animate-pulse">

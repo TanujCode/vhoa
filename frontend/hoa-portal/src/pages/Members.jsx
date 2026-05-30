@@ -294,7 +294,7 @@ const Members = ({ community }) => {
       toggleBtn = (
         <button
           onClick={() => handleStatusUpdate(member.user_id, 'ACTIVE')}
-          className="text-teal-600 hover:text-teal-500 dark:text-teal-400 dark:hover:text-teal-300 font-medium text-xs transition-colors hover:underline mr-4"
+          className="text-teal-600 hover:text-teal-505 dark:text-teal-400 dark:hover:text-teal-300 font-medium text-xs transition-colors hover:underline mr-4"
         >
           Approve
         </button>
@@ -303,7 +303,7 @@ const Members = ({ community }) => {
       toggleBtn = (
         <button
           onClick={() => handleStatusUpdate(member.user_id, 'ACTIVE')}
-          className="text-teal-600 hover:text-teal-500 dark:text-teal-400 dark:hover:text-teal-300 font-medium text-xs transition-colors hover:underline mr-4"
+          className="text-teal-600 hover:text-teal-505 dark:text-teal-400 dark:hover:text-teal-300 font-medium text-xs transition-colors hover:underline mr-4"
         >
           Reactivate
         </button>
@@ -315,7 +315,7 @@ const Members = ({ community }) => {
         {toggleBtn}
         <button
           onClick={() => handleOpenEditModal(member)}
-          className="text-teal-600 hover:text-teal-500 dark:text-teal-400 dark:hover:text-teal-300 font-medium text-xs transition-colors hover:underline"
+          className="text-teal-600 hover:text-teal-505 dark:text-teal-400 dark:hover:text-teal-300 font-medium text-xs transition-colors hover:underline"
         >
           Edit
         </button>
@@ -335,14 +335,14 @@ const Members = ({ community }) => {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
         <div>
           <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-1">Members</h1>
-          <p className="text-slate-500 dark:text-gray-400 text-sm">
+          <p className="text-slate-505 dark:text-gray-400 text-sm">
             {community?.name || "Community"} · View and manage community members
           </p>
         </div>
         <div>
           <button 
             onClick={() => setShowInviteModal(true)}
-            className="px-5 py-2.5 bg-teal-600 hover:bg-teal-500 rounded-2xl text-sm font-semibold transition flex items-center gap-2 text-white shadow-lg shadow-teal-500/25"
+            className="px-5 py-2.5 bg-teal-600 hover:bg-teal-550 rounded-2xl text-sm font-semibold transition flex items-center gap-2 text-white shadow-lg shadow-teal-500/25"
           >
             + Invite Member
           </button>
@@ -387,9 +387,9 @@ const Members = ({ community }) => {
         </div>
 
         <div className="overflow-x-auto custom-scrollbar">
-          {loading ? (
+          {loading && members.length === 0 ? (
             <div className="p-10 text-center text-slate-500 dark:text-gray-400">
-              <div className="w-8 h-8 border-2 border-teal-600 dark:border-teal-400 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+              <div className="w-8 h-8 border-2 border-teal-650 dark:border-teal-400 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
               Loading members...
             </div>
           ) : searched.length === 0 ? (
@@ -400,7 +400,7 @@ const Members = ({ community }) => {
           ) : (
             <table className="w-full text-left">
               <thead>
-                <tr className="border-b border-slate-200 dark:border-white/5 text-[10px] uppercase tracking-wider text-slate-500 dark:text-gray-400 font-bold whitespace-nowrap">
+                <tr className="border-b border-slate-200 dark:border-white/5 text-[10px] uppercase tracking-wider text-slate-505 dark:text-gray-400 font-bold whitespace-nowrap">
                   <th className="px-6 py-4">MEMBER</th>
                   <th className="px-6 py-4">UNIT / ADDRESS</th>
                   <th className="px-6 py-4">EMAIL</th>
@@ -418,10 +418,10 @@ const Members = ({ community }) => {
                         <p className="font-semibold text-slate-900 dark:text-white text-sm">{m.full_name}</p>
                         {m.role_name && (
                           <span className={`inline-block px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider w-max ${
-                            m.role_name === 'super_admin' ? 'bg-red-500/10 text-red-600 dark:bg-red-500/20 dark:text-red-400 border border-red-500/20' :
-                            m.role_name === 'property_manager' ? 'bg-teal-500/10 text-teal-600 dark:bg-teal-500/20 dark:text-teal-400 border border-teal-500/20' :
-                            m.role_name === 'board_member' ? 'bg-blue-500/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400 border border-blue-500/20' :
-                            'bg-slate-100 text-slate-600 dark:bg-white/5 dark:text-slate-400 border border-slate-200/10'
+                            m.role_name === 'super_admin' ? 'bg-red-500/10 text-red-655 dark:bg-red-500/20 dark:text-red-400 border border-red-500/20' :
+                            m.role_name === 'property_manager' ? 'bg-teal-500/10 text-teal-655 dark:bg-teal-500/20 dark:text-teal-400 border border-teal-500/20' :
+                            m.role_name === 'board_member' ? 'bg-blue-500/10 text-blue-655 dark:bg-blue-500/20 dark:text-blue-400 border border-blue-500/20' :
+                            'bg-slate-100 text-slate-655 dark:bg-white/5 dark:text-slate-400 border border-slate-200/10'
                           }`}>
                             {m.role_name === 'property_manager' ? 'Property Manager' : 
                              m.role_name === 'board_member' ? 'Board Member' : 
@@ -434,17 +434,17 @@ const Members = ({ community }) => {
                     </td>
 
                     <td className="px-6 py-4">
-                      <p className="text-slate-500 dark:text-gray-400 text-xs">
+                      <p className="text-slate-505 dark:text-gray-400 text-xs">
                         {m.unit_no || '—'}
                       </p>
                     </td>
 
                     <td className="px-6 py-4">
-                      <p className="text-slate-500 dark:text-gray-400 text-xs">{m.email_id}</p>
+                      <p className="text-slate-550 dark:text-gray-400 text-xs">{m.email_id}</p>
                     </td>
 
                     <td className="px-6 py-4">
-                      <p className="text-slate-500 dark:text-gray-400 text-xs">{m.mobile_number || '—'}</p>
+                      <p className="text-slate-550 dark:text-gray-400 text-xs">{m.mobile_number || '—'}</p>
                     </td>
 
                     <td className="px-6 py-4">
@@ -454,7 +454,7 @@ const Members = ({ community }) => {
                             href={getBaseUrl(m.id_proof_url)}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="px-2.5 py-1 text-xs font-semibold bg-blue-500/10 hover:bg-blue-500 text-blue-600 hover:text-white rounded-xl border border-blue-500/20 transition-all"
+                            className="px-2.5 py-1 text-xs font-semibold bg-blue-500/10 hover:bg-blue-505 text-blue-600 hover:text-white rounded-xl border border-blue-500/20 transition-all"
                           >
                             ID Proof
                           </a>
@@ -464,7 +464,7 @@ const Members = ({ community }) => {
                             href={getBaseUrl(m.address_proof_url)}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="px-2.5 py-1 text-xs font-semibold bg-purple-500/10 hover:bg-purple-500 text-purple-600 hover:text-white rounded-xl border border-purple-500/20 transition-all"
+                            className="px-2.5 py-1 text-xs font-semibold bg-purple-500/10 hover:bg-purple-505 text-purple-600 hover:text-white rounded-xl border border-purple-500/20 transition-all"
                           >
                             Address Proof
                           </a>
@@ -499,7 +499,7 @@ const Members = ({ community }) => {
                 <h2 className="text-xl font-bold text-slate-900 dark:text-white">Invite Member</h2>
                 <button onClick={() => setShowInviteModal(false)} className="text-slate-400 hover:text-slate-900 dark:text-gray-500 dark:hover:text-white"><X size={20} /></button>
               </div>
-              <p className="text-slate-500 dark:text-gray-400 text-sm mt-1">Send invitation to join the community</p>
+              <p className="text-slate-505 dark:text-gray-400 text-sm mt-1">Send invitation to join the community</p>
             </div>
 
             <div className="p-6 space-y-4 overflow-y-auto custom-scrollbar flex-1">
@@ -619,7 +619,7 @@ const Members = ({ community }) => {
                 <h2 className="text-xl font-bold text-slate-900 dark:text-white">Update Member Details</h2>
                 <button onClick={() => { setShowEditModal(false); setEditingMember(null); }} className="text-slate-400 hover:text-slate-900 dark:text-gray-500 dark:hover:text-white"><X size={20} /></button>
               </div>
-              <p className="text-slate-500 dark:text-gray-400 text-sm mt-1">Modify details for {editingMember?.full_name}</p>
+              <p className="text-slate-505 dark:text-gray-400 text-sm mt-1">Modify details for {editingMember?.full_name}</p>
             </div>
 
             <div className="p-6 space-y-4 overflow-y-auto custom-scrollbar flex-1">

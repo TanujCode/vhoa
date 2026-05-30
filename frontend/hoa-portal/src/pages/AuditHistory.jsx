@@ -94,7 +94,7 @@ const AuditHistory = ({ community, user }) => {
       <div className="text-slate-900 dark:text-white">
         <div className="mb-8">
           <h1 className="text-3xl font-semibold text-slate-900 dark:text-white">My Activity</h1>
-          <p className="text-slate-500 dark:text-gray-400 mt-1">Your recent actions</p>
+          <p className="text-slate-505 dark:text-gray-400 mt-1">Your recent actions</p>
         </div>
         <AuditTable logs={logs} loading={loading} search={search} setSearch={setSearch}
           filteredLogs={filteredLogs} getActionColor={getActionColor} getModuleIcon={getModuleIcon} formatDate={formatDate} isAdmin={false} />
@@ -108,7 +108,7 @@ const AuditHistory = ({ community, user }) => {
       <div className="flex justify-between items-center mb-8">
         <div>
           <h1 className="text-3xl font-semibold text-slate-900 dark:text-white">Audit History</h1>
-          <p className="text-slate-500 dark:text-gray-400 mt-1">{community?.name}</p>
+          <p className="text-slate-505 dark:text-gray-400 mt-1">{community?.name}</p>
         </div>
         <button 
           onClick={fetchLogs}
@@ -141,7 +141,7 @@ const AuditHistory = ({ community, user }) => {
           <Search size={15} className="absolute left-3 top-2.5 text-slate-400 dark:text-gray-400" />
           <input type="text" placeholder="Search action, user, description..." value={search}
             onChange={e => setSearch(e.target.value)}
-            className="w-full bg-white dark:bg-[#162535] border border-slate-200 dark:border-white/10 rounded-xl pl-9 pr-4 py-2 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 focus:outline-none focus:border-teal-500" />
+            className="w-full bg-white dark:bg-[#162535] border border-slate-200 dark:border-white/10 rounded-xl pl-9 pr-4 py-2 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-505 focus:outline-none focus:border-teal-500" />
         </div>
         <select value={moduleFilter} onChange={e => setModuleFilter(e.target.value)}
           className="bg-slate-50 dark:bg-[#162535] border border-slate-200 dark:border-white/10 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-teal-500 cursor-pointer">
@@ -160,10 +160,10 @@ const AuditTable = ({ logs, loading, filteredLogs, getActionColor, getModuleIcon
   <div className="bg-gradient-to-br from-slate-50 to-blue-50/40 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl overflow-hidden text-slate-900 dark:text-white">
     <div className="p-5 border-b border-slate-200 dark:border-white/10 flex justify-between items-center">
       <h2 className="font-semibold text-slate-900 dark:text-white">Activity Log</h2>
-      <span className="text-xs text-slate-500 dark:text-gray-505">{filteredLogs.length} records</span>
+      <span className="text-xs text-slate-550 dark:text-gray-505">{filteredLogs.length} records</span>
     </div>
 
-    {loading ? (
+    {loading && logs.length === 0 ? (
       <div className="p-16 text-center text-slate-500 dark:text-gray-400">
         <div className="w-8 h-8 border-2 border-teal-500 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
         Loading audit logs...
@@ -205,7 +205,7 @@ const AuditTable = ({ logs, loading, filteredLogs, getActionColor, getModuleIcon
                     {log.user_name || `User #${log.user_id}` || '—'}
                   </td>
                 )}
-                <td className="p-5 text-slate-400 dark:text-gray-500 text-xs font-mono">
+                <td className="p-5 text-slate-400 dark:text-gray-505 text-xs font-mono">
                   {log.ip_address || '—'}
                 </td>
                 <td className="p-5 text-slate-500 dark:text-gray-400 text-xs whitespace-nowrap">

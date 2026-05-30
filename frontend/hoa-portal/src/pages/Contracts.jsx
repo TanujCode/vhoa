@@ -17,6 +17,7 @@ export default function Contracts() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [copiedCode, setCopiedCode] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
 
   // Form setup
   const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm({
@@ -87,6 +88,7 @@ export default function Contracts() {
 
   const onSubmit = async (data) => {
     try {
+      setSubmitting(true);
       setErrorMsg('');
       setSuccessMsg('');
       
@@ -105,6 +107,8 @@ export default function Contracts() {
       fetchContracts();
     } catch (err) {
       setErrorMsg(err.response?.data?.detail || 'Failed to create contract.');
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -142,14 +146,14 @@ export default function Contracts() {
   return (
     <div className="relative text-slate-900 dark:text-white">
       {/* Header */}
-      <div className="flex justify-between items-start mb-8">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
         <div>
           <h1 className="text-3xl font-semibold text-slate-900 dark:text-white">Manage Contracts</h1>
           <p className="text-slate-500 dark:text-gray-400 mt-1">Generate and distribute unique contract codes for client onboarding</p>
         </div>
         <button
           onClick={() => setIsModalOpen(true)}
-          className="px-5 py-2.5 bg-[#1D9E75] hover:bg-[#15805d] rounded-2xl text-sm font-semibold transition flex items-center gap-2 text-white shadow-lg shadow-teal-950/20"
+          className="px-5 py-2.5 bg-[#1D9E75] hover:bg-[#15805d] rounded-2xl text-sm font-semibold transition flex items-center gap-2 text-white shadow-lg shadow-teal-950/20 w-full md:w-auto justify-center"
         >
           <Plus size={15} />
           Create Contract
@@ -221,7 +225,7 @@ export default function Contracts() {
       </div>
 
       {/* Table Section */}
-      {loading ? (
+      {loading && contracts.length === 0 ? (
         <div className="text-center py-20 text-gray-400">
           <div className="w-8 h-8 border-2 border-teal-500 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
           Loading contracts...
@@ -660,9 +664,13 @@ export default function Contracts() {
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-2.5 bg-[#1D9E75] hover:bg-[#15805d] rounded-xl text-sm font-medium transition text-white"
+                  disabled={submitting}
+                  className="px-6 py-2.5 bg-[#1D9E75] hover:bg-[#15805d] rounded-xl text-sm font-medium transition text-white disabled:opacity-50 flex items-center gap-2"
                 >
-                  Save Contract
+                  {submitting && (
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  )}
+                  {submitting ? 'Saving...' : 'Save Contract'}
                 </button>
               </div>
             </form>

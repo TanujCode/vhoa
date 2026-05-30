@@ -421,7 +421,7 @@ const Meetings = ({ community, user }) => {
           <p className="text-slate-500 dark:text-gray-400 mt-1">{community?.name || 'Community Portal'}</p>
         </div>
         {isAdmin && (
-          <div className="flex gap-3">
+          <div className="flex flex-wrap gap-2 w-full sm:w-auto">
             {activeTab === 'meetings' ? (
               <button
                 onClick={() => setShowMeetingModal(true)}

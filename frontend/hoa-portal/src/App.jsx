@@ -22,6 +22,18 @@ const ProtectedRoute = () => {
 };
 
 export default function App() {
+  React.useEffect(() => {
+    const handlePageShow = (event) => {
+      if (event.persisted) {
+        window.location.reload();
+      }
+    };
+    window.addEventListener('pageshow', handlePageShow);
+    return () => {
+      window.removeEventListener('pageshow', handlePageShow);
+    };
+  }, []);
+
   return (
     <BrowserRouter>
       <Routes>
