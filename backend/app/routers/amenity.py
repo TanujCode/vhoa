@@ -14,7 +14,7 @@ from app.services.amenity_service import (
     create_amenity, get_amenities, get_amenity_by_id, update_amenity,
     create_amenity_type, get_amenity_types,
     check_availability, create_booking, get_bookings,
-    approve_booking, cancel_booking,
+    approve_booking, cancel_booking, pay_booking,
 )
 from app.services.audit_service import log_action
 from datetime import date
@@ -35,7 +35,7 @@ def create_type(
 
 @router.get("/type", response_model=list[AmenityTypeOut])
 def get_types(db: Session = Depends(get_db)):
-    """Saare amenity types"""
+    """All amenity types"""
     return get_amenity_types(db)
 
 
@@ -57,7 +57,7 @@ fee_enabled = True → Members will have to pay.
 
     log_action(
         db, "CREATE_AMENITY", "amenity",
-        f"Amenity '{amenity.name}' banai",
+        f"Amenity '{amenity.name}' created",
         current_user.user_id, body.community_id,
     )
     return _to_out(amenity)
@@ -150,7 +150,7 @@ One will receive a success response, while the other will receive an error.
 
     log_action(
         db, "CREATE_BOOKING", "amenity",
-        f"Amenity {body.amenity_id} book ki — Date: {body.booking_date}, Slot: {body.slot_number}",
+        f"Amenity {body.amenity_id} booked — Date: {body.booking_date}, Slot: {body.slot_number}",
         current_user.user_id, body.community_id,
         request.client.host,
     )
@@ -214,7 +214,32 @@ Fee refunds → will be implemented after the payment module.
 
     log_action(
         db, "CANCEL_BOOKING", "amenity",
-        f"Booking {booking_id} cancel ki",
+        f"Booking {booking_id} cancelled",
+        current_user.user_id, booking.community_id,
+        request.client.host,
+    )
+    return _booking_to_out(booking)
+
+
+@router.put("/booking/{booking_id}/pay", response_model=BookingOut)
+def pay(
+    request: Request,
+    booking_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_verified_user),
+):
+    """
+    Simulate payment for a booking.
+    Sets is_paid = True and approves the booking (if PENDING).
+    """
+    try:
+        booking = pay_booking(booking_id, current_user.user_id, db)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+    log_action(
+        db, "PAY_BOOKING", "amenity",
+        f"Payment paid for booking {booking_id} — Amount: {booking.fee_amount}",
         current_user.user_id, booking.community_id,
         request.client.host,
     )
@@ -271,5 +296,8 @@ def _booking_to_out(b) -> BookingOut:
         payment_due_date = b.payment_due_date,
         cancel_reason    = b.cancel_reason,
         cancelled_date   = b.cancelled_date,
+        is_refunded      = b.is_refunded or False,
+        refund_date      = b.refund_date,
+        refund_amount    = b.refund_amount or 0.0,
         created_date     = b.created_date,
     )

@@ -1,6 +1,6 @@
 from sqlalchemy import (
     Column, Integer, String, Boolean,
-    DateTime, Date, ForeignKey, Text
+    DateTime, Date, ForeignKey, Text, Double
 )
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
@@ -102,9 +102,22 @@ class Community(Base):
     time_zone      = Column(String(50), default="America/New_York")
     # USA timezones: America/New_York, America/Chicago, America/Denver, America/Los_Angeles
 
+    # ── Community Settings ────────────────────
+    amenity_fee_enabled = Column(Boolean, default=False)
+    violation_fee_enabled = Column(Boolean, default=False)
+    late_fee_enabled = Column(Boolean, default=False)
+    late_fee_days = Column(Integer, default=7)
+    late_fee_amount = Column(Double, default=25.0)
+
+    # ── HOA Escrow Bank Details ───────────────
+    bank_name = Column(String(255), nullable=True)
+    bank_account_no = Column(String(255), nullable=True)
+    bank_routing_no = Column(String(255), nullable=True)
+    bank_account_name = Column(String(255), nullable=True)
+
     # ── Contract ─────────────────────────────
     contract_id    = Column(Integer, nullable=True)
-   
+    visible_tabs   = Column(Text, nullable=True)
 
     # ── Status & Audit ────────────────────────
     active_status  = Column(Boolean, default=True)
@@ -138,3 +151,29 @@ class CommunityDocument(Base):
 
     community      = relationship("Community", back_populates="documents")
     uploaded_by    = relationship("User", foreign_keys=[uploaded_by_id])
+
+
+class CommunityJoinRequest(Base):
+    __tablename__ = "community_join_requests"
+
+    request_id = Column(Integer, primary_key=True, index=True)
+    
+    user_id       = Column(Integer, ForeignKey("users.user_id"), nullable=False)
+    community_id  = Column(Integer, ForeignKey("communities.community_id"), nullable=False)
+    
+    pass_code_entered   = Column(String(50), nullable=False)
+    id_proof_url        = Column(String, nullable=True)
+    address_proof_url   = Column(String, nullable=True)
+    unit_no             = Column(String(50), nullable=True)
+    message             = Column(Text, nullable=True)
+
+    status       = Column(String(20), default="PENDING")
+    admin_note   = Column(Text, nullable=True)
+    
+    created_date   = Column(DateTime(timezone=True), server_default=func.now())
+    processed_date = Column(DateTime(timezone=True), nullable=True)
+    processed_by   = Column(Integer, ForeignKey("users.user_id"), nullable=True)
+
+    user = relationship("User", foreign_keys=[user_id])
+    community = relationship("Community")
+    processed_by_user = relationship("User", foreign_keys=[processed_by])

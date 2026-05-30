@@ -9,13 +9,16 @@ from app.schemas.service_request import (
     ServiceRequestCreate, ServiceRequestOut, ServiceRequestTypeCreate,
     ServiceRequestTypeOut, ServiceRequestStatusOut,
     StatusUpdateRequest, ServiceRequestNoteCreate, NoteOut,
+    ServiceRequestUpdate,
 )
 from app.services.service_request_service import (
     create_service_request, get_requests, get_request_by_id,
     update_status, add_note, delete_request,
-    create_type, get_types,
+    create_type, get_types, update_service_request,
 )
 from app.services.audit_service import log_action
+from app.models.audit_log import AuditLog
+from app.schemas.audit_log import AuditLogOut
 
 router = APIRouter(prefix="/service-request", tags=["Service Request"])
 
@@ -71,7 +74,7 @@ The status will automatically be set to 'Open'.
 
     log_action(
         db, "CREATE_SERVICE_REQUEST", "service_request",
-        f"Service request create ki: '{sr.title}'",
+        f"Service request created: '{sr.title}'",
         current_user.user_id, body.community_id,
         request.client.host,
     )
@@ -112,10 +115,10 @@ def get_one(
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
 
-    # Resident sirf apni dekh sakta hai
+    # Residents can only view their own requests
     if current_user.role.role_name == "resident":
         if sr.submitted_by_id != current_user.user_id:
-            raise HTTPException(status_code=403, detail="This request is not yours.।")
+            raise HTTPException(status_code=403, detail="This request is not yours.")
 
     return _to_out(sr)
 
@@ -169,7 +172,7 @@ def add_sr_note(
         require_role("super_admin", "property_manager", "board_member")
     ),
 ):
-    """Note add karo — sirf Admin/Board/Manager"""
+    """Add note — only Admin/Board/Manager"""
     try:
         note = add_note(request_id, body, current_user.user_id, db)
     except ValueError as e:
@@ -185,12 +188,12 @@ def delete(
         require_role("super_admin", "property_manager")
     ),
 ):
-    """Service request delete karo (soft delete)"""
+    """Delete service request (soft delete)"""
     try:
         delete_request(request_id, current_user.user_id, db)
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
-    return {"message": f"Service Request {request_id} delete ho gaya।"}
+    return {"message": f"Service Request {request_id} has been deleted."}
 
 
 # ══════════════════════════════════════════════
@@ -237,4 +240,73 @@ def _to_out(sr) -> ServiceRequestOut:
         modified_date     = sr.modified_date,
         closed_date       = sr.closed_date,
         notes             = [_note_to_out(n) for n in sr.notes],
+    )
+
+
+@router.put("/{request_id}", response_model=ServiceRequestOut)
+def update_details(
+    request_id: int,
+    body: ServiceRequestUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_verified_user),
+):
+    """Edit service request details (title, description, priority, type, etc.)"""
+    try:
+        sr = update_service_request(
+            request_id = request_id,
+            data = body,
+            user_id = current_user.user_id,
+            user_role = current_user.role.role_name,
+            db = db,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    return _to_out(sr)
+
+
+@router.get("/{request_id}/history", response_model=list[AuditLogOut])
+def get_history(
+    request_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_verified_user),
+):
+    """View audit trail history of a specific service request"""
+    try:
+        sr = get_request_by_id(request_id, db)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+    # Resident can only view history of their own requests
+    if current_user.role.role_name == "resident" and sr.submitted_by_id != current_user.user_id:
+        raise HTTPException(status_code=403, detail="You do not have permission to view history for this request.")
+
+    logs = db.query(AuditLog).filter(
+        AuditLog.module == "service_request",
+        AuditLog.request_id == request_id
+    ).order_by(AuditLog.created_at.desc()).all()
+
+    return [_to_audit_out(log) for log in logs]
+
+
+def _to_audit_out(log) -> AuditLogOut:
+    user_name = None
+    if log.user:
+        parts = [log.user.first_name]
+        if log.user.middle_name:
+            parts.append(log.user.middle_name)
+        parts.append(log.user.last_name)
+        user_name = " ".join(parts)
+
+    return AuditLogOut(
+        audit_id     = log.audit_id,
+        user_id      = log.user_id,
+        action       = log.action,
+        module       = log.module,
+        description  = log.description,
+        community_id = log.community_id,
+        ip_address   = log.ip_address,
+        old_value    = log.old_value,
+        new_value    = log.new_value,
+        created_at   = log.created_at,
+        user_name    = user_name,
     )

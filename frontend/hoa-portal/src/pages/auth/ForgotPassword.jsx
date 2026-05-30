@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Mail, CheckCircle, XCircle } from 'lucide-react';
+import { ArrowLeft, Mail, CheckCircle, XCircle, Lock } from 'lucide-react';
 import API from '../../services/api';
 import AuthLayout from '../../components/layout/AuthLayout';
 
@@ -30,7 +30,7 @@ const ForgotPassword = () => {
 
     try {
       await API.post('/auth/otp/send', {
-        email_id: email,
+        email_id: email.trim(),
         otp_type: "password_reset"
       });
 
@@ -63,8 +63,8 @@ const ForgotPassword = () => {
 
     try {
       await API.post('/auth/password/reset', {
-        email_id: email,
-        otp_code: otp,
+        email_id: email.trim(),
+        otp_code: otp.trim(),
         new_password: newPassword
       });
 
@@ -81,18 +81,18 @@ const ForgotPassword = () => {
     <AuthLayout>
       <div className="max-w-md mx-auto">
         <div className="mb-8">
-          <Link to="/login" className="inline-flex items-center text-teal-400 hover:text-teal-300 mb-4">
-            <ArrowLeft size={18} className="mr-1" /> Back to Login
+          <Link to="/login" className="inline-flex items-center text-[#0F2D59] hover:underline mb-4 text-sm font-medium">
+            <ArrowLeft size={16} className="mr-1" /> Back to Login
           </Link>
-          <h1 className="text-3xl font-semibold text-white">Forgot Password</h1>
-          <p className="text-gray-400 mt-2">Reset your password using OTP</p>
+          <h1 className="text-3xl font-bold text-gray-900">Forgot Password</h1>
+          <p className="text-gray-600 mt-1">Reset your password using OTP</p>
         </div>
 
         {message.text && (
-          <div className={`mb-6 p-4 rounded-2xl text-sm flex items-center gap-2 ${
+          <div className={`mb-6 p-3 border text-sm rounded-lg flex items-center gap-2 ${
             message.type === 'success' 
-              ? 'bg-teal-500/20 text-teal-400 border border-teal-500/30' 
-              : 'bg-red-500/20 text-red-400 border border-red-500/30'
+              ? 'bg-green-50 text-green-600 border-green-200' 
+              : 'bg-red-50 text-red-600 border-red-200'
           }`}>
             {message.type === 'success' ? <CheckCircle size={18} /> : <XCircle size={18} />}
             {message.text}
@@ -101,23 +101,28 @@ const ForgotPassword = () => {
 
         {/* Step 1: Enter Email */}
         {step === 1 && (
-          <form onSubmit={handleSendOtp}>
-            <div className="mb-6">
-              <label className="block text-gray-400 mb-2">Registered Email Address</label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className="w-full bg-[#1E3248] border border-white/20 rounded-2xl px-5 py-4 text-white focus:border-teal-500 outline-none"
-                placeholder="your@email.com"
-              />
+          <form onSubmit={handleSendOtp} className="space-y-4">
+            <div>
+              <label className="block text-xs font-bold text-gray-700 tracking-wider mb-1">
+                REGISTERED EMAIL ADDRESS
+              </label>
+              <div className="relative">
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none pl-10 text-sm text-gray-900 bg-white dark:text-gray-900 dark:bg-white"
+                  placeholder="name@company.com"
+                />
+                <Mail className="w-4 h-4 text-gray-400 absolute left-3 top-3" />
+              </div>
             </div>
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-teal-600 hover:bg-teal-500 py-4 rounded-2xl font-medium disabled:opacity-50 transition"
+              className="w-full bg-[#0F2D59] hover:bg-[#0c2345] text-white py-2 px-4 rounded-lg font-medium transition duration-200 disabled:opacity-50"
             >
               {loading ? "Sending OTP..." : "Send OTP"}
             </button>
@@ -126,48 +131,63 @@ const ForgotPassword = () => {
 
         {/* Step 2: OTP + New Password */}
         {step === 2 && (
-          <form onSubmit={handleResetPassword} className="space-y-5">
+          <form onSubmit={handleResetPassword} className="space-y-4">
             <div>
-              <label className="block text-gray-400 mb-2">Enter OTP</label>
-              <input
-                type="text"
-                maxLength={6}
-                value={otp}
-                onChange={(e) => setOtp(e.target.value)}
-                required
-                className="w-full bg-[#1E3248] border border-white/20 rounded-xl px-2 py-2 text-white text-center text-xl tracking-widest focus:border-teal-500 outline-none"
-                placeholder="123456"
-              />
+              <label className="block text-xs font-bold text-gray-700 tracking-wider mb-1">
+                ENTER OTP
+              </label>
+              <div className="relative">
+                <input
+                  type="text"
+                  maxLength={6}
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value)}
+                  required
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none pl-10 text-sm text-gray-900 bg-white dark:text-gray-900 dark:bg-white text-center text-lg tracking-widest font-mono"
+                  placeholder="123456"
+                />
+                <Lock className="w-4 h-4 text-gray-400 absolute left-3 top-3" />
+              </div>
             </div>
 
             <div>
-              <label className="block text-gray-400 mb-2">New Password</label>
-              <input
-                type="password"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                required
-                className="w-full bg-[#1E3248] border border-white/20 rounded-xl px-2 py-2 text-white focus:border-teal-500 outline-none"
-                placeholder="New password"
-              />
+              <label className="block text-xs font-bold text-gray-700 tracking-wider mb-1">
+                NEW PASSWORD
+              </label>
+              <div className="relative">
+                <input
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  required
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none pl-10 text-sm text-gray-900 bg-white dark:text-gray-900 dark:bg-white"
+                  placeholder="••••••••"
+                />
+                <Lock className="w-4 h-4 text-gray-400 absolute left-3 top-3" />
+              </div>
             </div>
 
             <div>
-              <label className="block text-gray-400 mb-2">Confirm New Password</label>
-              <input
-                type="password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                required
-                className="w-full bg-[#1E3248] border border-white/20 rounded-xl px-2 py-2 text-white focus:border-teal-500 outline-none"
-                placeholder="Confirm password"
-              />
+              <label className="block text-xs font-bold text-gray-700 tracking-wider mb-1">
+                CONFIRM NEW PASSWORD
+              </label>
+              <div className="relative">
+                <input
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  required
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none pl-10 text-sm text-gray-900 bg-white dark:text-gray-900 dark:bg-white"
+                  placeholder="••••••••"
+                />
+                <Lock className="w-4 h-4 text-gray-400 absolute left-3 top-3" />
+              </div>
             </div>
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-teal-600 hover:bg-teal-500 py-3 rounded-xl font-medium disabled:opacity-50 transition mt-6"
+              className="w-full bg-[#0F2D59] hover:bg-[#0c2345] text-white py-2 px-4 rounded-lg font-medium transition duration-200 disabled:opacity-50 mt-2"
             >
               {loading ? "Resetting Password..." : "Reset Password"}
             </button>

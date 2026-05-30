@@ -106,7 +106,7 @@ Dispute deadline = violation_date + 30 days
         request.client.host,
     )
 
-    # Resident ko email bhejo
+    # Send email to Resident
     try:
         from app.services.email_service import send_violation_email
         from app.models.user import User
@@ -136,9 +136,9 @@ def get_all(
     current_user: User = Depends(get_verified_user),
 ):
     """
-    Community ki violations dekho।
-    Resident → sirf apni
-    Admin/Manager/Board → sab
+    View community violations.
+    Resident → only own
+    Admin/Manager/Board → all
     """
     client_id = None
     if current_user.role.role_name == "resident":
@@ -162,7 +162,7 @@ def get_one(
 
     if current_user.role.role_name == "resident":
         if violation.client_id != current_user.user_id:
-            raise HTTPException(status_code=403, detail="Yeh violation aapki nahi hai।")
+            raise HTTPException(status_code=403, detail="This violation does not belong to you.")
 
     return _to_out(violation)
 
@@ -203,7 +203,7 @@ def delete(
         delete_violation(violation_id, current_user.user_id, db)
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
-    return {"message": f"Violation {violation_id} delete ho gayi।"}
+    return {"message": f"Violation {violation_id} has been deleted."}
 
 
 # ══════════════════════════════════════════════
@@ -341,5 +341,8 @@ def _to_out(v) -> ViolationOut:
         dispute_resolution    = v.dispute_resolution,
         created_date          = v.created_date,
         modified_date         = v.modified_date,
-        documents             = [],
+        documents             = [
+            ViolationDocumentOut.model_validate(d)
+            for d in v.documents if d.active_status
+        ],
     )

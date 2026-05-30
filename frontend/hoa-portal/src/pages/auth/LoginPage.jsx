@@ -1,15 +1,37 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import AuthLayout from '../../components/layout/AuthLayout';
 import API from '../../services/api';
+import { useGoogleLogin } from '@react-oauth/google';
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [errorMsg, setErrorMsg]         = useState('');
   const [successMsg, setSuccessMsg]     = useState('');
+  const [captcha, setCaptcha] = useState({ question: '', token: '' });
+  const [loadingCaptcha, setLoadingCaptcha] = useState(false);
   const navigate = useNavigate();
+
+  const fetchCaptcha = async () => {
+    try {
+      setLoadingCaptcha(true);
+      const res = await API.get('/auth/captcha');
+      setCaptcha({
+        question: res.data.question,
+        token: res.data.captcha_token
+      });
+    } catch (err) {
+      console.error('Failed to fetch captcha:', err);
+    } finally {
+      setLoadingCaptcha(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchCaptcha();
+  }, []);
 
   const {
     register,
@@ -17,25 +39,141 @@ export default function LoginPage() {
     formState: { errors, isSubmitting },
   } = useForm({ mode: 'onTouched' });
 
-  const onSubmit = async (data) => {
+const onSubmit = async (data) => {
   try {
+    setErrorMsg('');
+    
     const response = await API.post('/auth/login', {
       email_id: data.email,
       password: data.password,
+      captcha_token: captcha.token,
+      captcha_answer: data.captchaAnswer,
     });
 
-    if (response.data.access_token) {
-      localStorage.setItem('token', response.data.access_token);        // ← Yeh line important
-      localStorage.setItem('access_token', response.data.access_token); // backup ke liye
+    if (response.data && response.data.access_token) {
+      const userData = response.data.user;
+      
+      localStorage.setItem('token', response.data.access_token);
+      if (response.data.session_token) {
+        localStorage.setItem('session_token', response.data.session_token);
+      }
+      localStorage.setItem('user', JSON.stringify(userData));
 
-      // Redirect to dashboard
-      window.location.href = '/dashboard';   // ya useNavigate use kar sakte ho
-      // navigate('/dashboard');   // agar useNavigate import kiya hai toh
+      sessionStorage.removeItem('token');
+      sessionStorage.removeItem('session_token');
+      sessionStorage.removeItem('user');
+
+      // Role aur Community extract karo
+      const role = (userData?.role_name || userData?.role || response.data?.role || '').toLowerCase();
+      const communityId = userData?.community_id;
+
+      console.log("Login Check -> Role:", role, "Community:", communityId);
+
+      // 🔥 ROLE-BASED EXACT REDIRECTS
+      // 🔥 ROLE-BASED EXACT REDIRECTS (UPDATED)
+      if (role === 'super_admin' || role === 'property_manager' || role === 'board_member') {
+        // Sabhi main roles ko seedha AdminPortal (Layout wrapper) me bhejo
+        console.log(`Sending ${role} to main AdminPortal wrapper...`);
+        navigate('/dashboard');
+      } 
+      else if (role === 'resident') {
+        if (!communityId || communityId === null || communityId === 0) {
+          console.log("Resident has no community. Sending to SearchAndJoinHOA...");
+          navigate('/join-community'); 
+        } else {
+          console.log("Resident has community. Sending to Main Portal...");
+          navigate('/dashboard'); // Ise bhi dashboard bhej sakte ho agar ResidentDashboard AdminPortal ke andar render ho raha hai!
+        }
+      } 
+      else {
+        navigate('/dashboard');
+      }
     }
   } catch (err) {
-    setErrorMsg(err.response?.data?.detail || "Login failed");
+    console.error("Login Error Details:", err);
+    const status = err.response?.status;
+    const detail = err.response?.data?.detail || "Login failed";
+
+    if (status === 403 && detail.toLowerCase().includes("verify")) {
+      setErrorMsg("Email not verified! Sending OTP...");
+      try {
+        await API.post('/auth/otp/send', { 
+          email_id: data.email,
+          otp_type: 'email_verify' 
+        }); 
+      } catch (otpErr) {
+        console.error("OTP send failed:", otpErr);
+      }
+      setTimeout(() => navigate('/verify-otp', { state: { email: data.email } }), 2000);
+    } else {
+      setErrorMsg(detail);
+      alert(detail);
+      fetchCaptcha();
+    }
   }
 };
+
+  const googleLogin = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      setErrorMsg('');
+      setSuccessMsg('');
+      try {
+        const response = await API.post('/auth/google', {
+          access_token: tokenResponse.access_token,
+        });
+
+        if (response.data && response.data.access_token) {
+          const userData = response.data.user;
+
+          localStorage.setItem('token', response.data.access_token);
+          if (response.data.session_token) {
+            localStorage.setItem('session_token', response.data.session_token);
+          }
+          localStorage.setItem('user', JSON.stringify(userData));
+
+          sessionStorage.removeItem('token');
+          sessionStorage.removeItem('session_token');
+          sessionStorage.removeItem('user');
+
+          const role = (userData?.role_name || userData?.role || response.data?.role || '').toLowerCase();
+          const communityId = userData?.community_id;
+
+          setSuccessMsg('Google Login successful!');
+          
+          setTimeout(() => {
+            if (role === 'resident' && (!communityId || communityId === 0)) {
+              navigate('/join-community');
+            } else {
+              navigate('/dashboard');
+            }
+          }, 1500);
+        }
+      } catch (err) {
+        console.error('Google Auth Error:', err);
+        let errorMessage = 'Google Authentication failed.';
+        if (err.response?.data?.detail) {
+          errorMessage = typeof err.response.data.detail === 'string'
+            ? err.response.data.detail
+            : JSON.stringify(err.response.data.detail);
+        }
+        setErrorMsg(errorMessage);
+        alert(errorMessage);
+      }
+    },
+    onError: (error) => {
+      console.error('Google Login Failed:', error);
+      setErrorMsg('Google Authentication failed. Please try again.');
+      alert('Google Authentication failed. Please try again.');
+    }
+  });
+
+  const handleGoogleLogin = () => {
+    if (!import.meta.env.VITE_GOOGLE_CLIENT_ID || import.meta.env.VITE_GOOGLE_CLIENT_ID === 'PLACEHOLDER_CLIENT_ID') {
+      setErrorMsg('Google Login is not configured. Please add VITE_GOOGLE_CLIENT_ID in your frontend .env file.');
+      return;
+    }
+    googleLogin();
+  };
 
   return (
     <AuthLayout>
@@ -72,7 +210,7 @@ export default function LoginPage() {
                   message: 'Invalid email address',
                 },
               })}
-              className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none pl-10 text-sm ${
+              className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none pl-10 text-sm text-gray-900 bg-white dark:text-gray-900 dark:bg-white ${
                 errors.email ? 'border-red-500' : 'border-gray-300'
               }`}
               placeholder="name@company.com"
@@ -96,7 +234,7 @@ export default function LoginPage() {
                 required: 'Password is required',
                 minLength: { value: 6, message: 'Min 6 characters' },
               })}
-              className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none pl-10 pr-10 text-sm ${
+              className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none pl-10 pr-10 text-sm text-gray-900 bg-white dark:text-gray-900 dark:bg-white ${
                 errors.password ? 'border-red-500' : 'border-gray-300'
               }`}
               placeholder="••••••••"
@@ -115,18 +253,44 @@ export default function LoginPage() {
           )}
         </div>
 
-        <div className="flex items-center justify-between text-sm">
-          <label className="flex items-center text-gray-600">
-            <input
-              type="checkbox"
-              {...register('rememberMe')}
-              className="h-4 w-4 text-blue-600 border-gray-300 rounded mr-2"
-            />
-            Remember me
-          </label>
+        <div className="flex items-center justify-end text-sm">
           <Link to="/forgot-password" className="text-sm font-medium text-blue-600 hover:text-blue-500">
             Forgot password?
           </Link>
+        </div>
+
+        {/* Captcha Section */}
+        <div className="p-4 bg-slate-50 border border-gray-200 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex-1">
+            <label className="block text-xs font-bold text-gray-700 tracking-wider mb-2">CAPTCHA *</label>
+            <div className="flex items-center gap-3">
+              <span className="text-xl font-bold bg-white border border-gray-300 px-4 py-2 rounded-xl text-yellow-600 font-mono tracking-widest">
+                {loadingCaptcha ? '...' : captcha.question}
+              </span>
+              <button
+                type="button"
+                onClick={fetchCaptcha}
+                className="p-2 hover:bg-gray-100 rounded-xl transition text-gray-400 hover:text-gray-600"
+                title="Refresh Captcha"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 7.89M9 11l3-3 3 3" />
+                </svg>
+              </button>
+            </div>
+          </div>
+          <div className="w-full sm:w-32">
+            <label className="block text-xs font-bold text-gray-700 tracking-wider mb-2">ANSWER *</label>
+            <input
+              type="text"
+              {...register('captchaAnswer', { required: 'Answer is required' })}
+              placeholder="Result"
+              className="w-full bg-white border border-gray-300 rounded-xl px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-600 font-mono text-center font-bold text-lg"
+            />
+            {errors.captchaAnswer && (
+              <p className="text-red-500 text-xs mt-1">{errors.captchaAnswer.message}</p>
+            )}
+          </div>
         </div>
 
         <button
@@ -137,6 +301,42 @@ export default function LoginPage() {
           {isSubmitting ? 'Logging in...' : 'Log In'}
         </button>
       </form>
+
+      {/* Google Button */}
+      <div className="relative my-6">
+        <div className="absolute inset-0 flex items-center">
+          <div className="w-full border-t border-gray-300"></div>
+        </div>
+        <div className="relative flex justify-center text-sm">
+          <span className="px-2 bg-white text-gray-500">Or continue with</span>
+        </div>
+      </div>
+
+      <button
+        type="button"
+        onClick={handleGoogleLogin}
+        className="w-full flex items-center justify-center gap-3 border border-gray-300 bg-white py-2 px-4 rounded-lg hover:bg-gray-50 transition duration-200 text-sm text-gray-700 font-medium"
+      >
+        <svg className="w-5 h-5" viewBox="0 0 24 24">
+          <path
+            d="M22.56 12.25c0-.78-.07-1.53-.21-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+            fill="#4285F4"
+          />
+          <path
+            d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.99.66-2.26 1.05-3.71 1.05-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+            fill="#34A853"
+          />
+          <path
+            d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"
+            fill="#FBBC05"
+          />
+          <path
+            d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+            fill="#EA4335"
+          />
+        </svg>
+        Sign in with Google
+      </button>
 
       <div className="text-center mt-6 text-sm text-gray-600">
         New user?{' '}

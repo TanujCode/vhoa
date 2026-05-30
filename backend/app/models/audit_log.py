@@ -43,6 +43,7 @@ class AuditLog(Base):
     # ── Extra data ───────────────────────────
     old_value    = Column(Text, nullable=True)   
     new_value    = Column(Text, nullable=True) 
+    request_id   = Column(Integer, nullable=True)
 
     # ── Timestamp ────────────────────────────
     created_at   = Column(DateTime(timezone=True), server_default=func.now())

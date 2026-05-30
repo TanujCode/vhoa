@@ -1,49 +1,329 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { Clock, Save, DollarSign, Eye, RefreshCw } from 'lucide-react';
+import API from '../services/api';
+
+const Toggle = ({ value, onChange }) => (
+  <button
+    onClick={() => onChange(!value)}
+    className={`w-11 h-6 rounded-full relative transition-all duration-200 ${value ? 'bg-teal-600' : 'bg-gray-600'}`}
+  >
+    <div className={`w-5 h-5 bg-white rounded-full absolute top-0.5 transition-all duration-200 ${value ? 'right-0.5' : 'left-0.5'}`} />
+  </button>
+);
 
 const Settings = ({ community }) => {
+  const [saving, setSaving]   = useState(false);
+  const [saved, setSaved]     = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const [form, setForm] = useState({
+    time_zone:              community?.time_zone || 'America/New_York',
+    amenity_fee_enabled:    false,
+    violation_fee_enabled:  false,
+    late_fee_enabled:       false,
+    late_fee_days:          7,
+    late_fee_amount:        25,
+    bank_name:              '',
+    bank_account_no:        '',
+    bank_routing_no:        '',
+    bank_account_name:      '',
+  });
+
+  // Visible tabs for members
+  const [tabs, setTabs] = useState({
+    payments:        true,
+    violations:      true,
+    service_requests: true,
+    amenity_booking: true,
+    faqs:            true,
+    documents:       true,
+    news:            true,
+  });
+
+  useEffect(() => {
+    if (community?.community_id) fetchSettings();
+  }, [community]);
+
+  const fetchSettings = async () => {
+    try {
+      setLoading(true);
+      // Community ki existing settings load karo
+      const res = await API.get(`/community/${community.community_id}`);
+      const data = res.data;
+      setForm(prev => ({
+        ...prev,
+        time_zone:             data.time_zone || 'America/New_York',
+        amenity_fee_enabled:   data.amenity_fee_enabled || false,
+        violation_fee_enabled: data.violation_fee_enabled || false,
+        late_fee_enabled:      data.late_fee_enabled || false,
+        late_fee_days:         data.late_fee_days || 7,
+        late_fee_amount:       data.late_fee_amount || 25,
+        bank_name:             data.bank_name || '',
+        bank_account_no:       data.bank_account_no || '',
+        bank_routing_no:       data.bank_routing_no || '',
+        bank_account_name:     data.bank_account_name || '',
+      }));
+      if (data.visible_tabs) {
+        setTabs(data.visible_tabs);
+      }
+    } catch (err) {
+      console.error('Settings fetch error:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSave = async () => {
+    try {
+      setSaving(true);
+      await API.put(`/community/${community.community_id}`, {
+        time_zone: form.time_zone,
+        amenity_fee_enabled: form.amenity_fee_enabled,
+        violation_fee_enabled: form.violation_fee_enabled,
+        late_fee_enabled: form.late_fee_enabled,
+        late_fee_days: form.late_fee_days,
+        late_fee_amount: form.late_fee_amount,
+        bank_name: form.bank_name,
+        bank_account_no: form.bank_account_no,
+        bank_routing_no: form.bank_routing_no,
+        bank_account_name: form.bank_account_name,
+        visible_tabs: tabs,
+      });
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2500);
+    } catch (err) {
+      alert(err.response?.data?.detail || 'Save failed');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const timezones = [
+    { value: 'America/New_York',    label: 'EST — Eastern Standard Time (UTC-5)' },
+    { value: 'America/Chicago',     label: 'CST — Central Standard Time (UTC-6)' },
+    { value: 'America/Denver',      label: 'MST — Mountain Standard Time (UTC-7)' },
+    { value: 'America/Los_Angeles', label: 'PST — Pacific Standard Time (UTC-8)' },
+    { value: 'Asia/Kolkata',        label: 'IST — India Standard Time (UTC+5:30)' },
+    { value: 'UTC',                 label: 'UTC' },
+  ];
+
   return (
-    <div>
-      <div className="mb-8">
-        <h1 className="text-3xl font-semibold">Community Settings</h1>
-        <p className="text-gray-400 mt-1">{community?.name}</p>
+    <div className="text-slate-900 dark:text-white">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+        <div>
+          <h1 className="text-3xl font-semibold text-slate-900 dark:text-white">Community Settings</h1>
+          <p className="text-slate-500 dark:text-gray-400 mt-1">{community?.name}</p>
+        </div>
+        <div className="flex flex-col items-end gap-2">
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className="flex items-center gap-2 bg-teal-600 hover:bg-teal-500 text-white px-5 py-2.5 rounded-2xl text-sm font-semibold disabled:opacity-70 transition shadow-lg shadow-teal-500/25"
+          >
+            <Save size={15} />
+            {saving ? 'Saving...' : 'Save Settings'}
+          </button>
+          {saved && (
+            <span className="text-teal-600 dark:text-teal-400 text-sm font-medium animate-pulse">
+              ✓ Settings saved successfully!
+            </span>
+          )}
+        </div>
       </div>
 
-      {/* Timezone Section */}
-      <div className="bg-[#162535] border border-white/10 rounded-3xl p-8 mb-8">
-        <h2 className="text-xl font-semibold mb-6 flex items-center gap-3">
+      {/* Timezone */}
+      <div className="bg-gradient-to-br from-slate-50 to-blue-50/40 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200 dark:border-white/10 rounded-3xl p-8 mb-6 shadow-sm">
+        <h2 className="text-xl font-semibold mb-6 flex items-center gap-3 text-slate-900 dark:text-white">
           🌐 Platform Timezone
         </h2>
-        
-        <div className="bg-[#1E3248] rounded-2xl p-6">
+
+        <div className="bg-slate-50 dark:bg-[#1E3248] border border-slate-200 dark:border-0 rounded-2xl p-6">
           <div className="flex items-center gap-4 mb-6">
-            <div className="w-14 h-14 bg-teal/10 rounded-2xl flex items-center justify-center text-3xl">🕒</div>
+            <div className="w-14 h-14 bg-teal-500/10 rounded-2xl flex items-center justify-center text-3xl">🕒</div>
             <div>
-              <div className="text-2xl font-mono font-bold">EST (UTC−5)</div>
-              <div className="text-gray-400">Currently selected timezone</div>
+              <div className="text-xl font-mono font-bold text-slate-900 dark:text-white">
+                {timezones.find(t => t.value === form.time_zone)?.label || form.time_zone}
+              </div>
+              <div className="text-slate-500 dark:text-gray-400 text-sm">Currently selected timezone</div>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-sm text-gray-400 mb-2">Select Timezone</label>
-              <select className="w-full bg-[#0D1B2A] border border-white/20 rounded-2xl p-4 text-white focus:outline-none focus:border-teal">
-                <option>EST — Eastern Standard Time (UTC−5)</option>
-                <option>CST — Central Standard Time (UTC−6)</option>
-                <option>IST — India Standard Time (UTC+5:30)</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm text-gray-400 mb-2">Apply To</label>
-              <select className="w-full bg-[#0D1B2A] border border-white/20 rounded-2xl p-4 text-white focus:outline-none focus:border-teal">
-                <option>All modules (Recommended)</option>
-              </select>
-            </div>
+          <div>
+            <label className="block text-sm text-slate-500 dark:text-gray-400 mb-2">Select Timezone</label>
+            <select
+              value={form.time_zone}
+              onChange={e => setForm({...form, time_zone: e.target.value})}
+              className="w-full bg-white dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl p-4 text-slate-900 dark:text-white focus:outline-none focus:border-teal-500"
+            >
+              {timezones.map(tz => (
+                <option key={tz.value} value={tz.value}>{tz.label}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="mt-4 bg-teal-50 dark:bg-teal-900/30 border border-teal-200 dark:border-teal-500/30 rounded-2xl p-4 text-sm text-teal-600 dark:text-teal-400">
+            ✓ Applies to: Dashboard, Audit History, Payment dates, Violation dates, Email notifications
           </div>
         </div>
       </div>
 
-      <div className="text-center py-8 text-gray-400">
-        More settings (Payment, Visibility, etc.) coming soon...
+      {/* Community Configuration */}
+      <h2 className="text-xl font-semibold mb-5 text-slate-900 dark:text-white">⚙️ Community Configuration</h2>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+        {/* Payment Config */}
+        <div className="bg-gradient-to-br from-slate-50 to-blue-50/40 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200 dark:border-white/10 rounded-3xl p-6 shadow-sm">
+          <div className="flex items-center gap-3 mb-5">
+            <DollarSign className="text-teal-600 dark:text-teal-400" size={24} />
+            <h3 className="font-semibold text-lg text-slate-900 dark:text-white">Payment Configuration</h3>
+          </div>
+
+          <div className="space-y-5">
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-slate-700 dark:text-gray-200">Charge for Amenity Booking</span>
+              <Toggle
+                value={form.amenity_fee_enabled}
+                onChange={v => setForm({...form, amenity_fee_enabled: v})}
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-slate-700 dark:text-gray-200">Charge for Violations</span>
+              <Toggle
+                value={form.violation_fee_enabled}
+                onChange={v => setForm({...form, violation_fee_enabled: v})}
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-slate-700 dark:text-gray-200">Enable Late Fees</span>
+              <Toggle
+                value={form.late_fee_enabled}
+                onChange={v => setForm({...form, late_fee_enabled: v})}
+              />
+            </div>
+
+            {form.late_fee_enabled && (
+              <div className="bg-slate-50 dark:bg-[#1E3248] border border-slate-200 dark:border-0 rounded-2xl p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-slate-500 dark:text-gray-400">Late after (days)</span>
+                  <input
+                    type="number"
+                    min="1"
+                    value={form.late_fee_days}
+                    onChange={e => setForm({...form, late_fee_days: parseInt(e.target.value)})}
+                    className="w-20 bg-white dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl px-3 py-1.5 text-sm text-slate-900 dark:text-white text-center focus:outline-none focus:border-teal-500"
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-slate-500 dark:text-gray-400">Late fee amount ($)</span>
+                  <input
+                    type="number"
+                    min="0"
+                    value={form.late_fee_amount}
+                    onChange={e => setForm({...form, late_fee_amount: parseFloat(e.target.value)})}
+                    className="w-20 bg-white dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl px-3 py-1.5 text-sm text-slate-900 dark:text-white text-center focus:outline-none focus:border-teal-500"
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* HOA Escrow Bank Details */}
+            <div className="bg-slate-50 dark:bg-[#1E3248] border border-slate-200 dark:border-0 rounded-2xl p-4 mt-4 space-y-3">
+              <h4 className="font-medium text-sm text-teal-600 dark:text-teal-400 border-b border-slate-200 dark:border-white/10 pb-2">🏦 HOA Escrow Bank Details</h4>
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-xs text-slate-500 dark:text-gray-400 mb-1">Bank Name</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Chase Bank"
+                    value={form.bank_name}
+                    onChange={e => setForm({...form, bank_name: e.target.value})}
+                    className="w-full bg-white dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-teal-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-slate-500 dark:text-gray-400 mb-1">Account Holder Name</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Sunset HOA Escrow Account"
+                    value={form.bank_account_name}
+                    onChange={e => setForm({...form, bank_account_name: e.target.value})}
+                    className="w-full bg-white dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-teal-500"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs text-slate-500 dark:text-gray-400 mb-1">Account Number</label>
+                    <input
+                      type="text"
+                      placeholder="Account No"
+                      value={form.bank_account_no}
+                      onChange={e => setForm({...form, bank_account_no: e.target.value})}
+                      className="w-full bg-white dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-teal-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-slate-500 dark:text-gray-400 mb-1">Routing Number</label>
+                    <input
+                      type="text"
+                      placeholder="Routing No"
+                      value={form.bank_routing_no}
+                      onChange={e => setForm({...form, bank_routing_no: e.target.value})}
+                      className="w-full bg-white dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-teal-500"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Visible Tabs */}
+        <div className="bg-gradient-to-br from-slate-50 to-blue-50/40 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200 dark:border-white/10 rounded-3xl p-6 shadow-sm">
+          <div className="flex items-center gap-3 mb-5">
+            <Eye className="text-teal-600 dark:text-teal-400" size={24} />
+            <h3 className="font-semibold text-lg text-slate-900 dark:text-white">Visible Tabs for Members</h3>
+          </div>
+
+          <div className="space-y-4">
+            {Object.entries(tabs).map(([key, value]) => (
+              <div key={key} className="flex items-center justify-between">
+                <span className="text-sm capitalize text-slate-700 dark:text-gray-200">{key.replace('_', ' ')} Tab</span>
+                <Toggle
+                  value={value}
+                  onChange={v => setTabs(prev => ({...prev, [key]: v}))}
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Community Info */}
+      <div className="bg-gradient-to-br from-slate-50 to-blue-50/40 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200 dark:border-white/10 rounded-3xl p-6 mt-6 shadow-sm">
+        <h3 className="font-semibold text-lg mb-4 text-slate-900 dark:text-white">📋 Community Info</h3>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+          <div>
+            <p className="text-slate-500 dark:text-gray-400">Community Code</p>
+            <p className="font-mono font-bold text-teal-600 dark:text-teal-400 mt-1">{community?.community_code || '—'}</p>
+          </div>
+          <div>
+            <p className="text-slate-500 dark:text-gray-400">License Status</p>
+            <p className="font-medium mt-1 text-slate-800 dark:text-slate-200">{community?.license_status || '—'}</p>
+          </div>
+          <div>
+            <p className="text-slate-500 dark:text-gray-400">Total Units</p>
+            <p className="font-medium mt-1 text-slate-800 dark:text-slate-200">{community?.community_size || '—'}</p>
+          </div>
+          <div>
+            <p className="text-slate-500 dark:text-gray-400">Plan Expires</p>
+            <p className="font-medium mt-1 text-slate-800 dark:text-slate-200">{community?.plan_expire_date || '—'}</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="text-center text-slate-400 dark:text-gray-500 mt-8 text-sm">
+        More configuration options coming soon...
       </div>
     </div>
   );

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { Mail, Lock, User, Eye, EyeOff, Phone } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
@@ -11,7 +11,28 @@ export default function RegisterPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
+  const [captcha, setCaptcha] = useState({ question: '', token: '' });
+  const [loadingCaptcha, setLoadingCaptcha] = useState(false);
   const navigate = useNavigate();
+
+  const fetchCaptcha = async () => {
+    try {
+      setLoadingCaptcha(true);
+      const res = await API.get('/auth/captcha');
+      setCaptcha({
+        question: res.data.question,
+        token: res.data.captcha_token
+      });
+    } catch (err) {
+      console.error('Failed to fetch captcha:', err);
+    } finally {
+      setLoadingCaptcha(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchCaptcha();
+  }, []);
 
   const {
     register,
@@ -35,9 +56,11 @@ export default function RegisterPage() {
         email_id: data.email, // Backend `email_id` expect kar raha hai
         password: data.password,
         confirm_password: data.confirmPassword, // Naya field
-        role: data.role, // Backend ke allowed values (resident, board_member, etc.)
+        role: 'resident', // Public signup is restricted to Resident accounts only
         mobile_number: data.mobileNumber || '', // Naya optional field
         time_zone: 'America/New_York', // Default timezone
+        captcha_token: captcha.token,
+        captcha_answer: data.captchaAnswer,
       });
 
       setSuccessMsg('Registration successful! Redirecting to login...');
@@ -57,34 +80,69 @@ export default function RegisterPage() {
       }
       
       setErrorMsg(errorMessage);
+      fetchCaptcha();
     }
   };
-
-  // Google Sign-Up/Login Handler
-  const handleGoogleRegister = useGoogleLogin({
+  const googleLogin = useGoogleLogin({
     onSuccess: async (tokenResponse) => {
+      setErrorMsg('');
+      setSuccessMsg('');
       try {
         const response = await API.post('/auth/google', {
-          token: tokenResponse.access_token,
+          access_token: tokenResponse.access_token,
         });
 
-        if (response.data.access_token) {
+        if (response.data && response.data.access_token) {
+          const userData = response.data.user;
           localStorage.setItem('token', response.data.access_token);
-          setSuccessMsg('Google sign-up successful! Redirecting...');
+          if (response.data.session_token) {
+            localStorage.setItem('session_token', response.data.session_token);
+          }
+          localStorage.setItem('user', JSON.stringify(userData));
+
+          sessionStorage.removeItem('token');
+          sessionStorage.removeItem('session_token');
+          sessionStorage.removeItem('user');
+
+          const role = (userData?.role_name || userData?.role || response.data?.role || '').toLowerCase();
+          const communityId = userData?.community_id;
+
+          setSuccessMsg('Google registration successful!');
+          
           setTimeout(() => {
-            navigate('/dashboard');
+            if (role === 'resident' && (!communityId || communityId === 0)) {
+              navigate('/join-community');
+            } else {
+              navigate('/dashboard');
+            }
           }, 1500);
         }
       } catch (err) {
-        console.error('Google Auth Backend Error:', err);
-        setErrorMsg('Failed to authenticate with Google.');
+        console.error('Google Auth Error:', err);
+        let errorMessage = 'Google Authentication failed.';
+        if (err.response?.data?.detail) {
+          errorMessage = typeof err.response.data.detail === 'string'
+            ? err.response.data.detail
+            : JSON.stringify(err.response.data.detail);
+        }
+        setErrorMsg(errorMessage);
       }
     },
     onError: (error) => {
-      console.error('Google Register Failed:', error);
-      setErrorMsg('Google registration was interrupted.');
-    },
+      console.error('Google Login Failed:', error);
+      setErrorMsg('Google Authentication failed. Please try again.');
+    }
   });
+
+  const handleGoogleRegister = () => {
+    if (!import.meta.env.VITE_GOOGLE_CLIENT_ID || import.meta.env.VITE_GOOGLE_CLIENT_ID === 'PLACEHOLDER_CLIENT_ID') {
+      setErrorMsg('Google Registration is not configured. Please add VITE_GOOGLE_CLIENT_ID in your frontend .env file.');
+      return;
+    }
+    googleLogin();
+  };
+
+ 
 
   return (
     <AuthLayout>
@@ -114,7 +172,7 @@ export default function RegisterPage() {
             <input
               type="text"
               {...register('fullName', { required: 'Full name is required' })}
-              className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none pl-10 text-sm ${
+              className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none pl-10 text-sm text-gray-900 bg-white dark:text-gray-900 dark:bg-white ${
                 errors.fullName ? 'border-red-500' : 'border-gray-300'
               }`}
               placeholder="John Doe"
@@ -139,7 +197,7 @@ export default function RegisterPage() {
                   message: 'Invalid email address',
                 },
               })}
-              className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none pl-10 text-sm ${
+              className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none pl-10 text-sm text-gray-900 bg-white dark:text-gray-900 dark:bg-white ${
                 errors.email ? 'border-red-500' : 'border-gray-300'
               }`}
               placeholder="name@company.com"
@@ -169,7 +227,7 @@ export default function RegisterPage() {
                   return true;
                 }
               })}
-              className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none pl-10 pr-10 text-sm ${
+              className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none pl-10 pr-10 text-sm text-gray-900 bg-white dark:text-gray-900 dark:bg-white ${
                 errors.password ? 'border-red-500' : 'border-gray-300'
               }`}
               placeholder="••••••••"
@@ -199,7 +257,7 @@ export default function RegisterPage() {
                 validate: (value) =>
                   value === password || 'Passwords do not match',
               })}
-              className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none pl-10 pr-10 text-sm ${
+              className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none pl-10 pr-10 text-sm text-gray-900 bg-white dark:text-gray-900 dark:bg-white ${
                 errors.confirmPassword ? 'border-red-500' : 'border-gray-300'
               }`}
               placeholder="••••••••"
@@ -232,7 +290,7 @@ export default function RegisterPage() {
                   message: 'Invalid mobile number format',
                 },
               })}
-              className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none pl-10 text-sm ${
+              className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none pl-10 text-sm text-gray-900 bg-white dark:text-gray-900 dark:bg-white ${
                 errors.mobileNumber ? 'border-red-500' : 'border-gray-300'
               }`}
               placeholder="+1234567890"
@@ -244,36 +302,40 @@ export default function RegisterPage() {
           )}
         </div>
 
-        {/* Role Selection */}
-        <div>
-          <label className="block text-xs font-bold text-gray-700 tracking-wider mb-2">
-            SIGN UP AS WHOM?
-          </label>
-          <div className="space-y-2 border border-gray-200 rounded-lg p-4 bg-gray-50 max-h-36 overflow-y-auto">
-            {[
-              { id: 'resident', label: 'HOA Member', desc: 'Owns property in the community' },
-              { id: 'board_member', label: 'HOA Board Member', desc: 'Governing member' },
-              { id: 'property_manager', label: 'Property Manager', desc: 'Manages operations' },
-              { id: 'super_admin', label: 'Super Admin', desc: 'Super administrator' },
-            ].map((role) => (
-              <label
-                key={role.id}
-                className="flex items-start space-x-3 p-2 hover:bg-white rounded border border-transparent hover:border-gray-200 cursor-pointer text-sm"
+
+
+        {/* Captcha Section */}
+        <div className="p-4 bg-slate-50 border border-gray-200 rounded-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex-1">
+            <label className="block text-xs font-bold text-gray-700 tracking-wider mb-2">CAPTCHA *</label>
+            <div className="flex items-center gap-3">
+              <span className="text-xl font-bold bg-white border border-gray-300 px-4 py-2 rounded-xl text-yellow-600 font-mono tracking-widest">
+                {loadingCaptcha ? '...' : captcha.question}
+              </span>
+              <button
+                type="button"
+                onClick={fetchCaptcha}
+                className="p-2 hover:bg-gray-100 rounded-xl transition text-gray-400 hover:text-gray-600"
+                title="Refresh Captcha"
               >
-                <input
-                  type="radio"
-                  value={role.id}
-                  {...register('role', { required: 'Please select a role' })}
-                  className="mt-1 text-blue-600 focus:ring-blue-500"
-                />
-                <div>
-                  <span className="font-medium text-gray-900 block">{role.label}</span>
-                  <span className="text-gray-500 text-xs">{role.desc}</span>
-                </div>
-              </label>
-            ))}
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 7.89M9 11l3-3 3 3" />
+                </svg>
+              </button>
+            </div>
           </div>
-          {errors.role && <p className="text-red-500 text-xs mt-1">{errors.role.message}</p>}
+          <div className="w-full md:w-36">
+            <label className="block text-xs font-bold text-gray-700 tracking-wider mb-2">ANSWER *</label>
+            <input
+              type="text"
+              {...register('captchaAnswer', { required: 'Answer is required' })}
+              placeholder="Result"
+              className="w-full bg-white border border-gray-300 rounded-xl px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-600 font-mono text-center font-bold text-lg"
+            />
+            {errors.captchaAnswer && (
+              <p className="text-red-500 text-xs mt-1">{errors.captchaAnswer.message}</p>
+            )}
+          </div>
         </div>
 
         <button
@@ -296,7 +358,8 @@ export default function RegisterPage() {
       </div>
 
       <button
-        onClick={() => handleGoogleRegisterPage.handleGoogleRegister && handleGoogleRegister()}
+        type="button"
+        onClick={handleGoogleRegister}
         className="w-full flex items-center justify-center gap-3 border border-gray-300 bg-white py-2 px-4 rounded-lg hover:bg-gray-50 transition duration-200 text-sm text-gray-700 font-medium"
       >
         <svg className="w-5 h-5" viewBox="0 0 24 24">

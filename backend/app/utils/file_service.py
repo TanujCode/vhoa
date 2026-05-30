@@ -3,12 +3,12 @@ import uuid
 from fastapi import HTTPException, UploadFile
 
 #Config
-UPLOAD_DIR = "uploads/profile_pictures"   # backend folder ke andar
+UPLOAD_DIR = "uploads/profile_pictures"   # Inside backend folder
 ALLOWED_TYPES = {"image/jpeg", "image/png", "image/jpg", "image/webp"}
 MAX_SIZE_MB = 5
 MAX_SIZE_BYTES = MAX_SIZE_MB * 1024 * 1024
 
-# Folder exist nahi karta toh banao
+# Create folder if it doesn't exist
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 
@@ -40,19 +40,19 @@ Returns: URL string which will be stored in DB
             detail=f"File size {MAX_SIZE_MB}should not exceed the maximum limit.."
         )
 
-    # ── Unique filename banao ─────────────────────────────
+    # ── Create unique filename ─────────────────────────────
     # Format: profile_<user_id>_<random_uuid>.<extension>
     extension = file.filename.split(".")[-1].lower()
     filename = f"profile_{user_id}_{uuid.uuid4().hex}.{extension}"
     filepath = os.path.join(UPLOAD_DIR, filename)
 
 
-    # ── File save karo ────────────────────────────────────
+    # ── Save file ────────────────────────────────────
     with open(filepath, "wb") as f:
         f.write(contents)
 
-    # ── URL return karo ───────────────────────────────────
-    # Frontend is URL se image access karega
+    # ── Return URL ───────────────────────────────────
+    # Frontend will access the image using this URL
     url = f"/uploads/profile_pictures/{filename}"
     return url
 
@@ -65,7 +65,7 @@ Extract the file path from the URL and remove the file.
     if not url:
         return
 
-    # URL se local path nikalo
+    # Extract local path from URL
     # "/uploads/profile_pictures/abc.jpg" → "uploads/profile_pictures/abc.jpg"
     local_path = url.lstrip("/")
 
@@ -73,33 +73,33 @@ Extract the file path from the URL and remove the file.
         os.remove(local_path)
 
 
-async def save_document(file: UploadFile, community_id: int) -> str:
-    """Community document (PDF etc.) save karo"""
+async def save_document(file: UploadFile, folder_name: str) -> str:
     import os, uuid
     ALLOWED = {"application/pdf", "image/jpeg", "image/png", "application/msword",
                "application/vnd.openxmlformats-officedocument.wordprocessingml.document"}
-    folder = f"uploads/community_documents/{community_id}"
+    
+    # Now this is dynamic: uploads/identity_proofs etc.
+    folder = f"uploads/{folder_name}"
     os.makedirs(folder, exist_ok=True)
 
     if file.content_type not in ALLOWED:
-        raise ValueError("Only PDF, Word, and image files are allowed.")
+        raise ValueError(f"File type {file.content_type} not allowed.")
 
     contents = await file.read()
     if len(contents) > 10 * 1024 * 1024:
-        raise ValueError("The file should not exceed 10 MB.")
+        raise ValueError("File exceeds 10MB limit.")
 
     ext = file.filename.split(".")[-1].lower()
-    filename = f"doc_{community_id}_{uuid.uuid4().hex}.{ext}"
+    filename = f"{uuid.uuid4().hex}.{ext}" 
     filepath = os.path.join(folder, filename)
 
     with open(filepath, "wb") as f:
         f.write(contents)
 
-    return f"/uploads/community_documents/{community_id}/{filename}"
-
+    return f"/{folder}/{filename}"
 
 async def save_violation_document(file: UploadFile, violation_id: int) -> str:
-    """Violation photo/document save karo"""
+    """Save violation photo/document"""
     import os, uuid
     ALLOWED = {"image/jpeg", "image/png", "image/jpg", "image/webp", "application/pdf"}
     folder = f"uploads/violation_documents/{violation_id}"

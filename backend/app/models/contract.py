@@ -1,0 +1,58 @@
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, Numeric, ForeignKey
+from sqlalchemy.orm import relationship
+from sqlalchemy.sql import func
+from app.database import Base
+
+
+class Contract(Base):
+    __tablename__ = "contracts"
+
+    contract_id = Column(Integer, primary_key=True, index=True)
+    contract_code = Column(String(50), unique=True, nullable=False, index=True)
+
+    # Sales Agent (Creator)
+    sales_agent_id = Column(Integer, ForeignKey("users.user_id"), nullable=True)
+    sales_agent_name = Column(String(255), nullable=True)
+
+    # Contract Status: DRAFT | ACTIVE | ONBOARDED
+    status = Column(String(20), default="ACTIVE")
+
+    # Client Info (Section 3 in requirements)
+    client_first_name = Column(String(100), nullable=True)
+    client_middle_name = Column(String(100), nullable=True)
+    client_last_name = Column(String(100), nullable=True)
+    client_address = Column(String(255), nullable=True)
+    client_city = Column(String(100), nullable=True)
+    client_zip_code = Column(String(20), nullable=True)
+    client_country = Column(String(100), nullable=True)
+    client_phone_number = Column(String(20), nullable=True)
+    client_email_address = Column(String(255), nullable=True)
+    business_name = Column(String(255), nullable=True)
+    business_address = Column(String(255), nullable=True)
+    business_phone_number = Column(String(20), nullable=True)
+    client_preferred_communication_channel = Column(String(50), nullable=True)
+
+    # Plan / Subscription Parameters (Section 4 in requirements)
+    plan_selected = Column(String(100), nullable=True)
+    annual_renewal_fee = Column(Numeric(10, 2), nullable=True)
+    one_time_set_up = Column(Numeric(10, 2), nullable=True)
+    size_of_the_community = Column(Integer, nullable=True)
+    renewal_cycle = Column(String(50), nullable=True)  # "monthly" | "Annual"
+
+    # Simulated Payment / Onboarding Details
+    payment_method_details = Column(String(255), nullable=True)
+    onboarded_community_id = Column(Integer, ForeignKey("communities.community_id"), nullable=True)
+    onboarded_user_id = Column(Integer, ForeignKey("users.user_id"), nullable=True)
+
+    # Auditing / Timestamps
+    created_date = Column(DateTime(timezone=True), server_default=func.now())
+    created_by_id = Column(Integer, ForeignKey("users.user_id"), nullable=True)
+    last_updated = Column(DateTime(timezone=True), onupdate=func.now(), server_default=func.now())
+    last_updated_by_id = Column(Integer, ForeignKey("users.user_id"), nullable=True)
+
+    # Relationships
+    sales_agent = relationship("User", foreign_keys=[sales_agent_id])
+    created_by = relationship("User", foreign_keys=[created_by_id])
+    last_updated_by = relationship("User", foreign_keys=[last_updated_by_id])
+    onboarded_community = relationship("Community", foreign_keys=[onboarded_community_id])
+    onboarded_user = relationship("User", foreign_keys=[onboarded_user_id])

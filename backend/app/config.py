@@ -9,6 +9,8 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 15
     SESSION_TOKEN_EXPIRE_HOURS: int = 24
 
+    GOOGLE_CLIENT_ID: str = ""
+
     # Email
     MAIL_USERNAME: str = ""
     MAIL_PASSWORD: str = ""

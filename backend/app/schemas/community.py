@@ -35,6 +35,7 @@ class AddressOut(BaseModel):
 class CommunityCreate(BaseModel):
     name:           str
     community_code: str
+    contract_code:  str
     address:        AddressCreate | None = None
 
     # Board members (optional at creation)
@@ -53,6 +54,13 @@ class CommunityCreate(BaseModel):
     total_owners:   int | None    = None
     contact_person: str | None    = None
     time_zone:      str           = "America/New_York"
+
+    # HOA Escrow Bank Details
+    bank_name:          str | None = None
+    bank_account_no:    str | None = None
+    bank_routing_no:    str | None = None
+    bank_account_name:  str | None = None
+    visible_tabs:       dict | None = None
 
     @field_validator("community_code")
     @classmethod
@@ -84,6 +92,19 @@ class CommunityUpdate(BaseModel):
     treasurer_email_id: EmailStr | None = None
     admin_email_id:     EmailStr | None = None
 
+    amenity_fee_enabled: bool | None = None
+    violation_fee_enabled: bool | None = None
+    late_fee_enabled: bool | None = None
+    late_fee_days: int | None = None
+    late_fee_amount: float | None = None
+
+    # HOA Escrow Bank Details
+    bank_name:          str | None = None
+    bank_account_no:    str | None = None
+    bank_routing_no:    str | None = None
+    bank_account_name:  str | None = None
+    visible_tabs:       dict | None = None
+
 
 class CommunityOut(BaseModel):
     community_id:   int
@@ -97,6 +118,18 @@ class CommunityOut(BaseModel):
     time_zone:      str | None
     plan_expire_date: date | None
 
+    amenity_fee_enabled: bool
+    violation_fee_enabled: bool
+    late_fee_enabled: bool
+    late_fee_days: int
+    late_fee_amount: float
+
+    # HOA Escrow Bank Details
+    bank_name:          str | None = None
+    bank_account_no:    str | None = None
+    bank_routing_no:    str | None = None
+    bank_account_name:  str | None = None
+
     # Board members
     president_email_id:      str | None
     president_invite_status: str | None
@@ -109,6 +142,7 @@ class CommunityOut(BaseModel):
 
     # Address
     address: AddressOut | None = None
+    visible_tabs: dict | None = None
 
     created_date:  datetime
     modified_date: datetime | None
@@ -121,6 +155,8 @@ class CommunityStatsOut(BaseModel):
     name:              str
     total_owners:      int | None
     community_size:    int | None
+    total_residents:   int = 0
+    occupied_units:    int = 0
     active_violations: int = 0
     open_requests:     int = 0
     pending_payments:  int = 0

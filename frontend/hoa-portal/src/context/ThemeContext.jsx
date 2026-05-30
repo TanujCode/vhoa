@@ -10,9 +10,11 @@ export function ThemeProvider({ children }) {
   useEffect(() => {
     const root = document.documentElement;
     if (theme === 'light') {
-      root.setAttribute('data-theme', 'light');
+      root.classList.remove('dark');
+      root.classList.add('light');
     } else {
-      root.setAttribute('data-theme', 'dark');
+      root.classList.remove('light');
+      root.classList.add('dark');
     }
     localStorage.setItem('theme', theme);
   }, [theme]);

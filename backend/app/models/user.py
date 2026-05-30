@@ -29,6 +29,8 @@ class User(Base):
 
     user_id              = Column(Integer, primary_key=True, index=True)
 
+    community_id = Column(Integer, ForeignKey("communities.community_id"), nullable=True, default=None)
+
     #Name
     first_name           = Column(String(100), nullable=False)
     middle_name          = Column(String(100), nullable=True)
@@ -66,10 +68,19 @@ class User(Base):
     role_id              = Column(Integer, ForeignKey("roles.role_id"), nullable=False)
     role                 = relationship("Role", back_populates="users")
     is_client            = Column(Boolean, default=False)
+    unit_no              = Column(String(50), nullable=True)
+    unit_no_2            = Column(String(50), nullable=True)
 
     #Profile
     active_status        = Column(Boolean, default=True)
     user_profile_url     = Column(Text, nullable=True)
+    id_proof_url         = Column(Text, nullable=True)
+    address_proof_url    = Column(Text, nullable=True)
+
+    @property
+    def full_name(self) -> str:
+        parts = [self.first_name, self.middle_name, self.last_name]
+        return " ".join([p for p in parts if p]).strip()
 
     # ── Timestamps ───────────────────────────
     created_date         = Column(DateTime(timezone=True), server_default=func.now())
@@ -98,3 +109,13 @@ class OtpToken(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     user       = relationship("User", foreign_keys=[user_id])
+
+
+#  USER COMMUNITIES JUNCTION TABLE (For Many-to-Many relationship)
+class UserCommunity(Base):
+    __tablename__ = "user_communities"
+
+    user_id      = Column(Integer, ForeignKey("users.user_id", ondelete="CASCADE"), primary_key=True)
+    community_id = Column(Integer, ForeignKey("communities.community_id", ondelete="CASCADE"), primary_key=True)
+    unit_no      = Column(String(50), nullable=True)
+    unit_no_2    = Column(String(50), nullable=True)

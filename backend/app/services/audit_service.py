@@ -4,8 +4,6 @@ from app.models.audit_log import AuditLog
 
 # ══════════════════════════════════════════════
 #  AUDIT LOG — CREATE
-#  Har module se yeh call karo
-# ══════════════════════════════════════════════
 def log_action(
     db:           Session,
     action:       str,
@@ -17,6 +15,7 @@ def log_action(
     user_agent:   str | None = None,
     old_value:    str | None = None,
     new_value:    str | None = None,
+    request_id:   int | None = None,
 ) -> None:
     """
    Log any action. 
@@ -31,7 +30,7 @@ user_id=1, community_id=5)
 
 Usage – violation in: 
 log_action(db, "CREATE_VIOLATION", "violation", 
-f"Violation issue ki resident {client_id} ko", 
+f"Violation issued to resident {client_id}", 
 user_id=1, community_id=2)
     """
     try:
@@ -45,6 +44,7 @@ user_id=1, community_id=2)
             user_agent   = user_agent,
             old_value    = old_value,
             new_value    = new_value,
+            request_id   = request_id,
         )
         db.add(log)
         db.commit()

@@ -11,7 +11,7 @@ from app.schemas.violation import (
     ViolationTypeUpdate, ViolationStatusUpdate,
     DisputeCreate, DisputeResolve,
 )
-
+from app.models.community import Community
 
 # ══════════════════════════════════════════════
 #  SEED — Default Statuses
@@ -24,7 +24,50 @@ def seed_violation_statuses(db: Session):
         ).first():
             db.add(ViolationStatus(violation_status=s))
     db.commit()
+    print("Violation statuses seeded.")
 
+
+#  NEW: DEFAULT VIOLATION TYPES FOR ALL COMMUNITIES
+# ══════════════════════════════════════════════
+def seed_default_violation_types_for_all_communities(db: Session):
+    """Will create default violation types for each community"""
+    communities = db.query(Community).all()
+    
+    default_types = [
+        {"name": "Parking Violation", "description": "Unauthorized parking in restricted area", "amount": 50.0, "late_charge": 10.0, "due_days": 15},
+        {"name": "Noise Complaint", "description": "Excessive noise after 10 PM", "amount": 75.0, "late_charge": 15.0, "due_days": 10},
+        {"name": "Pet Violation", "description": "Pet waste not cleaned or unauthorized pet", "amount": 40.0, "late_charge": 10.0, "due_days": 7},
+        {"name": "Speeding in Community", "description": "Driving above speed limit inside society", "amount": 100.0, "late_charge": 25.0, "due_days": 15},
+        {"name": "Trash / Garbage Violation", "description": "Improper garbage disposal", "amount": 30.0, "late_charge": 8.0, "due_days": 5},
+        {"name": "Yard Maintenance", "description": "Unmaintained lawn or landscaping", "amount": 60.0, "late_charge": 12.0, "due_days": 10},
+        {"name": "Unauthorized Alteration", "description": "Unapproved modification to property", "amount": 150.0, "late_charge": 30.0, "due_days": 30},
+        {"name": "Pool Rules Violation", "description": "Violation of pool timing or safety rules", "amount": 45.0, "late_charge": 10.0, "due_days": 10},
+    ]
+
+    seeded_count = 0
+    for comm in communities:
+        for dt in default_types:
+            existing = db.query(ViolationType).filter(
+                ViolationType.community_id == comm.community_id,
+                ViolationType.name == dt["name"]
+            ).first()
+
+            if not existing:
+                vtype = ViolationType(
+                    name=dt["name"],
+                    description=dt["description"],
+                    amount=dt["amount"],
+                    late_charge=dt["late_charge"],
+                    due_days=dt["due_days"],
+                    community_id=comm.community_id,
+                    active_status=True,
+                    created_by_id=1,   # Default super_admin
+                )
+                db.add(vtype)
+                seeded_count += 1
+
+    db.commit()
+    print(f"Default violation types seeded for {len(communities)} communities ({seeded_count} new types added).")
 
 # ══════════════════════════════════════════════
 #  VIOLATION TYPE — CRUD
@@ -99,11 +142,11 @@ def create_violation(data: ViolationCreate, created_by_id: int, db: Session) -> 
 
     amount = data.amount if data.amount > 0 else vtype.amount
 
-    # Due date auto calculate karo
+    # Auto calculate due date
     due_days = vtype.due_days or 30
     violation_due_date = data.violation_date + timedelta(days=due_days)
 
-    # Dispute deadline — 30 din
+    # Dispute deadline — 30 days
     dispute_deadline = data.violation_date + timedelta(days=30)
 
     violation = Violation(
@@ -159,7 +202,7 @@ def get_violation_by_id(violation_id: int, db: Session) -> Violation:
         Violation.active_status == True,
     ).first()
     if not v:
-        raise ValueError(f"Violation ID {violation_id} nahi mila.")
+        raise ValueError(f"Violation ID {violation_id} not found.")
     return v
 
 
@@ -178,7 +221,7 @@ def update_violation_status(
     if not new_status:
         raise ValueError("Status does not exist.")
 
-    # Late charge check — agar due date nikal gayi aur PAID kar rahe hain
+    # Late charge check — if due date is passed and paying now
     if new_status.violation_status == "PAID":
         today = date.today()
         if violation.violation_due_date and today > violation.violation_due_date:
@@ -196,7 +239,7 @@ def update_violation_status(
 
 
 # ══════════════════════════════════════════════
-#  VIOLATION — DISPUTE (Member karta hai)
+#  VIOLATION — DISPUTE (Raised by member)
 # ══════════════════════════════════════════════
 def create_dispute(
     violation_id: int, data: DisputeCreate,
@@ -208,7 +251,7 @@ Once a dispute has been resolved, it cannot be raised again.
     """
     violation = get_violation_by_id(violation_id, db)
 
-    # Sirf apni violation dispute kar sakte hain
+    # Can only dispute own violations
     if violation.client_id != user_id:
         raise ValueError("You can only dispute your own violations.")
 
@@ -222,7 +265,7 @@ Once a dispute has been resolved, it cannot be raised again.
     if violation.is_disputed and not violation.dispute_resolved:
         raise ValueError("This violation is already under dispute. The Board's response is awaited.")
 
-    # 30 din ka deadline check
+    # 30 days deadline check
     today = date.today()
     if violation.dispute_deadline and today > violation.dispute_deadline:
         raise ValueError(
@@ -230,7 +273,7 @@ Once a dispute has been resolved, it cannot be raised again.
             "You can no longer file a dispute."
         )
 
-    # Appealed status set karo
+    # Set appealed status
     appealed_status = db.query(ViolationStatus).filter(
         ViolationStatus.violation_status == "APPEALED"
     ).first()

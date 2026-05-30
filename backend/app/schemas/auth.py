@@ -19,6 +19,8 @@ class RegisterRequest(BaseModel):
     role:             str
     mobile_number:    str | None = None
     time_zone:        str = "America/New_York"
+    captcha_token:    str
+    captcha_answer:   str
 
     @field_validator("full_name")
     @classmethod
@@ -44,9 +46,9 @@ class RegisterRequest(BaseModel):
     @field_validator("role")
     @classmethod
     def role_valid(cls, v):
-        allowed = {"resident", "board_member", "property_manager", "super_admin"}
+        allowed = {"resident"}
         if v not in allowed:
-            raise ValueError(f"The role should be one of these.: {allowed}")
+            raise ValueError("Only resident role is allowed to sign up publicly.")
         return v
 
     @field_validator("mobile_number")
@@ -71,11 +73,49 @@ class RegisterRequest(BaseModel):
 
 
 # ══════════════════════════════════════════════
+#  USER RESPONSE
+# ══════════════════════════════════════════════
+class UserOut(BaseModel):
+    user_id:              int
+    first_name:           str
+    middle_name:          str | None
+    last_name:            str
+    full_name:            str
+    email_id:             str
+    mobile_number:        str | None
+    mobile_is_verified:   bool
+    email_id_is_verified: bool
+    is_client:            bool
+    active_status:        bool
+    account_status:       str        # ACTIVE | INACTIVE | PENDING_VERIFICATION | LOCKED
+    time_zone:            str
+    role_id:              int
+    role_name:            str | None = None
+    user_profile_url:     str | None
+    created_date:         datetime
+    last_login:           datetime | None
+    community_id:         int | None = None
+    community_name:       str | None = None
+    unit_no:              str | None = None
+    unit_no_2:            str | None = None
+    id_proof_url:         str | None = None
+    address_proof_url:    str | None = None
+
+    model_config = {"from_attributes": True}
+
+
+# ══════════════════════════════════════════════
 #  LOGIN
 # ══════════════════════════════════════════════
 class LoginRequest(BaseModel):
     email_id: EmailStr
     password: str
+    captcha_token: str
+    captcha_answer: str
+
+
+class GoogleLoginRequest(BaseModel):
+    access_token: str
 
 
 # ══════════════════════════════════════════════
@@ -87,6 +127,7 @@ class TokenResponse(BaseModel):
     token_type:          str = "bearer"
     access_expires_in:   int
     session_expires_in:  int
+    user:                UserOut | None = None
 
 
 class RefreshRequest(BaseModel):
@@ -130,27 +171,23 @@ class PasswordResetRequest(BaseModel):
         return v
 
 
-# ══════════════════════════════════════════════
-#  USER RESPONSE
-# ══════════════════════════════════════════════
-class UserOut(BaseModel):
-    user_id:              int
-    first_name:           str
-    middle_name:          str | None
-    last_name:            str
-    full_name:            str
-    email_id:             str
-    mobile_number:        str | None
-    mobile_is_verified:   bool
-    email_id_is_verified: bool
-    is_client:            bool
-    active_status:        bool
-    account_status:       str        # ACTIVE | INACTIVE | PENDING_VERIFICATION | LOCKED
-    time_zone:            str
-    role_id:              int
-    role_name:            str | None = None
-    user_profile_url:     str | None
-    created_date:         datetime
-    last_login:           datetime | None
-
-    model_config = {"from_attributes": True}
+class ClientOnboardRequest(BaseModel):
+    first_name: str
+    middle_name: str | None = None
+    last_name: str
+    email_id: EmailStr
+    mobile_number: str
+    password: str
+    role_selected: str  # "Board Member" or "Admin"
+    hoa_name: str
+    hoa_address: str
+    hoa_city: str
+    hoa_state_id: int | None = None
+    hoa_country_id: int | None = None
+    hoa_zip_code: str | None = None
+    hoa_contact_number: str | None = None
+    contract_code: str
+    captcha_token: str
+    captcha_answer: str
+    payment_method: str | None = None
+    payment_details: str | None = None

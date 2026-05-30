@@ -106,6 +106,9 @@ class AmenityBooking(Base):
     cancelled_by_id = Column(Integer, ForeignKey("users.user_id"), nullable=True)
     cancelled_date  = Column(DateTime(timezone=True), nullable=True)
     cancel_reason   = Column(Text, nullable=True)
+    is_refunded     = Column(Boolean, default=False)
+    refund_date     = Column(DateTime(timezone=True), nullable=True)
+    refund_amount   = Column(Double, default=0.0)
 
     # ── Audit ─────────────────────────────────
     active_status  = Column(Boolean, default=True)

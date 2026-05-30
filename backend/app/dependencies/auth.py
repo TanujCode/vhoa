@@ -43,7 +43,7 @@ def get_current_user(
 
     if not user:
         raise HTTPException(status_code=404, detail="User not found.")
-    if not user.active_status:
+    if not user.active_status or user.account_status == "INACTIVE":
         raise HTTPException(status_code=403, detail="The account is inactive.")
     if user.account_status == "LOCKED":
         raise HTTPException(status_code=403, detail="Account locked. Try again later.")
@@ -105,7 +105,7 @@ def create(user = Depends(get_verified_user)):
 
     if not user:
         raise HTTPException(status_code=404, detail="User not found.")
-    if not user.active_status:
+    if not user.active_status or user.account_status == "INACTIVE":
         raise HTTPException(status_code=403, detail="The account is inactive.")
     if user.account_status == "LOCKED":
         raise HTTPException(status_code=403, detail="The account is locked.")

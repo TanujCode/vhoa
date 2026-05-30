@@ -122,6 +122,9 @@ class BookingOut(BaseModel):
     payment_due_date: date | None
     cancel_reason:   str | None
     cancelled_date:  datetime | None
+    is_refunded:     bool
+    refund_date:     datetime | None = None
+    refund_amount:   float
     created_date:    datetime
     model_config = {"from_attributes": True}
 

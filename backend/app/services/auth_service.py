@@ -97,7 +97,7 @@ def login_user(email_id: str, password: str, db: Session) -> dict:
             user.account_status = "ACTIVE" if user.email_id_is_verified else "PENDING_VERIFICATION"
             db.commit()
 
-    if not user.active_status:
+    if not user.active_status or user.account_status == "INACTIVE":
         raise ValueError("Account is inactive. Contact admin.")
 
     if not verify_password(password, user.password):
@@ -193,13 +193,14 @@ def generate_otp(user_id: int, otp_type: str, db: Session) -> str:
 #  VERIFY OTP
 # ══════════════════════════════════════════════
 def verify_otp(email_id: str, otp_code: str, otp_type: str, db: Session) -> User:
-    user = db.query(User).filter(User.email_id == email_id.lower()).first()
+    user = db.query(User).filter(User.email_id == email_id.lower().strip()).first()
     if not user:
         raise ValueError("User Not Found.")
 
+    clean_otp = otp_code.strip()
     otp_record = db.query(OtpToken).filter(
         OtpToken.user_id == user.user_id,
-        OtpToken.otp_code == otp_code,
+        OtpToken.otp_code == clean_otp,
         OtpToken.otp_type == otp_type,
         OtpToken.is_used == False,
     ).first()
@@ -227,13 +228,14 @@ def verify_otp(email_id: str, otp_code: str, otp_type: str, db: Session) -> User
 #  PASSWORD RESET
 # ══════════════════════════════════════════════
 def reset_password(email_id: str, otp_code: str, new_password: str, db: Session) -> bool:
-    user = db.query(User).filter(User.email_id == email_id.lower()).first()
+    user = db.query(User).filter(User.email_id == email_id.lower().strip()).first()
     if not user:
         raise ValueError("User Not Found.")
 
+    clean_otp = otp_code.strip()
     otp_record = db.query(OtpToken).filter(
         OtpToken.user_id == user.user_id,
-        OtpToken.otp_code == otp_code,
+        OtpToken.otp_code == clean_otp,
         OtpToken.otp_type == "password_reset",
         OtpToken.is_used == False,
     ).first()

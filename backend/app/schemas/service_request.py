@@ -116,3 +116,12 @@ class ServiceRequestOut(BaseModel):
     closed_date:      datetime | None
     notes:            list[NoteOut] = []
     model_config = {"from_attributes": True}
+
+
+class ServiceRequestUpdate(BaseModel):
+    title:        str | None = None
+    description:  str | None = None
+    priority:     str | None = None
+    type_id:      int | None = None
+    vendor_id:    int | None = None
+    payment_id:   int | None = None

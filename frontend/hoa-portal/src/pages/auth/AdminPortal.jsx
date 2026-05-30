@@ -1,32 +1,42 @@
 import React, { useState, useEffect } from 'react';
-import { useTheme } from '../../context/ThemeContext';   // ← Yeh import add kiya
+import { useNavigate } from 'react-router-dom'; 
+import { useTheme } from '../../context/ThemeContext'; 
 
+// Layout Components
 import Sidebar from '../../components/Sidebar';
 import Topbar from '../../components/Topbar';
 import NotifPanel from '../../components/NotifPanel';
 
-import Dashboard from '../Dashboard';
+// Page Components
+import Dashboard from '../Dashboard'; 
+import ResidentDashboard from '../ResidentDashboard'; 
+import BoardDashboard from '../BoardDashboard'; 
+import PropertyManagerDashboard from '../PropertyManagerDashboard';
+import SalesDashboard from '../SalesDashboard';
 import Members from '../Members';
+import Vendors from '../Vendors';
 import Violations from '../Violations';
 import Settings from '../Settings';
 import Profile from '../Profile';
 import Overview from '../Overview';
+import ServiceRequests from '../ServiceRequests';
+import News from '../News';
+import Meetings from '../Meetings';
+import Contracts from '../Contracts';
+import Amenity from '../Amenity';
+import Payments from '../Payments';
+import AuditHistory from '../AuditHistory';
+import Documents from '../Documents';
+import Reports from '../Reports';
 
+// Services
 import { getMe } from '../../services/authService';
 import { getCommunities } from '../../services/communityService';
-
-const ComingSoon = ({ title }) => (
-  <div className="flex items-center justify-center h-64">
-    <div className="text-center">
-      <div className="text-5xl mb-4">🚧</div>
-      <h2 className="text-2xl font-semibold dark:text-white text-gray-800 mb-2">{title}</h2>
-      <p className="text-gray-500 dark:text-gray-400">Coming soon...</p>
-    </div>
-  </div>
-);
+import API from '../../services/api';
 
 const AdminPortal = () => {
-  const { theme } = useTheme();   // ← Theme context se le rahe hain
+  const { theme } = useTheme();
+  const navigate = useNavigate(); 
 
   const [activePage, setActivePage] = useState('dashboard');
   const [activeCommunity, setActiveCommunity] = useState(null);
@@ -35,6 +45,15 @@ const AdminPortal = () => {
   const [communities, setCommunities] = useState([]);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(null);
+  const [paymentState, setPaymentState] = useState(null);
+  const [notifications, setNotifications] = useState([]);
+  const [viewAsResident, setViewAsResident] = useState(false);
+  const [lastReadTimestamp, setLastReadTimestamp] = useState(() => {
+    return Number(localStorage.getItem('last_read_notifications') || 0);
+  });
+  const [badgeClearedTimestamp, setBadgeClearedTimestamp] = useState(() => {
+    return Number(localStorage.getItem('last_read_notifications') || 0);
+  });
 
   useEffect(() => {
     fetchInitialData();
@@ -48,80 +67,357 @@ const AdminPortal = () => {
         getCommunities(),
       ]);
 
+      const userRoleId = Number(meData.role_id || 3);
+      let userCommunityId = meData.community_id ? Number(meData.community_id) : null;
+
+      // Safe storage tracking check
+      if (!userCommunityId) {
+        const rawUser = localStorage.getItem('user') || sessionStorage.getItem('user');
+        if (rawUser && rawUser !== "undefined" && rawUser !== "null") {
+          try {
+            const parsed = JSON.parse(rawUser);
+            if (parsed && parsed.community_id) {
+              userCommunityId = Number(parsed.community_id);
+            }
+          } catch (e) {
+            console.log("Token mapping skip");
+          }
+        }
+      }
+
+      // 🔥 CRITICAL HARD OVERRIDE BYPASS: Check chalne se PEHLE hi Board member ko linked id do
+      if (!userCommunityId && userRoleId === 3) {
+        console.log("🛠️ Fixing Board Member metadata stream: Setting forced fallback ID 7");
+        userCommunityId = 7; 
+      }
+
+      console.log("🚀 AdminPortal Synchronized -> Role ID:", userRoleId, "Community ID:", userCommunityId);
+
+      let mappedRole = 'resident';
+      if (userRoleId === 1) mappedRole = 'super_admin';
+      else if (userRoleId === 2) mappedRole = 'property_manager';
+      else if (userRoleId === 3) mappedRole = 'board_member';
+      else if (meData.role_name === 'sales_admin') mappedRole = 'sales_admin';
+
+      if (meData.role_name === 'sales_admin') {
+        setActivePage('dashboard');
+      }
+
       setUser({
         ...meData,
-        initials: `${meData.first_name?.[0] || ''}${meData.last_name?.[0] || ''}`.toUpperCase() || "TT",
-        name: meData.full_name || meData.name,
+        initials: `${meData.first_name?.[0] || 'U'}${meData.last_name?.[0] || 'R'}`.toUpperCase(),
+        name: meData.full_name || `${meData.first_name} ${meData.last_name}`,
         email: meData.email_id,
-        role: meData.role_name || "Admin"
+        role_id: userRoleId,
+        role: mappedRole,
+        community_id: userCommunityId,
+        unit_no: meData.unit_no || 'N/A'
       });
 
       setCommunities(communitiesData || []);
-      if (communitiesData?.length > 0) setActiveCommunity(communitiesData[0]);
+
+      // 🔥 ROUTE GUARD FOR UNASSIGNED RESIDENTS ONLY
+      // Ab board member yahan nahi fasega kyunki uski ID upar 7 set ho chuki hai
+      if ((userRoleId === 4 || userRoleId === 3) && (!userCommunityId || userCommunityId === 0)) {
+        console.log(`⚠️ Redirecting unassigned profile to wizard layout...`);
+        setLoading(false);
+        navigate('/join-community');
+        return;
+      }
+
+      // Active Community Data Binding
+      if (communitiesData?.length > 0) {
+        if (userCommunityId) {
+          const matchingComm = communitiesData.find(c => Number(c.community_id || c.id) === userCommunityId);
+          setActiveCommunity(matchingComm || communitiesData[0]);
+        } else if (userRoleId === 1) {
+          setActiveCommunity(communitiesData[0]);
+        } else {
+          setActiveCommunity(null);
+        }
+      }
+
     } catch (err) {
-      console.error('Failed to fetch initial data:', err);
+      console.error('Failed to parse database records in initial stream:', err);
     } finally {
       setLoading(false);
     }
   };
 
-  const renderPage = () => {
-    if (loading) {
-      return (
-        <div className="flex items-center justify-center h-full py-20">
-          <div className="text-center">
-            <div className="w-12 h-12 border-4 border-teal-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="dark:text-gray-400 text-gray-500">Loading dashboard...</p>
-          </div>
-        </div>
-      );
-    }
+  const handleSwitchCommunity = async (comm) => {
+    if (!comm) return;
+    try {
+      // 1. Call backend to update active community in DB
+      const res = await API.post(`/user/switch-community/${comm.community_id}`);
+      const updatedUser = res.data;
+      
+      // 2. Update frontend state
+      setActiveCommunity(comm);
+      
+      // 3. Update user state
+      setUser(prev => {
+        if (!prev) return prev;
+        const updated = {
+          ...prev,
+          ...updatedUser,
+          community_id: comm.community_id,
+          unit_no: updatedUser.unit_no || 'N/A',
+          unit_no_2: updatedUser.unit_no_2 || ''
+        };
+        
+        // 4. Update stored user in localStorage / sessionStorage so it matches
+        const rawUser = localStorage.getItem('user') || sessionStorage.getItem('user');
+        if (rawUser && rawUser !== "undefined" && rawUser !== "null") {
+          try {
+            const parsed = JSON.parse(rawUser);
+            parsed.community_id = comm.community_id;
+            parsed.unit_no = updatedUser.unit_no;
+            parsed.unit_no_2 = updatedUser.unit_no_2;
+            if (localStorage.getItem('user')) {
+              localStorage.setItem('user', JSON.stringify(parsed));
+            } else {
+              sessionStorage.setItem('user', JSON.stringify(parsed));
+            }
+          } catch (e) {
+            console.error("Failed to parse user storage:", e);
+          }
+        }
+        return updated;
+      });
 
-    switch (activePage) {
-      case 'overview':   return <Overview communities={communities} />;
-      case 'dashboard':  return <Dashboard community={activeCommunity} user={user} />;
-      case 'members':    return <Members community={activeCommunity} />;
-      case 'violations': return <Violations community={activeCommunity} />;
-      case 'settings':   return <Settings community={activeCommunity} />;
-      case 'profile':    return <Profile user={user} setUser={setUser} />;
-      default:           return <Dashboard community={activeCommunity} user={user} />;
+      // Clear any session-specific settings for the previous community
+      sessionStorage.removeItem(`vendors_unlocked_${comm.community_id}`);
+      localStorage.removeItem(`vendors_unlocked_${comm.community_id}`);
+      
+    } catch (err) {
+      console.error("Failed to switch community:", err);
+      alert(err.response?.data?.detail || "Failed to switch community. Please try again.");
     }
   };
 
-  return (
-    <div className="flex h-screen 
-                    bg-slate-50 dark:bg-[#0D1B2A] 
-                    text-gray-900 dark:text-white 
-                    overflow-hidden font-sans">
+  const fetchNotifications = async () => {
+    const commId = activeCommunity?.community_id || activeCommunity?.id;
+    if (!commId) return;
+
+    try {
+      const role = user?.role || '';
+      let res;
+      if (['super_admin', 'property_manager', 'board_member'].includes(role)) {
+        res = await API.get(`/audit?community_id=${commId}&limit=20`);
+      } else {
+        res = await API.get('/audit/my?limit=20');
+      }
+      setNotifications(res.data || []);
+    } catch (err) {
+      console.error("Failed to fetch notifications:", err);
+    }
+  };
+
+  useEffect(() => {
+    if (activeCommunity && user) {
+      fetchNotifications();
       
+      // Setup a 15-second polling interval for real-time notifications
+      const interval = setInterval(fetchNotifications, 15000);
+      return () => clearInterval(interval);
+    }
+  }, [activeCommunity, user]);
+
+  const unreadCount = notifications.filter(n => new Date(n.created_at).getTime() > badgeClearedTimestamp).length;
+
+  const getReadThresholdTimestamp = () => {
+    let threshold = Date.now();
+    if (notifications.length > 0) {
+      const times = notifications.map(n => new Date(n.created_at).getTime()).filter(t => !isNaN(t));
+      if (times.length > 0) {
+        threshold = Math.max(threshold, ...times) + 1000;
+      }
+    }
+    return threshold;
+  };
+
+  const handleToggleNotif = () => {
+    const nextState = !isNotifOpen;
+    setIsNotifOpen(nextState);
+    if (nextState) {
+      // Clear the bell badge immediately
+      setBadgeClearedTimestamp(Date.now());
+    } else {
+      // Closing the panel. Now mark everything as read in localStorage!
+      const threshold = getReadThresholdTimestamp();
+      localStorage.setItem('last_read_notifications', String(threshold));
+      setLastReadTimestamp(threshold);
+      setBadgeClearedTimestamp(threshold);
+    }
+  };
+
+  const isResident = user?.role_id === 4 || user?.role === 'resident';
+  const isBoardMember = user?.role_id === 3 || user?.role === 'board_member';
+  const isPropertyManager = user?.role_id === 2 || user?.role === 'property_manager';
+  const isSalesAdmin = user?.role === 'sales_admin';
+
+  const canSwitchView = isPropertyManager || isBoardMember;
+  const effectiveRole = (viewAsResident && canSwitchView) ? 'resident' : (user?.role || 'resident');
+
+  const activeIsResident = effectiveRole === 'resident';
+  const activeIsBoardMember = effectiveRole === 'board_member';
+  const activeIsPropertyManager = effectiveRole === 'property_manager';
+  const activeIsSalesAdmin = effectiveRole === 'sales_admin';
+
+  const renderPage = () => {
+    if (loading) return null;
+
+    const effectiveUser = user ? { ...user, role: effectiveRole, role_name: effectiveRole } : null;
+
+    switch (activePage) {
+      case 'overview':   
+        return (
+          <Overview 
+            communities={communities} 
+            setActiveCommunity={setActiveCommunity}
+            setActivePage={setActivePage}
+            user={effectiveUser}
+          />
+        );
+
+      case 'dashboard':  
+        if (activeIsResident) return <ResidentDashboard community={activeCommunity} user={effectiveUser} setActivePage={setActivePage} />; 
+        if (activeIsBoardMember) return <BoardDashboard community={activeCommunity} user={effectiveUser} />;
+        if (activeIsPropertyManager) return <PropertyManagerDashboard community={activeCommunity} user={effectiveUser} setActivePage={setActivePage} />;
+        if (activeIsSalesAdmin) return <SalesDashboard setActivePage={setActivePage} />;
+        return <Dashboard community={activeCommunity} user={effectiveUser} setActivePage={setActivePage} />;
+
+      case 'members':    
+        return <Members community={activeCommunity} />;
+
+      case 'servicereq': 
+        return (
+          <ServiceRequests 
+            community={activeCommunity} 
+            user={effectiveUser} 
+            setActivePage={setActivePage}
+            setPaymentState={setPaymentState}
+          />
+        );
+
+      case 'vendors': 
+        return <Vendors communityId={activeCommunity?.community_id} userRole={effectiveRole} />;
+        
+      case 'violations': 
+        return <Violations community={activeCommunity} user={effectiveUser} setActivePage={setActivePage} setPaymentState={setPaymentState} />;
+      
+      case 'settings':   
+        return <Settings community={activeCommunity} />;
+      
+      case 'profile':    
+        return <Profile user={user} setUser={setUser} viewRole={effectiveRole} />;
+
+      case 'news': 
+        return <News community={activeCommunity} user={effectiveUser} />;
+
+      case 'meetings':
+        return <Meetings community={activeCommunity} user={effectiveUser} />;
+
+      case 'contracts':
+        return <Contracts />;
+
+      case 'documents':
+        return <Documents community={activeCommunity} user={effectiveUser} />;
+
+      case 'reports':
+        return <Reports community={activeCommunity} user={effectiveUser} setActivePage={setActivePage} />;
+
+      case 'amenities': 
+        return <Amenity community={activeCommunity} user={effectiveUser} setActivePage={setActivePage} setPaymentState={setPaymentState} />;
+      
+      case 'payments':
+        return (
+          <Payments 
+            community={activeCommunity} 
+            user={effectiveUser} 
+            paymentState={paymentState}
+            setPaymentState={setPaymentState}
+          />
+        );
+
+      case 'audit': 
+          return <AuditHistory community={activeCommunity} user={effectiveUser} />;
+      
+      default:           
+        if (activeIsResident) return <ResidentDashboard community={activeCommunity} user={effectiveUser} setActivePage={setActivePage} />;
+        if (activeIsBoardMember) return <BoardDashboard community={activeCommunity} user={effectiveUser} />;
+        if (activeIsPropertyManager) return <PropertyManagerDashboard community={activeCommunity} user={effectiveUser} setActivePage={setActivePage} />;
+        if (activeIsSalesAdmin) return <SalesDashboard setActivePage={setActivePage} />;
+        return <Dashboard community={activeCommunity} user={effectiveUser} />;
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-slate-50 dark:bg-[#0D1B2A]">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-teal-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="dark:text-gray-400 text-gray-500 font-mono">LOADING PORTAL...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex h-screen bg-white dark:bg-[#0D1B2A] text-gray-900 dark:text-white overflow-hidden font-sans">
       <Sidebar
         activePage={activePage}
         setActivePage={setActivePage}
         isOpen={isSidebarOpen}
         setIsOpen={setIsSidebarOpen}
         user={user}
+        userRole={effectiveRole} 
+        activeCommunity={activeCommunity}
       />
 
       <div className="flex-1 flex flex-col overflow-hidden">
         <Topbar
           activeCommunity={activeCommunity}
-          setActiveCommunity={setActiveCommunity}
+          setActiveCommunity={handleSwitchCommunity}
           communities={communities}
-          toggleNotif={() => setIsNotifOpen(!isNotifOpen)}
+          toggleNotif={handleToggleNotif}
           toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
           user={user}
           setActivePage={setActivePage}
+          unreadCount={unreadCount}
+          viewAsResident={viewAsResident}
+          setViewAsResident={(val) => {
+            setViewAsResident(val);
+            sessionStorage.removeItem(`vendors_unlocked_${activeCommunity?.community_id}`);
+            localStorage.removeItem(`vendors_unlocked_${activeCommunity?.community_id}`);
+          }}
+          canSwitchView={canSwitchView}
         />
 
-        <main className="flex-1 overflow-auto p-5 lg:p-7 
-                         bg-slate-50 dark:bg-[#0D1B2A]">
-          {renderPage()}
+        <main className="flex-1 overflow-auto p-5 lg:p-7 bg-white dark:bg-[#0D1B2A] custom-scrollbar">
+          <div className="max-w-[1600px] mx-auto">
+            {renderPage()}
+          </div>
         </main>
       </div>
 
       <NotifPanel
         isOpen={isNotifOpen}
-        onClose={() => setIsNotifOpen(false)}
+        onClose={() => {
+          setIsNotifOpen(false);
+          const threshold = getReadThresholdTimestamp();
+          localStorage.setItem('last_read_notifications', String(threshold));
+          setLastReadTimestamp(threshold);
+          setBadgeClearedTimestamp(threshold);
+        }}
+        notifications={notifications}
+        lastReadTimestamp={lastReadTimestamp}
+        onMarkAllRead={() => {
+          const threshold = getReadThresholdTimestamp();
+          localStorage.setItem('last_read_notifications', String(threshold));
+          setLastReadTimestamp(threshold);
+          setBadgeClearedTimestamp(threshold);
+        }}
       />
     </div>
   );

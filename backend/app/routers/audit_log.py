@@ -71,14 +71,45 @@ def get_my_logs(
     db:    Session = Depends(get_db),
     current_user: User = Depends(get_verified_user),
 ):
-    """View the history of your own actions — all users can do this."""
-    logs = get_audit_logs(
-        db,
-        user_id = current_user.user_id,
-        skip    = skip,
-        limit   = limit,
+    """View the history of your own actions and actions affecting you."""
+    from sqlalchemy import or_
+    from app.models.service_request import ServiceRequest
+    from app.models.audit_log import AuditLog
+    
+    # 1. Fetch service request IDs submitted by this user
+    sr_ids = [
+        r.request_id for r in db.query(ServiceRequest.request_id)
+        .filter(ServiceRequest.submitted_by_id == current_user.user_id)
+        .all()
+    ]
+    
+    # 2. Build filters
+    # - User's own actions
+    filters = [AuditLog.user_id == current_user.user_id]
+    
+    # - Service request updates affecting their submissions
+    if sr_ids:
+        filters.append(
+            (AuditLog.module == "service_request") & (AuditLog.request_id.in_(sr_ids))
+        )
+        
+    # - Violations issued to them
+    filters.append(
+        (AuditLog.module == "violation") & (AuditLog.description.like(f"%resident {current_user.user_id}%"))
     )
+    
+    # 3. Query audit logs with or_ condition
+    logs = (
+        db.query(AuditLog)
+        .filter(or_(*filters))
+        .order_by(AuditLog.created_at.desc())
+        .offset(skip)
+        .limit(limit)
+        .all()
+    )
+    
     return [_to_out(log) for log in logs]
+
 
 
 #  HELPER

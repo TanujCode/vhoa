@@ -5,9 +5,11 @@ export const login = async (email_id, password) => {
   const res = await API.post('/auth/login', { email_id, password });
   const { access_token, session_token } = res.data;
 
-  // Dono tokens localStorage mein save karo
   localStorage.setItem('access_token', access_token);
-  localStorage.setItem('session_token', session_token);
+  if (session_token) localStorage.setItem('session_token', session_token);
+
+  sessionStorage.removeItem('access_token');
+  sessionStorage.removeItem('session_token');
 
   return res.data;
 };
@@ -23,8 +25,11 @@ export const logout = async () => {
   try {
     await API.post('/auth/logout');
   } catch {}
-  localStorage.removeItem('access_token');
-  localStorage.removeItem('session_token');
+  const keys = ['token', 'session_token', 'access_token', 'user'];
+  keys.forEach(k => {
+    localStorage.removeItem(k);
+    sessionStorage.removeItem(k);
+  });
   window.location.href = '/login';
 };
 
@@ -42,5 +47,5 @@ export const verifyOtp = async (email_id, otp_code, otp_type) => {
 
 // ── Check if logged in ────────────────────────
 export const isLoggedIn = () => {
-  return !!localStorage.getItem('access_token');
+  return !!(localStorage.getItem('token') || sessionStorage.getItem('token') || localStorage.getItem('access_token') || sessionStorage.getItem('access_token'));
 };
