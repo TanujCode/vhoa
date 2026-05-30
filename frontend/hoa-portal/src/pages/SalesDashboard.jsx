@@ -17,7 +17,7 @@ const SalesStatCard = ({ label, value, icon: Icon, color, sub, prefix = "" }) =>
     <p className="text-4xl font-mono font-bold mt-1 text-slate-900 dark:text-white">
       {prefix}{typeof value === 'number' ? value.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 }) : (value ?? '—')}
     </p>
-    {sub && <p className="text-xs text-slate-500 dark:text-gray-500 mt-2 font-sans">{sub}</p>}
+    {sub && <p className="text-xs text-slate-505 dark:text-gray-500 mt-2 font-sans">{sub}</p>}
   </div>
 );
 
@@ -97,7 +97,8 @@ export default function SalesDashboard({ setActivePage }) {
         <div className="flex items-center gap-3">
           <button
             onClick={fetchDashboardData}
-            className="px-5 py-2.5 bg-slate-200/60 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 text-slate-700 dark:text-white rounded-2xl text-sm font-semibold transition-all duration-200 flex items-center gap-2 border border-slate-300/30 dark:border-white/5 active:scale-95"
+            disabled={loading}
+            className="px-5 py-2.5 bg-slate-200/60 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 text-slate-700 dark:text-white rounded-2xl text-sm font-semibold transition-all duration-200 flex items-center gap-2 border border-slate-300/30 dark:border-white/5 active:scale-95 disabled:opacity-60"
           >
             <RefreshCw size={15} className={loading ? "animate-spin" : ""} /> Refresh Stats
           </button>
@@ -110,7 +111,7 @@ export default function SalesDashboard({ setActivePage }) {
         </div>
       </div>
 
-      {loading ? (
+      {loading && contracts.length === 0 ? (
         <div className="text-center py-20 text-gray-400">
           <div className="w-10 h-10 border-4 border-teal-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           Calculating sales aggregates...
@@ -177,7 +178,7 @@ export default function SalesDashboard({ setActivePage }) {
                   })}
                 </div>
               </div>
-              <div className="border-t border-slate-100 dark:border-white/5 pt-4 mt-6 flex justify-between items-center text-xs text-slate-500 dark:text-gray-500">
+              <div className="border-t border-slate-100 dark:border-white/5 pt-4 mt-6 flex justify-between items-center text-xs text-slate-500 dark:text-gray-505">
                 <span>Standard values based on pricing guidelines</span>
                 <span className="text-teal-600 dark:text-[#25C490] hover:underline cursor-pointer" onClick={() => setActivePage('contracts')}>Edit Prices</span>
               </div>
@@ -244,7 +245,7 @@ export default function SalesDashboard({ setActivePage }) {
                   </button>
                 </div>
               </div>
-              <div className="bg-slate-50 dark:bg-white/[0.02] border border-slate-100 dark:border-white/5 p-3 rounded-2xl text-[11px] text-slate-500 dark:text-gray-500 leading-snug mt-4">
+              <div className="bg-slate-50 dark:bg-white/[0.02] border border-slate-100 dark:border-white/5 p-3 rounded-2xl text-[11px] text-slate-500 dark:text-gray-505 leading-snug mt-4">
                 💡 Tip: Copy the Onboarding Link for any Active contract code and email it directly to the property manager for quick self-onboarding.
               </div>
             </div>

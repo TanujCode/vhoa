@@ -110,9 +110,13 @@ const AuditHistory = ({ community, user }) => {
           <h1 className="text-3xl font-semibold text-slate-900 dark:text-white">Audit History</h1>
           <p className="text-slate-500 dark:text-gray-400 mt-1">{community?.name}</p>
         </div>
-        <button onClick={fetchLogs}
-          className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 text-slate-700 dark:text-white rounded-2xl text-sm font-semibold transition flex items-center gap-2">
-          <RefreshCw size={15} /> Refresh
+        <button 
+          onClick={fetchLogs}
+          disabled={loading}
+          className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 text-slate-700 dark:text-white rounded-2xl text-sm font-semibold transition flex items-center gap-2 disabled:opacity-60"
+        >
+          <RefreshCw size={15} className={loading ? "animate-spin" : ""} />
+          {loading ? "Refreshing..." : "Refresh"}
         </button>
       </div>
 

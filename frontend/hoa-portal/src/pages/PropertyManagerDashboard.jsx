@@ -194,7 +194,8 @@ const PropertyManagerDashboard = ({ community, user, setActivePage }) => {
         </div>
         <button
           onClick={() => fetchDashboardData(community.community_id)}
-          className="px-5 py-2.5 bg-slate-200/60 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 text-slate-700 dark:text-white rounded-2xl text-sm font-semibold transition-all duration-200 flex items-center gap-2 border border-slate-300 dark:border-white/5 active:scale-95"
+          disabled={loading}
+          className="px-5 py-2.5 bg-slate-200/60 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 text-slate-700 dark:text-white rounded-2xl text-sm font-semibold transition-all duration-200 flex items-center gap-2 border border-slate-300 dark:border-white/5 active:scale-95 disabled:opacity-60"
         >
           <RefreshCw size={15} className={loading ? "animate-spin" : ""} /> Refresh Data
         </button>

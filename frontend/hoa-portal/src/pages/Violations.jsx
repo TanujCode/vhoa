@@ -739,10 +739,11 @@ const Violations = ({ community, user, setActivePage, setPaymentState }) => {
         <div className="flex gap-3">
           <button
             onClick={fetchViolations}
-            className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 rounded-2xl text-sm font-semibold transition flex items-center gap-2 text-slate-700 dark:text-white"
+            disabled={loading}
+            className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 rounded-2xl text-sm font-semibold transition flex items-center gap-2 text-slate-700 dark:text-white disabled:opacity-60"
           >
-            <RefreshCw size={15} />
-            Refresh
+            <RefreshCw size={15} className={loading ? "animate-spin" : ""} />
+            {loading ? "Refreshing..." : "Refresh"}
           </button>
 
           {!isResident && (
@@ -797,6 +798,8 @@ const Violations = ({ community, user, setActivePage, setPaymentState }) => {
                 type="text"
                 placeholder="Search violations..."
                 className="w-72 bg-slate-50 dark:bg-[#1e3248] border border-slate-200 dark:border-white/10 rounded-2xl pl-10 pr-4 py-2.5 text-sm text-slate-900 dark:text-white focus:border-teal-500 outline-none placeholder-slate-400 dark:placeholder-gray-500"
+                value={search}
+                onChange={e => setSearch(e.target.value)}
               />
             </div>
 

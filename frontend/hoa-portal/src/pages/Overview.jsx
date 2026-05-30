@@ -78,7 +78,7 @@ const Overview = ({ communities = [], setActiveCommunity, setActivePage, user })
         </div>
         <div className="bg-gradient-to-br from-slate-50 to-blue-50/40 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 shadow-sm dark:shadow-none rounded-3xl p-6">
           <div className="text-blue-600 dark:text-blue-400 text-5xl font-mono font-bold">{totalMembers}</div>
-          <div className="text-sm text-slate-500 dark:text-gray-400 mt-2">Total Members</div>
+          <div className="text-sm text-slate-505 dark:text-gray-400 mt-2">Total Members</div>
         </div>
         <div className="bg-gradient-to-br from-slate-50 to-blue-50/40 dark:from-[#1E2E42] dark:to-[#162535] border border-red-200/80 dark:border-red-500/20 shadow-sm dark:shadow-none rounded-3xl p-6">
           <div className="text-red-600 dark:text-red-400 text-5xl font-mono font-bold">{totalViolations}</div>
@@ -93,7 +93,7 @@ const Overview = ({ communities = [], setActiveCommunity, setActivePage, user })
       {/* Communities Grid */}
       <h2 className="text-lg font-semibold mb-5 text-slate-700 dark:text-gray-300">Communities at a Glance</h2>
 
-      {loading ? (
+      {loading && stats.length === 0 ? (
         <div className="text-center py-20 text-gray-400">
           <div className="w-8 h-8 border-2 border-teal-500 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
           Loading communities...
@@ -121,7 +121,7 @@ const Overview = ({ communities = [], setActiveCommunity, setActivePage, user })
             >
               {/* Card Header */}
               <div className="p-6 border-b border-slate-200/80 dark:border-white/10 flex items-center gap-4">
-                <div className="w-14 h-14 bg-teal-50 dark:bg-teal-500/10 rounded-2xl flex items-center justify-center flex-shrink-0">
+                <div className="w-14 h-14 bg-teal-5: dark:bg-teal-500/10 rounded-2xl flex items-center justify-center flex-shrink-0">
                   <Building2 size={28} className="text-teal-600 dark:text-teal-400" />
                 </div>
                 <div className="flex-1 min-w-0">
@@ -134,7 +134,7 @@ const Overview = ({ communities = [], setActiveCommunity, setActivePage, user })
                 <span className={`text-xs px-3 py-1 rounded-full font-medium flex-shrink-0 ${
                   comm.license_status === 'ACTIVE'
                     ? 'bg-teal-50 dark:bg-teal-500/20 text-teal-600 dark:text-teal-400'
-                    : 'bg-red-50 dark:bg-red-500/20 text-red-600 dark:text-red-400'
+                    : 'bg-red-550 dark:bg-red-500/20 text-red-600 dark:text-red-400'
                 }`}>
                   {comm.license_status}
                 </span>

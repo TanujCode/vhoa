@@ -300,23 +300,23 @@ const EditAmenityModal = ({ amenity, onClose, onSuccess }) => {
           <div>
             <label className="text-xs text-slate-500 dark:text-gray-400 mb-1 block">Name</label>
             <input type="text" required value={form.name} onChange={e => setForm({...form, name: e.target.value})}
-              className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500" />
+              className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl px-3 py-2 text-sm text-slate-950 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500" />
           </div>
           <div>
             <label className="text-xs text-slate-500 dark:text-gray-400 mb-1 block">Description</label>
             <textarea rows={2} value={form.description} onChange={e => setForm({...form, description: e.target.value})}
-              className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500 resize-none" />
+              className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl px-3 py-2 text-sm text-slate-950 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500 resize-none" />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="text-xs text-slate-500 dark:text-gray-400 mb-1 block">Location</label>
               <input type="text" value={form.location} onChange={e => setForm({...form, location: e.target.value})}
-                className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-teal-500" />
+                className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl px-3 py-2 text-sm text-slate-950 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500" />
             </div>
             <div>
               <label className="text-xs text-slate-500 dark:text-gray-400 mb-1 block">Capacity</label>
               <input type="number" min="1" value={form.capacity} onChange={e => setForm({...form, capacity: e.target.value})}
-                className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500" />
+                className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl px-3 py-2 text-sm text-slate-955 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500" />
             </div>
           </div>
           <div className="bg-slate-50 dark:bg-[#1e3248] p-3 rounded-2xl space-y-3">
@@ -329,7 +329,7 @@ const EditAmenityModal = ({ amenity, onClose, onSuccess }) => {
               <div>
                 <label className="text-xs text-slate-500 dark:text-gray-400 mb-1 block">Booking Fee ($)</label>
                 <input type="number" min="0" step="0.01" value={form.booking_fee} onChange={e => setForm({...form, booking_fee: e.target.value})}
-                  className="w-full bg-white dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500" />
+                  className="w-full bg-white dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl px-3 py-2 text-sm text-slate-950 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500" />
               </div>
             )}
           </div>
@@ -426,9 +426,13 @@ const Amenity = ({ community, user, setActivePage, setPaymentState }) => {
           <p className="text-slate-500 dark:text-gray-400 mt-1">{community?.name}</p>
         </div>
         <div className="flex gap-3">
-          <button onClick={() => activeTab === 'amenities' ? fetchAmenities() : fetchBookings()}
-            className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 rounded-2xl text-sm font-semibold transition flex items-center gap-2 text-slate-700 dark:text-white">
-            <RefreshCw size={15} /> Refresh
+          <button 
+            onClick={() => activeTab === 'amenities' ? fetchAmenities() : fetchBookings()}
+            disabled={loading}
+            className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 rounded-2xl text-sm font-semibold transition flex items-center gap-2 text-slate-700 dark:text-white disabled:opacity-60"
+          >
+            <RefreshCw size={15} className={loading ? "animate-spin" : ""} />
+            {loading ? "Refreshing..." : "Refresh"}
           </button>
           {isAdmin && (
             <button onClick={() => setShowCreateModal(true)}

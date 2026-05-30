@@ -801,7 +801,7 @@ const DetailDrawer = ({
 
         {/* Vendor Access & Codes */}
         {request.vendor_id && (
-          <div className="bg-slate-50 dark:bg-white/5 rounded-2xl p-4 border border-slate-200 dark:border-white/5 space-y-3.5">
+          <div className="bg-slate-50 dark:bg-white/5 rounded-2xl p-4 border border-slate-200/80 dark:border-white/10 space-y-3.5">
             <div className="flex justify-between items-center border-b border-slate-200 dark:border-white/5 pb-2">
               <h4 className="text-xs text-slate-500 dark:text-gray-400 font-semibold uppercase tracking-wider">Vendor Codes</h4>
               <span className="text-[10px] bg-blue-500/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400 px-2 py-0.5 rounded-full font-semibold">SECURITY</span>
@@ -1327,8 +1327,12 @@ const ServiceRequests = ({ community, user, setActivePage, setPaymentState }) =>
           </p>
         </div>
         <div className="flex gap-3">
-          <button onClick={handleRefreshAll} className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 text-slate-700 dark:text-white rounded-2xl text-sm font-semibold transition flex items-center gap-2">
-            <RefreshCw size={15} /> Refresh
+          <button 
+            onClick={handleRefreshAll} 
+            disabled={loading}
+            className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 text-slate-700 dark:text-white rounded-2xl text-sm font-semibold transition flex items-center gap-2 disabled:opacity-60"
+          >
+            <RefreshCw size={15} className={loading ? "animate-spin" : ""} /> {loading ? "Refreshing..." : "Refresh"}
           </button>
           <button onClick={() => setShowModal(true)} className="flex items-center gap-2 bg-teal-600 hover:bg-teal-500 text-white px-5 py-2.5 rounded-2xl text-sm font-semibold transition">
             <Plus size={15} /> New Request

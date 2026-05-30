@@ -202,10 +202,11 @@ const Documents = ({ community, user }) => {
         <div className="flex gap-2 w-full sm:w-auto">
           <button
             onClick={fetchDocuments}
-            className="p-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 text-slate-700 dark:text-white rounded-2xl transition flex items-center justify-center"
+            disabled={loading}
+            className="p-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 text-slate-700 dark:text-white rounded-2xl transition flex items-center justify-center disabled:opacity-60"
             title="Refresh"
           >
-            <RefreshCw size={15} />
+            <RefreshCw size={15} className={loading ? "animate-spin" : ""} />
           </button>
           {isManagement && (
             <button
