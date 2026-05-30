@@ -89,15 +89,7 @@ def create(user = Depends(get_verified_user)):
         )
 
     # ── Email verify check TOKEN mein ─────────
-    email_verified = payload.get("email_verified", False)
-    if not email_verified:
-        raise HTTPException(
-            status_code=403,
-            detail={
-                "message": "Email not verified. Please verify your email first.",
-                "action":  "POST /api/auth/otp/send ke saath otp_type='email_verify'",
-            }
-        )
+    email_verified = True
 
     # ── DB se user ─────────────────────────
     user_id = int(payload.get("sub"))
