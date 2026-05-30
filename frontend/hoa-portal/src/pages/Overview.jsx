@@ -133,8 +133,8 @@ const Overview = ({ communities = [], setActiveCommunity, setActivePage, user })
                 </div>
                 <span className={`text-xs px-3 py-1 rounded-full font-medium flex-shrink-0 ${
                   comm.license_status === 'ACTIVE'
-                    ? 'bg-teal-5 dark:bg-teal-500/20 text-teal-600 dark:text-teal-400'
-                    : 'bg-red-5 dark:bg-red-500/20 text-red-600 dark:text-red-400'
+                    ? 'bg-teal-50 dark:bg-teal-500/20 text-teal-600 dark:text-teal-400'
+                    : 'bg-red-50 dark:bg-red-500/20 text-red-600 dark:text-red-400'
                 }`}>
                   {comm.license_status}
                 </span>
