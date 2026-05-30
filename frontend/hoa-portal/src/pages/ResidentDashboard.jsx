@@ -34,6 +34,7 @@ const ResidentDashboard = ({ community, user: initialUser, setActivePage }) => {
   const [dues, setDues] = useState([]);
   const [requests, setRequests] = useState([]);
   const [news, setNews] = useState([]);
+  const [refreshing, setRefreshing] = useState(false);
 
   const fetchDashboardData = async (userObj) => {
     const communityId = userObj?.community_id;
@@ -87,8 +88,10 @@ const ResidentDashboard = ({ community, user: initialUser, setActivePage }) => {
     loadUserAndData(true);
   }, []);
 
-  const handleRefresh = () => {
-    loadUserAndData(false);
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await loadUserAndData(false);
+    setRefreshing(false);
   };
 
   if (loading) {
@@ -151,9 +154,10 @@ const ResidentDashboard = ({ community, user: initialUser, setActivePage }) => {
         </div>
         <button
           onClick={handleRefresh}
-          className="flex items-center gap-2 px-5 py-2.5 bg-slate-200/60 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 text-slate-700 dark:text-white rounded-2xl text-sm font-semibold transition"
+          disabled={refreshing}
+          className="flex items-center gap-2 px-5 py-2.5 bg-slate-200/60 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 text-slate-700 dark:text-white rounded-2xl text-sm font-semibold transition disabled:opacity-60"
         >
-          <RefreshCw size={15} /> Refresh
+          <RefreshCw size={15} className={refreshing ? "animate-spin" : ""} /> {refreshing ? "Refreshing..." : "Refresh"}
         </button>
       </div>
 

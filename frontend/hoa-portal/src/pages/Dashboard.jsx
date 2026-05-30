@@ -47,7 +47,10 @@ const Dashboard = ({ community, user, setActivePage }) => {
   const [requests, setRequests]     = useState([]);
   const [bookings, setBookings]     = useState([]);
   const [loading, setLoading]       = useState(true);
-  const [showExportModal, setShowExportModal] = useState(false);   // ← Added
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [exportType, setExportType] = useState('violations');
+  const [exportFormat, setExportFormat] = useState('CSV');
+  const [exporting, setExporting] = useState(false);
 
   useEffect(() => {
     if (community?.community_id) {
@@ -74,6 +77,28 @@ const Dashboard = ({ community, user, setActivePage }) => {
     }
   };
 
+  const handleExport = async () => {
+    try {
+      setExporting(true);
+      const response = await API.get(`/report/${community.community_id}/export?type=${exportType}`, {
+        responseType: 'blob',
+      });
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `report_${exportType}_${community.community_id}_${new Date().toISOString().slice(0, 10)}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      setShowExportModal(false);
+    } catch (err) {
+      console.error(`Export failed for type: ${exportType}`, err);
+      alert('Failed to generate report export. Please try again.');
+    } finally {
+      setExporting(false);
+    }
+  };
+
   if (!community) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -94,7 +119,7 @@ const Dashboard = ({ community, user, setActivePage }) => {
   return (
     <div>
       {/* ── Page Header ─────────────────────── */}
-      <div className="flex justify-between items-start mb-8">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-8">
         <div>
           <h1 className="text-3xl font-semibold">Dashboard</h1>
           <p className="text-gray-400 mt-1">
@@ -104,10 +129,11 @@ const Dashboard = ({ community, user, setActivePage }) => {
         <div className="flex gap-3">
           <button
             onClick={() => fetchDashboardData(community.community_id)}
-            className="px-4 py-2.5 bg-slate-200/60 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 text-slate-700 dark:text-white rounded-2xl text-sm font-medium transition flex items-center gap-2"
+            disabled={loading}
+            className="px-4 py-2.5 bg-slate-200/60 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 text-slate-700 dark:text-white rounded-2xl text-sm font-medium transition flex items-center gap-2 disabled:opacity-60"
           >
-            <RefreshCw size={15} />
-            Refresh
+            <RefreshCw size={15} className={loading ? "animate-spin" : ""} />
+            {loading ? "Refreshing..." : "Refresh"}
           </button>
 
           {/* Export Report Button */}
@@ -349,7 +375,7 @@ const Dashboard = ({ community, user, setActivePage }) => {
       {/* Export Report Modal */}
       {showExportModal && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
-          <div className="bg-gradient-to-br from-slate-50 to-blue-50/40 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl w-full max-w-md mx-4 overflow-hidden shadow-2xl">
+          <div className="bg-gradient-to-br from-slate-50 to-blue-50/40 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl w-full max-w-md mx-4 overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200">
             <div className="p-6 border-b border-slate-100 dark:border-white/10">
               <h2 className="text-2xl font-semibold text-slate-900 dark:text-white">Export Report</h2>
               <p className="text-slate-500 dark:text-gray-400 text-sm mt-1">
@@ -360,51 +386,57 @@ const Dashboard = ({ community, user, setActivePage }) => {
             <div className="p-6 space-y-5">
               <div>
                 <label className="block text-sm text-slate-500 dark:text-gray-400 mb-2">Report Type</label>
-                <select className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl p-4 text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-teal-500">
-                  <option>Monthly Summary</option>
-                  <option>Violation Report</option>
-                  <option>Payment Report</option>
-                  <option>Service Requests</option>
-                  <option>Full Community Report</option>
+                <select
+                  value={exportType}
+                  onChange={(e) => setExportType(e.target.value)}
+                  className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl p-4 text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-teal-500"
+                >
+                  <option value="violations">Violation Report</option>
+                  <option value="payments">Payment Report</option>
+                  <option value="servicerequests">Service Requests</option>
+                  <option value="bookings">Amenity Bookings</option>
                 </select>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm text-slate-500 dark:text-gray-400 mb-2">From Date</label>
-                  <input type="date" className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl p-4 text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-teal-500" />
-                </div>
-                <div>
-                  <label className="block text-sm text-slate-500 dark:text-gray-400 mb-2">To Date</label>
-                  <input type="date" className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl p-4 text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-teal-500" />
-                </div>
               </div>
 
               <div>
                 <label className="block text-sm text-slate-500 dark:text-gray-400 mb-2">Export Format</label>
-                <select className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl p-4 text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-teal-500">
-                  <option>PDF</option>
-                  <option>Excel (.xlsx)</option>
-                  <option>CSV</option>
+                <select
+                  value={exportFormat}
+                  onChange={(e) => setExportFormat(e.target.value)}
+                  className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl p-4 text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-teal-500"
+                >
+                  <option value="CSV">CSV (Supported)</option>
+                  <option value="PDF" disabled>PDF (Coming Soon)</option>
+                  <option value="Excel" disabled>Excel (.xlsx) (Coming Soon)</option>
                 </select>
               </div>
+              
+              <p className="text-xs text-slate-400 dark:text-gray-500 italic">
+                * Note: Full history of records will be generated for download.
+              </p>
             </div>
 
             <div className="p-6 border-t border-slate-100 dark:border-white/10 flex gap-3">
               <button
                 onClick={() => setShowExportModal(false)}
-                className="flex-1 py-3 text-slate-500 hover:bg-slate-100 dark:text-gray-400 dark:hover:bg-white/10 rounded-2xl transition"
+                disabled={exporting}
+                className="flex-1 py-3 text-slate-500 hover:bg-slate-100 dark:text-gray-400 dark:hover:bg-white/10 rounded-2xl transition disabled:opacity-50"
               >
                 Cancel
               </button>
               <button
-                onClick={() => {
-                  alert("✅ Report Exported Successfully!");
-                  setShowExportModal(false);
-                }}
-                className="flex-1 py-3 bg-teal-600 hover:bg-teal-500 rounded-2xl font-medium text-white transition"
+                onClick={handleExport}
+                disabled={exporting}
+                className="flex-1 py-3 bg-teal-600 hover:bg-teal-500 rounded-2xl font-medium text-white transition flex items-center justify-center gap-2 disabled:opacity-50"
               >
-                Export
+                {exporting ? (
+                  <>
+                    <RefreshCw size={15} className="animate-spin" />
+                    Exporting...
+                  </>
+                ) : (
+                  "Export"
+                )}
               </button>
             </div>
           </div>

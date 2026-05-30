@@ -44,7 +44,7 @@ const Overview = ({ communities = [], setActiveCommunity, setActivePage, user })
   return (
     <div>
       {/* Header */}
-      <div className="flex justify-between items-start mb-8">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-8">
         <div>
           <h1 className="text-3xl font-semibold text-slate-900 dark:text-white">All Communities</h1>
           <p className="text-slate-500 dark:text-gray-400 mt-1">Live updates across all your HOA communities</p>
@@ -52,10 +52,11 @@ const Overview = ({ communities = [], setActiveCommunity, setActivePage, user })
         <div className="flex gap-3">
           <button
             onClick={fetchAllStats}
-            className="px-5 py-2.5 bg-slate-200/60 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 text-slate-700 dark:text-white rounded-2xl text-sm font-semibold transition flex items-center gap-2"
+            disabled={loading}
+            className="px-5 py-2.5 bg-slate-200/60 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 text-slate-700 dark:text-white rounded-2xl text-sm font-semibold transition flex items-center gap-2 disabled:opacity-60"
           >
-            <RefreshCw size={15} />
-            Refresh
+            <RefreshCw size={15} className={loading ? "animate-spin" : ""} />
+            {loading ? "Refreshing..." : "Refresh"}
           </button>
           {['super_admin', 'sales_admin'].includes(user?.role) && (
             <button
