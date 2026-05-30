@@ -207,6 +207,79 @@ def seed_amenity_types():
         db.close()
 
 
+def seed_custom_users():
+    db = SessionLocal()
+    try:
+        from app.models.user import User, Role
+        from app.services.token_service import hash_password
+
+        # 1. Super Admin
+        super_admin_email = "tanujtongse132@gmail.com"
+        super_admin_role = db.query(Role).filter(Role.role_name == "super_admin").first()
+        if super_admin_role:
+            super_user = db.query(User).filter(User.email_id == super_admin_email).first()
+            if not super_user:
+                super_user = User(
+                    first_name="Super",
+                    last_name="Admin",
+                    email_id=super_admin_email,
+                    password=hash_password("Super1234"),
+                    role_id=super_admin_role.role_id,
+                    is_client=False,
+                    active_status=True,
+                    account_status="ACTIVE",
+                    email_id_is_verified=True,
+                    mobile_is_verified=False
+                )
+                db.add(super_user)
+                db.commit()
+                print("✅ Super admin seeded.")
+            else:
+                super_user.password = hash_password("Super1234")
+                super_user.role_id = super_admin_role.role_id
+                super_user.active_status = True
+                super_user.account_status = "ACTIVE"
+                super_user.email_id_is_verified = True
+                db.commit()
+                print("✅ Super admin updated.")
+
+        # 2. Sales Person (Sales Admin)
+        sales_email = "tanujtongse0732@gmail.com"
+        sales_role = db.query(Role).filter(Role.role_name == "sales_admin").first()
+        if sales_role:
+            sales_user = db.query(User).filter(User.email_id == sales_email).first()
+            if not sales_user:
+                sales_user = User(
+                    first_name="Sales",
+                    last_name="Person",
+                    email_id=sales_email,
+                    password=hash_password("Sales1234"),
+                    role_id=sales_role.role_id,
+                    is_client=False,
+                    active_status=True,
+                    account_status="ACTIVE",
+                    email_id_is_verified=True,
+                    mobile_is_verified=False
+                )
+                db.add(sales_user)
+                db.commit()
+                print("✅ Sales admin seeded.")
+            else:
+                sales_user.password = hash_password("Sales1234")
+                sales_user.role_id = sales_role.role_id
+                sales_user.active_status = True
+                sales_user.account_status = "ACTIVE"
+                sales_user.email_id_is_verified = True
+                db.commit()
+                print("✅ Sales admin updated.")
+
+    except Exception as e:
+        db.rollback()
+        print(f"❌ Failed to seed custom users: {e}")
+    finally:
+        db.close()
+
+
 # ==================== RUN ALL SEEDS ====================
 seed_roles()
 seed_violation_statuses()
@@ -214,6 +287,7 @@ seed_sr_statuses()
 seed_locations()
 seed_default_service_types_for_all_communities()   # ← Yeh important hai
 seed_amenity_types()
+seed_custom_users()
 
 print("All seeding completed successfully!")
 
