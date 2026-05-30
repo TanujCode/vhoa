@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Check, X, Users, ClipboardList, AlertTriangle, Clock } from 'lucide-react';
-import API from '../services/api'; 
+import API, { getBaseUrl } from '../services/api'; 
 
 export default function BoardDashboard({ community, user }) {
   const [requests, setRequests] = useState([]);
@@ -168,7 +168,7 @@ export default function BoardDashboard({ community, user }) {
                       <div className="flex gap-2">
                         {req.id_proof_url ? (
                           <a
-                            href={`http://127.0.0.1:9999${req.id_proof_url}`}
+                            href={getBaseUrl(req.id_proof_url)}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="px-2.5 py-1 text-xs font-semibold bg-blue-500/10 hover:bg-blue-500 text-blue-600 hover:text-white rounded-xl border border-blue-500/20 transition-all"
@@ -180,7 +180,7 @@ export default function BoardDashboard({ community, user }) {
                         )}
                         {req.address_proof_url ? (
                           <a
-                            href={`http://127.0.0.1:9999${req.address_proof_url}`}
+                            href={getBaseUrl(req.address_proof_url)}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="px-2.5 py-1 text-xs font-semibold bg-purple-500/10 hover:bg-purple-500 text-purple-600 hover:text-white rounded-xl border border-purple-500/20 transition-all"

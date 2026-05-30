@@ -1,7 +1,18 @@
 import axios from 'axios';
 
+export const getApiUrl = (path = '') => {
+  const baseURL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:9999/api';
+  return `${baseURL}${path}`;
+};
+
+export const getBaseUrl = (path = '') => {
+  const baseURL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:9999/api';
+  const base = baseURL.endsWith('/api') ? baseURL.slice(0, -4) : baseURL;
+  return `${base}${path}`;
+};
+
 const API = axios.create({
-  baseURL: 'http://127.0.0.1:9999/api',
+  baseURL: getApiUrl(),
   headers: { 'Content-Type': 'application/json' },
 });
 
@@ -44,7 +55,7 @@ API.interceptors.response.use(
 
       try {
         const res = await axios.post(
-          'http://127.0.0.1:9999/api/auth/refresh',
+          getApiUrl('/auth/refresh'),
           { session_token: sessionToken }
         );
         const newToken = res.data.access_token;

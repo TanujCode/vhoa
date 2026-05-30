@@ -4,6 +4,7 @@ import {
 } from 'lucide-react';
 import AddCommunityModal from './AddCommunityModal';
 import { useTheme } from '../context/ThemeContext';
+import { getBaseUrl } from '../services/api';
 
 const Topbar = ({
   activeCommunity,
@@ -28,11 +29,10 @@ const Topbar = ({
   const isResident = user?.role === 'resident';
   const isBoardMember = ['board_member', 'board', 'president', 'director'].includes(user?.role?.toLowerCase());
 
-  // Helper to handle backend image paths
   const getProfileImage = (url) => {
     if (!url) return null;
     if (url.startsWith('http')) return url;
-    return `http://127.0.0.1:9999${url}`;
+    return getBaseUrl(url.startsWith('/') ? url : '/' + url);
   };
 
   const getInitials = (name) => {

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { AlertTriangle, Plus, RefreshCw, ChevronDown, X, Search, ArrowUpRight, Download } from 'lucide-react';
-import API from '../services/api';
+import API, { getBaseUrl } from '../services/api';
 
 // ── Status Badge ──────────────────────────────
 const StatusBadge = ({ status }) => {
@@ -397,7 +397,7 @@ const ViolationDetailModal = ({ violation, isResident, statuses, onClose, onDisp
   const getFileUrl = (url) => {
     if (!url) return '';
     if (url.startsWith('http')) return url;
-    return `http://127.0.0.1:9999/${url}`;
+    return getBaseUrl(url.startsWith('/') ? url : '/' + url);
   };
 
   const handleStatusChangeSubmit = async () => {

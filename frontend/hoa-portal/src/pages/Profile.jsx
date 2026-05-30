@@ -3,7 +3,7 @@ import {
   Camera, Mail, Phone, Shield, Clock,
   CheckCircle, XCircle, Save, Key, Eye, EyeOff, User, Bell, Trash2
 } from 'lucide-react';
-import API from '../services/api';
+import API, { getBaseUrl } from '../services/api';
 
 const Profile = ({ user, setUser, viewRole }) => {
   // ── Form State ────────────────────────────
@@ -267,7 +267,7 @@ const Profile = ({ user, setUser, viewRole }) => {
             <div className="relative mb-4 group">
               {user?.user_profile_url ? (
                 <img
-                  src={`http://localhost:9999${user.user_profile_url}`}
+                  src={getBaseUrl(user.user_profile_url)}
                   alt="Profile"
                   className="w-28 h-28 rounded-3xl object-cover"
                 />
@@ -515,7 +515,7 @@ const Profile = ({ user, setUser, viewRole }) => {
                       {user?.id_proof_url ? (
                         <div className="flex items-center gap-2 mt-2">
                           <a
-                            href={`http://127.0.0.1:9999${user.id_proof_url}`}
+                            href={getBaseUrl(user.id_proof_url)}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="inline-flex items-center gap-1.5 text-xs text-teal-600 hover:text-teal-500 dark:text-teal-400 dark:hover:text-teal-300 font-medium transition bg-teal-500/5 hover:bg-teal-500/10 px-3 py-1.5 rounded-lg border border-teal-500/10"
@@ -555,7 +555,7 @@ const Profile = ({ user, setUser, viewRole }) => {
                       {user?.address_proof_url ? (
                         <div className="flex items-center gap-2 mt-2">
                           <a
-                            href={`http://127.0.0.1:9999${user.address_proof_url}`}
+                            href={getBaseUrl(user.address_proof_url)}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="inline-flex items-center gap-1.5 text-xs text-purple-600 hover:text-purple-500 dark:text-purple-400 dark:hover:text-purple-300 font-medium transition bg-purple-500/5 hover:bg-purple-500/10 px-3 py-1.5 rounded-lg border border-purple-500/10"

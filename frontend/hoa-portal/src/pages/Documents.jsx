@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { RefreshCw, Search, Plus, Trash2, Download, FileText, Folder, File, ShieldAlert } from 'lucide-react';
-import API from '../services/api';
+import API, { getBaseUrl } from '../services/api';
 
 const DocumentModal = ({ communityId, onClose, onSuccess }) => {
   const [form, setForm] = useState({
@@ -305,7 +305,7 @@ const Documents = ({ community, user }) => {
                     <td className="p-5">
                       <div className="flex justify-end gap-2">
                         <a
-                          href={`http://localhost:9999${doc.document_url}`}
+                          href={getBaseUrl(doc.document_url)}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="p-2 bg-teal-500/10 hover:bg-teal-500/20 dark:bg-teal-500/20 dark:hover:bg-teal-500/30 text-teal-600 dark:text-teal-400 rounded-xl transition-all"

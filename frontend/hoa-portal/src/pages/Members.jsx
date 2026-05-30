@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Search, ChevronDown, UserPlus, Mail, Phone, X } from 'lucide-react';
-import API from '../services/api';
+import API, { getBaseUrl } from '../services/api';
 
 const Members = ({ community }) => {
   const [members, setMembers]   = useState([]);
@@ -451,7 +451,7 @@ const Members = ({ community }) => {
                       <div className="flex gap-2">
                         {m.id_proof_url ? (
                           <a
-                            href={`http://127.0.0.1:9999${m.id_proof_url}`}
+                            href={getBaseUrl(m.id_proof_url)}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="px-2.5 py-1 text-xs font-semibold bg-blue-500/10 hover:bg-blue-500 text-blue-600 hover:text-white rounded-xl border border-blue-500/20 transition-all"
@@ -461,7 +461,7 @@ const Members = ({ community }) => {
                         ) : null}
                         {m.address_proof_url ? (
                           <a
-                            href={`http://127.0.0.1:9999${m.address_proof_url}`}
+                            href={getBaseUrl(m.address_proof_url)}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="px-2.5 py-1 text-xs font-semibold bg-purple-500/10 hover:bg-purple-500 text-purple-600 hover:text-white rounded-xl border border-purple-500/20 transition-all"
@@ -708,7 +708,7 @@ const Members = ({ community }) => {
                     <span className="text-[10px] font-bold text-slate-550 dark:text-gray-400 block">IDENTITY PROOF</span>
                     {editingMember?.id_proof_url ? (
                       <a
-                        href={`http://127.0.0.1:9999${editingMember.id_proof_url}`}
+                        href={getBaseUrl(editingMember.id_proof_url)}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-xs text-teal-600 hover:underline font-semibold block truncate"
@@ -732,10 +732,10 @@ const Members = ({ community }) => {
                     <span className="text-[10px] font-bold text-slate-550 dark:text-gray-400 block">ADDRESS PROOF</span>
                     {editingMember?.address_proof_url ? (
                       <a
-                        href={`http://127.0.0.1:9999${editingMember.address_proof_url}`}
+                        href={getBaseUrl(editingMember.address_proof_url)}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-xs text-purple-650 hover:underline font-semibold block truncate"
+                        className="text-xs text-purple-655 hover:underline font-semibold block truncate"
                       >
                         View Address Proof
                       </a>

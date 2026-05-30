@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Search, ShieldCheck, Upload, Send, Info } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import API from '../services/api';
 
 const SearchAndJoinHOA = () => {
     const navigate = useNavigate();
@@ -26,12 +27,7 @@ const SearchAndJoinHOA = () => {
                     return;
                 }
 
-                // 🔥 FIXED URL: Port 9999 ke sath global prefix '/api' jod diya hai
-                const res = await axios.get('http://127.0.0.1:9999/api/community', {
-                    headers: {
-                        Authorization: `Bearer ${token}`
-                    }
-                });
+                const res = await API.get('/community');
                 
                 const data = Array.isArray(res.data) ? res.data : (res.data.communities || []);
                 setCommunities(data);
@@ -70,12 +66,9 @@ const SearchAndJoinHOA = () => {
     formData.append('address_proof', addressProof);
 
     try {
-        const token = localStorage.getItem('token') || sessionStorage.getItem('token') || localStorage.getItem('access_token') || sessionStorage.getItem('access_token');
-        
-        const res = await axios.post('http://127.0.0.1:9999/api/community/join-request', formData, {
+        const res = await API.post('/community/join-request', formData, {
             headers: { 
-                'Content-Type': 'multipart/form-data',
-                'Authorization': `Bearer ${token}`
+                'Content-Type': 'multipart/form-data'
             }
         });
         
