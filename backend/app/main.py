@@ -10,7 +10,15 @@ from app.models import *  # noqa
 from app.routers import auth, community, violation, audit_log, location, service_request, amenity, news, vendor, contract, payment, meeting_survey, report
 from app.routers import user
 
-Base.metadata.create_all(bind=engine)
+try:
+    print("⏳ Connecting to database and verifying DDL...")
+    Base.metadata.create_all(bind=engine)
+    print("✅ Database connection verified and base tables created.")
+except Exception as e:
+    import traceback
+    print("❌ CRITICAL DATABASE ERROR ON STARTUP:")
+    traceback.print_exc()
+    raise e
 
 def run_db_upgrades():
     db = SessionLocal()
