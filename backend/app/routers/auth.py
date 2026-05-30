@@ -139,9 +139,9 @@ def login(request: Request, body: LoginRequest, db: Session = Depends(get_db)):
 
         # 2. REAL FIX: Check if verified or not
         # (Confirm column name according to your DB, usually email_id_is_verified)
-        if hasattr(user, 'email_id_is_verified') and not user.email_id_is_verified:
-            # If not verified, throw error
-            raise ValueError("Email not verified. Please verify your email first.")
+        # if hasattr(user, 'email_id_is_verified') and not user.email_id_is_verified:
+        #     # If not verified, throw error
+        #     raise ValueError("Email not verified. Please verify your email first.")
 
         # 3. If verified, only then call login_user
         result = login_user(body.email_id, body.password, db)
