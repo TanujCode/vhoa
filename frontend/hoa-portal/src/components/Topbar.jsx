@@ -65,37 +65,37 @@ const Topbar = ({
       <div className="relative flex-1 lg:flex-none">
         {isResident || isBoardMember ? (
           // Board Member + Resident ke liye Fixed Community (jaise HTML mein hai)
-          <div className="flex items-center gap-3 px-4 py-2 bg-slate-100 dark:bg-[#1E3248] border border-slate-200 dark:border-white/10 rounded-2xl">
-            <div className="w-2 h-2 bg-teal-500 rounded-full animate-pulse"></div>
-            <div>
-              <p className="text-[10px] text-slate-500 dark:text-gray-400 font-mono uppercase tracking-widest leading-none mb-0.5">MY COMMUNITY</p>
-              <p className="text-sm font-bold text-slate-900 dark:text-white leading-none truncate">
+          <div className="flex items-center gap-2 sm:gap-3 px-3 py-1.5 sm:px-4 sm:py-2 bg-slate-100 dark:bg-[#1E3248] border border-slate-200 dark:border-white/10 rounded-2xl max-w-[200px] sm:max-w-[280px] lg:max-w-none">
+            <div className="w-2 h-2 bg-teal-500 rounded-full animate-pulse flex-shrink-0"></div>
+            <div className="min-w-0">
+              <p className="text-[9px] sm:text-[10px] text-slate-500 dark:text-gray-400 font-mono uppercase tracking-widest leading-none mb-0.5 truncate">MY COMMUNITY</p>
+              <p className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white leading-none truncate">
                 {activeCommunity?.name || "Oakwood Estates"}
               </p>
             </div>
-            <div className="ml-auto text-[10px] font-mono text-teal-600 dark:text-teal-400 bg-teal-500/10 px-2.5 py-0.5 rounded">
+            <div className="ml-auto text-[8px] sm:text-[10px] font-mono text-teal-600 dark:text-teal-400 bg-teal-500/10 px-1.5 py-0.5 sm:px-2.5 rounded flex-shrink-0">
               {activeCommunity?.community_code || "OAK-2291"}
             </div>
           </div>
         ) : (
-          // Admin / Super Admin ke liye original dropdown
+          // Admin / Super Admin ke liye original dropdown (responsive layout)
           <div
-            className="bg-slate-100 dark:bg-[#1E3248] border border-slate-200 dark:border-white/20 rounded-2xl px-4 py-2 flex items-center gap-3 cursor-pointer hover:border-teal-500 transition min-w-[240px] lg:min-w-[280px]"
+            className="bg-slate-100 dark:bg-[#1E3248] border border-slate-200 dark:border-white/20 rounded-2xl px-3 py-2 sm:px-4 flex items-center gap-2 sm:gap-3 cursor-pointer hover:border-teal-500 transition min-w-[140px] max-w-[180px] sm:min-w-[240px] lg:min-w-[280px] lg:max-w-none"
             onClick={() => setIsCommDropdownOpen(!isCommDropdownOpen)}
           >
-            <div className="w-2 h-2 bg-teal-500 rounded-full"></div>
+            <div className="w-2 h-2 bg-teal-500 rounded-full flex-shrink-0"></div>
             <div className="min-w-0 flex-1">
-              <p className="text-sm font-semibold truncate text-gray-900 dark:text-white">
+              <p className="text-xs sm:text-sm font-semibold truncate text-gray-900 dark:text-white">
                 {activeCommunity?.name || "Select Community"}
               </p>
             </div>
-            <ChevronDown size={16} className={`text-gray-400 transition-transform ${isCommDropdownOpen ? 'rotate-180' : ''}`} />
+            <ChevronDown size={16} className={`text-gray-400 flex-shrink-0 transition-transform ${isCommDropdownOpen ? 'rotate-180' : ''}`} />
           </div>
         )}
 
         {/* Original Dropdown (Sirf non-board members ke liye) */}
         {!isResident && !isBoardMember && isCommDropdownOpen && (
-          <div className="absolute top-[calc(100%+12px)] left-0 w-80 bg-white dark:bg-[#1E3248] border border-slate-200 dark:border-white/20 rounded-3xl shadow-2xl z-50 py-3 overflow-hidden animate-in fade-in zoom-in-95">
+          <div className="absolute top-[calc(100%+12px)] left-0 w-72 sm:w-80 bg-white dark:bg-[#1E3248] border border-slate-200 dark:border-white/20 rounded-3xl shadow-2xl z-50 py-3 overflow-hidden animate-in fade-in zoom-in-95">
             <div className="px-3 relative">
               <Search size={16} className="absolute left-7 top-1/2 -translate-y-1/2 text-gray-400" />
               <input
@@ -137,13 +137,13 @@ const Topbar = ({
         )}
       </div>
 
-      {/* Right Side Actions - Original Code Same Rakha Hai */}
-      <div className="ml-auto flex items-center gap-2 lg:gap-4">
+      {/* Right Side Actions */}
+      <div className="ml-auto flex items-center gap-1.5 sm:gap-2 lg:gap-4 flex-shrink-0">
         
         {canSwitchView && (
           <button
             onClick={() => setViewAsResident(!viewAsResident)}
-            className="px-4 py-2 bg-gradient-to-r from-teal-500/10 to-blue-500/10 hover:from-teal-500/20 hover:to-blue-500/20 text-[#25C490] hover:text-[#2ae2a6] border border-teal-500/25 rounded-2xl text-xs font-bold transition flex items-center gap-1.5 shadow-md shadow-teal-950/5 active:scale-95"
+            className="hidden md:flex px-4 py-2 bg-gradient-to-r from-teal-500/10 to-blue-500/10 hover:from-teal-500/20 hover:to-blue-500/20 text-[#25C490] hover:text-[#2ae2a6] border border-teal-500/25 rounded-2xl text-xs font-bold transition items-center gap-1.5 shadow-md shadow-teal-950/5 active:scale-95"
           >
             {viewAsResident 
               ? (isBoardMember ? "Switch to Board View" : "Switch to Admin View") 
@@ -153,27 +153,27 @@ const Topbar = ({
         
         <button
           onClick={toggleTheme}
-          className="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-slate-100 dark:hover:bg-white/10 text-gray-500 dark:text-gray-400 transition-colors"
+          className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-xl hover:bg-slate-100 dark:hover:bg-white/10 text-gray-500 dark:text-gray-400 transition-colors"
         >
-          {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
+          {theme === 'dark' ? <Sun size={18} className="sm:w-5 sm:h-5" /> : <Moon size={18} className="sm:w-5 sm:h-5" />}
         </button>
 
         <button
           onClick={toggleNotif}
-          className="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-slate-100 dark:hover:bg-white/10 text-gray-500 dark:text-gray-400 relative transition-colors"
+          className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-xl hover:bg-slate-100 dark:hover:bg-white/10 text-gray-500 dark:text-gray-400 relative transition-colors"
         >
-          <Bell size={20} />
+          <Bell size={18} className="sm:w-5 sm:h-5" />
           {unreadCount > 0 && (
-            <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[9px] font-bold font-mono px-1.5 py-0.5 rounded-full flex items-center justify-center min-w-5 h-5 border-2 border-white dark:border-[#162535] shadow-sm animate-pulse">
+            <span className="absolute -top-0.5 -right-0.5 sm:-top-1 sm:-right-1 bg-red-500 text-white text-[8px] sm:text-[9px] font-bold font-mono px-1 sm:px-1.5 py-0.5 rounded-full flex items-center justify-center min-w-4 sm:min-w-5 h-4 sm:h-5 border border-white dark:border-[#162535] shadow-sm animate-pulse">
               {unreadCount}
             </span>
           )}
         </button>
 
-        {/* User Profile - FIXED IMAGE LOGIC */}
-        <div className="relative ml-2">
+        {/* User Profile */}
+        <div className="relative ml-1 sm:ml-2">
           <div
-            className="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-white cursor-pointer hover:ring-2 ring-teal-500/5 transition-all overflow-hidden border border-white/10 bg-gradient-to-br from-teal-500 to-blue-600 shadow-lg"
+            className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center font-bold text-white cursor-pointer hover:ring-2 ring-teal-500/5 transition-all overflow-hidden border border-white/10 bg-gradient-to-br from-teal-500 to-blue-600 shadow-lg"
             onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
           >
             {user?.user_profile_url ? (
@@ -183,11 +183,11 @@ const Topbar = ({
                 className="w-full h-full object-cover"
                 onError={(e) => {
                   e.target.style.display = 'none';
-                  e.target.parentElement.innerHTML = `<span class="text-sm">${getInitials(user?.name)}</span>`;
+                  e.target.parentElement.innerHTML = `<span class="text-xs sm:text-sm">${getInitials(user?.name)}</span>`;
                 }}
               />
             ) : (
-              <span className="text-sm tracking-tighter">{getInitials(user?.name)}</span>
+              <span className="text-xs sm:text-sm tracking-tighter">{getInitials(user?.name)}</span>
             )}
           </div>
 
@@ -201,6 +201,22 @@ const Topbar = ({
               </div>
 
               <div className="p-2">
+                {/* Mobile-only view switcher */}
+                {canSwitchView && (
+                  <button 
+                    onClick={() => { 
+                      setIsUserDropdownOpen(false); 
+                      setViewAsResident(!viewAsResident); 
+                    }}
+                    className="md:hidden w-full px-4 py-2.5 hover:bg-slate-100 dark:hover:bg-white/10 rounded-2xl flex items-center gap-3 text-sm text-teal-600 dark:text-teal-400 font-bold transition-colors mb-1"
+                  >
+                    <Plus size={16} /> 
+                    {viewAsResident 
+                      ? (isBoardMember ? "Switch to Board View" : "Switch to Admin View") 
+                      : "Switch to Resident View"}
+                  </button>
+                )}
+
                 <button 
                   onClick={() => { setIsUserDropdownOpen(false); setActivePage('profile'); }}
                   className="w-full px-4 py-2.5 hover:bg-slate-100 dark:hover:bg-white/10 rounded-2xl flex items-center gap-3 text-sm text-gray-600 dark:text-gray-300 transition-colors"
