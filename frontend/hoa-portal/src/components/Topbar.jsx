@@ -54,10 +54,10 @@ const Topbar = ({
   };
 
   return (
-    <header className="h-16 bg-white dark:bg-[#162535] border-b border-slate-200 dark:border-white/10 flex items-center px-4 lg:px-6 z-30 sticky top-0">
+    <header className="h-16 bg-white dark:bg-[#162535] border-b border-slate-200 dark:border-white/10 flex items-center px-3 sm:px-4 lg:px-6 z-30 sticky top-0">
       
       {/* Mobile Sidebar Button */}
-      <button onClick={toggleSidebar} className="lg:hidden p-2 mr-2 text-gray-500 dark:text-gray-400">
+      <button onClick={toggleSidebar} className="lg:hidden p-2 mr-1 sm:mr-2 text-gray-500 dark:text-gray-400">
         <Menu size={20} />
       </button>
 
@@ -65,22 +65,22 @@ const Topbar = ({
       <div className="relative flex-1 lg:flex-none">
         {isResident || isBoardMember ? (
           // Board Member + Resident ke liye Fixed Community (jaise HTML mein hai)
-          <div className="flex items-center gap-2 sm:gap-3 px-3 py-1.5 sm:px-4 sm:py-2 bg-slate-100 dark:bg-[#1E3248] border border-slate-200 dark:border-white/10 rounded-2xl max-w-[200px] sm:max-w-[280px] lg:max-w-none">
+          <div className="flex items-center gap-1.5 sm:gap-3 px-2 py-1 sm:px-4 sm:py-2 bg-slate-100 dark:bg-[#1E3248] border border-slate-200 dark:border-white/10 rounded-2xl max-w-[130px] sm:max-w-[280px] lg:max-w-none">
             <div className="w-2 h-2 bg-teal-500 rounded-full animate-pulse flex-shrink-0"></div>
             <div className="min-w-0">
-              <p className="text-[9px] sm:text-[10px] text-slate-500 dark:text-gray-400 font-mono uppercase tracking-widest leading-none mb-0.5 truncate">MY COMMUNITY</p>
+              <p className="text-[8px] sm:text-[10px] text-slate-500 dark:text-gray-400 font-mono uppercase tracking-widest leading-none mb-0.5 truncate">MY COMMUNITY</p>
               <p className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white leading-none truncate">
                 {activeCommunity?.name || "Oakwood Estates"}
               </p>
             </div>
-            <div className="ml-auto text-[8px] sm:text-[10px] font-mono text-teal-600 dark:text-teal-400 bg-teal-500/10 px-1.5 py-0.5 sm:px-2.5 rounded flex-shrink-0">
+            <div className="hidden sm:block ml-auto text-[10px] font-mono text-teal-600 dark:text-teal-400 bg-teal-500/10 px-2.5 py-0.5 rounded flex-shrink-0">
               {activeCommunity?.community_code || "OAK-2291"}
             </div>
           </div>
         ) : (
           // Admin / Super Admin ke liye original dropdown (responsive layout)
           <div
-            className="bg-slate-100 dark:bg-[#1E3248] border border-slate-200 dark:border-white/20 rounded-2xl px-3 py-2 sm:px-4 flex items-center gap-2 sm:gap-3 cursor-pointer hover:border-teal-500 transition min-w-[140px] max-w-[180px] sm:min-w-[240px] lg:min-w-[280px] lg:max-w-none"
+            className="bg-slate-100 dark:bg-[#1E3248] border border-slate-200 dark:border-white/20 rounded-2xl px-2.5 py-1.5 sm:px-4 sm:py-2 flex items-center gap-1.5 sm:gap-3 cursor-pointer hover:border-teal-500 transition min-w-[110px] max-w-[125px] sm:min-w-[240px] lg:min-w-[280px] lg:max-w-none"
             onClick={() => setIsCommDropdownOpen(!isCommDropdownOpen)}
           >
             <div className="w-2 h-2 bg-teal-500 rounded-full flex-shrink-0"></div>
@@ -89,7 +89,7 @@ const Topbar = ({
                 {activeCommunity?.name || "Select Community"}
               </p>
             </div>
-            <ChevronDown size={16} className={`text-gray-400 flex-shrink-0 transition-transform ${isCommDropdownOpen ? 'rotate-180' : ''}`} />
+            <ChevronDown size={14} className="text-gray-400 flex-shrink-0 transition-transform sm:w-4 sm:h-4" style={{ transform: isCommDropdownOpen ? 'rotate(180deg)' : 'none' }} />
           </div>
         )}
 
@@ -138,7 +138,7 @@ const Topbar = ({
       </div>
 
       {/* Right Side Actions */}
-      <div className="ml-auto flex items-center gap-1.5 sm:gap-2 lg:gap-4 flex-shrink-0">
+      <div className="ml-auto flex items-center gap-1 sm:gap-2 lg:gap-4 flex-shrink-0">
         
         {canSwitchView && (
           <button
@@ -153,14 +153,14 @@ const Topbar = ({
         
         <button
           onClick={toggleTheme}
-          className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-xl hover:bg-slate-100 dark:hover:bg-white/10 text-gray-500 dark:text-gray-400 transition-colors"
+          className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center rounded-xl hover:bg-slate-100 dark:hover:bg-white/10 text-gray-500 dark:text-gray-400 transition-colors"
         >
           {theme === 'dark' ? <Sun size={18} className="sm:w-5 sm:h-5" /> : <Moon size={18} className="sm:w-5 sm:h-5" />}
         </button>
 
         <button
           onClick={toggleNotif}
-          className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-xl hover:bg-slate-100 dark:hover:bg-white/10 text-gray-500 dark:text-gray-400 relative transition-colors"
+          className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center rounded-xl hover:bg-slate-100 dark:hover:bg-white/10 text-gray-500 dark:text-gray-400 relative transition-colors"
         >
           <Bell size={18} className="sm:w-5 sm:h-5" />
           {unreadCount > 0 && (
@@ -173,7 +173,7 @@ const Topbar = ({
         {/* User Profile */}
         <div className="relative ml-1 sm:ml-2">
           <div
-            className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center font-bold text-white cursor-pointer hover:ring-2 ring-teal-500/5 transition-all overflow-hidden border border-white/10 bg-gradient-to-br from-teal-500 to-blue-600 shadow-lg"
+            className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center font-bold text-white cursor-pointer hover:ring-2 ring-teal-500/5 transition-all overflow-hidden border border-white/10 bg-gradient-to-br from-teal-500 to-blue-600 shadow-lg"
             onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
           >
             {user?.user_profile_url ? (
