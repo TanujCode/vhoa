@@ -17,8 +17,18 @@ export default function ClientOnboarding() {
   const [loadingCode, setLoadingCode] = useState(false);
   const [verifiedContract, setVerifiedContract] = useState(null);
   
-  const [captcha, setCaptcha] = useState({ question: '', token: '' });
+  const generateLocalCaptcha = () => {
+    const num1 = Math.floor(Math.random() * 9) + 1;
+    const num2 = Math.floor(Math.random() * 9) + 1;
+    return {
+      question: `${num1} + ${num2} = ?`,
+      token: `local_captcha_math:${num1}+${num2}`
+    };
+  };
+
+  const [captcha, setCaptcha] = useState(() => generateLocalCaptcha());
   const [loadingCaptcha, setLoadingCaptcha] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   
   const [countries, setCountries] = useState([]);
@@ -66,7 +76,8 @@ export default function ClientOnboarding() {
   // Load countries and prefill code from URL on mount
   useEffect(() => {
     fetchCountries();
-    fetchCaptcha();
+    // Ping backend in background on mount to wake it up from cold-start
+    API.get('/auth/captcha', { timeout: 2000 }).catch(() => {});
     
     // Auto-verify if code is present in URL
     const urlCode = searchParams.get('code');
@@ -105,17 +116,24 @@ export default function ClientOnboarding() {
   };
 
   const fetchCaptcha = async () => {
+    // Instantly show a local math captcha — no delay!
+    setCaptcha(generateLocalCaptcha());
+    setValue('captcha_answer', '');
+
     try {
-      setLoadingCaptcha(true);
-      const data = await getCaptcha();
-      setCaptcha({
-        question: data.question,
-        token: data.captcha_token
-      });
+      setRefreshing(true);
+      const data = await getCaptcha({ timeout: 2000 });
+      const currentAnswer = watch('captcha_answer');
+      if (!currentAnswer || currentAnswer.trim() === '') {
+        setCaptcha({
+          question: data.question,
+          token: data.captcha_token
+        });
+      }
     } catch (err) {
-      console.error('Failed to fetch captcha:', err);
+      console.warn('Failed to fetch captcha from backend, keeping local:', err);
     } finally {
-      setLoadingCaptcha(false);
+      setRefreshing(false);
     }
   };
 
@@ -659,16 +677,20 @@ export default function ClientOnboarding() {
                     <div className="flex-1">
                       <label className="block text-xs font-semibold text-gray-400 uppercase mb-2">Math Captcha Verification *</label>
                       <div className="flex items-center gap-3">
-                        <span className="text-xl font-bold bg-[#162535] border border-white/10 px-4 py-2 rounded-xl text-yellow-400 font-mono tracking-widest">
+                        <span className="text-xl font-bold bg-[#162535] border border-white/10 px-4 py-2 rounded-xl text-yellow-400 font-mono tracking-widest select-none">
                           {loadingCaptcha ? '...' : captcha.question}
                         </span>
                         <button
                           type="button"
                           onClick={fetchCaptcha}
-                          className="p-2 hover:bg-white/5 rounded-xl transition text-gray-400 hover:text-white"
+                          disabled={refreshing}
+                          className="p-2 hover:bg-white/10 active:scale-95 bg-white/5 rounded-xl transition-all duration-150 text-gray-400 hover:text-teal-400 border border-transparent hover:border-teal-500/30 disabled:opacity-50 disabled:cursor-not-allowed"
                           title="Refresh Captcha"
                         >
-                          <RefreshCw size={16} />
+                          <RefreshCw
+                            size={16}
+                            className={`transition-transform duration-500 ${refreshing ? 'animate-spin text-teal-400' : 'hover:rotate-180'}`}
+                          />
                         </button>
                       </div>
                     </div>

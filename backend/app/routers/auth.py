@@ -39,18 +39,41 @@ router = APIRouter(prefix="/auth", tags=["Auth"])
 
 from sqlalchemy import func # 🔥 Check this import above
 
-@router.post("/register", response_model=UserOut, status_code=201)
-def register(request: Request, body: RegisterRequest, db: Session = Depends(get_db)):
-    # 0. Verify captcha
+def _verify_captcha(captcha_token: str, captcha_answer: str):
+    if not captcha_token:
+        raise HTTPException(status_code=400, detail="Captcha token is missing.")
+    if not captcha_answer:
+        raise HTTPException(status_code=400, detail="Captcha answer is required.")
+        
+    # Check for local captcha format: "local_captcha_math:X+Y"
+    if captcha_token.startswith("local_captcha_math:"):
+        try:
+            expr = captcha_token.split(":", 1)[1]
+            if not all(c.isdigit() or c == '+' for c in expr):
+                raise ValueError("Invalid captcha expression.")
+            num1, num2 = map(int, expr.split("+"))
+            expected_ans = num1 + num2
+            if int(captcha_answer.strip()) != expected_ans:
+                raise ValueError("Incorrect captcha answer.")
+            return
+        except Exception:
+            raise HTTPException(status_code=400, detail="Incorrect captcha answer.")
+
+    # Standard JWT verification
     try:
-        payload = jwt.decode(body.captcha_token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+        payload = jwt.decode(captcha_token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
         expected_ans = payload.get("ans")
-        if expected_ans is None or int(body.captcha_answer.strip()) != int(expected_ans):
+        if expected_ans is None or int(captcha_answer.strip()) != int(expected_ans):
             raise ValueError("Incorrect captcha answer.")
     except JWTError:
         raise HTTPException(status_code=400, detail="Captcha expired or invalid. Please refresh captcha.")
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+@router.post("/register", response_model=UserOut, status_code=201)
+def register(request: Request, body: RegisterRequest, db: Session = Depends(get_db)):
+    # 0. Verify captcha
+    _verify_captcha(body.captcha_token, body.captcha_answer)
 
     try:
         # 1. Register the user simply first
@@ -120,15 +143,7 @@ def register(request: Request, body: RegisterRequest, db: Session = Depends(get_
 @router.post("/login", response_model=TokenResponse)
 def login(request: Request, body: LoginRequest, db: Session = Depends(get_db)):
     # 0. Verify captcha
-    try:
-        payload = jwt.decode(body.captcha_token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
-        expected_ans = payload.get("ans")
-        if expected_ans is None or int(body.captcha_answer.strip()) != int(expected_ans):
-            raise ValueError("Incorrect captcha answer.")
-    except JWTError:
-        raise HTTPException(status_code=400, detail="Captcha expired or invalid. Please refresh captcha.")
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+    _verify_captcha(body.captcha_token, body.captcha_answer)
 
     try:
         # 1. Get the user first to check
@@ -601,15 +616,7 @@ def get_captcha():
 @router.post("/onboard-client", status_code=201)
 def onboard_client(request: Request, body: ClientOnboardRequest, db: Session = Depends(get_db)):
     # 1. Verify captcha
-    try:
-        payload = jwt.decode(body.captcha_token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
-        expected_ans = payload.get("ans")
-        if expected_ans is None or int(body.captcha_answer.strip()) != int(expected_ans):
-            raise ValueError("Incorrect captcha answer.")
-    except JWTError:
-        raise HTTPException(status_code=400, detail="Captcha expired or invalid. Please refresh captcha.")
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+    _verify_captcha(body.captcha_token, body.captcha_answer)
 
     # 2. Verify contract code
     contract = db.query(Contract).filter(Contract.contract_code == body.contract_code.strip().upper()).first()

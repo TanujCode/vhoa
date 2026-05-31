@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
-import { Mail, Lock, User, Eye, EyeOff, Phone } from 'lucide-react';
+import { Mail, Lock, User, Eye, EyeOff, Phone, RefreshCw } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import AuthLayout from '../../components/layout/AuthLayout';
 import API from '../../services/api';
@@ -11,33 +11,53 @@ export default function RegisterPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
-  const [captcha, setCaptcha] = useState({ question: '', token: '' });
+  const generateLocalCaptcha = () => {
+    const num1 = Math.floor(Math.random() * 9) + 1;
+    const num2 = Math.floor(Math.random() * 9) + 1;
+    return {
+      question: `${num1} + ${num2} = ?`,
+      token: `local_captcha_math:${num1}+${num2}`
+    };
+  };
+
+  const [captcha, setCaptcha] = useState(() => generateLocalCaptcha());
   const [loadingCaptcha, setLoadingCaptcha] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const navigate = useNavigate();
 
   const fetchCaptcha = async () => {
+    // Generate new local captcha instantly to avoid empty state or delays
+    setCaptcha(generateLocalCaptcha());
+    setValue('captchaAnswer', ''); // Reset form input
+
     try {
-      setLoadingCaptcha(true);
+      setRefreshing(true);
       const res = await API.get('/auth/captcha');
-      setCaptcha({
-        question: res.data.question,
-        token: res.data.captcha_token
-      });
+      // If user hasn't started typing in the new captcha answer yet, we can safely sync with backend JWT captcha
+      const currentAnswer = watch('captchaAnswer');
+      if (!currentAnswer || currentAnswer.trim() === '') {
+        setCaptcha({
+          question: res.data.question,
+          token: res.data.captcha_token
+        });
+      }
     } catch (err) {
-      console.error('Failed to fetch captcha:', err);
+      console.warn('Failed to fetch captcha from server, keeping local captcha:', err);
     } finally {
-      setLoadingCaptcha(false);
+      setRefreshing(false);
     }
   };
 
   useEffect(() => {
-    fetchCaptcha();
+    // Ping backend in background on mount to wake it up from cold-start sleep
+    API.get('/auth/captcha').catch(() => {});
   }, []);
 
   const {
     register,
     handleSubmit,
     watch,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm({
     mode: 'onTouched',
@@ -141,8 +161,6 @@ export default function RegisterPage() {
     }
     googleLogin();
   };
-
- 
 
   return (
     <AuthLayout>
@@ -318,9 +336,7 @@ export default function RegisterPage() {
                 className="p-2 hover:bg-gray-100 rounded-xl transition text-gray-400 hover:text-gray-600"
                 title="Refresh Captcha"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 7.89M9 11l3-3 3 3" />
-                </svg>
+                <RefreshCw size={16} className={`transition-transform duration-500 ${refreshing ? 'animate-spin' : 'hover:rotate-180'}`} />
               </button>
             </div>
           </div>

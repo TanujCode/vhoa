@@ -31,8 +31,8 @@ export const verifyContractCode = async (code) => {
 };
 
 // Fetch mathematical captcha (Public endpoint)
-export const getCaptcha = async () => {
-  const res = await API.get('/auth/captcha');
+export const getCaptcha = async (config = {}) => {
+  const res = await API.get('/auth/captcha', config);
   return res.data;
 };
 
