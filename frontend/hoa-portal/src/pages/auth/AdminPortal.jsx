@@ -62,6 +62,14 @@ const AdminPortal = () => {
   const fetchInitialData = async () => {
     try {
       setLoading(true);
+
+      // ⚡ INSTANT: Show cached user from localStorage first to avoid blank screen
+      const rawUser = localStorage.getItem('user') || sessionStorage.getItem('user');
+      let cachedUser = null;
+      if (rawUser && rawUser !== 'undefined' && rawUser !== 'null') {
+        try { cachedUser = JSON.parse(rawUser); } catch (_) {}
+      }
+
       const [meData, communitiesData] = await Promise.all([
         getMe(),
         getCommunities(),
@@ -72,16 +80,8 @@ const AdminPortal = () => {
 
       // Safe storage tracking check
       if (!userCommunityId) {
-        const rawUser = localStorage.getItem('user') || sessionStorage.getItem('user');
-        if (rawUser && rawUser !== "undefined" && rawUser !== "null") {
-          try {
-            const parsed = JSON.parse(rawUser);
-            if (parsed && parsed.community_id) {
-              userCommunityId = Number(parsed.community_id);
-            }
-          } catch (e) {
-            console.log("Token mapping skip");
-          }
+        if (cachedUser && cachedUser.community_id) {
+          userCommunityId = Number(cachedUser.community_id);
         }
       }
 
@@ -103,8 +103,10 @@ const AdminPortal = () => {
         setActivePage('dashboard');
       }
 
-      setUser({
+      const freshUser = {
         ...meData,
+        // Preserve profile picture URL from cached data if API didn't return it
+        user_profile_url: meData.user_profile_url || cachedUser?.user_profile_url || null,
         initials: `${meData.first_name?.[0] || 'U'}${meData.last_name?.[0] || 'R'}`.toUpperCase(),
         name: meData.full_name || `${meData.first_name} ${meData.last_name}`,
         email: meData.email_id,
@@ -112,7 +114,15 @@ const AdminPortal = () => {
         role: mappedRole,
         community_id: userCommunityId,
         unit_no: meData.unit_no || 'N/A'
-      });
+      };
+
+      setUser(freshUser);
+      // Keep localStorage in sync with fresh data
+      try {
+        if (localStorage.getItem('user')) {
+          localStorage.setItem('user', JSON.stringify(freshUser));
+        }
+      } catch (_) {}
 
       setCommunities(communitiesData || []);
 

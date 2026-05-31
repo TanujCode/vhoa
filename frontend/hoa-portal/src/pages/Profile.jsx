@@ -126,7 +126,18 @@ const Profile = ({ user, setUser, viewRole }) => {
       const res = await API.post('/user/profile/picture', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
-      setUser(prev => ({ ...prev, user_profile_url: res.data.user_profile_url }));
+      const newUrl = res.data.user_profile_url;
+      setUser(prev => {
+        const updated = { ...prev, user_profile_url: newUrl };
+        try {
+          const stored = localStorage.getItem('user');
+          if (stored) {
+            const parsed = JSON.parse(stored);
+            localStorage.setItem('user', JSON.stringify({ ...parsed, user_profile_url: newUrl }));
+          }
+        } catch (_) {}
+        return updated;
+      });
       showMsg('success', 'Profile picture updated!');
     } catch (err) {
       showMsg('error', 'Failed to upload picture.');
@@ -141,7 +152,17 @@ const Profile = ({ user, setUser, viewRole }) => {
     try {
       setUploading(true);
       await API.delete('/user/profile/picture'); 
-      setUser(prev => ({ ...prev, user_profile_url: null }));
+      setUser(prev => {
+        const updated = { ...prev, user_profile_url: null };
+        try {
+          const stored = localStorage.getItem('user');
+          if (stored) {
+            const parsed = JSON.parse(stored);
+            localStorage.setItem('user', JSON.stringify({ ...parsed, user_profile_url: null }));
+          }
+        } catch (_) {}
+        return updated;
+      });
       showMsg('success', 'Profile picture removed!');
     } catch (err) {
       showMsg('error', 'Failed to remove picture.');
