@@ -176,19 +176,19 @@ export default function Contracts() {
 
       {/* Aggregate Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-5 mb-10">
-        <div className="bg-gradient-to-br from-slate-50 to-blue-50/40 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 shadow-sm dark:shadow-none">
+        <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 shadow-sm dark:shadow-none">
           <div className="text-teal-600 dark:text-teal-400 text-5xl font-mono font-bold">{totalCount}</div>
           <div className="text-sm text-slate-500 dark:text-gray-400 mt-2">Total Contracts</div>
         </div>
-        <div className="bg-gradient-to-br from-slate-50 to-blue-50/40 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 shadow-sm dark:shadow-none">
+        <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 shadow-sm dark:shadow-none">
           <div className="text-[#1D9E75] dark:text-[#25C490] text-5xl font-mono font-bold">{activeCount}</div>
           <div className="text-sm text-slate-500 dark:text-gray-400 mt-2">Active (Ready to Use)</div>
         </div>
-        <div className="bg-gradient-to-br from-slate-50 to-blue-50/40 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 shadow-sm dark:shadow-none">
+        <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 shadow-sm dark:shadow-none">
           <div className="text-amber-600 dark:text-amber-400 text-5xl font-mono font-bold">{draftCount}</div>
           <div className="text-sm text-slate-500 dark:text-gray-400 mt-2">Drafts</div>
         </div>
-        <div className="bg-gradient-to-br from-slate-50 to-blue-50/40 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 shadow-sm dark:shadow-none">
+        <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 shadow-sm dark:shadow-none">
           <div className="text-blue-600 dark:text-blue-400 text-5xl font-mono font-bold">{onboardedCount}</div>
           <div className="text-sm text-slate-500 dark:text-gray-400 mt-2">Onboarded Clients</div>
         </div>
@@ -231,12 +231,12 @@ export default function Contracts() {
           Loading contracts...
         </div>
       ) : filteredContracts.length === 0 ? (
-        <div className="text-center py-20 text-slate-500 dark:text-gray-400 bg-gradient-to-br from-slate-50 to-blue-50/40 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl shadow-sm dark:shadow-none">
+        <div className="text-center py-20 text-slate-500 dark:text-gray-400 bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl shadow-sm dark:shadow-none">
           <FileText size={40} className="mx-auto mb-3 opacity-50 text-slate-400 dark:text-gray-500" />
           No contracts found matching your filters.
         </div>
       ) : (
-        <div className="bg-gradient-to-br from-slate-50 to-blue-50/40 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl overflow-x-auto shadow-sm dark:shadow-none">
+        <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl overflow-x-auto shadow-sm dark:shadow-none">
           <table className="w-full text-left border-collapse min-w-[1000px]">
             <thead>
               <tr className="border-b border-slate-200/80 dark:border-white/10 text-slate-500 dark:text-gray-400 text-xs font-semibold uppercase tracking-wider bg-slate-100/50 dark:bg-[#0D1622]/50">

@@ -7,7 +7,7 @@ import { getContracts } from '../services/contractService';
 
 // ── Sales Stat Card ─────────────────────────────────
 const SalesStatCard = ({ label, value, icon: Icon, color, sub, prefix = "" }) => (
-  <div className="bg-gradient-to-br from-slate-50 to-blue-50/40 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 transition-all duration-300 hover:border-slate-200 dark:hover:border-white/20 hover:-translate-y-1 shadow-sm dark:shadow-none">
+  <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 transition-all duration-300 hover:border-slate-200 dark:hover:border-white/20 hover:-translate-y-1 shadow-sm dark:shadow-none">
     <div className="flex items-center justify-between mb-3">
       <p className="text-slate-500 dark:text-gray-400 text-sm font-medium">{label}</p>
       <div className={`w-10 h-10 rounded-2xl flex items-center justify-center ${color} shadow-inner`}>
@@ -17,7 +17,7 @@ const SalesStatCard = ({ label, value, icon: Icon, color, sub, prefix = "" }) =>
     <p className="text-4xl font-mono font-bold mt-1 text-slate-900 dark:text-white">
       {prefix}{typeof value === 'number' ? value.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 }) : (value ?? '—')}
     </p>
-    {sub && <p className="text-xs text-slate-505 dark:text-gray-500 mt-2 font-sans">{sub}</p>}
+    {sub && <p className="text-xs text-slate-500 dark:text-gray-500 mt-2 font-sans">{sub}</p>}
   </div>
 );
 
@@ -154,7 +154,7 @@ export default function SalesDashboard({ setActivePage }) {
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Plan Distribution Progress */}
-            <div className="bg-gradient-to-br from-slate-50 to-blue-50/40 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 shadow-sm dark:shadow-none flex flex-col justify-between">
+            <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 shadow-sm dark:shadow-none flex flex-col justify-between">
               <div>
                 <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-5">Subscription Plan Breakdown</h3>
                 <div className="space-y-4">
@@ -178,14 +178,14 @@ export default function SalesDashboard({ setActivePage }) {
                   })}
                 </div>
               </div>
-              <div className="border-t border-slate-100 dark:border-white/5 pt-4 mt-6 flex justify-between items-center text-xs text-slate-500 dark:text-gray-505">
+              <div className="border-t border-slate-100 dark:border-white/5 pt-4 mt-6 flex justify-between items-center text-xs text-slate-500 dark:text-gray-500">
                 <span>Standard values based on pricing guidelines</span>
                 <span className="text-teal-600 dark:text-[#25C490] hover:underline cursor-pointer" onClick={() => setActivePage('contracts')}>Edit Prices</span>
               </div>
             </div>
 
             {/* Status Segment Gauge */}
-            <div className="bg-gradient-to-br from-slate-50 to-blue-50/40 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 shadow-sm dark:shadow-none flex flex-col justify-between">
+            <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 shadow-sm dark:shadow-none flex flex-col justify-between">
               <div>
                 <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-5">Contract Onboarding Funnel</h3>
                 <div className="flex items-center justify-center py-4">
@@ -224,7 +224,7 @@ export default function SalesDashboard({ setActivePage }) {
             </div>
 
             {/* Quick Actions & Notes */}
-            <div className="bg-gradient-to-br from-slate-50 to-blue-50/40 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 shadow-sm dark:shadow-none flex flex-col justify-between">
+            <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 shadow-sm dark:shadow-none flex flex-col justify-between">
               <div>
                 <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">Quick Sales Actions</h3>
                 <p className="text-slate-500 dark:text-gray-400 text-xs leading-relaxed mb-4">Use these onboarding tools to distribute active codes or follow up with prospective HOA communities.</p>
@@ -245,14 +245,14 @@ export default function SalesDashboard({ setActivePage }) {
                   </button>
                 </div>
               </div>
-              <div className="bg-slate-50 dark:bg-white/[0.02] border border-slate-100 dark:border-white/5 p-3 rounded-2xl text-[11px] text-slate-500 dark:text-gray-505 leading-snug mt-4">
+              <div className="bg-slate-50 dark:bg-white/[0.02] border border-slate-100 dark:border-white/5 p-3 rounded-2xl text-[11px] text-slate-500 dark:text-gray-500 leading-snug mt-4">
                 💡 Tip: Copy the Onboarding Link for any Active contract code and email it directly to the property manager for quick self-onboarding.
               </div>
             </div>
           </div>
 
           {/* Directory of Onboarded Clients */}
-          <div className="bg-gradient-to-br from-slate-50 to-blue-50/40 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 shadow-sm dark:shadow-none">
+          <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 shadow-sm dark:shadow-none">
             <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4 border-b border-slate-100 dark:border-white/5 pb-2">Recently Onboarded Clients</h3>
             {onboardedContracts.length === 0 ? (
               <p className="text-slate-500 dark:text-gray-400 py-10 text-center text-sm">No client registrations have completed onboarding yet.</p>

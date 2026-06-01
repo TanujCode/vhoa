@@ -72,19 +72,19 @@ const Overview = ({ communities = [], setActiveCommunity, setActivePage, user })
 
       {/* Aggregate Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-5 mb-10">
-        <div className="bg-gradient-to-br from-slate-50 to-blue-50/40 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 shadow-sm dark:shadow-none rounded-3xl p-6">
+        <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 shadow-sm dark:shadow-none rounded-3xl p-6">
           <div className="text-teal-600 dark:text-teal-400 text-5xl font-mono font-bold">{totalCommunities}</div>
           <div className="text-sm text-slate-500 dark:text-gray-400 mt-2">Total Communities</div>
         </div>
-        <div className="bg-gradient-to-br from-slate-50 to-blue-50/40 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 shadow-sm dark:shadow-none rounded-3xl p-6">
+        <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 shadow-sm dark:shadow-none rounded-3xl p-6">
           <div className="text-blue-600 dark:text-blue-400 text-5xl font-mono font-bold">{totalMembers}</div>
           <div className="text-sm text-slate-500 dark:text-gray-400 mt-2">Total Members</div>
         </div>
-        <div className="bg-gradient-to-br from-slate-50 to-blue-50/40 dark:from-[#1E2E42] dark:to-[#162535] border border-red-200/80 dark:border-red-500/20 shadow-sm dark:shadow-none rounded-3xl p-6">
+        <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-red-200/80 dark:border-red-500/20 shadow-sm dark:shadow-none rounded-3xl p-6">
           <div className="text-red-600 dark:text-red-400 text-5xl font-mono font-bold">{totalViolations}</div>
           <div className="text-sm text-slate-500 dark:text-gray-400 mt-2">Open Violations</div>
         </div>
-        <div className="bg-gradient-to-br from-slate-50 to-blue-50/40 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 shadow-sm dark:shadow-none rounded-3xl p-6">
+        <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 shadow-sm dark:shadow-none rounded-3xl p-6">
           <div className="text-amber-600 dark:text-yellow-400 text-5xl font-mono font-bold">{totalRequests}</div>
           <div className="text-sm text-slate-500 dark:text-gray-400 mt-2">Open Service Requests</div>
         </div>
@@ -117,7 +117,7 @@ const Overview = ({ communities = [], setActiveCommunity, setActivePage, user })
                   }
                 }
               }}
-              className="bg-gradient-to-br from-slate-50 to-blue-50/40 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl overflow-hidden hover:border-teal-500/50 transition-all hover:-translate-y-1 cursor-pointer shadow-sm dark:shadow-none"
+              className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl overflow-hidden hover:border-teal-500/50 transition-all hover:-translate-y-1 cursor-pointer shadow-sm dark:shadow-none"
             >
               {/* Card Header */}
               <div className="p-6 border-b border-slate-200/80 dark:border-white/10 flex items-center gap-4">

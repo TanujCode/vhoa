@@ -6,7 +6,7 @@ import API from '../services/api';
 const ResidentStatCard = ({ label, value, icon: Icon, color, sub, actionLabel, onClick }) => (
   <div 
     onClick={onClick}
-    className={`bg-gradient-to-br from-slate-50 to-blue-50/40 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 hover:border-teal-500/30 dark:hover:border-teal-500/30 transition-all shadow-sm dark:shadow-none group ${onClick ? 'cursor-pointer hover:-translate-y-0.5 hover:shadow-md' : ''}`}
+    className={`bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 hover:border-teal-500/30 dark:hover:border-teal-500/30 transition-all shadow-sm dark:shadow-none group ${onClick ? 'cursor-pointer hover:-translate-y-0.5 hover:shadow-md' : ''}`}
   >
     <div className="flex items-center justify-between mb-4">
       <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${color}`}>
@@ -192,7 +192,7 @@ const ResidentDashboard = ({ community, user: initialUser, setActivePage }) => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 bg-gradient-to-br from-slate-50 to-blue-50/40 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 shadow-sm dark:shadow-none">
+        <div className="lg:col-span-2 bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 shadow-sm dark:shadow-none">
           <h3 className="text-slate-900 dark:text-white font-semibold mb-4 flex items-center gap-2">
             <Bell size={18} className="text-amber-500" /> Community News
           </h3>
@@ -220,7 +220,7 @@ const ResidentDashboard = ({ community, user: initialUser, setActivePage }) => {
           </div>
         </div>
         
-        <div className="bg-gradient-to-br from-slate-50 to-blue-50/40 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 shadow-sm dark:shadow-none">
+        <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 shadow-sm dark:shadow-none">
           <h3 className="text-slate-900 dark:text-white font-semibold mb-4">Quick Links</h3>
           <div className="space-y-2">
             {['HOA Bylaws', 'Monthly Minutes', 'Parking Rules'].map(doc => (

@@ -12,7 +12,7 @@ import API from "../services/api";
 const StatCard = ({ label, value, icon: Icon, color, sub, subColor, onClick }) => (
   <div 
     onClick={onClick}
-    className={`bg-gradient-to-br from-slate-50 to-blue-50/40 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 shadow-sm dark:shadow-none transition-all duration-200 ${onClick ? 'cursor-pointer hover:border-teal-500/40 dark:hover:border-teal-400/40 hover:-translate-y-0.5 hover:shadow-md' : ''}`}
+    className={`bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 shadow-sm dark:shadow-none transition-all duration-200 ${onClick ? 'cursor-pointer hover:border-teal-500/40 dark:hover:border-teal-400/40 hover:-translate-y-0.5 hover:shadow-md' : ''}`}
   >
     <div className="flex items-center justify-between mb-3">
       <p className="text-slate-500 dark:text-gray-400 text-sm">{label}</p>
@@ -148,7 +148,7 @@ const Dashboard = ({ community, user, setActivePage }) => {
       </div>
 
       {/* ── Community Banner ─────────────────── */}
-      <div className="bg-gradient-to-br from-slate-50 to-blue-50/40 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 flex items-center gap-6 mb-8 transition-colors duration-200 shadow-sm">
+      <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 flex items-center gap-6 mb-8 transition-colors duration-200 shadow-sm">
         <div className="w-16 h-16 bg-teal-600 rounded-2xl flex items-center justify-center flex-shrink-0">
           <Building2 size={30} className="text-white" />
         </div>
@@ -209,7 +209,7 @@ const Dashboard = ({ community, user, setActivePage }) => {
       {loading && !stats ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
           {[...Array(4)].map((_, i) => (
-            <div key={i} className="bg-gradient-to-br from-slate-50 to-blue-50/40 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 animate-pulse">
+            <div key={i} className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 animate-pulse">
               <div className="h-4 bg-slate-200 dark:bg-white/10 rounded w-24 mb-4"></div>
               <div className="h-10 bg-slate-200 dark:bg-white/10 rounded w-16"></div>
             </div>
@@ -260,7 +260,7 @@ const Dashboard = ({ community, user, setActivePage }) => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
 
         {/* Recent Violations */}
-        <div className="bg-gradient-to-br from-slate-50 to-blue-50/40 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 shadow-sm dark:shadow-none">
+        <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 shadow-sm dark:shadow-none">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-semibold text-slate-900 dark:text-white">Recent Violations</h3>
             <span className="text-xs text-slate-400 dark:text-gray-500">Last 5</span>
@@ -286,7 +286,7 @@ const Dashboard = ({ community, user, setActivePage }) => {
         </div>
 
         {/* Recent Service Requests */}
-        <div className="bg-gradient-to-br from-slate-50 to-blue-50/40 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 shadow-sm dark:shadow-none">
+        <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 shadow-sm dark:shadow-none">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-semibold text-slate-900 dark:text-white">Recent Service Requests</h3>
             <span className="text-xs text-slate-400 dark:text-gray-500">Last 5</span>
@@ -320,7 +320,7 @@ const Dashboard = ({ community, user, setActivePage }) => {
 
       {/*Board Members*/}
       {(community.president_email_id || community.secretary_email_id || community.treasurer_email_id) && (
-        <div className="bg-gradient-to-br from-slate-50 to-blue-50/40 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 mt-5 shadow-sm dark:shadow-none">
+        <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 mt-5 shadow-sm dark:shadow-none">
           <h3 className="font-semibold text-slate-900 dark:text-white mb-4">Board Members</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {community.president_email_id && (
@@ -375,7 +375,7 @@ const Dashboard = ({ community, user, setActivePage }) => {
       {/* Export Report Modal */}
       {showExportModal && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
-          <div className="bg-gradient-to-br from-slate-50 to-blue-50/40 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl w-full max-w-md mx-4 overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200">
+          <div className="bg-white dark:bg-gradient-to-br dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl w-full max-w-md mx-4 overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200">
             <div className="p-6 border-b border-slate-100 dark:border-white/10">
               <h2 className="text-2xl font-semibold text-slate-900 dark:text-white">Export Report</h2>
               <p className="text-slate-500 dark:text-gray-400 text-sm mt-1">

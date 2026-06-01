@@ -74,7 +74,7 @@ const EditCommunityModal = ({ isOpen, onClose, community, onSuccess }) => {
 
   return (
     <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[100]">
-      <div className="bg-gradient-to-br from-slate-50 to-blue-50/40 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl w-full max-w-md mx-4 max-h-[90vh] overflow-y-auto text-slate-900 dark:text-white">
+      <div className="bg-white dark:bg-gradient-to-br dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl w-full max-w-md mx-4 max-h-[90vh] overflow-y-auto text-slate-900 dark:text-white">
         
         {/* Header */}
         <div className="p-5 border-b border-slate-200 dark:border-white/10">
@@ -124,7 +124,7 @@ const EditCommunityModal = ({ isOpen, onClose, community, onSuccess }) => {
           </div>
 
           <div>
-            <label className="block text-sm text-slate-500 dark:text-gray-400 mb-1">Contact Person</label>
+            <label className="block text-sm text-slate-555 dark:text-gray-400 mb-1">Contact Person</label>
             <input 
               name="contact_person" 
               value={formData.contact_person} 

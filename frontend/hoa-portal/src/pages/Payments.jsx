@@ -196,7 +196,7 @@ const Payments = ({ community, user, paymentState, setPaymentState }) => {
           </div>
         ) : (
           <div className="bg-amber-500/10 border border-amber-500/20 px-4 py-2.5 rounded-2xl flex items-center gap-3">
-            <span className="text-amber-600 dark:text-amber-400 font-semibold text-xs py-1 px-2.5 bg-amber-500/10 dark:bg-amber-500/20 rounded-full">NO ESCROW BANK</span>
+            <span className="text-amber-650 dark:text-amber-400 font-semibold text-xs py-1 px-2.5 bg-amber-500/10 dark:bg-amber-500/20 rounded-full">NO ESCROW BANK</span>
             <div className="text-xs text-slate-500 dark:text-gray-400">
               Board members must set up bank details in Settings.
             </div>
@@ -205,7 +205,7 @@ const Payments = ({ community, user, paymentState, setPaymentState }) => {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-2 p-1.5 bg-gradient-to-br from-slate-50 to-blue-50/40 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-2xl mb-8 w-fit overflow-x-auto max-w-full shadow-sm">
+      <div className="flex gap-2 p-1.5 bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-2xl mb-8 w-fit overflow-x-auto max-w-full shadow-sm">
         <button
           onClick={() => setActiveTab('pay')}
           className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-medium text-sm transition-all ${
@@ -264,7 +264,7 @@ const Payments = ({ community, user, paymentState, setPaymentState }) => {
       {!loading && activeTab === 'pay' && (
         <div>
           {dues.length === 0 ? (
-            <div className="bg-gradient-to-br from-slate-50 to-blue-50/40 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-12 text-center shadow-sm">
+            <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-12 text-center shadow-sm">
               <div className="w-16 h-16 bg-teal-500/10 rounded-2xl flex items-center justify-center text-teal-600 dark:text-teal-400 text-3xl mx-auto mb-4">🎉</div>
               <h3 className="text-xl font-semibold mb-2 text-slate-900 dark:text-white">No Outstanding Dues</h3>
               <p className="text-slate-500 dark:text-gray-400 text-sm">You are fully paid up for all community services, amenities, and dues.</p>
@@ -272,7 +272,7 @@ const Payments = ({ community, user, paymentState, setPaymentState }) => {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {dues.map((due, idx) => (
-                <div key={idx} className="bg-gradient-to-br from-slate-50 to-blue-50/40 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 flex flex-col justify-between hover:border-teal-500/30 transition shadow-sm hover:shadow-md relative overflow-hidden group">
+                <div key={idx} className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 flex flex-col justify-between hover:border-teal-500/30 transition shadow-sm hover:shadow-md relative overflow-hidden group">
                   <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-teal-500/5 to-transparent rounded-bl-full pointer-events-none" />
                   <div>
                     <span className="text-[10px] font-mono tracking-wider bg-slate-100 dark:bg-[#1E3248] text-teal-600 dark:text-teal-400 px-3 py-1 rounded-full font-bold uppercase">
@@ -301,7 +301,7 @@ const Payments = ({ community, user, paymentState, setPaymentState }) => {
       )}
 
       {!loading && activeTab === 'recurring' && (
-        <div className="max-w-2xl bg-gradient-to-br from-slate-50 to-blue-50/40 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-8 shadow-sm">
+        <div className="max-w-2xl bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-8 shadow-sm">
           <h2 className="text-xl font-semibold mb-2 flex items-center gap-2 text-slate-900 dark:text-white">
             <Shield className="text-teal-600 dark:text-teal-400" size={22} />
             Secure Auto-Pay Setup
@@ -330,7 +330,7 @@ const Payments = ({ community, user, paymentState, setPaymentState }) => {
                 </div>
                 <button
                   onClick={handleDeactivateRecurring}
-                  className="bg-red-500/10 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-500/20 px-4 py-2 rounded-xl text-sm font-medium hover:bg-red-500/20 dark:hover:bg-red-500/20 transition"
+                  className="bg-red-500/10 text-red-650 dark:text-red-400 border border-red-200 dark:border-red-500/20 px-4 py-2 rounded-xl text-sm font-medium hover:bg-red-500/20 dark:hover:bg-red-500/20 transition"
                 >
                   Turn Off Auto-Pay
                 </button>
@@ -413,7 +413,7 @@ const Payments = ({ community, user, paymentState, setPaymentState }) => {
       )}
 
       {!loading && activeTab === 'history' && (
-        <div className="bg-gradient-to-br from-slate-50 to-blue-50/40 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl overflow-hidden shadow-sm">
+        <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl overflow-hidden shadow-sm">
           <div className="p-6 border-b border-slate-200 dark:border-white/5 flex items-center justify-between">
             <h3 className="font-semibold text-lg text-slate-900 dark:text-white">Transaction History Logs</h3>
             <span className="text-xs text-slate-500 dark:text-gray-400">Total processed transactions: {history.length}</span>
@@ -476,7 +476,7 @@ const Payments = ({ community, user, paymentState, setPaymentState }) => {
       {/* Admin/Board Views */}
       {!loading && activeTab === 'virtualhoa' && isBoardOrAdmin && (
         <div className="space-y-6">
-          <div className="bg-gradient-to-br from-slate-50 to-blue-50/40 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 shadow-sm">
+          <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 shadow-sm">
             <h3 className="text-xl font-semibold mb-2 text-slate-900 dark:text-white">VirtualHOA Subscription Invoices</h3>
             <p className="text-slate-500 dark:text-gray-400 text-sm mb-6">
               Track setup fees and license subscriptions due to the platform provider VirtualHOA.
@@ -518,7 +518,7 @@ const Payments = ({ community, user, paymentState, setPaymentState }) => {
 
       {!loading && activeTab === 'vendors' && isBoardOrAdmin && (
         <div className="space-y-6">
-          <div className="bg-gradient-to-br from-slate-50 to-blue-50/40 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 shadow-sm">
+          <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 shadow-sm">
             <h3 className="text-xl font-semibold mb-2 text-slate-900 dark:text-white">Vendor Quotes & Escrow Payments</h3>
             <p className="text-slate-500 dark:text-gray-400 text-sm mb-6">
               Review quotes approved by residents. Pay the vendor from the escrow account once work is verified.
@@ -543,7 +543,7 @@ const Payments = ({ community, user, paymentState, setPaymentState }) => {
                       <h3 className="text-lg font-semibold mt-4 text-slate-900 dark:text-white">{v.vendor?.company_name || 'Vendor Company'}</h3>
                       <p className="text-xs text-slate-500 dark:text-gray-400 mt-1">Receipt No: {v.vendor_receipt_no || 'N/A'}</p>
                       
-                      <div className="mt-2 text-2xl font-bold font-mono text-teal-600 dark:text-teal-400">${(v.quote_amount || 0).toFixed(2)}</div>
+                      <div className="mt-2 text-2xl font-bold font-mono text-teal-650 dark:text-teal-400">${(v.quote_amount || 0).toFixed(2)}</div>
                       <div className="text-xs text-slate-500 dark:text-gray-400 mt-4 space-y-1">
                         <div>Location: <span className="text-slate-700 dark:text-white font-medium">{v.service_location || 'N/A'}</span></div>
                         <div>Quote Date: <span className="text-slate-700 dark:text-white font-medium">{v.quote_date || 'N/A'}</span></div>
@@ -580,7 +580,7 @@ const Payments = ({ community, user, paymentState, setPaymentState }) => {
       {/* Checkout Wizard Modal */}
       {wizard.isOpen && (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4 animate-fade-in">
-          <div className="bg-gradient-to-br from-slate-50 to-blue-50/40 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl max-w-lg w-full overflow-hidden shadow-2xl relative text-slate-900 dark:text-white">
+          <div className="bg-white dark:bg-gradient-to-br dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl max-w-lg w-full overflow-hidden shadow-2xl relative text-slate-900 dark:text-white">
             
             {/* Close Button */}
             {wizard.currentStep !== 3 && (
@@ -726,7 +726,7 @@ const Payments = ({ community, user, paymentState, setPaymentState }) => {
                           />
                         </div>
                         <div>
-                          <label className="text-[10px] text-slate-500 dark:text-gray-400 block mb-1">Account Number</label>
+                          <label className="text-[10px] text-slate-550 dark:text-gray-400 block mb-1">Account Number</label>
                           <input
                             type="text"
                             placeholder="Account Number"

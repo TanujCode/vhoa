@@ -177,7 +177,7 @@ const Vendors = ({ communityId, userRole }) => {
         </div>
 
         {/* Registered Vendors */}
-        <div className="bg-gradient-to-br from-slate-50 to-blue-50/40 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl overflow-hidden shadow-sm">
+        <div className="bg-gradient-to-br from-slate-50 to-blue-55 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl overflow-hidden shadow-sm">
           <div className="p-5 border-b border-slate-200 dark:border-white/10 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <h3 className="font-semibold text-slate-900 dark:text-white">Registered Vendors</h3>
             <div className="relative w-full sm:w-72">
@@ -338,7 +338,7 @@ const Vendors = ({ communityId, userRole }) => {
         )}
       </div>
 
-      <div className="bg-gradient-to-br from-slate-50 to-blue-50/40 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-xl overflow-hidden shadow-sm">
+      <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-xl overflow-hidden shadow-sm">
         <div className="p-4 border-b border-slate-200 dark:border-white/10 text-slate-800 dark:text-white font-medium text-sm flex items-center gap-2">
           <Truck size={16} /> Registered Vendors
         </div>

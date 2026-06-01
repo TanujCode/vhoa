@@ -1348,7 +1348,7 @@ const ServiceRequests = ({ community, user, setActivePage, setPaymentState }) =>
           { label: 'In Progress', value: stats.inProgress, color: 'text-amber-600 dark:text-amber-400' },
           { label: 'Closed',      value: stats.closed,     color: 'text-slate-500 dark:text-gray-400' },
         ].map(s => (
-          <div key={s.label} className="bg-gradient-to-br from-slate-50 to-blue-50/40 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 animate-fadeIn">
+          <div key={s.label} className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 animate-fadeIn">
             <div className={`text-4xl font-mono font-bold ${s.color}`}>{s.value}</div>
             <div className="text-sm text-slate-500 dark:text-gray-400 mt-2">{s.label}</div>
           </div>
@@ -1356,7 +1356,7 @@ const ServiceRequests = ({ community, user, setActivePage, setPaymentState }) =>
       </div>
 
       {/* Table */}
-      <div className="bg-gradient-to-br from-slate-50 to-blue-50/40 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl overflow-hidden">
+      <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl overflow-hidden">
         <div className="p-6 border-b border-slate-200 dark:border-white/10 flex items-center justify-between">
           <h2 className="font-semibold text-slate-900 dark:text-white">{isResident ? 'My Requests' : 'All Requests'}</h2>
           <div className="relative">
@@ -1457,7 +1457,7 @@ const ServiceRequests = ({ community, user, setActivePage, setPaymentState }) =>
       )}
       
       {/* Drawer */}
-      <div className={`fixed right-0 top-0 h-full w-full sm:w-[550px] bg-gradient-to-b from-slate-50 to-blue-50/45 dark:from-[#1E2E42] dark:to-[#162535] border-l border-slate-200 dark:border-white/10 shadow-2xl z-50 flex flex-col transition-transform duration-300 ease-in-out ${
+      <div className={`fixed right-0 top-0 h-full w-full sm:w-[550px] bg-gradient-to-b from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border-l border-slate-200 dark:border-white/10 shadow-2xl z-50 flex flex-col transition-transform duration-300 ease-in-out ${
         selectedRequest ? 'translate-x-0' : 'translate-x-full'
       }`}>
         {selectedRequest && (

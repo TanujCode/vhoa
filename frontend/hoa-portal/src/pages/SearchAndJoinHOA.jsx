@@ -114,7 +114,7 @@ const SearchAndJoinHOA = () => {
                 )}
 
                 {!selectedHOA ? (
-                    <div className="bg-gradient-to-br from-slate-50 to-blue-50/40 dark:from-[#1E2E42] dark:to-[#162535] p-6 rounded-2xl border border-slate-200/80 dark:border-white/10 shadow-xl">
+                    <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] p-6 rounded-2xl border border-slate-200/80 dark:border-white/10 shadow-xl">
                         <label className="block text-sm font-medium mb-4 text-slate-700 dark:text-slate-300">Search your HOA / Building Name</label>
                         <div className="relative mb-4">
                             <Search className="absolute left-3 top-3 text-slate-400 dark:text-slate-500" size={20} />
@@ -145,7 +145,7 @@ const SearchAndJoinHOA = () => {
                         </div>
                     </div>
                 ) : (
-                    <form onSubmit={handleSubmit} className="bg-gradient-to-br from-slate-50 to-blue-50/40 dark:from-[#1E2E42] dark:to-[#162535] p-6 rounded-2xl border border-slate-200/80 dark:border-white/10 space-y-6 shadow-xl text-slate-900 dark:text-white">
+                    <form onSubmit={handleSubmit} className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] p-6 rounded-2xl border border-slate-200/80 dark:border-white/10 space-y-6 shadow-xl text-slate-900 dark:text-white">
                         <div className="flex justify-between items-center border-b border-slate-200 dark:border-white/10 pb-4">
                             <h2 className="text-xl font-bold text-teal-600 dark:text-teal-400 tracking-tight">{selectedHOA.name}</h2>
                             <button type="button" onClick={() => setSelectedHOA(null)} className="text-xs text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white underline transition-colors">Change</button>

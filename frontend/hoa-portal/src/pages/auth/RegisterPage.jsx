@@ -32,7 +32,7 @@ export default function RegisterPage() {
 
     try {
       setRefreshing(true);
-      const res = await API.get('/auth/captcha');
+      const res = await API.get('/auth/captcha', { timeout: 2000 });
       // If user hasn't started typing in the new captcha answer yet, we can safely sync with backend JWT captcha
       const currentAnswer = watch('captchaAnswer');
       if (!currentAnswer || currentAnswer.trim() === '') {
@@ -50,7 +50,7 @@ export default function RegisterPage() {
 
   useEffect(() => {
     // Ping backend in background on mount to wake it up from cold-start sleep
-    API.get('/auth/captcha').catch(() => {});
+    API.get('/auth/captcha', { timeout: 2000 }).catch(() => {});
   }, []);
 
   const {
@@ -155,7 +155,8 @@ export default function RegisterPage() {
   });
 
   const handleGoogleRegister = () => {
-    if (!import.meta.env.VITE_GOOGLE_CLIENT_ID || import.meta.env.VITE_GOOGLE_CLIENT_ID === 'PLACEHOLDER_CLIENT_ID') {
+    const clientIdClean = (import.meta.env.VITE_GOOGLE_CLIENT_ID || '').replace(/['"]/g, "").trim();
+    if (!clientIdClean || clientIdClean === 'PLACEHOLDER_CLIENT_ID') {
       setErrorMsg('Google Registration is not configured. Please add VITE_GOOGLE_CLIENT_ID in your frontend .env file.');
       return;
     }
@@ -320,8 +321,6 @@ export default function RegisterPage() {
           )}
         </div>
 
-
-
         {/* Captcha Section */}
         <div className="p-4 bg-slate-50 border border-gray-200 rounded-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex-1">
@@ -333,10 +332,14 @@ export default function RegisterPage() {
               <button
                 type="button"
                 onClick={fetchCaptcha}
-                className="p-2 hover:bg-gray-100 rounded-xl transition text-gray-400 hover:text-gray-600"
+                disabled={refreshing}
+                className="p-2 bg-slate-100 hover:bg-blue-50 active:scale-95 rounded-xl transition-all duration-150 text-slate-400 hover:text-blue-500 border border-transparent hover:border-blue-200 disabled:opacity-60 disabled:cursor-not-allowed shadow-sm"
                 title="Refresh Captcha"
               >
-                <RefreshCw size={16} className={`transition-transform duration-500 ${refreshing ? 'animate-spin' : 'hover:rotate-180'}`} />
+                <RefreshCw
+                  size={16}
+                  className={`transition-transform duration-500 ${refreshing ? 'animate-spin text-blue-500' : 'hover:rotate-180'}`}
+                />
               </button>
             </div>
           </div>

@@ -127,8 +127,10 @@ const Profile = ({ user, setUser, viewRole }) => {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
       const newUrl = res.data.user_profile_url;
+      // Update React state
       setUser(prev => {
         const updated = { ...prev, user_profile_url: newUrl };
+        // Persist to localStorage so re-login shows the new picture
         try {
           const stored = localStorage.getItem('user');
           if (stored) {
@@ -154,6 +156,7 @@ const Profile = ({ user, setUser, viewRole }) => {
       await API.delete('/user/profile/picture'); 
       setUser(prev => {
         const updated = { ...prev, user_profile_url: null };
+        // Persist removal to localStorage
         try {
           const stored = localStorage.getItem('user');
           if (stored) {
@@ -284,7 +287,7 @@ const Profile = ({ user, setUser, viewRole }) => {
         <div className="space-y-5">
 
           {/* Avatar Card */}
-          <div className="bg-gradient-to-br from-slate-50 to-blue-50/40 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 flex flex-col items-center text-center text-slate-900 dark:text-white">
+          <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 flex flex-col items-center text-center text-slate-900 dark:text-white">
             <div className="relative mb-4 group">
               {user?.user_profile_url ? (
                 <img
@@ -365,7 +368,7 @@ const Profile = ({ user, setUser, viewRole }) => {
           </div>
 
           {/* Account Info Card */}
-          <div className="bg-gradient-to-br from-slate-50 to-blue-50/40 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 space-y-3 text-slate-900 dark:text-white">
+          <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 space-y-3 text-slate-900 dark:text-white">
             <h4 className="font-medium text-sm text-slate-500 dark:text-gray-400 uppercase tracking-wider">Account Info</h4>
             <div className="text-sm space-y-2">
               <div className="flex justify-between">
@@ -505,7 +508,7 @@ const Profile = ({ user, setUser, viewRole }) => {
                       secondaryUnits.length === 0 && <span className="text-xs text-slate-400 dark:text-gray-500">No secondary units assigned</span>
                     )}
                   </div>
-                  <p className="text-xs text-slate-450 dark:text-gray-600 mt-1">
+                  <p className="text-xs text-slate-455 dark:text-gray-600 mt-1">
                     {isResident 
                       ? "Residents cannot modify their own unit numbers. Please contact a Board Member or Property Manager to request changes." 
                       : "Press Enter to add multiple units. Click the 'X' to remove a unit."}
@@ -608,7 +611,7 @@ const Profile = ({ user, setUser, viewRole }) => {
 
           {/* ── New Notifications Tab ── */}
           {activeTab === 'notifications' && (
-            <div className="bg-gradient-to-br from-slate-50 to-blue-50/40 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-8 space-y-8 text-slate-900 dark:text-white">
+            <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-8 space-y-8 text-slate-900 dark:text-white">
               {/* Email Notifications */}
               <div>
                 <h3 className="text-lg font-semibold mb-4 text-slate-900 dark:text-white">Email Notifications</h3>
@@ -625,7 +628,7 @@ const Profile = ({ user, setUser, viewRole }) => {
                     <div key={item.key} className="flex items-center justify-between py-3 border-b border-slate-100 dark:border-white/10 last:border-0">
                       <div>
                         <p className="text-slate-900 dark:text-white text-sm">{item.label}</p>
-                        {item.sub && <p className="text-xs text-slate-450 dark:text-gray-500">{item.sub}</p>}
+                        {item.sub && <p className="text-xs text-slate-455 dark:text-gray-500">{item.sub}</p>}
                       </div>
                       <button
                         onClick={() => setEmailNotifications(prev => ({...prev, [item.key]: !prev[item.key]}))}

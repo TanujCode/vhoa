@@ -12,7 +12,7 @@ import API, { getBaseUrl } from "../services/api";
 const StatCard = ({ label, value, icon: Icon, color, sub, subColor, onClick }) => (
   <div 
     onClick={onClick}
-    className={`bg-gradient-to-br from-slate-50 to-blue-50/40 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 transition-all duration-300 hover:border-slate-200 dark:hover:border-white/20 hover:-translate-y-1 shadow-sm dark:shadow-none ${onClick ? 'cursor-pointer hover:border-teal-500/40 dark:hover:border-teal-400/40' : ''}`}
+    className={`bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 transition-all duration-300 hover:border-slate-200 dark:hover:border-white/20 hover:-translate-y-1 shadow-sm dark:shadow-none ${onClick ? 'cursor-pointer hover:border-teal-500/40 dark:hover:border-teal-400/40' : ''}`}
   >
     <div className="flex items-center justify-between mb-3">
       <p className="text-slate-500 dark:text-gray-400 text-sm font-medium">{label}</p>
@@ -203,7 +203,7 @@ const PropertyManagerDashboard = ({ community, user, setActivePage }) => {
 
       {/* Community Banner & Occupancy Cap Card */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 bg-gradient-to-br from-slate-50 to-blue-50/40 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 flex flex-col sm:flex-row items-center gap-6 shadow-sm dark:shadow-none">
+        <div className="lg:col-span-2 bg-gradient-to-br from-slate-50 to-blue-55 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 flex flex-col sm:flex-row items-center gap-6 shadow-sm dark:shadow-none">
           <div className="w-16 h-16 bg-[#1D9E75]/20 text-[#25C490] rounded-2xl flex items-center justify-center flex-shrink-0 border border-[#1D9E75]/30">
             <Building2 size={32} />
           </div>
@@ -220,7 +220,7 @@ const PropertyManagerDashboard = ({ community, user, setActivePage }) => {
         </div>
 
         {/* Occupancy Card */}
-        <div className="bg-gradient-to-br from-slate-50 to-blue-50/40 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 flex flex-col justify-between shadow-sm dark:shadow-none">
+        <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 flex flex-col justify-between shadow-sm dark:shadow-none">
           <div>
             <div className="flex items-center justify-between mb-3">
               <span className="text-sm font-semibold text-slate-500 dark:text-gray-400">Community Occupancy</span>
@@ -251,7 +251,7 @@ const PropertyManagerDashboard = ({ community, user, setActivePage }) => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
         {/* Quick Actions Panel */}
-        <div className="bg-gradient-to-br from-slate-50 to-blue-50/40 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 flex flex-col shadow-sm dark:shadow-none">
+        <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 flex flex-col shadow-sm dark:shadow-none">
           <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">Quick Shortcuts</h3>
           <div className="grid grid-cols-1 gap-3 flex-1">
             {quickActions.map((action, idx) => {
@@ -271,7 +271,7 @@ const PropertyManagerDashboard = ({ community, user, setActivePage }) => {
         </div>
 
         {/* To-Do Checklist Widget */}
-        <div className="lg:col-span-2 bg-gradient-to-br from-slate-50 to-blue-50/40 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 shadow-sm dark:shadow-none flex flex-col">
+        <div className="lg:col-span-2 bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 shadow-sm dark:shadow-none flex flex-col">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-bold text-slate-900 dark:text-white">Daily PM Checklist</h3>
             <span className="text-xs text-slate-400 dark:text-gray-500 font-mono">{tasks.filter(t => t.completed).length}/{tasks.length} Completed</span>
@@ -331,7 +331,7 @@ const PropertyManagerDashboard = ({ community, user, setActivePage }) => {
       {/* Recent Activity - 2 Columns */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Recent Violations */}
-        <div className="bg-gradient-to-br from-slate-50 to-blue-50/40 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 shadow-sm dark:shadow-none">
+        <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 shadow-sm dark:shadow-none">
           <div className="flex items-center justify-between mb-4 border-b border-slate-100 dark:border-white/5 pb-2">
             <h3 className="text-lg font-bold text-slate-900 dark:text-white">Recent Compliance Issues</h3>
             <button onClick={() => setActivePage('violations')} className="text-xs text-teal-600 dark:text-[#25C490] hover:underline">View All</button>
@@ -355,7 +355,7 @@ const PropertyManagerDashboard = ({ community, user, setActivePage }) => {
         </div>
 
         {/* Recent Service Requests */}
-        <div className="bg-gradient-to-br from-slate-50 to-blue-50/40 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 shadow-sm dark:shadow-none">
+        <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 shadow-sm dark:shadow-none">
           <div className="flex items-center justify-between mb-4 border-b border-slate-100 dark:border-white/5 pb-2">
             <h3 className="text-lg font-bold text-slate-900 dark:text-white">Recent Service Requests</h3>
             <button onClick={() => setActivePage('servicereq')} className="text-xs text-teal-600 dark:text-[#25C490] hover:underline">View All</button>
@@ -380,7 +380,7 @@ const PropertyManagerDashboard = ({ community, user, setActivePage }) => {
       </div>
 
       {/* Resident Join Requests */}
-      <div className="bg-gradient-to-br from-slate-50 to-blue-50/40 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl shadow-sm overflow-hidden">
+      <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl shadow-sm overflow-hidden">
         <div className="p-6 border-b border-gray-200 dark:border-white/10 flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <UserPlus className="w-5 h-5 text-teal-500" />

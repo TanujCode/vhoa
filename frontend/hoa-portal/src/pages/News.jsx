@@ -36,7 +36,7 @@ const NewsModal = ({ communityId, onClose, onSuccess }) => {
 
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-      <div className="bg-gradient-to-br from-slate-50 to-blue-50/40 dark:from-[#1E2E42] dark:to-[#162535] rounded-3xl p-6 w-full max-w-lg border border-slate-200/80 dark:border-white/10 text-slate-900 dark:text-white shadow-xl">
+      <div className="bg-white dark:bg-gradient-to-br dark:from-[#1E2E42] dark:to-[#162535] rounded-3xl p-6 w-full max-w-lg border border-slate-200/80 dark:border-white/10 text-slate-900 dark:text-white shadow-xl">
         <div className="flex items-center justify-between mb-6">
           <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Post News / Update</h3>
           <button onClick={onClose} className="text-slate-400 hover:text-slate-900 dark:text-gray-400 dark:hover:text-white"><X size={20} /></button>
@@ -108,7 +108,7 @@ const FAQModal = ({ communityId, onClose, onSuccess }) => {
 
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-      <div className="bg-gradient-to-br from-slate-50 to-blue-50/40 dark:from-[#1E2E42] dark:to-[#162535] rounded-3xl p-6 w-full max-w-lg border border-slate-200/80 dark:border-white/10 text-slate-900 dark:text-white shadow-xl">
+      <div className="bg-white dark:bg-gradient-to-br dark:from-[#1E2E42] dark:to-[#162535] rounded-3xl p-6 w-full max-w-lg border border-slate-200/80 dark:border-white/10 text-slate-900 dark:text-white shadow-xl">
         <div className="flex items-center justify-between mb-6">
           <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Add FAQ</h3>
           <button onClick={onClose} className="text-slate-400 hover:text-slate-900 dark:text-gray-400 dark:hover:text-white"><X size={20} /></button>
@@ -229,7 +229,7 @@ const News = ({ community, user }) => {
         {['news', 'faq'].map(tab => (
           <button key={tab} onClick={() => setActiveTab(tab)}
             className={`px-6 py-2.5 rounded-2xl text-sm font-medium transition capitalize ${
-              activeTab === tab ? 'bg-teal-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-white/10 dark:text-gray-400 dark:hover:bg-white/20'
+              activeTab === tab ? 'bg-teal-605 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-white/10 dark:text-gray-400 dark:hover:bg-white/20'
             }`}>
             {tab === 'news' ? '📢 News & Updates' : '❓ FAQs'}
           </button>
@@ -260,7 +260,7 @@ const News = ({ community, user }) => {
           ) : (
             <div className="space-y-4">
               {news.map(n => (
-                <div key={n.news_id} className={`bg-gradient-to-br from-slate-50 to-blue-50/40 dark:from-[#1E2E42] dark:to-[#162535] border rounded-3xl p-6 shadow-sm ${
+                <div key={n.news_id} className={`bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border rounded-3xl p-6 shadow-sm ${
                   n.is_pinned ? 'border-teal-500/40' : 'border-slate-200/80 dark:border-white/10'
                 }`}>
                   <div className="flex items-start justify-between gap-3">
@@ -276,7 +276,7 @@ const News = ({ community, user }) => {
                     </div>
                     {isAdmin && (
                       <button onClick={() => handleDeleteNews(n.news_id)}
-                        className="text-slate-400 hover:text-red-500 dark:text-gray-600 dark:hover:text-red-400 transition flex-shrink-0">
+                        className="text-slate-400 hover:text-red-500 dark:text-gray-650 dark:hover:text-red-400 transition flex-shrink-0">
                         <X size={16} />
                       </button>
                     )}
@@ -304,7 +304,7 @@ const News = ({ community, user }) => {
           ) : (
             <div className="space-y-3">
               {faqs.map((faq, i) => (
-                <div key={faq.faq_id} className="bg-gradient-to-br from-slate-50 to-blue-50/40 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl overflow-hidden shadow-sm">
+                <div key={faq.faq_id} className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl overflow-hidden shadow-sm">
                   <button
                     onClick={() => setExpandedFaq(expandedFaq === faq.faq_id ? null : faq.faq_id)}
                     className="w-full p-6 text-left flex items-center justify-between gap-4 hover:bg-slate-50 dark:hover:bg-white/5 transition"

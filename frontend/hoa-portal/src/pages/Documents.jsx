@@ -249,7 +249,7 @@ const Documents = ({ community, user }) => {
       </div>
 
       {/* Documents Layout */}
-      <div className="bg-gradient-to-br from-slate-50 to-blue-50/40 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl overflow-hidden shadow-sm">
+      <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl overflow-hidden shadow-sm">
         <div className="p-6 border-b border-slate-200 dark:border-white/10 flex justify-between items-center">
           <h2 className="font-semibold text-slate-900 dark:text-white flex items-center gap-2">
             <Folder size={18} className="text-teal-500" /> Document Repository

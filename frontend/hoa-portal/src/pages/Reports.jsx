@@ -92,7 +92,7 @@ const Reports = ({ community, user, setActivePage }) => {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <div 
           onClick={() => setActivePage('violations')}
-          className="bg-gradient-to-br from-slate-50 to-blue-50/40 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 p-6 rounded-3xl shadow-sm cursor-pointer hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
+          className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 p-6 rounded-3xl shadow-sm cursor-pointer hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
         >
           <div className="flex justify-between items-start mb-4">
             <div className="text-sm font-semibold text-slate-500 dark:text-gray-400">Total Fines Issued</div>
@@ -104,7 +104,7 @@ const Reports = ({ community, user, setActivePage }) => {
 
         <div 
           onClick={() => setActivePage('payments')}
-          className="bg-gradient-to-br from-slate-50 to-blue-50/40 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 p-6 rounded-3xl shadow-sm cursor-pointer hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
+          className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 p-6 rounded-3xl shadow-sm cursor-pointer hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
         >
           <div className="flex justify-between items-start mb-4">
             <div className="text-sm font-semibold text-slate-500 dark:text-gray-400">Revenue Collected</div>
@@ -116,7 +116,7 @@ const Reports = ({ community, user, setActivePage }) => {
 
         <div 
           onClick={() => setActivePage('servicereq')}
-          className="bg-gradient-to-br from-slate-50 to-blue-50/40 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 p-6 rounded-3xl shadow-sm cursor-pointer hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
+          className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 p-6 rounded-3xl shadow-sm cursor-pointer hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
         >
           <div className="flex justify-between items-start mb-4">
             <div className="text-sm font-semibold text-slate-500 dark:text-gray-400">Active Service Requests</div>
@@ -132,7 +132,7 @@ const Reports = ({ community, user, setActivePage }) => {
 
         <div 
           onClick={() => setActivePage('members')}
-          className="bg-gradient-to-br from-slate-50 to-blue-50/40 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 p-6 rounded-3xl shadow-sm cursor-pointer hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
+          className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 p-6 rounded-3xl shadow-sm cursor-pointer hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
         >
           <div className="flex justify-between items-start mb-4">
             <div className="text-sm font-semibold text-slate-500 dark:text-gray-400">Total Residents</div>
@@ -147,7 +147,7 @@ const Reports = ({ community, user, setActivePage }) => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         
         {/* Violations Report */}
-        <div className="bg-gradient-to-br from-slate-50 to-blue-50/40 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 p-6 rounded-3xl shadow-sm flex flex-col justify-between">
+        <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 p-6 rounded-3xl shadow-sm flex flex-col justify-between">
           <div>
             <div className="flex justify-between items-center mb-6">
               <h3 className="font-semibold text-lg flex items-center gap-2">
@@ -209,7 +209,7 @@ const Reports = ({ community, user, setActivePage }) => {
         </div>
 
         {/* Service Requests Report */}
-        <div className="bg-gradient-to-br from-slate-50 to-blue-50/40 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 p-6 rounded-3xl shadow-sm flex flex-col justify-between">
+        <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 p-6 rounded-3xl shadow-sm flex flex-col justify-between">
           <div>
             <div className="flex justify-between items-center mb-6">
               <h3 className="font-semibold text-lg flex items-center gap-2">
@@ -273,7 +273,7 @@ const Reports = ({ community, user, setActivePage }) => {
         </div>
 
         {/* Payments & Financials Report */}
-        <div className="bg-gradient-to-br from-slate-50 to-blue-50/40 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 p-6 rounded-3xl shadow-sm flex flex-col justify-between">
+        <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 p-6 rounded-3xl shadow-sm flex flex-col justify-between">
           <div>
             <div className="flex justify-between items-center mb-6">
               <h3 className="font-semibold text-lg flex items-center gap-2">
@@ -313,7 +313,7 @@ const Reports = ({ community, user, setActivePage }) => {
         </div>
 
         {/* Amenity Bookings Report */}
-        <div className="bg-gradient-to-br from-slate-50 to-blue-50/40 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 p-6 rounded-3xl shadow-sm flex flex-col justify-between">
+        <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 p-6 rounded-3xl shadow-sm flex flex-col justify-between">
           <div>
             <div className="flex justify-between items-center mb-6">
               <h3 className="font-semibold text-lg flex items-center gap-2">

@@ -194,7 +194,7 @@ const AddCommunityModal = ({ isOpen, onClose, onSuccess }) => {
 
   return (
     <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[100] p-4">
-      <div className="bg-gradient-to-br from-slate-50 to-blue-50/40 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl w-full max-w-md max-h-[90vh] overflow-y-auto text-slate-900 dark:text-white custom-scrollbar">
+      <div className="bg-white dark:bg-gradient-to-br dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl w-full max-w-md max-h-[90vh] overflow-y-auto text-slate-900 dark:text-white custom-scrollbar">
         
         {/* Header */}
         <div className="p-5 border-b border-slate-200 dark:border-white/10">

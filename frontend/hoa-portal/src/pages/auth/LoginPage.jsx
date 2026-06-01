@@ -31,7 +31,7 @@ export default function LoginPage() {
 
     try {
       setRefreshing(true);
-      const res = await API.get('/auth/captcha');
+      const res = await API.get('/auth/captcha', { timeout: 2000 });
       // If user hasn't started typing in the new captcha answer yet, we can safely sync with backend JWT captcha
       const currentAnswer = watch('captchaAnswer');
       if (!currentAnswer || currentAnswer.trim() === '') {
@@ -49,7 +49,7 @@ export default function LoginPage() {
 
   useEffect(() => {
     // Ping backend in background on mount to wake it up from cold-start sleep
-    API.get('/auth/captcha').catch(() => {});
+    API.get('/auth/captcha', { timeout: 2000 }).catch(() => {});
   }, []);
 
   const {
@@ -189,7 +189,8 @@ const onSubmit = async (data) => {
   });
 
   const handleGoogleLogin = () => {
-    if (!import.meta.env.VITE_GOOGLE_CLIENT_ID || import.meta.env.VITE_GOOGLE_CLIENT_ID === 'PLACEHOLDER_CLIENT_ID') {
+    const clientIdClean = (import.meta.env.VITE_GOOGLE_CLIENT_ID || '').replace(/['"]/g, "").trim();
+    if (!clientIdClean || clientIdClean === 'PLACEHOLDER_CLIENT_ID') {
       setErrorMsg('Google Login is not configured. Please add VITE_GOOGLE_CLIENT_ID in your frontend .env file.');
       return;
     }
@@ -285,16 +286,20 @@ const onSubmit = async (data) => {
           <div className="flex-1">
             <label className="block text-xs font-bold text-gray-700 tracking-wider mb-2">CAPTCHA *</label>
             <div className="flex items-center gap-3">
-              <span className="text-xl font-bold bg-white border border-gray-300 px-4 py-2 rounded-xl text-yellow-600 font-mono tracking-widest">
+              <span className="text-xl font-bold bg-white border border-gray-300 px-4 py-2 rounded-xl text-yellow-600 font-mono tracking-widest select-none">
                 {loadingCaptcha ? '...' : captcha.question}
               </span>
               <button
                 type="button"
                 onClick={fetchCaptcha}
-                className="p-2 hover:bg-gray-100 rounded-xl transition text-gray-400 hover:text-gray-600"
+                disabled={refreshing}
+                className="p-2 bg-slate-100 hover:bg-blue-50 active:scale-95 rounded-xl transition-all duration-150 text-slate-400 hover:text-blue-500 border border-transparent hover:border-blue-200 disabled:opacity-60 disabled:cursor-not-allowed shadow-sm"
                 title="Refresh Captcha"
               >
-                <RefreshCw size={16} className={`transition-transform duration-500 ${refreshing ? 'animate-spin' : 'hover:rotate-180'}`} />
+                <RefreshCw
+                  size={16}
+                  className={`transition-transform duration-500 ${refreshing ? 'animate-spin text-blue-500' : 'hover:rotate-180'}`}
+                />
               </button>
             </div>
           </div>

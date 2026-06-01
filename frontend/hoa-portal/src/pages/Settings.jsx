@@ -132,7 +132,7 @@ const Settings = ({ community }) => {
       </div>
 
       {/* Timezone */}
-      <div className="bg-gradient-to-br from-slate-50 to-blue-50/40 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200 dark:border-white/10 rounded-3xl p-8 mb-6 shadow-sm">
+      <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200 dark:border-white/10 rounded-3xl p-8 mb-6 shadow-sm">
         <h2 className="text-xl font-semibold mb-6 flex items-center gap-3 text-slate-900 dark:text-white">
           🌐 Platform Timezone
         </h2>
@@ -173,7 +173,7 @@ const Settings = ({ community }) => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
         {/* Payment Config */}
-        <div className="bg-gradient-to-br from-slate-50 to-blue-50/40 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200 dark:border-white/10 rounded-3xl p-6 shadow-sm">
+        <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200 dark:border-white/10 rounded-3xl p-6 shadow-sm">
           <div className="flex items-center gap-3 mb-5">
             <DollarSign className="text-teal-600 dark:text-teal-400" size={24} />
             <h3 className="font-semibold text-lg text-slate-900 dark:text-white">Payment Configuration</h3>
@@ -279,7 +279,7 @@ const Settings = ({ community }) => {
         </div>
 
         {/* Visible Tabs */}
-        <div className="bg-gradient-to-br from-slate-50 to-blue-50/40 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200 dark:border-white/10 rounded-3xl p-6 shadow-sm">
+        <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200 dark:border-white/10 rounded-3xl p-6 shadow-sm">
           <div className="flex items-center gap-3 mb-5">
             <Eye className="text-teal-600 dark:text-teal-400" size={24} />
             <h3 className="font-semibold text-lg text-slate-900 dark:text-white">Visible Tabs for Members</h3>
@@ -300,7 +300,7 @@ const Settings = ({ community }) => {
       </div>
 
       {/* Community Info */}
-      <div className="bg-gradient-to-br from-slate-50 to-blue-50/40 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200 dark:border-white/10 rounded-3xl p-6 mt-6 shadow-sm">
+      <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200 dark:border-white/10 rounded-3xl p-6 mt-6 shadow-sm">
         <h3 className="font-semibold text-lg mb-4 text-slate-900 dark:text-white">📋 Community Info</h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
           <div>

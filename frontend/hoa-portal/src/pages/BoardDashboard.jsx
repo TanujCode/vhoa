@@ -92,7 +92,7 @@ export default function BoardDashboard({ community, user }) {
 
       {/* Stats Grid Layout */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-        <div className="bg-gradient-to-br from-slate-50 to-blue-50/40 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-2xl p-5 flex items-center space-x-4 shadow-sm">
+        <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-2xl p-5 flex items-center space-x-4 shadow-sm">
           <div className="p-3 rounded-xl bg-teal-500/10 text-teal-500"><Users className="w-6 h-6" /></div>
           <div>
             <p className="text-xs text-gray-500 dark:text-gray-400 uppercase font-semibold">Total Residents</p>
@@ -100,7 +100,7 @@ export default function BoardDashboard({ community, user }) {
           </div>
         </div>
 
-        <div className="bg-gradient-to-br from-slate-50 to-blue-50/40 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-2xl p-5 flex items-center space-x-4 shadow-sm">
+        <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-2xl p-5 flex items-center space-x-4 shadow-sm">
           <div className="p-3 rounded-xl bg-amber-500/10 text-amber-500"><Clock className="w-6 h-6" /></div>
           <div>
             <p className="text-xs text-gray-500 dark:text-gray-400 uppercase font-semibold">Pending Approvals</p>
@@ -108,7 +108,7 @@ export default function BoardDashboard({ community, user }) {
           </div>
         </div>
 
-        <div className="bg-gradient-to-br from-slate-50 to-blue-50/40 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-2xl p-5 flex items-center space-x-4 shadow-sm">
+        <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-2xl p-5 flex items-center space-x-4 shadow-sm">
           <div className="p-3 rounded-xl bg-red-500/10 text-red-500"><AlertTriangle className="w-6 h-6" /></div>
           <div>
             <p className="text-xs text-gray-500 dark:text-gray-400 uppercase font-semibold">Open Violations</p>
@@ -118,7 +118,7 @@ export default function BoardDashboard({ community, user }) {
       </div>
 
       {/* 🔥 DYNAMIC APPROVAL TABLE COMPONENT */}
-      <div className="bg-gradient-to-br from-slate-50 to-blue-50/40 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-2xl shadow-sm overflow-hidden">
+      <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-2xl shadow-sm overflow-hidden">
         <div className="p-5 border-b border-gray-200 dark:border-white/10 flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <ClipboardList className="w-5 h-5 text-teal-500" />
@@ -154,7 +154,7 @@ export default function BoardDashboard({ community, user }) {
               <tbody className="divide-y divide-gray-200 dark:divide-white/10 text-sm">
                 {requests.map((req) => (
                   <tr key={req.request_id} className="hover:bg-slate-50/50 dark:hover:bg-white/5 transition-colors">
-                    <td className="p-4 font-medium text-gray-950 dark:text-white">{req.full_name}</td>
+                    <td className="p-4 font-medium text-gray-955 dark:text-white">{req.full_name}</td>
                     <td className="p-4 text-gray-500 dark:text-gray-400">{req.email_id || req.email}</td>
                     <td className="p-4">
                       <span className="px-2 py-1 text-xs font-mono bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded">

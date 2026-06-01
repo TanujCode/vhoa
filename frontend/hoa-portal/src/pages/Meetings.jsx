@@ -70,7 +70,7 @@ const ScheduleMeetingModal = ({ communityId, onClose, onSuccess, meeting }) => {
 
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-gradient-to-br from-slate-50 to-blue-50/40 dark:from-[#1E2E42] dark:to-[#162535] rounded-3xl p-6 w-full max-w-lg border border-slate-200/80 dark:border-white/10 text-slate-900 dark:text-white shadow-2xl max-h-[90vh] flex flex-col overflow-hidden">
+      <div className="bg-white dark:bg-gradient-to-br dark:from-[#1E2E42] dark:to-[#162535] rounded-3xl p-6 w-full max-w-lg border border-slate-200/80 dark:border-white/10 text-slate-900 dark:text-white shadow-2xl max-h-[90vh] flex flex-col overflow-hidden">
         <div className="flex items-center justify-between mb-6 flex-shrink-0">
           <h3 className="text-xl font-bold text-slate-900 dark:text-white">
             {meeting ? 'Update Meeting Details' : 'Schedule New Meeting'}
@@ -224,7 +224,7 @@ const CreateSurveyModal = ({ communityId, onClose, onSuccess, survey }) => {
 
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-gradient-to-br from-slate-50 to-blue-50/40 dark:from-[#1E2E42] dark:to-[#162535] rounded-3xl p-6 w-full max-w-lg border border-slate-200/80 dark:border-white/10 text-slate-900 dark:text-white shadow-2xl max-h-[90vh] flex flex-col overflow-hidden">
+      <div className="bg-white dark:bg-gradient-to-br dark:from-[#1E2E42] dark:to-[#162535] rounded-3xl p-6 w-full max-w-lg border border-slate-200/80 dark:border-white/10 text-slate-900 dark:text-white shadow-2xl max-h-[90vh] flex flex-col overflow-hidden">
         <div className="flex items-center justify-between mb-6 flex-shrink-0">
           <h3 className="text-xl font-bold text-slate-900 dark:text-white">
             {survey ? 'Update Survey Details' : 'Create New Survey / Poll'}
@@ -449,7 +449,7 @@ const Meetings = ({ community, user }) => {
             onClick={() => setActiveTab(tab)}
             className={`px-6 py-2.5 rounded-2xl text-sm font-medium transition capitalize ${
               activeTab === tab 
-                ? 'bg-teal-600 text-white shadow-md shadow-teal-500/20' 
+                ? 'bg-teal-650 text-white shadow-md shadow-teal-500/20' 
                 : 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-white/10 dark:text-gray-400 dark:hover:bg-white/20'
             }`}
           >
@@ -467,7 +467,7 @@ const Meetings = ({ community, user }) => {
       ) : activeTab === 'meetings' ? (
         /* ── MEETINGS LIST ── */
         meetings.length === 0 ? (
-          <div className="text-center py-20 text-slate-500 dark:text-gray-400 bg-gradient-to-br from-slate-50 to-blue-50/40 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl">
+          <div className="text-center py-20 text-slate-500 dark:text-gray-400 bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl">
             <Calendar size={40} className="mx-auto mb-3 opacity-50 text-slate-400 dark:text-gray-500" />
             No meetings scheduled yet.
           </div>
@@ -476,7 +476,7 @@ const Meetings = ({ community, user }) => {
             {meetings.map((meeting) => (
               <div
                 key={meeting.meeting_id}
-                className="bg-gradient-to-br from-slate-50 to-blue-50/40 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 shadow-sm flex flex-col md:flex-row justify-between gap-6"
+                className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 shadow-sm flex flex-col md:flex-row justify-between gap-6"
               >
                 <div className="flex-1 space-y-3">
                   <div className="flex items-center gap-2 flex-wrap">
@@ -579,7 +579,7 @@ const Meetings = ({ community, user }) => {
       ) : (
         /* ── SURVEYS LIST ── */
         surveys.length === 0 ? (
-          <div className="text-center py-20 text-slate-500 dark:text-gray-400 bg-gradient-to-br from-slate-50 to-blue-50/40 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl">
+          <div className="text-center py-20 text-slate-500 dark:text-gray-400 bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl">
             <Users size={40} className="mx-auto mb-3 opacity-50 text-slate-400 dark:text-gray-500" />
             No active surveys or polls yet.
           </div>
@@ -593,7 +593,7 @@ const Meetings = ({ community, user }) => {
               return (
                 <div
                   key={survey.survey_id}
-                  className="bg-gradient-to-br from-slate-50 to-blue-50/40 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 shadow-sm flex flex-col justify-between"
+                  className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 shadow-sm flex flex-col justify-between"
                 >
                   <div>
                     <div className="flex justify-between items-start gap-4 mb-3">
