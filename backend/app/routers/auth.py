@@ -146,19 +146,7 @@ def login(request: Request, body: LoginRequest, db: Session = Depends(get_db)):
     _verify_captcha(body.captcha_token, body.captcha_answer)
 
     try:
-        # 1. Get the user first to check
-        user = db.query(User).filter(User.email_id == body.email_id.lower().strip()).first()
-        
-        if not user:
-            raise ValueError("Invalid email or password")
-
-        # 2. REAL FIX: Check if verified or not
-        # (Confirm column name according to your DB, usually email_id_is_verified)
-        if hasattr(user, 'email_id_is_verified') and not user.email_id_is_verified:
-            # If not verified, throw error
-            raise ValueError("Email not verified. Please verify your email first.")
-
-        # 3. If verified, only then call login_user
+        # 1. Login user directly (no email verification required)
         result = login_user(body.email_id, body.password, db)
 
     except ValueError as e:
@@ -171,9 +159,7 @@ def login(request: Request, body: LoginRequest, db: Session = Depends(get_db)):
             user_id     = user_obj.user_id if user_obj else None,
             ip_address  = request.client.host,
         )
-        # Will send 403 here if there is a verification issue
-        status_code = 403 if "verified" in str(e).lower() else 401
-        raise HTTPException(status_code=status_code, detail=str(e))
+        raise HTTPException(status_code=401, detail=str(e))
 
     user = result["user"]
     log_action(

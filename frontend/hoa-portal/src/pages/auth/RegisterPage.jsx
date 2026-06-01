@@ -83,19 +83,9 @@ export default function RegisterPage() {
         captcha_answer: data.captchaAnswer,
       });
 
-      // Auto-trigger OTP send for email verification
-      try {
-        await API.post('/auth/otp/send', { 
-          email_id: data.email.trim(),
-          otp_type: 'email_verify' 
-        }); 
-      } catch (otpErr) {
-        console.error("OTP send failed:", otpErr);
-      }
-
-      setSuccessMsg('Registration successful! Sending verification code to your email...');
+      setSuccessMsg('Registration successful! Redirecting to login...');
       setTimeout(() => {
-        navigate('/verify-otp', { state: { email: data.email } });
+        navigate('/login');
       }, 2000);
     } catch (err) {
       console.error('API Error:', err);
@@ -172,6 +162,8 @@ export default function RegisterPage() {
     }
     googleLogin();
   };
+
+ 
 
   return (
     <AuthLayout>
@@ -330,6 +322,8 @@ export default function RegisterPage() {
             <p className="text-red-500 text-xs mt-1">{errors.mobileNumber.message}</p>
           )}
         </div>
+
+
 
         {/* Captcha Section */}
         <div className="p-4 bg-slate-50 border border-gray-200 rounded-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
