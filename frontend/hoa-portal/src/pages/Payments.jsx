@@ -209,7 +209,7 @@ const Payments = ({ community, user, paymentState, setPaymentState }) => {
         <button
           onClick={() => setActiveTab('pay')}
           className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-medium text-sm transition-all ${
-            activeTab === 'pay' ? 'bg-[#1D9E75] text-white shadow-lg shadow-[#1D9E75]/25' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100 dark:text-gray-400 dark:hover:text-white dark:hover:bg-white/5'
+            activeTab === 'pay' ? 'bg-[#1D9E75] hover:bg-[#15805d] text-white hover:text-white shadow-lg shadow-[#1D9E75]/25' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100 dark:text-gray-400 dark:hover:text-white dark:hover:bg-white/5'
           }`}
         >
           <DollarSign size={16} /> Outstanding Dues
@@ -217,7 +217,7 @@ const Payments = ({ community, user, paymentState, setPaymentState }) => {
         <button
           onClick={() => setActiveTab('recurring')}
           className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-medium text-sm transition-all ${
-            activeTab === 'recurring' ? 'bg-[#1D9E75] text-white shadow-lg shadow-[#1D9E75]/25' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100 dark:text-gray-400 dark:hover:text-white dark:hover:bg-white/5'
+            activeTab === 'recurring' ? 'bg-[#1D9E75] hover:bg-[#15805d] text-white hover:text-white shadow-lg shadow-[#1D9E75]/25' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100 dark:text-gray-400 dark:hover:text-white dark:hover:bg-white/5'
           }`}
         >
           <Calendar size={16} /> Auto-Pay (Recurring)
@@ -225,7 +225,7 @@ const Payments = ({ community, user, paymentState, setPaymentState }) => {
         <button
           onClick={() => setActiveTab('history')}
           className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-medium text-sm transition-all ${
-            activeTab === 'history' ? 'bg-[#1D9E75] text-white shadow-lg shadow-[#1D9E75]/25' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100 dark:text-gray-400 dark:hover:text-white dark:hover:bg-white/5'
+            activeTab === 'history' ? 'bg-[#1D9E75] hover:bg-[#15805d] text-white hover:text-white shadow-lg shadow-[#1D9E75]/25' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100 dark:text-gray-400 dark:hover:text-white dark:hover:bg-white/5'
           }`}
         >
           <History size={16} /> Transaction History
@@ -236,7 +236,7 @@ const Payments = ({ community, user, paymentState, setPaymentState }) => {
             <button
               onClick={() => setActiveTab('virtualhoa')}
               className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-medium text-sm transition-all ${
-                activeTab === 'virtualhoa' ? 'bg-[#1D9E75] text-white shadow-lg shadow-[#1D9E75]/25' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100 dark:text-gray-400 dark:hover:text-white dark:hover:bg-white/5'
+                activeTab === 'virtualhoa' ? 'bg-[#1D9E75] hover:bg-[#15805d] text-white hover:text-white shadow-lg shadow-[#1D9E75]/25' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100 dark:text-gray-400 dark:hover:text-white dark:hover:bg-white/5'
               }`}
             >
               <Zap size={16} /> VirtualHOA Invoices
@@ -244,7 +244,7 @@ const Payments = ({ community, user, paymentState, setPaymentState }) => {
             <button
               onClick={() => setActiveTab('vendors')}
               className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-medium text-sm transition-all ${
-                activeTab === 'vendors' ? 'bg-[#1D9E75] text-white shadow-lg shadow-[#1D9E75]/25' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100 dark:text-gray-400 dark:hover:text-white dark:hover:bg-white/5'
+                activeTab === 'vendors' ? 'bg-[#1D9E75] hover:bg-[#15805d] text-white hover:text-white shadow-lg shadow-[#1D9E75]/25' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100 dark:text-gray-400 dark:hover:text-white dark:hover:bg-white/5'
               }`}
             >
               <FileText size={16} /> Pay Vendors

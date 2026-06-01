@@ -227,7 +227,7 @@ const Documents = ({ community, user }) => {
             onClick={() => setTypeFilter(type)}
             className={`px-5 py-2.5 rounded-2xl text-sm font-medium transition whitespace-nowrap ${
               typeFilter === type
-                ? 'bg-teal-600 text-white shadow-md shadow-teal-500/10'
+                ? 'bg-teal-600 hover:bg-teal-700 text-white hover:text-white shadow-md shadow-teal-500/10'
                 : 'bg-slate-100 hover:bg-slate-200 dark:bg-white/10 text-slate-600 dark:text-gray-400 dark:hover:bg-white/20'
             }`}
           >

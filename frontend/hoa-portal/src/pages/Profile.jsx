@@ -422,7 +422,7 @@ const Profile = ({ user, setUser, viewRole }) => {
                 onClick={() => setActiveTab(tab.id)}
                 className={`px-5 py-2.5 rounded-2xl text-sm font-medium transition ${
                   activeTab === tab.id
-                    ? 'bg-teal-600 text-white'
+                    ? 'bg-teal-600 hover:bg-teal-700 text-white hover:text-white'
                     : 'bg-slate-100 hover:bg-slate-200 dark:bg-white/10 text-slate-655 dark:text-gray-400 dark:hover:bg-white/20'
                 }`}
               >

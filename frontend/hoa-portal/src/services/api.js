@@ -6,6 +6,10 @@ export const getApiUrl = (path = '') => {
 };
 
 export const getBaseUrl = (path = '') => {
+  if (!path) return '';
+  if (path.startsWith('http://') || path.startsWith('https://') || path.startsWith('data:')) {
+    return path;
+  }
   const baseURL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:9999/api';
   const base = baseURL.endsWith('/api') ? baseURL.slice(0, -4) : baseURL;
   return `${base}${path}`;

@@ -119,22 +119,40 @@ async def upload_profile_picture(
     Upload a profile picture.
 
     - Only image files allowed (JPEG, PNG, WebP)
-- Max size: 5 MB
-- The old picture will be automatically replaced.
+    - Max size: 5 MB
+    - The old picture will be automatically replaced.
     """
-    # Purani picture delete 
+    import base64
+    # Type check
+    allowed_types = {"image/jpeg", "image/png", "image/jpg", "image/webp"}
+    if file.content_type not in allowed_types:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Only image files allowed (JPEG, PNG, WebP). You uploaded: {file.content_type}"
+        )
+
+    # Size check
+    contents = await file.read()
+    if len(contents) > 5 * 1024 * 1024:
+        raise HTTPException(
+            status_code=400,
+            detail="File size should not exceed 5MB."
+        )
+
+    # Purani picture delete (if it was a local file)
     if current_user.user_profile_url:
         delete_profile_picture(current_user.user_profile_url)
 
-    # Nai picture save 
-    url = await save_profile_picture(file, current_user.user_id)
+    # Convert new picture to base64
+    encoded = base64.b64encode(contents).decode("utf-8")
+    url = f"data:{file.content_type};base64,{encoded}"
 
-    # DB mein URL update 
+    # DB mein URL update
     current_user.user_profile_url = url
     db.commit()
     db.refresh(current_user)
 
-    return _to_out(current_user)
+    return _to_out(current_user, db)
 
 
 #  DELETE /api/user/profile/picture

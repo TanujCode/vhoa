@@ -60,9 +60,9 @@ Returns: URL string which will be stored in DB
 def delete_profile_picture(url: str):
     """
     Delete the old profile picture when a new one is uploaded.
-Extract the file path from the URL and remove the file.
+    Extract the file path from the URL and remove the file.
     """
-    if not url:
+    if not url or url.startswith("data:") or url.startswith("http://") or url.startswith("https://"):
         return
 
     # Extract local path from URL
