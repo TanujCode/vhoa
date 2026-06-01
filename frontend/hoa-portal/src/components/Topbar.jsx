@@ -31,7 +31,7 @@ const Topbar = ({
 
   const getProfileImage = (url) => {
     if (!url) return null;
-    if (url.startsWith('http')) return url;
+    if (url.startsWith('http') || url.startsWith('data:')) return url;
     return getBaseUrl(url.startsWith('/') ? url : '/' + url);
   };
 

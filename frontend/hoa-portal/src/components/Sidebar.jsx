@@ -5,9 +5,16 @@ import {
   Settings, Megaphone, User, ShieldAlert, Truck,
   ClipboardList, Info, Building2
 } from 'lucide-react';
+import { getBaseUrl } from '../services/api';
 
 const Sidebar = ({ activePage, setActivePage, isOpen, setIsOpen, user, userRole: propRole, activeCommunity }) => {
   const userRole = propRole || user?.role || 'resident';
+
+  const getProfileImage = (url) => {
+    if (!url) return null;
+    if (url.startsWith('http') || url.startsWith('data:')) return url;
+    return getBaseUrl(url.startsWith('/') ? url : '/' + url);
+  };
 
   // 1. Admin/Manager Menu (Complete List)
   let adminNavItems = [
@@ -166,8 +173,20 @@ const Sidebar = ({ activePage, setActivePage, isOpen, setIsOpen, user, userRole:
         {/* User Footer */}
         <div className="p-4 border-t border-slate-200/60 dark:border-white/10">
           <div className="bg-white/60 dark:bg-[#1E3248] p-3 rounded-2xl flex items-center gap-3 cursor-pointer hover:bg-white/80 dark:hover:bg-white/10 transition-colors" onClick={() => setActivePage('profile')}>
-            <div className="w-9 h-9 bg-teal-500/20 dark:bg-gradient-to-br dark:from-[#1D9E75] dark:to-[#1E3248] text-teal-600 dark:text-white rounded-xl flex items-center justify-center font-bold text-sm">
-              {user?.initials || "U"}
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center font-bold text-white transition-all overflow-hidden border border-white/10 bg-gradient-to-br from-teal-500 to-blue-600 shadow-md flex-shrink-0">
+              {user?.user_profile_url ? (
+                <img 
+                  src={getProfileImage(user.user_profile_url)} 
+                  alt="Profile" 
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                    e.target.parentElement.innerHTML = `<span class="text-sm">${user?.initials || "U"}</span>`;
+                  }}
+                />
+              ) : (
+                <span className="text-sm">{user?.initials || "U"}</span>
+              )}
             </div>
             <div className="overflow-hidden text-slate-900 dark:text-white">
               <div className="text-sm font-medium truncate">{user?.name}</div>
