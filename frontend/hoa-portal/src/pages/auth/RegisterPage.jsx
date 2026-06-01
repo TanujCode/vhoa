@@ -83,9 +83,19 @@ export default function RegisterPage() {
         captcha_answer: data.captchaAnswer,
       });
 
-      setSuccessMsg('Registration successful! Redirecting to login...');
+      // Auto-trigger OTP send for email verification
+      try {
+        await API.post('/auth/otp/send', { 
+          email_id: data.email.trim(),
+          otp_type: 'email_verify' 
+        }); 
+      } catch (otpErr) {
+        console.error("OTP send failed:", otpErr);
+      }
+
+      setSuccessMsg('Registration successful! Sending verification code to your email...');
       setTimeout(() => {
-        navigate('/login');
+        navigate('/verify-otp', { state: { email: data.email } });
       }, 2000);
     } catch (err) {
       console.error('API Error:', err);
