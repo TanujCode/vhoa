@@ -77,12 +77,14 @@ Only the fields you send will be updated — the rest will remain unchanged.
         current_user.time_zone = body.time_zone
     if "unit_no_2" in body.model_fields_set:
         role_name = current_user.role.role_name if current_user.role else "resident"
-        if role_name == "resident":
+        new_unit = body.unit_no_2.strip() if body.unit_no_2 else None
+        old_unit = current_user.unit_no_2.strip() if current_user.unit_no_2 else None
+        if role_name == "resident" and new_unit != old_unit:
             raise HTTPException(
                 status_code=403,
                 detail="Residents cannot modify their own unit numbers. Please contact a Board Member or Property Manager."
             )
-        unit_no_2_val = body.unit_no_2.strip() if body.unit_no_2 else None
+        unit_no_2_val = new_unit
         current_user.unit_no_2 = unit_no_2_val
         if current_user.community_id:
             from app.models.user import UserCommunity

@@ -18,10 +18,9 @@ from app.models.community import Community
 # ══════════════════════════════════════════════
 def seed_violation_statuses(db: Session):
     statuses = ["OPEN", "IN_PROGRESS", "RESOLVED", "CLOSED", "PAID", "CANCELLED", "APPEALED"]
+    existing_statuses = {vs.violation_status for vs in db.query(ViolationStatus).all()}
     for s in statuses:
-        if not db.query(ViolationStatus).filter(
-            ViolationStatus.violation_status == s
-        ).first():
+        if s not in existing_statuses:
             db.add(ViolationStatus(violation_status=s))
     db.commit()
     print("Violation statuses seeded.")
@@ -31,6 +30,9 @@ def seed_violation_statuses(db: Session):
 # ══════════════════════════════════════════════
 def seed_default_violation_types_for_all_communities(db: Session):
     """Will create default violation types for each community"""
+    existing_types = db.query(ViolationType).all()
+    existing_lookup = {(vt.community_id, vt.name) for vt in existing_types}
+    
     communities = db.query(Community).all()
     
     default_types = [
@@ -47,12 +49,7 @@ def seed_default_violation_types_for_all_communities(db: Session):
     seeded_count = 0
     for comm in communities:
         for dt in default_types:
-            existing = db.query(ViolationType).filter(
-                ViolationType.community_id == comm.community_id,
-                ViolationType.name == dt["name"]
-            ).first()
-
-            if not existing:
+            if (comm.community_id, dt["name"]) not in existing_lookup:
                 vtype = ViolationType(
                     name=dt["name"],
                     description=dt["description"],

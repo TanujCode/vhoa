@@ -38,10 +38,9 @@ def seed_service_request_statuses(db: Session):
         "OPEN", "APPROVED", "IN_PROGRESS",
         "VENDOR_ASSIGNED", "ON_HOLD", "CLOSED", "CANCELLED"
     ]
+    existing = {s.status_name for s in db.query(ServiceRequestStatus).all()}
     for s in statuses:
-        if not db.query(ServiceRequestStatus).filter(
-            ServiceRequestStatus.status_name == s
-        ).first():
+        if s not in existing:
             db.add(ServiceRequestStatus(status_name=s))
     db.commit()
     print("✅ Service Request statuses seeded.")
@@ -51,6 +50,9 @@ def seed_service_request_statuses(db: Session):
 #  SEED — Default Types for EVERY Community
 # ══════════════════════════════════════════════
 def seed_default_service_types_for_all_communities(db: Session):
+    existing_types = db.query(ServiceRequestType).all()
+    existing_lookup = {(t.community_id, t.type_name) for t in existing_types}
+    
     communities = db.query(Community).all()
     default_types = [
         "Plumbing Issue", "Electrical Issue", "Carpentry Work",
@@ -59,12 +61,7 @@ def seed_default_service_types_for_all_communities(db: Session):
 
     for comm in communities:
         for name in default_types:
-            existing = db.query(ServiceRequestType).filter(
-                ServiceRequestType.community_id == comm.community_id,
-                ServiceRequestType.type_name == name
-            ).first()
-
-            if not existing:
+            if (comm.community_id, name) not in existing_lookup:
                 db.add(ServiceRequestType(
                     type_name=name,
                     description=f"General {name.lower()} related issue",
@@ -449,6 +446,9 @@ def delete_request(request_id: int, user_id: int, db: Session) -> bool:
 #  SEED DEFAULT TYPES FOR EVERY COMMUNITY
 # ══════════════════════════════════════════════
 def seed_default_service_types_for_all_communities(db: Session):
+    existing_types = db.query(ServiceRequestType).all()
+    existing_lookup = {(t.community_id, t.type_name) for t in existing_types}
+    
     communities = db.query(Community).all()
     default_types = [
         "Plumbing Issue", "Electrical Issue", "Carpentry Work",
@@ -458,12 +458,7 @@ def seed_default_service_types_for_all_communities(db: Session):
     count = 0
     for comm in communities:
         for name in default_types:
-            existing = db.query(ServiceRequestType).filter(
-                ServiceRequestType.community_id == comm.community_id,
-                ServiceRequestType.type_name == name
-            ).first()
-
-            if not existing:
+            if (comm.community_id, name) not in existing_lookup:
                 db.add(ServiceRequestType(
                     type_name=name,
                     description=f"General {name.lower()} related issue",

@@ -135,8 +135,9 @@ def seed_roles():
     db = SessionLocal()
     try:
         from app.models.user import Role
+        existing_roles = {r.role_name for r in db.query(Role).all()}
         for r in default_roles:
-            if not db.query(Role).filter(Role.role_name == r["role_name"]).first():
+            if r["role_name"] not in existing_roles:
                 db.add(Role(**r))
         db.commit()
         print("✅ Roles seeded.")
@@ -196,8 +197,9 @@ def seed_amenity_types():
     db = SessionLocal()
     try:
         from app.models.amenity import AmenityType
+        existing_types = {t.type_name for t in db.query(AmenityType).all()}
         for t in default_types:
-            if not db.query(AmenityType).filter(AmenityType.type_name == t["type_name"]).first():
+            if t["type_name"] not in existing_types:
                 db.add(AmenityType(**t))
         db.commit()
         print("✅ Amenity types seeded.")
@@ -235,13 +237,17 @@ def seed_custom_users():
                 db.commit()
                 print("✅ Super admin seeded.")
             else:
-                super_user.password = hash_password("Super1234")
-                super_user.role_id = super_admin_role.role_id
-                super_user.active_status = True
-                super_user.account_status = "ACTIVE"
-                super_user.email_id_is_verified = True
-                db.commit()
-                print("✅ Super admin updated.")
+                # Optimize: only update if state is mismatch, avoiding redundant hashing & DB write on every boot
+                if (super_user.role_id != super_admin_role.role_id or 
+                    not super_user.active_status or 
+                    super_user.account_status != "ACTIVE" or 
+                    not super_user.email_id_is_verified):
+                    super_user.role_id = super_admin_role.role_id
+                    super_user.active_status = True
+                    super_user.account_status = "ACTIVE"
+                    super_user.email_id_is_verified = True
+                    db.commit()
+                    print("✅ Super admin status updated.")
 
         # 2. Sales Person (Sales Admin)
         sales_email = "tanujtongse0732@gmail.com"
@@ -265,13 +271,17 @@ def seed_custom_users():
                 db.commit()
                 print("✅ Sales admin seeded.")
             else:
-                sales_user.password = hash_password("Sales1234")
-                sales_user.role_id = sales_role.role_id
-                sales_user.active_status = True
-                sales_user.account_status = "ACTIVE"
-                sales_user.email_id_is_verified = True
-                db.commit()
-                print("✅ Sales admin updated.")
+                # Optimize: only update if state is mismatch
+                if (sales_user.role_id != sales_role.role_id or 
+                    not sales_user.active_status or 
+                    sales_user.account_status != "ACTIVE" or 
+                    not sales_user.email_id_is_verified):
+                    sales_user.role_id = sales_role.role_id
+                    sales_user.active_status = True
+                    sales_user.account_status = "ACTIVE"
+                    sales_user.email_id_is_verified = True
+                    db.commit()
+                    print("✅ Sales admin status updated.")
 
     except Exception as e:
         db.rollback()
