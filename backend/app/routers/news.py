@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.dependencies.auth import get_verified_user, require_role
+from app.dependencies.auth import get_verified_user, require_role, check_community_access
 from app.models.user import User
 from app.schemas.news import (
     NewsCreate, NewsOut, NewsUpdate,
@@ -31,6 +31,7 @@ def create(
     ),
 ):
     """News post  — only Admin/Board/Manager"""
+    check_community_access(current_user, body.community_id, db)
     news = create_news(body, current_user.user_id, db)
     log_action(
         db, "CREATE_NEWS", "news",
@@ -53,6 +54,7 @@ def get_all_news(
     """
     category: GENERAL | MEETING | MAINTENANCE | EMERGENCY | EVENT
     """
+    check_community_access(current_user, community_id, db)
     news_list = get_news(community_id, db, category, skip, limit)
     return [_news_to_out(n) for n in news_list]
 
@@ -114,6 +116,7 @@ def create_faq_endpoint(
     ),
 ):
     """Create FAQ — sirf Admin/Board/Manager"""
+    check_community_access(current_user, body.community_id, db)
     return create_faq(body, current_user.user_id, db)
 
 
@@ -127,8 +130,9 @@ def get_all_faqs(
 ):
     """
     Community FAQs — paginated. 
-Max 10 per page (document requirement).
+    Max 10 per page (document requirement).
     """
+    check_community_access(current_user, community_id, db)
     result = get_faqs(community_id, db, page, per_page)
     return PaginatedFAQ(**result)
 

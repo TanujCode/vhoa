@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request, UploadFil
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.dependencies.auth import get_verified_user, require_role
+from app.dependencies.auth import get_verified_user, require_role, check_community_access
 from app.models.user import User
 from app.schemas.vendor import (
     VendorCreate, VendorOut, VendorUpdate,
@@ -29,6 +29,7 @@ def create(
     current_user: User = Depends(require_role("super_admin", "property_manager", "board_member")),
 ):
     """Onboard a new vendor and auto-generate access code"""
+    check_community_access(current_user, body.community_id, db)
     vendor = create_vendor(body, current_user.user_id, db)
     
     # --- AUTO GENERATE CODE START ---
@@ -56,6 +57,7 @@ def get_all(
     current_user: User = Depends(get_verified_user),
 ):
     """All the vendors in the community"""
+    check_community_access(current_user, community_id, db)
     vendors = get_vendors(community_id, db, category, status, skip, limit)
     return [_to_out(v, db) for v in vendors]
 
@@ -215,6 +217,7 @@ def create_assignment(
     current_user: User = Depends(require_role("super_admin", "property_manager", "board_member")),
 ):
     """Assign a vendor to a service request"""
+    check_community_access(current_user, body.community_id, db)
     try:
         assignment = assign_vendor(body, current_user.user_id, db)
     except ValueError as e:
@@ -234,6 +237,7 @@ def get_all_assignments(
     current_user: User = Depends(get_verified_user),
 ):
     """View Assignments"""
+    check_community_access(current_user, community_id, db)
     assignments = get_assignments(community_id, db, vendor_id, request_id)
     return [_assignment_to_out(a) for a in assignments]
 

@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.dependencies.auth import get_verified_user, require_role
+from app.dependencies.auth import get_verified_user, require_role, check_community_access
 from app.models.user import User
 from app.schemas.amenity import (
     AmenityCreate, AmenityOut, AmenityUpdate,
@@ -50,6 +50,7 @@ def create(
 Create a new amenity.
 fee_enabled = True → Members will have to pay.
 """
+    check_community_access(current_user, body.community_id, db)
     try:
         amenity = create_amenity(body, current_user.user_id, db)
     except ValueError as e:
@@ -70,6 +71,7 @@ def get_all(
     current_user: User = Depends(get_verified_user),
 ):
     
+    check_community_access(current_user, community_id, db)
     amenities = get_amenities(community_id, db)
     return [_to_out(a) for a in amenities]
 
@@ -129,6 +131,7 @@ def book(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_verified_user),
 ):
+    check_community_access(current_user, body.community_id, db)
     """
 Book an Amenity.
 
@@ -167,6 +170,7 @@ def get_all_bookings(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_verified_user),
 ):
+    check_community_access(current_user, community_id, db)
     """
 View Bookings.
 Resident → Only their own

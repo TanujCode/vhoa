@@ -91,11 +91,10 @@ def run_db_upgrades():
         
         # Force specific board member emails to be board_member (role_id=3) and community_id=7
         db.execute(text("UPDATE users SET role_id = 3, community_id = 7 WHERE email_id IN ('tanujtongse@gmail.com', 'rajeshtongse042@gmail.com');"))
-        db.execute(text("UPDATE users SET community_id = 7 WHERE role_id = 3;"))
         db.execute(text("""
             INSERT INTO user_communities (user_id, community_id)
             SELECT user_id, 7 FROM users
-            WHERE role_id = 3
+            WHERE email_id IN ('tanujtongse@gmail.com', 'rajeshtongse042@gmail.com')
             ON CONFLICT DO NOTHING;
         """))
         

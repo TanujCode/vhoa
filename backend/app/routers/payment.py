@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.dependencies.auth import get_current_user
+from app.dependencies.auth import get_current_user, check_community_access
 from app.models.user import User
 from app.schemas.payment import (
     PaymentCreate,
@@ -75,12 +75,10 @@ def get_payments_history(
     """
     Get payment history for a community. Residents can only see their own payments.
     """
+    check_community_access(current_user, community_id, db)
+
     role = current_user.role.role_name if current_user.role else "resident"
     is_admin = role in ["super_admin", "property_manager", "board_member"]
-    
-    # Permission check
-    if not is_admin and current_user.community_id != community_id:
-        raise HTTPException(status_code=403, detail="Access denied.")
 
     user_filter_id = None if is_admin else current_user.user_id
     return payment_service.get_payment_history(db, community_id, user_filter_id)

@@ -152,3 +152,21 @@ def internal_users_only(user: User = Depends(get_verified_user)) -> User:
     if user.role.role_name in {"resident", "vendor"}:
         raise HTTPException(status_code=403, detail="This action is not allowed.")
     return user
+
+
+# ══════════════════════════════════════════════
+#  COMMUNITY LEVEL ACCESS CHECK
+def check_community_access(user: User, community_id: int, db: Session):
+    role_name = user.role.role_name if user.role else None
+    if role_name in {"super_admin", "sales_admin"}:
+        return
+    from app.models.user import UserCommunity
+    assoc = db.query(UserCommunity).filter(
+        UserCommunity.user_id == user.user_id,
+        UserCommunity.community_id == community_id
+    ).first()
+    if not assoc:
+        raise HTTPException(
+            status_code=403,
+            detail="You do not have permission to access resources in this community."
+        )

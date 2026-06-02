@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.dependencies.auth import get_verified_user, require_role
+from app.dependencies.auth import get_verified_user, require_role, check_community_access
 from app.models.user import User
 from app.schemas.audit_log import AuditLogOut
 from app.services.audit_service import get_audit_logs
@@ -50,6 +50,7 @@ Resident / Board:
                 status_code=400,
                 detail="community_id is required. Please provide your HOA ID."
             )
+        check_community_access(current_user, community_id, db)
 
     else:
         # Resident → access nahi

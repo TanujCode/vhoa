@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.dependencies.auth import get_verified_user, require_role
+from app.dependencies.auth import get_verified_user, require_role, check_community_access
 from app.models.user import User
 from app.models.service_request import ServiceRequestStatus
 from app.schemas.service_request import (
@@ -41,6 +41,7 @@ def create_sr_type(
     ),
 ):
     """Create a new service request type — Plumbing, Electrical etc."""
+    check_community_access(current_user, body.community_id, db)
     return create_type(body, db)
 
 
@@ -51,6 +52,7 @@ def get_sr_types(
     current_user: User = Depends(get_verified_user),
 ):
     """View all service request types for a community"""
+    check_community_access(current_user, community_id, db)
     return get_types(community_id, db)
 
 
@@ -64,9 +66,10 @@ def create(
 ):
     """
    Create a New Service Request. 
-All verified users can do this. 
-The status will automatically be set to 'Open'.
+   All verified users can do this. 
+   The status will automatically be set to 'Open'.
     """
+    check_community_access(current_user, body.community_id, db)
     try:
         sr = create_service_request(body, current_user.user_id, db)
     except ValueError as e:
@@ -92,9 +95,10 @@ def get_all(
 ):
     """
   View community service requests.
-Resident → Only your own
-Admin/Manager/Board → Everyone
+  Resident → Only your own
+  Admin/Manager/Board → Everyone
     """
+    check_community_access(current_user, community_id, db)
     submitted_by_id = None
     if current_user.role.role_name == "resident":
         submitted_by_id = current_user.user_id

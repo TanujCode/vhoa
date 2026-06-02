@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Query, 
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.dependencies.auth import get_current_user, get_verified_user, require_role
+from app.dependencies.auth import get_current_user, get_verified_user, require_role, check_community_access
 from app.models.user import User
 from app.models.violation import ViolationStatus
 from app.schemas.violation import (
@@ -34,6 +34,7 @@ def create_type(
     current_user: User = Depends(require_role("super_admin", "property_manager", "board_member")),
 ):
     """Create a new violation type — e.g. Lawn Violation $50, 30 days"""
+    check_community_access(current_user, body.community_id, db)
     vtype = create_violation_type(body, current_user.user_id, db)
     log_action(db, "CREATE_VIOLATION_TYPE", "violation",
                f"Violation type '{vtype.name}' created",
@@ -48,6 +49,7 @@ def get_types(
     current_user: User = Depends(get_verified_user),
 ):
     """Community all violation types"""
+    check_community_access(current_user, community_id, db)
     return get_violation_types(community_id, db)
 
 
@@ -91,9 +93,10 @@ def create(
 ):
     """
     Please issue violation. 
-Due date will auto calculate: violation_date + due_days (by violation type) 
-Dispute deadline = violation_date + 30 days
+    Due date will auto calculate: violation_date + due_days (by violation type) 
+    Dispute deadline = violation_date + 30 days
     """
+    check_community_access(current_user, body.community_id, db)
     try:
         violation = create_violation(body, current_user.user_id, db)
     except ValueError as e:
@@ -140,6 +143,7 @@ def get_all(
     Resident → only own
     Admin/Manager/Board → all
     """
+    check_community_access(current_user, community_id, db)
     client_id = None
     if current_user.role.role_name == "resident":
         client_id = current_user.user_id
@@ -178,6 +182,11 @@ def update_status(
     ),
 ):
     """Status updated — OPEN → IN_PROGRESS → RESOLVED/PAID/CLOSED"""
+    from app.models.violation import Violation
+    violation = db.query(Violation).filter(Violation.violation_id == violation_id, Violation.active_status == True).first()
+    if not violation:
+        raise HTTPException(status_code=404, detail="Violation not found.")
+    check_community_access(current_user, violation.community_id, db)
     try:
         violation = update_violation_status(violation_id, body, current_user.user_id, db)
     except ValueError as e:
@@ -248,9 +257,14 @@ def resolve_violation_dispute(
 ):
     """
     The Board will resolve the dispute.
-This must be done within 30 days.
-Once resolved, the member cannot raise the dispute again.
+    This must be done within 30 days.
+    Once resolved, the member cannot raise the dispute again.
     """
+    from app.models.violation import Violation
+    violation = db.query(Violation).filter(Violation.violation_id == violation_id, Violation.active_status == True).first()
+    if not violation:
+        raise HTTPException(status_code=404, detail="Violation not found.")
+    check_community_access(current_user, violation.community_id, db)
     try:
         violation = resolve_dispute(violation_id, body, current_user.user_id, db)
     except ValueError as e:

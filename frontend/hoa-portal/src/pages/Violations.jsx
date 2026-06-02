@@ -203,7 +203,7 @@ const CreateTypeModal = ({ communityId, onClose, onSuccess }) => {
   };
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:from-[#1E2E42] dark:to-[#162535] dark:bg-gradient-to-br p-6 rounded-3xl w-96 max-h-[90vh] overflow-y-auto custom-scrollbar border border-slate-200/80 dark:border-white/10 text-slate-900 dark:text-white shadow-2xl">
+      <div className="bg-white dark:from-[#1E2E42] dark:to-[#162535] dark:bg-gradient-to-br p-6 rounded-3xl w-full sm:w-96 max-h-[90vh] overflow-y-auto custom-scrollbar border border-slate-200/80 dark:border-white/10 text-slate-900 dark:text-white shadow-2xl">
         <h2 className="text-slate-900 dark:text-white text-lg mb-4 font-semibold">Create Violation Type</h2>
         
         <input 

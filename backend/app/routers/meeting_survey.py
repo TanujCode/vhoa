@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.dependencies.auth import get_current_user, require_role
+from app.dependencies.auth import get_current_user, require_role, check_community_access
 from app.models.user import User
 from app.schemas.meeting_survey import (
     MeetingCreate, MeetingOut, MeetingRSVPCreate, MeetingRSVPOut,
@@ -26,10 +26,8 @@ def schedule_meeting(
     db: Session = Depends(get_db),
     current_user: User = Depends(require_role("super_admin", "property_manager", "board_member")),
 ):
-    # Verify user belongs to community or is super_admin
-    role_name = current_user.role.role_name if current_user.role else None
-    if role_name != "super_admin" and current_user.community_id != body.community_id:
-        raise HTTPException(status_code=403, detail="You do not have permission to schedule meetings for this community.")
+    # Verify user belongs to community
+    check_community_access(current_user, body.community_id, db)
 
     try:
         meeting = create_meeting(body, current_user.user_id, db)
@@ -61,9 +59,7 @@ def get_meetings(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    role_name = current_user.role.role_name if current_user.role else None
-    if role_name != "super_admin" and current_user.community_id != community_id:
-        raise HTTPException(status_code=403, detail="You do not have permission to view meetings for this community.")
+    check_community_access(current_user, community_id, db)
 
     return get_community_meetings(community_id, current_user.user_id, db)
 
@@ -99,9 +95,7 @@ def schedule_survey(
     db: Session = Depends(get_db),
     current_user: User = Depends(require_role("super_admin", "property_manager", "board_member")),
 ):
-    role_name = current_user.role.role_name if current_user.role else None
-    if role_name != "super_admin" and current_user.community_id != body.community_id:
-        raise HTTPException(status_code=403, detail="You do not have permission to create surveys for this community.")
+    check_community_access(current_user, body.community_id, db)
 
     try:
         survey = create_survey(body, current_user.user_id, db)
@@ -138,9 +132,7 @@ def get_surveys(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    role_name = current_user.role.role_name if current_user.role else None
-    if role_name != "super_admin" and current_user.community_id != community_id:
-        raise HTTPException(status_code=403, detail="You do not have permission to view surveys for this community.")
+    check_community_access(current_user, community_id, db)
 
     return get_community_surveys(community_id, current_user.user_id, db)
 
@@ -155,7 +147,10 @@ def vote_on_survey(
     try:
         vote_survey(survey_id, body.option_id, current_user.user_id, db)
         # Fetch updated survey state to return for instant frontend updates
-        surveys = get_community_surveys(current_user.community_id, current_user.user_id, db)
+        from app.models.meeting_survey import Survey
+        survey = db.query(Survey).filter(Survey.survey_id == survey_id).first()
+        comm_id = survey.community_id if survey else current_user.community_id
+        surveys = get_community_surveys(comm_id, current_user.user_id, db)
         matching = next((s for s in surveys if s.survey_id == survey_id), None)
         if not matching:
             raise HTTPException(status_code=404, detail="Survey not found.")
@@ -176,9 +171,7 @@ def modify_meeting(
     if not meeting:
         raise HTTPException(status_code=404, detail="Meeting not found.")
 
-    role_name = current_user.role.role_name if current_user.role else None
-    if role_name != "super_admin" and current_user.community_id != meeting.community_id:
-        raise HTTPException(status_code=403, detail="You do not have permission to update meetings for this community.")
+    check_community_access(current_user, meeting.community_id, db)
 
     try:
         updated = update_meeting(meeting_id, body, current_user.user_id, db)
@@ -226,9 +219,7 @@ def remove_meeting(
     if not meeting:
         raise HTTPException(status_code=404, detail="Meeting not found.")
 
-    role_name = current_user.role.role_name if current_user.role else None
-    if role_name != "super_admin" and current_user.community_id != meeting.community_id:
-        raise HTTPException(status_code=403, detail="You do not have permission to delete meetings for this community.")
+    check_community_access(current_user, meeting.community_id, db)
 
     try:
         delete_meeting(meeting_id, current_user.user_id, db)
@@ -249,9 +240,7 @@ def modify_survey(
     if not survey:
         raise HTTPException(status_code=404, detail="Survey not found.")
 
-    role_name = current_user.role.role_name if current_user.role else None
-    if role_name != "super_admin" and current_user.community_id != survey.community_id:
-        raise HTTPException(status_code=403, detail="You do not have permission to update surveys for this community.")
+    check_community_access(current_user, survey.community_id, db)
 
     try:
         updated = update_survey(survey_id, body, current_user.user_id, db)
@@ -276,9 +265,7 @@ def remove_survey(
     if not survey:
         raise HTTPException(status_code=404, detail="Survey not found.")
 
-    role_name = current_user.role.role_name if current_user.role else None
-    if role_name != "super_admin" and current_user.community_id != survey.community_id:
-        raise HTTPException(status_code=403, detail="You do not have permission to delete surveys for this community.")
+    check_community_access(current_user, survey.community_id, db)
 
     try:
         delete_survey(survey_id, current_user.user_id, db)
