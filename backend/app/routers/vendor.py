@@ -174,14 +174,29 @@ async def upload_license(
     current_user: User = Depends(require_role("super_admin", "property_manager", "board_member")),
 ):
     """Upload License document."""
+    vendor = get_vendor_by_id(vendor_id, db)
+    if not vendor:
+        raise HTTPException(status_code=404, detail="Vendor not found.")
+    
+    check_community_access(current_user, vendor.community_id, db)
+
+    # Validate file type and size
+    ALLOWED = {"application/pdf", "image/jpeg", "image/png", "application/msword",
+               "application/vnd.openxmlformats-officedocument.wordprocessingml.document"}
+    if file.content_type not in ALLOWED:
+        raise HTTPException(status_code=400, detail="Only PDF, Word documents, and images (JPEG/PNG) are allowed.")
+
+    contents = await file.read()
+    if len(contents) > 10 * 1024 * 1024:
+        raise HTTPException(status_code=400, detail="File exceeds 10MB limit.")
+
     import os, uuid
     os.makedirs("uploads/vendor_docs", exist_ok=True)
-    contents = await file.read()
     ext = file.filename.split(".")[-1].lower()
     filename = f"license_{vendor_id}_{uuid.uuid4().hex}.{ext}"
     with open(f"uploads/vendor_docs/{filename}", "wb") as f:
         f.write(contents)
-    vendor = get_vendor_by_id(vendor_id, db)
+    
     vendor.license_doc_url = f"/uploads/vendor_docs/{filename}"
     db.commit()
     return {"license_doc_url": vendor.license_doc_url}
@@ -195,14 +210,29 @@ async def upload_insurance(
     current_user: User = Depends(require_role("super_admin", "property_manager", "board_member")),
 ):
     """Upload Insurance document"""
+    vendor = get_vendor_by_id(vendor_id, db)
+    if not vendor:
+        raise HTTPException(status_code=404, detail="Vendor not found.")
+    
+    check_community_access(current_user, vendor.community_id, db)
+
+    # Validate file type and size
+    ALLOWED = {"application/pdf", "image/jpeg", "image/png", "application/msword",
+               "application/vnd.openxmlformats-officedocument.wordprocessingml.document"}
+    if file.content_type not in ALLOWED:
+        raise HTTPException(status_code=400, detail="Only PDF, Word documents, and images (JPEG/PNG) are allowed.")
+
+    contents = await file.read()
+    if len(contents) > 10 * 1024 * 1024:
+        raise HTTPException(status_code=400, detail="File exceeds 10MB limit.")
+
     import os, uuid
     os.makedirs("uploads/vendor_docs", exist_ok=True)
-    contents = await file.read()
     ext = file.filename.split(".")[-1].lower()
     filename = f"insurance_{vendor_id}_{uuid.uuid4().hex}.{ext}"
     with open(f"uploads/vendor_docs/{filename}", "wb") as f:
         f.write(contents)
-    vendor = get_vendor_by_id(vendor_id, db)
+    
     vendor.insurance_doc_url = f"/uploads/vendor_docs/{filename}"
     db.commit()
     return {"insurance_doc_url": vendor.insurance_doc_url}
