@@ -93,8 +93,11 @@ def get_user_outstanding_dues(
     """
     Fetch all outstanding dues for the logged in resident.
     """
-    if current_user.community_id != community_id:
-        raise HTTPException(status_code=403, detail="Access denied.")
+    check_community_access(current_user, community_id, db)
+    
+    role = current_user.role.role_name if current_user.role else "resident"
+    if role in ["super_admin", "property_manager", "sales_admin"]:
+        return []
         
     return payment_service.get_dues(db, current_user.user_id, community_id)
 
@@ -109,8 +112,7 @@ def setup_recurring_payment(
     """
     Setup or update auto-pay details for HOA monthly dues.
     """
-    if current_user.community_id != body.community_id:
-        raise HTTPException(status_code=403, detail="Access denied.")
+    check_community_access(current_user, body.community_id, db)
 
     try:
         rec = payment_service.setup_recurring(db, body, current_user.user_id)
@@ -140,8 +142,11 @@ def get_active_recurring_settings(
     """
     Retrieve current recurring payment configuration.
     """
-    if current_user.community_id != community_id:
-        raise HTTPException(status_code=403, detail="Access denied.")
+    check_community_access(current_user, community_id, db)
+    
+    role = current_user.role.role_name if current_user.role else "resident"
+    if role in ["super_admin", "property_manager", "sales_admin"]:
+        return None
         
     rec = payment_service.get_recurring_settings(db, current_user.user_id, community_id)
     return rec
@@ -157,8 +162,7 @@ def stop_recurring_payment(
     """
     Deactivate active recurring payments.
     """
-    if current_user.community_id != community_id:
-        raise HTTPException(status_code=403, detail="Access denied.")
+    check_community_access(current_user, community_id, db)
         
     success = payment_service.deactivate_recurring(db, current_user.user_id, community_id)
     if not success:

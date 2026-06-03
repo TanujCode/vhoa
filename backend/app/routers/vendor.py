@@ -70,9 +70,12 @@ def get_one(
 ):
     """Get details of a specific vendor"""
     try:
-        return _to_out(get_vendor_by_id(vendor_id, db), db)
+        vendor = get_vendor_by_id(vendor_id, db)
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
+    
+    check_community_access(current_user, vendor.community_id, db)
+    return _to_out(vendor, db)
 
 
 @router.put("/{vendor_id}", response_model=VendorOut)
@@ -83,6 +86,13 @@ def update(
     current_user: User = Depends(require_role("super_admin", "property_manager", "board_member")),
 ):
     """Update a vendor"""
+    try:
+        vendor = get_vendor_by_id(vendor_id, db)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+    check_community_access(current_user, vendor.community_id, db)
+
     try:
         return _to_out(update_vendor(vendor_id, body, current_user.user_id, db), db)
     except ValueError as e:
@@ -96,6 +106,13 @@ def delete(
     current_user: User = Depends(require_role("super_admin", "property_manager", "board_member")),
 ):
     """Delete a vendor"""
+    try:
+        vendor = get_vendor_by_id(vendor_id, db)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+    check_community_access(current_user, vendor.community_id, db)
+
     try:
         delete_vendor(vendor_id, current_user.user_id, db)
     except ValueError as e:
@@ -115,6 +132,13 @@ def gen_access_code(
     48 hours valid.
     The Admin/Board generates it → and gives it to the Member.
     """
+    try:
+        vendor = get_vendor_by_id(vendor_id, db)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+    check_community_access(current_user, vendor.community_id, db)
+
     try:
         code = generate_vendor_access_code(vendor_id, db)
     except ValueError as e:
@@ -137,6 +161,13 @@ def gen_contract_code(
     Give this code to the vendor once the work is complete.
     """
     try:
+        vendor = get_vendor_by_id(vendor_id, db)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+    check_community_access(current_user, vendor.community_id, db)
+
+    try:
         code = generate_contract_code(vendor_id, db)
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
@@ -152,6 +183,17 @@ def verify_code(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_verified_user),
 ):
+    from app.models.vendor import Vendor
+    vendor = db.query(Vendor).filter(
+        Vendor.vendor_access_code == access_code,
+        Vendor.access_code_used == False,
+        Vendor.active_status == True,
+    ).first()
+    if not vendor:
+        raise HTTPException(status_code=400, detail="Invalid or already used access code.")
+
+    check_community_access(current_user, vendor.community_id, db)
+
     try:
         # 1. Call logic
         vendors = verify_vendor_access_code(access_code, db)
@@ -280,6 +322,13 @@ def update_assignment_endpoint(
     current_user: User = Depends(get_verified_user),
 ):
     """Update an assignment — quote, status etc."""
+    from app.models.vendor import VendorAssignment
+    assignment = db.query(VendorAssignment).filter(VendorAssignment.assignment_id == assignment_id).first()
+    if not assignment:
+        raise HTTPException(status_code=404, detail="Assignment not found.")
+
+    check_community_access(current_user, assignment.community_id, db)
+
     try:
         return _assignment_to_out(update_assignment(assignment_id, body, db))
     except ValueError as e:
@@ -294,6 +343,7 @@ def give_feedback(
     current_user: User = Depends(get_verified_user),
 ):
     """Give feedback to a vendor — 1 to 5 stars"""
+    check_community_access(current_user, body.community_id, db)
     return add_feedback(body, current_user.user_id, db)
 
 

@@ -166,6 +166,9 @@ def check_community_access(user: User, community_id: int, db: Session):
         UserCommunity.community_id == community_id
     ).first()
     if not assoc:
+        # Fallback to checking direct user community_id
+        if getattr(user, "community_id", None) == community_id:
+            return
         raise HTTPException(
             status_code=403,
             detail="You do not have permission to access resources in this community."

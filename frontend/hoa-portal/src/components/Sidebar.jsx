@@ -16,6 +16,11 @@ const Sidebar = ({ activePage, setActivePage, isOpen, setIsOpen, user, userRole:
     return getBaseUrl(url.startsWith('/') ? url : '/' + url);
   };
 
+  const getInitials = (name) => {
+    if (!name) return "U";
+    return name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+  };
+
   // 1. Admin/Manager Menu (Complete List)
   let adminNavItems = [
     { id: 'overview', label: 'All Communities', icon: Globe },
@@ -181,15 +186,15 @@ const Sidebar = ({ activePage, setActivePage, isOpen, setIsOpen, user, userRole:
                   className="w-full h-full object-cover"
                   onError={(e) => {
                     e.target.style.display = 'none';
-                    e.target.parentElement.innerHTML = `<span class="text-sm">${user?.initials || "U"}</span>`;
+                    e.target.parentElement.innerHTML = `<span class="text-sm">${getInitials(user?.full_name || user?.name)}</span>`;
                   }}
                 />
               ) : (
-                <span className="text-sm">{user?.initials || "U"}</span>
+                <span className="text-sm">{getInitials(user?.full_name || user?.name)}</span>
               )}
             </div>
             <div className="overflow-hidden text-slate-900 dark:text-white">
-              <div className="text-sm font-medium truncate">{user?.name}</div>
+              <div className="text-sm font-medium truncate">{user?.full_name || user?.name || "User"}</div>
               <div className="text-[10px] text-teal-600 dark:text-[#1D9E75] font-mono uppercase tracking-tighter">
                 {userRole.replace('_', ' ')}
               </div>

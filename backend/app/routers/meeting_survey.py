@@ -245,7 +245,7 @@ def modify_survey(
     try:
         updated = update_survey(survey_id, body, current_user.user_id, db)
         # return the updated survey layout
-        surveys = get_community_surveys(current_user.community_id, current_user.user_id, db)
+        surveys = get_community_surveys(survey.community_id, current_user.user_id, db)
         matching = next((s for s in surveys if s.survey_id == survey_id), None)
         if not matching:
             raise HTTPException(status_code=404, detail="Survey not found.")

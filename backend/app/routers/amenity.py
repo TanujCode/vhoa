@@ -84,9 +84,12 @@ def get_one(
 ):
     """Get details of a specific amenity"""
     try:
-        return _to_out(get_amenity_by_id(amenity_id, db))
+        amenity = get_amenity_by_id(amenity_id, db)
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
+
+    check_community_access(current_user, amenity.community_id, db)
+    return _to_out(amenity)
 
 
 @router.put("/{amenity_id}", response_model=AmenityOut)
@@ -97,6 +100,13 @@ def update(
     current_user: User = Depends(require_role("super_admin", "property_manager", "board_member")),
 ):
     """Update anAmenity"""
+    try:
+        amenity = get_amenity_by_id(amenity_id, db)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+    check_community_access(current_user, amenity.community_id, db)
+
     try:
         return _to_out(update_amenity(amenity_id, body, current_user.user_id, db))
     except ValueError as e:
@@ -111,13 +121,15 @@ def get_availability(
     current_user: User = Depends(get_verified_user),
 ):
     """
-   Which slots are available on a specific date?
-Check before booking.
+    Which slots are available on a specific date?
+    Check before booking.
     """
     try:
-        get_amenity_by_id(amenity_id, db)
+        amenity = get_amenity_by_id(amenity_id, db)
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
+
+    check_community_access(current_user, amenity.community_id, db)
 
     result = check_availability(amenity_id, booking_date, db)
     return SlotAvailability(**result)
@@ -191,6 +203,13 @@ def approve(
     current_user: User = Depends(require_role("super_admin", "property_manager", "board_member")),
 ):
     """Booking approved — PENDING → APPROVED"""
+    from app.models.amenity import AmenityBooking
+    booking = db.query(AmenityBooking).filter(AmenityBooking.booking_id == booking_id).first()
+    if not booking:
+        raise HTTPException(status_code=404, detail="Booking not found.")
+
+    check_community_access(current_user, booking.community_id, db)
+
     try:
         booking = approve_booking(booking_id, current_user.user_id, db)
     except ValueError as e:
@@ -211,6 +230,13 @@ Cancel a booking.
 Both Members and Admins/Board members can cancel.
 Fee refunds → will be implemented after the payment module.
 """
+    from app.models.amenity import AmenityBooking
+    booking = db.query(AmenityBooking).filter(AmenityBooking.booking_id == booking_id).first()
+    if not booking:
+        raise HTTPException(status_code=404, detail="Booking not found.")
+
+    check_community_access(current_user, booking.community_id, db)
+
     try:
         booking = cancel_booking(booking_id, current_user.user_id, body, db)
     except ValueError as e:
@@ -236,6 +262,13 @@ def pay(
     Simulate payment for a booking.
     Sets is_paid = True and approves the booking (if PENDING).
     """
+    from app.models.amenity import AmenityBooking
+    booking = db.query(AmenityBooking).filter(AmenityBooking.booking_id == booking_id).first()
+    if not booking:
+        raise HTTPException(status_code=404, detail="Booking not found.")
+
+    check_community_access(current_user, booking.community_id, db)
+
     try:
         booking = pay_booking(booking_id, current_user.user_id, db)
     except ValueError as e:

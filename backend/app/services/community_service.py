@@ -364,6 +364,15 @@ def create_join_request(db: Session, user_id: int, community_id: int, pass_code:
     if existing:
         raise ValueError("You already have a pending join request for this community.")
 
+    # Check if user is already a member of this community
+    from app.models.user import UserCommunity
+    assoc = db.query(UserCommunity).filter(
+        UserCommunity.user_id == user_id,
+        UserCommunity.community_id == community_id
+    ).first()
+    if assoc:
+        raise ValueError("You are already a member of this community.")
+
     new_request = CommunityJoinRequest(
         user_id=user_id,
         community_id=community_id,

@@ -66,9 +66,12 @@ def get_one_news(
     current_user: User = Depends(get_verified_user),
 ):
     try:
-        return _news_to_out(get_news_by_id(news_id, db))
+        news = get_news_by_id(news_id, db)
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
+
+    check_community_access(current_user, news.community_id, db)
+    return _news_to_out(news)
 
 
 @router.put("/news/{news_id}", response_model=NewsOut)
@@ -81,6 +84,13 @@ def update(
     ),
 ):
     """News updated"""
+    try:
+        news = get_news_by_id(news_id, db)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+    check_community_access(current_user, news.community_id, db)
+
     try:
         return _news_to_out(update_news(news_id, body, current_user.user_id, db))
     except ValueError as e:
@@ -96,6 +106,13 @@ def delete(
     ),
 ):
     """News deleted"""
+    try:
+        news = get_news_by_id(news_id, db)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+    check_community_access(current_user, news.community_id, db)
+
     try:
         delete_news(news_id, current_user.user_id, db)
     except ValueError as e:
@@ -147,6 +164,13 @@ def update_faq_endpoint(
     ),
 ):
     """FAQ updated"""
+    from app.models.news import FAQ
+    faq = db.query(FAQ).filter(FAQ.faq_id == faq_id).first()
+    if not faq:
+        raise HTTPException(status_code=404, detail="FAQ not found.")
+
+    check_community_access(current_user, faq.community_id, db)
+
     try:
         return update_faq(faq_id, body, current_user.user_id, db)
     except ValueError as e:
@@ -162,6 +186,13 @@ def delete_faq_endpoint(
     ),
 ):
     """FAQ delete"""
+    from app.models.news import FAQ
+    faq = db.query(FAQ).filter(FAQ.faq_id == faq_id).first()
+    if not faq:
+        raise HTTPException(status_code=404, detail="FAQ not found.")
+
+    check_community_access(current_user, faq.community_id, db)
+
     try:
         delete_faq(faq_id, current_user.user_id, db)
     except ValueError as e:

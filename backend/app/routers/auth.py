@@ -261,6 +261,16 @@ def google_auth(request: Request, body: GoogleLoginRequest, db: Session = Depend
             
             db.commit()
             db.refresh(user)
+            
+            # Link in user_communities table
+            from app.models.user import UserCommunity
+            assoc = db.query(UserCommunity).filter(
+                UserCommunity.user_id == user.user_id,
+                UserCommunity.community_id == community.community_id
+            ).first()
+            if not assoc:
+                db.add(UserCommunity(user_id=user.user_id, community_id=community.community_id))
+                db.commit()
             print(f"🔥 Google Registration Auto-Linked: {email} with Community {community.community_id}")
             
         log_action(
@@ -282,6 +292,17 @@ def google_auth(request: Request, body: GoogleLoginRequest, db: Session = Depend
             user.account_status = "ACTIVE"
             db.commit()
             db.refresh(user)
+            
+        # Ensure user_communities association exists if user has community_id
+        if user.community_id:
+            from app.models.user import UserCommunity
+            assoc = db.query(UserCommunity).filter(
+                UserCommunity.user_id == user.user_id,
+                UserCommunity.community_id == user.community_id
+            ).first()
+            if not assoc:
+                db.add(UserCommunity(user_id=user.user_id, community_id=user.community_id))
+                db.commit()
             
         log_action(
             db=db,
