@@ -172,8 +172,8 @@ export default function RegisterPage() {
   return (
     <AuthLayout>
       <div className="mb-8">
-        <h2 className="text-3xl font-bold text-gray-900">Sign Up</h2>
-        <p className="text-gray-600 mt-1">Create your account to get started</p>
+        <h2 className="text-3xl font-bold text-gray-900">Resident Sign Up</h2>
+        <p className="text-gray-600 mt-1">Create your resident account to get started</p>
       </div>
 
       {errorMsg && (

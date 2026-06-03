@@ -23,6 +23,9 @@ const StatusBadge = ({ status }) => {
 // ── Submit Violation Modal ────────────────────
 const SubmitModal = ({ communityId, onClose, onSuccess }) => {
   const [types, setTypes]     = useState([]);
+  const [residents, setResidents] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isOpen, setIsOpen]   = useState(false);
   const [loading, setLoading] = useState(false);
   const [file, setFile]       = useState(null);
   const [form, setForm]       = useState({
@@ -33,14 +36,37 @@ const SubmitModal = ({ communityId, onClose, onSuccess }) => {
     remarks:           '',
   });
 
+  const selectRef = React.useRef(null);
+
   useEffect(() => {
     API.get(`/violation/type/${communityId}`)
       .then(r => setTypes(r.data))
       .catch(console.error);
+
+    API.get(`/user/community/${communityId}?limit=1000`)
+      .then(r => {
+        const list = (r.data || []).filter(u => u.role_name === 'resident');
+        setResidents(list);
+      })
+      .catch(console.error);
   }, [communityId]);
+
+  useEffect(() => {
+    const handleOutsideClick = (e) => {
+      if (selectRef.current && !selectRef.current.contains(e.target)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleOutsideClick);
+    return () => document.removeEventListener('mousedown', handleOutsideClick);
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!form.client_id) {
+      alert('Please select a resident from the list.');
+      return;
+    }
     setLoading(true);
     try {
       const res = await API.post('/violation', {
@@ -102,16 +128,74 @@ const SubmitModal = ({ communityId, onClose, onSuccess }) => {
             </select>
           </div>
 
-          <div>
-            <label className="text-xs text-slate-500 dark:text-gray-400 mb-1 block">Resident User ID</label>
-            <input
-              type="number"
-              required
-              placeholder="Enter resident's user ID"
-              value={form.client_id}
-              onChange={e => setForm({...form, client_id: e.target.value})}
-              className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-teal-500"
-            />
+          <div ref={selectRef} className="relative">
+            <label className="text-xs text-slate-500 dark:text-gray-400 mb-1 block">Select Resident *</label>
+            <div className="relative">
+              <input
+                type="text"
+                required
+                placeholder="Type name, email or ID to search..."
+                value={searchTerm}
+                onChange={e => {
+                  setSearchTerm(e.target.value);
+                  setIsOpen(true);
+                  if (form.client_id) {
+                    setForm({ ...form, client_id: '' });
+                  }
+                }}
+                onFocus={() => setIsOpen(true)}
+                className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-teal-500"
+              />
+              {form.client_id && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearchTerm('');
+                    setForm({ ...form, client_id: '' });
+                  }}
+                  className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 dark:hover:text-white"
+                >
+                  <X size={16} />
+                </button>
+              )}
+            </div>
+
+            {isOpen && (
+              <div className="absolute left-0 right-0 mt-1 bg-white dark:bg-[#1E2E42] border border-slate-200 dark:border-white/10 rounded-xl shadow-xl z-50 max-h-48 overflow-y-auto custom-scrollbar">
+                {residents
+                  .filter(r => 
+                    r.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                    r.email_id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                    String(r.user_id).includes(searchTerm)
+                  )
+                  .map(r => (
+                    <div
+                      key={r.user_id}
+                      onClick={() => {
+                        setForm({ ...form, client_id: String(r.user_id) });
+                        setSearchTerm(`${r.full_name} (#${r.user_id})`);
+                        setIsOpen(false);
+                      }}
+                      className="px-4 py-2 hover:bg-teal-500/10 cursor-pointer text-sm text-slate-900 dark:text-white flex justify-between items-center transition-colors border-b border-slate-100 dark:border-white/5 last:border-0"
+                    >
+                      <div className="flex flex-col">
+                        <span className="font-semibold text-xs text-slate-900 dark:text-white">{r.full_name}</span>
+                        <span className="text-[10px] text-slate-500 dark:text-gray-400 font-mono">{r.email_id} • Unit: {r.unit_no || 'N/A'}</span>
+                      </div>
+                      <span className="text-[10px] font-mono text-teal-600 dark:text-teal-400 bg-teal-500/10 px-2 py-0.5 rounded">ID: #{r.user_id}</span>
+                    </div>
+                  ))}
+                {residents.filter(r => 
+                  r.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                  r.email_id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                  String(r.user_id).includes(searchTerm)
+                ).length === 0 && (
+                  <div className="p-3 text-center text-xs text-slate-500 dark:text-gray-400">
+                    No matching residents found
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           <div>
