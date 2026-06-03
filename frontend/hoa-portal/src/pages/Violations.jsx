@@ -45,8 +45,7 @@ const SubmitModal = ({ communityId, onClose, onSuccess }) => {
 
     API.get(`/user/community/${communityId}?limit=1000`)
       .then(r => {
-        const list = (r.data || []).filter(u => u.role_name === 'resident');
-        setResidents(list);
+        setResidents(r.data || []);
       })
       .catch(console.error);
   }, [communityId]);
