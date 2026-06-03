@@ -18,9 +18,10 @@ from app.models.community import Community
 # ══════════════════════════════════════════════
 def seed_violation_statuses(db: Session):
     statuses = ["OPEN", "IN_PROGRESS", "RESOLVED", "CLOSED", "PAID", "CANCELLED", "APPEALED"]
-    existing_statuses = {vs.violation_status for vs in db.query(ViolationStatus).all()}
     for s in statuses:
-        if s not in existing_statuses:
+        if not db.query(ViolationStatus).filter(
+            ViolationStatus.violation_status == s
+        ).first():
             db.add(ViolationStatus(violation_status=s))
     db.commit()
     print("Violation statuses seeded.")
@@ -30,9 +31,6 @@ def seed_violation_statuses(db: Session):
 # ══════════════════════════════════════════════
 def seed_default_violation_types_for_all_communities(db: Session):
     """Will create default violation types for each community"""
-    existing_types = db.query(ViolationType).all()
-    existing_lookup = {(vt.community_id, vt.name) for vt in existing_types}
-    
     communities = db.query(Community).all()
     
     default_types = [
@@ -49,7 +47,12 @@ def seed_default_violation_types_for_all_communities(db: Session):
     seeded_count = 0
     for comm in communities:
         for dt in default_types:
-            if (comm.community_id, dt["name"]) not in existing_lookup:
+            existing = db.query(ViolationType).filter(
+                ViolationType.community_id == comm.community_id,
+                ViolationType.name == dt["name"]
+            ).first()
+
+            if not existing:
                 vtype = ViolationType(
                     name=dt["name"],
                     description=dt["description"],
@@ -127,9 +130,28 @@ def create_violation(data: ViolationCreate, created_by_id: int, db: Session) -> 
     if not vtype:
         raise ValueError("Violation type not found.")
 
+    if vtype.community_id != data.community_id:
+        raise ValueError("Violation type community mismatch.")
+
     client = db.query(User).filter(User.user_id == data.client_id).first()
     if not client:
         raise ValueError("Resident Not Found.")
+
+    # Check if resident belongs to the community
+    has_community_relation = False
+    if client.community_id == data.community_id:
+        has_community_relation = True
+    else:
+        from app.models.user import UserCommunity
+        assoc = db.query(UserCommunity).filter(
+            UserCommunity.user_id == client.user_id,
+            UserCommunity.community_id == data.community_id
+        ).first()
+        if assoc:
+            has_community_relation = True
+
+    if not has_community_relation:
+        raise ValueError("Resident does not belong to the specified community.")
 
     open_status = db.query(ViolationStatus).filter(
         ViolationStatus.violation_status == "OPEN"

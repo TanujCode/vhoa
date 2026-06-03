@@ -61,6 +61,11 @@ def update_type(
     current_user: User = Depends(require_role("super_admin", "property_manager", "board_member")),
 ):
     """Violation type update"""
+    from app.models.violation import ViolationType
+    vtype = db.query(ViolationType).filter(ViolationType.violation_type_id == violation_type_id, ViolationType.active_status == True).first()
+    if not vtype:
+        raise HTTPException(status_code=404, detail="Violation type not found.")
+    check_community_access(current_user, vtype.community_id, db)
     try:
         return update_violation_type(violation_type_id, body, current_user.user_id, db)
     except ValueError as e:
@@ -164,6 +169,8 @@ def get_one(
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
 
+    check_community_access(current_user, violation.community_id, db)
+
     if current_user.role.role_name == "resident":
         if violation.client_id != current_user.user_id:
             raise HTTPException(status_code=403, detail="This violation does not belong to you.")
@@ -208,6 +215,11 @@ def delete(
     current_user: User = Depends(require_role("super_admin", "property_manager")),
 ):
     """Violation deleted (soft delete)"""
+    from app.models.violation import Violation
+    violation = db.query(Violation).filter(Violation.violation_id == violation_id, Violation.active_status == True).first()
+    if not violation:
+        raise HTTPException(status_code=404, detail="Violation not found.")
+    check_community_access(current_user, violation.community_id, db)
     try:
         delete_violation(violation_id, current_user.user_id, db)
     except ValueError as e:
@@ -228,9 +240,14 @@ def dispute_violation(
 ):
     """
     A resident may dispute a violation:
-Only within 30 days. 
-Not again once it has been resolved.
+    Only within 30 days. 
+    Not again once it has been resolved.
     """
+    from app.models.violation import Violation
+    violation = db.query(Violation).filter(Violation.violation_id == violation_id, Violation.active_status == True).first()
+    if not violation:
+        raise HTTPException(status_code=404, detail="Violation not found.")
+    check_community_access(current_user, violation.community_id, db)
     try:
         violation = create_dispute(violation_id, body, current_user.user_id, db)
     except ValueError as e:
@@ -294,10 +311,18 @@ async def upload_document(
 ):
     """
    Attach the document. 
-doc_type: VIOLATION (admin) | DISPUTES (members)
+   doc_type: VIOLATION (admin) | DISPUTES (members)
     """
+    from app.models.violation import Violation
+    violation = db.query(Violation).filter(Violation.violation_id == violation_id, Violation.active_status == True).first()
+    if not violation:
+        raise HTTPException(status_code=404, detail="Violation not found.")
+    if violation.community_id != community_id:
+        raise HTTPException(status_code=400, detail="Community ID mismatch.")
+    check_community_access(current_user, violation.community_id, db)
+    if current_user.role.role_name == "resident" and violation.client_id != current_user.user_id:
+        raise HTTPException(status_code=403, detail="This violation does not belong to you.")
     try:
-        get_violation_by_id(violation_id, db)
         url = await save_violation_document(file, violation_id)
         doc = add_violation_document(
             violation_id, community_id, url,
@@ -315,6 +340,13 @@ def get_documents(
     current_user: User = Depends(get_verified_user),
 ):
     """Violation ke documents"""
+    from app.models.violation import Violation
+    violation = db.query(Violation).filter(Violation.violation_id == violation_id, Violation.active_status == True).first()
+    if not violation:
+        raise HTTPException(status_code=404, detail="Violation not found.")
+    check_community_access(current_user, violation.community_id, db)
+    if current_user.role.role_name == "resident" and violation.client_id != current_user.user_id:
+        raise HTTPException(status_code=403, detail="This violation does not belong to you.")
     return get_violation_documents(violation_id, db)
 
 

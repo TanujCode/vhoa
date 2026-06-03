@@ -635,9 +635,8 @@ const Violations = ({ community, user, setActivePage, setPaymentState }) => {
   const [showModal, setShowModal]   = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [statusFilter, setStatusFilter] = useState('');
-  const [stats, setStats] = useState({
-    open: 0, paid: 0, disputed: 0, closed: 0
-  });
+  const [searchTerm, setSearchTerm] = useState('');
+
 
   // Modal control states
   const [selectedViolation, setSelectedViolation] = useState(null);
@@ -672,13 +671,7 @@ const Violations = ({ community, user, setActivePage, setPaymentState }) => {
       const res = await API.get(url);
       setViolations(res.data);
 
-      const all = res.data;
-      setStats({
-        open:     all.filter(v => v.violation_status === 'OPEN').length,
-        paid:     all.filter(v => v.violation_status === 'PAID').length,
-        disputed: all.filter(v => v.violation_status === 'APPEALED').length,
-        closed:   all.filter(v => ['CLOSED', 'RESOLVED'].includes(v.violation_status)).length,
-      });
+
 
       // Update selected violation to get fresh changes inside the open detail view
       if (selectedViolation) {
@@ -743,6 +736,31 @@ const Violations = ({ community, user, setActivePage, setPaymentState }) => {
   };
 
   const statuses = ['', 'OPEN', 'IN_PROGRESS', 'APPEALED', 'PAID', 'RESOLVED', 'CLOSED', 'CANCELLED'];
+
+  // Derive stats dynamically based on current view (Resident/Admin)
+  const residentOrAllViolations = isResident 
+    ? violations.filter(v => v.client_id === user?.user_id)
+    : violations;
+
+  const stats = {
+    open:     residentOrAllViolations.filter(v => v.violation_status === 'OPEN').length,
+    paid:     residentOrAllViolations.filter(v => v.violation_status === 'PAID').length,
+    disputed: residentOrAllViolations.filter(v => v.violation_status === 'APPEALED').length,
+    closed:   residentOrAllViolations.filter(v => ['CLOSED', 'RESOLVED'].includes(v.violation_status)).length,
+  };
+
+  const filteredViolations = violations.filter(v => {
+    // If viewing as resident, only show violations belonging to the current user
+    if (isResident && v.client_id !== user?.user_id) {
+      return false;
+    }
+    const term = searchTerm.toLowerCase().trim();
+    if (!term) return true;
+    const name = (v.client_name || `User #${v.client_id}`).toLowerCase();
+    const type = (v.violation_type_name || '').toLowerCase();
+    const remarks = (v.remarks || '').toLowerCase();
+    return name.includes(term) || type.includes(term) || remarks.includes(term);
+  });
 
   return (
     <div className="text-slate-900 dark:text-white">
@@ -815,6 +833,8 @@ const Violations = ({ community, user, setActivePage, setPaymentState }) => {
               <input
                 type="text"
                 placeholder="Search violations..."
+                value={searchTerm}
+                onChange={e => setSearchTerm(e.target.value)}
                 className="w-72 bg-slate-50 dark:bg-[#1e3248] border border-slate-200 dark:border-white/10 rounded-2xl pl-10 pr-4 py-2.5 text-sm text-slate-900 dark:text-white focus:border-teal-500 outline-none placeholder-slate-400 dark:placeholder-gray-500"
               />
             </div>
@@ -840,7 +860,7 @@ const Violations = ({ community, user, setActivePage, setPaymentState }) => {
               <div className="w-8 h-8 border-2 border-teal-500 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
               Loading violations...
             </div>
-          ) : violations.length === 0 ? (
+          ) : filteredViolations.length === 0 ? (
             <div className="p-10 text-center text-slate-500 dark:text-gray-400">
               <AlertTriangle size={32} className="mx-auto mb-3 opacity-50" />
               No violations found.
@@ -859,7 +879,7 @@ const Violations = ({ community, user, setActivePage, setPaymentState }) => {
                 </tr>
               </thead>
               <tbody>
-                {violations.map((v) => (
+                {filteredViolations.map((v) => (
                   <tr
                     key={v.violation_id}
                     onClick={() => setSelectedViolation(v)}
