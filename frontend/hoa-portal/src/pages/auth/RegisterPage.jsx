@@ -131,7 +131,11 @@ export default function RegisterPage() {
           
           setTimeout(() => {
             if (role === 'resident' && (!communityId || communityId === 0)) {
-              navigate('/join-community');
+              if (userData?.account_status === 'PENDING_APPROVAL') {
+                navigate('/waiting-approval');
+              } else {
+                navigate('/join-community');
+              }
             } else {
               navigate('/dashboard');
             }

@@ -572,6 +572,18 @@ def _to_out(user: User, db: Session | None = None, community_id: int | None = No
         unit_no = getattr(user, 'unit_no', None)
         unit_no_2 = getattr(user, 'unit_no_2', None)
 
+    role_name = user.role.role_name if user.role else None
+
+    account_status = user.account_status or "PENDING_VERIFICATION"
+    if db and role_name == "resident":
+        from app.models.community import CommunityJoinRequest
+        pending_req = db.query(CommunityJoinRequest).filter(
+            CommunityJoinRequest.user_id == user.user_id,
+            CommunityJoinRequest.status == "PENDING"
+        ).first()
+        if pending_req:
+            account_status = "PENDING_APPROVAL"
+
     return UserOut(
         user_id              = user.user_id,
         first_name           = user.first_name,
@@ -584,10 +596,10 @@ def _to_out(user: User, db: Session | None = None, community_id: int | None = No
         email_id_is_verified = user.email_id_is_verified,
         is_client            = user.is_client,
         active_status        = user.active_status,
-        account_status       = user.account_status or "PENDING_VERIFICATION",
+        account_status       = account_status,
         time_zone            = user.time_zone or "Asia/Kolkata",
         role_id              = user.role_id,
-        role_name            = user.role.role_name if user.role else None,
+        role_name            = role_name,
         user_profile_url     = user.user_profile_url,
         created_date         = user.created_date,
         last_login           = user.last_login,

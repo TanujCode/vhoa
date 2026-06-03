@@ -18,12 +18,32 @@ const SearchAndJoinHOA = () => {
 
     // 1. Fetch Communities Logic
     useEffect(() => {
-        const fetchHOAs = async () => {
+        const checkStatusAndFetchHOAs = async () => {
+            // Quick local storage guard
+            const storedUser = localStorage.getItem('user') || sessionStorage.getItem('user');
+            if (storedUser) {
+                try {
+                    const u = JSON.parse(storedUser);
+                    if (u.account_status === 'PENDING_APPROVAL') {
+                        navigate('/waiting-approval');
+                        return;
+                    }
+                } catch (_) {}
+            }
+
             try {
                 setApiError('');
                 const token = localStorage.getItem('token') || sessionStorage.getItem('token') || localStorage.getItem('access_token') || sessionStorage.getItem('access_token');
                 if (!token) {
                     navigate('/login');
+                    return;
+                }
+
+                // Check active user details fresh from backend
+                const meRes = await API.get('/auth/me');
+                if (meRes.data && meRes.data.account_status === 'PENDING_APPROVAL') {
+                    localStorage.setItem('user', JSON.stringify(meRes.data));
+                    navigate('/waiting-approval');
                     return;
                 }
 
@@ -42,7 +62,7 @@ const SearchAndJoinHOA = () => {
                 }
             }
         };
-        fetchHOAs();
+        checkStatusAndFetchHOAs();
     }, [navigate]);
 
     const filteredHOAs = communities.filter(hoa => 

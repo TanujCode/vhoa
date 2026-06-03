@@ -131,7 +131,11 @@ const AdminPortal = () => {
       if ((userRoleId === 4 || userRoleId === 3) && (!userCommunityId || userCommunityId === 0)) {
         console.log(`⚠️ Redirecting unassigned profile to wizard layout...`);
         setLoading(false);
-        navigate('/join-community');
+        if (freshUser.account_status === 'PENDING_APPROVAL') {
+          navigate('/waiting-approval');
+        } else {
+          navigate('/join-community');
+        }
         return;
       }
 

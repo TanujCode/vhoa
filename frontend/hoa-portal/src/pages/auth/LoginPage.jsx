@@ -99,11 +99,16 @@ const onSubmit = async (data) => {
       } 
       else if (role === 'resident') {
         if (!communityId || communityId === null || communityId === 0) {
-          console.log("Resident has no community. Sending to SearchAndJoinHOA...");
-          navigate('/join-community'); 
+          if (userData?.account_status === 'PENDING_APPROVAL') {
+            console.log("Resident has a pending join request. Sending to WaitingApproval...");
+            navigate('/waiting-approval');
+          } else {
+            console.log("Resident has no community. Sending to SearchAndJoinHOA...");
+            navigate('/join-community'); 
+          }
         } else {
           console.log("Resident has community. Sending to Main Portal...");
-          navigate('/dashboard'); // Ise bhi dashboard bhej sakte ho agar ResidentDashboard AdminPortal ke andar render ho raha hai!
+          navigate('/dashboard'); 
         }
       } 
       else {
@@ -163,7 +168,11 @@ const onSubmit = async (data) => {
           
           setTimeout(() => {
             if (role === 'resident' && (!communityId || communityId === 0)) {
-              navigate('/join-community');
+              if (userData?.account_status === 'PENDING_APPROVAL') {
+                navigate('/waiting-approval');
+              } else {
+                navigate('/join-community');
+              }
             } else {
               navigate('/dashboard');
             }
