@@ -1,5 +1,0 @@
-
---- Request to /api/user/profile [PUT] ---
-Body: {"first_name":"Rajesh","middle_name":"","last_name":"Kumar","mobile_number":"9575280067","time_zone":"Asia/Kolkata"}
-HTTPException on /api/user/profile: status=400, detail=This mobile number is already registered to someone else.
-Response Status: 400
