@@ -4,9 +4,7 @@ from sqlalchemy.sql import func
 from app.database import Base
 
 
-# ══════════════════════════════════════════════
 #  MEETING MODEL
-# ══════════════════════════════════════════════
 class Meeting(Base):
     __tablename__ = "meetings"
 
@@ -29,9 +27,7 @@ class Meeting(Base):
     rsvps      = relationship("MeetingRSVP", back_populates="meeting", cascade="all, delete-orphan")
 
 
-# ══════════════════════════════════════════════
 #  MEETING RSVP MODEL
-# ══════════════════════════════════════════════
 class MeetingRSVP(Base):
     __tablename__ = "meeting_rsvps"
 
@@ -45,9 +41,7 @@ class MeetingRSVP(Base):
     user    = relationship("User", foreign_keys=[user_id])
 
 
-# ══════════════════════════════════════════════
 #  SURVEY MODEL
-# ══════════════════════════════════════════════
 class Survey(Base):
     __tablename__ = "surveys"
 
@@ -69,9 +63,7 @@ class Survey(Base):
     votes      = relationship("SurveyVote", back_populates="survey", cascade="all, delete-orphan")
 
 
-# ══════════════════════════════════════════════
 #  SURVEY OPTION MODEL
-# ══════════════════════════════════════════════
 class SurveyOption(Base):
     __tablename__ = "survey_options"
 
@@ -82,9 +74,7 @@ class SurveyOption(Base):
     survey = relationship("Survey", back_populates="options")
 
 
-# ══════════════════════════════════════════════
 #  SURVEY VOTE MODEL
-# ══════════════════════════════════════════════
 class SurveyVote(Base):
     __tablename__ = "survey_votes"
 

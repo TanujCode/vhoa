@@ -49,7 +49,6 @@ class ServiceRequest(Base):
 
     #Submitted by
     submitted_by_id = Column(Integer, ForeignKey("users.user_id"), nullable=False)
-    # The resident or admin submitting the request.
 
     #Status
     status_id     = Column(Integer, ForeignKey("service_request_statuses.status_id"), nullable=False)

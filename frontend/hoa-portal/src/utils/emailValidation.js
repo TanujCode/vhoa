@@ -5,7 +5,6 @@
 
 export const EMAIL_REGEX = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i;
 
-// Map of common typo domains → suggested correct domain
 export const EMAIL_TYPO_MAP = {
   // Gmail domain typos
   'gmailgmail.com': 'gmail.com',
@@ -86,7 +85,6 @@ export const EMAIL_TYPO_MAP = {
   'icloud.coam':    'icloud.com',
 };
 
-// Common TLD scrambles of ".com" — catches ANY domain with a bad TLD
 const COM_TLD_TYPOS = [
   'cpom', 'cmo', 'ocm', 'con', 'copm', 'comn',
   'vom', 'xom', 'cpm', 'coom', 'coam', 'coa', 'coma',
@@ -123,13 +121,11 @@ export const validateEmail = (value) => {
   const domain = trimmed.split('@')[1]?.toLowerCase() || '';
   const localPart = trimmed.split('@')[0];
 
-  // 1. Exact typo map check
   const mapSuggestion = EMAIL_TYPO_MAP[domain];
   if (mapSuggestion) {
     return `Suspicious domain! Did you mean "${localPart}@${mapSuggestion}"?`;
   }
 
-  // 2. Generic TLD typo check (e.g. gmail.cpom → gmail.com, xyz.coam → xyz.com)
   const tldFixedDomain = detectTldTypo(domain);
   if (tldFixedDomain) {
     return `Suspicious domain! Did you mean "${localPart}@${tldFixedDomain}"?`;
@@ -150,13 +146,11 @@ export const checkEmail = (value) => {
   const domain = trimmed.split('@')[1]?.toLowerCase() || '';
   const localPart = trimmed.split('@')[0];
 
-  // 1. Exact typo map check
   const mapSuggestion = EMAIL_TYPO_MAP[domain];
   if (mapSuggestion) {
     return { valid: false, message: `Suspicious domain! Did you mean "${localPart}@${mapSuggestion}"?` };
   }
 
-  // 2. Generic TLD typo check
   const tldFixedDomain = detectTldTypo(domain);
   if (tldFixedDomain) {
     return { valid: false, message: `Suspicious domain! Did you mean "${localPart}@${tldFixedDomain}"?` };

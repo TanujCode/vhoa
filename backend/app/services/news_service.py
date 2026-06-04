@@ -4,9 +4,6 @@ from app.schemas.news import NewsCreate, NewsUpdate, FAQCreate, FAQUpdate
 import math
 
 
-# ══════════════════════════════════════════════
-#  NEWS — CRUD
-# ══════════════════════════════════════════════
 def create_news(data: NewsCreate, created_by_id: int, db: Session) -> News:
     news = News(
         community_id  = data.community_id,
@@ -78,9 +75,6 @@ def delete_news(news_id: int, modified_by_id: int, db: Session) -> bool:
     return True
 
 
-# ══════════════════════════════════════════════
-#  FAQ — CRUD
-# ══════════════════════════════════════════════
 def create_faq(data: FAQCreate, created_by_id: int, db: Session) -> FAQ:
     faq = FAQ(
         community_id  = data.community_id,

@@ -68,7 +68,6 @@ def run_db_upgrades():
             ON CONFLICT DO NOTHING;
         """))
 
-        # Note: Do not copy existing user unit numbers globally to user_communities,
         # as some user_communities associations (like property managers) are intentionally NULL.
         pass
         

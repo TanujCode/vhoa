@@ -49,18 +49,15 @@ export default function BoardDashboard({ community, user }) {
     }
   };
 
-  // 🔥 ACTION HANDLER: Approve ya Reject submit karne ke liye
   const handleRequestAction = async (requestId, actionType) => {
     try {
       setActionId(requestId);
       const commId = community?.community_id || community?.id;
 
-      // Backend API fire karo
       await API.post(`/community/${commId}/join-requests/${requestId}/action`, {
-        action: actionType // "APPROVE" ya "REJECT"
+        action: actionType
       });
 
-      // UI state local update karke row hatao aur counter change karo
       const updatedRequests = requests.filter(r => r.request_id !== requestId);
       setRequests(updatedRequests);
       setStats(prev => ({
@@ -117,7 +114,6 @@ export default function BoardDashboard({ community, user }) {
         </div>
       </div>
 
-      {/* 🔥 DYNAMIC APPROVAL TABLE COMPONENT */}
       <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-2xl shadow-sm overflow-hidden">
         <div className="p-5 border-b border-gray-200 dark:border-white/10 flex items-center justify-between">
           <div className="flex items-center space-x-2">

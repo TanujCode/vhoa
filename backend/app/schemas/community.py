@@ -162,9 +162,7 @@ class CommunityStatsOut(BaseModel):
     pending_payments:  int = 0
 
 
-# ══════════════════════════════════════════════
 #  DOCUMENT SCHEMAS
-# ══════════════════════════════════════════════
 class DocumentOut(BaseModel):
     document_id:   int
     community_id:  int

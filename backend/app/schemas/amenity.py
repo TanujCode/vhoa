@@ -2,9 +2,7 @@ from datetime import date, datetime
 from pydantic import BaseModel, field_validator
 
 
-# ══════════════════════════════════════════════
 #  AMENITY TYPE
-# ══════════════════════════════════════════════
 class AmenityTypeCreate(BaseModel):
     type_name:   str
     description: str | None = None
@@ -18,9 +16,7 @@ class AmenityTypeOut(BaseModel):
     model_config = {"from_attributes": True}
 
 
-# ══════════════════════════════════════════════
 #  AMENITY
-# ══════════════════════════════════════════════
 class AmenityCreate(BaseModel):
     community_id:    int
     amenity_type_id: int
@@ -31,7 +27,6 @@ class AmenityCreate(BaseModel):
     fee_enabled:     bool  = False
     booking_fee:     float = 0.0
 
-    # Custom slot times (optional — default 8-2, 2-8)
     slot1_start: str = "08:00"
     slot1_end:   str = "14:00"
     slot2_start: str = "14:00"
@@ -75,9 +70,7 @@ class AmenityOut(BaseModel):
     model_config = {"from_attributes": True}
 
 
-# ══════════════════════════════════════════════
 #  BOOKING
-# ══════════════════════════════════════════════
 class BookingCreate(BaseModel):
     amenity_id:   int
     community_id: int
@@ -129,9 +122,6 @@ class BookingOut(BaseModel):
     model_config = {"from_attributes": True}
 
 
-# ══════════════════════════════════════════════
-#  AVAILABILITY CHECK
-# ══════════════════════════════════════════════
 class SlotAvailability(BaseModel):
     booking_date: date
     slot_1_available: bool

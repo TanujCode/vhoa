@@ -17,7 +17,6 @@ export default {
           textSecondary: "#64748b",
           hover: "#f1f5f9",
         },
-        // Dark Mode Colors (already jo tum use kar rahe ho)
         dark: {
           bg: "#0D1B2A",
           card: "#162535",

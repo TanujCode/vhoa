@@ -43,7 +43,6 @@ const Sidebar = ({ activePage, setActivePage, isOpen, setIsOpen, user, userRole:
     adminNavItems = adminNavItems.filter(item => item.id !== 'overview' && item.id !== 'contracts');
   }
 
-  // Property managers do not see 'Manage Contracts'
   if (userRole === 'property_manager') {
     adminNavItems = adminNavItems.filter(item => item.id !== 'contracts');
   }

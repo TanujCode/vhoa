@@ -260,7 +260,6 @@ const Payments = ({ community, user, paymentState, setPaymentState }) => {
         </div>
       )}
 
-      {/* Tab Contents */}
       {!loading && activeTab === 'pay' && (
         <div>
           {dues.length === 0 ? (

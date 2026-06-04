@@ -49,7 +49,6 @@ def main():
 
     db = SessionLocal()
     try:
-        # Check duplicate email
         existing_user = db.query(User).filter(User.email_id == email).first()
         if existing_user:
             print(f"Error: A user with email '{email}' already exists.")

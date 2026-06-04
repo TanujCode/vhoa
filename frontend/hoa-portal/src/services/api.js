@@ -20,7 +20,6 @@ const API = axios.create({
   headers: { 'Content-Type': 'application/json' },
 });
 
-// ── Request interceptor ──
 API.interceptors.request.use((config) => {
   
   if (config.url.includes('/auth/login') || config.url.includes('/auth/register')) {
@@ -34,7 +33,6 @@ API.interceptors.request.use((config) => {
   return config;
 }, (error) => Promise.reject(error));
 
-// ── Response interceptor ──
 API.interceptors.response.use(
   (response) => response,
   async (error) => {
@@ -64,7 +62,6 @@ API.interceptors.response.use(
         );
         const newToken = res.data.access_token;
         
-        // Save back to whichever storage contained the token
         if (localStorage.getItem('token')) {
           localStorage.setItem('token', newToken);
         } else if (sessionStorage.getItem('token')) {

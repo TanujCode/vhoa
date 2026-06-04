@@ -72,9 +72,7 @@ class RegisterRequest(BaseModel):
         return self
 
 
-# ══════════════════════════════════════════════
 #  USER RESPONSE
-# ══════════════════════════════════════════════
 class UserOut(BaseModel):
     user_id:              int
     first_name:           str
@@ -104,9 +102,7 @@ class UserOut(BaseModel):
     model_config = {"from_attributes": True}
 
 
-# ══════════════════════════════════════════════
 #  LOGIN
-# ══════════════════════════════════════════════
 class LoginRequest(BaseModel):
     email_id: EmailStr
     password: str
@@ -118,9 +114,7 @@ class GoogleLoginRequest(BaseModel):
     access_token: str
 
 
-# ══════════════════════════════════════════════
 #  TOKEN RESPONSES
-# ══════════════════════════════════════════════
 class TokenResponse(BaseModel):
     access_token:        str
     session_token:       str
@@ -140,9 +134,7 @@ class NewAccessTokenResponse(BaseModel):
     expires_in:   int
 
 
-# ══════════════════════════════════════════════
 #  OTP
-# ══════════════════════════════════════════════
 class SendOtpRequest(BaseModel):
     email_id: EmailStr
     otp_type: str

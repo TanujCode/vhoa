@@ -47,7 +47,6 @@ const Settings = ({ community }) => {
   const fetchSettings = async () => {
     try {
       setLoading(true);
-      // Community ki existing settings load karo
       const res = await API.get(`/community/${community.community_id}`);
       const data = res.data;
       setForm(prev => ({

@@ -17,9 +17,7 @@ from app.services.meeting_survey_service import (
 router = APIRouter(prefix="/meeting-survey", tags=["Meetings & Surveys"])
 
 
-# ══════════════════════════════════════════════
 #  MEETING ENDPOINTS
-# ══════════════════════════════════════════════
 @router.post("/meetings", response_model=MeetingOut, status_code=201)
 def schedule_meeting(
     body: MeetingCreate,
@@ -31,7 +29,6 @@ def schedule_meeting(
 
     try:
         meeting = create_meeting(body, current_user.user_id, db)
-        # Fetch the created_by name to return
         creator_name = f"{current_user.first_name or ''} {current_user.last_name or ''}".strip()
         
         # Build output structure
@@ -86,9 +83,7 @@ def submit_meeting_rsvp(
         raise HTTPException(status_code=400, detail=str(e))
 
 
-# ══════════════════════════════════════════════
 #  SURVEY ENDPOINTS
-# ══════════════════════════════════════════════
 @router.post("/surveys", response_model=SurveyOut, status_code=201)
 def schedule_survey(
     body: SurveyCreate,
@@ -244,7 +239,6 @@ def modify_survey(
 
     try:
         updated = update_survey(survey_id, body, current_user.user_id, db)
-        # return the updated survey layout
         surveys = get_community_surveys(survey.community_id, current_user.user_id, db)
         matching = next((s for s in surveys if s.survey_id == survey_id), None)
         if not matching:

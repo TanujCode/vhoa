@@ -35,7 +35,6 @@ export default function RegisterPage() {
     try {
       setRefreshing(true);
       const res = await API.get('/auth/captcha', { timeout: 2000 });
-      // If user hasn't started typing in the new captcha answer yet, we can safely sync with backend JWT captcha
       const currentAnswer = watch('captchaAnswer');
       if (!currentAnswer || currentAnswer.trim() === '') {
         setCaptcha({
@@ -87,7 +86,6 @@ export default function RegisterPage() {
   const countryCode = watch('countryCode') || '+1';
   const phoneRule = getPhoneValidationRule(countryCode);
 
-  // Password value track karne ke liye for confirm password match
   const password = watch('password');
 
   const onSubmit = async (data) => {
@@ -97,7 +95,7 @@ export default function RegisterPage() {
     try {
       const response = await API.post('/auth/register', {
         full_name: data.fullName,
-        email_id: data.email, // Backend `email_id` expect kar raha hai
+        email_id: data.email,
         password: data.password,
         confirm_password: data.confirmPassword, // Naya field
         role: 'resident', // Public signup is restricted to Resident accounts only

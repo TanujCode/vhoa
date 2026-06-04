@@ -19,7 +19,6 @@ const Overview = ({ communities = [], setActiveCommunity, setActivePage, user })
   const fetchAllStats = async () => {
     try {
       setLoading(true);
-      // Har community ke stats fetch karo
       const results = await Promise.allSettled(
         communities.map(c =>
           API.get(`/community/${c.community_id}/stats`)

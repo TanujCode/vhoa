@@ -2,8 +2,6 @@ from sqlalchemy.orm import Session
 from app.models.audit_log import AuditLog
 
 
-# ══════════════════════════════════════════════
-#  AUDIT LOG — CREATE
 def log_action(
     db:           Session,
     action:       str,
@@ -52,12 +50,9 @@ user_id=1, community_id=2)
         db.rollback()
 
 
-# ══════════════════════════════════════════════
-#  AUDIT LOG — GET
-# ══════════════════════════════════════════════
 def get_audit_logs(
     db:           Session,
-    community_id: int | None = None,   # None = super admin — sab dekhe
+    community_id: int | None = None,
     user_id:      int | None = None,
     module:       str | None = None,
     action:       str | None = None,

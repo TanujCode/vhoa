@@ -24,9 +24,7 @@ from app.utils.file_service import save_violation_document
 router = APIRouter(prefix="/violation", tags=["Violation"])
 
 
-# ══════════════════════════════════════════════
 #  VIOLATION TYPE
-# ══════════════════════════════════════════════
 @router.post("/type", response_model=ViolationTypeOut, status_code=201)
 def create_type(
     body: ViolationTypeCreate,
@@ -72,9 +70,7 @@ def update_type(
         raise HTTPException(status_code=404, detail=str(e))
 
 
-# ══════════════════════════════════════════════
 #  VIOLATION STATUSES
-# ══════════════════════════════════════════════
 @router.get("/status", response_model=list[ViolationStatusOut])
 def get_statuses(
     db: Session = Depends(get_db),
@@ -84,9 +80,7 @@ def get_statuses(
     return db.query(ViolationStatus).all()
 
 
-# ══════════════════════════════════════════════
 #  VIOLATION CRUD
-# ══════════════════════════════════════════════
 @router.post("", response_model=ViolationOut, status_code=201)
 def create(
     request: Request,
@@ -227,9 +221,7 @@ def delete(
     return {"message": f"Violation {violation_id} has been deleted."}
 
 
-# ══════════════════════════════════════════════
 #  DISPUTE ENDPOINTS
-# ══════════════════════════════════════════════
 @router.post("/{violation_id}/dispute", response_model=ViolationOut)
 def dispute_violation(
     request: Request,
@@ -296,9 +288,7 @@ def resolve_violation_dispute(
     return _to_out(violation)
 
 
-# ══════════════════════════════════════════════
 #  DOCUMENTS
-# ══════════════════════════════════════════════
 @router.post("/{violation_id}/document", response_model=ViolationDocumentOut, status_code=201)
 async def upload_document(
     violation_id: int,
@@ -350,9 +340,7 @@ def get_documents(
     return get_violation_documents(violation_id, db)
 
 
-# ══════════════════════════════════════════════
 #  HELPER
-# ══════════════════════════════════════════════
 def _to_out(v) -> ViolationOut:
     client_name = None
     if v.client:

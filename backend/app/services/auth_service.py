@@ -29,9 +29,7 @@ def split_full_name(full_name: str) -> tuple[str, str | None, str]:
         return parts[0], " ".join(parts[1:-1]), parts[-1]
 
 
-# ══════════════════════════════════════════════
 #  REGISTER
-# ══════════════════════════════════════════════
 def register_user(data: RegisterRequest, db: Session) -> User:
     if db.query(User).filter(User.email_id == data.email_id.lower()).first():
         raise ValueError("This email is already registered.")
@@ -72,16 +70,13 @@ def register_user(data: RegisterRequest, db: Session) -> User:
     return new_user
 
 
-# ══════════════════════════════════════════════
 #  LOGIN
-# ══════════════════════════════════════════════
 def login_user(email_id: str, password: str, db: Session) -> dict:
     user = db.query(User).filter(User.email_id == email_id.lower().strip()).first()
 
     if not user:
         raise ValueError("Incorrect email or password.")
 
-    # Lock Check
     if user.account_locked_until:
         now = datetime.now(timezone.utc)
         locked_until = user.account_locked_until
@@ -136,9 +131,7 @@ def login_user(email_id: str, password: str, db: Session) -> dict:
     }
 
 
-# ══════════════════════════════════════════════
 #  SEND OTP FOR PASSWORD RESET (with email validation)
-# ══════════════════════════════════════════════
 def send_otp_for_password_reset(email_id: str, db: Session):
     """Checks email for the password reset OTP."""
     user = db.query(User).filter(User.email_id == email_id.lower().strip()).first()
@@ -146,7 +139,6 @@ def send_otp_for_password_reset(email_id: str, db: Session):
     if not user:
         raise ValueError("This email is not registered with us.")
 
-    # Purane OTP invalidate kar do
     db.query(OtpToken).filter(
         OtpToken.user_id == user.user_id,
         OtpToken.otp_type == "password_reset",
@@ -167,9 +159,7 @@ def send_otp_for_password_reset(email_id: str, db: Session):
     return otp_code, user
 
 
-# ══════════════════════════════════════════════
 #  GENERAL OTP GENERATOR
-# ══════════════════════════════════════════════
 def generate_otp(user_id: int, otp_type: str, db: Session) -> str:
     db.query(OtpToken).filter(
         OtpToken.user_id == user_id,
@@ -189,9 +179,7 @@ def generate_otp(user_id: int, otp_type: str, db: Session) -> str:
     return otp_code
 
 
-# ══════════════════════════════════════════════
 #  VERIFY OTP
-# ══════════════════════════════════════════════
 def verify_otp(email_id: str, otp_code: str, otp_type: str, db: Session) -> User:
     user = db.query(User).filter(User.email_id == email_id.lower().strip()).first()
     if not user:
@@ -224,9 +212,7 @@ def verify_otp(email_id: str, otp_code: str, otp_type: str, db: Session) -> User
     return user
 
 
-# ══════════════════════════════════════════════
 #  PASSWORD RESET
-# ══════════════════════════════════════════════
 def reset_password(email_id: str, otp_code: str, new_password: str, db: Session) -> bool:
     user = db.query(User).filter(User.email_id == email_id.lower().strip()).first()
     if not user:

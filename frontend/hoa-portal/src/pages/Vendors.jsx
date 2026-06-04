@@ -30,7 +30,6 @@ const Vendors = ({ communityId, userRole }) => {
   const [phoneCountryCode, setPhoneCountryCode] = useState('+1');
   const [phoneOnly, setPhoneOnly] = useState('');
 
-  // Form State - Backend Schema ke hisaab se updated
   const [formData, setFormData] = useState({
     company_name: '',
     contact_person: '',

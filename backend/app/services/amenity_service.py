@@ -87,15 +87,11 @@ def update_amenity(
     return amenity
 
 
-# ══════════════════════════════════════════════
-#  AVAILABILITY CHECK
-# ══════════════════════════════════════════════
 def check_availability(amenity_id: int, booking_date: date, db: Session) -> dict:
     """
     Check which slots are available on a given date.
     Use DB level lock to handle race conditions during booking.
     """
-    # Check active bookings on that date
     existing = db.query(AmenityBooking).filter(
         AmenityBooking.amenity_id   == amenity_id,
         AmenityBooking.booking_date == booking_date,
@@ -114,9 +110,6 @@ def check_availability(amenity_id: int, booking_date: date, db: Session) -> dict
     }
 
 
-# ══════════════════════════════════════════════
-#  BOOKING — CREATE (Race condition safe)
-# ══════════════════════════════════════════════
 def create_booking(
     data: BookingCreate,
     booked_by_id: int,
@@ -131,7 +124,6 @@ def create_booking(
     if not community:
         raise ValueError("Community not found.")
 
-    # ── Race condition check (DB locking first) ────────────────────
     existing = db.query(AmenityBooking).filter(
         AmenityBooking.amenity_id   == data.amenity_id,
         AmenityBooking.booking_date == data.booking_date,
@@ -161,7 +153,6 @@ def create_booking(
     if community.amenity_fee_enabled and amenity.fee_enabled:
         fee_amount = amenity.booking_fee or 0.0
 
-    # Payment due date — 1 day before booking
     payment_due = data.booking_date - timedelta(days=1) if fee_amount > 0 else None
 
     booking = AmenityBooking(
@@ -187,7 +178,6 @@ def create_booking(
     
     db.refresh(booking)
 
-    # ── Email Notifications ──
     booked_by = db.query(User).filter(User.user_id == booked_by_id).first()
     booked_by_name = ""
     if booked_by:
@@ -236,9 +226,6 @@ def create_booking(
     return booking
 
 
-# ══════════════════════════════════════════════
-#  BOOKING — GET ALL
-# ══════════════════════════════════════════════
 def get_bookings(
     community_id: int, db: Session,
     amenity_id: int | None = None,
@@ -320,9 +307,6 @@ def get_bookings(
     return query.order_by(AmenityBooking.booking_date.desc()).offset(skip).limit(limit).all()
 
 
-# ══════════════════════════════════════════════
-#  BOOKING — APPROVE
-# ══════════════════════════════════════════════
 def approve_booking(booking_id: int, approved_by_id: int, db: Session) -> AmenityBooking:
     booking = db.query(AmenityBooking).filter(
         AmenityBooking.booking_id    == booking_id,
@@ -339,9 +323,6 @@ def approve_booking(booking_id: int, approved_by_id: int, db: Session) -> Amenit
     return booking
 
 
-# ══════════════════════════════════════════════
-#  BOOKING — CANCEL
-# ══════════════════════════════════════════════
 def cancel_booking(
     booking_id: int,
     cancelled_by_id: int,
@@ -373,9 +354,6 @@ def cancel_booking(
     return booking
 
 
-# ══════════════════════════════════════════════
-#  BOOKING — PAY (SIMULATION)
-# ══════════════════════════════════════════════
 def pay_booking(booking_id: int, user_id: int, db: Session) -> AmenityBooking:
     from app.models.community import Community
     from app.services.email_service import send_payment_received_email

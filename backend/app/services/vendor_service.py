@@ -102,7 +102,6 @@ def delete_vendor(vendor_id: int, modified_by_id: int, db: Session) -> bool:
     return True
 
 
-#  ACCESS CODE — Generate
 #  One time use only + time constraint
 def generate_vendor_access_code(vendor_id: int, db: Session) -> str:
     """
@@ -112,7 +111,6 @@ def generate_vendor_access_code(vendor_id: int, db: Session) -> str:
     """
     vendor = get_vendor_by_id(vendor_id, db)
 
-    # Naya code generate karo
     code = _generate_code("VAC")
 
     vendor.vendor_access_code = code
@@ -149,7 +147,6 @@ The member provides this code to the vendor.
     if not vendor:
         raise ValueError("Invalid or already used access code.")
 
-    # Expiry check
     if vendor.access_code_expiry:
         expiry = vendor.access_code_expiry
         if expiry.tzinfo is None:
@@ -171,7 +168,7 @@ The member provides this code to the vendor.
 
 #  ASSIGNMENTS
 def assign_vendor(data: AssignmentCreate, assigned_by_id: int, db: Session) -> VendorAssignment:
-    get_vendor_by_id(data.vendor_id, db)  # exist check
+    get_vendor_by_id(data.vendor_id, db)
 
     assignment = VendorAssignment(
         vendor_id        = data.vendor_id,

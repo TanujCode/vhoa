@@ -12,9 +12,7 @@ from app.schemas.meeting_survey import (
 from app.services.audit_service import log_action
 
 
-# ══════════════════════════════════════════════
 #  MEETING SERVICES
-# ══════════════════════════════════════════════
 def create_meeting(data: MeetingCreate, user_id: int, db: Session) -> Meeting:
     # Verify user exists
     user = db.query(User).filter(User.user_id == user_id).first()
@@ -65,7 +63,6 @@ def get_community_meetings(community_id: int, user_id: int, db: Session) -> list
         no_count = sum(1 for r in rsvps if r.status == "NO")
         maybe_count = sum(1 for r in rsvps if r.status == "MAYBE")
 
-        # Check current user's RSVP status
         user_rsvp_record = next((r for r in rsvps if r.user_id == user_id), None)
         user_rsvp_status = user_rsvp_record.status if user_rsvp_record else None
 
@@ -125,9 +122,7 @@ def rsvp_meeting(meeting_id: int, status: str, user_id: int, db: Session) -> Mee
     return rsvp
 
 
-# ══════════════════════════════════════════════
 #  SURVEY SERVICES
-# ══════════════════════════════════════════════
 def create_survey(data: SurveyCreate, user_id: int, db: Session) -> Survey:
     # Verify user exists
     user = db.query(User).filter(User.user_id == user_id).first()
@@ -197,7 +192,6 @@ def get_community_surveys(community_id: int, user_id: int, db: Session) -> list[
         # Total votes
         total_votes = db.query(SurveyVote).filter(SurveyVote.survey_id == s.survey_id).count()
 
-        # Check if current user voted
         user_vote = db.query(SurveyVote).filter(
             SurveyVote.survey_id == s.survey_id,
             SurveyVote.user_id == user_id
@@ -228,14 +222,12 @@ def vote_survey(survey_id: int, option_id: int, user_id: int, db: Session) -> Su
     if not survey:
         raise ValueError("Survey not found or inactive.")
 
-    # Check if survey has expired
     # Compare timezone-aware
     now = datetime.now(timezone.utc)
     expires = survey.expires_at.replace(tzinfo=timezone.utc) if survey.expires_at.tzinfo is None else survey.expires_at
     if now > expires:
         raise ValueError("This survey/poll has expired and is closed for voting.")
 
-    # Check if option exists for this survey
     option = db.query(SurveyOption).filter(
         SurveyOption.option_id == option_id,
         SurveyOption.survey_id == survey_id
@@ -243,7 +235,6 @@ def vote_survey(survey_id: int, option_id: int, user_id: int, db: Session) -> Su
     if not option:
         raise ValueError("Selected option is invalid for this survey.")
 
-    # Check if user already voted
     existing_vote = db.query(SurveyVote).filter(
         SurveyVote.survey_id == survey_id,
         SurveyVote.user_id == user_id

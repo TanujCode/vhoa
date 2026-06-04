@@ -51,20 +51,17 @@ class Violation(Base):
     violation_type_id   = Column(Integer, ForeignKey("violation_types.violation_type_id"), nullable=False)
     violation_date      = Column(Date, nullable=False)
     violation_due_date  = Column(Date, nullable=True)
-    # Due Date — Payment is to be made within 'X' days.
     # Auto calculate: violation_date + due_days
 
     community_id        = Column(Integer, ForeignKey("communities.community_id"), nullable=False)
     amount              = Column(Double, default=0.0)
     late_charge_applied = Column(Double, default=0.0)
-    # Late Charge: If paid after the due date
 
     client_id           = Column(Integer, ForeignKey("users.user_id"), nullable=False)
     violation_status_id = Column(Integer, ForeignKey("violation_statuses.violation_status_id"), nullable=False)
     remarks             = Column(Text, nullable=True)
     active_status       = Column(Boolean, default=True)
 
-    # ── Dispute System (NEW) 
     is_disputed          = Column(Boolean, default=False)
     dispute_description  = Column(Text, nullable=True)
     dispute_date         = Column(DateTime(timezone=True), nullable=True)
@@ -75,15 +72,12 @@ class Violation(Base):
     dispute_resolved_date = Column(DateTime(timezone=True), nullable=True)
     dispute_resolved_by  = Column(Integer, ForeignKey("users.user_id"), nullable=True)
     dispute_resolution   = Column(Text, nullable=True)
-    # Board ka response — dispute accept/reject
 
-    # ── Audit 
     created_by_id       = Column(Integer, ForeignKey("users.user_id"), nullable=True)
     created_date        = Column(DateTime(timezone=True), server_default=func.now())
     modified_by_id      = Column(Integer, ForeignKey("users.user_id"), nullable=True)
     modified_date       = Column(DateTime(timezone=True), onupdate=func.now())
 
-    # ── Relationships
     violation_type    = relationship("ViolationType", back_populates="violations")
     status            = relationship("ViolationStatus", back_populates="violations")
     community         = relationship("Community", foreign_keys=[community_id])
@@ -103,8 +97,6 @@ class ViolationDocument(Base):
     doc_url               = Column(Text, nullable=False)
     description           = Column(Text, nullable=True)
     doc_type              = Column(String(20), default="VIOLATION")
-    # "VIOLATION" → Uploaded by the admin
-# "DISPUTE"   → Uploaded by a member during a dispute
     active_status         = Column(Boolean, default=True)
 
     created_by_id         = Column(Integer, ForeignKey("users.user_id"), nullable=True)

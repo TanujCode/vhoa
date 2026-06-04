@@ -32,7 +32,6 @@ const Reports = ({ community, user, setActivePage }) => {
         responseType: 'blob', // Important: response is binary CSV file
       });
       
-      // Create a local URL for the downloadable blob
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement('a');
       link.href = url;

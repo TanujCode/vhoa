@@ -8,7 +8,6 @@ import {
 } from 'lucide-react';
 import API, { getBaseUrl } from "../services/api";
 
-// ── Stat Card (Premium) ─────────────────────────────
 const StatCard = ({ label, value, icon: Icon, color, sub, subColor, onClick }) => (
   <div 
     onClick={onClick}
@@ -27,7 +26,6 @@ const StatCard = ({ label, value, icon: Icon, color, sub, subColor, onClick }) =
   </div>
 );
 
-// ── Activity Item ─────────────────────────────
 const ActivityItem = ({ icon: Icon, color, title, time, status }) => (
   <div className="flex items-center gap-3 py-3.5 border-b border-slate-100 dark:border-white/5 last:border-0 hover:bg-slate-50/50 dark:hover:bg-white/[0.01] px-2 rounded-xl transition duration-150">
     <div className={`w-8.5 h-8.5 rounded-xl flex items-center justify-center flex-shrink-0 ${color}`}>
@@ -49,7 +47,6 @@ const ActivityItem = ({ icon: Icon, color, title, time, status }) => (
   </div>
 );
 
-// ── Property Manager Dashboard ────────────────────────────
 const PropertyManagerDashboard = ({ community, user, setActivePage }) => {
   const [stats, setStats]           = useState(null);
   const [violations, setViolations] = useState([]);
@@ -270,7 +267,6 @@ const PropertyManagerDashboard = ({ community, user, setActivePage }) => {
           </div>
         </div>
 
-        {/* To-Do Checklist Widget */}
         <div className="lg:col-span-2 bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 shadow-sm dark:shadow-none flex flex-col">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-bold text-slate-900 dark:text-white">Daily PM Checklist</h3>

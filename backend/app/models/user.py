@@ -47,19 +47,12 @@ class User(Base):
 
     #Login Security (NEW)
     login_attempts        = Column(Integer, default=0)
-    # 3 incorrect attempts → Account locked
     account_locked_until  = Column(DateTime(timezone=True), nullable=True)
-    # How long is it locked? — 'None' means not locked.
     last_failed_login     = Column(DateTime(timezone=True), nullable=True)
 
     #Account Status (NEW)
     account_status       = Column(String(30), default="PENDING_VERIFICATION")
-   # "PENDING_VERIFICATION" → Newly registered; email not yet verified
-# "ACTIVE"              → Email verified; full access/capabilities
-# "INACTIVE"            → Deactivated by an admin
-# "LOCKED"              → Locked after 3 incorrect password attempts
 
-    # ── Timezone (NEW) 
     time_zone            = Column(String(50), default="America/New_York")
     # America/New_York | America/Chicago | America/Denver | America/Los_Angeles
     # Asia/Kolkata etc.
@@ -82,7 +75,6 @@ class User(Base):
         parts = [self.first_name, self.middle_name, self.last_name]
         return " ".join([p for p in parts if p]).strip()
 
-    # ── Timestamps ───────────────────────────
     created_date         = Column(DateTime(timezone=True), server_default=func.now())
     modified_by_id       = Column(Integer, ForeignKey("users.user_id"), nullable=True)
     modified_date        = Column(DateTime(timezone=True), onupdate=func.now())

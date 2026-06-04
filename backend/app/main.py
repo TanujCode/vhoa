@@ -85,7 +85,6 @@ def run_db_upgrades():
             ON CONFLICT DO NOTHING;
         """))
 
-        # Note: Do not copy existing user unit numbers globally to user_communities on every startup,
         # as some user_communities associations (like property managers) are intentionally NULL.
         pass
         
@@ -294,7 +293,7 @@ seed_roles()
 seed_violation_statuses()
 seed_sr_statuses()
 seed_locations()
-seed_default_service_types_for_all_communities()   # ← Yeh important hai
+seed_default_service_types_for_all_communities()
 seed_amenity_types()
 seed_custom_users()
 

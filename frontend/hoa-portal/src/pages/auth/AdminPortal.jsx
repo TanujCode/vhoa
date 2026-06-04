@@ -63,7 +63,6 @@ const AdminPortal = () => {
     try {
       setLoading(true);
 
-      // ⚡ INSTANT: Show cached user from localStorage first to avoid blank screen
       const rawUser = localStorage.getItem('user') || sessionStorage.getItem('user');
       let cachedUser = null;
       if (rawUser && rawUser !== 'undefined' && rawUser !== 'null') {
@@ -78,14 +77,12 @@ const AdminPortal = () => {
       const userRoleId = Number(meData.role_id || 3);
       let userCommunityId = meData.community_id ? Number(meData.community_id) : null;
 
-      // Safe storage tracking check
       if (!userCommunityId) {
         if (cachedUser && cachedUser.community_id) {
           userCommunityId = Number(cachedUser.community_id);
         }
       }
 
-      // 🔥 CRITICAL HARD OVERRIDE BYPASS: Check chalne se PEHLE hi Board member ko linked id do
       if (!userCommunityId && userRoleId === 3) {
         console.log("🛠️ Fixing Board Member metadata stream: Setting forced fallback ID 7");
         userCommunityId = 7; 
@@ -126,8 +123,6 @@ const AdminPortal = () => {
 
       setCommunities(communitiesData || []);
 
-      // 🔥 ROUTE GUARD FOR UNASSIGNED RESIDENTS ONLY
-      // Ab board member yahan nahi fasega kyunki uski ID upar 7 set ho chuki hai
       if ((userRoleId === 4 || userRoleId === 3) && (!userCommunityId || userCommunityId === 0)) {
         console.log(`⚠️ Redirecting unassigned profile to wizard layout...`);
         setLoading(false);
@@ -199,7 +194,6 @@ const AdminPortal = () => {
         return updated;
       });
 
-      // Clear any session-specific settings for the previous community
       sessionStorage.removeItem(`vendors_unlocked_${comm.community_id}`);
       localStorage.removeItem(`vendors_unlocked_${comm.community_id}`);
       
@@ -254,10 +248,8 @@ const AdminPortal = () => {
     const nextState = !isNotifOpen;
     setIsNotifOpen(nextState);
     if (nextState) {
-      // Clear the bell badge immediately
       setBadgeClearedTimestamp(Date.now());
     } else {
-      // Closing the panel. Now mark everything as read in localStorage!
       const threshold = getReadThresholdTimestamp();
       localStorage.setItem('last_read_notifications', String(threshold));
       setLastReadTimestamp(threshold);

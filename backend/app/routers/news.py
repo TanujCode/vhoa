@@ -17,9 +17,7 @@ from app.services.audit_service import log_action
 router = APIRouter(tags=["News & FAQ"])
 
 
-# ══════════════════════════════════════════════
 #  NEWS ENDPOINTS
-# ══════════════════════════════════════════════
 
 @router.post("/news", response_model=NewsOut, status_code=201)
 def create(
@@ -120,9 +118,7 @@ def delete(
     return {"message": "News deleted."}
 
 
-# ══════════════════════════════════════════════
 #  FAQ ENDPOINTS
-# ══════════════════════════════════════════════
 
 @router.post("/faq", response_model=FAQOut, status_code=201)
 def create_faq_endpoint(
@@ -200,9 +196,7 @@ def delete_faq_endpoint(
     return {"message": "FAQ deleted."}
 
 
-# ══════════════════════════════════════════════
 #  HELPER
-# ══════════════════════════════════════════════
 def _news_to_out(n) -> NewsOut:
     created_by_name = None
     if n.created_by:

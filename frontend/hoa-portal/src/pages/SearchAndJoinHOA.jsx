@@ -41,7 +41,6 @@ const SearchAndJoinHOA = () => {
                     return;
                 }
 
-                // Check active user details fresh from backend
                 const meRes = await API.get('/auth/me');
                 if (meRes.data && meRes.data.account_status === 'PENDING_APPROVAL') {
                     localStorage.setItem('user', JSON.stringify(meRes.data));
@@ -102,14 +101,12 @@ const SearchAndJoinHOA = () => {
         
         alert("✅ " + (res.data.message || "Request submitted successfully!"));
         
-        // 🔥 FIXED THE TYPO HERE:
         setPassCode('');
         setUnitNo('');
         setIdProof(null);
-        setAddressProof(null); // <-- Yeh pehle addressProof(null) tha, ab setAddressProof kar diya
+        setAddressProof(null);
         setSelectedHOA(null);
 
-        // Ab user perfectly automatic Is screen par navigate kar jayega
         navigate('/waiting-approval');
 
     } catch (err) {

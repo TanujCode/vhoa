@@ -3,7 +3,6 @@ import { AlertTriangle, Plus, RefreshCw, ChevronDown, X, Search, ArrowUpRight, D
 import API, { getBaseUrl } from '../services/api';
 import { onlyDecimalKeyPress, onlyDigitsKeyPress } from '../utils/fieldValidators';
 
-// ── Status Badge ──────────────────────────────
 const StatusBadge = ({ status }) => {
   const map = {
     OPEN:        'bg-red-500/20 text-red-400',
@@ -21,7 +20,6 @@ const StatusBadge = ({ status }) => {
   );
 };
 
-// ── Submit Violation Modal ────────────────────
 const SubmitModal = ({ communityId, onClose, onSuccess }) => {
   const [types, setTypes]     = useState([]);
   const [residents, setResidents] = useState([]);
@@ -284,7 +282,6 @@ const SubmitModal = ({ communityId, onClose, onSuccess }) => {
   );
 };
 
-// ── Create Violation Type Modal ───────────────
 const CreateTypeModal = ({ communityId, onClose, onSuccess }) => {
   const [formData, setFormData] = useState({ name: '', description: '', amount: 0, late_charge: 0, due_days: 30 });
   const [errors, setErrors] = useState({});
@@ -432,7 +429,6 @@ const CreateTypeModal = ({ communityId, onClose, onSuccess }) => {
   );
 };
 
-// ── Dispute Submission Modal ──────────────────
 const DisputeModal = ({ communityId, violationId, onClose, onSuccess }) => {
   const [description, setDescription] = useState('');
   const [file, setFile] = useState(null);
@@ -509,7 +505,6 @@ const DisputeModal = ({ communityId, violationId, onClose, onSuccess }) => {
   );
 };
 
-// ── Dispute Resolution Modal ──────────────────
 const ResolveDisputeModal = ({ violationId, statuses, onClose, onSuccess }) => {
   const [resolution, setResolution] = useState('');
   const [statusId, setStatusId] = useState('');
@@ -584,7 +579,6 @@ const ResolveDisputeModal = ({ violationId, statuses, onClose, onSuccess }) => {
   );
 };
 
-// ── Violation Detail Modal ────────────────────
 const ViolationDetailModal = ({ violation, isResident, statuses, onClose, onDispute, onResolve, onStatusChange, onPay }) => {
   const [selectedStatusId, setSelectedStatusId] = useState(violation.violation_status_id || '');
   const [updatingStatus, setUpdatingStatus] = useState(false);
@@ -805,7 +799,6 @@ const ViolationDetailModal = ({ violation, isResident, statuses, onClose, onDisp
   );
 };
 
-// ── Main Violations Page ──────────────────────
 const Violations = ({ community, user, setActivePage, setPaymentState }) => {
   const [violations, setViolations] = useState([]);
   const [loading, setLoading]       = useState(true);
@@ -823,7 +816,6 @@ const Violations = ({ community, user, setActivePage, setPaymentState }) => {
   const [resolveViolationId, setResolveViolationId] = useState(null);
   const [allStatuses, setAllStatuses] = useState([]);
 
-  // Role Check
   const role = user?.role_name || user?.role?.role_name || user?.role || '';
   const isResident = role.toLowerCase() === 'resident';
 
@@ -850,7 +842,6 @@ const Violations = ({ community, user, setActivePage, setPaymentState }) => {
 
 
 
-      // Update selected violation to get fresh changes inside the open detail view
       if (selectedViolation) {
         const fresh = res.data.find(item => item.violation_id === selectedViolation.violation_id);
         if (fresh) {
@@ -927,7 +918,6 @@ const Violations = ({ community, user, setActivePage, setPaymentState }) => {
   };
 
   const filteredViolations = violations.filter(v => {
-    // If viewing as resident, only show violations belonging to the current user
     if (isResident && v.client_id !== user?.user_id) {
       return false;
     }

@@ -60,14 +60,11 @@ def create_payment(db: Session, data: PaymentCreate, user_id: int, community_id:
     elif data.reason == "VIOLATION" and data.reference_id:
         violation = db.query(Violation).filter(Violation.violation_id == data.reference_id).first()
         if violation:
-            # Query the violation status for PAID
             paid_status = db.query(ViolationStatus).filter(ViolationStatus.violation_status == "PAID").first()
             if paid_status:
                 violation.violation_status_id = paid_status.violation_status_id
             
-            # Check if dynamic late fee should be applied and written back
             if community.late_fee_enabled and violation.violation_due_date:
-                # If payment date (today) is past due date, record the late fee
                 today = datetime.now().date()
                 if today > violation.violation_due_date and violation.late_charge_applied == 0:
                     violation.late_charge_applied = community.late_fee_amount
@@ -80,14 +77,12 @@ def create_payment(db: Session, data: PaymentCreate, user_id: int, community_id:
             from app.models.service_request import ServiceRequest, ServiceRequestStatus
             req = db.query(ServiceRequest).filter(ServiceRequest.request_id == assignment.request_id).first()
             if data.escrow_flag:
-                # Resident paying the HOA
                 assignment.status = "APPROVED"
                 if req:
                     approved_status = db.query(ServiceRequestStatus).filter(ServiceRequestStatus.status_name == "APPROVED").first()
                     if approved_status:
                         req.status_id = approved_status.status_id
             else:
-                # HOA Board paying the Vendor
                 assignment.status = "COMPLETED"
                 assignment.completed_date = datetime.now(timezone.utc)
                 if req:
@@ -178,7 +173,6 @@ def get_dues(db: Session, user_id: int, community_id: int) -> list[OutstandingDu
     today = datetime.now().date()
     
     # 1. Monthly HOA Fee (Standard fixed fee of $150.00 if unpaid in current month)
-    # Check if user has already paid HOA_FEE this month
     current_year = datetime.now().year
     current_month = datetime.now().month
     
@@ -382,8 +376,6 @@ def send_due_payment_reminders(db: Session) -> dict:
                 errors.append(f"Violation {violation.violation_id} Error: {str(e)}")
 
     # 3. Monthly HOA Fee reminders
-    # Standard monthly HOA fee is due on the 10th of every month.
-    # Check if today is 10 days before (last day of prev month or 1st/2nd/3rd depending on month length)
     # Let's say: 14 days before 10th is 26th or 27th. 7 days before is 3rd. 1 day before is 9th.
     # To keep it extremely simple: if due date is 10th of this month:
     # 7 days left -> today is 3rd.
@@ -405,7 +397,6 @@ def send_due_payment_reminders(db: Session) -> dict:
                 ~Role.role_name.in_(["super_admin", "sales_admin", "vendor"])
             ).all()
             for u in users:
-                # Check if already paid
                 paid = db.query(Payment).filter(
                     Payment.user_id == u.user_id,
                     Payment.community_id == comm.community_id,

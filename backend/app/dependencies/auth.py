@@ -11,7 +11,6 @@ bearer_scheme = HTTPBearer()
 
 
 
-#  STEP 1 — Basic token check
 
 def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
@@ -51,8 +50,6 @@ def get_current_user(
     return user
 
 
-# ══════════════════════════════════════════════
-#  STEP 2 — Email verify check
 
 def get_verified_user(
     credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
@@ -88,10 +85,8 @@ def create(user = Depends(get_verified_user)):
             detail="The token may be invalid or expired.",
         )
 
-    # ── Email verify check TOKEN mein ─────────
     email_verified = True
 
-    # ── DB se user ─────────────────────────
     user_id = int(payload.get("sub"))
     user    = db.query(User).filter(User.user_id == user_id).first()
 
@@ -105,7 +100,6 @@ def create(user = Depends(get_verified_user)):
     return user
 
 
-#  STEP 3 — Phone verify check
 def get_phone_verified_user(
     current_user: User = Depends(get_verified_user),
 ) -> User:
@@ -118,8 +112,6 @@ def get_phone_verified_user(
     return current_user
 
 
-# ══════════════════════════════════════════════
-#  ROLE CHECK — verified user ke liye
 def require_role(*allowed_roles: str):
     """
     Email verified + specific role check।
@@ -140,7 +132,6 @@ def require_role(*allowed_roles: str):
     return _check
 
 
-# ══════════════════════════════════════════════
 #  SHORTCUTS
 def admin_only(user: User = Depends(get_verified_user)) -> User:
     if user.role.role_name != "super_admin":
@@ -154,8 +145,6 @@ def internal_users_only(user: User = Depends(get_verified_user)) -> User:
     return user
 
 
-# ══════════════════════════════════════════════
-#  COMMUNITY LEVEL ACCESS CHECK
 def check_community_access(user: User, community_id: int, db: Session):
     role_name = user.role.role_name if user.role else None
     if role_name in {"super_admin", "sales_admin"}:

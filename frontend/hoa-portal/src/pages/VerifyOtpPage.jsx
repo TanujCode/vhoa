@@ -20,7 +20,6 @@ const VerifyOtpPage = () => {
     }
   }, [emailFromState, navigate]);
 
-  // OTP Verify Karne ka Function
 const handleVerify = async (e) => {
   if (e) e.preventDefault();
   setLoading(true);
@@ -30,7 +29,7 @@ const handleVerify = async (e) => {
     const response = await API.post('/auth/otp/verify', {
       email_id: email,
       otp_code: otp,
-      otp_type: 'email_verify' // ✅ FIX: Match with backend template keys
+      otp_type: 'email_verify'
     });
 
     setSuccessMsg("Email Successfully Verified!");
@@ -43,13 +42,11 @@ const handleVerify = async (e) => {
   }
 };
 
-  // OTP Resend Karne ka Function
   const handleResendOtp = async () => {
   setLoading(true);
   setErrorMsg('');
   setSuccessMsg('');
   try {
-    // ✅ CORRECT ENDPOINT
     await API.post('/auth/otp/send', { 
       email_id: email,
       otp_type: 'email_verify' 

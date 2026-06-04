@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Plus, RefreshCw, X, Pin, ChevronLeft, ChevronRight } from 'lucide-react';
 import API from '../services/api';
 
-// ── Category Badge ────────────────────────────
 const CategoryBadge = ({ category }) => {
   const map = {
     GENERAL:     'bg-slate-100 text-slate-600 dark:bg-gray-500/20 dark:text-gray-400',
@@ -18,7 +17,6 @@ const CategoryBadge = ({ category }) => {
   );
 };
 
-// ── Add News Modal ────────────────────────────
 const NewsModal = ({ communityId, onClose, onSuccess }) => {
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({ title: '', content: '', category: 'GENERAL', is_pinned: false });
@@ -90,7 +88,6 @@ const NewsModal = ({ communityId, onClose, onSuccess }) => {
   );
 };
 
-// ── Add FAQ Modal ─────────────────────────────
 const FAQModal = ({ communityId, onClose, onSuccess }) => {
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({ question: '', answer: '', doc_url: '' });
@@ -144,7 +141,6 @@ const FAQModal = ({ communityId, onClose, onSuccess }) => {
   );
 };
 
-// ── Main Page ─────────────────────────────────
 const News = ({ community, user }) => {
   const [activeTab, setActiveTab]   = useState('news');
   const [news, setNews]             = useState([]);
@@ -236,7 +232,6 @@ const News = ({ community, user }) => {
         ))}
       </div>
 
-      {/* ── NEWS TAB ── */}
       {activeTab === 'news' && (
         <div>
           {/* Category filter */}
@@ -288,7 +283,6 @@ const News = ({ community, user }) => {
         </div>
       )}
 
-      {/* ── FAQ TAB ── */}
       {activeTab === 'faq' && (
         <div>
           <div className="flex justify-between items-center mb-4">
@@ -332,7 +326,6 @@ const News = ({ community, user }) => {
             </div>
           )}
 
-          {/* Pagination — max 10 per page */}
           {faqTotal.pages > 1 && (
             <div className="flex items-center justify-center gap-3 mt-6">
               <button onClick={() => setFaqPage(p => Math.max(1, p - 1))} disabled={faqPage === 1}

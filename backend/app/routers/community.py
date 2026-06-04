@@ -6,7 +6,6 @@ from sqlalchemy import text
 from app.database import get_db
 from app.dependencies.auth import get_current_user, require_role
 from app.models.user import User
-# 🔥 Your models imports are linked here
 from app.models.community import Community, CommunityJoinRequest 
 from app.schemas.community import (
     CommunityCreate, CommunityOut, CommunityUpdate,
@@ -20,9 +19,8 @@ from app.utils.file_service import save_document
 
 router = APIRouter(prefix="/community", tags=["Community"])
 
-# Input schema action approve/reject ke liye
 class RequestActionInput(BaseModel):
-    action: str  # "APPROVE" ya "REJECT"
+    action: str
 
 
 #  POST /api/community
@@ -51,7 +49,6 @@ def get_all(
     if role_name in {"super_admin", "sales_admin"}:
         communities = get_all_communities(db, skip, limit)
     else:
-        # Fetch communities associated with the user in user_communities junction table
         from app.models.user import UserCommunity
         assoc_communities = (
             db.query(Community)
@@ -67,7 +64,6 @@ def get_all(
             comm = db.query(Community).filter(Community.community_id == current_user.community_id, Community.active_status == True).first()
             assoc_communities = [comm] if comm else []
             
-        # If the user has no community linked at all, allow them to see all active communities to search and join (for residents/unassigned)
         if not assoc_communities and not current_user.community_id:
             assoc_communities = db.query(Community).filter(Community.active_status == True).offset(skip).limit(limit).all()
             
@@ -160,7 +156,6 @@ def get_stats(
     return CommunityStatsOut(**stats)
 
 
-# 🔥 Pending Join Requests (For Board Member)
 @router.get("/{community_id}/join-requests/pending")
 def get_pending_requests(
     community_id: int,
@@ -205,7 +200,7 @@ def get_pending_requests(
 def process_join_request(
     community_id: int,
     request_id: int,
-    body: RequestActionInput,          # ← this is correct
+    body: RequestActionInput,
     db: Session = Depends(get_db),
     current_user: User = Depends(require_role("super_admin", "property_manager", "board_member")),
 ):
@@ -302,12 +297,12 @@ async def request_to_join(
             "message": "Join request submitted successfully. The Board will review your documents.",
             "request_id": request.request_id
         }
-    except Exception as e:                     # ← This is important
-        print("=== JOIN REQUEST ERROR ===")     # ← Will be shown in console
+    except Exception as e:
+        print("=== JOIN REQUEST ERROR ===")
         print("Error Type:", type(e).__name__)
         print("Error Message:", str(e))
         import traceback
-        traceback.print_exc()                   # ← Will print full traceback
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
     
 

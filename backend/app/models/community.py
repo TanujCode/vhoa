@@ -8,10 +8,7 @@ from sqlalchemy.sql import func
 from app.database import Base
 
 
-# ══════════════════════════════════════════════
 #  COUNTRIES TABLE
-#  Country list — USA, India etc.
-# ══════════════════════════════════════════════
 class Country(Base):
     __tablename__ = "countries"
 
@@ -47,7 +44,7 @@ class Address(Base):
     city          = Column(String(100), nullable=False)
     state_id      = Column(Integer, ForeignKey("states.state_id"), nullable=True)
     country_id    = Column(Integer, ForeignKey("countries.country_id"), nullable=True)
-    zip_code      = Column(String(20), nullable=True)     # String — "90210-1234"
+    zip_code      = Column(String(20), nullable=True)
     active_status = Column(Boolean, default=True)
 
     state         = relationship("State", back_populates="addresses")
@@ -64,12 +61,9 @@ class Community(Base):
     community_code = Column(String(50), unique=True, nullable=False)
    # Unique short codes such as "Sah001", "Gav002"
 
-    # ── Address 
     address_id     = Column(Integer, ForeignKey("addresses.address_id"), nullable=True)
     address        = relationship("Address", back_populates="communities")
 
-    # ── Board Members (President, Secretary, Treasurer) ──
-    # Invite flow: email fill → status PENDING → accepted → user linked
     president_email_id      = Column(String(255), nullable=True)
     president_invite_status = Column(String(20), default="PENDING")
     # "PENDING" | "ACCEPTED" | "REJECTED"
@@ -83,50 +77,41 @@ class Community(Base):
     treasurer_invite_status = Column(String(20), default="PENDING")
     treasurer_user_id       = Column(Integer, ForeignKey("users.user_id"), nullable=True)
 
-    # ── Admin (Property Manager) 
     admin_email_id      = Column(String(255), nullable=True)
     admin_invite_status = Column(String(20), default="PENDING")
     admin_user_id       = Column(Integer, ForeignKey("users.user_id"), nullable=True)
 
-    # ── Plan / Subscription 
     plan_id          = Column(Integer, nullable=True)
-    # From the Foreign key Plans Table — Will add later.
     plan_expire_date = Column(Date, nullable=True)
     license_status   = Column(String(20), default="ACTIVE")
     # "ACTIVE" | "EXPIRED" | "SUSPENDED"
 
-    # ── Community Info ────────────────────────
     community_size = Column(Integer, nullable=True)   # total units/homes
     total_owners   = Column(Integer, nullable=True)   # total registered owners
     contact_person = Column(String(255), nullable=True)
     time_zone      = Column(String(50), default="America/New_York")
     # USA timezones: America/New_York, America/Chicago, America/Denver, America/Los_Angeles
 
-    # ── Community Settings ────────────────────
     amenity_fee_enabled = Column(Boolean, default=False)
     violation_fee_enabled = Column(Boolean, default=False)
     late_fee_enabled = Column(Boolean, default=False)
     late_fee_days = Column(Integer, default=7)
     late_fee_amount = Column(Double, default=25.0)
 
-    # ── HOA Escrow Bank Details ───────────────
     bank_name = Column(String(255), nullable=True)
     bank_account_no = Column(String(255), nullable=True)
     bank_routing_no = Column(String(255), nullable=True)
     bank_account_name = Column(String(255), nullable=True)
 
-    # ── Contract ─────────────────────────────
     contract_id    = Column(Integer, nullable=True)
     visible_tabs   = Column(Text, nullable=True)
 
-    # ── Status & Audit ────────────────────────
     active_status  = Column(Boolean, default=True)
     created_by_id  = Column(Integer, ForeignKey("users.user_id"), nullable=True)
     created_date   = Column(DateTime(timezone=True), server_default=func.now())
     modified_by_id = Column(Integer, ForeignKey("users.user_id"), nullable=True)
     modified_date  = Column(DateTime(timezone=True), onupdate=func.now())
 
-    # ── Relationships ─────────────────────────
     president  = relationship("User", foreign_keys=[president_user_id])
     secretary  = relationship("User", foreign_keys=[secretary_user_id])
     treasurer  = relationship("User", foreign_keys=[treasurer_user_id])

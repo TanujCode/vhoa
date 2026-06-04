@@ -2,9 +2,7 @@ from datetime import datetime
 from pydantic import BaseModel, field_validator
 
 
-# ══════════════════════════════════════════════
 #  MEETING SCHEMAS
-# ══════════════════════════════════════════════
 class MeetingCreate(BaseModel):
     community_id: int
     title:        str
@@ -41,9 +39,7 @@ class MeetingOut(BaseModel):
     model_config = {"from_attributes": True}
 
 
-# ══════════════════════════════════════════════
 #  MEETING RSVP SCHEMAS
-# ══════════════════════════════════════════════
 class MeetingRSVPCreate(BaseModel):
     status: str
 
@@ -67,9 +63,7 @@ class MeetingRSVPOut(BaseModel):
     model_config = {"from_attributes": True}
 
 
-# ══════════════════════════════════════════════
 #  SURVEY SCHEMAS
-# ══════════════════════════════════════════════
 class SurveyOptionOut(BaseModel):
     option_id:   int
     option_text: str

@@ -88,7 +88,6 @@ const AuditHistory = ({ community, user }) => {
 
   const modules = ['', 'auth', 'community', 'violation', 'service_request', 'amenity', 'vendor', 'user', 'news'];
 
-  // Resident → sirf apna log
   if (!isAdmin) {
     return (
       <div className="text-slate-900 dark:text-white">
@@ -155,7 +154,6 @@ const AuditHistory = ({ community, user }) => {
   );
 };
 
-// ── Audit Table Component ─────────────────────
 const AuditTable = ({ logs, loading, filteredLogs, getActionColor, getModuleIcon, formatDate, isAdmin }) => (
   <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl overflow-hidden text-slate-900 dark:text-white">
     <div className="p-5 border-b border-slate-200 dark:border-white/10 flex justify-between items-center">

@@ -13,9 +13,6 @@ from app.schemas.violation import (
 )
 from app.models.community import Community
 
-# ══════════════════════════════════════════════
-#  SEED — Default Statuses
-# ══════════════════════════════════════════════
 def seed_violation_statuses(db: Session):
     statuses = ["OPEN", "IN_PROGRESS", "RESOLVED", "CLOSED", "PAID", "CANCELLED", "APPEALED"]
     for s in statuses:
@@ -28,7 +25,6 @@ def seed_violation_statuses(db: Session):
 
 
 #  NEW: DEFAULT VIOLATION TYPES FOR ALL COMMUNITIES
-# ══════════════════════════════════════════════
 def seed_default_violation_types_for_all_communities(db: Session):
     """Will create default violation types for each community"""
     communities = db.query(Community).all()
@@ -69,9 +65,6 @@ def seed_default_violation_types_for_all_communities(db: Session):
     db.commit()
     print(f"Default violation types seeded for {len(communities)} communities ({seeded_count} new types added).")
 
-# ══════════════════════════════════════════════
-#  VIOLATION TYPE — CRUD
-# ══════════════════════════════════════════════
 def create_violation_type(data: ViolationTypeCreate, created_by_id: int, db: Session) -> ViolationType:
     vtype = ViolationType(
         name          = data.name.strip(),
@@ -119,9 +112,6 @@ def update_violation_type(
     return vtype
 
 
-# ══════════════════════════════════════════════
-#  VIOLATION — CREATE
-# ══════════════════════════════════════════════
 def create_violation(data: ViolationCreate, created_by_id: int, db: Session) -> Violation:
     vtype = db.query(ViolationType).filter(
         ViolationType.violation_type_id == data.violation_type_id,
@@ -137,7 +127,6 @@ def create_violation(data: ViolationCreate, created_by_id: int, db: Session) -> 
     if not client:
         raise ValueError("Resident Not Found.")
 
-    # Check if resident belongs to the community
     has_community_relation = False
     if client.community_id == data.community_id:
         has_community_relation = True
@@ -165,7 +154,6 @@ def create_violation(data: ViolationCreate, created_by_id: int, db: Session) -> 
     due_days = vtype.due_days or 30
     violation_due_date = data.violation_date + timedelta(days=due_days)
 
-    # Dispute deadline — 30 days
     dispute_deadline = data.violation_date + timedelta(days=30)
 
     violation = Violation(
@@ -190,9 +178,6 @@ def create_violation(data: ViolationCreate, created_by_id: int, db: Session) -> 
     return violation
 
 
-# ══════════════════════════════════════════════
-#  VIOLATION — GET ALL
-# ══════════════════════════════════════════════
 def get_violations(
     community_id: int, db: Session,
     client_id: int | None = None,
@@ -212,9 +197,6 @@ def get_violations(
     return query.order_by(Violation.created_date.desc()).offset(skip).limit(limit).all()
 
 
-# ══════════════════════════════════════════════
-#  VIOLATION — GET BY ID
-# ══════════════════════════════════════════════
 def get_violation_by_id(violation_id: int, db: Session) -> Violation:
     v = db.query(Violation).filter(
         Violation.violation_id  == violation_id,
@@ -225,9 +207,6 @@ def get_violation_by_id(violation_id: int, db: Session) -> Violation:
     return v
 
 
-# ══════════════════════════════════════════════
-#  VIOLATION — STATUS UPDATE
-# ══════════════════════════════════════════════
 def update_violation_status(
     violation_id: int, data: ViolationStatusUpdate,
     modified_by_id: int, db: Session,
@@ -240,7 +219,6 @@ def update_violation_status(
     if not new_status:
         raise ValueError("Status does not exist.")
 
-    # Late charge check — if due date is passed and paying now
     if new_status.violation_status == "PAID":
         today = date.today()
         if violation.violation_due_date and today > violation.violation_due_date:
@@ -257,9 +235,6 @@ def update_violation_status(
     return violation
 
 
-# ══════════════════════════════════════════════
-#  VIOLATION — DISPUTE (Raised by member)
-# ══════════════════════════════════════════════
 def create_dispute(
     violation_id: int, data: DisputeCreate,
     user_id: int, db: Session,
@@ -274,7 +249,6 @@ Once a dispute has been resolved, it cannot be raised again.
     if violation.client_id != user_id:
         raise ValueError("You can only dispute your own violations.")
 
-    # Already disputed check
     if violation.is_disputed and violation.dispute_resolved:
         raise ValueError(
             "This violation has already been resolved."
@@ -284,7 +258,6 @@ Once a dispute has been resolved, it cannot be raised again.
     if violation.is_disputed and not violation.dispute_resolved:
         raise ValueError("This violation is already under dispute. The Board's response is awaited.")
 
-    # 30 days deadline check
     today = date.today()
     if violation.dispute_deadline and today > violation.dispute_deadline:
         raise ValueError(
@@ -309,9 +282,6 @@ Once a dispute has been resolved, it cannot be raised again.
     return violation
 
 
-# ══════════════════════════════════════════════
-#  VIOLATION — DISPUTE RESOLVE 
-# ══════════════════════════════════════════════
 def resolve_dispute(
     violation_id: int, data: DisputeResolve,
     resolved_by_id: int, db: Session,
@@ -330,7 +300,6 @@ def resolve_dispute(
     violation.dispute_resolved_by   = resolved_by_id
     violation.dispute_resolution    = data.dispute_resolution
 
-    # Status update agar diya
     if data.new_status_id:
         new_status = db.query(ViolationStatus).filter(
             ViolationStatus.violation_status_id == data.new_status_id
@@ -344,9 +313,6 @@ def resolve_dispute(
     return violation
 
 
-# ══════════════════════════════════════════════
-#  VIOLATION — DELETE
-# ══════════════════════════════════════════════
 def delete_violation(violation_id: int, modified_by_id: int, db: Session) -> bool:
     violation = get_violation_by_id(violation_id, db)
     violation.active_status  = False
@@ -355,9 +321,6 @@ def delete_violation(violation_id: int, modified_by_id: int, db: Session) -> boo
     return True
 
 
-# ══════════════════════════════════════════════
-#  DOCUMENT — ADD
-# ══════════════════════════════════════════════
 def add_violation_document(
     violation_id: int, community_id: int,
     doc_url: str, description: str | None,

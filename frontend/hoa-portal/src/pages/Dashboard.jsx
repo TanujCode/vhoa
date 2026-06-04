@@ -8,7 +8,6 @@ import {
 } from 'lucide-react';
 import API from "../services/api";
 
-// ── Stat Card ─────────────────────────────────
 const StatCard = ({ label, value, icon: Icon, color, sub, subColor, onClick }) => (
   <div 
     onClick={onClick}
@@ -27,7 +26,6 @@ const StatCard = ({ label, value, icon: Icon, color, sub, subColor, onClick }) =
   </div>
 );
 
-// ── Activity Item ─────────────────────────────
 const ActivityItem = ({ icon: Icon, color, title, time }) => (
   <div className="flex items-center gap-3 py-3 border-b border-slate-100 dark:border-white/5 last:border-0">
     <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${color}`}>
@@ -40,7 +38,6 @@ const ActivityItem = ({ icon: Icon, color, title, time }) => (
   </div>
 );
 
-// ── Main Dashboard ────────────────────────────
 const Dashboard = ({ community, user, setActivePage }) => {
   const [stats, setStats]           = useState(null);
   const [violations, setViolations] = useState([]);
@@ -118,7 +115,6 @@ const Dashboard = ({ community, user, setActivePage }) => {
 
   return (
     <div>
-      {/* ── Page Header ─────────────────────── */}
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-8">
         <div>
           <h1 className="text-3xl font-semibold">Dashboard</h1>
@@ -147,7 +143,6 @@ const Dashboard = ({ community, user, setActivePage }) => {
         </div>
       </div>
 
-      {/* ── Community Banner ─────────────────── */}
       <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 flex items-center gap-6 mb-8 transition-colors duration-200 shadow-sm">
         <div className="w-16 h-16 bg-teal-600 rounded-2xl flex items-center justify-center flex-shrink-0">
           <Building2 size={30} className="text-white" />
@@ -205,7 +200,6 @@ const Dashboard = ({ community, user, setActivePage }) => {
         </div>
       </div>
 
-      {/* ── Stats Grid ───────────────────────── */}
       {loading && !stats ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
           {[...Array(4)].map((_, i) => (
@@ -256,7 +250,6 @@ const Dashboard = ({ community, user, setActivePage }) => {
         </div>
       )}
 
-      {/* ── Recent Activity ───────────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
 
         {/* Recent Violations */}

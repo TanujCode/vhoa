@@ -14,7 +14,6 @@ def _send_email_thread(to_email: str, subject: str, html_body: str):
 
         msg.attach(MIMEText(html_body, "html"))
 
-        # Added a 10 second timeout to prevent the thread from hanging indefinitely
         with smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=10) as server:
             server.login(settings.MAIL_USERNAME, settings.MAIL_PASSWORD)
             server.sendmail(settings.MAIL_FROM, to_email, msg.as_string())
@@ -25,15 +24,12 @@ def _send_email_thread(to_email: str, subject: str, html_body: str):
 
 
 def send_email(to_email: str, subject: str, html_body: str) -> bool:
-    # Run SMTP transport asynchronously in a background thread so it doesn't block the request lifecycle
     thread = threading.Thread(target=_send_email_thread, args=(to_email, subject, html_body))
     thread.start()
     return True
 
 
-# ══════════════════════════════════════════════
 #  EMAIL TEMPLATES
-# ══════════════════════════════════════════════
 
 def send_otp_email(to_email: str, otp_code: str, otp_type: str) -> bool:
     """Send OTP email"""
@@ -114,7 +110,7 @@ def send_welcome_email(to_email: str, full_name: str) -> bool:
         </div>
       </div>
       <div style="background: #162535; padding: 20px; text-align: center;">
-        <p style="margin: 0; color: #6B7280; font-size: 12px;">© 2026 VHOAS</p>
+        <p style="margin: 0; color:
       </div>
     </div>
     """
@@ -157,7 +153,7 @@ def send_violation_email(
         </p>
       </div>
       <div style="background: #162535; padding: 20px; text-align: center;">
-        <p style="margin: 0; color: #6B7280; font-size: 12px;">© 2026 VHOAS</p>
+        <p style="margin: 0; color:
       </div>
     </div>
     """
@@ -225,7 +221,7 @@ def send_booking_created_email(
       </div>
 
       <div style="background: #162535; padding: 20px; text-align: center; border-top: 1px solid rgba(255,255,255,0.1);">
-        <p style="margin: 0; color: #6B7280; font-size: 12px;">© 2026 VHOAS</p>
+        <p style="margin: 0; color:
       </div>
     </div>
     """
@@ -278,7 +274,7 @@ def send_payment_received_email(
       </div>
 
       <div style="background: #162535; padding: 20px; text-align: center; border-top: 1px solid rgba(255,255,255,0.1);">
-        <p style="margin: 0; color: #6B7280; font-size: 12px;">© 2026 VHOAS</p>
+        <p style="margin: 0; color:
       </div>
     </div>
     """
@@ -327,7 +323,7 @@ def send_general_payment_receipt_email(
       </div>
 
       <div style="background: #162535; padding: 20px; text-align: center; border-top: 1px solid rgba(255,255,255,0.1);">
-        <p style="margin: 0; color: #6B7280; font-size: 12px;">© 2026 VHOAS</p>
+        <p style="margin: 0; color:
       </div>
     </div>
     """
@@ -375,7 +371,7 @@ def send_due_payment_reminder_email(
       </div>
 
       <div style="background: #162535; padding: 20px; text-align: center; border-top: 1px solid rgba(255,255,255,0.1);">
-        <p style="margin: 0; color: #6B7280; font-size: 12px;">© 2026 VHOAS</p>
+        <p style="margin: 0; color:
       </div>
     </div>
     """

@@ -5,7 +5,6 @@ import {
 } from 'lucide-react';
 import { getContracts } from '../services/contractService';
 
-// ── Sales Stat Card ─────────────────────────────────
 const SalesStatCard = ({ label, value, icon: Icon, color, sub, prefix = "" }) => (
   <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 transition-all duration-300 hover:border-slate-200 dark:hover:border-white/20 hover:-translate-y-1 shadow-sm dark:shadow-none">
     <div className="flex items-center justify-between mb-3">

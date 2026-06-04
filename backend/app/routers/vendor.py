@@ -33,11 +33,10 @@ def create(
     vendor = create_vendor(body, current_user.user_id, db)
     
     # --- AUTO GENERATE CODE START ---
-    # Jaise hi vendor create ho, uska pehla code auto-generate kar do
     try:
         generate_vendor_access_code(vendor.vendor_id, db)
     except Exception as e:
-        print(f"Auto-gen failed: {e}") # Sirf log karo taaki vendor creation na ruke
+        print(f"Auto-gen failed: {e}")
     # --- AUTO GENERATE CODE END ---
 
     log_action(db, "CREATE_VENDOR", "vendor",
@@ -179,7 +178,7 @@ def gen_contract_code(
 
 @router.post("/verify-access-code", response_model=list[VendorOut])
 def verify_code(
-    access_code: str, # Query param that was fixed on the frontend
+    access_code: str,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_verified_user),
 ):
@@ -199,8 +198,6 @@ def verify_code(
         vendors = verify_vendor_access_code(access_code, db)
         
         # 2. Note: Inside verify_vendor_access_code function, 
-        # 'access_code_used' must be set to True in the database.
-        # If not happening there, check db.commit() here.
         
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))

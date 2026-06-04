@@ -30,9 +30,6 @@ def get_eastern_time_now() -> datetime:
     offset = -4 if dst_start <= now_utc < dst_end else -5
     return now_utc.astimezone(timezone(timedelta(hours=offset)))
 
-# ══════════════════════════════════════════════
-#  SEED — Default Statuses (Global)
-# ══════════════════════════════════════════════
 def seed_service_request_statuses(db: Session):
     statuses = [
         "OPEN", "APPROVED", "IN_PROGRESS",
@@ -46,9 +43,6 @@ def seed_service_request_statuses(db: Session):
     print("✅ Service Request statuses seeded.")
 
 
-# ══════════════════════════════════════════════
-#  SEED — Default Types for EVERY Community
-# ══════════════════════════════════════════════
 def seed_default_service_types_for_all_communities(db: Session):
     existing_types = db.query(ServiceRequestType).all()
     existing_lookup = {(t.community_id, t.type_name) for t in existing_types}
@@ -73,9 +67,7 @@ def seed_default_service_types_for_all_communities(db: Session):
     print(f"✅ Default service types seeded for {len(communities)} communities.")
 
 
-# ══════════════════════════════════════════════
 #  TYPE CRUD
-# ══════════════════════════════════════════════
 def create_type(data: ServiceRequestTypeCreate, db: Session) -> ServiceRequestType:
     stype = ServiceRequestType(
         type_name    = data.type_name.strip(),
@@ -96,9 +88,6 @@ def get_types(community_id: int, db: Session) -> list[ServiceRequestType]:
     ).all()
 
 
-# ══════════════════════════════════════════════
-#  SERVICE REQUEST — CREATE
-# ══════════════════════════════════════════════
 def create_service_request(
     data: ServiceRequestCreate,
     submitted_by_id: int,
@@ -133,9 +122,6 @@ def create_service_request(
     return request
 
 
-# ══════════════════════════════════════════════
-#  SERVICE REQUEST — GET ALL
-# ══════════════════════════════════════════════
 def get_requests(
     community_id: int,
     db: Session,
@@ -157,9 +143,6 @@ def get_requests(
     return query.order_by(ServiceRequest.created_date.desc()).offset(skip).limit(limit).all()
 
 
-# ══════════════════════════════════════════════
-#  SERVICE REQUEST — GET BY ID
-# ══════════════════════════════════════════════
 def get_request_by_id(request_id: int, db: Session) -> ServiceRequest:
     r = db.query(ServiceRequest).filter(
         ServiceRequest.request_id  == request_id,
@@ -170,9 +153,7 @@ def get_request_by_id(request_id: int, db: Session) -> ServiceRequest:
     return r
 
 
-# ══════════════════════════════════════════════
 #  STATUS UPDATE
-# ══════════════════════════════════════════════
 def update_status(
     request_id: int,
     data: StatusUpdateRequest,
@@ -193,7 +174,6 @@ def update_status(
 
     # 1. Enforce Role-based Transition Rules
     if user_role == "resident":
-        # Resident must own the request
         if request.submitted_by_id != user_id:
             raise ValueError("You can only modify your own service requests.")
         
@@ -242,7 +222,6 @@ def update_status(
             changes.append(f"vendor_id: '{request.vendor_id}' -> '{data.vendor_id}'")
             request.vendor_id = data.vendor_id
         
-        # Check and create VendorAssignment
         existing_assignment = db.query(VendorAssignment).filter(
             VendorAssignment.request_id == request_id,
             VendorAssignment.vendor_id == data.vendor_id
@@ -313,7 +292,6 @@ def update_service_request(
     
     # 1. Access Control
     if user_role == "resident":
-        # Resident must own the request
         if request.submitted_by_id != user_id:
             raise ValueError("You can only modify your own service requests.")
             
@@ -409,9 +387,6 @@ def update_service_request(
     return request
 
 
-# ══════════════════════════════════════════════
-#  NOTE — ADD
-# ══════════════════════════════════════════════
 def add_note(
     request_id: int,
     data: ServiceRequestNoteCreate,
@@ -431,9 +406,6 @@ def add_note(
     return note
 
 
-# ══════════════════════════════════════════════
-#  DELETE — soft delete
-# ══════════════════════════════════════════════
 def delete_request(request_id: int, user_id: int, db: Session) -> bool:
     request = get_request_by_id(request_id, db)
     request.active_status  = False
@@ -442,9 +414,7 @@ def delete_request(request_id: int, user_id: int, db: Session) -> bool:
     return True
 
 
-# ══════════════════════════════════════════════
 #  SEED DEFAULT TYPES FOR EVERY COMMUNITY
-# ══════════════════════════════════════════════
 def seed_default_service_types_for_all_communities(db: Session):
     existing_types = db.query(ServiceRequestType).all()
     existing_lookup = {(t.community_id, t.type_name) for t in existing_types}

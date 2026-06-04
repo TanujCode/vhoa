@@ -155,7 +155,6 @@ export default function ClientOnboarding() {
   };
 
   const fetchCaptcha = async () => {
-    // Instantly show a local math captcha — no delay!
     setCaptcha(generateLocalCaptcha());
     setValue('captcha_answer', '');
 

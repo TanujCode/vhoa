@@ -223,9 +223,7 @@ def delete(
     return {"message": f"Service Request {request_id} has been deleted."}
 
 
-# ══════════════════════════════════════════════
 #  HELPERS
-# ══════════════════════════════════════════════
 def _get_full_name(user) -> str | None:
     if not user:
         return None

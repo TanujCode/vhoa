@@ -13,7 +13,6 @@ import {
   deleteSurvey
 } from '../services/meetingSurveyService';
 
-// ── Schedule Meeting Modal ────────────────────────────
 const ScheduleMeetingModal = ({ communityId, onClose, onSuccess, meeting }) => {
   const [loading, setLoading] = useState(false);
 
@@ -142,7 +141,6 @@ const ScheduleMeetingModal = ({ communityId, onClose, onSuccess, meeting }) => {
   );
 };
 
-// ── Create Survey Modal ──────────────────────────────
 const CreateSurveyModal = ({ communityId, onClose, onSuccess, survey }) => {
   const [loading, setLoading] = useState(false);
 
@@ -313,7 +311,6 @@ const CreateSurveyModal = ({ communityId, onClose, onSuccess, survey }) => {
   );
 };
 
-// ── Main Page Component ──────────────────────────────
 const Meetings = ({ community, user }) => {
   const [activeTab, setActiveTab] = useState('meetings');
   const [meetings, setMeetings] = useState([]);
@@ -465,7 +462,6 @@ const Meetings = ({ community, user }) => {
           <p className="text-slate-500 dark:text-gray-400 font-mono text-sm">LOADING...</p>
         </div>
       ) : activeTab === 'meetings' ? (
-        /* ── MEETINGS LIST ── */
         meetings.length === 0 ? (
           <div className="text-center py-20 text-slate-500 dark:text-gray-400 bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl">
             <Calendar size={40} className="mx-auto mb-3 opacity-50 text-slate-400 dark:text-gray-500" />
@@ -577,7 +573,6 @@ const Meetings = ({ community, user }) => {
           </div>
         )
       ) : (
-        /* ── SURVEYS LIST ── */
         surveys.length === 0 ? (
           <div className="text-center py-20 text-slate-500 dark:text-gray-400 bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl">
             <Users size={40} className="mx-auto mb-3 opacity-50 text-slate-400 dark:text-gray-500" />

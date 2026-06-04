@@ -4,9 +4,7 @@ from sqlalchemy.sql import func
 from app.database import Base
 
 
-# ══════════════════════════════════════════════
 #  NEWS TABLE
-# ══════════════════════════════════════════════
 class News(Base):
     __tablename__ = "news"
 
@@ -17,7 +15,6 @@ class News(Base):
     category     = Column(String(50), default="GENERAL")
     # "GENERAL" | "MEETING" | "MAINTENANCE" | "EMERGENCY" | "EVENT"
     is_pinned    = Column(Boolean, default=False)
-    # Pinned news dashboard pe upar dikhti hai
     active_status = Column(Boolean, default=True)
 
     created_by_id  = Column(Integer, ForeignKey("users.user_id"), nullable=True)
@@ -29,9 +26,7 @@ class News(Base):
     created_by = relationship("User", foreign_keys=[created_by_id])
 
 
-# ══════════════════════════════════════════════
 #  FAQ TABLE
-# ══════════════════════════════════════════════
 class FAQ(Base):
     __tablename__ = "faqs"
 

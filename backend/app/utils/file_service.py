@@ -25,14 +25,12 @@ async def save_profile_picture(file: UploadFile, user_id: int) -> str:
 Returns: URL string which will be stored in DB
     """
 
-    # ── Type check ────────────────────────────────────────
     if file.content_type not in ALLOWED_TYPES:
         raise HTTPException(
             status_code=400,
             detail=f"Only image files allowed (JPEG, PNG, WebP). You uploaded: {file.content_type}"
         )
 
-    # ── Size check ────────────────────────────────────────
     contents = await file.read()
     if len(contents) > MAX_SIZE_BYTES:
         raise HTTPException(
@@ -40,19 +38,15 @@ Returns: URL string which will be stored in DB
             detail=f"File size {MAX_SIZE_MB}should not exceed the maximum limit.."
         )
 
-    # ── Create unique filename ─────────────────────────────
     # Format: profile_<user_id>_<random_uuid>.<extension>
     extension = file.filename.split(".")[-1].lower()
     filename = f"profile_{user_id}_{uuid.uuid4().hex}.{extension}"
     filepath = os.path.join(UPLOAD_DIR, filename)
 
 
-    # ── Save file ────────────────────────────────────
     with open(filepath, "wb") as f:
         f.write(contents)
 
-    # ── Return URL ───────────────────────────────────
-    # Frontend will access the image using this URL
     url = f"/uploads/profile_pictures/{filename}"
     return url
 
@@ -66,7 +60,6 @@ def delete_profile_picture(url: str):
         return
 
     # Extract local path from URL
-    # "/uploads/profile_pictures/abc.jpg" → "uploads/profile_pictures/abc.jpg"
     local_path = url.lstrip("/")
 
     if os.path.exists(local_path):

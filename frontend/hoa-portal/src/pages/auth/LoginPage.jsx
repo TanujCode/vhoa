@@ -32,7 +32,6 @@ export default function LoginPage() {
     try {
       setRefreshing(true);
       const res = await API.get('/auth/captcha', { timeout: 2000 });
-      // If user hasn't started typing in the new captcha answer yet, we can safely sync with backend JWT captcha
       const currentAnswer = watch('captchaAnswer');
       if (!currentAnswer || currentAnswer.trim() === '') {
         setCaptcha({
@@ -84,16 +83,12 @@ const onSubmit = async (data) => {
       sessionStorage.removeItem('session_token');
       sessionStorage.removeItem('user');
 
-      // Role aur Community extract karo
       const role = (userData?.role_name || userData?.role || response.data?.role || '').toLowerCase();
       const communityId = userData?.community_id;
 
       console.log("Login Check -> Role:", role, "Community:", communityId);
 
-      // 🔥 ROLE-BASED EXACT REDIRECTS
-      // 🔥 ROLE-BASED EXACT REDIRECTS (UPDATED)
       if (role === 'super_admin' || role === 'property_manager' || role === 'board_member') {
-        // Sabhi main roles ko seedha AdminPortal (Layout wrapper) me bhejo
         console.log(`Sending ${role} to main AdminPortal wrapper...`);
         navigate('/dashboard');
       } 

@@ -612,7 +612,6 @@ const DetailDrawer = ({
     try {
       let assignmentToUpdate = assignments[0];
       if (!assignmentToUpdate) {
-        // Automatically create a VendorAssignment record on the fly
         const createRes = await API.post('/vendor/assignment', {
           vendor_id: request.vendor_id,
           request_id: request.request_id,

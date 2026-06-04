@@ -10,11 +10,7 @@ from app.services.audit_service import get_audit_logs
 router = APIRouter(prefix="/audit", tags=["Audit Logs"])
 
 
-# ══════════════════════════════════════════════
 #  GET /api/audit
-#  Super Admin → sab logs
-#  HOA Admin   → sirf apni community ke logs
-# ══════════════════════════════════════════════
 @router.get("", response_model=list[AuditLogOut])
 def get_logs(
     community_id: int | None = Query(default=None, description="HOA Admin ke liye mandatory"),
@@ -39,7 +35,6 @@ Resident / Board:
     """
     role = current_user.role.role_name
 
-    # ── Role based access ─────────────────────
     if role == "super_admin":
         pass
 
@@ -53,7 +48,6 @@ Resident / Board:
         check_community_access(current_user, community_id, db)
 
     else:
-        # Resident → access nahi
         raise HTTPException(
             status_code=403,
             detail="You do not have permission to view audit logs."
