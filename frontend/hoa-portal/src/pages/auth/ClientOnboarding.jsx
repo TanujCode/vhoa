@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import API from '../../services/api';
 import { verifyContractCode, getCaptcha, onboardClient } from '../../services/contractService';
+import { validateEmail } from '../../utils/emailValidation';
 
 export default function ClientOnboarding() {
   const navigate = useNavigate();
@@ -553,7 +554,7 @@ export default function ClientOnboarding() {
                         type="email"
                         {...register('email_id', { 
                           required: 'Required',
-                          pattern: { value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i, message: 'Invalid email address' }
+                          validate: validateEmail,
                         })}
                         className="w-full bg-[#1e2f41] border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]"
                       />

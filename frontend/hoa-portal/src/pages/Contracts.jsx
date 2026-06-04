@@ -6,6 +6,7 @@ import {
   MapPin, Phone, Mail, User, Building, Trash2, RefreshCw
 } from 'lucide-react';
 import { getContracts, createContract, updateContract } from '../services/contractService';
+import { validateEmail } from '../utils/emailValidation';
 
 export default function Contracts() {
   const [contracts, setContracts] = useState([]);
@@ -43,6 +44,7 @@ export default function Contracts() {
   };
 
   const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm({
+    mode: 'onTouched',
     defaultValues: {
       status: 'ACTIVE',
       client_first_name: '',
@@ -563,7 +565,7 @@ export default function Contracts() {
                       type="email"
                       {...register('client_email_address', { 
                         required: 'Email address is required',
-                        pattern: { value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i, message: 'Invalid email format' }
+                        validate: validateEmail,
                       })}
                       className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl px-4 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-[#1D9E75] placeholder-slate-400 dark:placeholder-gray-500"
                     />

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Search, ChevronDown, UserPlus, Mail, Phone, X } from 'lucide-react';
 import API, { getBaseUrl } from '../services/api';
+import { checkEmail } from '../utils/emailValidation';
 
 const getPhoneValidationRule = (code) => {
   switch (code) {
@@ -75,6 +76,13 @@ const Members = ({ community }) => {
     if (e && e.preventDefault) e.preventDefault();
     if (!inviteForm.firstName.trim() || !inviteForm.lastName.trim() || !inviteForm.email.trim()) {
       alert("Please fill in all required fields.");
+      return;
+    }
+
+    // Email format & typo validation
+    const emailCheck = checkEmail(inviteForm.email);
+    if (!emailCheck.valid) {
+      alert(emailCheck.message);
       return;
     }
 
@@ -182,14 +190,14 @@ const Members = ({ community }) => {
   const getJoinReqBadge = (status) => {
     if (status === 'PENDING_VERIFICATION') {
       return (
-        <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[11px] font-medium w-max">
-          <div className="w-1.5 h-1.5 rounded-full bg-amber-500"></div>Pending
+        <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-550/10 text-amber-600 dark:text-amber-400 text-[11px] font-medium w-max">
+          <div className="w-1.5 h-1.5 rounded-full bg-amber-550"></div>Pending
         </span>
       );
     }
     return (
-      <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[11px] font-medium w-max">
-        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>Approved
+      <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-550/10 text-emerald-600 dark:text-emerald-400 text-[11px] font-medium w-max">
+        <div className="w-1.5 h-1.5 rounded-full bg-emerald-550"></div>Approved
       </span>
     );
   };
@@ -274,6 +282,13 @@ const Members = ({ community }) => {
     if (e && e.preventDefault) e.preventDefault();
     if (!editForm.firstName.trim() || !editForm.lastName.trim() || !editForm.email.trim()) {
       alert("Please fill in all required fields.");
+      return;
+    }
+
+    // Email format & typo validation
+    const emailCheck = checkEmail(editForm.email);
+    if (!emailCheck.valid) {
+      alert(emailCheck.message);
       return;
     }
 
@@ -405,7 +420,7 @@ const Members = ({ community }) => {
         <div>
           <button 
             onClick={() => setShowInviteModal(true)}
-            className="px-5 py-2.5 bg-teal-600 hover:bg-teal-500 rounded-2xl text-sm font-semibold transition flex items-center gap-2 text-white shadow-lg shadow-teal-500/25"
+            className="px-5 py-2.5 bg-teal-600 hover:bg-teal-500 rounded-2xl text-sm font-semibold transition flex items-center gap-2 text-white shadow-lg shadow-teal-550/25"
           >
             + Invite Member
           </button>
@@ -567,7 +582,7 @@ const Members = ({ community }) => {
                 <h2 className="text-xl font-bold text-slate-900 dark:text-white">Invite Member</h2>
                 <button onClick={() => setShowInviteModal(false)} className="text-slate-400 hover:text-slate-900 dark:text-gray-500 dark:hover:text-white"><X size={20} /></button>
               </div>
-              <p className="text-slate-500 dark:text-gray-400 text-sm mt-1">Send invitation to join the community</p>
+              <p className="text-slate-550 dark:text-gray-400 text-sm mt-1">Send invitation to join the community</p>
             </div>
 
             <div className="p-6 space-y-4 overflow-y-auto custom-scrollbar flex-1">
@@ -595,7 +610,7 @@ const Members = ({ community }) => {
               </div>
 
               <div>
-                <label className="block text-xs text-slate-500 dark:text-gray-400 mb-1">Email Address *</label>
+                <label className="block text-xs text-slate-550 dark:text-gray-400 mb-1">Email Address *</label>
                 <input
                   type="email"
                   value={inviteForm.email}
@@ -693,7 +708,7 @@ const Members = ({ community }) => {
               <button
                 onClick={handleInviteSubmit}
                 disabled={inviting}
-                className="flex-1 py-2.5 bg-teal-600 hover:bg-teal-500 disabled:opacity-50 rounded-xl font-medium text-white transition text-sm shadow-md shadow-teal-500/25"
+                className="flex-1 py-2.5 bg-teal-600 hover:bg-teal-500 disabled:opacity-50 rounded-xl font-medium text-white transition text-sm shadow-md shadow-teal-550/25"
               >
                 {inviting ? "Sending..." : "Send Invite"}
               </button>
@@ -730,7 +745,7 @@ const Members = ({ community }) => {
                   <input
                     type="text"
                     value={editForm.lastName}
-                    onChange={e => setEditForm({...editForm, lastName: e.target.value})}
+                    onChange={e => setInviteForm({...editForm, lastName: e.target.value})}
                     className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl p-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-teal-500 placeholder-slate-400 dark:placeholder-gray-500"
                     placeholder="Holloway"
                   />
@@ -738,7 +753,7 @@ const Members = ({ community }) => {
               </div>
 
               <div>
-                <label className="block text-xs text-slate-500 dark:text-gray-400 mb-1">Email Address *</label>
+                <label className="block text-xs text-slate-550 dark:text-gray-400 mb-1">Email Address *</label>
                 <input
                   type="email"
                   value={editForm.email}
@@ -818,7 +833,7 @@ const Members = ({ community }) => {
                 <h4 className="font-semibold text-xs text-slate-800 dark:text-white uppercase tracking-wider">Verification Documents</h4>
                 <div className="grid grid-cols-2 gap-3">
                   {/* ID Proof */}
-                  <div className="bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl p-3 flex flex-col gap-2">
+                  <div className="bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200/80 dark:border-white/10 rounded-xl p-3 flex flex-col gap-2">
                     <span className="text-[10px] font-bold text-slate-550 dark:text-gray-400 block">IDENTITY PROOF</span>
                     {editingMember?.id_proof_url ? (
                       <a
@@ -842,7 +857,7 @@ const Members = ({ community }) => {
                   </div>
 
                   {/* Address Proof */}
-                  <div className="bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl p-3 flex flex-col gap-2">
+                  <div className="bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200/80 dark:border-white/10 rounded-xl p-3 flex flex-col gap-2">
                     <span className="text-[10px] font-bold text-slate-550 dark:text-gray-400 block">ADDRESS PROOF</span>
                     {editingMember?.address_proof_url ? (
                       <a

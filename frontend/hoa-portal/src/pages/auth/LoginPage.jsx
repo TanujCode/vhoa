@@ -236,9 +236,28 @@ const onSubmit = async (data) => {
               type="email"
               {...register('email', {
                 required: 'Email is required',
-                pattern: {
-                  value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                  message: 'Invalid email address',
+                validate: (value) => {
+                  const emailRegex = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i;
+                  if (!emailRegex.test(value.trim())) {
+                    return 'Please enter a valid email address.';
+                  }
+
+                  const domain = value.split('@')[1]?.toLowerCase() || '';
+                  const commonTypos = [
+                    'gmailgmail.com', 'yahooyahoo.com', 'outlookoutlook.com',
+                    'gamil.com', 'gmial.com', 'gml.com', 'gmail.co',
+                    'yahooo.com', 'yaho.com', 'hotmial.com'
+                  ];
+
+                  if (commonTypos.includes(domain)) {
+                    const suggestedDomain = domain
+                      .replace(/gmailgmail|gamil|gmial|gml|gmail\.co/, 'gmail.com')
+                      .replace(/yahooyahoo|yahooo|yaho/, 'yahoo.com')
+                      .replace(/outlookoutlook/, 'outlook.com')
+                      .replace(/hotmial/, 'hotmail.com');
+                    return `Suspicious domain! Did you mean ${suggestedDomain}?`;
+                  }
+                  return true;
                 },
               })}
               className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none pl-10 text-sm text-gray-900 bg-white dark:text-gray-900 dark:bg-white ${

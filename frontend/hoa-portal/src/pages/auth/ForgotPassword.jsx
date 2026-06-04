@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Mail, CheckCircle, XCircle, Lock } from 'lucide-react';
 import API from '../../services/api';
 import AuthLayout from '../../components/layout/AuthLayout';
+import { checkEmail } from '../../utils/emailValidation';
 
 const ForgotPassword = () => {
   const navigate = useNavigate();
@@ -25,10 +26,10 @@ const ForgotPassword = () => {
     e.preventDefault();
     if (!email) return;
 
-    // Strict email validation
-    const emailRegex = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i;
-    if (!emailRegex.test(email.trim())) {
-      showMsg('error', 'Please enter a valid email address.');
+    // Strict email validation with typo detection
+    const emailCheck = checkEmail(email);
+    if (!emailCheck.valid) {
+      showMsg('error', emailCheck.message);
       return;
     }
 
