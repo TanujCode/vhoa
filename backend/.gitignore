@@ -1,0 +1,26 @@
+# Backend
+backend/venv/
+backend/__pycache__/
+backend/.env
+backend/.pytest_cache/
+backend/alembic.ini
+*.sqlite3
+
+# Frontend
+# (Frontend already has its own .gitignore in frontend/hoa-portal, but we can add common node ignores here too if needed)
+node_modules/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.sqlite3
+*.log
+*.env
+.idea/
+.vscode/
