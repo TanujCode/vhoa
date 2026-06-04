@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { 
   FileText, Plus, Search, CheckCircle, 
   Clock, AlertCircle, Copy, Check, X, Info, 
-  MapPin, Phone, Mail, User, Building, Trash2 
+  MapPin, Phone, Mail, User, Building, Trash2, RefreshCw
 } from 'lucide-react';
 import { getContracts, createContract, updateContract } from '../services/contractService';
 
@@ -19,7 +19,29 @@ export default function Contracts() {
   const [currentUser, setCurrentUser] = useState(null);
   const [submitting, setSubmitting] = useState(false);
 
+  // Address Autocomplete states
+  const mapboxToken = (import.meta.env.VITE_MAPBOX_ACCESS_TOKEN || '').replace(/['"]/g, "").trim();
+  const [addressSuggestions, setAddressSuggestions] = useState([]);
+  const [searchingAddress, setSearchingAddress] = useState(false);
+  const [addressSelected, setAddressSelected] = useState(false);
+  const addressTimeoutRef = useRef(null);
+
   // Form setup
+  const getPhoneValidationRule = (code) => {
+    switch (code) {
+      case '+1':
+      case '+91':
+      case '+44':
+        return { min: 10, max: 10, label: '10 digits' };
+      case '+971':
+      case '+966':
+      case '+61':
+        return { min: 9, max: 9, label: '9 digits' };
+      default:
+        return { min: 7, max: 15, label: '7 to 15 digits' };
+    }
+  };
+
   const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm({
     defaultValues: {
       status: 'ACTIVE',
@@ -31,10 +53,14 @@ export default function Contracts() {
       client_zip_code: '',
       client_country: 'USA',
       client_phone_number: '',
+      client_phone_country_code: '+1',
+      client_phone_only: '',
       client_email_address: '',
       business_name: '',
       business_address: '',
       business_phone_number: '',
+      business_phone_country_code: '+1',
+      business_phone_only: '',
       client_preferred_communication_channel: 'email',
       plan_selected: 'Standard',
       annual_renewal_fee: '',
@@ -44,8 +70,14 @@ export default function Contracts() {
     }
   });
 
-  // Watch plan selection to auto-calculate or suggest values if desired
+  const clientAddressRegister = register('client_address');
+
+  // Watch fields
   const selectedPlan = watch('plan_selected');
+  const clientPhoneCountryCode = watch('client_phone_country_code') || '+1';
+  const businessPhoneCountryCode = watch('business_phone_country_code') || '+1';
+  const clientPhoneRule = getPhoneValidationRule(clientPhoneCountryCode);
+  const businessPhoneRule = getPhoneValidationRule(businessPhoneCountryCode);
 
   useEffect(() => {
     // Load current user from storage to prepopulate sales agent details
@@ -59,6 +91,91 @@ export default function Contracts() {
     }
     fetchContracts();
   }, []);
+  useEffect(() => {
+    return () => {
+      if (addressTimeoutRef.current) {
+        clearTimeout(addressTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  const handleAddressInputChange = (val) => {
+    if (!mapboxToken || mapboxToken.startsWith('pk.placeholder_please_replace')) {
+      return;
+    }
+
+    if (addressTimeoutRef.current) {
+      clearTimeout(addressTimeoutRef.current);
+    }
+
+    if (!val || val.trim().length < 3) {
+      setAddressSuggestions([]);
+      return;
+    }
+
+    addressTimeoutRef.current = setTimeout(async () => {
+      try {
+        setSearchingAddress(true);
+        const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(val)}.json?access_token=${mapboxToken}&autocomplete=true&types=address&limit=5`;
+        const response = await fetch(url);
+        if (!response.ok) throw new Error('Mapbox API failed');
+        const data = await response.json();
+        setAddressSuggestions(data.features || []);
+      } catch (err) {
+        console.error('Error fetching address suggestions:', err);
+        setAddressSuggestions([]);
+      } finally {
+        setSearchingAddress(false);
+      }
+    }, 600);
+  };
+
+  const handleSelectSuggestion = (feature) => {
+    setAddressSuggestions([]);
+    
+    const streetNumber = feature.address || '';
+    const streetName = feature.text || '';
+    const fullStreet = streetNumber ? `${streetNumber} ${streetName}`.trim() : streetName;
+    
+    let city = '';
+    let zipCode = '';
+    let countryName = '';
+    let countryCode = '';
+
+    if (feature.context) {
+      feature.context.forEach((item) => {
+        if (item.id.startsWith('postcode')) {
+          zipCode = item.text;
+        } else if (item.id.startsWith('place') || item.id.startsWith('locality')) {
+          city = item.text;
+        } else if (item.id.startsWith('country')) {
+          countryName = item.text;
+          countryCode = item.short_code ? item.short_code.toUpperCase() : '';
+        }
+      });
+    }
+
+    setValue('client_address', fullStreet || feature.place_name);
+    if (city) setValue('client_city', city);
+    if (zipCode) setValue('client_zip_code', zipCode);
+    if (countryName) setValue('client_country', countryName);
+
+    setAddressSelected(true);
+  };
+
+  const handleResetAddress = () => {
+    setAddressSelected(false);
+    setValue('client_address', '');
+    setValue('client_city', '');
+    setValue('client_zip_code', '');
+    setValue('client_country', 'USA');
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    reset();
+    setAddressSelected(false);
+  };
 
   const fetchContracts = async () => {
     try {
@@ -95,6 +212,8 @@ export default function Contracts() {
       // Clean numeric inputs
       const payload = {
         ...data,
+        client_phone_number: data.client_phone_only ? `${data.client_phone_country_code}${data.client_phone_only}` : '',
+        business_phone_number: data.business_phone_only ? `${data.business_phone_country_code}${data.business_phone_only}` : '',
         annual_renewal_fee: data.annual_renewal_fee ? parseFloat(data.annual_renewal_fee) : null,
         one_time_set_up: data.one_time_set_up ? parseFloat(data.one_time_set_up) : null,
         size_of_the_community: data.size_of_the_community ? parseInt(data.size_of_the_community, 10) : null,
@@ -102,8 +221,7 @@ export default function Contracts() {
 
       await createContract(payload);
       setSuccessMsg('Contract created successfully!');
-      setIsModalOpen(false);
-      reset();
+      handleCloseModal();
       fetchContracts();
     } catch (err) {
       setErrorMsg(err.response?.data?.detail || 'Failed to create contract.');
@@ -387,7 +505,7 @@ export default function Contracts() {
                 <p className="text-xs text-slate-500 dark:text-gray-400 mt-1">Provide client registration parameters and choose plans</p>
               </div>
               <button
-                onClick={() => { setIsModalOpen(false); reset(); }}
+                onClick={handleCloseModal}
                 className="p-1.5 hover:bg-slate-200/80 dark:hover:bg-white/10 rounded-xl transition text-slate-500 hover:text-slate-800 dark:text-gray-400 dark:hover:text-white"
               >
                 <X size={20} />
@@ -445,7 +563,7 @@ export default function Contracts() {
                       type="email"
                       {...register('client_email_address', { 
                         required: 'Email address is required',
-                        pattern: { value: /^\S+@\S+$/i, message: 'Invalid email format' }
+                        pattern: { value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i, message: 'Invalid email format' }
                       })}
                       className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl px-4 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-[#1D9E75] placeholder-slate-400 dark:placeholder-gray-500"
                     />
@@ -453,30 +571,95 @@ export default function Contracts() {
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-slate-500 dark:text-gray-400 mb-1">Client Phone *</label>
-                    <input
-                      type="text"
-                      {...register('client_phone_number', { required: 'Phone number is required' })}
-                      className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl px-4 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-[#1D9E75] placeholder-slate-400 dark:placeholder-gray-500"
-                    />
-                    {errors.client_phone_number && <span className="text-xs text-red-400 mt-1">{errors.client_phone_number.message}</span>}
+                    <div className="flex gap-2">
+                      <select
+                        {...register('client_phone_country_code')}
+                        className="px-3 py-2.5 bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl text-sm text-slate-900 dark:text-white focus:outline-none focus:border-[#1D9E75] cursor-pointer"
+                      >
+                        <option value="+1">🇺🇸 +1</option>
+                        <option value="+91">🇮🇳 +91</option>
+                        <option value="+44">🇬🇧 +44</option>
+                        <option value="+971">🇦🇪 +971</option>
+                        <option value="+966">🇸🇦 +966</option>
+                        <option value="+61">🇦🇺 +61</option>
+                      </select>
+                      <input
+                        type="text"
+                        maxLength={clientPhoneRule.max}
+                        {...register('client_phone_only', { 
+                          required: 'Phone number is required',
+                          validate: (val) => {
+                            if (!val) return 'Phone number is required';
+                            if (val.length < clientPhoneRule.min || val.length > clientPhoneRule.max) {
+                              return `Phone must be exactly ${clientPhoneRule.label} for ${clientPhoneCountryCode}`;
+                            }
+                            return true;
+                          }
+                        })}
+                        onKeyPress={(e) => {
+                          if (!/[0-9]/.test(e.key)) {
+                            e.preventDefault();
+                          }
+                        }}
+                        placeholder={`${clientPhoneRule.max}-digit number`}
+                        className="flex-1 bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl px-4 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-[#1D9E75] placeholder-slate-400 dark:placeholder-gray-500"
+                      />
+                    </div>
+                    {errors.client_phone_only && <span className="text-xs text-red-400 mt-1">{errors.client_phone_only.message}</span>}
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4">
-                  <div className="md:col-span-2">
+                  <div className="md:col-span-2 relative">
                     <label className="block text-xs font-medium text-slate-500 dark:text-gray-400 mb-1">Client Address</label>
                     <input
                       type="text"
-                      {...register('client_address')}
-                      className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl px-4 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-[#1D9E75] placeholder-slate-400 dark:placeholder-gray-500"
+                      name={clientAddressRegister.name}
+                      ref={clientAddressRegister.ref}
+                      onBlur={clientAddressRegister.onBlur}
+                      onChange={(e) => {
+                        clientAddressRegister.onChange(e);
+                        handleAddressInputChange(e.target.value);
+                      }}
+                      readOnly={addressSelected}
+                      placeholder={mapboxToken ? "Start typing to search..." : "Street Address"}
+                      className={`w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl px-4 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-[#1D9E75] placeholder-slate-400 dark:placeholder-gray-500 ${
+                        addressSelected ? 'opacity-65 bg-slate-100/50 dark:bg-[#0D1B2A]/50 cursor-not-allowed' : ''
+                      }`}
                     />
+
+                    {/* Autocomplete suggestions dropdown */}
+                    {searchingAddress && (
+                      <div className="absolute z-50 w-full mt-1 bg-slate-50 dark:bg-[#1e2f41] border border-slate-200 dark:border-white/10 rounded-xl p-3 text-xs text-gray-550 dark:text-gray-400 flex items-center gap-2">
+                        <RefreshCw size={14} className="animate-spin text-teal-400" />
+                        Searching address...
+                      </div>
+                    )}
+
+                    {!searchingAddress && addressSuggestions.length > 0 && (
+                      <div className="absolute z-50 w-full mt-1 bg-white dark:bg-[#162535] border border-slate-200 dark:border-white/10 rounded-xl overflow-hidden shadow-2xl max-h-60 overflow-y-auto">
+                        {addressSuggestions.map((feature) => (
+                          <button
+                            key={feature.id}
+                            type="button"
+                            onClick={() => handleSelectSuggestion(feature)}
+                            className="w-full text-left px-4 py-2.5 hover:bg-teal-500/10 hover:text-teal-600 dark:hover:text-teal-400 text-xs text-slate-800 dark:text-gray-200 border-b border-slate-200 dark:border-white/5 last:border-0 transition-colors"
+                          >
+                            {feature.place_name}
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-slate-500 dark:text-gray-400 mb-1">City</label>
                     <input
                       type="text"
                       {...register('client_city')}
-                      className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl px-4 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-[#1D9E75] placeholder-slate-400 dark:placeholder-gray-500"
+                      readOnly={addressSelected}
+                      className={`w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl px-4 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-[#1D9E75] placeholder-slate-400 dark:placeholder-gray-500 ${
+                        addressSelected ? 'opacity-65 bg-slate-100/50 dark:bg-[#0D1B2A]/50 cursor-not-allowed' : ''
+                      }`}
                     />
                   </div>
                   <div>
@@ -484,7 +667,10 @@ export default function Contracts() {
                     <input
                       type="text"
                       {...register('client_zip_code')}
-                      className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl px-4 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-[#1D9E75] placeholder-slate-400 dark:placeholder-gray-500"
+                      readOnly={addressSelected}
+                      className={`w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl px-4 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-[#1D9E75] placeholder-slate-400 dark:placeholder-gray-500 ${
+                        addressSelected ? 'opacity-65 bg-slate-100/50 dark:bg-[#0D1B2A]/50 cursor-not-allowed' : ''
+                      }`}
                     />
                   </div>
                 </div>
@@ -495,7 +681,10 @@ export default function Contracts() {
                     <input
                       type="text"
                       {...register('client_country')}
-                      className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl px-4 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-[#1D9E75] placeholder-slate-400 dark:placeholder-gray-500"
+                      readOnly={addressSelected}
+                      className={`w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl px-4 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-[#1D9E75] placeholder-slate-400 dark:placeholder-gray-500 ${
+                        addressSelected ? 'opacity-65 bg-slate-100/50 dark:bg-[#0D1B2A]/50 cursor-not-allowed' : ''
+                      }`}
                     />
                   </div>
                   <div>
@@ -510,6 +699,22 @@ export default function Contracts() {
                     </select>
                   </div>
                 </div>
+
+                {addressSelected && (
+                  <div className="mt-4 p-3 bg-emerald-500/10 border border-emerald-500/25 rounded-xl flex items-center justify-between text-xs text-[#25C490]">
+                    <div className="flex items-center gap-1.5 font-medium">
+                      <CheckCircle size={14} />
+                      <span>Address verified & auto-filled via Mapbox.</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleResetAddress}
+                      className="underline text-teal-600 dark:text-teal-400 hover:text-teal-500 dark:hover:text-teal-350 font-semibold cursor-pointer"
+                    >
+                      Reset / Edit Address
+                    </button>
+                  </div>
+                )}
               </div>
 
               {/* Section 2: Business details */}
@@ -531,11 +736,40 @@ export default function Contracts() {
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-slate-500 dark:text-gray-400 mb-1">Business Phone</label>
-                    <input
-                      type="text"
-                      {...register('business_phone_number')}
-                      className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl px-4 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-[#1D9E75] placeholder-slate-400 dark:placeholder-gray-500"
-                    />
+                    <div className="flex gap-2">
+                      <select
+                        {...register('business_phone_country_code')}
+                        className="px-3 py-2.5 bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl text-sm text-slate-900 dark:text-white focus:outline-none focus:border-[#1D9E75] cursor-pointer"
+                      >
+                        <option value="+1">🇺🇸 +1</option>
+                        <option value="+91">🇮🇳 +91</option>
+                        <option value="+44">🇬🇧 +44</option>
+                        <option value="+971">🇦🇪 +971</option>
+                        <option value="+966">🇸🇦 +966</option>
+                        <option value="+61">🇦🇺 +61</option>
+                      </select>
+                      <input
+                        type="text"
+                        maxLength={businessPhoneRule.max}
+                        {...register('business_phone_only', {
+                          validate: (val) => {
+                            if (!val) return true; // Optional field
+                            if (val.length < businessPhoneRule.min || val.length > businessPhoneRule.max) {
+                              return `Phone must be exactly ${businessPhoneRule.label} for ${businessPhoneCountryCode}`;
+                            }
+                            return true;
+                          }
+                        })}
+                        onKeyPress={(e) => {
+                          if (!/[0-9]/.test(e.key)) {
+                            e.preventDefault();
+                          }
+                        }}
+                        placeholder={`${businessPhoneRule.max}-digit number`}
+                        className="flex-1 bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl px-4 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-[#1D9E75] placeholder-slate-400 dark:placeholder-gray-500"
+                      />
+                    </div>
+                    {errors.business_phone_only && <span className="text-xs text-red-400 mt-1">{errors.business_phone_only.message}</span>}
                   </div>
                 </div>
                 <div className="mt-4">
@@ -657,7 +891,7 @@ export default function Contracts() {
               <div className="flex justify-end gap-3 border-t border-slate-200 dark:border-white/10 pt-6">
                 <button
                   type="button"
-                  onClick={() => { setIsModalOpen(false); reset(); }}
+                  onClick={handleCloseModal}
                   className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 rounded-xl text-sm font-medium transition text-slate-700 dark:text-white"
                 >
                   Cancel

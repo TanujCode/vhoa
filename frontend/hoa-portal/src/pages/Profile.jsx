@@ -5,6 +5,37 @@ import {
 } from 'lucide-react';
 import API, { getBaseUrl } from '../services/api';
 
+const getPhoneValidationRule = (code) => {
+  switch (code) {
+    case '+1':
+    case '+91':
+    case '+44':
+      return { min: 10, max: 10, label: '10 digits' };
+    case '+971':
+    case '+966':
+    case '+61':
+      return { min: 9, max: 9, label: '9 digits' };
+    default:
+      return { min: 7, max: 15, label: '7 to 15 digits' };
+  }
+};
+
+const parsePhoneNumber = (fullNumber) => {
+  const prefixes = ['+971', '+966', '+91', '+44', '+61', '+1'];
+  for (const prefix of prefixes) {
+    if (fullNumber?.startsWith(prefix)) {
+      return {
+        countryCode: prefix,
+        numberOnly: fullNumber.slice(prefix.length)
+      };
+    }
+  }
+  return {
+    countryCode: '+1',
+    numberOnly: fullNumber || ''
+  };
+};
+
 const Profile = ({ user, setUser, viewRole }) => {
   // ── Form State ────────────────────────────
   const [form, setForm] = useState({
@@ -15,6 +46,16 @@ const Profile = ({ user, setUser, viewRole }) => {
     time_zone:     user?.time_zone     || 'America/New_York',
     unit_no_2:     user?.unit_no_2     || '',
   });
+
+  const initialPhone = parsePhoneNumber(user?.mobile_number || '');
+  const [phoneCountryCode, setPhoneCountryCode] = useState(initialPhone.countryCode);
+  const [phoneNumberOnly, setPhoneNumberOnly] = useState(initialPhone.numberOnly);
+
+  useEffect(() => {
+    const parsed = parsePhoneNumber(user?.mobile_number || '');
+    setPhoneCountryCode(parsed.countryCode);
+    setPhoneNumberOnly(parsed.numberOnly);
+  }, [user?.mobile_number]);
 
   const [secondaryUnits, setSecondaryUnits] = useState(
     user?.unit_no_2 ? user.unit_no_2.split(',').map(u => u.trim()).filter(Boolean) : []
@@ -89,8 +130,19 @@ const Profile = ({ user, setUser, viewRole }) => {
         setUnitInput('');
       }
 
+      // Check phone validation
+      if (phoneNumberOnly) {
+        const rule = getPhoneValidationRule(phoneCountryCode);
+        if (phoneNumberOnly.length < rule.min || phoneNumberOnly.length > rule.max) {
+          showMsg('error', `Mobile number must be exactly ${rule.label} for ${phoneCountryCode}`);
+          setSaving(false);
+          return;
+        }
+      }
+
       const payload = {
         ...form,
+        mobile_number: phoneNumberOnly ? `${phoneCountryCode}${phoneNumberOnly}` : '',
         unit_no_2: finalUnits.join(', ')
       };
       const res = await API.put('/user/profile', payload);
@@ -268,7 +320,7 @@ const Profile = ({ user, setUser, viewRole }) => {
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-semibold text-slate-900 dark:text-white">Profile Settings</h1>
-        <p className="text-slate-555 dark:text-gray-400 mt-1">Manage your account and preferences</p>
+        <p className="text-slate-550 dark:text-gray-400 mt-1">Manage your account and preferences</p>
       </div>
 
       {/* Message */}
@@ -316,7 +368,7 @@ const Profile = ({ user, setUser, viewRole }) => {
               {user?.user_profile_url && (
                 <button
                   onClick={handleRemovePicture}
-                  className="absolute -top-2 -right-2 w-8 h-8 bg-red-500 hover:bg-red-650 text-white rounded-lg flex items-center justify-center transition-all shadow-lg z-20 border-2 border-white dark:border-[#162535] opacity-0 group-hover:opacity-100"
+                  className="absolute -top-2 -right-2 w-8 h-8 bg-red-500 hover:bg-red-655 text-white rounded-lg flex items-center justify-center transition-all shadow-lg z-20 border-2 border-white dark:border-[#162535] opacity-0 group-hover:opacity-100"
                   title="Remove Photo"
                 >
                   <Trash2 size={14} />
@@ -333,7 +385,7 @@ const Profile = ({ user, setUser, viewRole }) => {
             </div>
 
             <h3 className="text-xl font-semibold text-slate-900 dark:text-white">{user?.name || user?.full_name}</h3>
-            <p className="text-slate-550 dark:text-gray-400 text-sm capitalize mt-1">
+            <p className="text-slate-500 dark:text-gray-400 text-sm capitalize mt-1">
               {(viewRole || user?.role)?.replace('_', ' ')}
             </p>
 
@@ -463,18 +515,33 @@ const Profile = ({ user, setUser, viewRole }) => {
 
               <div>
                 <label className="text-xs text-slate-500 dark:text-gray-400 mb-1.5 block">Mobile Number</label>
-                <input
-                  type="tel"
-                  value={form.mobile_number}
-                  onChange={e => setForm({...form, mobile_number: e.target.value})}
-                  onKeyPress={(e) => {
-                    if (!/[\d\s\-+]/.test(e.key)) {
-                      e.preventDefault();
-                    }
-                  }}
-                  placeholder="+1 512-555-0198"
-                  className="w-full bg-slate-50 dark:bg-[#1E3248] border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-600 focus:outline-none focus:border-teal-500"
-                />
+                <div className="flex gap-2">
+                  <select
+                    value={phoneCountryCode}
+                    onChange={e => setPhoneCountryCode(e.target.value)}
+                    className="px-3 py-3 bg-slate-50 dark:bg-[#1E3248] border border-slate-200 dark:border-white/10 rounded-xl text-sm text-slate-900 dark:text-white focus:outline-none focus:border-teal-500 cursor-pointer"
+                  >
+                    <option value="+1">🇺🇸 +1</option>
+                    <option value="+91">🇮🇳 +91</option>
+                    <option value="+44">🇬🇧 +44</option>
+                    <option value="+971">🇦🇪 +971</option>
+                    <option value="+966">🇸🇦 +966</option>
+                    <option value="+61">🇦🇺 +61</option>
+                  </select>
+                  <input
+                    type="text"
+                    value={phoneNumberOnly}
+                    maxLength={getPhoneValidationRule(phoneCountryCode).max}
+                    onChange={e => setPhoneNumberOnly(e.target.value.replace(/\D/g, ''))}
+                    onKeyPress={(e) => {
+                      if (!/[0-9]/.test(e.key)) {
+                        e.preventDefault();
+                      }
+                    }}
+                    placeholder={`${getPhoneValidationRule(phoneCountryCode).max}-digit number`}
+                    className="flex-1 bg-slate-50 dark:bg-[#1E3248] border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-600 focus:outline-none focus:border-teal-500"
+                  />
+                </div>
               </div>
 
               <div>
@@ -513,12 +580,12 @@ const Profile = ({ user, setUser, viewRole }) => {
                             placeholder={secondaryUnits.length === 0 ? "e.g. Unit 2B, press Enter to add" : "Add unit..."}
                             onKeyDown={(e) => {
                               if (e.key === 'Enter') {
-                                  e.preventDefault();
-                                  const val = unitInput.trim();
-                                  if (val && !secondaryUnits.includes(val)) {
-                                    setSecondaryUnits([...secondaryUnits, val]);
-                                    setUnitInput('');
-                                  }
+                                e.preventDefault();
+                                const val = unitInput.trim();
+                                if (val && !secondaryUnits.includes(val)) {
+                                  setSecondaryUnits([...secondaryUnits, val]);
+                                  setUnitInput('');
+                                }
                               }
                             }}
                             className="flex-1 bg-transparent border-0 outline-none text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-600 focus:ring-0 p-0 min-w-[120px]"
@@ -561,7 +628,7 @@ const Profile = ({ user, setUser, viewRole }) => {
                                 href={getBaseUrl(user.id_proof_url)}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="inline-flex items-center gap-1.5 text-xs text-teal-650 hover:text-teal-500 dark:text-teal-400 dark:hover:text-teal-300 font-medium transition bg-teal-500/5 hover:bg-teal-500/10 px-3 py-1.5 rounded-lg border border-teal-500/10"
+                                className="inline-flex items-center gap-1.5 text-xs text-teal-600 hover:text-teal-500 dark:text-teal-400 dark:hover:text-teal-300 font-medium transition bg-teal-500/5 hover:bg-teal-500/10 px-3 py-1.5 rounded-lg border border-teal-500/10"
                               >
                                 <Eye size={14} /> View Document
                               </a>
@@ -580,7 +647,7 @@ const Profile = ({ user, setUser, viewRole }) => {
                       </div>
 
                       {/* Address Proof */}
-                      <div className="bg-slate-555/5 border border-slate-200 dark:border-white/5 rounded-3xl p-5 flex flex-col justify-between gap-4 transition hover:shadow-md">
+                      <div className="bg-slate-550/5 border border-slate-200 dark:border-white/5 rounded-3xl p-5 flex flex-col justify-between gap-4 transition hover:shadow-md">
                         <div>
                           <div className="flex items-center justify-between mb-3">
                             <span className="text-xs font-bold text-slate-400 dark:text-gray-455 tracking-wider uppercase">Address Proof</span>
@@ -636,7 +703,7 @@ const Profile = ({ user, setUser, viewRole }) => {
               {/* Email Notifications */}
               <div>
                 <h3 className="text-lg font-semibold mb-4 text-slate-900 dark:text-white">Email Notifications</h3>
-                <p className="text-slate-500 dark:text-gray-400 text-sm mb-5">Choose what you receive in your inbox</p>
+                <p className="text-slate-550 dark:text-gray-400 text-sm mb-5">Choose what you receive in your inbox</p>
                 
                 <div className="space-y-4">
                   {[

@@ -53,6 +53,21 @@ export default function RegisterPage() {
     API.get('/auth/captcha', { timeout: 2000 }).catch(() => {});
   }, []);
 
+  const getPhoneValidationRule = (code) => {
+    switch (code) {
+      case '+1':
+      case '+91':
+      case '+44':
+        return { min: 10, max: 10, label: '10 digits' };
+      case '+971':
+      case '+966':
+      case '+61':
+        return { min: 9, max: 9, label: '9 digits' };
+      default:
+        return { min: 7, max: 15, label: '7 to 15 digits' };
+    }
+  };
+
   const {
     register,
     handleSubmit,
@@ -61,7 +76,14 @@ export default function RegisterPage() {
     formState: { errors, isSubmitting },
   } = useForm({
     mode: 'onTouched',
+    defaultValues: {
+      countryCode: '+1',
+      mobileNumberOnly: ''
+    }
   });
+
+  const countryCode = watch('countryCode') || '+1';
+  const phoneRule = getPhoneValidationRule(countryCode);
 
   // Password value track karne ke liye for confirm password match
   const password = watch('password');
@@ -77,7 +99,7 @@ export default function RegisterPage() {
         password: data.password,
         confirm_password: data.confirmPassword, // Naya field
         role: 'resident', // Public signup is restricted to Resident accounts only
-        mobile_number: data.mobileNumber || '', // Naya optional field
+        mobile_number: data.mobileNumberOnly ? `${data.countryCode}${data.mobileNumberOnly}` : '', // Prepend country code
         time_zone: 'America/New_York', // Default timezone
         captcha_token: captcha.token,
         captcha_answer: data.captchaAnswer,
@@ -149,7 +171,7 @@ export default function RegisterPage() {
             } else {
               navigate('/dashboard');
             }
-          }, 1500);
+          }, 1550);
         }
       } catch (err) {
         console.error('Google Auth Error:', err);
@@ -187,7 +209,7 @@ export default function RegisterPage() {
       </div>
 
       {errorMsg && (
-        <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg">
+        <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-655 text-sm rounded-lg">
           {errorMsg}
         </div>
       )}
@@ -316,36 +338,51 @@ export default function RegisterPage() {
           <label className="block text-xs font-bold text-gray-700 tracking-wider mb-1">
             MOBILE NUMBER (Optional)
           </label>
-          <div className="relative">
-            <input
-              type="text"
-              {...register('mobileNumber', {
-                pattern: {
-                  value: /^\+?[\d\s\-]{7,15}$/,
-                  message: 'Invalid mobile number format',
-                },
-              })}
-              onKeyPress={(e) => {
-                if (!/[\d\s\-+]/.test(e.key)) {
-                  e.preventDefault();
-                }
-              }}
-              className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none pl-10 text-sm text-gray-900 bg-white dark:text-gray-900 dark:bg-white ${
-                errors.mobileNumber ? 'border-red-500' : 'border-gray-300'
-              }`}
-              placeholder="+1234567890"
-            />
-            <Phone className="w-4 h-4 text-gray-400 absolute left-3 top-3" />
+          <div className="flex gap-2">
+            <select
+              {...register('countryCode')}
+              className="px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 bg-white focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none dark:text-gray-900 dark:bg-white cursor-pointer"
+            >
+              <option value="+1">🇺🇸 +1</option>
+              <option value="+91">🇮🇳 +91</option>
+              <option value="+44">🇬🇧 +44</option>
+              <option value="+971">🇦🇪 +971</option>
+              <option value="+966">🇸🇦 +966</option>
+              <option value="+61">🇦🇺 +61</option>
+            </select>
+            <div className="relative flex-1">
+              <input
+                type="text"
+                maxLength={phoneRule.max}
+                {...register('mobileNumberOnly', {
+                  validate: (val) => {
+                    if (!val) return true; // Optional field
+                    if (val.length < phoneRule.min || val.length > phoneRule.max) {
+                      return `Mobile number must be exactly ${phoneRule.label} for ${countryCode}`;
+                    }
+                    return true;
+                  }
+                })}
+                onKeyPress={(e) => {
+                  if (!/[0-9]/.test(e.key)) {
+                    e.preventDefault();
+                  }
+                }}
+                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none pl-10 text-sm text-gray-900 bg-white dark:text-gray-900 dark:bg-white ${
+                  errors.mobileNumberOnly ? 'border-red-500' : 'border-gray-300'
+                }`}
+                placeholder={`${phoneRule.max}-digit number`}
+              />
+              <Phone className="w-4 h-4 text-gray-400 absolute left-3 top-3" />
+            </div>
           </div>
-          {errors.mobileNumber && (
-            <p className="text-red-500 text-xs mt-1">{errors.mobileNumber.message}</p>
+          {errors.mobileNumberOnly && (
+            <p className="text-red-500 text-xs mt-1">{errors.mobileNumberOnly.message}</p>
           )}
         </div>
 
-
-
         {/* Captcha Section */}
-        <div className="p-4 bg-slate-50 border border-gray-200 rounded-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="p-4 bg-slate-50 border border-gray-200 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex-1">
             <label className="block text-xs font-bold text-gray-700 tracking-wider mb-2">CAPTCHA *</label>
             <div className="flex items-center gap-3">
@@ -366,7 +403,7 @@ export default function RegisterPage() {
               </button>
             </div>
           </div>
-          <div className="w-full md:w-36">
+          <div className="w-full sm:w-32">
             <label className="block text-xs font-bold text-gray-700 tracking-wider mb-2">ANSWER *</label>
             <input
               type="text"

@@ -44,6 +44,21 @@ export default function ClientOnboarding() {
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
 
+  const getPhoneValidationRule = (code) => {
+    switch (code) {
+      case '+1':
+      case '+91':
+      case '+44':
+        return { min: 10, max: 10, label: '10 digits' };
+      case '+971':
+      case '+966':
+      case '+61':
+        return { min: 9, max: 9, label: '9 digits' };
+      default:
+        return { min: 7, max: 15, label: '7 to 15 digits' };
+    }
+  };
+
   const { register, handleSubmit, watch, setValue, formState: { errors, isValid } } = useForm({
     mode: 'onTouched',
     defaultValues: {
@@ -53,6 +68,8 @@ export default function ClientOnboarding() {
       last_name: '',
       email_id: '',
       mobile_number: '',
+      mobile_number_only: '',
+      country_code: '+1',
       password: '',
       confirm_password: '',
       role_selected: 'Admin',
@@ -63,6 +80,8 @@ export default function ClientOnboarding() {
       hoa_country_id: '',
       hoa_zip_code: '',
       hoa_contact_number: '',
+      hoa_contact_country_code: '+1',
+      hoa_contact_number_only: '',
       payment_method: 'bank_account',
       bank_name: '',
       routing_number: '',
@@ -78,6 +97,10 @@ export default function ClientOnboarding() {
   const contractCodeValue = watch('contract_code');
   const passwordValue = watch('password');
   const paymentMethod = watch('payment_method');
+  const countryCode = watch('country_code') || '+1';
+  const hoaContactCountryCode = watch('hoa_contact_country_code') || '+1';
+  const ownerPhoneRule = getPhoneValidationRule(countryCode);
+  const contactPhoneRule = getPhoneValidationRule(hoaContactCountryCode);
   const hoaAddressRegister = register('hoa_address', { required: 'Required' });
 
   // Load countries and prefill code from URL on mount
@@ -337,7 +360,7 @@ export default function ClientOnboarding() {
         middle_name: data.middle_name || null,
         last_name: data.last_name,
         email_id: data.email_id,
-        mobile_number: data.mobile_number,
+        mobile_number: data.mobile_number_only ? `${data.country_code}${data.mobile_number_only}` : '',
         password: data.password,
         role_selected: data.role_selected,
         hoa_name: data.hoa_name,
@@ -346,7 +369,7 @@ export default function ClientOnboarding() {
         hoa_state_id: data.hoa_state_id ? parseInt(data.hoa_state_id, 10) : null,
         hoa_country_id: data.hoa_country_id ? parseInt(data.hoa_country_id, 10) : null,
         hoa_zip_code: data.hoa_zip_code || null,
-        hoa_contact_number: data.hoa_contact_number || null,
+        hoa_contact_number: data.hoa_contact_number_only ? `${data.hoa_contact_country_code}${data.hoa_contact_number_only}` : null,
         contract_code: data.contract_code.trim().toUpperCase(),
         captcha_token: captcha.token,
         captcha_answer: data.captcha_answer,
@@ -530,7 +553,7 @@ export default function ClientOnboarding() {
                         type="email"
                         {...register('email_id', { 
                           required: 'Required',
-                          pattern: { value: /^\S+@\S+$/i, message: 'Invalid email' }
+                          pattern: { value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i, message: 'Invalid email address' }
                         })}
                         className="w-full bg-[#1e2f41] border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]"
                       />
@@ -538,13 +561,41 @@ export default function ClientOnboarding() {
                     </div>
                     <div>
                       <label className="block text-xs font-medium text-gray-400 mb-1">Mobile Phone *</label>
-                      <input
-                        type="text"
-                        {...register('mobile_number', { required: 'Required' })}
-                        placeholder="+1 (555) 000-0000"
-                        className="w-full bg-[#1e2f41] border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]"
-                      />
-                      {errors.mobile_number && <span className="text-xs text-red-400">{errors.mobile_number.message}</span>}
+                      <div className="flex gap-2">
+                        <select
+                          {...register('country_code')}
+                          className="px-3 py-2 bg-[#1e2f41] border border-white/10 rounded-xl text-sm text-white focus:outline-none focus:border-[#1D9E75] cursor-pointer"
+                        >
+                          <option value="+1">🇺🇸 +1</option>
+                          <option value="+91">🇮🇳 +91</option>
+                          <option value="+44">🇬🇧 +44</option>
+                          <option value="+971">🇦🇪 +971</option>
+                          <option value="+966">🇸🇦 +966</option>
+                          <option value="+61">🇦🇺 +61</option>
+                        </select>
+                        <input
+                          type="text"
+                          maxLength={ownerPhoneRule.max}
+                          {...register('mobile_number_only', { 
+                            required: 'Mobile phone is required',
+                            validate: (val) => {
+                              if (!val) return 'Mobile phone is required';
+                              if (val.length < ownerPhoneRule.min || val.length > ownerPhoneRule.max) {
+                                return `Phone must be exactly ${ownerPhoneRule.label} for ${countryCode}`;
+                              }
+                              return true;
+                            }
+                          })}
+                          onKeyPress={(e) => {
+                            if (!/[0-9]/.test(e.key)) {
+                              e.preventDefault();
+                            }
+                          }}
+                          placeholder={`${ownerPhoneRule.max}-digit number`}
+                          className="flex-1 bg-[#1e2f41] border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]"
+                        />
+                      </div>
+                      {errors.mobile_number_only && <span className="text-xs text-red-400">{errors.mobile_number_only.message}</span>}
                     </div>
                   </div>
 
@@ -746,12 +797,40 @@ export default function ClientOnboarding() {
 
                   <div>
                     <label className="block text-xs font-medium text-gray-400 mb-1">HOA Contact Phone</label>
-                    <input
-                      type="text"
-                      {...register('hoa_contact_number')}
-                      placeholder="+1 (555) 000-0000"
-                      className="w-full bg-[#1e2f41] border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]"
-                    />
+                    <div className="flex gap-2">
+                      <select
+                        {...register('hoa_contact_country_code')}
+                        className="px-3 py-2 bg-[#1e2f41] border border-white/10 rounded-xl text-sm text-white focus:outline-none focus:border-[#1D9E75] cursor-pointer"
+                      >
+                        <option value="+1">🇺🇸 +1</option>
+                        <option value="+91">🇮🇳 +91</option>
+                        <option value="+44">🇬🇧 +44</option>
+                        <option value="+971">🇦🇪 +971</option>
+                        <option value="+966">🇸🇦 +966</option>
+                        <option value="+61">🇦🇺 +61</option>
+                      </select>
+                      <input
+                        type="text"
+                        maxLength={contactPhoneRule.max}
+                        {...register('hoa_contact_number_only', {
+                          validate: (val) => {
+                            if (!val) return true; // Optional field
+                            if (val.length < contactPhoneRule.min || val.length > contactPhoneRule.max) {
+                              return `Phone must be exactly ${contactPhoneRule.label} for ${hoaContactCountryCode}`;
+                            }
+                            return true;
+                          }
+                        })}
+                        onKeyPress={(e) => {
+                          if (!/[0-9]/.test(e.key)) {
+                            e.preventDefault();
+                          }
+                        }}
+                        placeholder={`${contactPhoneRule.max}-digit number`}
+                        className="flex-1 bg-[#1e2f41] border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]"
+                      />
+                    </div>
+                    {errors.hoa_contact_number_only && <span className="text-xs text-red-400">{errors.hoa_contact_number_only.message}</span>}
                   </div>
                 </div>
               )}
@@ -806,7 +885,7 @@ export default function ClientOnboarding() {
                             {...register('routing_number', { required: paymentMethod === 'bank_account' })}
                             onKeyPress={(e) => {
                               if (!/[0-9]/.test(e.key)) {
-                                e.preventDefault();
+                                  e.preventDefault();
                               }
                             }}
                             className="w-full bg-[#162535] border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-[#1D9E75] font-mono"
@@ -819,7 +898,7 @@ export default function ClientOnboarding() {
                             {...register('account_number', { required: paymentMethod === 'bank_account' })}
                             onKeyPress={(e) => {
                               if (!/[0-9]/.test(e.key)) {
-                                e.preventDefault();
+                                  e.preventDefault();
                               }
                             }}
                             className="w-full bg-[#162535] border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-[#1D9E75] font-mono"

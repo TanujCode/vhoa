@@ -2,6 +2,37 @@ import React, { useState, useEffect } from 'react';
 import { Search, ChevronDown, UserPlus, Mail, Phone, X } from 'lucide-react';
 import API, { getBaseUrl } from '../services/api';
 
+const getPhoneValidationRule = (code) => {
+  switch (code) {
+    case '+1':
+    case '+91':
+    case '+44':
+      return { min: 10, max: 10, label: '10 digits' };
+    case '+971':
+    case '+966':
+    case '+61':
+      return { min: 9, max: 9, label: '9 digits' };
+    default:
+      return { min: 7, max: 15, label: '7 to 15 digits' };
+  }
+};
+
+const parsePhoneNumber = (fullNumber) => {
+  const prefixes = ['+971', '+966', '+91', '+44', '+61', '+1'];
+  for (const prefix of prefixes) {
+    if (fullNumber?.startsWith(prefix)) {
+      return {
+        countryCode: prefix,
+        numberOnly: fullNumber.slice(prefix.length)
+      };
+    }
+  }
+  return {
+    countryCode: '+1',
+    numberOnly: fullNumber || ''
+  };
+};
+
 const Members = ({ community }) => {
   const [members, setMembers]   = useState([]);
   const [loading, setLoading]   = useState(true);
@@ -19,6 +50,9 @@ const Members = ({ community }) => {
   });
   const [inviting, setInviting] = useState(false);
 
+  const [invitePhoneCountryCode, setInvitePhoneCountryCode] = useState('+1');
+  const [invitePhoneOnly, setInvitePhoneOnly] = useState('');
+
   // Edit Member State
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingMember, setEditingMember] = useState(null);
@@ -34,11 +68,23 @@ const Members = ({ community }) => {
   const [idFile, setIdFile] = useState(null);
   const [addrFile, setAddrFile] = useState(null);
 
+  const [editPhoneCountryCode, setEditPhoneCountryCode] = useState('+1');
+  const [editPhoneOnly, setEditPhoneOnly] = useState('');
+
   const handleInviteSubmit = async (e) => {
     if (e && e.preventDefault) e.preventDefault();
     if (!inviteForm.firstName.trim() || !inviteForm.lastName.trim() || !inviteForm.email.trim()) {
       alert("Please fill in all required fields.");
       return;
+    }
+
+    // Phone validation (optional)
+    if (invitePhoneOnly) {
+      const rule = getPhoneValidationRule(invitePhoneCountryCode);
+      if (invitePhoneOnly.length < rule.min || invitePhoneOnly.length > rule.max) {
+        alert(`Mobile number must be exactly ${rule.label} for ${invitePhoneCountryCode}`);
+        return;
+      }
     }
 
     let mappedRole = 'resident';
@@ -56,7 +102,7 @@ const Members = ({ community }) => {
         first_name: inviteForm.firstName.trim(),
         last_name: inviteForm.lastName.trim(),
         email_id: inviteForm.email.trim(),
-        mobile_number: inviteForm.mobileNumber.trim() || null,
+        mobile_number: invitePhoneOnly ? `${invitePhoneCountryCode}${invitePhoneOnly}` : null,
         unit_no: inviteForm.unit.trim() || null,
         role_name: mappedRole,
         community_id: community.community_id
@@ -72,6 +118,8 @@ const Members = ({ community }) => {
         unit: '',
         role: 'HOA Member'
       });
+      setInvitePhoneCountryCode('+1');
+      setInvitePhoneOnly('');
       fetchMembers();
     } catch (err) {
       console.error(err);
@@ -204,6 +252,10 @@ const Members = ({ community }) => {
       mappedRole = 'Resident';
     }
 
+    const parsed = parsePhoneNumber(member.mobile_number || '');
+    setEditPhoneCountryCode(parsed.countryCode);
+    setEditPhoneOnly(parsed.numberOnly);
+
     setIdFile(null);
     setAddrFile(null);
     setEditingMember(member);
@@ -223,6 +275,15 @@ const Members = ({ community }) => {
     if (!editForm.firstName.trim() || !editForm.lastName.trim() || !editForm.email.trim()) {
       alert("Please fill in all required fields.");
       return;
+    }
+
+    // Phone validation (optional)
+    if (editPhoneOnly) {
+      const rule = getPhoneValidationRule(editPhoneCountryCode);
+      if (editPhoneOnly.length < rule.min || editPhoneOnly.length > rule.max) {
+        alert(`Mobile number must be exactly ${rule.label} for ${editPhoneCountryCode}`);
+        return;
+      }
     }
 
     let mappedRole = 'resident';
@@ -259,7 +320,7 @@ const Members = ({ community }) => {
         first_name: editForm.firstName.trim(),
         last_name: editForm.lastName.trim(),
         email_id: editForm.email.trim(),
-        mobile_number: editForm.mobileNumber.trim() || null,
+        mobile_number: editPhoneOnly ? `${editPhoneCountryCode}${editPhoneOnly}` : null,
         unit_no: editForm.unit.trim() || null,
         role_name: mappedRole
       });
@@ -269,6 +330,8 @@ const Members = ({ community }) => {
       setEditingMember(null);
       setIdFile(null);
       setAddrFile(null);
+      setEditPhoneCountryCode('+1');
+      setEditPhoneOnly('');
       fetchMembers();
     } catch (err) {
       console.error("Update member error:", err);
@@ -417,7 +480,7 @@ const Members = ({ community }) => {
                       <div className="flex flex-col gap-1.5">
                         <div className="flex items-center gap-2">
                           <p className="font-semibold text-slate-900 dark:text-white text-sm">{m.full_name}</p>
-                          <span className="text-[10px] font-mono text-slate-550 dark:text-gray-400 bg-slate-100 dark:bg-white/5 px-1.5 py-0.5 rounded border border-slate-200/10">
+                          <span className="text-[10px] font-mono text-slate-500 dark:text-gray-400 bg-slate-100 dark:bg-white/5 px-1.5 py-0.5 rounded border border-slate-200/10">
                             #{m.user_id}
                           </span>
                         </div>
@@ -544,13 +607,36 @@ const Members = ({ community }) => {
 
               <div>
                 <label className="block text-xs text-slate-500 dark:text-gray-400 mb-1">Mobile Number (Optional)</label>
-                <input
-                  type="text"
-                  value={inviteForm.mobileNumber}
-                  onChange={e => setInviteForm({...inviteForm, mobileNumber: e.target.value})}
-                  className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl p-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-teal-500 placeholder-slate-400 dark:placeholder-gray-500"
-                  placeholder="+1234567890"
-                />
+                <div className="flex gap-2">
+                  <select
+                    value={invitePhoneCountryCode}
+                    onChange={e => {
+                      setInvitePhoneCountryCode(e.target.value);
+                      setInvitePhoneOnly('');
+                    }}
+                    className="px-2 py-2 bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl text-sm text-slate-900 dark:text-white focus:outline-none focus:border-teal-500 cursor-pointer"
+                  >
+                    <option value="+1">🇺🇸 +1</option>
+                    <option value="+91">🇮🇳 +91</option>
+                    <option value="+44">🇬🇧 +44</option>
+                    <option value="+971">🇦🇪 +971</option>
+                    <option value="+966">🇸🇦 +966</option>
+                    <option value="+61">🇦🇺 +61</option>
+                  </select>
+                  <input
+                    type="text"
+                    value={invitePhoneOnly}
+                    maxLength={getPhoneValidationRule(invitePhoneCountryCode).max}
+                    placeholder={`${getPhoneValidationRule(invitePhoneCountryCode).max}-digit number`}
+                    onChange={e => setInvitePhoneOnly(e.target.value.replace(/\D/g, ''))}
+                    onKeyPress={e => {
+                      if (!/[0-9]/.test(e.key)) {
+                        e.preventDefault();
+                      }
+                    }}
+                    className="flex-1 bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl p-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-teal-500 placeholder-slate-400 dark:placeholder-gray-500"
+                  />
+                </div>
               </div>
 
               <div>
@@ -663,14 +749,37 @@ const Members = ({ community }) => {
               </div>
 
               <div>
-                <label className="block text-xs text-slate-550 dark:text-gray-400 mb-1">Mobile Number (Optional)</label>
-                <input
-                  type="text"
-                  value={editForm.mobileNumber}
-                  onChange={e => setEditForm({...editForm, mobileNumber: e.target.value})}
-                  className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl p-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-teal-500 placeholder-slate-400 dark:placeholder-gray-500"
-                  placeholder="+1234567890"
-                />
+                <label className="block text-xs text-slate-500 dark:text-gray-400 mb-1">Mobile Number (Optional)</label>
+                <div className="flex gap-2">
+                  <select
+                    value={editPhoneCountryCode}
+                    onChange={e => {
+                      setEditPhoneCountryCode(e.target.value);
+                      setEditPhoneOnly('');
+                    }}
+                    className="px-2 py-2 bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl text-sm text-slate-900 dark:text-white focus:outline-none focus:border-teal-500 cursor-pointer"
+                  >
+                    <option value="+1">🇺🇸 +1</option>
+                    <option value="+91">🇮🇳 +91</option>
+                    <option value="+44">🇬🇧 +44</option>
+                    <option value="+971">🇦🇪 +971</option>
+                    <option value="+966">🇸🇦 +966</option>
+                    <option value="+61">🇦🇺 +61</option>
+                  </select>
+                  <input
+                    type="text"
+                    value={editPhoneOnly}
+                    maxLength={getPhoneValidationRule(editPhoneCountryCode).max}
+                    placeholder={`${getPhoneValidationRule(editPhoneCountryCode).max}-digit number`}
+                    onChange={e => setEditPhoneOnly(e.target.value.replace(/\D/g, ''))}
+                    onKeyPress={e => {
+                      if (!/[0-9]/.test(e.key)) {
+                        e.preventDefault();
+                      }
+                    }}
+                    className="flex-1 bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl p-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-teal-500 placeholder-slate-400 dark:placeholder-gray-500"
+                  />
+                </div>
               </div>
 
               <div>

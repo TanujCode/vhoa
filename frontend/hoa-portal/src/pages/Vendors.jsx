@@ -3,6 +3,21 @@ import { Plus, X, Lock, Truck, Search, Copy, Check, Trash2 } from 'lucide-react'
 import API from "../services/api";
 import { toast } from 'react-hot-toast';
 
+const getPhoneValidationRule = (code) => {
+  switch (code) {
+    case '+1':
+    case '+91':
+    case '+44':
+      return { min: 10, max: 10, label: '10 digits' };
+    case '+971':
+    case '+966':
+    case '+61':
+      return { min: 9, max: 9, label: '9 digits' };
+    default:
+      return { min: 7, max: 15, label: '7 to 15 digits' };
+  }
+};
+
 const Vendors = ({ communityId, userRole }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [vendors, setVendors] = useState([]);
@@ -11,6 +26,9 @@ const Vendors = ({ communityId, userRole }) => {
   const [accessCode, setAccessCode] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [copied, setCopied] = useState(false);
+
+  const [phoneCountryCode, setPhoneCountryCode] = useState('+1');
+  const [phoneOnly, setPhoneOnly] = useState('');
 
   // Form State - Backend Schema ke hisaab se updated
   const [formData, setFormData] = useState({
@@ -94,6 +112,17 @@ const Vendors = ({ communityId, userRole }) => {
 
   const handleOnboard = async (e) => {
     e.preventDefault();
+
+    const rule = getPhoneValidationRule(phoneCountryCode);
+    if (!phoneOnly) {
+      alert("Phone number is required");
+      return;
+    }
+    if (phoneOnly.length < rule.min || phoneOnly.length > rule.max) {
+      alert(`Phone number must be exactly ${rule.label} for ${phoneCountryCode}`);
+      return;
+    }
+
     try {
       setLoading(true);
       const payload = {
@@ -101,7 +130,7 @@ const Vendors = ({ communityId, userRole }) => {
         company_name: formData.company_name,
         contact_person: formData.contact_person,
         email: formData.email,
-        phone: formData.phone,
+        phone: `${phoneCountryCode}${phoneOnly}`,
         category: formData.service_type, 
         license_number: formData.license_number || null,
         license_expiry: formData.expiry || null,
@@ -111,6 +140,8 @@ const Vendors = ({ communityId, userRole }) => {
       await API.post('/vendor', payload);
       setIsModalOpen(false);
       setFormData({ company_name: '', contact_person: '', phone: '', service_type: 'PLUMBING', license_number: '', expiry: '', insurance: '', email: '' });
+      setPhoneCountryCode('+1');
+      setPhoneOnly('');
       fetchVendors();
     } catch (err) {
       console.error("422 Error details:", err.response?.data);
@@ -133,8 +164,8 @@ const Vendors = ({ communityId, userRole }) => {
         <p className="text-slate-555 dark:text-gray-400 text-sm mb-8">View authorized vendors using your vendor access code.</p>
         
         <div className="bg-amber-50 dark:bg-[#2a1f0a] border border-amber-200 dark:border-yellow-700/30 p-4 rounded-lg flex items-center gap-3 mb-6 max-w-3xl">
-          <Lock className="text-amber-600 dark:text-yellow-505" size={18} />
-          <p className="text-amber-750 dark:text-yellow-500/90 text-sm">
+          <Lock className="text-amber-600 dark:text-yellow-500" size={18} />
+          <p className="text-amber-700 dark:text-yellow-500/90 text-sm">
             Enter your <span className="font-bold">vendor access code</span> to view authorized vendors.
           </p>
         </div>
@@ -166,18 +197,18 @@ const Vendors = ({ communityId, userRole }) => {
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
             <h1 className="text-3xl font-semibold text-slate-900 dark:text-white">Vendor Management</h1>
-            <p className="text-slate-500 dark:text-gray-400 mt-1">Onboard vendors, manage licenses, and generate access codes</p>
+            <p className="text-slate-550 dark:text-gray-400 mt-1">Onboard vendors, manage licenses, and generate access codes</p>
           </div>
           <button 
             onClick={() => setIsModalOpen(true)}
-            className="bg-teal-600 hover:bg-teal-505 px-5 py-2.5 rounded-2xl text-white flex items-center gap-2 text-sm font-semibold transition shadow-lg shadow-teal-500/25"
+            className="bg-teal-600 hover:bg-teal-500 px-5 py-2.5 rounded-2xl text-white flex items-center gap-2 text-sm font-semibold transition shadow-lg shadow-teal-500/25"
           >
             <Plus size={15} /> Onboard Vendor
           </button>
         </div>
 
         {/* Registered Vendors */}
-        <div className="bg-gradient-to-br from-slate-55 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl overflow-hidden shadow-sm">
+        <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl overflow-hidden shadow-sm">
           <div className="p-5 border-b border-slate-200 dark:border-white/10 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <h3 className="font-semibold text-slate-900 dark:text-white">Registered Vendors</h3>
             <div className="relative w-full sm:w-72">
@@ -214,19 +245,19 @@ const Vendors = ({ communityId, userRole }) => {
                         <div className="text-slate-900 dark:text-white font-medium group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">
                           {v.company_name}
                         </div>
-                        <div className="text-[10px] text-slate-500 dark:text-gray-400">
+                        <div className="text-[10px] text-slate-550 dark:text-gray-400">
                           {v.contact_person} | {v.phone}
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <span className="bg-teal-500/10 text-teal-600 dark:bg-teal-505/20 dark:text-teal-400 px-2 py-0.5 rounded text-[10px] font-bold border border-teal-500/20">
+                        <span className="bg-teal-500/10 text-teal-600 dark:bg-teal-500/20 dark:text-teal-400 px-2 py-0.5 rounded text-[10px] font-bold border border-teal-500/20">
                           {v.category}
                         </span>
                       </td>
                       <td className="px-6 py-4 font-mono text-xs text-slate-500 dark:text-gray-400">{v.license_number || 'N/A'}</td>
                       <td className="px-6 py-4 text-xs text-slate-600 dark:text-gray-300">{v.insurance_number || "N/A"}</td>
                       <td className="px-6 py-4 text-right">
-                        <span className={`px-2 py-1 rounded text-[10px] font-bold border ${v.active_status ? 'text-teal-600 dark:text-teal-400 bg-teal-505/10 dark:bg-teal-500/20 border-teal-500/20' : 'text-slate-500 dark:text-gray-400 bg-slate-100 dark:bg-white/5 border-slate-200 dark:border-white/10'}`}>
+                        <span className={`px-2 py-1 rounded text-[10px] font-bold border ${v.active_status ? 'text-teal-600 dark:text-teal-400 bg-teal-500/10 dark:bg-teal-500/20 border-teal-500/20' : 'text-slate-500 dark:text-gray-400 bg-slate-100 dark:bg-white/5 border-slate-200 dark:border-white/10'}`}>
                           {v.active_status ? 'ACTIVE' : 'INACTIVE'}
                         </span>
                       </td>
@@ -273,17 +304,34 @@ const Vendors = ({ communityId, userRole }) => {
                     </div>
                     <div>
                       <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Phone *</label>
-                      <input
-                        required
-                        className="w-full bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:border-teal-500 outline-none"
-                        value={formData.phone}
-                        onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                        onKeyPress={(e) => {
-                          if (!/[\d\s\-+]/.test(e.key)) {
-                            e.preventDefault();
-                          }
-                        }}
-                      />
+                      <div className="flex gap-2">
+                        <select
+                          value={phoneCountryCode}
+                          onChange={(e) => setPhoneCountryCode(e.target.value)}
+                          className="px-2 py-2 bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 rounded-lg text-sm text-slate-900 dark:text-white focus:border-teal-500 outline-none cursor-pointer"
+                        >
+                          <option value="+1">🇺🇸 +1</option>
+                          <option value="+91">🇮🇳 +91</option>
+                          <option value="+44">🇬🇧 +44</option>
+                          <option value="+971">🇦🇪 +971</option>
+                          <option value="+966">🇸🇦 +966</option>
+                          <option value="+61">🇦🇺 +61</option>
+                        </select>
+                        <input
+                          required
+                          type="text"
+                          maxLength={getPhoneValidationRule(phoneCountryCode).max}
+                          placeholder={`${getPhoneValidationRule(phoneCountryCode).max}-digit number`}
+                          className="flex-1 bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:border-teal-500 outline-none"
+                          value={phoneOnly}
+                          onChange={(e) => setPhoneOnly(e.target.value.replace(/\D/g, ''))}
+                          onKeyPress={(e) => {
+                            if (!/[0-9]/.test(e.key)) {
+                              e.preventDefault();
+                            }
+                          }}
+                        />
+                      </div>
                     </div>
                   </div>
 
@@ -336,12 +384,12 @@ const Vendors = ({ communityId, userRole }) => {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div>
           <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Vendor Management</h1>
-          <p className="text-slate-500 dark:text-gray-400 text-sm">Oakwood Estates</p>
+          <p className="text-slate-550 dark:text-gray-400 text-sm">Oakwood Estates</p>
         </div>
         {isAdmin && (
           <button 
             onClick={() => setIsModalOpen(true)}
-            className="bg-teal-600 hover:bg-teal-505 text-white px-5 py-2.5 rounded-2xl flex items-center gap-2 text-sm font-semibold transition-all shadow-lg shadow-teal-500/25"
+            className="bg-teal-600 hover:bg-teal-500 text-white px-5 py-2.5 rounded-2xl flex items-center gap-2 text-sm font-semibold transition-all shadow-lg shadow-teal-500/25"
           >
             <Plus size={15} /> Onboard Vendor
           </button>
@@ -383,21 +431,21 @@ const Vendors = ({ communityId, userRole }) => {
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <span className="bg-teal-505/10 text-teal-600 dark:bg-teal-505/20 dark:text-teal-400 px-2 py-0.5 rounded text-[10px] font-bold border border-teal-500/20">
+                      <span className="bg-teal-500/10 text-teal-600 dark:bg-teal-500/20 dark:text-teal-400 px-2 py-0.5 rounded text-[10px] font-bold border border-teal-500/20">
                         {v.category}
                       </span>
                     </td>
                     <td className="px-6 py-4 font-mono text-xs text-slate-500 dark:text-gray-400">{v.license_number || 'N/A'}</td>
-                    <td className="px-6 py-4 text-xs text-slate-655 dark:text-gray-300">{v.insurance_number || "N/A"}</td>
+                    <td className="px-6 py-4 text-xs text-slate-600 dark:text-gray-300">{v.insurance_number || "N/A"}</td>
                     <td className="px-6 py-4 text-right">
-                      <span className={`px-2 py-1 rounded text-[10px] font-bold border ${v.active_status ? 'text-teal-600 dark:text-teal-400 bg-teal-500/10 dark:bg-teal-505/20 border-teal-500/20' : 'text-slate-500 dark:text-gray-400 bg-slate-100 dark:bg-white/5 border-slate-200 dark:border-white/10'}`}>
+                      <span className={`px-2 py-1 rounded text-[10px] font-bold border ${v.active_status ? 'text-teal-600 dark:text-teal-400 bg-teal-500/10 dark:bg-teal-500/20 border-teal-500/20' : 'text-slate-500 dark:text-gray-400 bg-slate-100 dark:bg-white/5 border-slate-200 dark:border-white/10'}`}>
                         {v.active_status ? 'ACTIVE' : 'INACTIVE'}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-right">
                       <button
                         onClick={() => handleDelete(v.vendor_id)}
-                        className="text-red-500 hover:text-red-705 dark:text-red-400 dark:hover:text-red-300 p-1 rounded transition-colors"
+                        className="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 p-1 rounded transition-colors"
                         title="Delete Vendor"
                       >
                         <Trash2 size={16} />
@@ -422,7 +470,7 @@ const Vendors = ({ communityId, userRole }) => {
                 <h2 className="text-xl font-bold text-slate-900 dark:text-white">Onboard Vendor</h2>
                 <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-slate-900 dark:text-gray-500 dark:hover:text-white"><X size={20} /></button>
               </div>
-              <p className="text-slate-500 dark:text-gray-400 text-xs mb-6">Register a new vendor with license and insurance details.</p>
+              <p className="text-slate-555 dark:text-gray-400 text-xs mb-6">Register a new vendor with license and insurance details.</p>
               
               <form onSubmit={handleOnboard} className="space-y-4">
                 <div>
@@ -436,18 +484,35 @@ const Vendors = ({ communityId, userRole }) => {
                     <input required className="w-full bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:border-teal-500 outline-none" value={formData.contact_person} onChange={(e) => setFormData({...formData, contact_person: e.target.value})} />
                   </div>
                   <div>
-                    <label className="block text-[11px] text-slate-550 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Phone *</label>
-                    <input
-                      required
-                      className="w-full bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:border-teal-500 outline-none"
-                      value={formData.phone}
-                      onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                      onKeyPress={(e) => {
-                        if (!/[\d\s\-+]/.test(e.key)) {
-                          e.preventDefault();
-                        }
-                      }}
-                    />
+                    <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Phone *</label>
+                    <div className="flex gap-2">
+                      <select
+                        value={phoneCountryCode}
+                        onChange={(e) => setPhoneCountryCode(e.target.value)}
+                        className="px-2 py-2 bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 rounded-lg text-sm text-slate-900 dark:text-white focus:border-teal-500 outline-none cursor-pointer"
+                      >
+                        <option value="+1">🇺🇸 +1</option>
+                        <option value="+91">🇮🇳 +91</option>
+                        <option value="+44">🇬🇧 +44</option>
+                        <option value="+971">🇦🇪 +971</option>
+                        <option value="+966">🇸🇦 +966</option>
+                        <option value="+61">🇦🇺 +61</option>
+                      </select>
+                      <input
+                        required
+                        type="text"
+                        maxLength={getPhoneValidationRule(phoneCountryCode).max}
+                        placeholder={`${getPhoneValidationRule(phoneCountryCode).max}-digit number`}
+                        className="flex-1 bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:border-teal-500 outline-none"
+                        value={phoneOnly}
+                        onChange={(e) => setPhoneOnly(e.target.value.replace(/\D/g, ''))}
+                        onKeyPress={(e) => {
+                          if (!/[0-9]/.test(e.key)) {
+                            e.preventDefault();
+                          }
+                        }}
+                      />
+                    </div>
                   </div>
                 </div>
 
@@ -469,7 +534,7 @@ const Vendors = ({ communityId, userRole }) => {
                     <input className="w-full bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:border-teal-500 outline-none" value={formData.license_number} onChange={(e) => setFormData({...formData, license_number: e.target.value})} />
                   </div>
                   <div>
-                    <label className="block text-[11px] text-slate-550 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Expiry</label>
+                    <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Expiry</label>
                     <input type="date" className="w-full bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:border-teal-500 outline-none" value={formData.expiry} onChange={(e) => setFormData({...formData, expiry: e.target.value})} />
                   </div>
                 </div>
