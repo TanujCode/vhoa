@@ -672,23 +672,34 @@ export default function Contracts() {
                     <label className="block text-xs font-medium text-slate-500 dark:text-gray-400 mb-1">City</label>
                     <input
                       type="text"
-                      {...register('client_city')}
+                      {...register('client_city', { validate: validateCity })}
+                      onKeyPress={onlyLettersKeyPress}
                       readOnly={addressSelected}
                       className={`w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl px-4 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-[#1D9E75] placeholder-slate-400 dark:placeholder-gray-500 ${
                         addressSelected ? 'opacity-65 bg-slate-100/50 dark:bg-[#0D1B2A]/50 cursor-not-allowed' : ''
                       }`}
                     />
+                    {errors.client_city && <span className="text-xs text-red-400 mt-1">{errors.client_city.message}</span>}
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-slate-500 dark:text-gray-400 mb-1">Zip Code</label>
                     <input
                       type="text"
-                      {...register('client_zip_code')}
+                      {...register('client_zip_code', {
+                        validate: (val) => {
+                          if (!val) return true;
+                          if (!/^\d+$/.test(val)) return 'Zip code must contain only numbers';
+                          if (val.length < 5 || val.length > 10) return 'Zip code must be between 5 and 10 digits';
+                          return true;
+                        }
+                      })}
+                      onKeyPress={onlyDigitsKeyPress}
                       readOnly={addressSelected}
                       className={`w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl px-4 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-[#1D9E75] placeholder-slate-400 dark:placeholder-gray-500 ${
                         addressSelected ? 'opacity-65 bg-slate-100/50 dark:bg-[#0D1B2A]/50 cursor-not-allowed' : ''
                       }`}
                     />
+                    {errors.client_zip_code && <span className="text-xs text-red-400 mt-1">{errors.client_zip_code.message}</span>}
                   </div>
                 </div>
 
@@ -745,7 +756,10 @@ export default function Contracts() {
                     <label className="block text-xs font-medium text-slate-500 dark:text-gray-400 mb-1">Business/Management Name *</label>
                     <input
                       type="text"
-                      {...register('business_name', { required: 'Business name is required' })}
+                      {...register('business_name', {
+                        required: 'Business name is required',
+                        validate: validateBusinessName
+                      })}
                       placeholder="e.g. Acme Property Management"
                       className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl px-4 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-[#1D9E75] placeholder-slate-400 dark:placeholder-gray-500"
                     />
