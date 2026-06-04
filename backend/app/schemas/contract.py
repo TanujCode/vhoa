@@ -1,6 +1,30 @@
 from datetime import datetime
 from decimal import Decimal
-from pydantic import BaseModel
+import re
+from pydantic import BaseModel, field_validator
+
+
+EMAIL_REGEX = re.compile(
+    r'^[A-Z0-9._%+\-]+@[A-Z0-9.\-]+\.[A-Z]{2,}$',
+    re.IGNORECASE
+)
+
+# Common TLD typos of ".com"
+BAD_TLDS = {'cpom', 'cmo', 'ocm', 'con', 'copm', 'comn', 'vom', 'xom', 'cpm', 'coom', 'coam', 'coa', 'coma'}
+
+def _validate_email_format(email: str | None) -> str | None:
+    """Validates email format and detects common TLD typos."""
+    if not email:
+        return email
+    email = email.strip()
+    if not EMAIL_REGEX.match(email):
+        raise ValueError(f"'{email}' is not a valid email address format.")
+    tld = email.rsplit('.', 1)[-1].lower() if '.' in email else ''
+    if tld in BAD_TLDS:
+        raise ValueError(
+            f"'{email}' looks like a typo. Did you mean '{email.rsplit('.', 1)[0]}.com'?"
+        )
+    return email
 
 
 class ContractCreate(BaseModel):
@@ -20,6 +44,11 @@ class ContractCreate(BaseModel):
     business_address: str | None = None
     business_phone_number: str | None = None
     client_preferred_communication_channel: str | None = None
+
+    @field_validator('client_email_address', mode='before')
+    @classmethod
+    def validate_client_email(cls, v):
+        return _validate_email_format(v)
 
     # Plan parameters (Section 4)
     plan_selected: str | None = None
@@ -52,6 +81,11 @@ class ContractUpdate(BaseModel):
     payment_method_details: str | None = None
     onboarded_community_id: int | None = None
     onboarded_user_id: int | None = None
+
+    @field_validator('client_email_address', mode='before')
+    @classmethod
+    def validate_client_email(cls, v):
+        return _validate_email_format(v)
 
 
 class ContractOut(BaseModel):

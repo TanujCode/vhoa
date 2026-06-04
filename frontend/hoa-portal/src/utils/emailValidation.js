@@ -20,6 +20,7 @@ export const EMAIL_TYPO_MAP = {
   'gmaill.co':      'gmail.com',
   'gimail.com':     'gmail.com',
   'gmal.com':       'gmail.com',
+  'gamailgamail.com': 'gmail.com',
   // Gmail TLD typos
   'gmail.cpom':     'gmail.com',
   'gmail.cmo':      'gmail.com',
@@ -27,10 +28,12 @@ export const EMAIL_TYPO_MAP = {
   'gmail.con':      'gmail.com',
   'gmail.copm':     'gmail.com',
   'gmail.comn':     'gmail.com',
+  'gmail.coam':     'gmail.com',
   'gmail.vom':      'gmail.com',
   'gmail.xom':      'gmail.com',
   'gmail.cm':       'gmail.com',
-  'gmail.com.':     'gmail.com',
+  'gmail.cpm':      'gmail.com',
+  'gmail.coom':     'gmail.com',
   // Yahoo domain typos
   'yahooyahoo.com': 'yahoo.com',
   'yahooo.com':     'yahoo.com',
@@ -44,6 +47,7 @@ export const EMAIL_TYPO_MAP = {
   'yahoo.cmo':      'yahoo.com',
   'yahoo.ocm':      'yahoo.com',
   'yahoo.con':      'yahoo.com',
+  'yahoo.coam':     'yahoo.com',
   // Outlook domain typos
   'outlookoutlook.com': 'outlook.com',
   'outlok.com':     'outlook.com',
@@ -56,6 +60,7 @@ export const EMAIL_TYPO_MAP = {
   'outlook.cmo':    'outlook.com',
   'outlook.ocm':    'outlook.com',
   'outlook.con':    'outlook.com',
+  'outlook.coam':   'outlook.com',
   // Hotmail domain typos
   'hotmial.com':    'hotmail.com',
   'hmal.com':       'hotmail.com',
@@ -71,16 +76,22 @@ export const EMAIL_TYPO_MAP = {
   'hotmail.cmo':    'hotmail.com',
   'hotmail.ocm':    'hotmail.com',
   'hotmail.con':    'hotmail.com',
+  'hotmail.coam':   'hotmail.com',
   // iCloud typos
   'iclod.com':      'icloud.com',
   'iclould.com':    'icloud.com',
   'iclooud.com':    'icloud.com',
   'icloud.cpom':    'icloud.com',
   'icloud.cmo':     'icloud.com',
+  'icloud.coam':    'icloud.com',
 };
 
-// Common TLD scrambles of ".com" that we can catch generically
-const COM_TLD_TYPOS = ['cpom', 'cmo', 'ocm', 'con', 'copm', 'comn', 'vom', 'xom', 'cpm', 'coom'];
+// Common TLD scrambles of ".com" — catches ANY domain with a bad TLD
+const COM_TLD_TYPOS = [
+  'cpom', 'cmo', 'ocm', 'con', 'copm', 'comn',
+  'vom', 'xom', 'cpm', 'coom', 'coam', 'coa', 'coma',
+  'col', 'cob', 'cof', 'cor', 'cm'
+];
 
 /**
  * Internal: detect any domain whose TLD looks like a scrambled ".com"
@@ -90,7 +101,10 @@ const detectTldTypo = (domain) => {
   for (const typo of COM_TLD_TYPOS) {
     if (domain.endsWith('.' + typo)) {
       const base = domain.slice(0, -(typo.length + 1));
-      return base + '.com';
+      // Avoid flagging real short domains (e.g., something.co.uk)
+      if (base.length > 2) {
+        return base + '.com';
+      }
     }
   }
   return null;
@@ -115,7 +129,7 @@ export const validateEmail = (value) => {
     return `Suspicious domain! Did you mean "${localPart}@${mapSuggestion}"?`;
   }
 
-  // 2. Generic TLD typo check (e.g. gmail.cpom → gmail.com)
+  // 2. Generic TLD typo check (e.g. gmail.cpom → gmail.com, xyz.coam → xyz.com)
   const tldFixedDomain = detectTldTypo(domain);
   if (tldFixedDomain) {
     return `Suspicious domain! Did you mean "${localPart}@${tldFixedDomain}"?`;
@@ -142,7 +156,7 @@ export const checkEmail = (value) => {
     return { valid: false, message: `Suspicious domain! Did you mean "${localPart}@${mapSuggestion}"?` };
   }
 
-  // 2. Generic TLD typo check (e.g. gmail.cpom → gmail.com)
+  // 2. Generic TLD typo check
   const tldFixedDomain = detectTldTypo(domain);
   if (tldFixedDomain) {
     return { valid: false, message: `Suspicious domain! Did you mean "${localPart}@${tldFixedDomain}"?` };
