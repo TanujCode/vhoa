@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { AlertTriangle, Plus, RefreshCw, ChevronDown, X, Search, ArrowUpRight, Download } from 'lucide-react';
 import API, { getBaseUrl } from '../services/api';
+import { onlyDecimalKeyPress, onlyDigitsKeyPress } from '../utils/fieldValidators';
 
 // ── Status Badge ──────────────────────────────
 const StatusBadge = ({ status }) => {
@@ -35,6 +36,7 @@ const SubmitModal = ({ communityId, onClose, onSuccess }) => {
     amount:            0,
     remarks:           '',
   });
+  const [errors, setErrors]   = useState({});
 
   const selectRef = React.useRef(null);
 
@@ -64,6 +66,10 @@ const SubmitModal = ({ communityId, onClose, onSuccess }) => {
     e.preventDefault();
     if (!form.client_id) {
       alert('Please select a resident from the list.');
+      return;
+    }
+    if (errors.amount) {
+      alert('Please correct the validation errors first.');
       return;
     }
     setLoading(true);
@@ -215,9 +221,25 @@ const SubmitModal = ({ communityId, onClose, onSuccess }) => {
               min="0"
               step="0.01"
               value={form.amount}
-              onChange={e => setForm({...form, amount: e.target.value})}
-              className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
+              onKeyPress={onlyDecimalKeyPress}
+              onChange={e => {
+                const val = e.target.value;
+                setForm({...form, amount: val});
+                if (val === '' || isNaN(parseFloat(val))) {
+                  setErrors(prev => ({...prev, amount: 'Amount is required'}));
+                } else if (parseFloat(val) < 0) {
+                  setErrors(prev => ({...prev, amount: 'Amount cannot be negative'}));
+                } else {
+                  setErrors(prev => {
+                    const next = {...prev};
+                    delete next.amount;
+                    return next;
+                  });
+                }
+              }}
+              className={`w-full bg-slate-50 dark:bg-[#0D1B2A] border rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500 ${errors.amount ? 'border-red-500' : 'border-slate-200 dark:border-white/20'}`}
             />
+            {errors.amount && <p className="text-red-500 text-xs mt-1">{errors.amount}</p>}
           </div>
 
           <div>
@@ -265,6 +287,7 @@ const SubmitModal = ({ communityId, onClose, onSuccess }) => {
 // ── Create Violation Type Modal ───────────────
 const CreateTypeModal = ({ communityId, onClose, onSuccess }) => {
   const [formData, setFormData] = useState({ name: '', description: '', amount: 0, late_charge: 0, due_days: 30 });
+  const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
@@ -273,9 +296,19 @@ const CreateTypeModal = ({ communityId, onClose, onSuccess }) => {
       alert("Name is required.");
       return;
     }
+    if (Object.keys(errors).length > 0) {
+      alert("Please fix the validation errors before saving.");
+      return;
+    }
     setLoading(true);
     try {
-      await API.post('/violation/type', { ...formData, community_id: communityId });
+      await API.post('/violation/type', { 
+        ...formData, 
+        community_id: communityId,
+        amount: parseFloat(formData.amount) || 0,
+        late_charge: parseFloat(formData.late_charge) || 0,
+        due_days: parseInt(formData.due_days) || 30
+      });
       onSuccess();
       onClose();
     } catch (err) {
@@ -286,46 +319,107 @@ const CreateTypeModal = ({ communityId, onClose, onSuccess }) => {
   };
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:from-[#1E2E42] dark:to-[#162535] dark:bg-gradient-to-br p-6 rounded-3xl w-full sm:w-96 max-h-[90vh] overflow-y-auto custom-scrollbar border border-slate-200/80 dark:border-white/10 text-slate-900 dark:text-white shadow-2xl">
+      <div className="bg-white dark:from-[#1E2E42] dark:to-[#162535] dark:bg-gradient-to-br p-6 rounded-3xl w-96 max-h-[90vh] overflow-y-auto custom-scrollbar border border-slate-200/80 dark:border-white/10 text-slate-900 dark:text-white shadow-2xl">
         <h2 className="text-slate-900 dark:text-white text-lg mb-4 font-semibold">Create Violation Type</h2>
         
-        <input 
-          className="w-full p-2 mb-3 bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500" 
-          placeholder="Name" 
-          value={formData.name}
-          onChange={e => setFormData({...formData, name: e.target.value})} 
-        />
+        <div className="mb-3">
+          <input 
+            className="w-full p-2 bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500" 
+            placeholder="Name" 
+            value={formData.name}
+            onChange={e => setFormData({...formData, name: e.target.value})} 
+          />
+        </div>
         
-        <input 
-          className="w-full p-2 mb-3 bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500" 
-          placeholder="Description" 
-          value={formData.description}
-          onChange={e => setFormData({...formData, description: e.target.value})} 
-        />
+        <div className="mb-3">
+          <input 
+            className="w-full p-2 bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500" 
+            placeholder="Description" 
+            value={formData.description}
+            onChange={e => setFormData({...formData, description: e.target.value})} 
+          />
+        </div>
         
-        <input 
-          className="w-full p-2 mb-3 bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500" 
-          placeholder="Amount" 
-          type="number" 
-          value={formData.amount}
-          onChange={e => setFormData({...formData, amount: parseFloat(e.target.value) || 0})} 
-        />
+        <div className="mb-3">
+          <label className="text-[10px] text-slate-500 block mb-0.5">Amount ($)</label>
+          <input 
+            className={`w-full p-2 bg-slate-50 dark:bg-[#0D1B2A] border rounded-xl text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 ${errors.amount ? 'border-red-500' : 'border-slate-200 dark:border-white/20'}`} 
+            placeholder="Amount" 
+            type="number" 
+            value={formData.amount}
+            onKeyPress={onlyDecimalKeyPress}
+            onChange={e => {
+              const val = e.target.value;
+              setFormData({...formData, amount: val});
+              if (val === '' || isNaN(parseFloat(val))) {
+                setErrors(prev => ({...prev, amount: 'Amount is required'}));
+              } else if (parseFloat(val) < 0) {
+                setErrors(prev => ({...prev, amount: 'Amount cannot be negative'}));
+              } else {
+                setErrors(prev => {
+                  const next = {...prev};
+                  delete next.amount;
+                  return next;
+                });
+              }
+            }} 
+          />
+          {errors.amount && <p className="text-xs mt-1 text-red-500">{errors.amount}</p>}
+        </div>
         
-        <input 
-          className="w-full p-2 mb-3 bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500" 
-          placeholder="Late Charge" 
-          type="number" 
-          value={formData.late_charge}
-          onChange={e => setFormData({...formData, late_charge: parseFloat(e.target.value) || 0})} 
-        />
+        <div className="mb-3">
+          <label className="text-[10px] text-slate-500 block mb-0.5">Late Charge ($)</label>
+          <input 
+            className={`w-full p-2 bg-slate-50 dark:bg-[#0D1B2A] border rounded-xl text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 ${errors.late_charge ? 'border-red-500' : 'border-slate-200 dark:border-white/20'}`} 
+            placeholder="Late Charge" 
+            type="number" 
+            value={formData.late_charge}
+            onKeyPress={onlyDecimalKeyPress}
+            onChange={e => {
+              const val = e.target.value;
+              setFormData({...formData, late_charge: val});
+              if (val === '' || isNaN(parseFloat(val))) {
+                setErrors(prev => ({...prev, late_charge: 'Late charge is required'}));
+              } else if (parseFloat(val) < 0) {
+                setErrors(prev => ({...prev, late_charge: 'Late charge cannot be negative'}));
+              } else {
+                setErrors(prev => {
+                  const next = {...prev};
+                  delete next.late_charge;
+                  return next;
+                });
+              }
+            }} 
+          />
+          {errors.late_charge && <p className="text-xs mt-1 text-red-500">{errors.late_charge}</p>}
+        </div>
         
-        <input 
-          className="w-full p-2 mb-3 bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500" 
-          placeholder="Due Days" 
-          type="number" 
-          value={formData.due_days}
-          onChange={e => setFormData({...formData, due_days: parseInt(e.target.value) || 30})} 
-        />
+        <div className="mb-3">
+          <label className="text-[10px] text-slate-500 block mb-0.5">Due Days</label>
+          <input 
+            className={`w-full p-2 bg-slate-50 dark:bg-[#0D1B2A] border rounded-xl text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 ${errors.due_days ? 'border-red-500' : 'border-slate-200 dark:border-white/20'}`} 
+            placeholder="Due Days" 
+            type="number" 
+            value={formData.due_days}
+            onKeyPress={onlyDigitsKeyPress}
+            onChange={e => {
+              const val = e.target.value;
+              setFormData({...formData, due_days: val});
+              if (val === '' || isNaN(parseInt(val, 10))) {
+                setErrors(prev => ({...prev, due_days: 'Due days is required'}));
+              } else if (parseInt(val, 10) < 1) {
+                setErrors(prev => ({...prev, due_days: 'Due days must be at least 1'}));
+              } else {
+                setErrors(prev => {
+                  const next = {...prev};
+                  delete next.due_days;
+                  return next;
+                });
+              }
+            }} 
+          />
+          {errors.due_days && <p className="text-xs mt-1 text-red-500">{errors.due_days}</p>}
+        </div>
 
         <div className="flex gap-2 mt-4">
           <button type="button" disabled={loading} onClick={onClose} className="px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-white/10 rounded-xl flex-1 text-slate-700 dark:text-white disabled:opacity-50">Cancel</button>
@@ -758,7 +852,7 @@ const Violations = ({ community, user, setActivePage, setPaymentState }) => {
 
       // Update selected violation to get fresh changes inside the open detail view
       if (selectedViolation) {
-        const fresh = all.find(item => item.violation_id === selectedViolation.violation_id);
+        const fresh = res.data.find(item => item.violation_id === selectedViolation.violation_id);
         if (fresh) {
           setSelectedViolation(fresh);
         }

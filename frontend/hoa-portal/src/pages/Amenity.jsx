@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Calendar, Plus, RefreshCw, X, Clock, ChevronDown } from 'lucide-react';
 import API from '../services/api';
+import { onlyDigitsKeyPress, onlyDecimalKeyPress } from '../utils/fieldValidators';
 
 const StatusBadge = ({ status }) => {
   const map = {
@@ -111,7 +112,7 @@ const BookModal = ({ amenity, communityId, onClose, onSuccess }) => {
           <div className="flex gap-3 pt-2">
             <button type="button" onClick={onClose} className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 text-slate-700 dark:text-white rounded-xl text-sm font-medium transition">Cancel</button>
             <button type="submit" disabled={loading || !form.slot_number}
-              className="flex-1 py-2.5 bg-teal-600 hover:bg-teal-500 text-white rounded-xl text-sm font-medium transition disabled:opacity-50">
+              className="flex-1 py-2.5 bg-teal-600 hover:bg-teal-500 text-white rounded-xl text-sm font-medium transition disabled:opacity-50 disabled:cursor-not-allowed">
               {loading ? 'Booking...' : 'Confirm Booking'}
             </button>
           </div>
@@ -123,6 +124,7 @@ const BookModal = ({ amenity, communityId, onClose, onSuccess }) => {
 
 const CreateAmenityModal = ({ communityId, onClose, onSuccess }) => {
   const [types, setTypes] = useState([]);
+  const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({
     amenity_type_id: '',
@@ -146,6 +148,10 @@ const CreateAmenityModal = ({ communityId, onClose, onSuccess }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (Object.keys(errors).length > 0) {
+      alert("Please fix the validation errors before saving.");
+      return;
+    }
     setLoading(true);
     try {
       await API.post('/amenity', {
@@ -202,8 +208,23 @@ const CreateAmenityModal = ({ communityId, onClose, onSuccess }) => {
             </div>
             <div>
               <label className="text-xs text-slate-500 dark:text-gray-400 mb-1 block">Capacity</label>
-              <input type="number" min="1" value={form.capacity} onChange={e => setForm({...form, capacity: e.target.value})}
-                className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500" />
+              <input type="number" min="1" value={form.capacity} 
+                onKeyPress={onlyDigitsKeyPress}
+                onChange={e => {
+                  const val = e.target.value;
+                  setForm({...form, capacity: val});
+                  if (val && (isNaN(parseInt(val, 10)) || parseInt(val, 10) < 1)) {
+                    setErrors(prev => ({...prev, capacity: 'Capacity must be at least 1'}));
+                  } else {
+                    setErrors(prev => {
+                      const next = {...prev};
+                      delete next.capacity;
+                      return next;
+                    });
+                  }
+                }}
+                className={`w-full bg-slate-50 dark:bg-[#0D1B2A] border rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500 ${errors.capacity ? 'border-red-500' : 'border-slate-200 dark:border-white/20'}`} />
+              {errors.capacity && <p className="text-red-500 text-xs mt-1">{errors.capacity}</p>}
             </div>
           </div>
           <div className="bg-slate-50 dark:bg-[#1e3248] p-3 rounded-2xl space-y-3">
@@ -215,8 +236,25 @@ const CreateAmenityModal = ({ communityId, onClose, onSuccess }) => {
             {form.fee_enabled && (
               <div>
                 <label className="text-xs text-slate-500 dark:text-gray-400 mb-1 block">Booking Fee ($)</label>
-                <input type="number" min="0" step="0.01" value={form.booking_fee} onChange={e => setForm({...form, booking_fee: e.target.value})}
-                  className="w-full bg-white dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500" />
+                <input type="number" min="0" step="0.01" value={form.booking_fee} 
+                  onKeyPress={onlyDecimalKeyPress}
+                  onChange={e => {
+                    const val = e.target.value;
+                    setForm({...form, booking_fee: val});
+                    if (val === '' || isNaN(parseFloat(val))) {
+                      setErrors(prev => ({...prev, booking_fee: 'Booking fee is required'}));
+                    } else if (parseFloat(val) < 0) {
+                      setErrors(prev => ({...prev, booking_fee: 'Booking fee cannot be negative'}));
+                    } else {
+                      setErrors(prev => {
+                        const next = {...prev};
+                        delete next.booking_fee;
+                        return next;
+                      });
+                    }
+                  }}
+                  className={`w-full bg-white dark:bg-[#0D1B2A] border rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500 ${errors.booking_fee ? 'border-red-500' : 'border-slate-200 dark:border-white/20'}`} />
+                {errors.booking_fee && <p className="text-red-500 text-xs mt-1">{errors.booking_fee}</p>}
               </div>
             )}
           </div>
@@ -261,6 +299,7 @@ const CreateAmenityModal = ({ communityId, onClose, onSuccess }) => {
 
 const EditAmenityModal = ({ amenity, onClose, onSuccess }) => {
   const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState({});
   const [form, setForm] = useState({
     name:          amenity.name || '',
     description:   amenity.description || '',
@@ -273,6 +312,10 @@ const EditAmenityModal = ({ amenity, onClose, onSuccess }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (Object.keys(errors).length > 0) {
+      alert("Please fix the validation errors before saving.");
+      return;
+    }
     setLoading(true);
     try {
       await API.put(`/amenity/${amenity.amenity_id}`, {
@@ -313,12 +356,27 @@ const EditAmenityModal = ({ amenity, onClose, onSuccess }) => {
             <div>
               <label className="text-xs text-slate-500 dark:text-gray-400 mb-1 block">Location</label>
               <input type="text" value={form.location} onChange={e => setForm({...form, location: e.target.value})}
-                className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-teal-500" />
+                className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-teal-550" />
             </div>
             <div>
               <label className="text-xs text-slate-500 dark:text-gray-400 mb-1 block">Capacity</label>
-              <input type="number" min="1" value={form.capacity} onChange={e => setForm({...form, capacity: e.target.value})}
-                className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500" />
+              <input type="number" min="1" value={form.capacity} 
+                onKeyPress={onlyDigitsKeyPress}
+                onChange={e => {
+                  const val = e.target.value;
+                  setForm({...form, capacity: val});
+                  if (val && (isNaN(parseInt(val, 10)) || parseInt(val, 10) < 1)) {
+                    setErrors(prev => ({...prev, capacity: 'Capacity must be at least 1'}));
+                  } else {
+                    setErrors(prev => {
+                      const next = {...prev};
+                      delete next.capacity;
+                      return next;
+                    });
+                  }
+                }}
+                className={`w-full bg-slate-50 dark:bg-[#0D1B2A] border rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500 ${errors.capacity ? 'border-red-500' : 'border-slate-200 dark:border-white/20'}`} />
+              {errors.capacity && <p className="text-red-500 text-xs mt-1">{errors.capacity}</p>}
             </div>
           </div>
           <div className="bg-slate-50 dark:bg-[#1e3248] p-3 rounded-2xl space-y-3">
@@ -330,8 +388,25 @@ const EditAmenityModal = ({ amenity, onClose, onSuccess }) => {
             {form.fee_enabled && (
               <div>
                 <label className="text-xs text-slate-500 dark:text-gray-400 mb-1 block">Booking Fee ($)</label>
-                <input type="number" min="0" step="0.01" value={form.booking_fee} onChange={e => setForm({...form, booking_fee: e.target.value})}
-                  className="w-full bg-white dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500" />
+                <input type="number" min="0" step="0.01" value={form.booking_fee} 
+                  onKeyPress={onlyDecimalKeyPress}
+                  onChange={e => {
+                    const val = e.target.value;
+                    setForm({...form, booking_fee: val});
+                    if (val === '' || isNaN(parseFloat(val))) {
+                      setErrors(prev => ({...prev, booking_fee: 'Booking fee is required'}));
+                    } else if (parseFloat(val) < 0) {
+                      setErrors(prev => ({...prev, booking_fee: 'Booking fee cannot be negative'}));
+                    } else {
+                      setErrors(prev => {
+                        const next = {...prev};
+                        delete next.booking_fee;
+                        return next;
+                      });
+                    }
+                  }}
+                  className={`w-full bg-white dark:bg-[#0D1B2A] border rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500 ${errors.booking_fee ? 'border-red-500' : 'border-slate-200 dark:border-white/20'}`} />
+                {errors.booking_fee && <p className="text-red-500 text-xs mt-1">{errors.booking_fee}</p>}
               </div>
             )}
           </div>
@@ -341,8 +416,8 @@ const EditAmenityModal = ({ amenity, onClose, onSuccess }) => {
               className="w-4 h-4 rounded border-slate-300 text-teal-600 focus:ring-teal-500" />
           </div>
           <div className="flex gap-3 pt-2">
-            <button type="button" onClick={onClose} className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-white/10 rounded-xl text-sm font-medium text-slate-700 dark:text-white">Cancel</button>
-            <button type="submit" disabled={loading} className="flex-1 py-2.5 bg-teal-600 hover:bg-teal-500 text-white rounded-xl text-sm font-medium transition-colors disabled:opacity-50">
+            <button type="button" onClick={onClose} className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-white/10 rounded-xl text-sm font-medium text-slate-700 dark:text-white font-sans">Cancel</button>
+            <button type="submit" disabled={loading} className="flex-1 py-2.5 bg-teal-600 hover:bg-teal-500 text-white rounded-xl text-sm font-medium transition-colors disabled:opacity-50 font-sans">
               {loading ? 'Saving...' : 'Save Changes'}
             </button>
           </div>
@@ -423,11 +498,11 @@ const Amenity = ({ community, user, setActivePage, setPaymentState }) => {
   const formatDate = (d) => d ? new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—';
 
   return (
-    <div className="text-slate-900 dark:text-white">
+    <div className="text-slate-900 dark:text-white font-sans">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
         <div>
           <h1 className="text-3xl font-semibold text-slate-900 dark:text-white">Amenity Booking</h1>
-          <p className="text-slate-500 dark:text-gray-400 mt-1">{community?.name}</p>
+          <p className="text-slate-505 dark:text-gray-400 mt-1">{community?.name}</p>
         </div>
         <div className="flex flex-wrap gap-2 w-full md:w-auto">
           <button 
@@ -466,7 +541,7 @@ const Amenity = ({ community, user, setActivePage, setPaymentState }) => {
             </div>
           ) : amenities.length === 0 ? (
             <div className="text-center py-20 text-slate-500 dark:text-gray-400">
-              <Calendar size={40} className="mx-auto mb-3 opacity-50" />
+              <Calendar size={40} className="mx-auto mb-3 opacity-55" />
               No amenities available.
             </div>
           ) : (
@@ -509,7 +584,7 @@ const Amenity = ({ community, user, setActivePage, setPaymentState }) => {
                     {isAdmin && (
                       <button
                         onClick={() => setEditModal(a)}
-                        className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 text-slate-700 dark:text-white rounded-2xl text-sm font-medium transition border border-slate-200 dark:border-white/10"
+                        className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 text-slate-700 dark:text-white rounded-2xl text-sm font-medium transition border border-slate-200 dark:border-white/10 font-sans"
                       >
                         Edit
                       </button>
@@ -517,7 +592,7 @@ const Amenity = ({ community, user, setActivePage, setPaymentState }) => {
                     <button
                       onClick={() => setBookModal(a)}
                       disabled={!a.active_status}
-                      className="flex-1 py-2.5 bg-teal-600 hover:bg-teal-500 text-white rounded-2xl text-sm font-medium transition disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+                      className="flex-1 py-2.5 bg-teal-600 hover:bg-teal-505 text-white rounded-2xl text-sm font-medium transition disabled:opacity-50 disabled:cursor-not-allowed shadow-sm font-sans"
                     >
                       Book Now
                     </button>
@@ -532,7 +607,7 @@ const Amenity = ({ community, user, setActivePage, setPaymentState }) => {
       {activeTab === 'bookings' && (
         <div>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="font-semibold text-slate-900 dark:text-white">{isAdmin ? 'All Bookings' : 'My Bookings'}</h2>
+            <h2 className="font-semibold text-slate-905 dark:text-white">{isAdmin ? 'All Bookings' : 'My Bookings'}</h2>
             <div className="relative">
               <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)}
                 className="bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl pl-3 pr-8 py-2 text-sm text-slate-900 dark:text-white focus:outline-none appearance-none cursor-pointer">
@@ -547,11 +622,11 @@ const Amenity = ({ community, user, setActivePage, setPaymentState }) => {
           <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl overflow-hidden shadow-sm">
             {loading && bookings.length === 0 ? (
               <div className="p-16 text-center text-slate-500 dark:text-gray-400">
-                <div className="w-8 h-8 border-2 border-teal-500 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+                <div className="w-8 h-8 border-2 border-teal-505 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
               </div>
             ) : bookings.length === 0 ? (
               <div className="p-16 text-center text-slate-500 dark:text-gray-400">
-                <Calendar size={32} className="mx-auto mb-3 opacity-50" />
+                <Calendar size={32} className="mx-auto mb-3 opacity-55" />
                 No bookings found.
               </div>
             ) : (
@@ -567,7 +642,7 @@ const Amenity = ({ community, user, setActivePage, setPaymentState }) => {
                         <span>📅 {formatDate(b.booking_date)}</span>
                         <span>🕐 {b.slot_start} - {b.slot_end}</span>
                         {isAdmin && <span>👤 {b.booked_by_name}</span>}
-                        {b.fee_amount > 0 && <span className={b.is_paid ? 'text-teal-600 dark:text-teal-400 font-medium' : 'text-red-600 dark:text-red-400 font-medium'}>
+                        {b.fee_amount > 0 && <span className={b.is_paid ? 'text-teal-600 dark:text-teal-400 font-medium' : 'text-red-655 dark:text-red-400 font-medium'}>
                           ${b.fee_amount} {b.is_paid ? '✓ Paid' : '⚠ Unpaid'}
                         </span>}
                       </div>
@@ -581,19 +656,19 @@ const Amenity = ({ community, user, setActivePage, setPaymentState }) => {
                       <StatusBadge status={b.status} />
                       {!b.is_paid && b.fee_amount > 0 && ['PENDING', 'APPROVED'].includes(b.status) && (
                         <button onClick={() => handlePay(b)}
-                          className="px-3 py-1.5 bg-teal-600 hover:bg-teal-500 text-white rounded-xl text-xs font-medium transition shadow-sm">
+                          className="px-3 py-1.5 bg-teal-600 hover:bg-teal-505 text-white rounded-xl text-xs font-medium transition shadow-sm font-sans">
                           Pay Fee
                         </button>
                       )}
                       {isAdmin && b.status === 'PENDING' && (
                         <button onClick={() => handleApprove(b.booking_id)}
-                          className="px-3 py-1.5 bg-teal-500/10 dark:bg-teal-500/20 hover:bg-teal-500/20 dark:hover:bg-teal-500/30 text-teal-600 dark:text-teal-400 rounded-xl text-xs font-medium transition">
+                          className="px-3 py-1.5 bg-teal-500/10 dark:bg-teal-500/20 hover:bg-teal-500/20 dark:hover:bg-teal-500/30 text-teal-600 dark:text-teal-400 rounded-xl text-xs font-medium transition font-sans">
                           Approve
                         </button>
                       )}
                       {['PENDING', 'APPROVED'].includes(b.status) && (
                         <button onClick={() => handleCancel(b.booking_id)}
-                          className="px-3 py-1.5 bg-red-500/10 dark:bg-red-500/20 hover:bg-red-500/20 dark:hover:bg-red-500/30 text-red-600 dark:text-red-400 rounded-xl text-xs font-medium transition">
+                          className="px-3 py-1.5 bg-red-500/10 dark:bg-red-500/20 hover:bg-red-500/20 dark:hover:bg-red-500/30 text-red-655 dark:text-red-400 rounded-xl text-xs font-medium transition font-sans">
                           Cancel
                         </button>
                       )}

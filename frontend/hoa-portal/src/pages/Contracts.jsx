@@ -7,6 +7,11 @@ import {
 } from 'lucide-react';
 import { getContracts, createContract, updateContract } from '../services/contractService';
 import { validateEmail } from '../utils/emailValidation';
+import {
+  validateName, validateCity, validateCountry, validateZipCode,
+  validateBusinessName, validateAmount, validatePositiveInt,
+  onlyLettersKeyPress, onlyZipKeyPress, onlyDigitsKeyPress, onlyDecimalKeyPress
+} from '../utils/fieldValidators';
 
 export default function Contracts() {
   const [contracts, setContracts] = useState([]);
@@ -202,7 +207,7 @@ export default function Contracts() {
     const link = `${window.location.origin}/onboarding?code=${code}`;
     navigator.clipboard.writeText(link);
     setSuccessMsg('Public onboarding link copied to clipboard!');
-    setTimeout(() => setSuccessMsg(''), 3000);
+    setTimeout(() => setSuccessMsg(''), 3500);
   };
 
   const onSubmit = async (data) => {
@@ -534,7 +539,11 @@ export default function Contracts() {
                     <label className="block text-xs font-medium text-slate-500 dark:text-gray-400 mb-1">First Name *</label>
                     <input
                       type="text"
-                      {...register('client_first_name', { required: 'First name is required' })}
+                      {...register('client_first_name', {
+                        required: 'First name is required',
+                        validate: validateName('First Name')
+                      })}
+                      onKeyPress={onlyLettersKeyPress}
                       className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl px-4 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-[#1D9E75] placeholder-slate-400 dark:placeholder-gray-500"
                     />
                     {errors.client_first_name && <span className="text-xs text-red-400 mt-1">{errors.client_first_name.message}</span>}
@@ -543,15 +552,21 @@ export default function Contracts() {
                     <label className="block text-xs font-medium text-slate-500 dark:text-gray-400 mb-1">Middle Name</label>
                     <input
                       type="text"
-                      {...register('client_middle_name')}
+                      {...register('client_middle_name', { validate: validateName('Middle Name', false) })}
+                      onKeyPress={onlyLettersKeyPress}
                       className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl px-4 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-[#1D9E75] placeholder-slate-400 dark:placeholder-gray-500"
                     />
+                    {errors.client_middle_name && <span className="text-xs text-red-400 mt-1">{errors.client_middle_name.message}</span>}
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-slate-500 dark:text-gray-400 mb-1">Last Name *</label>
                     <input
                       type="text"
-                      {...register('client_last_name', { required: 'Last name is required' })}
+                      {...register('client_last_name', {
+                        required: 'Last name is required',
+                        validate: validateName('Last Name')
+                      })}
+                      onKeyPress={onlyLettersKeyPress}
                       className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl px-4 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-[#1D9E75] placeholder-slate-400 dark:placeholder-gray-500"
                     />
                     {errors.client_last_name && <span className="text-xs text-red-400 mt-1">{errors.client_last_name.message}</span>}

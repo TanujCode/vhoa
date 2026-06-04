@@ -6,6 +6,7 @@ import AuthLayout from '../../components/layout/AuthLayout';
 import API from '../../services/api';
 import { useGoogleLogin } from '@react-oauth/google';
 import { validateEmail } from '../../utils/emailValidation';
+import { validateName, onlyLettersKeyPress } from '../../utils/fieldValidators';
 
 export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -106,9 +107,19 @@ export default function RegisterPage() {
         captcha_answer: data.captchaAnswer,
       });
 
-      setSuccessMsg('Registration successful! Redirecting to login...');
+      // Auto-trigger OTP send for email verification
+      try {
+        await API.post('/auth/otp/send', { 
+          email_id: data.email.trim(),
+          otp_type: 'email_verify' 
+        }); 
+      } catch (otpErr) {
+        console.error("OTP send failed:", otpErr);
+      }
+
+      setSuccessMsg('Registration successful! Sending verification code to your email...');
       setTimeout(() => {
-        navigate('/login');
+        navigate('/verify-otp', { state: { email: data.email } });
       }, 2000);
     } catch (err) {
       console.error('API Error:', err);
@@ -162,7 +173,7 @@ export default function RegisterPage() {
             } else {
               navigate('/dashboard');
             }
-          }, 1550);
+          }, 1500);
         }
       } catch (err) {
         console.error('Google Auth Error:', err);
@@ -200,7 +211,7 @@ export default function RegisterPage() {
       </div>
 
       {errorMsg && (
-        <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-655 text-sm rounded-lg">
+        <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg">
           {errorMsg}
         </div>
       )}
@@ -219,7 +230,11 @@ export default function RegisterPage() {
           <div className="relative">
             <input
               type="text"
-              {...register('fullName', { required: 'Full name is required' })}
+              {...register('fullName', { 
+                required: 'Full name is required',
+                validate: validateName('Full Name')
+              })}
+              onKeyPress={onlyLettersKeyPress}
               className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none pl-10 text-sm text-gray-900 bg-white dark:text-gray-900 dark:bg-white ${
                 errors.fullName ? 'border-red-500' : 'border-gray-300'
               }`}

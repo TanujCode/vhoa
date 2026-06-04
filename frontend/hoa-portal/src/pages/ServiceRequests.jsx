@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Wrench, Plus, RefreshCw, X, ChevronDown, MessageSquare, UserCheck, Edit, Clock, Landmark, User, DollarSign } from 'lucide-react';
 import API from '../services/api';
+import { onlyDigitsKeyPress, onlyDecimalKeyPress } from '../utils/fieldValidators';
 
 const StatusBadge = ({ status }) => {
   const map = {
@@ -286,6 +287,7 @@ const StatusModal = ({ request, statuses, onClose, onSuccess }) => {
                   type="number"
                   placeholder="Associated Payment ID..."
                   value={paymentId}
+                  onKeyPress={onlyDigitsKeyPress}
                   onChange={e => setPaymentId(e.target.value)}
                   className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl px-4 py-3 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 focus:outline-none focus:border-teal-500"
                 />
@@ -409,7 +411,7 @@ const EditModal = ({ request, communityId, isAdmin, onClose, onSuccess }) => {
               placeholder="Brief title of the issue..." 
               value={form.title}
               onChange={e => setForm({...form, title: e.target.value})}
-              className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl px-4 py-3 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 focus:outline-none focus:border-teal-500"
+              className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl px-4 py-3 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-550 focus:outline-none focus:border-teal-500"
             />
           </div>
 
@@ -469,8 +471,9 @@ const EditModal = ({ request, communityId, isAdmin, onClose, onSuccess }) => {
                   type="number" 
                   placeholder="Associated Payment ID..." 
                   value={form.payment_id}
+                  onKeyPress={onlyDigitsKeyPress}
                   onChange={e => setForm({...form, payment_id: e.target.value})}
-                  className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl px-4 py-3 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 focus:outline-none focus:border-teal-500"
+                  className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl px-4 py-3 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-550 focus:outline-none focus:border-teal-500"
                 />
               </div>
             </>
@@ -859,7 +862,7 @@ const DetailDrawer = ({
 
         {/* Dynamic Action / Quote details Section */}
         {assignmentsLoading ? (
-          <div className="flex justify-center py-4 bg-slate-50 dark:bg-white/5 rounded-2xl border border-slate-200 dark:border-white/5">
+          <div className="flex justify-center py-4 bg-slate-50 dark:bg-white/5 rounded-2xl p-5 border border-slate-200 dark:border-white/5">
             <div className="w-5 h-5 border-2 border-teal-500 border-t-transparent rounded-full animate-spin"></div>
           </div>
         ) : (
@@ -880,6 +883,7 @@ const DetailDrawer = ({
                           required
                           placeholder="0.00"
                           value={quoteAmount}
+                          onKeyPress={onlyDecimalKeyPress}
                           onChange={(e) => setQuoteAmount(e.target.value)}
                           className="w-full bg-slate-100 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-white outline-none focus:border-teal-500"
                         />
@@ -1416,7 +1420,7 @@ const ServiceRequests = ({ community, user, setActivePage, setPaymentState }) =>
                     {isResident && req.status_name === 'OPEN' && (
                       <button 
                         onClick={() => handleCancel(req)}
-                        className="px-3 py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-655 dark:text-red-400 rounded-xl text-xs font-medium transition"
+                        className="px-3 py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400 rounded-xl text-xs font-medium transition"
                       >
                         Cancel Request
                       </button>

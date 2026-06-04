@@ -2,6 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { Search, ChevronDown, UserPlus, Mail, Phone, X } from 'lucide-react';
 import API, { getBaseUrl } from '../services/api';
 import { checkEmail } from '../utils/emailValidation';
+import { 
+  validateName, 
+  validateUnitNo, 
+  onlyLettersKeyPress 
+} from '../utils/fieldValidators';
 
 const getPhoneValidationRule = (code) => {
   switch (code) {
@@ -50,7 +55,7 @@ const Members = ({ community }) => {
     role: 'HOA Member'
   });
   const [inviting, setInviting] = useState(false);
-
+  const [inviteErrors, setInviteErrors] = useState({});
   const [invitePhoneCountryCode, setInvitePhoneCountryCode] = useState('+1');
   const [invitePhoneOnly, setInvitePhoneOnly] = useState('');
 
@@ -66,27 +71,70 @@ const Members = ({ community }) => {
     role: 'HOA Member'
   });
   const [updating, setUpdating] = useState(false);
+  const [editErrors, setEditErrors] = useState({});
   const [idFile, setIdFile] = useState(null);
   const [addrFile, setAddrFile] = useState(null);
 
   const [editPhoneCountryCode, setEditPhoneCountryCode] = useState('+1');
   const [editPhoneOnly, setEditPhoneOnly] = useState('');
 
+  const validateInviteField = (field, val) => {
+    let err = '';
+    if (field === 'firstName') {
+      const r = validateName('First Name')(val);
+      if (r !== true) err = r;
+    } else if (field === 'lastName') {
+      const r = validateName('Last Name')(val);
+      if (r !== true) err = r;
+    } else if (field === 'email') {
+      const r = checkEmail(val);
+      if (!r.valid) err = r.message;
+    } else if (field === 'unit') {
+      const r = validateUnitNo(val);
+      if (r !== true) err = r;
+    }
+    setInviteErrors(prev => ({ ...prev, [field]: err }));
+    return !err;
+  };
+
+  const validateEditField = (field, val) => {
+    let err = '';
+    if (field === 'firstName') {
+      const r = validateName('First Name')(val);
+      if (r !== true) err = r;
+    } else if (field === 'lastName') {
+      const r = validateName('Last Name')(val);
+      if (r !== true) err = r;
+    } else if (field === 'email') {
+      const r = checkEmail(val);
+      if (!r.valid) err = r.message;
+    } else if (field === 'unit') {
+      const r = validateUnitNo(val);
+      if (r !== true) err = r;
+    }
+    setEditErrors(prev => ({ ...prev, [field]: err }));
+    return !err;
+  };
+
   const handleInviteSubmit = async (e) => {
     if (e && e.preventDefault) e.preventDefault();
+    
+    // Validate all fields
+    const isFirstValid = validateInviteField('firstName', inviteForm.firstName);
+    const isLastValid = validateInviteField('lastName', inviteForm.lastName);
+    const isEmailValid = validateInviteField('email', inviteForm.email);
+    const isUnitValid = validateInviteField('unit', inviteForm.unit);
+
     if (!inviteForm.firstName.trim() || !inviteForm.lastName.trim() || !inviteForm.email.trim()) {
       alert("Please fill in all required fields.");
       return;
     }
 
-    // Email format & typo validation
-    const emailCheck = checkEmail(inviteForm.email);
-    if (!emailCheck.valid) {
-      alert(emailCheck.message);
+    if (!isFirstValid || !isLastValid || !isEmailValid || !isUnitValid) {
+      alert("Please correct validation errors first.");
       return;
     }
 
-    // Phone validation (optional)
     if (invitePhoneOnly) {
       const rule = getPhoneValidationRule(invitePhoneCountryCode);
       if (invitePhoneOnly.length < rule.min || invitePhoneOnly.length > rule.max) {
@@ -190,14 +238,14 @@ const Members = ({ community }) => {
   const getJoinReqBadge = (status) => {
     if (status === 'PENDING_VERIFICATION') {
       return (
-        <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-550/10 text-amber-600 dark:text-amber-400 text-[11px] font-medium w-max">
-          <div className="w-1.5 h-1.5 rounded-full bg-amber-550"></div>Pending
+        <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[11px] font-medium w-max">
+          <div className="w-1.5 h-1.5 rounded-full bg-amber-500"></div>Pending
         </span>
       );
     }
     return (
-      <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-550/10 text-emerald-600 dark:text-emerald-400 text-[11px] font-medium w-max">
-        <div className="w-1.5 h-1.5 rounded-full bg-emerald-550"></div>Approved
+      <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[11px] font-medium w-max">
+        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>Approved
       </span>
     );
   };
@@ -280,18 +328,22 @@ const Members = ({ community }) => {
 
   const handleEditSubmit = async (e) => {
     if (e && e.preventDefault) e.preventDefault();
+
+    // Validate all fields
+    const isFirstValid = validateEditField('firstName', editForm.firstName);
+    const isLastValid = validateEditField('lastName', editForm.lastName);
+    const isEmailValid = validateEditField('email', editForm.email);
+    const isUnitValid = validateEditField('unit', editForm.unit);
+
     if (!editForm.firstName.trim() || !editForm.lastName.trim() || !editForm.email.trim()) {
       alert("Please fill in all required fields.");
       return;
     }
 
-    // Email format & typo validation
-    const emailCheck = checkEmail(editForm.email);
-    if (!emailCheck.valid) {
-      alert(emailCheck.message);
+    if (!isFirstValid || !isLastValid || !isEmailValid || !isUnitValid) {
+      alert("Please correct validation errors first.");
       return;
     }
-
     // Phone validation (optional)
     if (editPhoneOnly) {
       const rule = getPhoneValidationRule(editPhoneCountryCode);
@@ -420,7 +472,7 @@ const Members = ({ community }) => {
         <div>
           <button 
             onClick={() => setShowInviteModal(true)}
-            className="px-5 py-2.5 bg-teal-600 hover:bg-teal-500 rounded-2xl text-sm font-semibold transition flex items-center gap-2 text-white shadow-lg shadow-teal-550/25"
+            className="px-5 py-2.5 bg-teal-600 hover:bg-teal-500 rounded-2xl text-sm font-semibold transition flex items-center gap-2 text-white shadow-lg shadow-teal-500/25"
           >
             + Invite Member
           </button>
@@ -537,7 +589,7 @@ const Members = ({ community }) => {
                             href={getBaseUrl(m.id_proof_url)}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="px-2.5 py-1 text-xs font-semibold bg-blue-500/10 hover:bg-blue-500 text-blue-600 hover:text-white rounded-xl border border-blue-500/20 transition-all"
+                            className="px-2.5 py-1 text-xs font-semibold bg-blue-500/10 hover:bg-blue-50 text-blue-600 hover:text-white rounded-xl border border-blue-500/20 transition-all"
                           >
                             ID Proof
                           </a>
@@ -547,7 +599,7 @@ const Members = ({ community }) => {
                             href={getBaseUrl(m.address_proof_url)}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="px-2.5 py-1 text-xs font-semibold bg-purple-500/10 hover:bg-purple-500 text-purple-600 hover:text-white rounded-xl border border-purple-500/20 transition-all"
+                            className="px-2.5 py-1 text-xs font-semibold bg-purple-500/10 hover:bg-purple-50 text-purple-600 hover:text-white rounded-xl border border-purple-500/20 transition-all"
                           >
                             Address Proof
                           </a>
@@ -582,7 +634,7 @@ const Members = ({ community }) => {
                 <h2 className="text-xl font-bold text-slate-900 dark:text-white">Invite Member</h2>
                 <button onClick={() => setShowInviteModal(false)} className="text-slate-400 hover:text-slate-900 dark:text-gray-500 dark:hover:text-white"><X size={20} /></button>
               </div>
-              <p className="text-slate-550 dark:text-gray-400 text-sm mt-1">Send invitation to join the community</p>
+              <p className="text-slate-500 dark:text-gray-400 text-sm mt-1">Send invitation to join the community</p>
             </div>
 
             <div className="p-6 space-y-4 overflow-y-auto custom-scrollbar flex-1">
@@ -592,32 +644,49 @@ const Members = ({ community }) => {
                   <input
                     type="text"
                     value={inviteForm.firstName}
-                    onChange={e => setInviteForm({...inviteForm, firstName: e.target.value})}
+                    onChange={e => {
+                      setInviteForm({...inviteForm, firstName: e.target.value});
+                      validateInviteField('firstName', e.target.value);
+                    }}
+                    onBlur={e => validateInviteField('firstName', e.target.value)}
+                    onKeyPress={onlyLettersKeyPress}
                     className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl p-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-teal-500 placeholder-slate-400 dark:placeholder-gray-500"
                     placeholder="James"
                   />
+                  {inviteErrors.firstName && <p className="text-red-500 text-xs mt-1">{inviteErrors.firstName}</p>}
                 </div>
                 <div>
                   <label className="block text-xs text-slate-500 dark:text-gray-400 mb-1">Last Name *</label>
                   <input
                     type="text"
                     value={inviteForm.lastName}
-                    onChange={e => setInviteForm({...inviteForm, lastName: e.target.value})}
+                    onChange={e => {
+                      setInviteForm({...inviteForm, lastName: e.target.value});
+                      validateInviteField('lastName', e.target.value);
+                    }}
+                    onBlur={e => validateInviteField('lastName', e.target.value)}
+                    onKeyPress={onlyLettersKeyPress}
                     className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl p-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-teal-500 placeholder-slate-400 dark:placeholder-gray-500"
                     placeholder="Holloway"
                   />
+                  {inviteErrors.lastName && <p className="text-red-500 text-xs mt-1">{inviteErrors.lastName}</p>}
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs text-slate-550 dark:text-gray-400 mb-1">Email Address *</label>
+                <label className="block text-xs text-slate-500 dark:text-gray-400 mb-1">Email Address *</label>
                 <input
                   type="email"
                   value={inviteForm.email}
-                  onChange={e => setInviteForm({...inviteForm, email: e.target.value})}
+                  onChange={e => {
+                    setInviteForm({...inviteForm, email: e.target.value});
+                    validateInviteField('email', e.target.value);
+                  }}
+                  onBlur={e => validateInviteField('email', e.target.value)}
                   className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl p-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-teal-500 placeholder-slate-400 dark:placeholder-gray-500"
                   placeholder="member@email.com"
                 />
+                {inviteErrors.email && <p className="text-red-500 text-xs mt-1">{inviteErrors.email}</p>}
               </div>
 
               <div>
@@ -659,10 +728,15 @@ const Members = ({ community }) => {
                 <input
                   type="text"
                   value={inviteForm.unit}
-                  onChange={e => setInviteForm({...inviteForm, unit: e.target.value})}
+                  onChange={e => {
+                    setInviteForm({...inviteForm, unit: e.target.value});
+                    validateInviteField('unit', e.target.value);
+                  }}
+                  onBlur={e => validateInviteField('unit', e.target.value)}
                   className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl p-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-teal-500 placeholder-slate-400 dark:placeholder-gray-500"
                   placeholder="Unit 14A"
                 />
+                {inviteErrors.unit && <p className="text-red-500 text-xs mt-1">{inviteErrors.unit}</p>}
               </div>
 
               <div className="grid grid-cols-2 gap-3">
@@ -708,7 +782,7 @@ const Members = ({ community }) => {
               <button
                 onClick={handleInviteSubmit}
                 disabled={inviting}
-                className="flex-1 py-2.5 bg-teal-600 hover:bg-teal-500 disabled:opacity-50 rounded-xl font-medium text-white transition text-sm shadow-md shadow-teal-550/25"
+                className="flex-1 py-2.5 bg-teal-600 hover:bg-teal-500 disabled:opacity-50 rounded-xl font-medium text-white transition text-sm shadow-md shadow-teal-500/25"
               >
                 {inviting ? "Sending..." : "Send Invite"}
               </button>
@@ -735,32 +809,49 @@ const Members = ({ community }) => {
                   <input
                     type="text"
                     value={editForm.firstName}
-                    onChange={e => setEditForm({...editForm, firstName: e.target.value})}
+                    onChange={e => {
+                      setEditForm({...editForm, firstName: e.target.value});
+                      validateEditField('firstName', e.target.value);
+                    }}
+                    onBlur={e => validateEditField('firstName', e.target.value)}
+                    onKeyPress={onlyLettersKeyPress}
                     className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl p-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-teal-500 placeholder-slate-400 dark:placeholder-gray-500"
                     placeholder="James"
                   />
+                  {editErrors.firstName && <p className="text-red-500 text-xs mt-1">{editErrors.firstName}</p>}
                 </div>
                 <div>
                   <label className="block text-xs text-slate-500 dark:text-gray-400 mb-1">Last Name *</label>
                   <input
                     type="text"
                     value={editForm.lastName}
-                    onChange={e => setInviteForm({...editForm, lastName: e.target.value})}
+                    onChange={e => {
+                      setEditForm({...editForm, lastName: e.target.value});
+                      validateEditField('lastName', e.target.value);
+                    }}
+                    onBlur={e => validateEditField('lastName', e.target.value)}
+                    onKeyPress={onlyLettersKeyPress}
                     className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl p-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-teal-500 placeholder-slate-400 dark:placeholder-gray-500"
                     placeholder="Holloway"
                   />
+                  {editErrors.lastName && <p className="text-red-500 text-xs mt-1">{editErrors.lastName}</p>}
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs text-slate-550 dark:text-gray-400 mb-1">Email Address *</label>
+                <label className="block text-xs text-slate-500 dark:text-gray-400 mb-1">Email Address *</label>
                 <input
                   type="email"
                   value={editForm.email}
-                  onChange={e => setEditForm({...editForm, email: e.target.value})}
+                  onChange={e => {
+                    setEditForm({...editForm, email: e.target.value});
+                    validateEditField('email', e.target.value);
+                  }}
+                  onBlur={e => validateEditField('email', e.target.value)}
                   className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl p-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-teal-500 placeholder-slate-400 dark:placeholder-gray-500"
                   placeholder="member@email.com"
                 />
+                {editErrors.email && <p className="text-red-500 text-xs mt-1">{editErrors.email}</p>}
               </div>
 
               <div>
@@ -802,10 +893,15 @@ const Members = ({ community }) => {
                 <input
                   type="text"
                   value={editForm.unit}
-                  onChange={e => setEditForm({...editForm, unit: e.target.value})}
+                  onChange={e => {
+                    setEditForm({...editForm, unit: e.target.value});
+                    validateEditField('unit', e.target.value);
+                  }}
+                  onBlur={e => validateEditField('unit', e.target.value)}
                   className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl p-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-teal-500 placeholder-slate-400 dark:placeholder-gray-500"
                   placeholder="Unit 14A"
                 />
+                {editErrors.unit && <p className="text-red-500 text-xs mt-1">{editErrors.unit}</p>}
               </div>
 
               <div className="grid grid-cols-2 gap-3">
@@ -833,7 +929,7 @@ const Members = ({ community }) => {
                 <h4 className="font-semibold text-xs text-slate-800 dark:text-white uppercase tracking-wider">Verification Documents</h4>
                 <div className="grid grid-cols-2 gap-3">
                   {/* ID Proof */}
-                  <div className="bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200/80 dark:border-white/10 rounded-xl p-3 flex flex-col gap-2">
+                  <div className="bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl p-3 flex flex-col gap-2">
                     <span className="text-[10px] font-bold text-slate-550 dark:text-gray-400 block">IDENTITY PROOF</span>
                     {editingMember?.id_proof_url ? (
                       <a
@@ -857,7 +953,7 @@ const Members = ({ community }) => {
                   </div>
 
                   {/* Address Proof */}
-                  <div className="bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200/80 dark:border-white/10 rounded-xl p-3 flex flex-col gap-2">
+                  <div className="bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl p-3 flex flex-col gap-2">
                     <span className="text-[10px] font-bold text-slate-550 dark:text-gray-400 block">ADDRESS PROOF</span>
                     {editingMember?.address_proof_url ? (
                       <a

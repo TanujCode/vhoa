@@ -3,6 +3,7 @@ import { Search, ShieldCheck, Upload, Send, Info } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import API from '../services/api';
+import { validateUnitNo } from '../utils/fieldValidators';
 
 const SearchAndJoinHOA = () => {
     const navigate = useNavigate();
@@ -11,6 +12,7 @@ const SearchAndJoinHOA = () => {
     const [selectedHOA, setSelectedHOA] = useState(null);
     const [passCode, setPassCode] = useState('');
     const [unitNo, setUnitNo] = useState('');
+    const [unitError, setUnitError] = useState('');
     const [idProof, setIdProof] = useState(null);
     const [addressProof, setAddressProof] = useState(null);
     const [loading, setLoading] = useState(false);
@@ -72,6 +74,12 @@ const SearchAndJoinHOA = () => {
     // 2. Submit Request
     const handleSubmit = async (e) => {
     e.preventDefault();
+    const check = validateUnitNo(unitNo);
+    if (check !== true) {
+        setUnitError(check);
+        alert(check);
+        return;
+    }
     if (!idProof || !addressProof) {
         alert("Please upload both Identity and Address proofs.");
         return;
@@ -168,7 +176,7 @@ const SearchAndJoinHOA = () => {
                     <form onSubmit={handleSubmit} className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] p-6 rounded-2xl border border-slate-200/80 dark:border-white/10 space-y-6 shadow-xl text-slate-900 dark:text-white">
                         <div className="flex justify-between items-center border-b border-slate-200 dark:border-white/10 pb-4">
                             <h2 className="text-xl font-bold text-teal-600 dark:text-teal-400 tracking-tight">{selectedHOA.name}</h2>
-                            <button type="button" onClick={() => setSelectedHOA(null)} className="text-xs text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white underline transition-colors">Change</button>
+                            <button type="button" onClick={() => setSelectedHOA(null)} className="text-xs text-slate-500 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white underline transition-colors">Change</button>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -183,16 +191,31 @@ const SearchAndJoinHOA = () => {
                                     onChange={(e) => setPassCode(e.target.value)}
                                 />
                             </div>
-                            <div>
+                             <div>
                                 <label className="block text-sm font-medium mb-2 text-slate-700 dark:text-slate-300">Unit / Apartment Number</label>
                                 <input 
                                     type="text"
                                     required
-                                    className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl py-2.5 px-4 outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500"
+                                    className={`w-full bg-slate-50 dark:bg-[#0D1B2A] border rounded-xl py-2.5 px-4 outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 ${unitError ? 'border-red-500' : 'border-slate-200 dark:border-white/10'}`}
                                     placeholder="e.g. Unit 4B, Apt 102"
                                     value={unitNo}
-                                    onChange={(e) => setUnitNo(e.target.value)}
+                                    onKeyPress={(e) => {
+                                        if (!/[A-Za-z0-9\s\-/#]/.test(e.key)) {
+                                            e.preventDefault();
+                                        }
+                                    }}
+                                    onChange={(e) => {
+                                        const val = e.target.value;
+                                        setUnitNo(val);
+                                        const err = validateUnitNo(val);
+                                        if (err !== true) {
+                                            setUnitError(err);
+                                        } else {
+                                            setUnitError('');
+                                        }
+                                    }}
                                 />
+                                {unitError && <p className="text-red-500 text-xs mt-1">{unitError}</p>}
                             </div>
                         </div>
 

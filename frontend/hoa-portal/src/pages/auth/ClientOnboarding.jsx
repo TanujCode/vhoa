@@ -8,6 +8,14 @@ import {
 import API from '../../services/api';
 import { verifyContractCode, getCaptcha, onboardClient } from '../../services/contractService';
 import { validateEmail } from '../../utils/emailValidation';
+import { 
+  validateName, 
+  validateCity, 
+  validateZipCode, 
+  validateBusinessName, 
+  onlyLettersKeyPress, 
+  onlyZipKeyPress 
+} from '../../utils/fieldValidators';
 
 export default function ClientOnboarding() {
   const navigate = useNavigate();
@@ -517,13 +525,16 @@ export default function ClientOnboarding() {
                     <h3 className="text-lg font-semibold mb-1">Set Up Owner Account</h3>
                     <p className="text-xs text-gray-400">Create the primary administrative or board user credentials.</p>
                   </div>
-
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
                       <label className="block text-xs font-medium text-gray-400 mb-1">First Name *</label>
                       <input
                         type="text"
-                        {...register('first_name', { required: 'Required' })}
+                        {...register('first_name', { 
+                          required: 'Required',
+                          validate: validateName('First Name')
+                        })}
+                        onKeyPress={onlyLettersKeyPress}
                         className="w-full bg-[#1e2f41] border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]"
                       />
                       {errors.first_name && <span className="text-xs text-red-400">{errors.first_name.message}</span>}
@@ -532,15 +543,23 @@ export default function ClientOnboarding() {
                       <label className="block text-xs font-medium text-gray-400 mb-1">Middle Name</label>
                       <input
                         type="text"
-                        {...register('middle_name')}
+                        {...register('middle_name', {
+                          validate: validateName('Middle Name')
+                        })}
+                        onKeyPress={onlyLettersKeyPress}
                         className="w-full bg-[#1e2f41] border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]"
                       />
+                      {errors.middle_name && <span className="text-xs text-red-400">{errors.middle_name.message}</span>}
                     </div>
                     <div>
                       <label className="block text-xs font-medium text-gray-400 mb-1">Last Name *</label>
                       <input
                         type="text"
-                        {...register('last_name', { required: 'Required' })}
+                        {...register('last_name', { 
+                          required: 'Required',
+                          validate: validateName('Last Name')
+                        })}
+                        onKeyPress={onlyLettersKeyPress}
                         className="w-full bg-[#1e2f41] border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]"
                       />
                       {errors.last_name && <span className="text-xs text-red-400">{errors.last_name.message}</span>}
@@ -582,7 +601,7 @@ export default function ClientOnboarding() {
                             validate: (val) => {
                               if (!val) return 'Mobile phone is required';
                               if (val.length < ownerPhoneRule.min || val.length > ownerPhoneRule.max) {
-                                return `Phone must be exactly ${ownerPhoneRule.label} for ${countryCode}`;
+                                  return `Phone must be exactly ${ownerPhoneRule.label} for ${countryCode}`;
                               }
                               return true;
                             }
@@ -672,7 +691,10 @@ export default function ClientOnboarding() {
                     <label className="block text-xs font-medium text-gray-400 mb-1">HOA/Community Name *</label>
                     <input
                       type="text"
-                      {...register('hoa_name', { required: 'Required' })}
+                      {...register('hoa_name', { 
+                        required: 'Required',
+                        validate: validateBusinessName
+                      })}
                       placeholder="e.g. Whispering Pines HOA"
                       className="w-full bg-[#1e2f41] border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]"
                     />
@@ -713,7 +735,11 @@ export default function ClientOnboarding() {
                       <label className="block text-xs font-medium text-gray-400 mb-1">City/Town *</label>
                       <input
                         type="text"
-                        {...register('hoa_city', { required: 'Required' })}
+                        {...register('hoa_city', { 
+                          required: 'Required',
+                          validate: validateCity
+                        })}
+                        onKeyPress={onlyLettersKeyPress}
                         readOnly={addressSelected}
                         className={`w-full bg-[#1e2f41] border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75] ${
                           addressSelected ? 'opacity-65 bg-[#162535] cursor-not-allowed' : ''
@@ -770,7 +796,11 @@ export default function ClientOnboarding() {
                       <label className="block text-xs font-medium text-gray-400 mb-1">Zip Code *</label>
                       <input
                         type="text"
-                        {...register('hoa_zip_code', { required: 'Required' })}
+                        {...register('hoa_zip_code', { 
+                          required: 'Required',
+                          validate: validateZipCode
+                        })}
+                        onKeyPress={onlyZipKeyPress}
                         readOnly={addressSelected}
                         className={`w-full bg-[#1e2f41] border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75] ${
                           addressSelected ? 'opacity-65 bg-[#162535] cursor-not-allowed' : ''
@@ -886,7 +916,7 @@ export default function ClientOnboarding() {
                             {...register('routing_number', { required: paymentMethod === 'bank_account' })}
                             onKeyPress={(e) => {
                               if (!/[0-9]/.test(e.key)) {
-                                  e.preventDefault();
+                                e.preventDefault();
                               }
                             }}
                             className="w-full bg-[#162535] border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-[#1D9E75] font-mono"
@@ -899,7 +929,7 @@ export default function ClientOnboarding() {
                             {...register('account_number', { required: paymentMethod === 'bank_account' })}
                             onKeyPress={(e) => {
                               if (!/[0-9]/.test(e.key)) {
-                                  e.preventDefault();
+                                e.preventDefault();
                               }
                             }}
                             className="w-full bg-[#162535] border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-[#1D9E75] font-mono"
