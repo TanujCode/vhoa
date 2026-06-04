@@ -260,6 +260,8 @@ const Profile = ({ user, setUser, viewRole }) => {
   };
 
   const isResident = (viewRole || user?.role_name || user?.role) === 'resident';
+  const currentRole = (viewRole || user?.role_name || user?.role || '').toLowerCase();
+  const isStaff = ['super_admin', 'sales_admin'].includes(currentRole);
 
   return (
     <div className="text-slate-900 dark:text-white">
@@ -379,21 +381,25 @@ const Profile = ({ user, setUser, viewRole }) => {
                 <span className="text-slate-500 dark:text-gray-400">Role</span>
                 <span className="capitalize text-slate-800 dark:text-slate-200">{(viewRole || user?.role_name || user?.role)?.replace('_', ' ')}</span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-slate-500 dark:text-gray-400">Unit / Address</span>
-                <span className="text-slate-800 dark:text-slate-200">{user?.unit_no || '—'}</span>
-              </div>
-              {user?.unit_no_2 && (
-                <div className="flex flex-col gap-1 py-1">
-                  <span className="text-slate-500 dark:text-gray-400 text-xs">Other Units (P2)</span>
-                  <div className="flex flex-wrap gap-1 mt-0.5">
-                    {user.unit_no_2.split(',').map(u => u.trim()).filter(Boolean).map((unit, idx) => (
-                      <span key={idx} className="px-2 py-0.5 rounded bg-teal-500/10 text-teal-700 dark:bg-teal-500/20 dark:text-teal-400 border border-teal-500/10 text-xs font-medium">
-                        {unit}
-                      </span>
-                    ))}
+              {!isStaff && (
+                <>
+                  <div className="flex justify-between">
+                    <span className="text-slate-500 dark:text-gray-400">Unit / Address</span>
+                    <span className="text-slate-800 dark:text-slate-200">{user?.unit_no || '—'}</span>
                   </div>
-                </div>
+                  {user?.unit_no_2 && (
+                    <div className="flex flex-col gap-1 py-1">
+                      <span className="text-slate-500 dark:text-gray-400 text-xs">Other Units (P2)</span>
+                      <div className="flex flex-wrap gap-1 mt-0.5">
+                        {user.unit_no_2.split(',').map(u => u.trim()).filter(Boolean).map((unit, idx) => (
+                          <span key={idx} className="px-2 py-0.5 rounded bg-teal-500/10 text-teal-700 dark:bg-teal-500/20 dark:text-teal-400 border border-teal-500/10 text-xs font-medium">
+                            {unit}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </>
               )}
               <div className="flex justify-between">
                 <span className="text-slate-500 dark:text-gray-400">Timezone</span>
@@ -467,140 +473,144 @@ const Profile = ({ user, setUser, viewRole }) => {
                 </select>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="text-xs text-slate-500 dark:text-gray-400 mb-1.5 block">Primary Unit / Address</label>
-                  <input type="text" value={user?.unit_no || '—'} disabled className="w-full bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/5 rounded-xl px-4 py-3 text-sm text-slate-400 dark:text-gray-500 cursor-not-allowed" />
-                  <p className="text-xs text-slate-450 dark:text-gray-600 mt-1">Primary Unit cannot be changed</p>
-                </div>
-                <div>
-                  <label className="text-xs text-slate-500 dark:text-gray-400 mb-1.5 block">Secondary Units / Addresses (P2)</label>
-                  <div className="flex flex-wrap gap-2 p-3 bg-slate-50 dark:bg-[#1E3248] border border-slate-200 dark:border-white/10 rounded-xl min-h-[46px] items-center">
-                    {secondaryUnits.map((unit, idx) => (
-                      <span key={idx} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold bg-teal-500/10 text-teal-700 dark:bg-teal-500/20 dark:text-teal-400 border border-teal-500/20">
-                        {unit}
-                        {!isResident && (
-                          <button type="button" onClick={() => setSecondaryUnits(secondaryUnits.filter((_, i) => i !== idx))} className="hover:text-red-500 transition-colors ml-1">
-                            <XCircle size={12} />
-                          </button>
-                        )}
-                      </span>
-                    ))}
-                    {!isResident ? (
-                      <input
-                        type="text"
-                        value={unitInput}
-                        onChange={(e) => setUnitInput(e.target.value)}
-                        placeholder={secondaryUnits.length === 0 ? "e.g. Unit 2B, press Enter to add" : "Add unit..."}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') {
-                            e.preventDefault();
-                            const val = unitInput.trim();
-                            if (val && !secondaryUnits.includes(val)) {
-                              setSecondaryUnits([...secondaryUnits, val]);
-                              setUnitInput('');
-                            }
-                          }
-                        }}
-                        className="flex-1 bg-transparent border-0 outline-none text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-600 focus:ring-0 p-0 min-w-[120px]"
-                      />
-                    ) : (
-                      secondaryUnits.length === 0 && <span className="text-xs text-slate-400 dark:text-gray-500">No secondary units assigned</span>
-                    )}
-                  </div>
-                  <p className="text-xs text-slate-455 dark:text-gray-600 mt-1">
-                    {isResident 
-                      ? "Residents cannot modify their own unit numbers. Please contact a Board Member or Property Manager to request changes." 
-                      : "Press Enter to add multiple units. Click the 'X' to remove a unit."}
-                  </p>
-                </div>
-              </div>
-
-              <div className="border-t border-slate-200 dark:border-white/10 pt-5 space-y-4">
-                <h4 className="font-semibold text-sm text-slate-800 dark:text-white">Verification Documents</h4>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {/* ID Proof */}
-                  <div className="bg-slate-550/5 border border-slate-200 dark:border-white/5 rounded-3xl p-5 flex flex-col justify-between gap-4 transition hover:shadow-md">
+              {!isStaff && (
+                <>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <div className="flex items-center justify-between mb-3">
-                        <span className="text-xs font-bold text-slate-400 dark:text-gray-450 tracking-wider uppercase">Identity Proof</span>
-                        {user?.id_proof_url ? (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400 border border-emerald-500/20">
-                            <CheckCircle size={12} /> Uploaded
+                      <label className="text-xs text-slate-500 dark:text-gray-400 mb-1.5 block">Primary Unit / Address</label>
+                      <input type="text" value={user?.unit_no || '—'} disabled className="w-full bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/5 rounded-xl px-4 py-3 text-sm text-slate-400 dark:text-gray-500 cursor-not-allowed" />
+                      <p className="text-xs text-slate-450 dark:text-gray-600 mt-1">Primary Unit cannot be changed</p>
+                    </div>
+                    <div>
+                      <label className="text-xs text-slate-500 dark:text-gray-400 mb-1.5 block">Secondary Units / Addresses (P2)</label>
+                      <div className="flex flex-wrap gap-2 p-3 bg-slate-50 dark:bg-[#1E3248] border border-slate-200 dark:border-white/10 rounded-xl min-h-[46px] items-center">
+                        {secondaryUnits.map((unit, idx) => (
+                          <span key={idx} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold bg-teal-500/10 text-teal-700 dark:bg-teal-500/20 dark:text-teal-400 border border-teal-500/20">
+                            {unit}
+                            {!isResident && (
+                              <button type="button" onClick={() => setSecondaryUnits(secondaryUnits.filter((_, i) => i !== idx))} className="hover:text-red-500 transition-colors ml-1">
+                                <XCircle size={12} />
+                              </button>
+                            )}
                           </span>
+                        ))}
+                        {!isResident ? (
+                          <input
+                            type="text"
+                            value={unitInput}
+                            onChange={(e) => setUnitInput(e.target.value)}
+                            placeholder={secondaryUnits.length === 0 ? "e.g. Unit 2B, press Enter to add" : "Add unit..."}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                e.preventDefault();
+                                const val = unitInput.trim();
+                                if (val && !secondaryUnits.includes(val)) {
+                                  setSecondaryUnits([...secondaryUnits, val]);
+                                  setUnitInput('');
+                                }
+                              }
+                            }}
+                            className="flex-1 bg-transparent border-0 outline-none text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-600 focus:ring-0 p-0 min-w-[120px]"
+                          />
                         ) : (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400 border border-amber-500/20">
-                            <XCircle size={12} /> Pending
-                          </span>
+                          secondaryUnits.length === 0 && <span className="text-xs text-slate-400 dark:text-gray-500">No secondary units assigned</span>
                         )}
                       </div>
-
-                      {user?.id_proof_url ? (
-                        <div className="flex items-center gap-2 mt-2">
-                          <a
-                            href={getBaseUrl(user.id_proof_url)}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1.5 text-xs text-teal-600 hover:text-teal-500 dark:text-teal-400 dark:hover:text-teal-300 font-medium transition bg-teal-500/5 hover:bg-teal-500/10 px-3 py-1.5 rounded-lg border border-teal-500/10"
-                          >
-                            <Eye size={14} /> View Document
-                          </a>
-                        </div>
-                      ) : (
-                        <p className="text-xs text-slate-400 dark:text-gray-500 mt-1">No identity verification document uploaded yet.</p>
-                      )}
-                    </div>
-
-                    <div className="border-t border-slate-100 dark:border-white/5 pt-3 mt-1">
-                      <label className="w-full inline-flex items-center justify-center gap-2 py-2 bg-slate-50 hover:bg-slate-100 dark:bg-[#1E3248] dark:hover:bg-[#253d58] border border-slate-200 dark:border-white/10 text-center rounded-xl text-xs font-semibold text-slate-700 dark:text-white cursor-pointer transition">
-                        {uploadingId ? 'Uploading...' : user?.id_proof_url ? 'Replace Document' : 'Upload ID Proof'}
-                        <input type="file" accept="image/*,application/pdf" onChange={handleIdProofUpload} disabled={uploadingId} className="hidden" />
-                      </label>
+                      <p className="text-xs text-slate-450 dark:text-gray-600 mt-1">
+                        {isResident 
+                          ? "Residents cannot modify their own unit numbers. Please contact a Board Member or Property Manager to request changes." 
+                          : "Press Enter to add multiple units. Click the 'X' to remove a unit."}
+                      </p>
                     </div>
                   </div>
 
-                  {/* Address Proof */}
-                  <div className="bg-slate-550/5 border border-slate-200 dark:border-white/5 rounded-3xl p-5 flex flex-col justify-between gap-4 transition hover:shadow-md">
-                    <div>
-                      <div className="flex items-center justify-between mb-3">
-                        <span className="text-xs font-bold text-slate-400 dark:text-gray-450 tracking-wider uppercase">Address Proof</span>
-                        {user?.address_proof_url ? (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400 border border-emerald-500/20">
-                            <CheckCircle size={12} /> Uploaded
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400 border border-amber-500/20">
-                            <XCircle size={12} /> Pending
-                          </span>
-                        )}
+                  <div className="border-t border-slate-200 dark:border-white/10 pt-5 space-y-4">
+                    <h4 className="font-semibold text-sm text-slate-800 dark:text-white">Verification Documents</h4>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {/* ID Proof */}
+                      <div className="bg-slate-550/5 border border-slate-200 dark:border-white/5 rounded-3xl p-5 flex flex-col justify-between gap-4 transition hover:shadow-md">
+                        <div>
+                          <div className="flex items-center justify-between mb-3">
+                            <span className="text-xs font-bold text-slate-400 dark:text-gray-455 tracking-wider uppercase">Identity Proof</span>
+                            {user?.id_proof_url ? (
+                              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400 border border-emerald-500/20">
+                                <CheckCircle size={12} /> Uploaded
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400 border border-amber-500/20">
+                                <XCircle size={12} /> Pending
+                              </span>
+                            )}
+                          </div>
+
+                          {user?.id_proof_url ? (
+                            <div className="flex items-center gap-2 mt-2">
+                              <a
+                                href={getBaseUrl(user.id_proof_url)}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1.5 text-xs text-teal-600 hover:text-teal-500 dark:text-teal-400 dark:hover:text-teal-300 font-medium transition bg-teal-500/5 hover:bg-teal-500/10 px-3 py-1.5 rounded-lg border border-teal-500/10"
+                              >
+                                <Eye size={14} /> View Document
+                              </a>
+                            </div>
+                          ) : (
+                            <p className="text-xs text-slate-400 dark:text-gray-500 mt-1">No identity verification document uploaded yet.</p>
+                          )}
+                        </div>
+
+                        <div className="border-t border-slate-100 dark:border-white/5 pt-3 mt-1">
+                          <label className="w-full inline-flex items-center justify-center gap-2 py-2 bg-slate-50 hover:bg-slate-100 dark:bg-[#1E3248] dark:hover:bg-[#253d58] border border-slate-200 dark:border-white/10 text-center rounded-xl text-xs font-semibold text-slate-700 dark:text-white cursor-pointer transition">
+                            {uploadingId ? 'Uploading...' : user?.id_proof_url ? 'Replace Document' : 'Upload ID Proof'}
+                            <input type="file" accept="image/*,application/pdf" onChange={handleIdProofUpload} disabled={uploadingId} className="hidden" />
+                          </label>
+                        </div>
                       </div>
 
-                      {user?.address_proof_url ? (
-                        <div className="flex items-center gap-2 mt-2">
-                          <a
-                            href={getBaseUrl(user.address_proof_url)}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1.5 text-xs text-purple-600 hover:text-purple-500 dark:text-purple-400 dark:hover:text-purple-300 font-medium transition bg-purple-500/5 hover:bg-purple-500/10 px-3 py-1.5 rounded-lg border border-purple-500/10"
-                          >
-                            <Eye size={14} /> View Document
-                          </a>
-                        </div>
-                      ) : (
-                        <p className="text-xs text-slate-400 dark:text-gray-500 mt-1">No address verification document uploaded yet.</p>
-                      )}
-                    </div>
+                      {/* Address Proof */}
+                      <div className="bg-slate-550/5 border border-slate-200 dark:border-white/5 rounded-3xl p-5 flex flex-col justify-between gap-4 transition hover:shadow-md">
+                        <div>
+                          <div className="flex items-center justify-between mb-3">
+                            <span className="text-xs font-bold text-slate-400 dark:text-gray-455 tracking-wider uppercase">Address Proof</span>
+                            {user?.address_proof_url ? (
+                              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400 border border-emerald-500/20">
+                                <CheckCircle size={12} /> Uploaded
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400 border border-amber-500/20">
+                                <XCircle size={12} /> Pending
+                              </span>
+                            )}
+                          </div>
 
-                    <div className="border-t border-slate-100 dark:border-white/5 pt-3 mt-1">
-                      <label className="w-full inline-flex items-center justify-center gap-2 py-2 bg-slate-50 hover:bg-slate-100 dark:bg-[#1E3248] dark:hover:bg-[#253d58] border border-slate-200 dark:border-white/10 text-center rounded-xl text-xs font-semibold text-slate-700 dark:text-white cursor-pointer transition">
-                        {uploadingAddr ? 'Uploading...' : user?.address_proof_url ? 'Replace Document' : 'Upload Address Proof'}
-                        <input type="file" accept="image/*,application/pdf" onChange={handleAddressProofUpload} disabled={uploadingAddr} className="hidden" />
-                      </label>
+                          {user?.address_proof_url ? (
+                            <div className="flex items-center gap-2 mt-2">
+                              <a
+                                href={getBaseUrl(user.address_proof_url)}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1.5 text-xs text-purple-600 hover:text-purple-500 dark:text-purple-400 dark:hover:text-purple-300 font-medium transition bg-purple-500/5 hover:bg-purple-500/10 px-3 py-1.5 rounded-lg border border-purple-500/10"
+                              >
+                                <Eye size={14} /> View Document
+                              </a>
+                            </div>
+                          ) : (
+                            <p className="text-xs text-slate-400 dark:text-gray-500 mt-1">No address verification document uploaded yet.</p>
+                          )}
+                        </div>
+
+                        <div className="border-t border-slate-100 dark:border-white/5 pt-3 mt-1">
+                          <label className="w-full inline-flex items-center justify-center gap-2 py-2 bg-slate-50 hover:bg-slate-100 dark:bg-[#1E3248] dark:hover:bg-[#253d58] border border-slate-200 dark:border-white/10 text-center rounded-xl text-xs font-semibold text-slate-700 dark:text-white cursor-pointer transition">
+                            {uploadingAddr ? 'Uploading...' : user?.address_proof_url ? 'Replace Document' : 'Upload Address Proof'}
+                            <input type="file" accept="image/*,application/pdf" onChange={handleAddressProofUpload} disabled={uploadingAddr} className="hidden" />
+                          </label>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </div>
+                </>
+              )}
 
               <button onClick={handleSave} disabled={saving} className="w-full py-3 bg-teal-600 hover:bg-teal-500 text-white rounded-2xl font-medium transition disabled:opacity-50 flex items-center justify-center gap-2">
                 <Save size={16} />
@@ -628,7 +638,7 @@ const Profile = ({ user, setUser, viewRole }) => {
                     <div key={item.key} className="flex items-center justify-between py-3 border-b border-slate-100 dark:border-white/10 last:border-0">
                       <div>
                         <p className="text-slate-900 dark:text-white text-sm">{item.label}</p>
-                        {item.sub && <p className="text-xs text-slate-455 dark:text-gray-500">{item.sub}</p>}
+                        {item.sub && <p className="text-xs text-slate-450 dark:text-gray-500">{item.sub}</p>}
                       </div>
                       <button
                         onClick={() => setEmailNotifications(prev => ({...prev, [item.key]: !prev[item.key]}))}

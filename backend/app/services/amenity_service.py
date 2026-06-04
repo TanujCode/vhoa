@@ -246,6 +246,66 @@ def get_bookings(
     status: str | None = None,
     skip: int = 0, limit: int = 20,
 ) -> list[AmenityBooking]:
+    # Auto-complete past approved bookings in community's local timezone
+    try:
+        from app.models.community import Community
+        from zoneinfo import ZoneInfo
+        comm = db.query(Community).filter(Community.community_id == community_id).first()
+        comm_tz = comm.time_zone if comm and comm.time_zone else "America/New_York"
+        
+        tz = ZoneInfo(comm_tz)
+        now_in_tz = datetime.now(tz)
+        today = now_in_tz.date()
+        now_time_str = now_in_tz.strftime("%H:%M")
+        
+        # 1. Bookings where booking_date is yesterday or older (APPROVED -> COMPLETED, PENDING -> CANCELLED)
+        past_approved = db.query(AmenityBooking).filter(
+            AmenityBooking.community_id == community_id,
+            AmenityBooking.status == "APPROVED",
+            AmenityBooking.booking_date < today,
+            AmenityBooking.active_status == True
+        ).all()
+        
+        past_pending = db.query(AmenityBooking).filter(
+            AmenityBooking.community_id == community_id,
+            AmenityBooking.status == "PENDING",
+            AmenityBooking.booking_date < today,
+            AmenityBooking.active_status == True
+        ).all()
+        
+        # 2. Bookings where booking_date is today, but slot_end time has passed
+        today_past_approved = db.query(AmenityBooking).filter(
+            AmenityBooking.community_id == community_id,
+            AmenityBooking.status == "APPROVED",
+            AmenityBooking.booking_date == today,
+            AmenityBooking.slot_end <= now_time_str,
+            AmenityBooking.active_status == True
+        ).all()
+        
+        today_past_pending = db.query(AmenityBooking).filter(
+            AmenityBooking.community_id == community_id,
+            AmenityBooking.status == "PENDING",
+            AmenityBooking.booking_date == today,
+            AmenityBooking.slot_end <= now_time_str,
+            AmenityBooking.active_status == True
+        ).all()
+        
+        updated = False
+        for b in (past_approved + today_past_approved):
+            b.status = "COMPLETED"
+            updated = True
+            
+        for b in (past_pending + today_past_pending):
+            b.status = "CANCELLED"
+            b.cancel_reason = "System Auto-Cancelled: Slot expired without approval."
+            updated = True
+            
+        if updated:
+            db.commit()
+    except Exception as e:
+        print(f"Error auto-completing/cancelling bookings: {e}")
+        db.rollback()
+
     query = db.query(AmenityBooking).filter(
         AmenityBooking.community_id  == community_id,
         AmenityBooking.active_status == True,

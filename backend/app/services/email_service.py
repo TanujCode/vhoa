@@ -1,10 +1,11 @@
 import smtplib
+import threading
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from app.config import settings
 
 
-def send_email(to_email: str, subject: str, html_body: str) -> bool:
+def _send_email_thread(to_email: str, subject: str, html_body: str):
     try:
         msg = MIMEMultipart("alternative")
         msg["Subject"] = subject
@@ -13,16 +14,21 @@ def send_email(to_email: str, subject: str, html_body: str) -> bool:
 
         msg.attach(MIMEText(html_body, "html"))
 
+        # Added a 10 second timeout to prevent the thread from hanging indefinitely
         with smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=10) as server:
             server.login(settings.MAIL_USERNAME, settings.MAIL_PASSWORD)
             server.sendmail(settings.MAIL_FROM, to_email, msg.as_string())
 
         print(f"Email sent to {to_email}")
-        return True
-
     except Exception as e:
         print(f"Email failed: {e}")
-        return False
+
+
+def send_email(to_email: str, subject: str, html_body: str) -> bool:
+    # Run SMTP transport asynchronously in a background thread so it doesn't block the request lifecycle
+    thread = threading.Thread(target=_send_email_thread, args=(to_email, subject, html_body))
+    thread.start()
+    return True
 
 
 # ══════════════════════════════════════════════
