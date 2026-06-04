@@ -11,9 +11,11 @@ from app.services.contract_service import (
     get_contract_by_code,
     get_contract_by_id,
     update_contract,
+    delete_contract_by_id,
 )
 
 router = APIRouter(prefix="/contracts", tags=["Contracts"])
+
 
 
 @router.post("", response_model=ContractOut, status_code=201)
@@ -87,3 +89,16 @@ def update_existing_contract(
     if not contract:
         raise HTTPException(status_code=404, detail="Contract not found.")
     return contract
+
+
+@router.delete("/{contract_id}")
+def delete_existing_contract(
+    contract_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("super_admin", "sales_admin")),
+):
+    success = delete_contract_by_id(contract_id, db)
+    if not success:
+        raise HTTPException(status_code=404, detail="Contract not found.")
+    return {"detail": "Contract deleted successfully"}
+

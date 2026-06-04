@@ -80,3 +80,13 @@ def update_contract(contract_id: int, data: ContractUpdate, user_id: int, db: Se
     db.commit()
     db.refresh(contract)
     return contract
+
+
+def delete_contract_by_id(contract_id: int, db: Session) -> bool:
+    contract = get_contract_by_id(contract_id, db)
+    if not contract:
+        return False
+    db.delete(contract)
+    db.commit()
+    return True
+

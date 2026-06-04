@@ -24,6 +24,13 @@ export const updateContract = async (id, data) => {
   return res.data;
 };
 
+// Delete a contract (Super Admin / Sales Admin only)
+export const deleteContract = async (id) => {
+  const res = await API.delete(`/contracts/${id}`);
+  return res.data;
+};
+
+
 // Verify contract code (Public endpoint)
 export const verifyContractCode = async (code) => {
   const res = await API.get(`/contracts/code/${code}`);

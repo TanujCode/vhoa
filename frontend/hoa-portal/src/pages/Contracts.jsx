@@ -5,7 +5,7 @@ import {
   Clock, AlertCircle, Copy, Check, X, Info, 
   MapPin, Phone, Mail, User, Building, Trash2, RefreshCw
 } from 'lucide-react';
-import { getContracts, createContract, updateContract } from '../services/contractService';
+import { getContracts, createContract, updateContract, deleteContract } from '../services/contractService';
 import { validateEmail } from '../utils/emailValidation';
 import {
   validateName, validateCity, validateCountry, validateZipCode,
@@ -249,6 +249,22 @@ export default function Contracts() {
     }
   };
 
+  const handleDeleteContract = async (contractId) => {
+    if (!window.confirm('Are you sure you want to delete this contract? This action cannot be undone.')) {
+      return;
+    }
+    try {
+      setErrorMsg('');
+      setSuccessMsg('');
+      await deleteContract(contractId);
+      setSuccessMsg('Contract deleted successfully!');
+      setTimeout(() => setSuccessMsg(''), 3000);
+      fetchContracts();
+    } catch (err) {
+      setErrorMsg(err.response?.data?.detail || 'Failed to delete contract.');
+    }
+  };
+
   // Filter and search contracts
   const filteredContracts = contracts.filter((c) => {
     const matchesStatus = filterStatus === 'ALL' || c.status === filterStatus;
@@ -489,9 +505,13 @@ export default function Contracts() {
                           {contract.status === 'ACTIVE' ? 'Set Draft' : 'Activate'}
                         </button>
                       )}
-                      {contract.status === 'ONBOARDED' && (
-                        <span className="text-xs text-slate-500 dark:text-gray-500 italic">No actions</span>
-                      )}
+                      <button
+                        onClick={() => handleDeleteContract(contract.contract_id)}
+                        className="p-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-lg transition"
+                        title="Delete Contract"
+                      >
+                        <Trash2 size={14} />
+                      </button>
                     </div>
                   </td>
                 </tr>
