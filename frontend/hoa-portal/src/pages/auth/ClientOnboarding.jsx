@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { 
@@ -34,6 +34,12 @@ export default function ClientOnboarding() {
   const [countries, setCountries] = useState([]);
   const [states, setStates] = useState([]);
   const [selectedCountry, setSelectedCountry] = useState('');
+  
+  const mapboxToken = (import.meta.env.VITE_MAPBOX_ACCESS_TOKEN || '').replace(/['"]/g, "").trim();
+  const [addressSuggestions, setAddressSuggestions] = useState([]);
+  const [searchingAddress, setSearchingAddress] = useState(false);
+  const [addressSelected, setAddressSelected] = useState(false);
+  const addressTimeoutRef = useRef(null);
   
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
@@ -72,6 +78,7 @@ export default function ClientOnboarding() {
   const contractCodeValue = watch('contract_code');
   const passwordValue = watch('password');
   const paymentMethod = watch('payment_method');
+  const hoaAddressRegister = register('hoa_address', { required: 'Required' });
 
   // Load countries and prefill code from URL on mount
   useEffect(() => {
@@ -175,6 +182,124 @@ export default function ClientOnboarding() {
     } finally {
       setLoadingCode(false);
     }
+  };
+
+  useEffect(() => {
+    return () => {
+      if (addressTimeoutRef.current) {
+        clearTimeout(addressTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  const handleAddressInputChange = (val) => {
+    if (!mapboxToken || mapboxToken.startsWith('pk.placeholder_please_replace')) {
+      return;
+    }
+
+    if (addressTimeoutRef.current) {
+      clearTimeout(addressTimeoutRef.current);
+    }
+
+    if (!val || val.trim().length < 3) {
+      setAddressSuggestions([]);
+      return;
+    }
+
+    addressTimeoutRef.current = setTimeout(async () => {
+      try {
+        setSearchingAddress(true);
+        const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(val)}.json?access_token=${mapboxToken}&autocomplete=true&types=address&limit=5`;
+        const response = await fetch(url);
+        if (!response.ok) throw new Error('Mapbox API failed');
+        const data = await response.json();
+        setAddressSuggestions(data.features || []);
+      } catch (err) {
+        console.error('Error fetching address suggestions:', err);
+        setAddressSuggestions([]);
+      } finally {
+        setSearchingAddress(false);
+      }
+    }, 600);
+  };
+
+  const handleSelectSuggestion = async (feature) => {
+    setAddressSuggestions([]);
+    
+    const streetNumber = feature.address || '';
+    const streetName = feature.text || '';
+    const fullStreet = streetNumber ? `${streetNumber} ${streetName}`.trim() : streetName;
+    
+    let city = '';
+    let zipCode = '';
+    let stateName = '';
+    let stateCode = '';
+    let countryName = '';
+    let countryCode = '';
+
+    if (feature.context) {
+      feature.context.forEach((item) => {
+        if (item.id.startsWith('postcode')) {
+          zipCode = item.text;
+        } else if (item.id.startsWith('place') || item.id.startsWith('locality')) {
+          city = item.text;
+        } else if (item.id.startsWith('region')) {
+          stateName = item.text;
+          stateCode = item.short_code ? item.short_code.replace(/^[^-]+-/, '').toUpperCase() : '';
+        } else if (item.id.startsWith('country')) {
+          countryName = item.text;
+          countryCode = item.short_code ? item.short_code.toUpperCase() : '';
+        }
+      });
+    }
+
+    setValue('hoa_address', fullStreet || feature.place_name);
+    if (city) setValue('hoa_city', city);
+    if (zipCode) setValue('hoa_zip_code', zipCode);
+
+    let matchedCountry = null;
+    if (countryCode || countryName) {
+      matchedCountry = countries.find(c => 
+        (countryCode && c.country_code?.toUpperCase() === countryCode) ||
+        (countryName && c.country_name?.toLowerCase() === countryName.toLowerCase())
+      );
+    }
+
+    if (matchedCountry) {
+      const countryId = matchedCountry.country_id;
+      setValue('hoa_country_id', countryId);
+      setSelectedCountry(countryId);
+      
+      try {
+        const res = await API.get(`/location/states/${countryId}`);
+        setStates(res.data);
+        
+        let matchedState = null;
+        if (stateCode || stateName) {
+          matchedState = res.data.find(s => 
+            (stateCode && s.state_code?.toUpperCase() === stateCode) ||
+            (stateName && s.state_name?.toLowerCase() === stateName.toLowerCase())
+          );
+        }
+        
+        if (matchedState) {
+          setValue('hoa_state_id', matchedState.state_id);
+        } else if (res.data.length > 0) {
+          setValue('hoa_state_id', res.data[0].state_id);
+        }
+      } catch (err) {
+        console.error('Failed to load/resolve states:', err);
+      }
+    }
+
+    setAddressSelected(true);
+  };
+
+  const handleResetAddress = () => {
+    setAddressSelected(false);
+    setValue('hoa_address', '');
+    setValue('hoa_city', '');
+    setValue('hoa_zip_code', '');
   };
 
   const handleCountryChange = (e) => {
@@ -510,7 +635,9 @@ export default function ClientOnboarding() {
                           required: true,
                           onChange: handleCountryChange
                         })}
-                        className="w-full bg-[#1e2f41] border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]"
+                        className={`w-full bg-[#1e2f41] border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75] ${
+                          addressSelected ? 'pointer-events-none opacity-60 bg-[#162535]' : ''
+                        }`}
                       >
                         {countries.map((c) => (
                           <option key={c.country_id} value={c.country_id}>{c.country_name}</option>
@@ -521,7 +648,9 @@ export default function ClientOnboarding() {
                       <label className="block text-xs font-medium text-gray-400 mb-1">State *</label>
                       <select
                         {...register('hoa_state_id', { required: true })}
-                        className="w-full bg-[#1e2f41] border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]"
+                        className={`w-full bg-[#1e2f41] border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75] ${
+                          addressSelected ? 'pointer-events-none opacity-60 bg-[#162535]' : ''
+                        }`}
                       >
                         {states.map((s) => (
                           <option key={s.state_id} value={s.state_id}>{s.state_name}</option>
@@ -533,32 +662,87 @@ export default function ClientOnboarding() {
                       <input
                         type="text"
                         {...register('hoa_city', { required: 'Required' })}
-                        className="w-full bg-[#1e2f41] border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]"
+                        readOnly={addressSelected}
+                        className={`w-full bg-[#1e2f41] border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75] ${
+                          addressSelected ? 'opacity-65 bg-[#162535] cursor-not-allowed' : ''
+                        }`}
                       />
                       {errors.hoa_city && <span className="text-xs text-red-400">{errors.hoa_city.message}</span>}
                     </div>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="md:col-span-2">
+                    <div className="md:col-span-2 relative">
                       <label className="block text-xs font-medium text-gray-400 mb-1">HOA Address (Street Name & No) *</label>
                       <input
                         type="text"
-                        {...register('hoa_address', { required: 'Required' })}
-                        className="w-full bg-[#1e2f41] border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]"
+                        name={hoaAddressRegister.name}
+                        ref={hoaAddressRegister.ref}
+                        onBlur={hoaAddressRegister.onBlur}
+                        onChange={(e) => {
+                          hoaAddressRegister.onChange(e);
+                          handleAddressInputChange(e.target.value);
+                        }}
+                        readOnly={addressSelected}
+                        placeholder={mapboxToken ? "Start typing to search..." : "Street Name & No"}
+                        className={`w-full bg-[#1e2f41] border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75] ${
+                          addressSelected ? 'opacity-65 bg-[#162535] cursor-not-allowed' : ''
+                        }`}
                       />
                       {errors.hoa_address && <span className="text-xs text-red-400">{errors.hoa_address.message}</span>}
+
+                      {/* Autocomplete suggestions dropdown */}
+                      {searchingAddress && (
+                        <div className="absolute z-50 w-full mt-1 bg-[#1e2f41] border border-white/10 rounded-xl p-3 text-xs text-gray-400 flex items-center gap-2">
+                          <RefreshCw size={14} className="animate-spin text-teal-400" />
+                          Searching address...
+                        </div>
+                      )}
+
+                      {!searchingAddress && addressSuggestions.length > 0 && (
+                        <div className="absolute z-50 w-full mt-1 bg-[#162535] border border-white/10 rounded-xl overflow-hidden shadow-2xl max-h-60 overflow-y-auto">
+                          {addressSuggestions.map((feature) => (
+                            <button
+                              key={feature.id}
+                              type="button"
+                              onClick={() => handleSelectSuggestion(feature)}
+                              className="w-full text-left px-4 py-2.5 hover:bg-teal-500/10 hover:text-teal-400 text-xs text-gray-200 border-b border-white/5 last:border-0 transition-colors"
+                            >
+                              {feature.place_name}
+                            </button>
+                          ))}
+                        </div>
+                      )}
                     </div>
                     <div>
                       <label className="block text-xs font-medium text-gray-400 mb-1">Zip Code *</label>
                       <input
                         type="text"
                         {...register('hoa_zip_code', { required: 'Required' })}
-                        className="w-full bg-[#1e2f41] border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]"
+                        readOnly={addressSelected}
+                        className={`w-full bg-[#1e2f41] border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75] ${
+                          addressSelected ? 'opacity-65 bg-[#162535] cursor-not-allowed' : ''
+                        }`}
                       />
                       {errors.hoa_zip_code && <span className="text-xs text-red-400">{errors.hoa_zip_code.message}</span>}
                     </div>
                   </div>
+
+                  {addressSelected && (
+                    <div className="p-3 bg-emerald-500/10 border border-emerald-500/25 rounded-xl flex items-center justify-between text-xs text-[#25C490]">
+                      <div className="flex items-center gap-1.5 font-medium">
+                        <CheckCircle size={14} />
+                        <span>Address auto-filled & verified via Mapbox.</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handleResetAddress}
+                        className="underline text-teal-400 hover:text-teal-300 font-semibold cursor-pointer"
+                      >
+                        Reset / Edit Address
+                      </button>
+                    </div>
+                  )}
 
                   <div>
                     <label className="block text-xs font-medium text-gray-400 mb-1">HOA Contact Phone</label>
@@ -620,6 +804,11 @@ export default function ClientOnboarding() {
                           <input
                             type="text"
                             {...register('routing_number', { required: paymentMethod === 'bank_account' })}
+                            onKeyPress={(e) => {
+                              if (!/[0-9]/.test(e.key)) {
+                                e.preventDefault();
+                              }
+                            }}
                             className="w-full bg-[#162535] border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-[#1D9E75] font-mono"
                           />
                         </div>
@@ -628,6 +817,11 @@ export default function ClientOnboarding() {
                           <input
                             type="password"
                             {...register('account_number', { required: paymentMethod === 'bank_account' })}
+                            onKeyPress={(e) => {
+                              if (!/[0-9]/.test(e.key)) {
+                                e.preventDefault();
+                              }
+                            }}
                             className="w-full bg-[#162535] border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-[#1D9E75] font-mono"
                           />
                         </div>
@@ -647,6 +841,11 @@ export default function ClientOnboarding() {
                           <input
                             type="text"
                             {...register('card_number', { required: paymentMethod === 'credit_card' })}
+                            onKeyPress={(e) => {
+                              if (!/[0-9\s]/.test(e.key)) {
+                                e.preventDefault();
+                              }
+                            }}
                             className="w-full bg-[#162535] border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-[#1D9E75] font-mono"
                           />
                         </div>
@@ -656,6 +855,11 @@ export default function ClientOnboarding() {
                             type="text"
                             placeholder="MM/YY"
                             {...register('card_expiry', { required: paymentMethod === 'credit_card' })}
+                            onKeyPress={(e) => {
+                              if (!/[0-9/]/.test(e.key)) {
+                                e.preventDefault();
+                              }
+                            }}
                             className="w-full bg-[#162535] border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-[#1D9E75] font-mono"
                           />
                         </div>
@@ -665,6 +869,11 @@ export default function ClientOnboarding() {
                             type="password"
                             maxLength="4"
                             {...register('card_cvv', { required: paymentMethod === 'credit_card' })}
+                            onKeyPress={(e) => {
+                              if (!/[0-9]/.test(e.key)) {
+                                e.preventDefault();
+                              }
+                            }}
                             className="w-full bg-[#162535] border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-[#1D9E75] font-mono"
                           />
                         </div>
@@ -677,7 +886,7 @@ export default function ClientOnboarding() {
                     <div className="flex-1">
                       <label className="block text-xs font-semibold text-gray-400 uppercase mb-2">Math Captcha Verification *</label>
                       <div className="flex items-center gap-3">
-                        <span className="text-xl font-bold bg-[#162535] border border-white/10 px-4 py-2 rounded-xl text-yellow-400 font-mono tracking-widest select-none">
+                        <span className="text-xl font-bold bg-[#162535] border border-white/10 px-4 py-2 rounded-xl text-yellow-400 font-mono tracking-widest">
                           {loadingCaptcha ? '...' : captcha.question}
                         </span>
                         <button
@@ -698,7 +907,18 @@ export default function ClientOnboarding() {
                       <label className="block text-xs font-medium text-gray-400 mb-1">Your Answer *</label>
                       <input
                         type="text"
-                        {...register('captcha_answer', { required: 'Captcha is required' })}
+                        {...register('captcha_answer', { 
+                          required: 'Captcha is required',
+                          pattern: {
+                            value: /^[0-9]+$/,
+                            message: 'Numbers only'
+                          }
+                        })}
+                        onKeyPress={(e) => {
+                          if (!/[0-9]/.test(e.key)) {
+                            e.preventDefault();
+                          }
+                        }}
                         placeholder="Result"
                         className="w-full bg-[#162535] border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75] font-mono text-center font-bold text-lg"
                       />

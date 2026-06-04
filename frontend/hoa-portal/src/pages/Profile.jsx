@@ -268,7 +268,7 @@ const Profile = ({ user, setUser, viewRole }) => {
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-semibold text-slate-900 dark:text-white">Profile Settings</h1>
-        <p className="text-slate-550 dark:text-gray-400 mt-1">Manage your account and preferences</p>
+        <p className="text-slate-555 dark:text-gray-400 mt-1">Manage your account and preferences</p>
       </div>
 
       {/* Message */}
@@ -333,7 +333,7 @@ const Profile = ({ user, setUser, viewRole }) => {
             </div>
 
             <h3 className="text-xl font-semibold text-slate-900 dark:text-white">{user?.name || user?.full_name}</h3>
-            <p className="text-slate-500 dark:text-gray-400 text-sm capitalize mt-1">
+            <p className="text-slate-550 dark:text-gray-400 text-sm capitalize mt-1">
               {(viewRole || user?.role)?.replace('_', ' ')}
             </p>
 
@@ -463,7 +463,18 @@ const Profile = ({ user, setUser, viewRole }) => {
 
               <div>
                 <label className="text-xs text-slate-500 dark:text-gray-400 mb-1.5 block">Mobile Number</label>
-                <input type="tel" value={form.mobile_number} onChange={e => setForm({...form, mobile_number: e.target.value})} placeholder="+1 512-555-0198" className="w-full bg-slate-50 dark:bg-[#1E3248] border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-600 focus:outline-none focus:border-teal-500" />
+                <input
+                  type="tel"
+                  value={form.mobile_number}
+                  onChange={e => setForm({...form, mobile_number: e.target.value})}
+                  onKeyPress={(e) => {
+                    if (!/[\d\s\-+]/.test(e.key)) {
+                      e.preventDefault();
+                    }
+                  }}
+                  placeholder="+1 512-555-0198"
+                  className="w-full bg-slate-50 dark:bg-[#1E3248] border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-600 focus:outline-none focus:border-teal-500"
+                />
               </div>
 
               <div>
@@ -502,12 +513,12 @@ const Profile = ({ user, setUser, viewRole }) => {
                             placeholder={secondaryUnits.length === 0 ? "e.g. Unit 2B, press Enter to add" : "Add unit..."}
                             onKeyDown={(e) => {
                               if (e.key === 'Enter') {
-                                e.preventDefault();
-                                const val = unitInput.trim();
-                                if (val && !secondaryUnits.includes(val)) {
-                                  setSecondaryUnits([...secondaryUnits, val]);
-                                  setUnitInput('');
-                                }
+                                  e.preventDefault();
+                                  const val = unitInput.trim();
+                                  if (val && !secondaryUnits.includes(val)) {
+                                    setSecondaryUnits([...secondaryUnits, val]);
+                                    setUnitInput('');
+                                  }
                               }
                             }}
                             className="flex-1 bg-transparent border-0 outline-none text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-600 focus:ring-0 p-0 min-w-[120px]"
@@ -550,7 +561,7 @@ const Profile = ({ user, setUser, viewRole }) => {
                                 href={getBaseUrl(user.id_proof_url)}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="inline-flex items-center gap-1.5 text-xs text-teal-600 hover:text-teal-500 dark:text-teal-400 dark:hover:text-teal-300 font-medium transition bg-teal-500/5 hover:bg-teal-500/10 px-3 py-1.5 rounded-lg border border-teal-500/10"
+                                className="inline-flex items-center gap-1.5 text-xs text-teal-650 hover:text-teal-500 dark:text-teal-400 dark:hover:text-teal-300 font-medium transition bg-teal-500/5 hover:bg-teal-500/10 px-3 py-1.5 rounded-lg border border-teal-500/10"
                               >
                                 <Eye size={14} /> View Document
                               </a>
@@ -569,7 +580,7 @@ const Profile = ({ user, setUser, viewRole }) => {
                       </div>
 
                       {/* Address Proof */}
-                      <div className="bg-slate-550/5 border border-slate-200 dark:border-white/5 rounded-3xl p-5 flex flex-col justify-between gap-4 transition hover:shadow-md">
+                      <div className="bg-slate-555/5 border border-slate-200 dark:border-white/5 rounded-3xl p-5 flex flex-col justify-between gap-4 transition hover:shadow-md">
                         <div>
                           <div className="flex items-center justify-between mb-3">
                             <span className="text-xs font-bold text-slate-400 dark:text-gray-455 tracking-wider uppercase">Address Proof</span>
@@ -698,7 +709,19 @@ const Profile = ({ user, setUser, viewRole }) => {
                 <div className="space-y-4">
                   <div>
                     <label className="text-xs text-slate-500 dark:text-gray-400 mb-1.5 block">OTP Code</label>
-                    <input type="text" maxLength={6} placeholder="6 digit OTP" value={pwdForm.otp_code} onChange={e => setPwdForm({...pwdForm, otp_code: e.target.value})} className="w-full bg-slate-50 dark:bg-[#1E3248] border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-600 focus:outline-none focus:border-teal-500 tracking-widest" />
+                    <input
+                      type="text"
+                      maxLength={6}
+                      placeholder="6 digit OTP"
+                      value={pwdForm.otp_code}
+                      onChange={e => setPwdForm({...pwdForm, otp_code: e.target.value})}
+                      onKeyPress={(e) => {
+                        if (!/[0-9]/.test(e.key)) {
+                          e.preventDefault();
+                        }
+                      }}
+                      className="w-full bg-slate-50 dark:bg-[#1E3248] border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-600 focus:outline-none focus:border-teal-500 tracking-widest"
+                    />
                   </div>
 
                   <div>

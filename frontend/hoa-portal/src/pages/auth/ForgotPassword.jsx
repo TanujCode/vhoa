@@ -142,6 +142,11 @@ const ForgotPassword = () => {
                   maxLength={6}
                   value={otp}
                   onChange={(e) => setOtp(e.target.value)}
+                  onKeyPress={(e) => {
+                    if (!/[0-9]/.test(e.key)) {
+                      e.preventDefault();
+                    }
+                  }}
                   required
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none pl-10 text-sm text-gray-900 bg-white dark:text-gray-900 dark:bg-white text-center text-lg tracking-widest font-mono"
                   placeholder="123456"

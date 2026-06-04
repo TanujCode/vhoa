@@ -259,6 +259,11 @@ const Settings = ({ community }) => {
                       placeholder="Account No"
                       value={form.bank_account_no}
                       onChange={e => setForm({...form, bank_account_no: e.target.value})}
+                      onKeyPress={(e) => {
+                        if (!/[0-9]/.test(e.key)) {
+                          e.preventDefault();
+                        }
+                      }}
                       className="w-full bg-white dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-teal-500"
                     />
                   </div>
@@ -269,6 +274,11 @@ const Settings = ({ community }) => {
                       placeholder="Routing No"
                       value={form.bank_routing_no}
                       onChange={e => setForm({...form, bank_routing_no: e.target.value})}
+                      onKeyPress={(e) => {
+                        if (!/[0-9]/.test(e.key)) {
+                          e.preventDefault();
+                        }
+                      }}
                       className="w-full bg-white dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-teal-500"
                     />
                   </div>

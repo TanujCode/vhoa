@@ -83,9 +83,19 @@ export default function RegisterPage() {
         captcha_answer: data.captchaAnswer,
       });
 
-      setSuccessMsg('Registration successful! Redirecting to login...');
+      // Auto-trigger OTP send for email verification
+      try {
+        await API.post('/auth/otp/send', { 
+          email_id: data.email.trim(),
+          otp_type: 'email_verify' 
+        }); 
+      } catch (otpErr) {
+        console.error("OTP send failed:", otpErr);
+      }
+
+      setSuccessMsg('Registration successful! Sending verification code to your email...');
       setTimeout(() => {
-        navigate('/login');
+        navigate('/verify-otp', { state: { email: data.email } });
       }, 2000);
     } catch (err) {
       console.error('API Error:', err);
@@ -214,7 +224,7 @@ export default function RegisterPage() {
           </label>
           <div className="relative">
             <input
-              type="text"
+              type="email"
               {...register('email', {
                 required: 'Email is required',
                 pattern: {
@@ -315,6 +325,11 @@ export default function RegisterPage() {
                   message: 'Invalid mobile number format',
                 },
               })}
+              onKeyPress={(e) => {
+                if (!/[\d\s\-+]/.test(e.key)) {
+                  e.preventDefault();
+                }
+              }}
               className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none pl-10 text-sm text-gray-900 bg-white dark:text-gray-900 dark:bg-white ${
                 errors.mobileNumber ? 'border-red-500' : 'border-gray-300'
               }`}
@@ -355,7 +370,18 @@ export default function RegisterPage() {
             <label className="block text-xs font-bold text-gray-700 tracking-wider mb-2">ANSWER *</label>
             <input
               type="text"
-              {...register('captchaAnswer', { required: 'Answer is required' })}
+              {...register('captchaAnswer', { 
+                required: 'Answer is required',
+                pattern: {
+                  value: /^[0-9]+$/,
+                  message: 'Numbers only'
+                }
+              })}
+              onKeyPress={(e) => {
+                if (!/[0-9]/.test(e.key)) {
+                  e.preventDefault();
+                }
+              }}
               placeholder="Result"
               className="w-full bg-white border border-gray-300 rounded-xl px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-600 font-mono text-center font-bold text-lg"
             />

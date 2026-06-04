@@ -233,7 +233,7 @@ const onSubmit = async (data) => {
           </label>
           <div className="relative">
             <input
-              type="text"
+              type="email"
               {...register('email', {
                 required: 'Email is required',
                 pattern: {
@@ -316,7 +316,18 @@ const onSubmit = async (data) => {
             <label className="block text-xs font-bold text-gray-700 tracking-wider mb-2">ANSWER *</label>
             <input
               type="text"
-              {...register('captchaAnswer', { required: 'Answer is required' })}
+              {...register('captchaAnswer', { 
+                required: 'Answer is required',
+                pattern: {
+                  value: /^[0-9]+$/,
+                  message: 'Numbers only'
+                }
+              })}
+              onKeyPress={(e) => {
+                if (!/[0-9]/.test(e.key)) {
+                  e.preventDefault();
+                }
+              }}
               placeholder="Result"
               className="w-full bg-white border border-gray-300 rounded-xl px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-600 font-mono text-center font-bold text-lg"
             />

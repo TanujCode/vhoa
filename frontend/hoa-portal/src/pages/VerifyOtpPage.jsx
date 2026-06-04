@@ -101,6 +101,11 @@ const handleVerify = async (e) => {
               maxLength="6"
               value={otp}
               onChange={(e) => setOtp(e.target.value)}
+              onKeyPress={(e) => {
+                if (!/[0-9]/.test(e.key)) {
+                  e.preventDefault();
+                }
+              }}
               placeholder="· · · · · ·"
               className="w-full px-4 py-4 bg-gray-50 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 outline-none transition text-center text-3xl font-bold tracking-[0.5em] placeholder-gray-300 text-gray-900 bg-gray-50 dark:text-gray-900 dark:bg-gray-50"
               required
