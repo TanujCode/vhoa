@@ -50,6 +50,10 @@ export default function ClientOnboarding() {
   const [searchingAddress, setSearchingAddress] = useState(false);
   const [addressSelected, setAddressSelected] = useState(false);
   const addressTimeoutRef = useRef(null);
+
+  const [citySuggestions, setCitySuggestions] = useState([]);
+  const [searchingCity, setSearchingCity] = useState(false);
+  const cityTimeoutRef = useRef(null);
   
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
@@ -114,6 +118,9 @@ export default function ClientOnboarding() {
   const ownerPhoneRule = getPhoneValidationRule(countryCode);
   const contactPhoneRule = getPhoneValidationRule(hoaContactCountryCode);
   const hoaAddressRegister = register('hoa_address', { required: 'Required' });
+
+  const selectedStateId = watch('hoa_state_id');
+  const selectedCountryId = watch('hoa_country_id');
 
   // Load countries and prefill code from URL on mount
   useEffect(() => {
@@ -222,6 +229,9 @@ export default function ClientOnboarding() {
     return () => {
       if (addressTimeoutRef.current) {
         clearTimeout(addressTimeoutRef.current);
+      }
+      if (cityTimeoutRef.current) {
+        clearTimeout(cityTimeoutRef.current);
       }
     };
   }, []);
@@ -334,6 +344,78 @@ export default function ClientOnboarding() {
     setValue('hoa_address', '');
     setValue('hoa_city', '');
     setValue('hoa_zip_code', '');
+  };
+
+  const handleCityInputChange = (val) => {
+    if (!mapboxToken || mapboxToken.startsWith('pk.placeholder_please_replace')) {
+      return;
+    }
+
+    if (cityTimeoutRef.current) {
+      clearTimeout(cityTimeoutRef.current);
+    }
+
+    if (!val || val.trim().length < 2) {
+      setCitySuggestions([]);
+      return;
+    }
+
+    const selectedCountryObj = countries.find(c => String(c.country_id) === String(selectedCountryId));
+    const countryCodeStr = selectedCountryObj?.country_code?.toLowerCase() || 'us';
+
+    cityTimeoutRef.current = setTimeout(async () => {
+      try {
+         setSearchingCity(true);
+         const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(val)}.json?access_token=${mapboxToken}&autocomplete=true&types=place,locality&country=${countryCodeStr}&limit=5`;
+         const response = await fetch(url);
+         if (!response.ok) throw new Error('Mapbox API failed');
+         const data = await response.json();
+         setCitySuggestions(data.features || []);
+      } catch (err) {
+         console.error('Error fetching city suggestions:', err);
+         setCitySuggestions([]);
+      } finally {
+         setSearchingCity(false);
+      }
+    }, 500);
+  };
+
+  const handleSelectCitySuggestion = (feature) => {
+    setCitySuggestions([]);
+    
+    const placeName = feature.text || '';
+    const cleanCity = placeName.replace(/[^A-Za-z]/g, '');
+    setValue('hoa_city', cleanCity, { shouldValidate: true });
+
+    let zipCode = '';
+    let stateName = '';
+    let stateCode = '';
+
+    if (feature.context) {
+      feature.context.forEach((item) => {
+        if (item.id.startsWith('postcode')) {
+          zipCode = item.text;
+        } else if (item.id.startsWith('region')) {
+          stateName = item.text;
+          stateCode = item.short_code ? item.short_code.replace(/^[^-]+-/, '').toUpperCase() : '';
+        }
+      });
+    }
+
+    if (zipCode) {
+      const cleanZip = zipCode.replace(/[^0-9]/g, '');
+      setValue('hoa_zip_code', cleanZip, { shouldValidate: true });
+    }
+
+    if (stateCode || stateName) {
+      const matchedState = states.find(s => 
+        (stateCode && s.state_code?.toUpperCase() === stateCode) ||
+        (stateName && s.state_name?.toLowerCase() === stateName.toLowerCase())
+      );
+      if (matchedState) {
+        setValue('hoa_state_id', matchedState.state_id, { shouldValidate: true });
+      }
+    }
   };
 
   const handleCountryChange = (e) => {
@@ -792,21 +874,51 @@ export default function ClientOnboarding() {
                         ))}
                       </select>
                     </div>
-                    <div>
+                    <div className="relative">
                       <label className="block text-xs font-medium text-gray-400 mb-1">City/Town *</label>
                       <input
                         type="text"
                         {...register('hoa_city', { 
                           required: 'Required',
-                          validate: validateCity
+                          validate: (val) => /^[A-Za-z]+$/.test(val) || 'City should contain only letters (no spaces or numbers)',
+                          onChange: (e) => {
+                            handleCityInputChange(e.target.value);
+                          }
                         })}
-                        onKeyPress={onlyLettersKeyPress}
+                        onKeyPress={(e) => {
+                          if (!/[A-Za-z]/.test(e.key)) {
+                            e.preventDefault();
+                          }
+                        }}
                         readOnly={addressSelected}
                         className={`w-full bg-[#1e2f41] border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75] ${
                           addressSelected ? 'opacity-65 bg-[#162535] cursor-not-allowed' : ''
                         }`}
                       />
-                      {errors.hoa_city && <span className="text-xs text-red-400">{errors.hoa_city.message}</span>}
+                      
+                      {searchingCity && (
+                        <div className="absolute z-50 w-full mt-1 bg-[#1e2f41] border border-white/10 rounded-xl p-3 text-xs text-gray-400 flex items-center gap-2">
+                          <RefreshCw size={14} className="animate-spin text-teal-400" />
+                          Searching city...
+                        </div>
+                      )}
+
+                      {!searchingCity && citySuggestions.length > 0 && (
+                        <div className="absolute z-50 w-full mt-1 bg-[#162535] border border-white/10 rounded-xl overflow-hidden shadow-2xl max-h-60 overflow-y-auto">
+                          {citySuggestions.map((feature) => (
+                            <button
+                              key={feature.id}
+                              type="button"
+                              onClick={() => handleSelectCitySuggestion(feature)}
+                              className="w-full text-left px-4 py-2.5 hover:bg-teal-500/10 hover:text-teal-400 text-xs text-gray-200 border-b border-white/5 last:border-0 transition-colors"
+                            >
+                              {feature.place_name}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+
+                      {errors.hoa_city && <span className="text-xs text-red-400 mt-1 block">{errors.hoa_city.message}</span>}
                     </div>
                   </div>
 
@@ -859,15 +971,24 @@ export default function ClientOnboarding() {
                         type="text"
                         {...register('hoa_zip_code', { 
                           required: 'Required',
-                          validate: validateZipCode
+                          validate: (val) => {
+                            if (!val) return 'Required';
+                            if (!/^\d+$/.test(val)) return 'Zip code must contain only numbers';
+                            if (val.length < 5 || val.length > 10) return 'Zip code must be between 5 and 10 digits';
+                            return true;
+                          }
                         })}
-                        onKeyPress={onlyZipKeyPress}
+                        onKeyPress={(e) => {
+                          if (!/[0-9]/.test(e.key)) {
+                            e.preventDefault();
+                          }
+                        }}
                         readOnly={addressSelected}
                         className={`w-full bg-[#1e2f41] border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75] ${
                           addressSelected ? 'opacity-65 bg-[#162535] cursor-not-allowed' : ''
                         }`}
                       />
-                      {errors.hoa_zip_code && <span className="text-xs text-red-400">{errors.hoa_zip_code.message}</span>}
+                      {errors.hoa_zip_code && <span className="text-xs text-red-400 mt-1 block">{errors.hoa_zip_code.message}</span>}
                     </div>
                   </div>
 
@@ -966,15 +1087,38 @@ export default function ClientOnboarding() {
                           <label className="block text-xs font-medium text-gray-400 mb-1">Bank Name *</label>
                           <input
                             type="text"
-                            {...register('bank_name', { required: paymentMethod === 'bank_account' })}
+                            {...register('bank_name', { 
+                              required: paymentMethod === 'bank_account' ? 'Bank Name is required' : false,
+                              validate: (val) => {
+                                if (paymentMethod !== 'bank_account') return true;
+                                if (!val || !val.trim()) return 'Bank Name is required';
+                                if (!/^[A-Za-z\s\-\.]+$/.test(val)) return 'Bank Name should only contain letters, spaces, hyphens, or dots';
+                                return true;
+                              }
+                            })}
+                            onKeyPress={(e) => {
+                              if (!/[A-Za-z\s\-\.]/.test(e.key)) {
+                                e.preventDefault();
+                              }
+                            }}
                             className="w-full bg-[#162535] border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-[#1D9E75]"
                           />
+                          {errors.bank_name && <span className="text-xs text-red-400 mt-1 block">{errors.bank_name.message}</span>}
                         </div>
                         <div>
                           <label className="block text-xs font-medium text-gray-400 mb-1">Routing Number *</label>
                           <input
                             type="text"
-                            {...register('routing_number', { required: paymentMethod === 'bank_account' })}
+                            maxLength={9}
+                            {...register('routing_number', { 
+                              required: paymentMethod === 'bank_account' ? 'Routing Number is required' : false,
+                              validate: (val) => {
+                                if (paymentMethod !== 'bank_account') return true;
+                                if (!val) return 'Routing Number is required';
+                                if (!/^\d{9}$/.test(val)) return 'Routing Number must be exactly 9 digits';
+                                return true;
+                              }
+                            })}
                             onKeyPress={(e) => {
                               if (!/[0-9]/.test(e.key)) {
                                 e.preventDefault();
@@ -982,12 +1126,22 @@ export default function ClientOnboarding() {
                             }}
                             className="w-full bg-[#162535] border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-[#1D9E75] font-mono"
                           />
+                          {errors.routing_number && <span className="text-xs text-red-400 mt-1 block">{errors.routing_number.message}</span>}
                         </div>
                         <div>
                           <label className="block text-xs font-medium text-gray-400 mb-1">Account Number *</label>
                           <input
                             type="password"
-                            {...register('account_number', { required: paymentMethod === 'bank_account' })}
+                            maxLength={17}
+                            {...register('account_number', { 
+                              required: paymentMethod === 'bank_account' ? 'Account Number is required' : false,
+                              validate: (val) => {
+                                if (paymentMethod !== 'bank_account') return true;
+                                if (!val) return 'Account Number is required';
+                                if (!/^\d{8,17}$/.test(val)) return 'Account Number must be between 8 and 17 digits';
+                                return true;
+                              }
+                            })}
                             onKeyPress={(e) => {
                               if (!/[0-9]/.test(e.key)) {
                                 e.preventDefault();
@@ -995,6 +1149,7 @@ export default function ClientOnboarding() {
                             }}
                             className="w-full bg-[#162535] border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-[#1D9E75] font-mono"
                           />
+                          {errors.account_number && <span className="text-xs text-red-400 mt-1 block">{errors.account_number.message}</span>}
                         </div>
                       </div>
                     ) : (
@@ -1003,43 +1158,39 @@ export default function ClientOnboarding() {
                           <label className="block text-xs font-medium text-gray-400 mb-1">Cardholder Name *</label>
                           <input
                             type="text"
-                            {...register('cardholder_name', { required: paymentMethod === 'credit_card' })}
+                            {...register('cardholder_name', { 
+                              required: paymentMethod === 'credit_card' ? 'Cardholder Name is required' : false,
+                              validate: (val) => {
+                                if (paymentMethod !== 'credit_card') return true;
+                                if (!val || !val.trim()) return 'Cardholder Name is required';
+                                if (!/^[A-Za-z\s'\-]+$/.test(val)) return 'Cardholder Name should contain only letters, spaces, hyphens, or apostrophes';
+                                return true;
+                              }
+                            })}
+                            onKeyPress={(e) => {
+                              if (!/[A-Za-z\s'\-]/.test(e.key)) {
+                                e.preventDefault();
+                              }
+                            }}
                             className="w-full bg-[#162535] border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-[#1D9E75]"
                           />
+                          {errors.cardholder_name && <span className="text-xs text-red-400 mt-1 block">{errors.cardholder_name.message}</span>}
                         </div>
                         <div className="md:col-span-2">
                           <label className="block text-xs font-medium text-gray-400 mb-1">Card Number *</label>
                           <input
                             type="text"
-                            {...register('card_number', { required: paymentMethod === 'credit_card' })}
-                            onKeyPress={(e) => {
-                              if (!/[0-9\s]/.test(e.key)) {
-                                e.preventDefault();
+                            maxLength={19}
+                            {...register('card_number', { 
+                              required: paymentMethod === 'credit_card' ? 'Card Number is required' : false,
+                              validate: (val) => {
+                                if (paymentMethod !== 'credit_card') return true;
+                                if (!val) return 'Card Number is required';
+                                const digitsOnly = val.replace(/\s/g, '');
+                                if (!/^\d{13,19}$/.test(digitsOnly)) return 'Card Number must be between 13 and 19 digits';
+                                return true;
                               }
-                            }}
-                            className="w-full bg-[#162535] border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-[#1D9E75] font-mono"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-xs font-medium text-gray-400 mb-1">Expiry Date *</label>
-                          <input
-                            type="text"
-                            placeholder="MM/YY"
-                            {...register('card_expiry', { required: paymentMethod === 'credit_card' })}
-                            onKeyPress={(e) => {
-                              if (!/[0-9/]/.test(e.key)) {
-                                e.preventDefault();
-                              }
-                            }}
-                            className="w-full bg-[#162535] border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-[#1D9E75] font-mono"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-xs font-medium text-gray-400 mb-1">CVV *</label>
-                          <input
-                            type="password"
-                            maxLength="4"
-                            {...register('card_cvv', { required: paymentMethod === 'credit_card' })}
+                            })}
                             onKeyPress={(e) => {
                               if (!/[0-9]/.test(e.key)) {
                                 e.preventDefault();
@@ -1047,6 +1198,54 @@ export default function ClientOnboarding() {
                             }}
                             className="w-full bg-[#162535] border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-[#1D9E75] font-mono"
                           />
+                          {errors.card_number && <span className="text-xs text-red-400 mt-1 block">{errors.card_number.message}</span>}
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-gray-400 mb-1">Expiry Date *</label>
+                          <input
+                            type="text"
+                            placeholder="MM/YY"
+                            maxLength={5}
+                            {...register('card_expiry', { 
+                              required: paymentMethod === 'credit_card' ? 'Expiry Date is required' : false,
+                              validate: (val) => {
+                                if (paymentMethod !== 'credit_card') return true;
+                                if (!val) return 'Expiry Date is required';
+                                if (!/^(0[1-9]|1[0-2])\/[0-9]{2}$/.test(val)) return 'Expiry Date must be in MM/YY format (e.g. 12/28)';
+                                return true;
+                              }
+                            })}
+                            onKeyPress={(e) => {
+                              if (!/[0-9/]/.test(e.key)) {
+                                  e.preventDefault();
+                              }
+                            }}
+                            className="w-full bg-[#162535] border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-[#1D9E75] font-mono"
+                          />
+                          {errors.card_expiry && <span className="text-xs text-red-400 mt-1 block">{errors.card_expiry.message}</span>}
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-gray-400 mb-1">CVV *</label>
+                          <input
+                            type="password"
+                            maxLength={4}
+                            {...register('card_cvv', { 
+                              required: paymentMethod === 'credit_card' ? 'CVV is required' : false,
+                              validate: (val) => {
+                                if (paymentMethod !== 'credit_card') return true;
+                                if (!val) return 'CVV is required';
+                                if (!/^\d{3,4}$/.test(val)) return 'CVV must be 3 or 4 digits';
+                                return true;
+                              }
+                            })}
+                            onKeyPress={(e) => {
+                              if (!/[0-9]/.test(e.key)) {
+                                e.preventDefault();
+                              }
+                            }}
+                            className="w-full bg-[#162535] border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-[#1D9E75] font-mono"
+                          />
+                          {errors.card_cvv && <span className="text-xs text-red-400 mt-1 block">{errors.card_cvv.message}</span>}
                         </div>
                       </div>
                     )}
