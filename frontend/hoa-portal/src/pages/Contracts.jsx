@@ -70,9 +70,9 @@ export default function Contracts() {
       business_phone_only: '',
       client_preferred_communication_channel: 'email',
       plan_selected: 'Standard',
-      annual_renewal_fee: '',
-      one_time_set_up: '',
-      size_of_the_community: '',
+      annual_renewal_fee: '999',
+      one_time_set_up: '199',
+      size_of_the_community: '100',
       renewal_cycle: 'Annual'
     }
   });
