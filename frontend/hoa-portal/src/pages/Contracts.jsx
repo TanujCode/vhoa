@@ -874,7 +874,34 @@ export default function Contracts() {
                     <label className="block text-xs font-medium text-slate-500 dark:text-gray-400 mb-1">Max Community Size (Units) *</label>
                     <input
                       type="number"
-                      {...register('size_of_the_community', { required: 'Size is required', min: 1 })}
+                      {...register('size_of_the_community', {
+                        required: 'Size is required',
+                        min: 1,
+                        onChange: (e) => {
+                          const val = e.target.value;
+                          if (!val) return;
+                          const size = parseInt(val, 10);
+                          if (isNaN(size) || size <= 0) return;
+
+                          if (selectedPlan !== 'Custom') {
+                            if (size <= 100) {
+                              setValue('plan_selected', 'Standard');
+                              setValue('one_time_set_up', '199');
+                              setValue('annual_renewal_fee', '999');
+                            } else if (size <= 350) {
+                              setValue('plan_selected', 'Premium');
+                              setValue('one_time_set_up', '399');
+                              setValue('annual_renewal_fee', '1999');
+                            } else if (size <= 1000) {
+                              setValue('plan_selected', 'Enterprise');
+                              setValue('one_time_set_up', '999');
+                              setValue('annual_renewal_fee', '4999');
+                            } else {
+                              setValue('plan_selected', 'Custom');
+                            }
+                          }
+                        }
+                      })}
                       className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl px-4 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-[#1D9E75] placeholder-slate-400 dark:placeholder-gray-500"
                     />
                     {errors.size_of_the_community && <span className="text-xs text-red-400 mt-1">{errors.size_of_the_community.message}</span>}
