@@ -3,7 +3,8 @@ import { useForm } from 'react-hook-form';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { 
   Building, User, Shield, CreditCard, CheckCircle, 
-  AlertCircle, ChevronRight, ChevronLeft, RefreshCw, KeyRound, Globe2, Landmark, Info
+  AlertCircle, ChevronRight, ChevronLeft, RefreshCw, KeyRound, Globe2, Landmark, Info,
+  Eye, EyeOff
 } from 'lucide-react';
 import API from '../../services/api';
 import { verifyContractCode, getCaptcha, onboardClient } from '../../services/contractService';
@@ -52,6 +53,8 @@ export default function ClientOnboarding() {
   
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const getPhoneValidationRule = (code) => {
     switch (code) {
@@ -68,7 +71,7 @@ export default function ClientOnboarding() {
     }
   };
 
-  const { register, handleSubmit, watch, setValue, formState: { errors, isValid } } = useForm({
+  const { register, handleSubmit, watch, setValue, trigger, formState: { errors, isValid } } = useForm({
     mode: 'onTouched',
     defaultValues: {
       contract_code: searchParams.get('code') || '',
@@ -339,9 +342,45 @@ export default function ClientOnboarding() {
     fetchStates(countryId);
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     setErrorMsg('');
-    setStep((prev) => Math.min(prev + 1, 4));
+    
+    let isValidStep = false;
+    if (step === 1) {
+      if (verifiedContract) {
+        isValidStep = true;
+      } else {
+        const isCodeValid = await trigger('contract_code');
+        if (isCodeValid) {
+          await handleVerifyCode();
+          return;
+        }
+      }
+    } else if (step === 2) {
+      isValidStep = await trigger([
+        'first_name', 
+        'middle_name', 
+        'last_name', 
+        'email_id', 
+        'mobile_number_only', 
+        'password', 
+        'confirm_password'
+      ]);
+    } else if (step === 3) {
+      isValidStep = await trigger([
+        'hoa_name',
+        'hoa_country_id',
+        'hoa_state_id',
+        'hoa_city',
+        'hoa_address',
+        'hoa_zip_code',
+        'hoa_contact_number_only'
+      ]);
+    }
+
+    if (isValidStep) {
+      setStep((prev) => Math.min(prev + 1, 4));
+    }
   };
 
   const handleBack = () => {
@@ -621,27 +660,50 @@ export default function ClientOnboarding() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-xs font-medium text-gray-400 mb-1">Password *</label>
-                      <input
-                        type="password"
-                        {...register('password', { 
-                          required: 'Required',
-                          minLength: { value: 6, message: 'Password must be at least 6 characters' }
-                        })}
-                        className="w-full bg-[#1e2f41] border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]"
-                      />
-                      {errors.password && <span className="text-xs text-red-400">{errors.password.message}</span>}
+                      <div className="relative">
+                        <input
+                          type={showPassword ? 'text' : 'password'}
+                          {...register('password', { 
+                            required: 'Password is required',
+                            minLength: { value: 8, message: 'Password must be at least 8 characters' },
+                            validate: {
+                              hasUppercase: (value) => /[A-Z]/.test(value) || 'Password must contain at least one uppercase letter',
+                              hasNumber: (value) => /[0-9]/.test(value) || 'Password must contain at least one number',
+                              hasSpecialChar: (value) => /[^A-Za-z0-9]/.test(value) || 'Password must contain at least one special character'
+                            }
+                          })}
+                          className="w-full bg-[#1e2f41] border border-white/10 rounded-xl pl-3 pr-10 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition"
+                        >
+                          {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                        </button>
+                      </div>
+                      {errors.password && <span className="text-xs text-red-400 mt-1 block">{errors.password.message}</span>}
                     </div>
                     <div>
                       <label className="block text-xs font-medium text-gray-400 mb-1">Confirm Password *</label>
-                      <input
-                        type="password"
-                        {...register('confirm_password', { 
-                          required: 'Required',
-                          validate: (val) => val === passwordValue || 'Passwords do not match'
-                        })}
-                        className="w-full bg-[#1e2f41] border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]"
-                      />
-                      {errors.confirm_password && <span className="text-xs text-red-400">{errors.confirm_password.message}</span>}
+                      <div className="relative">
+                        <input
+                          type={showConfirmPassword ? 'text' : 'password'}
+                          {...register('confirm_password', { 
+                            required: 'Confirm password is required',
+                            validate: (val) => val === passwordValue || 'Passwords do not match'
+                          })}
+                          className="w-full bg-[#1e2f41] border border-white/10 rounded-xl pl-3 pr-10 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition"
+                        >
+                          {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                        </button>
+                      </div>
+                      {errors.confirm_password && <span className="text-xs text-red-400 mt-1 block">{errors.confirm_password.message}</span>}
                     </div>
                   </div>
 
