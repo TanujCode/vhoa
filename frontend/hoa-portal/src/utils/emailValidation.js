@@ -121,14 +121,52 @@ export const validateEmail = (value) => {
   const domain = trimmed.split('@')[1]?.toLowerCase() || '';
   const localPart = trimmed.split('@')[0];
 
+  // 1. Exact typo map check
   const mapSuggestion = EMAIL_TYPO_MAP[domain];
   if (mapSuggestion) {
     return `Suspicious domain! Did you mean "${localPart}@${mapSuggestion}"?`;
   }
 
+  // 2. Generic TLD typo check (e.g. gmail.cpom → gmail.com, xyz.coam → xyz.com)
   const tldFixedDomain = detectTldTypo(domain);
   if (tldFixedDomain) {
     return `Suspicious domain! Did you mean "${localPart}@${tldFixedDomain}"?`;
+  }
+
+  // 3. Deep substring typo check
+  const gmailTypos = ['gamil', 'gmial', 'gmal', 'gimail', 'gnail', 'gmali', 'gmaill', 'gml', 'gmailgmail', 'gamail', 'gmmak', 'gmmmak', 'gamilgamil', 'gmailgamil'];
+  for (const typo of gmailTypos) {
+    if (domain.includes(typo) && domain !== 'gmail.com') {
+      return `Suspicious domain! Did you mean "${localPart}@gmail.com"?`;
+    }
+  }
+
+  const yahooTypos = ['yahooyahoo', 'yahooo', 'yhaoo', 'yaaho', 'yhoo'];
+  for (const typo of yahooTypos) {
+    if (domain.includes(typo) && domain !== 'yahoo.com') {
+      return `Suspicious domain! Did you mean "${localPart}@yahoo.com"?`;
+    }
+  }
+
+  const hotmailTypos = ['hotmial', 'hotmali', 'hotmal', 'htmail', 'homail', 'hotamil'];
+  for (const typo of hotmailTypos) {
+    if (domain.includes(typo) && domain !== 'hotmail.com') {
+      return `Suspicious domain! Did you mean "${localPart}@hotmail.com"?`;
+    }
+  }
+
+  const outlookTypos = ['outlok', 'outloo', 'outloook', 'outlookk', 'outlookoutlook'];
+  for (const typo of outlookTypos) {
+    if (domain.includes(typo) && domain !== 'outlook.com') {
+      return `Suspicious domain! Did you mean "${localPart}@outlook.com"?`;
+    }
+  }
+
+  const icloudTypos = ['iclod', 'iclould', 'iclooud'];
+  for (const typo of icloudTypos) {
+    if (domain.includes(typo) && domain !== 'icloud.com') {
+      return `Suspicious domain! Did you mean "${localPart}@icloud.com"?`;
+    }
   }
 
   return true;
@@ -146,14 +184,52 @@ export const checkEmail = (value) => {
   const domain = trimmed.split('@')[1]?.toLowerCase() || '';
   const localPart = trimmed.split('@')[0];
 
+  // 1. Exact typo map check
   const mapSuggestion = EMAIL_TYPO_MAP[domain];
   if (mapSuggestion) {
     return { valid: false, message: `Suspicious domain! Did you mean "${localPart}@${mapSuggestion}"?` };
   }
 
+  // 2. Generic TLD typo check
   const tldFixedDomain = detectTldTypo(domain);
   if (tldFixedDomain) {
     return { valid: false, message: `Suspicious domain! Did you mean "${localPart}@${tldFixedDomain}"?` };
+  }
+
+  // 3. Deep substring typo check
+  const gmailTypos = ['gamil', 'gmial', 'gmal', 'gimail', 'gnail', 'gmali', 'gmaill', 'gml', 'gmailgmail', 'gamail', 'gmmak', 'gmmmak', 'gamilgamil', 'gmailgamil'];
+  for (const typo of gmailTypos) {
+    if (domain.includes(typo) && domain !== 'gmail.com') {
+      return { valid: false, message: `Suspicious domain! Did you mean "${localPart}@gmail.com"?` };
+    }
+  }
+
+  const yahooTypos = ['yahooyahoo', 'yahooo', 'yhaoo', 'yaaho', 'yhoo'];
+  for (const typo of yahooTypos) {
+    if (domain.includes(typo) && domain !== 'yahoo.com') {
+      return { valid: false, message: `Suspicious domain! Did you mean "${localPart}@yahoo.com"?` };
+    }
+  }
+
+  const hotmailTypos = ['hotmial', 'hotmali', 'hotmal', 'htmail', 'homail', 'hotamil'];
+  for (const typo of hotmailTypos) {
+    if (domain.includes(typo) && domain !== 'hotmail.com') {
+      return { valid: false, message: `Suspicious domain! Did you mean "${localPart}@hotmail.com"?` };
+    }
+  }
+
+  const outlookTypos = ['outlok', 'outloo', 'outloook', 'outlookk', 'outlookoutlook'];
+  for (const typo of outlookTypos) {
+    if (domain.includes(typo) && domain !== 'outlook.com') {
+      return { valid: false, message: `Suspicious domain! Did you mean "${localPart}@outlook.com"?` };
+    }
+  }
+
+  const icloudTypos = ['iclod', 'iclould', 'iclooud'];
+  for (const typo of icloudTypos) {
+    if (domain.includes(typo) && domain !== 'icloud.com') {
+      return { valid: false, message: `Suspicious domain! Did you mean "${localPart}@icloud.com"?` };
+    }
   }
 
   return { valid: true, message: '' };

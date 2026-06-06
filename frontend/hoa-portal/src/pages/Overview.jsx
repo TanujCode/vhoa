@@ -4,7 +4,7 @@ import API from '../services/api';
 import AddCommunityModal from '../components/AddCommunityModal';
 import EditCommunityModal from '../components/EditCommunityModal';
 
-const Overview = ({ communities = [], setActiveCommunity, setActivePage, user }) => {
+const Overview = ({ communities = [], setActiveCommunity, setActivePage, user, refreshCommunities }) => {
   const [stats, setStats]           = useState([]);
   const [loading, setLoading]       = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -188,7 +188,11 @@ const Overview = ({ communities = [], setActiveCommunity, setActivePage, user })
                           try {
                             await API.delete(`/community/${comm.community_id}`);
                             alert("✅ Community deactivated successfully!");
-                            fetchAllStats();
+                            if (refreshCommunities) {
+                              await refreshCommunities();
+                            } else {
+                              fetchAllStats();
+                            }
                           } catch (err) {
                             alert(`Error: ${err.response?.data?.detail || err.message}`);
                           }

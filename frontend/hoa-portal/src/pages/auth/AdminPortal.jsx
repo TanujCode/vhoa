@@ -153,6 +153,15 @@ const AdminPortal = () => {
     }
   };
 
+  const refreshCommunities = async () => {
+    try {
+      const communitiesData = await getCommunities();
+      setCommunities(communitiesData || []);
+    } catch (err) {
+      console.error('Failed to refresh communities:', err);
+    }
+  };
+
   const handleSwitchCommunity = async (comm) => {
     if (!comm) return;
     try {
@@ -283,6 +292,7 @@ const AdminPortal = () => {
             setActiveCommunity={setActiveCommunity}
             setActivePage={setActivePage}
             user={effectiveUser}
+            refreshCommunities={refreshCommunities}
           />
         );
 

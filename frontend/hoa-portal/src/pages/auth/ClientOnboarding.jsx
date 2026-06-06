@@ -3,7 +3,8 @@ import { useForm } from 'react-hook-form';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { 
   Building, User, Shield, CreditCard, CheckCircle, 
-  AlertCircle, ChevronRight, ChevronLeft, RefreshCw, KeyRound, Globe2, Landmark, Info
+  AlertCircle, ChevronRight, ChevronLeft, RefreshCw, KeyRound, Globe2, Landmark, Info,
+  Eye, EyeOff
 } from 'lucide-react';
 import API from '../../services/api';
 import { verifyContractCode, getCaptcha, onboardClient } from '../../services/contractService';
@@ -49,9 +50,19 @@ export default function ClientOnboarding() {
   const [searchingAddress, setSearchingAddress] = useState(false);
   const [addressSelected, setAddressSelected] = useState(false);
   const addressTimeoutRef = useRef(null);
+
+  const [citySuggestions, setCitySuggestions] = useState([]);
+  const [searchingCity, setSearchingCity] = useState(false);
+  const cityTimeoutRef = useRef(null);
+
+  const [stateCities, setStateCities] = useState([]);
+  const [loadingCities, setLoadingCities] = useState(false);
   
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
+  const [zipError, setZipError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const getPhoneValidationRule = (code) => {
     switch (code) {
@@ -68,7 +79,7 @@ export default function ClientOnboarding() {
     }
   };
 
-  const { register, handleSubmit, watch, setValue, formState: { errors, isValid } } = useForm({
+  const { register, handleSubmit, watch, setValue, trigger, formState: { errors, isValid } } = useForm({
     mode: 'onTouched',
     defaultValues: {
       contract_code: searchParams.get('code') || '',
@@ -112,6 +123,9 @@ export default function ClientOnboarding() {
   const contactPhoneRule = getPhoneValidationRule(hoaContactCountryCode);
   const hoaAddressRegister = register('hoa_address', { required: 'Required' });
 
+  const selectedStateId = watch('hoa_state_id');
+  const selectedCountryId = watch('hoa_country_id');
+
   // Load countries and prefill code from URL on mount
   useEffect(() => {
     fetchCountries();
@@ -134,23 +148,276 @@ export default function ClientOnboarding() {
         const defaultCountryId = res.data[0].country_id;
         setValue('hoa_country_id', defaultCountryId);
         setSelectedCountry(defaultCountryId);
-        fetchStates(defaultCountryId);
+        fetchStates(defaultCountryId, res.data);
       }
     } catch (err) {
       console.error('Failed to load countries:', err);
     }
   };
 
-  const fetchStates = async (countryId) => {
+  const fetchStates = async (countryId, currentCountriesList = countries) => {
     if (!countryId) return;
     try {
       const res = await API.get(`/location/states/${countryId}`);
       setStates(res.data);
       if (res.data.length > 0) {
-        setValue('hoa_state_id', res.data[0].state_id);
+        const defaultStateId = res.data[0].state_id;
+        setValue('hoa_state_id', defaultStateId);
+        fetchCitiesForState(defaultStateId, res.data, countryId, currentCountriesList);
+      } else {
+        setValue('hoa_state_id', '');
+        setStateCities([]);
       }
     } catch (err) {
       console.error('Failed to load states:', err);
+    }
+  };
+
+  const fetchCitiesForState = async (stateId, currentStatesList = states, currentCountryId = null, currentCountriesList = countries) => {
+    setValue('hoa_city', '');
+    setValue('hoa_zip_code', '');
+    setStateCities([]);
+    
+    if (!stateId) return;
+
+    const stateObj = currentStatesList.find(s => String(s.state_id) === String(stateId));
+    if (!stateObj) return;
+    
+    const actualCountryId = currentCountryId || watch('hoa_country_id') || selectedCountryId;
+    const countryObj = currentCountriesList.find(c => String(c.country_id) === String(actualCountryId));
+    const countryName = countryObj ? countryObj.country_name : '';
+    const stateName = stateObj.state_name;
+
+    if (!countryName || !stateName) return;
+
+    // 1. Try clean, curated Indian districts dataset first to avoid typos
+    if (countryName.toLowerCase() === 'india') {
+      try {
+        setLoadingCities(true);
+        const response = await fetch('https://raw.githubusercontent.com/sab99r/Indian-States-And-Districts/master/states-and-districts.json');
+        if (response.ok) {
+          const result = await response.json();
+          const stateData = result.states.find(s => s.state.toLowerCase() === stateName.toLowerCase());
+          if (stateData && Array.isArray(stateData.districts) && stateData.districts.length > 0) {
+            const cleanedCities = stateData.districts
+              .map(city => city.replace(/[^A-Za-z]/g, ''))
+              .filter(city => city.length > 0);
+            const uniqueCities = Array.from(new Set(cleanedCities)).sort();
+            setStateCities(uniqueCities);
+            return;
+          }
+        }
+      } catch (err) {
+        console.warn('Failed to fetch clean Indian districts JSON, falling back to CountriesNow:', err);
+      } finally {
+        setLoadingCities(false);
+      }
+    }
+
+    const cityCorrections = {
+      "Betl": "Betul",
+      "BetlBazr": "BetulBazar",
+      "Barwni": "Barwani",
+      "Bbai": "Babai",
+      "Barght": "Barghat",
+      "Bg": "Bagh"
+    };
+
+    try {
+      setLoadingCities(true);
+      const response = await fetch('https://countriesnow.space/api/v0.1/countries/state/cities', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          country: countryName,
+          state: stateName
+        })
+      });
+
+      if (!response.ok) throw new Error('API failed');
+      const result = await response.json();
+      
+      if (result.data && Array.isArray(result.data) && result.data.length > 0) {
+        const cleanedCities = result.data
+          .map(city => {
+            const cleaned = city.replace(/[^A-Za-z]/g, '');
+            return cityCorrections[cleaned] || cleaned;
+          })
+          .filter(city => city.length > 0);
+        const uniqueCities = Array.from(new Set(cleanedCities)).sort();
+        setStateCities(uniqueCities);
+      } else {
+        throw new Error('No cities returned');
+      }
+    } catch (err) {
+      console.warn('Failed to fetch cities from API, using fallback:', err);
+      const normalizedState = stateName.toLowerCase();
+      let fallback = [];
+      if (normalizedState.includes('madhya pradesh')) {
+        fallback = [
+          "Indore", "Bhopal", "Jabalpur", "Gwalior", "Ujjain", "Sagar", "Dewas", "Satna", "Ratlam", "Rewa", 
+          "Singrauli", "Katni", "Morena", "Chhindwara", "Bhind", "Shivpuri", "Guna", "Khandwa", "Burhanpur", 
+          "Dhar", "Khargone", "Sehore", "Vidisha", "Betul", "Hoshangabad", "Itarsi"
+        ];
+      } else if (normalizedState.includes('california')) {
+        fallback = [
+          "LosAngeles", "SanDiego", "SanJose", "SanFrancisco", "Fresno", "Sacramento", "LongBeach", 
+          "Oakland", "Bakersfield", "Anaheim", "SantaAna", "Riverside", "Stockton", "ChulaVista", "Irvine", "Fremont"
+        ];
+      }
+      
+      if (fallback.length > 0) {
+        setStateCities(fallback.sort());
+      } else {
+        setStateCities([]);
+      }
+    } finally {
+      setLoadingCities(false);
+    }
+  };
+
+  const fetchZipForCity = async (cityName) => {
+    if (!cityName) return;
+
+    const countryObj = countries.find(c => String(c.country_id) === String(selectedCountryId));
+    const countryName = countryObj ? countryObj.country_name : '';
+    const countryCodeStr = countryObj?.country_code?.toLowerCase() || 'us';
+    
+    const stateObj = states.find(s => String(s.state_id) === String(watch('hoa_state_id')));
+    const stateName = stateObj ? stateObj.state_name : '';
+
+    const searchQueryName = cityName === "BetulBazar" ? "Betul Bazar" : cityName;
+    
+    // 1. Try Mapbox if token is configured and valid
+    const hasMapbox = mapboxToken && !mapboxToken.startsWith('pk.placeholder');
+    if (hasMapbox) {
+      try {
+        const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(searchQueryName)}.json?access_token=${mapboxToken}&country=${countryCodeStr}&types=place,locality,postcode&limit=5`;
+        const response = await fetch(url);
+        if (response.ok) {
+          const data = await response.json();
+          let zipCode = '';
+          if (data.features && data.features.length > 0) {
+            for (const feature of data.features) {
+              if (feature.id.startsWith('postcode')) {
+                zipCode = feature.text;
+                break;
+              }
+              if (feature.context) {
+                const pc = feature.context.find(c => c.id.startsWith('postcode'));
+                if (pc) {
+                  zipCode = pc.text;
+                  break;
+                }
+              }
+            }
+          }
+          if (zipCode) {
+            const cleanZip = zipCode.replace(/[^0-9]/g, '');
+            setValue('hoa_zip_code', cleanZip, { shouldValidate: true });
+            setZipError('');
+            return;
+          }
+        }
+      } catch (err) {
+        console.warn('Mapbox zip lookup failed, falling back:', err);
+      }
+    }
+
+    // 2. Fallback to OpenStreetMap Nominatim Geocoding (free, no key required)
+    try {
+      const query = `${searchQueryName}, ${stateName}, ${countryName}`;
+      const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&addressdetails=1&limit=5`;
+      const response = await fetch(url);
+      if (response.ok) {
+        const data = await response.json();
+        if (data && data.length > 0) {
+          for (const item of data) {
+            if (item.address && item.address.postcode) {
+              const cleanZip = item.address.postcode.replace(/[^0-9]/g, '');
+              if (cleanZip) {
+                setValue('hoa_zip_code', cleanZip, { shouldValidate: true });
+                setZipError('');
+                return;
+              }
+            }
+          }
+        }
+      }
+
+      // If we still don't have a postcode, try querying with "post office" fallback
+      const fallbackQuery = `${searchQueryName} post office, ${stateName}, ${countryName}`;
+      const fallbackUrl = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(fallbackQuery)}&format=json&addressdetails=1&limit=3`;
+      const fallbackResponse = await fetch(fallbackUrl);
+      if (fallbackResponse.ok) {
+        const fallbackData = await fallbackResponse.json();
+        if (fallbackData && fallbackData.length > 0) {
+          for (const item of fallbackData) {
+            if (item.address && item.address.postcode) {
+              const cleanZip = item.address.postcode.replace(/[^0-9]/g, '');
+              if (cleanZip) {
+                setValue('hoa_zip_code', cleanZip, { shouldValidate: true });
+                setZipError('');
+                return;
+              }
+            }
+          }
+        }
+      }
+    } catch (err) {
+      console.error('Nominatim zip lookup fallback failed:', err);
+    }
+  };
+
+  const verifyZipForCity = async (zipCode) => {
+    setZipError('');
+    if (!zipCode) return;
+    
+    if (zipCode.length < 5 || zipCode.length > 10) return;
+
+    const cityName = watch('hoa_city');
+    if (!cityName) return;
+
+    const countryObj = countries.find(c => String(c.country_id) === String(selectedCountryId));
+    const countryName = countryObj ? countryObj.country_name : '';
+
+    try {
+      const url = `https://nominatim.openstreetmap.org/search?postalcode=${encodeURIComponent(zipCode)}&country=${encodeURIComponent(countryName)}&format=json&addressdetails=1&limit=3`;
+      const response = await fetch(url);
+      if (response.ok) {
+        const data = await response.json();
+        if (data && data.length > 0) {
+          let matched = false;
+          const normalizedCity = cityName.toLowerCase();
+          
+          for (const item of data) {
+            const addr = item.address || {};
+            const possibleNames = [
+              addr.city,
+              addr.town,
+              addr.village,
+              addr.suburb,
+              addr.county,
+              addr.state_district,
+              addr.municipality,
+              item.display_name
+            ].filter(Boolean).map(n => n.toLowerCase().replace(/[^a-z]/g, ''));
+
+            if (possibleNames.some(name => name.includes(normalizedCity) || normalizedCity.includes(name))) {
+              matched = true;
+              break;
+            }
+          }
+
+          if (!matched) {
+            setZipError(`Zip code ${zipCode} does not belong to ${cityName}`);
+          }
+        } else {
+          setZipError(`Zip code ${zipCode} not found in ${countryName}`);
+        }
+      }
+    } catch (err) {
+      console.warn('Zip validation failed:', err);
     }
   };
 
@@ -219,6 +486,9 @@ export default function ClientOnboarding() {
     return () => {
       if (addressTimeoutRef.current) {
         clearTimeout(addressTimeoutRef.current);
+      }
+      if (cityTimeoutRef.current) {
+        clearTimeout(cityTimeoutRef.current);
       }
     };
   }, []);
@@ -333,15 +603,143 @@ export default function ClientOnboarding() {
     setValue('hoa_zip_code', '');
   };
 
+  const handleCityInputChange = (val) => {
+    // Clean input to letters-only (remove spaces, numbers, symbols)
+    const cleanedVal = val.replace(/[^A-Za-z]/g, '');
+    setValue('hoa_city', cleanedVal, { shouldValidate: true });
+    
+    // Clear zip code while typing
+    setValue('hoa_zip_code', '');
+    
+    // Clear zip verification errors
+    setZipError('');
+
+    if (cityTimeoutRef.current) {
+      clearTimeout(cityTimeoutRef.current);
+    }
+
+    if (!cleanedVal || cleanedVal.trim().length < 2) {
+      setCitySuggestions([]);
+      return;
+    }
+
+    const selectedCountryObj = countries.find(c => String(c.country_id) === String(selectedCountryId));
+    const countryCodeStr = selectedCountryObj?.country_code?.toLowerCase() || 'us';
+
+    cityTimeoutRef.current = setTimeout(async () => {
+      // 1. Fetch zip code automatically for this city name
+      await fetchZipForCity(cleanedVal);
+
+      // 2. Fetch Mapbox suggestions if active and mapboxToken exists
+      const hasMapbox = mapboxToken && !mapboxToken.startsWith('pk.placeholder');
+      if (hasMapbox) {
+        try {
+          setSearchingCity(true);
+          const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(cleanedVal)}.json?access_token=${mapboxToken}&autocomplete=true&types=place,locality&country=${countryCodeStr}&limit=5`;
+          const response = await fetch(url);
+          if (response.ok) {
+            const data = await response.json();
+            setCitySuggestions(data.features || []);
+          }
+        } catch (err) {
+          console.error('Error fetching city suggestions:', err);
+          setCitySuggestions([]);
+        } finally {
+          setSearchingCity(false);
+        }
+      }
+    }, 800);
+  };
+
+  const handleSelectCitySuggestion = (feature) => {
+    setCitySuggestions([]);
+    
+    const placeName = feature.text || '';
+    const cleanCity = placeName.replace(/[^A-Za-z]/g, '');
+    setValue('hoa_city', cleanCity, { shouldValidate: true });
+
+    let zipCode = '';
+    let stateName = '';
+    let stateCode = '';
+
+    if (feature.context) {
+      feature.context.forEach((item) => {
+        if (item.id.startsWith('postcode')) {
+          zipCode = item.text;
+        } else if (item.id.startsWith('region')) {
+          stateName = item.text;
+          stateCode = item.short_code ? item.short_code.replace(/^[^-]+-/, '').toUpperCase() : '';
+        }
+      });
+    }
+
+    if (zipCode) {
+      const cleanZip = zipCode.replace(/[^0-9]/g, '');
+      setValue('hoa_zip_code', cleanZip, { shouldValidate: true });
+    }
+
+    if (stateCode || stateName) {
+      const matchedState = states.find(s => 
+        (stateCode && s.state_code?.toUpperCase() === stateCode) ||
+        (stateName && s.state_name?.toLowerCase() === stateName.toLowerCase())
+      );
+      if (matchedState) {
+        setValue('hoa_state_id', matchedState.state_id, { shouldValidate: true });
+      }
+    }
+  };
+
   const handleCountryChange = (e) => {
     const countryId = e.target.value;
     setSelectedCountry(countryId);
     fetchStates(countryId);
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     setErrorMsg('');
-    setStep((prev) => Math.min(prev + 1, 4));
+    
+    let isValidStep = false;
+    if (step === 1) {
+      if (verifiedContract) {
+        isValidStep = true;
+      } else {
+        const isCodeValid = await trigger('contract_code');
+        if (isCodeValid) {
+          await handleVerifyCode();
+          return;
+        }
+      }
+    } else if (step === 2) {
+      isValidStep = await trigger([
+        'first_name', 
+        'middle_name', 
+        'last_name', 
+        'email_id', 
+        'mobile_number_only', 
+        'password', 
+        'confirm_password'
+      ]);
+    } else if (step === 3) {
+      const isFormValid = await trigger([
+        'hoa_name',
+        'hoa_country_id',
+        'hoa_state_id',
+        'hoa_city',
+        'hoa_address',
+        'hoa_zip_code',
+        'hoa_contact_number_only'
+      ]);
+      
+      if (zipError) {
+        isValidStep = false;
+      } else {
+        isValidStep = isFormValid;
+      }
+    }
+
+    if (isValidStep) {
+      setStep((prev) => Math.min(prev + 1, 4));
+    }
   };
 
   const handleBack = () => {
@@ -621,27 +1019,50 @@ export default function ClientOnboarding() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-xs font-medium text-gray-400 mb-1">Password *</label>
-                      <input
-                        type="password"
-                        {...register('password', { 
-                          required: 'Required',
-                          minLength: { value: 6, message: 'Password must be at least 6 characters' }
-                        })}
-                        className="w-full bg-[#1e2f41] border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]"
-                      />
-                      {errors.password && <span className="text-xs text-red-400">{errors.password.message}</span>}
+                      <div className="relative">
+                        <input
+                          type={showPassword ? 'text' : 'password'}
+                          {...register('password', { 
+                            required: 'Password is required',
+                            minLength: { value: 8, message: 'Password must be at least 8 characters' },
+                            validate: {
+                              hasUppercase: (value) => /[A-Z]/.test(value) || 'Password must contain at least one uppercase letter',
+                              hasNumber: (value) => /[0-9]/.test(value) || 'Password must contain at least one number',
+                              hasSpecialChar: (value) => /[^A-Za-z0-9]/.test(value) || 'Password must contain at least one special character'
+                            }
+                          })}
+                          className="w-full bg-[#1e2f41] border border-white/10 rounded-xl pl-3 pr-10 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition"
+                        >
+                          {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                        </button>
+                      </div>
+                      {errors.password && <span className="text-xs text-red-400 mt-1 block">{errors.password.message}</span>}
                     </div>
                     <div>
                       <label className="block text-xs font-medium text-gray-400 mb-1">Confirm Password *</label>
-                      <input
-                        type="password"
-                        {...register('confirm_password', { 
-                          required: 'Required',
-                          validate: (val) => val === passwordValue || 'Passwords do not match'
-                        })}
-                        className="w-full bg-[#1e2f41] border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]"
-                      />
-                      {errors.confirm_password && <span className="text-xs text-red-400">{errors.confirm_password.message}</span>}
+                      <div className="relative">
+                        <input
+                          type={showConfirmPassword ? 'text' : 'password'}
+                          {...register('confirm_password', { 
+                            required: 'Confirm password is required',
+                            validate: (val) => val === passwordValue || 'Passwords do not match'
+                          })}
+                          className="w-full bg-[#1e2f41] border border-white/10 rounded-xl pl-3 pr-10 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition"
+                        >
+                          {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                        </button>
+                      </div>
+                      {errors.confirm_password && <span className="text-xs text-red-400 mt-1 block">{errors.confirm_password.message}</span>}
                     </div>
                   </div>
 
@@ -720,7 +1141,10 @@ export default function ClientOnboarding() {
                     <div>
                       <label className="block text-xs font-medium text-gray-400 mb-1">State *</label>
                       <select
-                        {...register('hoa_state_id', { required: true })}
+                        {...register('hoa_state_id', { 
+                          required: true,
+                          onChange: (e) => fetchCitiesForState(e.target.value)
+                        })}
                         className={`w-full bg-[#1e2f41] border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75] ${
                           addressSelected ? 'pointer-events-none opacity-60 bg-[#162535]' : ''
                         }`}
@@ -730,21 +1154,78 @@ export default function ClientOnboarding() {
                         ))}
                       </select>
                     </div>
-                    <div>
+                    <div className="relative">
                       <label className="block text-xs font-medium text-gray-400 mb-1">City/Town *</label>
-                      <input
-                        type="text"
-                        {...register('hoa_city', { 
-                          required: 'Required',
-                          validate: validateCity
-                        })}
-                        onKeyPress={onlyLettersKeyPress}
-                        readOnly={addressSelected}
-                        className={`w-full bg-[#1e2f41] border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75] ${
-                          addressSelected ? 'opacity-65 bg-[#162535] cursor-not-allowed' : ''
-                        }`}
-                      />
-                      {errors.hoa_city && <span className="text-xs text-red-400">{errors.hoa_city.message}</span>}
+                      
+                      {addressSelected ? (
+                        <input
+                          type="text"
+                          readOnly
+                          {...register('hoa_city', { required: 'Required' })}
+                          className="w-full bg-[#162535] border border-white/10 rounded-xl px-3 py-2 text-sm text-white opacity-65 cursor-not-allowed"
+                        />
+                      ) : loadingCities ? (
+                        <div className="w-full bg-[#1e2f41] border border-white/10 rounded-xl px-3 py-2 text-sm text-gray-400 flex items-center gap-2">
+                          <RefreshCw size={14} className="animate-spin text-teal-400" />
+                          <span>Loading districts/cities...</span>
+                        </div>
+                      ) : (
+                        <>
+                          <input
+                            type="text"
+                            list={stateCities.length > 0 ? "city-options" : undefined}
+                            placeholder={stateCities.length > 0 ? "Select or Type City/Town" : "Type City/Town"}
+                            {...register('hoa_city', { 
+                              required: 'Required',
+                              validate: (val) => /^[A-Za-z]+$/.test(val) || 'City should contain only letters (no spaces or numbers)',
+                              onChange: (e) => {
+                                handleCityInputChange(e.target.value);
+                              }
+                            })}
+                            onKeyPress={(e) => {
+                              if (!/[A-Za-z]/.test(e.key)) {
+                                e.preventDefault();
+                              }
+                            }}
+                            className="w-full bg-[#1e2f41] border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]"
+                          />
+                          {stateCities.length > 0 && (
+                            <datalist id="city-options">
+                              {stateCities.map((cityName) => (
+                                <option key={cityName} value={cityName} />
+                              ))}
+                            </datalist>
+                          )}
+                        </>
+                      )}
+
+                      {!addressSelected && !loadingCities && stateCities.length === 0 && (
+                        <>
+                          {searchingCity && (
+                            <div className="absolute z-50 w-full mt-1 bg-[#1e2f41] border border-white/10 rounded-xl p-3 text-xs text-gray-400 flex items-center gap-2">
+                              <RefreshCw size={14} className="animate-spin text-teal-400" />
+                              Searching city...
+                            </div>
+                          )}
+
+                          {!searchingCity && citySuggestions.length > 0 && (
+                            <div className="absolute z-50 w-full mt-1 bg-[#162535] border border-white/10 rounded-xl overflow-hidden shadow-2xl max-h-60 overflow-y-auto">
+                              {citySuggestions.map((feature) => (
+                                <button
+                                  key={feature.id}
+                                  type="button"
+                                  onClick={() => handleSelectCitySuggestion(feature)}
+                                  className="w-full text-left px-4 py-2.5 hover:bg-teal-500/10 hover:text-teal-400 text-xs text-gray-200 border-b border-white/5 last:border-0 transition-colors"
+                                >
+                                  {feature.place_name}
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </>
+                      )}
+
+                      {errors.hoa_city && <span className="text-xs text-red-400 mt-1 block">{errors.hoa_city.message}</span>}
                     </div>
                   </div>
 
@@ -797,15 +1278,30 @@ export default function ClientOnboarding() {
                         type="text"
                         {...register('hoa_zip_code', { 
                           required: 'Required',
-                          validate: validateZipCode
+                          validate: (val) => {
+                            if (!val) return 'Required';
+                            if (!/^\d+$/.test(val)) return 'Zip code must contain only numbers';
+                            if (val.length < 5 || val.length > 10) return 'Zip code must be between 5 and 10 digits';
+                            return true;
+                          }
                         })}
-                        onKeyPress={onlyZipKeyPress}
+                        onBlur={(e) => {
+                          const formOnBlur = register('hoa_zip_code').onBlur;
+                          if (formOnBlur) formOnBlur(e);
+                          verifyZipForCity(e.target.value);
+                        }}
+                        onKeyPress={(e) => {
+                          if (!/[0-9]/.test(e.key)) {
+                            e.preventDefault();
+                          }
+                        }}
                         readOnly={addressSelected}
                         className={`w-full bg-[#1e2f41] border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75] ${
                           addressSelected ? 'opacity-65 bg-[#162535] cursor-not-allowed' : ''
                         }`}
                       />
-                      {errors.hoa_zip_code && <span className="text-xs text-red-400">{errors.hoa_zip_code.message}</span>}
+                      {errors.hoa_zip_code && <span className="text-xs text-red-400 mt-1 block">{errors.hoa_zip_code.message}</span>}
+                      {zipError && <span className="text-xs text-red-400 mt-1 block font-medium">{zipError}</span>}
                     </div>
                   </div>
 
@@ -904,15 +1400,38 @@ export default function ClientOnboarding() {
                           <label className="block text-xs font-medium text-gray-400 mb-1">Bank Name *</label>
                           <input
                             type="text"
-                            {...register('bank_name', { required: paymentMethod === 'bank_account' })}
+                            {...register('bank_name', { 
+                              required: paymentMethod === 'bank_account' ? 'Bank Name is required' : false,
+                              validate: (val) => {
+                                if (paymentMethod !== 'bank_account') return true;
+                                if (!val || !val.trim()) return 'Bank Name is required';
+                                if (!/^[A-Za-z\s\-\.]+$/.test(val)) return 'Bank Name should only contain letters, spaces, hyphens, or dots';
+                                return true;
+                              }
+                            })}
+                            onKeyPress={(e) => {
+                              if (!/[A-Za-z\s\-\.]/.test(e.key)) {
+                                e.preventDefault();
+                              }
+                            }}
                             className="w-full bg-[#162535] border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-[#1D9E75]"
                           />
+                          {errors.bank_name && <span className="text-xs text-red-400 mt-1 block">{errors.bank_name.message}</span>}
                         </div>
                         <div>
                           <label className="block text-xs font-medium text-gray-400 mb-1">Routing Number *</label>
                           <input
                             type="text"
-                            {...register('routing_number', { required: paymentMethod === 'bank_account' })}
+                            maxLength={9}
+                            {...register('routing_number', { 
+                              required: paymentMethod === 'bank_account' ? 'Routing Number is required' : false,
+                              validate: (val) => {
+                                if (paymentMethod !== 'bank_account') return true;
+                                if (!val) return 'Routing Number is required';
+                                if (!/^\d{9}$/.test(val)) return 'Routing Number must be exactly 9 digits';
+                                return true;
+                              }
+                            })}
                             onKeyPress={(e) => {
                               if (!/[0-9]/.test(e.key)) {
                                 e.preventDefault();
@@ -920,12 +1439,22 @@ export default function ClientOnboarding() {
                             }}
                             className="w-full bg-[#162535] border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-[#1D9E75] font-mono"
                           />
+                          {errors.routing_number && <span className="text-xs text-red-400 mt-1 block">{errors.routing_number.message}</span>}
                         </div>
                         <div>
                           <label className="block text-xs font-medium text-gray-400 mb-1">Account Number *</label>
                           <input
                             type="password"
-                            {...register('account_number', { required: paymentMethod === 'bank_account' })}
+                            maxLength={17}
+                            {...register('account_number', { 
+                              required: paymentMethod === 'bank_account' ? 'Account Number is required' : false,
+                              validate: (val) => {
+                                if (paymentMethod !== 'bank_account') return true;
+                                if (!val) return 'Account Number is required';
+                                if (!/^\d{8,17}$/.test(val)) return 'Account Number must be between 8 and 17 digits';
+                                return true;
+                              }
+                            })}
                             onKeyPress={(e) => {
                               if (!/[0-9]/.test(e.key)) {
                                 e.preventDefault();
@@ -933,6 +1462,7 @@ export default function ClientOnboarding() {
                             }}
                             className="w-full bg-[#162535] border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-[#1D9E75] font-mono"
                           />
+                          {errors.account_number && <span className="text-xs text-red-400 mt-1 block">{errors.account_number.message}</span>}
                         </div>
                       </div>
                     ) : (
@@ -941,43 +1471,39 @@ export default function ClientOnboarding() {
                           <label className="block text-xs font-medium text-gray-400 mb-1">Cardholder Name *</label>
                           <input
                             type="text"
-                            {...register('cardholder_name', { required: paymentMethod === 'credit_card' })}
+                            {...register('cardholder_name', { 
+                              required: paymentMethod === 'credit_card' ? 'Cardholder Name is required' : false,
+                              validate: (val) => {
+                                if (paymentMethod !== 'credit_card') return true;
+                                if (!val || !val.trim()) return 'Cardholder Name is required';
+                                if (!/^[A-Za-z\s'\-]+$/.test(val)) return 'Cardholder Name should contain only letters, spaces, hyphens, or apostrophes';
+                                return true;
+                              }
+                            })}
+                            onKeyPress={(e) => {
+                              if (!/[A-Za-z\s'\-]/.test(e.key)) {
+                                e.preventDefault();
+                              }
+                            }}
                             className="w-full bg-[#162535] border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-[#1D9E75]"
                           />
+                          {errors.cardholder_name && <span className="text-xs text-red-400 mt-1 block">{errors.cardholder_name.message}</span>}
                         </div>
                         <div className="md:col-span-2">
                           <label className="block text-xs font-medium text-gray-400 mb-1">Card Number *</label>
                           <input
                             type="text"
-                            {...register('card_number', { required: paymentMethod === 'credit_card' })}
-                            onKeyPress={(e) => {
-                              if (!/[0-9\s]/.test(e.key)) {
-                                e.preventDefault();
+                            maxLength={19}
+                            {...register('card_number', { 
+                              required: paymentMethod === 'credit_card' ? 'Card Number is required' : false,
+                              validate: (val) => {
+                                if (paymentMethod !== 'credit_card') return true;
+                                if (!val) return 'Card Number is required';
+                                const digitsOnly = val.replace(/\s/g, '');
+                                if (!/^\d{13,19}$/.test(digitsOnly)) return 'Card Number must be between 13 and 19 digits';
+                                return true;
                               }
-                            }}
-                            className="w-full bg-[#162535] border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-[#1D9E75] font-mono"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-xs font-medium text-gray-400 mb-1">Expiry Date *</label>
-                          <input
-                            type="text"
-                            placeholder="MM/YY"
-                            {...register('card_expiry', { required: paymentMethod === 'credit_card' })}
-                            onKeyPress={(e) => {
-                              if (!/[0-9/]/.test(e.key)) {
-                                e.preventDefault();
-                              }
-                            }}
-                            className="w-full bg-[#162535] border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-[#1D9E75] font-mono"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-xs font-medium text-gray-400 mb-1">CVV *</label>
-                          <input
-                            type="password"
-                            maxLength="4"
-                            {...register('card_cvv', { required: paymentMethod === 'credit_card' })}
+                            })}
                             onKeyPress={(e) => {
                               if (!/[0-9]/.test(e.key)) {
                                 e.preventDefault();
@@ -985,6 +1511,54 @@ export default function ClientOnboarding() {
                             }}
                             className="w-full bg-[#162535] border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-[#1D9E75] font-mono"
                           />
+                          {errors.card_number && <span className="text-xs text-red-400 mt-1 block">{errors.card_number.message}</span>}
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-gray-400 mb-1">Expiry Date *</label>
+                          <input
+                            type="text"
+                            placeholder="MM/YY"
+                            maxLength={5}
+                            {...register('card_expiry', { 
+                              required: paymentMethod === 'credit_card' ? 'Expiry Date is required' : false,
+                              validate: (val) => {
+                                if (paymentMethod !== 'credit_card') return true;
+                                if (!val) return 'Expiry Date is required';
+                                if (!/^(0[1-9]|1[0-2])\/[0-9]{2}$/.test(val)) return 'Expiry Date must be in MM/YY format (e.g. 12/28)';
+                                return true;
+                              }
+                            })}
+                            onKeyPress={(e) => {
+                              if (!/[0-9/]/.test(e.key)) {
+                                  e.preventDefault();
+                              }
+                            }}
+                            className="w-full bg-[#162535] border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-[#1D9E75] font-mono"
+                          />
+                          {errors.card_expiry && <span className="text-xs text-red-400 mt-1 block">{errors.card_expiry.message}</span>}
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-gray-400 mb-1">CVV *</label>
+                          <input
+                            type="password"
+                            maxLength={4}
+                            {...register('card_cvv', { 
+                              required: paymentMethod === 'credit_card' ? 'CVV is required' : false,
+                              validate: (val) => {
+                                if (paymentMethod !== 'credit_card') return true;
+                                if (!val) return 'CVV is required';
+                                if (!/^\d{3,4}$/.test(val)) return 'CVV must be 3 or 4 digits';
+                                return true;
+                              }
+                            })}
+                            onKeyPress={(e) => {
+                              if (!/[0-9]/.test(e.key)) {
+                                e.preventDefault();
+                              }
+                            }}
+                            className="w-full bg-[#162535] border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-[#1D9E75] font-mono"
+                          />
+                          {errors.card_cvv && <span className="text-xs text-red-400 mt-1 block">{errors.card_cvv.message}</span>}
                         </div>
                       </div>
                     )}
