@@ -370,7 +370,7 @@ export default function ClientOnboarding() {
   };
 
   const verifyZipForCity = async (zipCode) => {
-    setZipWarning('');
+    setZipError('');
     if (!zipCode) return;
     
     if (zipCode.length < 5 || zipCode.length > 10) return;
@@ -410,10 +410,10 @@ export default function ClientOnboarding() {
           }
 
           if (!matched) {
-            setZipWarning(`Warning: Zip code ${zipCode} may not belong to ${cityName}`);
+            setZipError(`Zip code ${zipCode} does not belong to ${cityName}`);
           }
         } else {
-          setZipWarning(`Warning: Zip code ${zipCode} not found in ${countryName}`);
+          setZipError(`Zip code ${zipCode} not found in ${countryName}`);
         }
       }
     } catch (err) {
@@ -1301,7 +1301,7 @@ export default function ClientOnboarding() {
                         }`}
                       />
                       {errors.hoa_zip_code && <span className="text-xs text-red-400 mt-1 block">{errors.hoa_zip_code.message}</span>}
-                      {zipWarning && <span className="text-xs text-amber-400 mt-1 block font-medium">{zipWarning}</span>}
+                      {zipError && <span className="text-xs text-red-400 mt-1 block font-medium">{zipError}</span>}
                     </div>
                   </div>
 
