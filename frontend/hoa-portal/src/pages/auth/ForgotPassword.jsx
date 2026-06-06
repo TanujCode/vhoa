@@ -156,83 +156,85 @@ const ForgotPassword = () => {
 
         {/* Step 2: OTP + New Password */}
         {step === 2 && (
-          <form onSubmit={handleResetPassword} className="space-y-4">
-            <div>
-              <label className="block text-xs font-bold text-gray-700 tracking-wider mb-1">
-                ENTER OTP
-              </label>
-              <div className="relative">
-                <input
-                  type="text"
-                  maxLength={6}
-                  value={otp}
-                  onChange={(e) => setOtp(e.target.value)}
-                  onKeyPress={(e) => {
-                    if (!/[0-9]/.test(e.key)) {
-                      e.preventDefault();
-                    }
-                  }}
-                  required
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none pl-10 text-sm text-gray-900 bg-white dark:text-gray-900 dark:bg-white text-center text-lg tracking-widest font-mono"
-                  placeholder="123456"
-                />
-                <Lock className="w-4 h-4 text-gray-400 absolute left-3 top-3" />
+          <>
+            <form onSubmit={handleResetPassword} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-gray-700 tracking-wider mb-1">
+                  ENTER OTP
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    maxLength={6}
+                    value={otp}
+                    onChange={(e) => setOtp(e.target.value)}
+                    onKeyPress={(e) => {
+                      if (!/[0-9]/.test(e.key)) {
+                        e.preventDefault();
+                      }
+                    }}
+                    required
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none pl-10 text-sm text-gray-900 bg-white dark:text-gray-900 dark:bg-white text-center text-lg tracking-widest font-mono"
+                    placeholder="123456"
+                  />
+                  <Lock className="w-4 h-4 text-gray-400 absolute left-3 top-3" />
+                </div>
               </div>
-            </div>
 
-            <div>
-              <label className="block text-xs font-bold text-gray-700 tracking-wider mb-1">
-                NEW PASSWORD
-              </label>
-              <div className="relative">
-                <input
-                  type="password"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  required
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none pl-10 text-sm text-gray-900 bg-white dark:text-gray-900 dark:bg-white"
-                  placeholder="••••••••"
-                />
-                <Lock className="w-4 h-4 text-gray-400 absolute left-3 top-3" />
+              <div>
+                <label className="block text-xs font-bold text-gray-700 tracking-wider mb-1">
+                  NEW PASSWORD
+                </label>
+                <div className="relative">
+                  <input
+                    type="password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    required
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none pl-10 text-sm text-gray-900 bg-white dark:text-gray-900 dark:bg-white"
+                    placeholder="••••••••"
+                  />
+                  <Lock className="w-4 h-4 text-gray-400 absolute left-3 top-3" />
+                </div>
               </div>
-            </div>
 
-            <div>
-              <label className="block text-xs font-bold text-gray-700 tracking-wider mb-1">
-                CONFIRM NEW PASSWORD
-              </label>
-              <div className="relative">
-                <input
-                  type="password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  required
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none pl-10 text-sm text-gray-900 bg-white dark:text-gray-900 dark:bg-white"
-                  placeholder="••••••••"
-                />
-                <Lock className="w-4 h-4 text-gray-400 absolute left-3 top-3" />
+              <div>
+                <label className="block text-xs font-bold text-gray-700 tracking-wider mb-1">
+                  CONFIRM NEW PASSWORD
+                </label>
+                <div className="relative">
+                  <input
+                    type="password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    required
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none pl-10 text-sm text-gray-900 bg-white dark:text-gray-900 dark:bg-white"
+                    placeholder="••••••••"
+                  />
+                  <Lock className="w-4 h-4 text-gray-400 absolute left-3 top-3" />
+                </div>
               </div>
-            </div>
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-[#0F2D59] hover:bg-[#0c2345] text-white py-2 px-4 rounded-lg font-medium transition duration-200 disabled:opacity-50 mt-2"
-            >
-              {loading ? "Resetting Password..." : "Reset Password"}
-            </button>
-          </form>
-          <div className="mt-6 text-center">
-            <span className="text-sm text-gray-500">Didn't receive the OTP? </span>
-            <button
-              type="button"
-              onClick={handleResendOtp}
-              disabled={loading}
-              className="text-sm text-blue-600 hover:text-[#0c2345] hover:underline font-semibold disabled:opacity-50"
-            >
-              Resend OTP
-            </button>
-          </div>
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-[#0F2D59] hover:bg-[#0c2345] text-white py-2 px-4 rounded-lg font-medium transition duration-200 disabled:opacity-50 mt-2"
+              >
+                {loading ? "Resetting Password..." : "Reset Password"}
+              </button>
+            </form>
+            <div className="mt-6 text-center">
+              <span className="text-sm text-gray-500">Didn't receive the OTP? </span>
+              <button
+                type="button"
+                onClick={handleResendOtp}
+                disabled={loading}
+                className="text-sm text-blue-600 hover:text-[#0c2345] hover:underline font-semibold disabled:opacity-50"
+              >
+                Resend OTP
+              </button>
+            </div>
+          </>
         )}
       </div>
     </AuthLayout>
