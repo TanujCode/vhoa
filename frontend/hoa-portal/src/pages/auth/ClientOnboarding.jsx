@@ -189,6 +189,39 @@ export default function ClientOnboarding() {
 
     if (!countryName || !stateName) return;
 
+    // 1. Try clean, curated Indian districts dataset first to avoid typos
+    if (countryName.toLowerCase() === 'india') {
+      try {
+        setLoadingCities(true);
+        const response = await fetch('https://raw.githubusercontent.com/sab99r/Indian-States-And-Districts/master/states-and-districts.json');
+        if (response.ok) {
+          const result = await response.json();
+          const stateData = result.states.find(s => s.state.toLowerCase() === stateName.toLowerCase());
+          if (stateData && Array.isArray(stateData.districts) && stateData.districts.length > 0) {
+            const cleanedCities = stateData.districts
+              .map(city => city.replace(/[^A-Za-z]/g, ''))
+              .filter(city => city.length > 0);
+            const uniqueCities = Array.from(new Set(cleanedCities)).sort();
+            setStateCities(uniqueCities);
+            return;
+          }
+        }
+      } catch (err) {
+        console.warn('Failed to fetch clean Indian districts JSON, falling back to CountriesNow:', err);
+      } finally {
+        setLoadingCities(false);
+      }
+    }
+
+    const cityCorrections = {
+      "Betl": "Betul",
+      "BetlBazr": "BetulBazar",
+      "Barwni": "Barwani",
+      "Bbai": "Babai",
+      "Barght": "Barghat",
+      "Bg": "Bagh"
+    };
+
     try {
       setLoadingCities(true);
       const response = await fetch('https://countriesnow.space/api/v0.1/countries/state/cities', {
@@ -205,7 +238,10 @@ export default function ClientOnboarding() {
       
       if (result.data && Array.isArray(result.data) && result.data.length > 0) {
         const cleanedCities = result.data
-          .map(city => city.replace(/[^A-Za-z]/g, ''))
+          .map(city => {
+            const cleaned = city.replace(/[^A-Za-z]/g, '');
+            return cityCorrections[cleaned] || cleaned;
+          })
           .filter(city => city.length > 0);
         const uniqueCities = Array.from(new Set(cleanedCities)).sort();
         setStateCities(uniqueCities);
@@ -240,49 +276,73 @@ export default function ClientOnboarding() {
   };
 
   const fetchZipForCity = async (cityName) => {
-    if (!mapboxToken || !cityName) return;
-    try {
-      const countryObj = countries.find(c => String(c.country_id) === String(selectedCountryId));
-      const countryCodeStr = countryObj?.country_code?.toLowerCase() || 'us';
-      
-      const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(cityName)}.json?access_token=${mapboxToken}&country=${countryCodeStr}&types=place,locality,postcode&limit=5`;
-      const response = await fetch(url);
-      if (!response.ok) throw new Error('Mapbox API failed');
-      const data = await response.json();
-      
-      let zipCode = '';
-      if (data.features && data.features.length > 0) {
-        for (const feature of data.features) {
-          if (feature.id.startsWith('postcode')) {
-            zipCode = feature.text;
-            break;
+    if (!cityName) return;
+
+    const countryObj = countries.find(c => String(c.country_id) === String(selectedCountryId));
+    const countryName = countryObj ? countryObj.country_name : '';
+    const countryCodeStr = countryObj?.country_code?.toLowerCase() || 'us';
+    
+    const stateObj = states.find(s => String(s.state_id) === String(watch('hoa_state_id')));
+    const stateName = stateObj ? stateObj.state_name : '';
+
+    const searchQueryName = cityName === "BetulBazar" ? "Betul Bazar" : cityName;
+    
+    // 1. Try Mapbox if token is configured and valid
+    const hasMapbox = mapboxToken && !mapboxToken.startsWith('pk.placeholder');
+    if (hasMapbox) {
+      try {
+        const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(searchQueryName)}.json?access_token=${mapboxToken}&country=${countryCodeStr}&types=place,locality,postcode&limit=5`;
+        const response = await fetch(url);
+        if (response.ok) {
+          const data = await response.json();
+          let zipCode = '';
+          if (data.features && data.features.length > 0) {
+            for (const feature of data.features) {
+              if (feature.id.startsWith('postcode')) {
+                zipCode = feature.text;
+                break;
+              }
+              if (feature.context) {
+                const pc = feature.context.find(c => c.id.startsWith('postcode'));
+                if (pc) {
+                  zipCode = pc.text;
+                  break;
+                }
+              }
+            }
           }
-          if (feature.context) {
-            const pc = feature.context.find(c => c.id.startsWith('postcode'));
-            if (pc) {
-              zipCode = pc.text;
-              break;
+          if (zipCode) {
+            const cleanZip = zipCode.replace(/[^0-9]/g, '');
+            setValue('hoa_zip_code', cleanZip, { shouldValidate: true });
+            return;
+          }
+        }
+      } catch (err) {
+        console.warn('Mapbox zip lookup failed, falling back:', err);
+      }
+    }
+
+    // 2. Fallback to OpenStreetMap Nominatim Geocoding (free, no key required)
+    try {
+      const query = `${searchQueryName}, ${stateName}, ${countryName}`;
+      const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&addressdetails=1&limit=3`;
+      const response = await fetch(url);
+      if (response.ok) {
+        const data = await response.json();
+        if (data && data.length > 0) {
+          for (const item of data) {
+            if (item.address && item.address.postcode) {
+              const cleanZip = item.address.postcode.replace(/[^0-9]/g, '');
+              if (cleanZip) {
+                setValue('hoa_zip_code', cleanZip, { shouldValidate: true });
+                return;
+              }
             }
           }
         }
       }
-      
-      if (zipCode) {
-        const cleanZip = zipCode.replace(/[^0-9]/g, '');
-        setValue('hoa_zip_code', cleanZip, { shouldValidate: true });
-      } else {
-        const urlZip = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(cityName + " postal code")}.json?access_token=${mapboxToken}&country=${countryCodeStr}&types=postcode&limit=1`;
-        const responseZip = await fetch(urlZip);
-        if (responseZip.ok) {
-          const dataZip = await responseZip.json();
-          if (dataZip.features && dataZip.features.length > 0) {
-            const cleanZip = dataZip.features[0].text.replace(/[^0-9]/g, '');
-            setValue('hoa_zip_code', cleanZip, { shouldValidate: true });
-          }
-        }
-      }
     } catch (err) {
-      console.error('Failed to auto-fill zip code:', err);
+      console.error('Nominatim zip lookup fallback failed:', err);
     }
   };
 
@@ -476,15 +536,18 @@ export default function ClientOnboarding() {
   };
 
   const handleCityInputChange = (val) => {
-    if (!mapboxToken || mapboxToken.startsWith('pk.placeholder_please_replace')) {
-      return;
-    }
+    // Clean input to letters-only (remove spaces, numbers, symbols)
+    const cleanedVal = val.replace(/[^A-Za-z]/g, '');
+    setValue('hoa_city', cleanedVal, { shouldValidate: true });
+    
+    // Clear zip code while typing
+    setValue('hoa_zip_code', '');
 
     if (cityTimeoutRef.current) {
       clearTimeout(cityTimeoutRef.current);
     }
 
-    if (!val || val.trim().length < 2) {
+    if (!cleanedVal || cleanedVal.trim().length < 2) {
       setCitySuggestions([]);
       return;
     }
@@ -493,20 +556,28 @@ export default function ClientOnboarding() {
     const countryCodeStr = selectedCountryObj?.country_code?.toLowerCase() || 'us';
 
     cityTimeoutRef.current = setTimeout(async () => {
-      try {
-         setSearchingCity(true);
-         const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(val)}.json?access_token=${mapboxToken}&autocomplete=true&types=place,locality&country=${countryCodeStr}&limit=5`;
-         const response = await fetch(url);
-         if (!response.ok) throw new Error('Mapbox API failed');
-         const data = await response.json();
-         setCitySuggestions(data.features || []);
-      } catch (err) {
-         console.error('Error fetching city suggestions:', err);
-         setCitySuggestions([]);
-      } finally {
-         setSearchingCity(false);
+      // 1. Fetch zip code automatically for this city name
+      await fetchZipForCity(cleanedVal);
+
+      // 2. Fetch Mapbox suggestions if active and mapboxToken exists
+      const hasMapbox = mapboxToken && !mapboxToken.startsWith('pk.placeholder');
+      if (hasMapbox) {
+        try {
+          setSearchingCity(true);
+          const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(cleanedVal)}.json?access_token=${mapboxToken}&autocomplete=true&types=place,locality&country=${countryCodeStr}&limit=5`;
+          const response = await fetch(url);
+          if (response.ok) {
+            const data = await response.json();
+            setCitySuggestions(data.features || []);
+          }
+        } catch (err) {
+          console.error('Error fetching city suggestions:', err);
+          setCitySuggestions([]);
+        } finally {
+          setSearchingCity(false);
+        }
       }
-    }, 500);
+    }, 800);
   };
 
   const handleSelectCitySuggestion = (feature) => {
@@ -1021,37 +1092,34 @@ export default function ClientOnboarding() {
                           <RefreshCw size={14} className="animate-spin text-teal-400" />
                           <span>Loading districts/cities...</span>
                         </div>
-                      ) : stateCities.length > 0 ? (
-                        <select
-                          {...register('hoa_city', { 
-                            required: 'Required',
-                            onChange: (e) => handleCitySelect(e.target.value)
-                          })}
-                          className="w-full bg-[#1e2f41] border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75] cursor-pointer"
-                        >
-                          <option value="">-- Select District/City --</option>
-                          {stateCities.map((cityName) => (
-                            <option key={cityName} value={cityName}>{cityName}</option>
-                          ))}
-                        </select>
                       ) : (
-                        <input
-                          type="text"
-                          {...register('hoa_city', { 
-                            required: 'Required',
-                            validate: (val) => /^[A-Za-z]+$/.test(val) || 'City should contain only letters (no spaces or numbers)',
-                            onChange: (e) => {
-                              handleCityInputChange(e.target.value);
-                            }
-                          })}
-                          onKeyPress={(e) => {
-                            if (!/[A-Za-z]/.test(e.key)) {
-                              e.preventDefault();
-                            }
-                          }}
-                          placeholder="Type City/Town"
-                          className="w-full bg-[#1e2f41] border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]"
-                        />
+                        <>
+                          <input
+                            type="text"
+                            list={stateCities.length > 0 ? "city-options" : undefined}
+                            placeholder={stateCities.length > 0 ? "Select or Type City/Town" : "Type City/Town"}
+                            {...register('hoa_city', { 
+                              required: 'Required',
+                              validate: (val) => /^[A-Za-z]+$/.test(val) || 'City should contain only letters (no spaces or numbers)',
+                              onChange: (e) => {
+                                handleCityInputChange(e.target.value);
+                              }
+                            })}
+                            onKeyPress={(e) => {
+                              if (!/[A-Za-z]/.test(e.key)) {
+                                e.preventDefault();
+                              }
+                            }}
+                            className="w-full bg-[#1e2f41] border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]"
+                          />
+                          {stateCities.length > 0 && (
+                            <datalist id="city-options">
+                              {stateCities.map((cityName) => (
+                                <option key={cityName} value={cityName} />
+                              ))}
+                            </datalist>
+                          )}
+                        </>
                       )}
 
                       {!addressSelected && !loadingCities && stateCities.length === 0 && (
