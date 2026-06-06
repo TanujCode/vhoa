@@ -413,7 +413,7 @@ const Dashboard = ({ community, user, setActivePage }) => {
               <button
                 onClick={() => setShowExportModal(false)}
                 disabled={exporting}
-                className="flex-1 py-3 text-slate-500 hover:bg-red-50 hover:text-red-600 dark:text-gray-400 dark:hover:bg-red-500/10 dark:hover:text-red-400 rounded-2xl transition disabled:opacity-50"
+                className="flex-1 py-3 text-slate-500 hover:bg-red-600 hover:text-white dark:text-gray-400 dark:hover:bg-red-600 dark:hover:text-white rounded-2xl transition disabled:opacity-50"
               >
                 Cancel
               </button>
