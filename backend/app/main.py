@@ -88,14 +88,16 @@ def run_db_upgrades():
         # as some user_communities associations (like property managers) are intentionally NULL.
         pass
         
-        # Force specific board member emails to be board_member (role_id=3) and community_id=7
-        db.execute(text("UPDATE users SET role_id = 3, community_id = 7 WHERE email_id IN ('tanujtongse@gmail.com', 'rajeshtongse042@gmail.com');"))
-        db.execute(text("""
-            INSERT INTO user_communities (user_id, community_id)
-            SELECT user_id, 7 FROM users
-            WHERE email_id IN ('tanujtongse@gmail.com', 'rajeshtongse042@gmail.com')
-            ON CONFLICT DO NOTHING;
-        """))
+        # Force specific board member emails to be board_member (role_id=3) and community_id=7 if it exists
+        community_7_exists = db.execute(text("SELECT 1 FROM communities WHERE community_id = 7")).fetchone()
+        if community_7_exists:
+            db.execute(text("UPDATE users SET role_id = 3, community_id = 7 WHERE email_id IN ('tanujtongse@gmail.com', 'rajeshtongse042@gmail.com');"))
+            db.execute(text("""
+                INSERT INTO user_communities (user_id, community_id)
+                SELECT user_id, 7 FROM users
+                WHERE email_id IN ('tanujtongse@gmail.com', 'rajeshtongse042@gmail.com')
+                ON CONFLICT DO NOTHING;
+            """))
         
         # Restore tanujtongse132@gmail.com to super_admin and clean up community mappings
         db.execute(text("UPDATE users SET role_id = 1, community_id = NULL WHERE email_id = 'tanujtongse132@gmail.com';"))
