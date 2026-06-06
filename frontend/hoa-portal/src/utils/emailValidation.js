@@ -70,7 +70,7 @@ export const EMAIL_TYPO_MAP = {
   'outlok.com':     'outlook.com',
   'outloo.com':     'outlook.com',
   'outloook.com':   'outlook.com',
-  'outlool.com':    'outlook.com',
+  'outloool.com':    'outlook.com',
   'outlookk.com':   'outlook.com',
   // Outlook TLD typos
   'outlook.cpom':   'outlook.com',
@@ -109,6 +109,50 @@ const COM_TLD_TYPOS = [
   'col', 'cob', 'cof', 'cor', 'co', 'cm'
 ];
 
+// In-memory DNS cache to prevent redundant fetches
+const dnsCache = {};
+
+/**
+ * Helper: Query MX records via Cloudflare DNS-over-HTTPS.
+ * Checks if the domain exists and determines if it uses Google mail servers.
+ */
+export const checkDomainMX = async (domain) => {
+  if (dnsCache[domain] !== undefined) {
+    return dnsCache[domain];
+  }
+
+  try {
+    const response = await fetch(`https://cloudflare-dns.com/dns-query?name=${encodeURIComponent(domain)}&type=MX`, {
+      headers: {
+        'Accept': 'application/dns-json'
+      }
+    });
+
+    if (!response.ok) {
+      return { hasMX: false, isGoogle: false };
+    }
+
+    const data = await response.json();
+    const hasMX = data.Answer && data.Answer.length > 0;
+    
+    let isGoogle = false;
+    if (hasMX) {
+      isGoogle = data.Answer.some(record => {
+        const target = (record.data || '').toLowerCase();
+        return target.includes('google.com') || target.includes('googlemail.com');
+      });
+    }
+
+    const result = { hasMX, isGoogle };
+    dnsCache[domain] = result;
+    return result;
+  } catch (err) {
+    console.warn('DNS MX check failed:', err);
+    // If request fails (e.g. offline/blocked), return fallback hasMX: true to avoid blocking users
+    return { hasMX: true, isGoogle: false };
+  }
+};
+
 /**
  * Internal: detect any domain whose TLD looks like a scrambled ".com"
  * Returns suggested corrected domain string, or null.
@@ -131,7 +175,7 @@ const detectTldTypo = (domain) => {
  * Use as: {...register('email', { validate: validateEmail })}
  * Returns true if valid, or an error string if invalid.
  */
-export const validateEmail = (value) => {
+export const validateEmail = async (value) => {
   const trimmed = (value || '').trim();
   if (!EMAIL_REGEX.test(trimmed)) {
     return 'Please enter a valid email address (e.g. name@gmail.com).';
@@ -213,8 +257,14 @@ export const validateEmail = (value) => {
   }
 
   // Whitelist check
-  if (!ALLOWED_EMAIL_DOMAINS.includes(domain)) {
-    return 'Only standard email domains (e.g. @gmail.com, @yahoo.com, @outlook.com) are allowed.';
+  if (ALLOWED_EMAIL_DOMAINS.includes(domain)) {
+    return true;
+  }
+
+  // Asynchronous DNS MX check for custom domains
+  const dnsCheck = await checkDomainMX(domain);
+  if (!dnsCheck.hasMX) {
+    return 'Only standard email domains (e.g. @gmail.com, @yahoo.com) or valid company domains are allowed.';
   }
 
   return true;
@@ -303,11 +353,6 @@ export const checkEmail = (value) => {
     if (domain.includes(typo) && domain !== 'icloud.com') {
       return { valid: false, message: `Suspicious domain! Did you mean "${localPart}@icloud.com"?` };
     }
-  }
-
-  // Whitelist check
-  if (!ALLOWED_EMAIL_DOMAINS.includes(domain)) {
-    return { valid: false, message: 'Only standard email domains (e.g. @gmail.com, @yahoo.com, @outlook.com) are allowed.' };
   }
 
   return { valid: true, message: '' };
