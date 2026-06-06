@@ -5,6 +5,24 @@
 
 export const EMAIL_REGEX = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i;
 
+// Allowed standard email domains
+export const ALLOWED_EMAIL_DOMAINS = [
+  'gmail.com', 'yahoo.com', 'yahoo.co.in', 'hotmail.com', 'outlook.com', 
+  'icloud.com', 'aol.com', 'live.com', 'msn.com', 'zoho.com', 
+  'protonmail.com', 'proton.me', 'mail.com', 'yandex.com', 'gmx.com',
+  'rediffmail.com', 'outlook.in', 'live.in', 'hotmail.co.uk', 'yahoo.co.uk',
+  'att.net', 'comcast.net', 'verizon.net', 'sbcglobal.net', 'cox.net',
+  'charter.net', 'me.com', 'mac.com'
+];
+
+// Blocked / Disposable / Fake domains
+export const BLOCKED_DOMAINS = [
+  'test.com', 'test.in', 'testing.com', 'example.com', 'fake.com', 'temp.com',
+  'junk.com', 'dummy.com', 'invalid.com', 'mailinator.com', 'yopmail.com',
+  '10minutemail.com', 'tempmail.com', 'temp-mail.org', 'guerrillamail.com'
+];
+
+// Map of common typo domains → suggested correct domain
 export const EMAIL_TYPO_MAP = {
   // Gmail domain typos
   'gmailgmail.com': 'gmail.com',
@@ -88,7 +106,7 @@ export const EMAIL_TYPO_MAP = {
 const COM_TLD_TYPOS = [
   'cpom', 'cmo', 'ocm', 'con', 'copm', 'comn',
   'vom', 'xom', 'cpm', 'coom', 'coam', 'coa', 'coma',
-  'col', 'cob', 'cof', 'cor', 'cm'
+  'col', 'cob', 'cof', 'cor', 'co', 'cm'
 ];
 
 /**
@@ -120,6 +138,31 @@ export const validateEmail = (value) => {
   }
   const domain = trimmed.split('@')[1]?.toLowerCase() || '';
   const localPart = trimmed.split('@')[0];
+
+  // Blocked / Disposable / Fake domains check
+  if (BLOCKED_DOMAINS.includes(domain)) {
+    return 'This email domain is not allowed. Please use a valid email address.';
+  }
+
+  const firstPart = domain.split('.')[0] || '';
+  
+  // Generic startsWith/endsWith key-mash checks for popular providers
+  const popularProviders = ['gmail', 'yahoo', 'hotmail', 'outlook', 'icloud'];
+  for (const provider of popularProviders) {
+    if (firstPart.startsWith(provider) && firstPart !== provider) {
+      return `Suspicious domain! Did you mean "${localPart}@${provider}.com"?`;
+    }
+  }
+
+  // Gmail key-mash check (e.g. gmHAHAHAil.com)
+  if (firstPart.startsWith('gm') && firstPart.endsWith('il') && firstPart !== 'gmail' && firstPart.length <= 12) {
+    return `Suspicious domain! Did you mean "${localPart}@gmail.com"?`;
+  }
+
+  // Yahoo key-mash check (e.g. yahahahaoo.com)
+  if (firstPart.startsWith('ya') && firstPart.endsWith('oo') && firstPart !== 'yahoo' && firstPart.length <= 12) {
+    return `Suspicious domain! Did you mean "${localPart}@yahoo.com"?`;
+  }
 
   // 1. Exact typo map check
   const mapSuggestion = EMAIL_TYPO_MAP[domain];
@@ -169,6 +212,11 @@ export const validateEmail = (value) => {
     }
   }
 
+  // Whitelist check
+  if (!ALLOWED_EMAIL_DOMAINS.includes(domain)) {
+    return 'Only standard email domains (e.g. @gmail.com, @yahoo.com, @outlook.com) are allowed.';
+  }
+
   return true;
 };
 
@@ -183,6 +231,31 @@ export const checkEmail = (value) => {
   }
   const domain = trimmed.split('@')[1]?.toLowerCase() || '';
   const localPart = trimmed.split('@')[0];
+
+  // Blocked / Disposable / Fake domains check
+  if (BLOCKED_DOMAINS.includes(domain)) {
+    return { valid: false, message: 'This email domain is not allowed. Please use a valid email address.' };
+  }
+
+  const firstPart = domain.split('.')[0] || '';
+  
+  // Generic startsWith/endsWith key-mash checks for popular providers
+  const popularProviders = ['gmail', 'yahoo', 'hotmail', 'outlook', 'icloud'];
+  for (const provider of popularProviders) {
+    if (firstPart.startsWith(provider) && firstPart !== provider) {
+      return { valid: false, message: `Suspicious domain! Did you mean "${localPart}@${provider}.com"?` };
+    }
+  }
+
+  // Gmail key-mash check (e.g. gmHAHAHAil.com)
+  if (firstPart.startsWith('gm') && firstPart.endsWith('il') && firstPart !== 'gmail' && firstPart.length <= 12) {
+    return { valid: false, message: `Suspicious domain! Did you mean "${localPart}@gmail.com"?` };
+  }
+
+  // Yahoo key-mash check (e.g. yahahahaoo.com)
+  if (firstPart.startsWith('ya') && firstPart.endsWith('oo') && firstPart !== 'yahoo' && firstPart.length <= 12) {
+    return { valid: false, message: `Suspicious domain! Did you mean "${localPart}@yahoo.com"?` };
+  }
 
   // 1. Exact typo map check
   const mapSuggestion = EMAIL_TYPO_MAP[domain];
@@ -230,6 +303,11 @@ export const checkEmail = (value) => {
     if (domain.includes(typo) && domain !== 'icloud.com') {
       return { valid: false, message: `Suspicious domain! Did you mean "${localPart}@icloud.com"?` };
     }
+  }
+
+  // Whitelist check
+  if (!ALLOWED_EMAIL_DOMAINS.includes(domain)) {
+    return { valid: false, message: 'Only standard email domains (e.g. @gmail.com, @yahoo.com, @outlook.com) are allowed.' };
   }
 
   return { valid: true, message: '' };
