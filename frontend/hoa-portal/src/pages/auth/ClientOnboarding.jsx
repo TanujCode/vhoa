@@ -60,6 +60,7 @@ export default function ClientOnboarding() {
   
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
+  const [zipWarning, setZipWarning] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
@@ -346,11 +347,56 @@ export default function ClientOnboarding() {
     }
   };
 
-  const handleCitySelect = async (cityName) => {
-    setValue('hoa_city', cityName, { shouldValidate: true });
-    setValue('hoa_zip_code', '');
+  const verifyZipForCity = async (zipCode) => {
+    setZipWarning('');
+    if (!zipCode) return;
+    
+    if (zipCode.length < 5 || zipCode.length > 10) return;
+
+    const cityName = watch('hoa_city');
     if (!cityName) return;
-    await fetchZipForCity(cityName);
+
+    const countryObj = countries.find(c => String(c.country_id) === String(selectedCountryId));
+    const countryName = countryObj ? countryObj.country_name : '';
+
+    try {
+      const url = `https://nominatim.openstreetmap.org/search?postalcode=${encodeURIComponent(zipCode)}&country=${encodeURIComponent(countryName)}&format=json&addressdetails=1&limit=3`;
+      const response = await fetch(url);
+      if (response.ok) {
+        const data = await response.json();
+        if (data && data.length > 0) {
+          let matched = false;
+          const normalizedCity = cityName.toLowerCase();
+          
+          for (const item of data) {
+            const addr = item.address || {};
+            const possibleNames = [
+              addr.city,
+              addr.town,
+              addr.village,
+              addr.suburb,
+              addr.county,
+              addr.state_district,
+              addr.municipality,
+              item.display_name
+            ].filter(Boolean).map(n => n.toLowerCase().replace(/[^a-z]/g, ''));
+
+            if (possibleNames.some(name => name.includes(normalizedCity) || normalizedCity.includes(name))) {
+              matched = true;
+              break;
+            }
+          }
+
+          if (!matched) {
+            setZipWarning(`Warning: Zip code ${zipCode} may not belong to ${cityName}`);
+          }
+        } else {
+          setZipWarning(`Warning: Zip code ${zipCode} not found in ${countryName}`);
+        }
+      }
+    } catch (err) {
+      console.warn('Zip validation failed:', err);
+    }
   };
 
   const fetchCaptcha = async () => {
@@ -1208,6 +1254,11 @@ export default function ClientOnboarding() {
                             return true;
                           }
                         })}
+                        onBlur={(e) => {
+                          const formOnBlur = register('hoa_zip_code').onBlur;
+                          if (formOnBlur) formOnBlur(e);
+                          verifyZipForCity(e.target.value);
+                        }}
                         onKeyPress={(e) => {
                           if (!/[0-9]/.test(e.key)) {
                             e.preventDefault();
@@ -1219,6 +1270,7 @@ export default function ClientOnboarding() {
                         }`}
                       />
                       {errors.hoa_zip_code && <span className="text-xs text-red-400 mt-1 block">{errors.hoa_zip_code.message}</span>}
+                      {zipWarning && <span className="text-xs text-amber-400 mt-1 block font-medium">{zipWarning}</span>}
                     </div>
                   </div>
 
