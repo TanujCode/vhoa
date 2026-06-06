@@ -315,6 +315,7 @@ export default function ClientOnboarding() {
           if (zipCode) {
             const cleanZip = zipCode.replace(/[^0-9]/g, '');
             setValue('hoa_zip_code', cleanZip, { shouldValidate: true });
+            setZipError('');
             return;
           }
         }
@@ -326,7 +327,7 @@ export default function ClientOnboarding() {
     // 2. Fallback to OpenStreetMap Nominatim Geocoding (free, no key required)
     try {
       const query = `${searchQueryName}, ${stateName}, ${countryName}`;
-      const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&addressdetails=1&limit=3`;
+      const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&addressdetails=1&limit=5`;
       const response = await fetch(url);
       if (response.ok) {
         const data = await response.json();
@@ -336,6 +337,27 @@ export default function ClientOnboarding() {
               const cleanZip = item.address.postcode.replace(/[^0-9]/g, '');
               if (cleanZip) {
                 setValue('hoa_zip_code', cleanZip, { shouldValidate: true });
+                setZipError('');
+                return;
+              }
+            }
+          }
+        }
+      }
+
+      // If we still don't have a postcode, try querying with "post office" fallback
+      const fallbackQuery = `${searchQueryName} post office, ${stateName}, ${countryName}`;
+      const fallbackUrl = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(fallbackQuery)}&format=json&addressdetails=1&limit=3`;
+      const fallbackResponse = await fetch(fallbackUrl);
+      if (fallbackResponse.ok) {
+        const fallbackData = await fallbackResponse.json();
+        if (fallbackData && fallbackData.length > 0) {
+          for (const item of fallbackData) {
+            if (item.address && item.address.postcode) {
+              const cleanZip = item.address.postcode.replace(/[^0-9]/g, '');
+              if (cleanZip) {
+                setValue('hoa_zip_code', cleanZip, { shouldValidate: true });
+                setZipError('');
                 return;
               }
             }
@@ -588,6 +610,9 @@ export default function ClientOnboarding() {
     
     // Clear zip code while typing
     setValue('hoa_zip_code', '');
+    
+    // Clear zip verification errors
+    setZipError('');
 
     if (cityTimeoutRef.current) {
       clearTimeout(cityTimeoutRef.current);
@@ -695,7 +720,7 @@ export default function ClientOnboarding() {
         'confirm_password'
       ]);
     } else if (step === 3) {
-      isValidStep = await trigger([
+      const isFormValid = await trigger([
         'hoa_name',
         'hoa_country_id',
         'hoa_state_id',
@@ -704,6 +729,12 @@ export default function ClientOnboarding() {
         'hoa_zip_code',
         'hoa_contact_number_only'
       ]);
+      
+      if (zipError) {
+        isValidStep = false;
+      } else {
+        isValidStep = isFormValid;
+      }
     }
 
     if (isValidStep) {
