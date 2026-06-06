@@ -85,6 +85,23 @@ const ForgotPassword = () => {
     }
   };
 
+  const handleResendOtp = async () => {
+    if (!email) return;
+    setLoading(true);
+    setMessage({ type: '', text: '' });
+    try {
+      await API.post('/auth/otp/send', {
+        email_id: email.trim(),
+        otp_type: "password_reset"
+      });
+      showMsg('success', 'A new OTP has been sent to your email!');
+    } catch (err) {
+      showMsg('error', err.response?.data?.detail || "Failed to resend OTP");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <AuthLayout>
       <div className="max-w-md mx-auto">
@@ -205,6 +222,17 @@ const ForgotPassword = () => {
               {loading ? "Resetting Password..." : "Reset Password"}
             </button>
           </form>
+          <div className="mt-6 text-center">
+            <span className="text-sm text-gray-500">Didn't receive the OTP? </span>
+            <button
+              type="button"
+              onClick={handleResendOtp}
+              disabled={loading}
+              className="text-sm text-blue-600 hover:text-[#0c2345] hover:underline font-semibold disabled:opacity-50"
+            >
+              Resend OTP
+            </button>
+          </div>
         )}
       </div>
     </AuthLayout>
