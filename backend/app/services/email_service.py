@@ -14,6 +14,7 @@ def _send_email_thread(to_email: str, subject: str, html_body: str):
 
         msg.attach(MIMEText(html_body, "html"))
 
+        # Added a 10 second timeout to prevent the thread from hanging indefinitely
         with smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=10) as server:
             server.login(settings.MAIL_USERNAME, settings.MAIL_PASSWORD)
             server.sendmail(settings.MAIL_FROM, to_email, msg.as_string())
@@ -24,49 +25,73 @@ def _send_email_thread(to_email: str, subject: str, html_body: str):
 
 
 def send_email(to_email: str, subject: str, html_body: str) -> bool:
+    # Run SMTP transport asynchronously in a background thread so it doesn't block the request lifecycle
     thread = threading.Thread(target=_send_email_thread, args=(to_email, subject, html_body))
     thread.start()
     return True
 
 
+def _wrap_in_responsive_layout(inner_html: str, subtitle: str = "HOA Management System") -> str:
+    """Wraps inner HTML in a responsive, centered table layout that looks beautiful on mobile email clients."""
+    sub_element = f'<p style="margin: 8px 0 0; color: #9CA3AF; font-size: 14px;">{subtitle}</p>' if subtitle else ''
+    return f"""
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color: #050b14; width: 100%; height: 100%; margin: 0; padding: 20px 0; font-family: Arial, sans-serif;">
+      <tr>
+        <td align="center" valign="top">
+          <div style="width: 100%; max-width: 500px; margin: 0 auto; background: #0D1B2A; color: #ffffff; border-radius: 16px; overflow: hidden; text-align: left; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);">
+            
+            <!-- Header -->
+            <div style="background: #162535; padding: 30px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1);">
+              <h1 style="margin: 0; font-size: 24px; color: #ffffff;">
+                <span style="color: #14B8A6;">V</span>HOAS
+              </h1>
+              {sub_element}
+            </div>
+
+            <!-- Body Content -->
+            {inner_html}
+
+            <!-- Footer -->
+            <div style="background: #162535; padding: 20px; text-align: center; border-top: 1px solid rgba(255,255,255,0.1);">
+              <p style="margin: 0; color: #6B7280; font-size: 12px;">
+                © 2026 VHOAS — HOA Management System
+              </p>
+            </div>
+
+          </div>
+        </td>
+      </tr>
+    </table>
+    """
+
+
+# ══════════════════════════════════════════════
 #  EMAIL TEMPLATES
+# ══════════════════════════════════════════════
 
 def send_otp_email(to_email: str, otp_code: str, otp_type: str) -> bool:
     """Send OTP email"""
-
     type_labels = {
         "email_verify":   "Email Verification",
         "mobile_verify":  "Mobile Verification",
         "password_reset": "Password Reset",
     }
     label = type_labels.get(otp_type, "Verification")
-
     subject = f"VHOAS — {label} OTP"
 
-    html = f"""
-    <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; background: #0D1B2A; color: #ffffff; border-radius: 16px; overflow: hidden;">
-
-      <!-- Header -->
-      <div style="background: #162535; padding: 30px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1);">
-        <h1 style="margin: 0; font-size: 24px; color: #ffffff;">
-          <span style="color: #14B8A6;">V</span>HOAS
-        </h1>
-        <p style="margin: 8px 0 0; color: #9CA3AF; font-size: 14px;">HOA Management System</p>
-      </div>
-
-      <!-- Body -->
+    inner_html = f"""
       <div style="padding: 40px 30px; text-align: center;">
-        <h2 style="margin: 0 0 10px; font-size: 20px;">{label}</h2>
+        <h2 style="margin: 0 0 10px; font-size: 20px; color: #ffffff;">{label}</h2>
         <p style="color: #9CA3AF; margin: 0 0 30px; font-size: 15px;">
           Your one-time verification code is:
         </p>
 
-       <!-- OTP Box - Mobile Friendly -->
-<div style="background: #162535; border: 2px solid #14B8A6; border-radius: 12px; padding: 18px 25px; display: inline-block; margin: 20px 0 30px; max-width: 100%;">
-  <span style="font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #14B8A6; font-family: monospace;">
-    {otp_code}
-  </span>
-</div>
+        <!-- OTP Box - Mobile Friendly -->
+        <div style="background: #162535; border: 2px solid #14B8A6; border-radius: 12px; padding: 18px 25px; display: inline-block; margin: 20px 0 30px;">
+          <span style="font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #14B8A6; font-family: monospace;">
+            {otp_code}
+          </span>
+        </div>
 
         <p style="color: #9CA3AF; font-size: 13px; margin: 0;">
           ⏰ This code expires in <strong style="color: #ffffff;">10 minutes</strong>
@@ -75,28 +100,17 @@ def send_otp_email(to_email: str, otp_code: str, otp_type: str) -> bool:
           If you did not request this, please ignore this email.
         </p>
       </div>
-
-      <!-- Footer -->
-      <div style="background: #162535; padding: 20px; text-align: center; border-top: 1px solid rgba(255,255,255,0.1);">
-        <p style="margin: 0; color: #6B7280; font-size: 12px;">
-          © 2026 VHOAS — HOA Management System
-        </p>
-      </div>
-    </div>
     """
+    html = _wrap_in_responsive_layout(inner_html)
     return send_email(to_email, subject, html)
 
 
 def send_welcome_email(to_email: str, full_name: str) -> bool:
-    """Registration ke baad welcome email"""
+    """Registration welcome email"""
     subject = "Welcome to VHOAS — HOA Management"
-    html = f"""
-    <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; background: #0D1B2A; color: #ffffff; border-radius: 16px; overflow: hidden;">
-      <div style="background: #162535; padding: 30px; text-align: center;">
-        <h1 style="margin: 0; font-size: 24px;"><span style="color: #14B8A6;">V</span>HOAS</h1>
-      </div>
+    inner_html = f"""
       <div style="padding: 40px 30px;">
-        <h2 style="margin: 0 0 16px;">Welcome, {full_name}! 👋</h2>
+        <h2 style="margin: 0 0 16px; color: #ffffff;">Welcome, {full_name}! 👋</h2>
         <p style="color: #9CA3AF; line-height: 1.6;">
           Your account has been created successfully on VHOAS HOA Management System.
         </p>
@@ -109,11 +123,8 @@ def send_welcome_email(to_email: str, full_name: str) -> bool:
           </p>
         </div>
       </div>
-      <div style="background: #162535; padding: 20px; text-align: center;">
-        <p style="margin: 0; color:
-      </div>
-    </div>
     """
+    html = _wrap_in_responsive_layout(inner_html, subtitle="")
     return send_email(to_email, subject, html)
 
 
@@ -127,20 +138,16 @@ def send_violation_email(
 ) -> bool:
     """Send email to resident when a violation is issued"""
     subject = f"VHOAS — Violation Notice: {violation_type}"
-    html = f"""
-    <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; background: #0D1B2A; color: #ffffff; border-radius: 16px; overflow: hidden;">
-      <div style="background: #162535; padding: 30px; text-align: center;">
-        <h1 style="margin: 0; font-size: 24px;"><span style="color: #14B8A6;">V</span>HOAS</h1>
-      </div>
+    inner_html = f"""
       <div style="padding: 40px 30px;">
-        <div style="background: #7F1D1D; border-radius: 12px; padding: 16px; margin-bottom: 24px; text-align: center;">
-          <p style="margin: 0; font-size: 18px;">⚠️ Violation Notice</p>
+        <div style="background: #7F1D1D; border-radius: 12px; padding: 16px; margin-bottom: 24px; text-align: center; color: #ffffff; font-weight: bold;">
+          ⚠️ Violation Notice
         </div>
         <p>Dear <strong>{resident_name}</strong>,</p>
         <p style="color: #9CA3AF;">A violation has been issued for your property.</p>
 
         <div style="background: #162535; border-radius: 12px; padding: 20px; margin: 20px 0;">
-          <table style="width: 100%; border-collapse: collapse;">
+          <table style="width: 100%; border-collapse: collapse; color: #ffffff;">
             <tr><td style="color: #9CA3AF; padding: 8px 0;">Violation Type</td><td style="text-align: right; font-weight: bold;">{violation_type}</td></tr>
             <tr><td style="color: #9CA3AF; padding: 8px 0; border-top: 1px solid rgba(255,255,255,0.05);">Fine Amount</td><td style="text-align: right; font-weight: bold; color: #F87171;">${amount}</td></tr>
             <tr><td style="color: #9CA3AF; padding: 8px 0; border-top: 1px solid rgba(255,255,255,0.05);">Due Date</td><td style="text-align: right;">{due_date}</td></tr>
@@ -152,11 +159,8 @@ def send_violation_email(
           You have 30 days to dispute this violation through the VHOAS portal.
         </p>
       </div>
-      <div style="background: #162535; padding: 20px; text-align: center;">
-        <p style="margin: 0; color:
-      </div>
-    </div>
     """
+    html = _wrap_in_responsive_layout(inner_html, subtitle="")
     return send_email(to_email, subject, html)
 
 
@@ -186,15 +190,7 @@ def send_booking_created_email(
         status_banner = "⚠️ Payment Due"
         detail_msg = f"Your booking is pending payment. Please make a payment of <strong>${fee_amount}</strong> by <strong>{payment_due_date}</strong> to confirm your slot."
 
-    html = f"""
-    <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; background: #0D1B2A; color: #ffffff; border-radius: 16px; overflow: hidden;">
-      <div style="background: #162535; padding: 30px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1);">
-        <h1 style="margin: 0; font-size: 24px; color: #ffffff;">
-          <span style="color: #14B8A6;">V</span>HOAS
-        </h1>
-        <p style="margin: 8px 0 0; color: #9CA3AF; font-size: 14px;">HOA Management System</p>
-      </div>
-
+    inner_html = f"""
       <div style="padding: 40px 30px;">
         <div style="background: {status_color}; border-radius: 12px; padding: 16px; margin-bottom: 24px; text-align: center; color: #000000; font-weight: bold; font-size: 18px;">
           {status_banner}
@@ -205,7 +201,7 @@ def send_booking_created_email(
         </p>
 
         <div style="background: #162535; border-radius: 12px; padding: 20px; margin: 20px 0;">
-          <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+          <table style="width: 100%; border-collapse: collapse; font-size: 14px; color: #ffffff;">
             <tr><td style="color: #9CA3AF; padding: 8px 0;">Amenity</td><td style="text-align: right; font-weight: bold; color: #ffffff;">{amenity_name}</td></tr>
             <tr><td style="color: #9CA3AF; padding: 8px 0; border-top: 1px solid rgba(255,255,255,0.05);">Booked By</td><td style="text-align: right; font-weight: bold; color: #ffffff;">{booked_by_name}</td></tr>
             <tr><td style="color: #9CA3AF; padding: 8px 0; border-top: 1px solid rgba(255,255,255,0.05);">Date</td><td style="text-align: right; color: #ffffff;">{booking_date}</td></tr>
@@ -219,12 +215,8 @@ def send_booking_created_email(
           {detail_msg}
         </p>
       </div>
-
-      <div style="background: #162535; padding: 20px; text-align: center; border-top: 1px solid rgba(255,255,255,0.1);">
-        <p style="margin: 0; color:
-      </div>
-    </div>
     """
+    html = _wrap_in_responsive_layout(inner_html)
     return send_email(to_email, subject, html)
 
 
@@ -240,15 +232,7 @@ def send_payment_received_email(
 ) -> bool:
     """Send payment receipt confirmation email to user/board"""
     subject = f"VHOAS — Payment Confirmed for {amenity_name}"
-    html = f"""
-    <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; background: #0D1B2A; color: #ffffff; border-radius: 16px; overflow: hidden;">
-      <div style="background: #162535; padding: 30px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1);">
-        <h1 style="margin: 0; font-size: 24px; color: #ffffff;">
-          <span style="color: #14B8A6;">V</span>HOAS
-        </h1>
-        <p style="margin: 8px 0 0; color: #9CA3AF; font-size: 14px;">HOA Management System</p>
-      </div>
-
+    inner_html = f"""
       <div style="padding: 40px 30px;">
         <div style="background: #14B8A6; border-radius: 12px; padding: 16px; margin-bottom: 24px; text-align: center; color: #000000; font-weight: bold; font-size: 18px;">
           💳 Payment Received & Confirmed
@@ -259,7 +243,7 @@ def send_payment_received_email(
         </p>
 
         <div style="background: #162535; border-radius: 12px; padding: 20px; margin: 20px 0;">
-          <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+          <table style="width: 100%; border-collapse: collapse; font-size: 14px; color: #ffffff;">
             <tr><td style="color: #9CA3AF; padding: 8px 0;">Amenity</td><td style="text-align: right; font-weight: bold; color: #ffffff;">{amenity_name}</td></tr>
             <tr><td style="color: #9CA3AF; padding: 8px 0; border-top: 1px solid rgba(255,255,255,0.05);">Booked By</td><td style="text-align: right; font-weight: bold; color: #ffffff;">{booked_by_name}</td></tr>
             <tr><td style="color: #9CA3AF; padding: 8px 0; border-top: 1px solid rgba(255,255,255,0.05);">Date</td><td style="text-align: right; color: #ffffff;">{booking_date}</td></tr>
@@ -272,12 +256,8 @@ def send_payment_received_email(
           Enjoy your reservation! Let us know if you have any questions.
         </p>
       </div>
-
-      <div style="background: #162535; padding: 20px; text-align: center; border-top: 1px solid rgba(255,255,255,0.1);">
-        <p style="margin: 0; color:
-      </div>
-    </div>
     """
+    html = _wrap_in_responsive_layout(inner_html)
     return send_email(to_email, subject, html)
 
 
@@ -293,15 +273,7 @@ def send_general_payment_receipt_email(
 ) -> bool:
     subject = f"VHOAS — Payment Receipt: {reason.replace('_', ' ').title()}"
     escrow_info = f"<p style='color: #9CA3AF;'>Paid to Escrow Bank: <strong>{escrow_bank}</strong></p>" if escrow_bank else ""
-    html = f"""
-    <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; background: #0D1B2A; color: #ffffff; border-radius: 16px; overflow: hidden;">
-      <div style="background: #162535; padding: 30px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1);">
-        <h1 style="margin: 0; font-size: 24px; color: #ffffff;">
-          <span style="color: #14B8A6;">V</span>HOAS
-        </h1>
-        <p style="margin: 8px 0 0; color: #9CA3AF; font-size: 14px;">HOA Management System</p>
-      </div>
-
+    inner_html = f"""
       <div style="padding: 40px 30px;">
         <div style="background: #14B8A6; border-radius: 12px; padding: 16px; margin-bottom: 24px; text-align: center; color: #000000; font-weight: bold; font-size: 18px;">
           💳 Payment Successful
@@ -312,7 +284,7 @@ def send_general_payment_receipt_email(
         </p>
 
         <div style="background: #162535; border-radius: 12px; padding: 20px; margin: 20px 0;">
-          <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+          <table style="width: 100%; border-collapse: collapse; font-size: 14px; color: #ffffff;">
             <tr><td style="color: #9CA3AF; padding: 8px 0;">Payment Reason</td><td style="text-align: right; font-weight: bold; color: #ffffff;">{reason.replace('_', ' ').title()}</td></tr>
             <tr><td style="color: #9CA3AF; padding: 8px 0; border-top: 1px solid rgba(255,255,255,0.05);">Amount Paid</td><td style="text-align: right; font-weight: bold; color: #14B8A6;">${amount}</td></tr>
             <tr><td style="color: #9CA3AF; padding: 8px 0; border-top: 1px solid rgba(255,255,255,0.05);">Payment Method</td><td style="text-align: right; color: #ffffff;">{payment_method.replace('_', ' ').title()}</td></tr>
@@ -321,12 +293,8 @@ def send_general_payment_receipt_email(
         </div>
         {escrow_info}
       </div>
-
-      <div style="background: #162535; padding: 20px; text-align: center; border-top: 1px solid rgba(255,255,255,0.1);">
-        <p style="margin: 0; color:
-      </div>
-    </div>
     """
+    html = _wrap_in_responsive_layout(inner_html)
     return send_email(to_email, subject, html)
 
 
@@ -340,15 +308,7 @@ def send_due_payment_reminder_email(
     days_left: int
 ) -> bool:
     subject = f"VHOAS — Reminder: Payment Due in {days_left} Days"
-    html = f"""
-    <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; background: #0D1B2A; color: #ffffff; border-radius: 16px; overflow: hidden;">
-      <div style="background: #162535; padding: 30px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1);">
-        <h1 style="margin: 0; font-size: 24px; color: #ffffff;">
-          <span style="color: #14B8A6;">V</span>HOAS
-        </h1>
-        <p style="margin: 8px 0 0; color: #9CA3AF; font-size: 14px;">HOA Management System</p>
-      </div>
-
+    inner_html = f"""
       <div style="padding: 40px 30px;">
         <div style="background: #F59E0B; border-radius: 12px; padding: 16px; margin-bottom: 24px; text-align: center; color: #000000; font-weight: bold; font-size: 18px;">
           ⏰ Payment Reminder: {days_left} Days Left
@@ -359,7 +319,7 @@ def send_due_payment_reminder_email(
         </p>
 
         <div style="background: #162535; border-radius: 12px; padding: 20px; margin: 20px 0;">
-          <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+          <table style="width: 100%; border-collapse: collapse; font-size: 14px; color: #ffffff;">
             <tr><td style="color: #9CA3AF; padding: 8px 0;">Description</td><td style="text-align: right; font-weight: bold; color: #ffffff;">{reason.replace('_', ' ').title()}</td></tr>
             <tr><td style="color: #9CA3AF; padding: 8px 0; border-top: 1px solid rgba(255,255,255,0.05);">Amount Due</td><td style="text-align: right; font-weight: bold; color: #F87171;">${amount}</td></tr>
             <tr><td style="color: #9CA3AF; padding: 8px 0; border-top: 1px solid rgba(255,255,255,0.05);">Due Date</td><td style="text-align: right; color: #ffffff;">{due_date}</td></tr>
@@ -369,10 +329,6 @@ def send_due_payment_reminder_email(
           Please log in to the VHOAS portal to complete this payment.
         </p>
       </div>
-
-      <div style="background: #162535; padding: 20px; text-align: center; border-top: 1px solid rgba(255,255,255,0.1);">
-        <p style="margin: 0; color:
-      </div>
-    </div>
     """
+    html = _wrap_in_responsive_layout(inner_html)
     return send_email(to_email, subject, html)
