@@ -271,7 +271,7 @@ const News = ({ community, user }) => {
                     </div>
                     {isAdmin && (
                       <button onClick={() => handleDeleteNews(n.news_id)}
-                        className="text-slate-400 hover:text-red-500 dark:text-gray-650 dark:hover:text-red-400 transition flex-shrink-0">
+                        className="text-slate-400 hover:text-red-500 dark:text-gray-400 dark:hover:text-red-400 transition flex-shrink-0">
                         <X size={16} />
                       </button>
                     )}

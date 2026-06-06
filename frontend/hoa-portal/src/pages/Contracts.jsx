@@ -757,7 +757,7 @@ export default function Contracts() {
                     <button
                       type="button"
                       onClick={handleResetAddress}
-                      className="underline text-teal-600 dark:text-teal-400 hover:text-teal-500 dark:hover:text-teal-350 font-semibold cursor-pointer"
+                      className="underline text-teal-600 dark:text-teal-400 hover:text-teal-500 dark:hover:text-teal-300 font-semibold cursor-pointer"
                     >
                       Reset / Edit Address
                     </button>

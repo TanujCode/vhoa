@@ -124,7 +124,7 @@ const EditCommunityModal = ({ isOpen, onClose, community, onSuccess }) => {
           </div>
 
           <div>
-            <label className="block text-sm text-slate-555 dark:text-gray-400 mb-1">Contact Person</label>
+            <label className="block text-sm text-slate-500 dark:text-gray-400 mb-1">Contact Person</label>
             <input 
               name="contact_person" 
               value={formData.contact_person} 

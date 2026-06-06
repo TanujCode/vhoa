@@ -580,7 +580,7 @@ const Profile = ({ user, setUser, viewRole }) => {
                           secondaryUnits.length === 0 && <span className="text-xs text-slate-400 dark:text-gray-500">No secondary units assigned</span>
                         )}
                       </div>
-                      <p className="text-xs text-slate-450 dark:text-gray-600 mt-1">
+                      <p className="text-xs text-slate-400 dark:text-gray-600 mt-1">
                         {isResident 
                           ? "Residents cannot modify their own unit numbers. Please contact a Board Member or Property Manager to request changes." 
                           : "Press Enter to add multiple units. Click the 'X' to remove a unit."}

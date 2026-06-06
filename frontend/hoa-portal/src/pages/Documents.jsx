@@ -116,7 +116,7 @@ const DocumentModal = ({ communityId, onClose, onSuccess }) => {
             <button
               type="submit"
               disabled={loading}
-              className="px-6 py-2.5 bg-teal-600 hover:bg-teal-505 text-white rounded-xl text-sm font-medium transition disabled:opacity-50"
+              className="px-6 py-2.5 bg-teal-600 hover:bg-teal-500 text-white rounded-xl text-sm font-medium transition disabled:opacity-50"
             >
               {loading ? 'Uploading...' : 'Upload'}
             </button>

@@ -147,7 +147,7 @@ const SubmitModal = ({ communityId, onClose, onSuccess }) => {
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 text-slate-700 dark:text-white rounded-2xl text-sm font-medium transition"
+              className="flex-1 py-3 bg-slate-100 hover:bg-red-600 hover:text-white dark:bg-white/10 dark:hover:bg-red-600 dark:hover:text-white text-slate-700 dark:text-white rounded-2xl text-sm font-medium transition"
             >
               Cancel
             </button>
@@ -1120,13 +1120,13 @@ const DetailDrawer = ({
             )}
           </div>
 
-          {/* Note Input for Admins */}
-          {isAdmin && (
+          {/* Note Input for Admins and Owner Residents */}
+          {(isAdmin || (isResident && isOwner)) && (
             <form onSubmit={handleAddNote} className="space-y-2.5 pt-2">
               <textarea
                 value={newNote}
                 onChange={(e) => setNewNote(e.target.value)}
-                placeholder="Add notes for this service request..."
+                placeholder={isAdmin ? "Add notes for this service request..." : "Submit a note or change request to management..."}
                 rows={2}
                 className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-2xl p-3 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 focus:outline-none focus:border-teal-500 resize-none"
               />

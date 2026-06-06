@@ -412,7 +412,7 @@ const PropertyManagerDashboard = ({ community, user, setActivePage }) => {
               <tbody className="divide-y divide-gray-200 dark:divide-white/10 text-sm">
                 {joinRequests.map((req) => (
                   <tr key={req.request_id} className="hover:bg-slate-50/50 dark:hover:bg-white/5 transition-colors">
-                    <td className="p-4 font-medium text-gray-950 dark:text-white">{req.full_name}</td>
+                    <td className="p-4 font-medium text-gray-900 dark:text-white">{req.full_name}</td>
                     <td className="p-4 text-gray-500 dark:text-gray-400">{req.email_id || req.email}</td>
                     <td className="p-4">
                       <span className="px-2 py-1 text-xs font-mono bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded">

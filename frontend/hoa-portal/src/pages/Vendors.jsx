@@ -160,7 +160,7 @@ const Vendors = ({ communityId, userRole }) => {
     return (
       <div className="p-6 text-slate-900 dark:text-white">
         <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-1">Vendors</h1>
-        <p className="text-slate-555 dark:text-gray-400 text-sm mb-8">View authorized vendors using your vendor access code.</p>
+        <p className="text-slate-500 dark:text-gray-400 text-sm mb-8">View authorized vendors using your vendor access code.</p>
         
         <div className="bg-amber-50 dark:bg-[#2a1f0a] border border-amber-200 dark:border-yellow-700/30 p-4 rounded-lg flex items-center gap-3 mb-6 max-w-3xl">
           <Lock className="text-amber-600 dark:text-yellow-500" size={18} />
@@ -196,7 +196,7 @@ const Vendors = ({ communityId, userRole }) => {
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
             <h1 className="text-3xl font-semibold text-slate-900 dark:text-white">Vendor Management</h1>
-            <p className="text-slate-550 dark:text-gray-400 mt-1">Onboard vendors, manage licenses, and generate access codes</p>
+            <p className="text-slate-500 dark:text-gray-400 mt-1">Onboard vendors, manage licenses, and generate access codes</p>
           </div>
           <button 
             onClick={() => setIsModalOpen(true)}
@@ -244,7 +244,7 @@ const Vendors = ({ communityId, userRole }) => {
                         <div className="text-slate-900 dark:text-white font-medium group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">
                           {v.company_name}
                         </div>
-                        <div className="text-[10px] text-slate-550 dark:text-gray-400">
+                        <div className="text-[10px] text-slate-500 dark:text-gray-400">
                           {v.contact_person} | {v.phone}
                         </div>
                       </td>
@@ -383,7 +383,7 @@ const Vendors = ({ communityId, userRole }) => {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div>
           <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Vendor Management</h1>
-          <p className="text-slate-550 dark:text-gray-400 text-sm">Oakwood Estates</p>
+          <p className="text-slate-500 dark:text-gray-400 text-sm">Oakwood Estates</p>
         </div>
         {isAdmin && (
           <button 
@@ -425,7 +425,7 @@ const Vendors = ({ communityId, userRole }) => {
                       <div className="text-slate-900 dark:text-white font-medium group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">
                         {v.company_name}
                       </div>
-                      <div className="text-[10px] text-slate-550 dark:text-gray-400">
+                      <div className="text-[10px] text-slate-500 dark:text-gray-400">
                         {v.contact_person} | {v.phone}
                       </div>
                     </td>
@@ -469,7 +469,7 @@ const Vendors = ({ communityId, userRole }) => {
                 <h2 className="text-xl font-bold text-slate-900 dark:text-white">Onboard Vendor</h2>
                 <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-slate-900 dark:text-gray-500 dark:hover:text-white"><X size={20} /></button>
               </div>
-              <p className="text-slate-555 dark:text-gray-400 text-xs mb-6">Register a new vendor with license and insurance details.</p>
+              <p className="text-slate-500 dark:text-gray-400 text-xs mb-6">Register a new vendor with license and insurance details.</p>
               
               <form onSubmit={handleOnboard} className="space-y-4">
                 <div>

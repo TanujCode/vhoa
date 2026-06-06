@@ -356,7 +356,7 @@ const EditAmenityModal = ({ amenity, onClose, onSuccess }) => {
             <div>
               <label className="text-xs text-slate-500 dark:text-gray-400 mb-1 block">Location</label>
               <input type="text" value={form.location} onChange={e => setForm({...form, location: e.target.value})}
-                className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-teal-550" />
+                className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-teal-500" />
             </div>
             <div>
               <label className="text-xs text-slate-500 dark:text-gray-400 mb-1 block">Capacity</label>
@@ -502,7 +502,7 @@ const Amenity = ({ community, user, setActivePage, setPaymentState }) => {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
         <div>
           <h1 className="text-3xl font-semibold text-slate-900 dark:text-white">Amenity Booking</h1>
-          <p className="text-slate-505 dark:text-gray-400 mt-1">{community?.name}</p>
+          <p className="text-slate-500 dark:text-gray-400 mt-1">{community?.name}</p>
         </div>
         <div className="flex flex-wrap gap-2 w-full md:w-auto">
           <button 
@@ -592,7 +592,7 @@ const Amenity = ({ community, user, setActivePage, setPaymentState }) => {
                     <button
                       onClick={() => setBookModal(a)}
                       disabled={!a.active_status}
-                      className="flex-1 py-2.5 bg-teal-600 hover:bg-teal-505 text-white rounded-2xl text-sm font-medium transition disabled:opacity-50 disabled:cursor-not-allowed shadow-sm font-sans"
+                      className="flex-1 py-2.5 bg-teal-600 hover:bg-teal-500 text-white rounded-2xl text-sm font-medium transition disabled:opacity-50 disabled:cursor-not-allowed shadow-sm font-sans"
                     >
                       Book Now
                     </button>
@@ -642,7 +642,7 @@ const Amenity = ({ community, user, setActivePage, setPaymentState }) => {
                         <span>📅 {formatDate(b.booking_date)}</span>
                         <span>🕐 {b.slot_start} - {b.slot_end}</span>
                         {isAdmin && <span>👤 {b.booked_by_name}</span>}
-                        {b.fee_amount > 0 && <span className={b.is_paid ? 'text-teal-600 dark:text-teal-400 font-medium' : 'text-red-655 dark:text-red-400 font-medium'}>
+                        {b.fee_amount > 0 && <span className={b.is_paid ? 'text-teal-600 dark:text-teal-400 font-medium' : 'text-red-600 dark:text-red-400 font-medium'}>
                           ${b.fee_amount} {b.is_paid ? '✓ Paid' : '⚠ Unpaid'}
                         </span>}
                       </div>
@@ -656,7 +656,7 @@ const Amenity = ({ community, user, setActivePage, setPaymentState }) => {
                       <StatusBadge status={b.status} />
                       {!b.is_paid && b.fee_amount > 0 && ['PENDING', 'APPROVED'].includes(b.status) && (
                         <button onClick={() => handlePay(b)}
-                          className="px-3 py-1.5 bg-teal-600 hover:bg-teal-505 text-white rounded-xl text-xs font-medium transition shadow-sm font-sans">
+                          className="px-3 py-1.5 bg-teal-600 hover:bg-teal-500 text-white rounded-xl text-xs font-medium transition shadow-sm font-sans">
                           Pay Fee
                         </button>
                       )}
@@ -668,7 +668,7 @@ const Amenity = ({ community, user, setActivePage, setPaymentState }) => {
                       )}
                       {['PENDING', 'APPROVED'].includes(b.status) && (
                         <button onClick={() => handleCancel(b.booking_id)}
-                          className="px-3 py-1.5 bg-red-500/10 dark:bg-red-500/20 hover:bg-red-500/20 dark:hover:bg-red-500/30 text-red-655 dark:text-red-400 rounded-xl text-xs font-medium transition font-sans">
+                          className="px-3 py-1.5 bg-red-500/10 dark:bg-red-500/20 hover:bg-red-500/20 dark:hover:bg-red-500/30 text-red-600 dark:text-red-400 rounded-xl text-xs font-medium transition font-sans">
                           Cancel
                         </button>
                       )}
