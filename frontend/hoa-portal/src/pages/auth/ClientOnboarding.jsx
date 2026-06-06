@@ -56,6 +56,7 @@ export default function ClientOnboarding() {
   const cityTimeoutRef = useRef(null);
 
   const [stateCities, setStateCities] = useState([]);
+  const [cityOriginalNames, setCityOriginalNames] = useState({});
   const [loadingCities, setLoadingCities] = useState(false);
   
   const [errorMsg, setErrorMsg] = useState('');
@@ -177,6 +178,7 @@ export default function ClientOnboarding() {
     setValue('hoa_city', '');
     setValue('hoa_zip_code', '');
     setStateCities([]);
+    setCityOriginalNames({});
     
     if (!stateId) return;
 
@@ -199,11 +201,18 @@ export default function ClientOnboarding() {
           const result = await response.json();
           const stateData = result.states.find(s => s.state.toLowerCase() === stateName.toLowerCase());
           if (stateData && Array.isArray(stateData.districts) && stateData.districts.length > 0) {
-            const cleanedCities = stateData.districts
-              .map(city => city.replace(/[^A-Za-z]/g, ''))
-              .filter(city => city.length > 0);
+            const mapping = {};
+            const cleanedCities = [];
+            stateData.districts.forEach(city => {
+              const cleaned = city.replace(/[^A-Za-z]/g, '');
+              if (cleaned.length > 0) {
+                cleanedCities.push(cleaned);
+                mapping[cleaned] = city;
+              }
+            });
             const uniqueCities = Array.from(new Set(cleanedCities)).sort();
             setStateCities(uniqueCities);
+            setCityOriginalNames(mapping);
             return;
           }
         }
@@ -238,14 +247,19 @@ export default function ClientOnboarding() {
       const result = await response.json();
       
       if (result.data && Array.isArray(result.data) && result.data.length > 0) {
-        const cleanedCities = result.data
-          .map(city => {
-            const cleaned = city.replace(/[^A-Za-z]/g, '');
-            return cityCorrections[cleaned] || cleaned;
-          })
-          .filter(city => city.length > 0);
+        const mapping = {};
+        const cleanedCities = [];
+        result.data.forEach(city => {
+          const cleaned = city.replace(/[^A-Za-z]/g, '');
+          const corrected = cityCorrections[cleaned] || cleaned;
+          if (corrected.length > 0) {
+            cleanedCities.push(corrected);
+            mapping[corrected] = cityCorrections[cleaned] ? cityCorrections[cleaned] : city;
+          }
+        });
         const uniqueCities = Array.from(new Set(cleanedCities)).sort();
         setStateCities(uniqueCities);
+        setCityOriginalNames(mapping);
       } else {
         throw new Error('No cities returned');
       }
@@ -253,23 +267,45 @@ export default function ClientOnboarding() {
       console.warn('Failed to fetch cities from API, using fallback:', err);
       const normalizedState = stateName.toLowerCase();
       let fallback = [];
+      let mapping = {};
       if (normalizedState.includes('madhya pradesh')) {
         fallback = [
           "Indore", "Bhopal", "Jabalpur", "Gwalior", "Ujjain", "Sagar", "Dewas", "Satna", "Ratlam", "Rewa", 
           "Singrauli", "Katni", "Morena", "Chhindwara", "Bhind", "Shivpuri", "Guna", "Khandwa", "Burhanpur", 
           "Dhar", "Khargone", "Sehore", "Vidisha", "Betul", "Hoshangabad", "Itarsi"
         ];
+        fallback.forEach(c => { mapping[c] = c; });
       } else if (normalizedState.includes('california')) {
         fallback = [
           "LosAngeles", "SanDiego", "SanJose", "SanFrancisco", "Fresno", "Sacramento", "LongBeach", 
           "Oakland", "Bakersfield", "Anaheim", "SantaAna", "Riverside", "Stockton", "ChulaVista", "Irvine", "Fremont"
         ];
+        mapping = {
+          "LosAngeles": "Los Angeles",
+          "SanDiego": "San Diego",
+          "SanJose": "San Jose",
+          "SanFrancisco": "San Francisco",
+          "Fresno": "Fresno",
+          "Sacramento": "Sacramento",
+          "LongBeach": "Long Beach",
+          "Oakland": "Oakland",
+          "Bakersfield": "Bakersfield",
+          "Anaheim": "Anaheim",
+          "SantaAna": "Santa Ana",
+          "Riverside": "Riverside",
+          "Stockton": "Stockton",
+          "ChulaVista": "Chula Vista",
+          "Irvine": "Irvine",
+          "Fremont": "Fremont"
+        };
       }
       
       if (fallback.length > 0) {
         setStateCities(fallback.sort());
+        setCityOriginalNames(mapping);
       } else {
         setStateCities([]);
+        setCityOriginalNames({});
       }
     } finally {
       setLoadingCities(false);
@@ -286,9 +322,34 @@ export default function ClientOnboarding() {
     const stateObj = states.find(s => String(s.state_id) === String(watch('hoa_state_id')));
     const stateName = stateObj ? stateObj.state_name : '';
 
-    const searchQueryName = cityName === "BetulBazar" ? "Betul Bazar" : cityName;
+    const originalName = cityOriginalNames[cityName] || cityName;
+    const searchQueryName = originalName;
     
-    // 1. Try Mapbox if token is configured and valid
+    // 1. Try clean India Postal Pincode API first
+    if (countryName.toLowerCase() === 'india') {
+      try {
+        const url = `https://api.postalpincode.in/postoffice/${encodeURIComponent(searchQueryName)}`;
+        const response = await fetch(url);
+        if (response.ok) {
+          const data = await response.json();
+          if (data && data[0] && data[0].Status === 'Success' && Array.isArray(data[0].PostOffice)) {
+            const matchedPO = data[0].PostOffice.find(po => 
+              po.State?.toLowerCase() === stateName.toLowerCase()
+            );
+            const po = matchedPO || data[0].PostOffice[0];
+            if (po && po.Pincode) {
+              setValue('hoa_zip_code', po.Pincode, { shouldValidate: true });
+              setZipError('');
+              return;
+            }
+          }
+        }
+      } catch (err) {
+        console.warn('India postal pincode API lookup failed, falling back:', err);
+      }
+    }
+
+    // 2. Try Mapbox if token is configured and valid
     const hasMapbox = mapboxToken && !mapboxToken.startsWith('pk.placeholder');
     if (hasMapbox) {
       try {
@@ -324,7 +385,7 @@ export default function ClientOnboarding() {
       }
     }
 
-    // 2. Fallback to OpenStreetMap Nominatim Geocoding (free, no key required)
+    // 3. Fallback to OpenStreetMap Nominatim Geocoding (free, no key required)
     try {
       const query = `${searchQueryName}, ${stateName}, ${countryName}`;
       const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&addressdetails=1&limit=5`;
@@ -369,18 +430,45 @@ export default function ClientOnboarding() {
     }
   };
 
-  const verifyZipForCity = async (zipCode) => {
-    setZipError('');
-    if (!zipCode) return;
-    
-    if (zipCode.length < 5 || zipCode.length > 10) return;
+  const verifyZipForCityAsync = async (zipCode) => {
+    if (!zipCode) return '';
+    if (zipCode.length < 5 || zipCode.length > 10) return '';
 
     const cityName = watch('hoa_city');
-    if (!cityName) return;
+    if (!cityName) return '';
 
     const countryObj = countries.find(c => String(c.country_id) === String(selectedCountryId));
     const countryName = countryObj ? countryObj.country_name : '';
+    const stateObj = states.find(s => String(s.state_id) === String(watch('hoa_state_id')));
+    const stateName = stateObj ? stateObj.state_name : '';
 
+    // 1. If country is India, use fast clean postal pincode API for verification
+    if (countryName.toLowerCase() === 'india') {
+      try {
+        const url = `https://api.postalpincode.in/pincode/${encodeURIComponent(zipCode)}`;
+        const response = await fetch(url);
+        if (response.ok) {
+          const data = await response.json();
+          if (data && data[0] && data[0].Status === 'Success' && Array.isArray(data[0].PostOffice)) {
+            const cleanCityName = cityName.toLowerCase().replace(/[^a-z]/g, '');
+            const matched = data[0].PostOffice.some(po => {
+              const cleanName = po.Name?.toLowerCase().replace(/[^a-z]/g, '') || '';
+              return cleanName === cleanCityName || cleanName.includes(cleanCityName);
+            });
+            if (!matched) {
+              return `Zip code ${zipCode} does not belong to ${cityName}`;
+            }
+            return '';
+          } else {
+            return `Zip code ${zipCode} not found in India`;
+          }
+        }
+      } catch (err) {
+        console.warn('Postal pincode validation failed, falling back to Nominatim:', err);
+      }
+    }
+
+    // 2. Fallback to Nominatim check for USA and other countries
     try {
       const url = `https://nominatim.openstreetmap.org/search?postalcode=${encodeURIComponent(zipCode)}&country=${encodeURIComponent(countryName)}&format=json&addressdetails=1&limit=3`;
       const response = await fetch(url);
@@ -410,14 +498,77 @@ export default function ClientOnboarding() {
           }
 
           if (!matched) {
-            setZipError(`Zip code ${zipCode} does not belong to ${cityName}`);
+            return `Zip code ${zipCode} does not belong to ${cityName}`;
           }
+          return '';
         } else {
-          setZipError(`Zip code ${zipCode} not found in ${countryName}`);
+          return `Zip code ${zipCode} not found in ${countryName}`;
         }
       }
     } catch (err) {
       console.warn('Zip validation failed:', err);
+    }
+    return '';
+  };
+
+  const verifyZipForCity = async (zipCode) => {
+    setZipError('');
+    const err = await verifyZipForCityAsync(zipCode);
+    if (err) {
+      setZipError(err);
+    }
+  };
+
+  const handleZipChange = async (zipCode) => {
+    setZipError('');
+    if (!zipCode) return;
+
+    const cleanZip = zipCode.replace(/[^0-9]/g, '');
+    
+    const countryObj = countries.find(c => String(c.country_id) === String(selectedCountryId));
+    const countryName = countryObj ? countryObj.country_name : '';
+
+    if (countryName.toLowerCase() === 'india' && cleanZip.length === 6) {
+      try {
+        const url = `https://api.postalpincode.in/pincode/${encodeURIComponent(cleanZip)}`;
+        const response = await fetch(url);
+        if (response.ok) {
+          const data = await response.json();
+          if (data && data[0] && data[0].Status === 'Success' && Array.isArray(data[0].PostOffice)) {
+            // Find Head Post Office or Sub Post Office first
+            const mainPO = data[0].PostOffice.find(po => 
+              po.BranchType === 'Head Post Office' || po.BranchType === 'Sub Post Office'
+            );
+            const po = mainPO || data[0].PostOffice[0];
+            if (po && po.Name) {
+              const cleanCity = po.Name.replace(/[^A-Za-z]/g, '');
+              setValue('hoa_city', cleanCity, { shouldValidate: true });
+              setZipError('');
+            }
+          }
+        }
+      } catch (err) {
+        console.warn('Failed to auto-fill city from pin code:', err);
+      }
+    } else if (countryName.toLowerCase() !== 'india' && cleanZip.length === 5) {
+      try {
+        const url = `https://nominatim.openstreetmap.org/search?postalcode=${encodeURIComponent(cleanZip)}&country=${encodeURIComponent(countryName)}&format=json&addressdetails=1&limit=1`;
+        const response = await fetch(url);
+        if (response.ok) {
+          const data = await response.json();
+          if (data && data[0] && data[0].address) {
+            const addr = data[0].address;
+            const city = addr.city || addr.town || addr.village || addr.suburb;
+            if (city) {
+              const cleanCity = city.replace(/[^A-Za-z]/g, '');
+              setValue('hoa_city', cleanCity, { shouldValidate: true });
+              setZipError('');
+            }
+          }
+        }
+      } catch (err) {
+        console.warn('Failed to auto-fill US city from zip code:', err);
+      }
     }
   };
 
@@ -730,10 +881,18 @@ export default function ClientOnboarding() {
         'hoa_contact_number_only'
       ]);
       
-      if (zipError) {
+      if (!isFormValid) {
         isValidStep = false;
       } else {
-        isValidStep = isFormValid;
+        const enteredZip = watch('hoa_zip_code');
+        const validationError = await verifyZipForCityAsync(enteredZip);
+        if (validationError) {
+          setZipError(validationError);
+          isValidStep = false;
+        } else {
+          setZipError('');
+          isValidStep = true;
+        }
       }
     }
 
@@ -1283,6 +1442,9 @@ export default function ClientOnboarding() {
                             if (!/^\d+$/.test(val)) return 'Zip code must contain only numbers';
                             if (val.length < 5 || val.length > 10) return 'Zip code must be between 5 and 10 digits';
                             return true;
+                          },
+                          onChange: (e) => {
+                            handleZipChange(e.target.value);
                           }
                         })}
                         onBlur={(e) => {
