@@ -172,7 +172,7 @@ export default function ClientOnboarding() {
     }
   };
 
-  const fetchCitiesForState = async (stateId, currentStatesList = states, currentCountryId = selectedCountryId, currentCountriesList = countries) => {
+  const fetchCitiesForState = async (stateId, currentStatesList = states, currentCountryId = null, currentCountriesList = countries) => {
     setValue('hoa_city', '');
     setValue('hoa_zip_code', '');
     setStateCities([]);
@@ -182,7 +182,8 @@ export default function ClientOnboarding() {
     const stateObj = currentStatesList.find(s => String(s.state_id) === String(stateId));
     if (!stateObj) return;
     
-    const countryObj = currentCountriesList.find(c => String(c.country_id) === String(currentCountryId));
+    const actualCountryId = currentCountryId || watch('hoa_country_id') || selectedCountryId;
+    const countryObj = currentCountriesList.find(c => String(c.country_id) === String(actualCountryId));
     const countryName = countryObj ? countryObj.country_name : '';
     const stateName = stateObj.state_name;
 
