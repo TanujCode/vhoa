@@ -309,7 +309,7 @@ const Profile = ({ user, setUser, viewRole }) => {
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-semibold text-slate-900 dark:text-white">Profile Settings</h1>
-        <p className="text-slate-550 dark:text-gray-400 mt-1">Manage your account and preferences</p>
+        <p className="text-slate-500 dark:text-gray-400 mt-1">Manage your account and preferences</p>
       </div>
 
       {/* Message */}
@@ -356,7 +356,7 @@ const Profile = ({ user, setUser, viewRole }) => {
               {user?.user_profile_url && (
                 <button
                   onClick={handleRemovePicture}
-                  className="absolute -top-2 -right-2 w-8 h-8 bg-red-500 hover:bg-red-655 text-white rounded-lg flex items-center justify-center transition-all shadow-lg z-20 border-2 border-white dark:border-[#162535] opacity-0 group-hover:opacity-100"
+                  className="absolute -top-2 -right-2 w-8 h-8 bg-red-500 hover:bg-red-600 text-white rounded-lg flex items-center justify-center transition-all shadow-lg z-20 border-2 border-white dark:border-[#162535] opacity-0 group-hover:opacity-100"
                   title="Remove Photo"
                 >
                   <Trash2 size={14} />
@@ -468,7 +468,7 @@ const Profile = ({ user, setUser, viewRole }) => {
                 className={`px-5 py-2.5 rounded-2xl text-sm font-medium transition ${
                   activeTab === tab.id
                     ? 'bg-teal-600 hover:bg-teal-700 text-white hover:text-white'
-                    : 'bg-slate-100 hover:bg-slate-200 dark:bg-white/10 text-slate-655 dark:text-gray-400 dark:hover:bg-white/20'
+                    : 'bg-slate-100 hover:bg-slate-200 dark:bg-white/10 text-slate-600 dark:text-gray-400 dark:hover:bg-white/20'
                 }`}
               >
                 {tab.label}
@@ -543,7 +543,7 @@ const Profile = ({ user, setUser, viewRole }) => {
                     <div>
                       <label className="text-xs text-slate-500 dark:text-gray-400 mb-1.5 block">Primary Unit / Address</label>
                       <input type="text" value={user?.unit_no || '—'} disabled className="w-full bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/5 rounded-xl px-4 py-3 text-sm text-slate-400 dark:text-gray-500 cursor-not-allowed" />
-                      <p className="text-xs text-slate-450 dark:text-gray-600 mt-1">Primary Unit cannot be changed</p>
+                      <p className="text-xs text-slate-400 dark:text-gray-600 mt-1">Primary Unit cannot be changed</p>
                     </div>
                     <div>
                       <label className="text-xs text-slate-500 dark:text-gray-400 mb-1.5 block">Secondary Units / Addresses (P2)</label>
@@ -593,10 +593,10 @@ const Profile = ({ user, setUser, viewRole }) => {
                     
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {/* ID Proof */}
-                      <div className="bg-slate-550/5 border border-slate-200 dark:border-white/5 rounded-3xl p-5 flex flex-col justify-between gap-4 transition hover:shadow-md">
+                      <div className="bg-slate-500/5 border border-slate-200 dark:border-white/5 rounded-3xl p-5 flex flex-col justify-between gap-4 transition hover:shadow-md">
                         <div>
                           <div className="flex items-center justify-between mb-3">
-                            <span className="text-xs font-bold text-slate-400 dark:text-gray-455 tracking-wider uppercase">Identity Proof</span>
+                            <span className="text-xs font-bold text-slate-400 dark:text-gray-400 tracking-wider uppercase">Identity Proof</span>
                             {user?.id_proof_url ? (
                               <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400 border border-emerald-500/20">
                                 <CheckCircle size={12} /> Uploaded
@@ -633,10 +633,10 @@ const Profile = ({ user, setUser, viewRole }) => {
                       </div>
 
                       {/* Address Proof */}
-                      <div className="bg-slate-550/5 border border-slate-200 dark:border-white/5 rounded-3xl p-5 flex flex-col justify-between gap-4 transition hover:shadow-md">
+                      <div className="bg-slate-500/5 border border-slate-200 dark:border-white/5 rounded-3xl p-5 flex flex-col justify-between gap-4 transition hover:shadow-md">
                         <div>
                           <div className="flex items-center justify-between mb-3">
-                            <span className="text-xs font-bold text-slate-400 dark:text-gray-455 tracking-wider uppercase">Address Proof</span>
+                            <span className="text-xs font-bold text-slate-400 dark:text-gray-400 tracking-wider uppercase">Address Proof</span>
                             {user?.address_proof_url ? (
                               <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400 border border-emerald-500/20">
                                 <CheckCircle size={12} /> Uploaded
@@ -688,7 +688,7 @@ const Profile = ({ user, setUser, viewRole }) => {
               {/* Email Notifications */}
               <div>
                 <h3 className="text-lg font-semibold mb-4 text-slate-900 dark:text-white">Email Notifications</h3>
-                <p className="text-slate-550 dark:text-gray-400 text-sm mb-5">Choose what you receive in your inbox</p>
+                <p className="text-slate-500 dark:text-gray-400 text-sm mb-5">Choose what you receive in your inbox</p>
                 
                 <div className="space-y-4">
                   {[
@@ -701,7 +701,7 @@ const Profile = ({ user, setUser, viewRole }) => {
                     <div key={item.key} className="flex items-center justify-between py-3 border-b border-slate-100 dark:border-white/10 last:border-0">
                       <div>
                         <p className="text-slate-900 dark:text-white text-sm">{item.label}</p>
-                        {item.sub && <p className="text-xs text-slate-450 dark:text-gray-500">{item.sub}</p>}
+                        {item.sub && <p className="text-xs text-slate-400 dark:text-gray-500">{item.sub}</p>}
                       </div>
                       <button
                         onClick={() => setEmailNotifications(prev => ({...prev, [item.key]: !prev[item.key]}))}
@@ -726,7 +726,7 @@ const Profile = ({ user, setUser, viewRole }) => {
                     <div key={item.key} className="flex items-center justify-between py-3 border-b border-slate-100 dark:border-white/10 last:border-0">
                       <div>
                         <p className="text-slate-900 dark:text-white text-sm">{item.label}</p>
-                        {item.sub && <p className="text-xs text-slate-455 dark:text-gray-500">{item.sub}</p>}
+                        {item.sub && <p className="text-xs text-slate-400 dark:text-gray-500">{item.sub}</p>}
                       </div>
                       <button
                         onClick={() => setPushNotifications(prev => ({...prev, [item.key]: !prev[item.key]}))}

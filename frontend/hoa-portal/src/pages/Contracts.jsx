@@ -667,7 +667,7 @@ export default function Contracts() {
 
                     {/* Autocomplete suggestions dropdown */}
                     {searchingAddress && (
-                      <div className="absolute z-50 w-full mt-1 bg-slate-50 dark:bg-[#1e2f41] border border-slate-200 dark:border-white/10 rounded-xl p-3 text-xs text-gray-550 dark:text-gray-400 flex items-center gap-2">
+                      <div className="absolute z-50 w-full mt-1 bg-slate-50 dark:bg-[#1e2f41] border border-slate-200 dark:border-white/10 rounded-xl p-3 text-xs text-gray-500 dark:text-gray-400 flex items-center gap-2">
                         <RefreshCw size={14} className="animate-spin text-teal-400" />
                         Searching address...
                       </div>

@@ -74,7 +74,7 @@ const SubmitModal = ({ communityId, onClose, onSuccess }) => {
 
   return (
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4 animate-fadeIn">
-      <div className="bg-white dark:from-[#1E2E42] dark:to-[#162535] dark:bg-gradient-to-br rounded-3xl p-6 w-full max-w-md border border-slate-200/80 dark:border-white/10 max-h-[90vh] overflow-y-auto text-slate-900 dark:text-white shadow-2xl">
+      <div className="bg-white dark:from-[#1E2E42] dark:to-[#162535] dark:bg-gradient-to-br rounded-3xl p-6 w-full max-w-md border border-slate-200/80 dark:border-white/10 max-h-[90vh] overflow-y-auto custom-scrollbar text-slate-900 dark:text-white shadow-2xl">
         <div className="flex items-center justify-between mb-6">
           <h3 className="text-lg font-semibold text-slate-900 dark:text-white">New Service Request</h3>
           <button onClick={onClose} className="text-slate-500 hover:text-slate-900 dark:text-gray-400 dark:hover:text-white">
@@ -90,7 +90,7 @@ const SubmitModal = ({ communityId, onClose, onSuccess }) => {
                 required 
                 value={form.type_id} 
                 onChange={e => setForm({...form, type_id: e.target.value})}
-                className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl px-4 py-3 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-teal-500 appearance-none cursor-pointer"
+                className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl pl-4 pr-10 py-3 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-teal-500 appearance-none cursor-pointer"
               >
                 <option value="" className="text-slate-900 dark:text-white">Select type...</option>
                 {types.map(t => (
@@ -133,7 +133,7 @@ const SubmitModal = ({ communityId, onClose, onSuccess }) => {
               <select 
                 value={form.priority} 
                 onChange={e => setForm({...form, priority: e.target.value})}
-                className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl px-4 py-3 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-teal-500 appearance-none cursor-pointer"
+                className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl pl-4 pr-10 py-3 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-teal-500 appearance-none cursor-pointer"
               >
                 <option value="NORMAL" className="text-slate-900 dark:text-white">Normal</option>
                 <option value="HIGH" className="text-slate-900 dark:text-white">High</option>
@@ -234,7 +234,7 @@ const StatusModal = ({ request, statuses, onClose, onSuccess }) => {
 
   return (
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4 animate-fadeIn">
-      <div className="bg-white dark:from-[#1E2E42] dark:to-[#162535] dark:bg-gradient-to-br rounded-3xl p-6 w-full max-w-md border border-slate-200/80 dark:border-white/10 max-h-[90vh] overflow-y-auto text-slate-900 dark:text-white shadow-2xl">
+      <div className="bg-white dark:from-[#1E2E42] dark:to-[#162535] dark:bg-gradient-to-br rounded-3xl p-6 w-full max-w-md border border-slate-200/80 dark:border-white/10 max-h-[90vh] overflow-y-auto custom-scrollbar text-slate-900 dark:text-white shadow-2xl">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Update Status</h3>
           <button onClick={onClose} className="text-slate-500 hover:text-slate-900 dark:text-gray-400 dark:hover:text-white"><X size={20} /></button>
@@ -248,7 +248,7 @@ const StatusModal = ({ request, statuses, onClose, onSuccess }) => {
                 required 
                 value={statusId} 
                 onChange={e => setStatusId(e.target.value)}
-                className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl px-4 py-3 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-teal-500 appearance-none cursor-pointer"
+                className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl pl-4 pr-10 py-3 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-teal-500 appearance-none cursor-pointer"
               >
                 <option value="" className="text-slate-900 dark:text-white">Select status...</option>
                 {allowedStatuses.map(s => (
@@ -268,7 +268,7 @@ const StatusModal = ({ request, statuses, onClose, onSuccess }) => {
                     required
                     value={vendorId}
                     onChange={e => setVendorId(e.target.value)}
-                    className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl px-4 py-3 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-teal-500 appearance-none cursor-pointer"
+                    className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl pl-4 pr-10 py-3 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-teal-500 appearance-none cursor-pointer"
                   >
                     <option value="" className="text-slate-900 dark:text-white">
                       {vendorsLoading ? 'Loading vendors...' : 'Select vendor...'}
@@ -374,7 +374,7 @@ const EditModal = ({ request, communityId, isAdmin, onClose, onSuccess }) => {
 
   return (
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4 animate-fadeIn">
-      <div className="bg-white dark:from-[#1E2E42] dark:to-[#162535] dark:bg-gradient-to-br rounded-3xl p-6 w-full max-w-md border border-slate-200/80 dark:border-white/10 max-h-[90vh] overflow-y-auto text-slate-900 dark:text-white shadow-2xl">
+      <div className="bg-white dark:from-[#1E2E42] dark:to-[#162535] dark:bg-gradient-to-br rounded-3xl p-6 w-full max-w-md border border-slate-200/80 dark:border-white/10 max-h-[90vh] overflow-y-auto custom-scrollbar text-slate-900 dark:text-white shadow-2xl">
         <div className="flex items-center justify-between mb-6">
           <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Edit Service Request</h3>
           <button onClick={onClose} className="text-slate-500 hover:text-slate-900 dark:text-gray-400 dark:hover:text-white">
@@ -390,7 +390,7 @@ const EditModal = ({ request, communityId, isAdmin, onClose, onSuccess }) => {
                 required 
                 value={form.type_id} 
                 onChange={e => setForm({...form, type_id: e.target.value})}
-                className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl px-4 py-3 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-teal-500 appearance-none cursor-pointer"
+                className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl pl-4 pr-10 py-3 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-teal-500 appearance-none cursor-pointer"
               >
                 <option value="" className="text-slate-900 dark:text-white">Select type...</option>
                 {types.map(t => (
@@ -433,7 +433,7 @@ const EditModal = ({ request, communityId, isAdmin, onClose, onSuccess }) => {
               <select 
                 value={form.priority} 
                 onChange={e => setForm({...form, priority: e.target.value})}
-                className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl px-4 py-3 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-teal-500 appearance-none cursor-pointer"
+                className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl pl-4 pr-10 py-3 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-teal-500 appearance-none cursor-pointer"
               >
                 <option value="LOW" className="text-slate-900 dark:text-white">Low</option>
                 <option value="NORMAL" className="text-slate-900 dark:text-white">Normal</option>
@@ -452,7 +452,7 @@ const EditModal = ({ request, communityId, isAdmin, onClose, onSuccess }) => {
                   <select 
                     value={form.vendor_id} 
                     onChange={e => setForm({...form, vendor_id: e.target.value})}
-                    className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl px-4 py-3 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-teal-500 appearance-none cursor-pointer"
+                    className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl pl-4 pr-10 py-3 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-teal-500 appearance-none cursor-pointer"
                   >
                     <option value="" className="text-slate-900 dark:text-white">None / Unassign</option>
                     {vendors.map(v => (
@@ -714,8 +714,9 @@ const DetailDrawer = ({
     }
   };
 
+  const isResident = ['resident'].includes(user?.role_name || user?.role || '');
   const isOwner = request.submitted_by_id === user?.user_id;
-  const canEdit = isAdmin || isOwner;
+  const canEdit = isAdmin || (isOwner && request.status_name === 'OPEN');
   const activeAssignment = assignments[0];
 
   return (
@@ -742,7 +743,7 @@ const DetailDrawer = ({
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto p-6 space-y-6">
+      <div className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-6">
         {/* Title & Status */}
         <div>
           <div className="flex items-center justify-between gap-3 mb-2">
@@ -757,6 +758,13 @@ const DetailDrawer = ({
           <h4 className="text-xs text-slate-500 dark:text-gray-400 font-semibold uppercase tracking-wider mb-2">Description</h4>
           <p className="text-slate-700 dark:text-gray-300 text-sm whitespace-pre-wrap leading-relaxed">{request.description}</p>
         </div>
+
+        {/* Helper message for residents if request is not OPEN */}
+        {isResident && isOwner && request.status_name !== 'OPEN' && (
+          <div className="p-4 bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-400 text-xs rounded-2xl font-medium leading-relaxed">
+            ℹ️ Approved/Processed requests cannot be edited directly by residents. To request changes, please submit a note in the **Note History** below for the management team.
+          </div>
+        )}
 
         {/* Info Grid */}
         <div className="grid grid-cols-2 gap-4">
@@ -1096,7 +1104,7 @@ const DetailDrawer = ({
           </div>
 
           {/* Notes List */}
-          <div className="space-y-3 max-h-[220px] overflow-y-auto pr-1">
+          <div className="space-y-3 max-h-[220px] overflow-y-auto custom-scrollbar pr-1">
             {request.notes && request.notes.length > 0 ? (
               request.notes.map((note) => (
                 <div key={note.note_id} className="bg-slate-50 dark:bg-white/5 rounded-xl p-3 border border-slate-200 dark:border-white/5 text-sm">
@@ -1173,7 +1181,7 @@ const ServiceRequests = ({ community, user, setActivePage, setPaymentState }) =>
   const [loading, setLoading]         = useState(true);
   const [showModal, setShowModal]     = useState(false);
   const [statusModal, setStatusModal] = useState(null);
-  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingRequest, setEditingRequest] = useState(null);
   const [statusFilter, setStatusFilter] = useState('');
   const [allStatuses, setAllStatuses] = useState([]);
   const [stats, setStats] = useState({ open: 0, approved: 0, inProgress: 0, closed: 0 });
@@ -1366,7 +1374,7 @@ const ServiceRequests = ({ community, user, setActivePage, setPaymentState }) =>
             <select 
               value={statusFilter} 
               onChange={e => setStatusFilter(e.target.value)}
-              className="bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-2xl px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:border-teal-500 outline-none cursor-pointer"
+              className="bg-slate-50 dark:bg-[#1E3248] border border-slate-200 dark:border-white/10 rounded-2xl pl-4 pr-10 py-2.5 text-sm text-slate-900 dark:text-white focus:border-teal-500 focus:outline-none appearance-none cursor-pointer"
             >
               <option value="" className="text-slate-900 dark:text-white">All Status</option>
               <option value="OPEN" className="text-slate-900 dark:text-white">Open</option>
@@ -1375,6 +1383,7 @@ const ServiceRequests = ({ community, user, setActivePage, setPaymentState }) =>
               <option value="VENDOR_ASSIGNED" className="text-slate-900 dark:text-white">Vendor Assigned</option>
               <option value="CLOSED" className="text-slate-900 dark:text-white">Closed</option>
             </select>
+            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-gray-500 pointer-events-none" size={16} />
           </div>
         </div>
 
@@ -1432,13 +1441,13 @@ const ServiceRequests = ({ community, user, setActivePage, setPaymentState }) =>
                         <UserCheck size={12} /> Update Status
                       </button>
                     )}
-                    {(isAdmin || (isResident && req.submitted_by_id === user?.user_id)) && (
+                    {(isAdmin || (isResident && req.submitted_by_id === user?.user_id && req.status_name === 'OPEN')) && (
                       <button 
-                        onClick={() => {
-                          setSelectedRequest(req);
-                          setShowEditModal(true);
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setEditingRequest(req);
                         }}
-                        className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 text-slate-700 dark:text-gray-300 rounded-xl text-xs font-medium transition flex items-center gap-1"
+                        className="px-3 py-1.5 bg-slate-100 hover:bg-red-600 hover:text-white dark:bg-white/10 dark:hover:bg-red-600 dark:hover:text-white text-slate-700 dark:text-gray-300 rounded-xl text-xs font-medium transition flex items-center gap-1"
                       >
                         <Edit size={12} /> Edit Details
                       </button>
@@ -1472,7 +1481,7 @@ const ServiceRequests = ({ community, user, setActivePage, setPaymentState }) =>
             user={user}
             isAdmin={isAdmin}
             onClose={() => setSelectedRequest(null)}
-            onEdit={() => setShowEditModal(true)}
+            onEdit={() => setEditingRequest(selectedDetails || selectedRequest)}
             onStatusUpdate={() => setStatusModal(selectedDetails || selectedRequest)}
             onCancel={() => handleCancel(selectedDetails || selectedRequest)}
             onRefresh={handleRefreshAll}
@@ -1493,12 +1502,12 @@ const ServiceRequests = ({ community, user, setActivePage, setPaymentState }) =>
         />
       )}
 
-      {showEditModal && selectedRequest && (
+      {editingRequest && (
         <EditModal
-          request={selectedDetails || selectedRequest}
+          request={editingRequest}
           communityId={community?.community_id}
           isAdmin={isAdmin}
-          onClose={() => setShowEditModal(false)}
+          onClose={() => setEditingRequest(null)}
           onSuccess={handleRefreshAll}
         />
       )}

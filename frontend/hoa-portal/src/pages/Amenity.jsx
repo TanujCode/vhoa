@@ -607,26 +607,26 @@ const Amenity = ({ community, user, setActivePage, setPaymentState }) => {
       {activeTab === 'bookings' && (
         <div>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="font-semibold text-slate-905 dark:text-white">{isAdmin ? 'All Bookings' : 'My Bookings'}</h2>
+            <h2 className="font-semibold text-slate-900 dark:text-white">{isAdmin ? 'All Bookings' : 'My Bookings'}</h2>
             <div className="relative">
               <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)}
-                className="bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl pl-3 pr-8 py-2 text-sm text-slate-900 dark:text-white focus:outline-none appearance-none cursor-pointer">
+                className="bg-slate-50 dark:bg-[#1E3248] border border-slate-200 dark:border-white/10 rounded-2xl pl-4 pr-10 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none appearance-none cursor-pointer">
                 {['', 'PENDING', 'APPROVED', 'CANCELLED', 'COMPLETED'].map(s => (
                   <option key={s} value={s} className="text-slate-900 dark:text-white">{s || 'All Status'}</option>
                 ))}
               </select>
-              <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-gray-500 pointer-events-none" size={16} />
+              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-gray-500 pointer-events-none" size={16} />
             </div>
           </div>
 
           <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl overflow-hidden shadow-sm">
             {loading && bookings.length === 0 ? (
               <div className="p-16 text-center text-slate-500 dark:text-gray-400">
-                <div className="w-8 h-8 border-2 border-teal-505 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+                <div className="w-8 h-8 border-2 border-teal-500 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
               </div>
             ) : bookings.length === 0 ? (
               <div className="p-16 text-center text-slate-500 dark:text-gray-400">
-                <Calendar size={32} className="mx-auto mb-3 opacity-55" />
+                <Calendar size={32} className="mx-auto mb-3 opacity-50" />
                 No bookings found.
               </div>
             ) : (

@@ -511,7 +511,7 @@ const Meetings = ({ community, user }) => {
                         </button>
                         <button
                           onClick={() => handleDeleteMeeting(meeting.meeting_id)}
-                          className="p-1.5 hover:bg-red-500/15 rounded-lg text-slate-450 hover:text-red-500 transition"
+                          className="p-1.5 hover:bg-red-500/15 rounded-lg text-slate-400 hover:text-red-500 transition"
                           title="Delete Meeting"
                         >
                           <Trash2 size={14} />

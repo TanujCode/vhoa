@@ -104,7 +104,7 @@ const NotifPanel = ({ isOpen, onClose, notifications = [], onMarkAllRead, lastRe
       </div>
 
       {/* Notifications List */}
-      <div className="overflow-y-auto h-full pb-20">
+      <div className="overflow-y-auto custom-scrollbar h-full pb-20">
         {notifications.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center p-8">
             <Bell size={48} className="text-gray-300 dark:text-gray-600 mb-4" />

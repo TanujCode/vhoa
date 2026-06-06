@@ -196,7 +196,7 @@ const Payments = ({ community, user, paymentState, setPaymentState }) => {
           </div>
         ) : (
           <div className="bg-amber-500/10 border border-amber-500/20 px-4 py-2.5 rounded-2xl flex items-center gap-3">
-            <span className="text-amber-650 dark:text-amber-400 font-semibold text-xs py-1 px-2.5 bg-amber-500/10 dark:bg-amber-500/20 rounded-full">NO ESCROW BANK</span>
+            <span className="text-amber-600 dark:text-amber-400 font-semibold text-xs py-1 px-2.5 bg-amber-500/10 dark:bg-amber-500/20 rounded-full">NO ESCROW BANK</span>
             <div className="text-xs text-slate-500 dark:text-gray-400">
               Board members must set up bank details in Settings.
             </div>
@@ -329,7 +329,7 @@ const Payments = ({ community, user, paymentState, setPaymentState }) => {
                 </div>
                 <button
                   onClick={handleDeactivateRecurring}
-                  className="bg-red-500/10 text-red-650 dark:text-red-400 border border-red-200 dark:border-red-500/20 px-4 py-2 rounded-xl text-sm font-medium hover:bg-red-500/20 dark:hover:bg-red-500/20 transition"
+                  className="bg-red-500/10 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-500/20 px-4 py-2 rounded-xl text-sm font-medium hover:bg-red-500/20 dark:hover:bg-red-500/20 transition"
                 >
                   Turn Off Auto-Pay
                 </button>
@@ -542,7 +542,7 @@ const Payments = ({ community, user, paymentState, setPaymentState }) => {
                       <h3 className="text-lg font-semibold mt-4 text-slate-900 dark:text-white">{v.vendor?.company_name || 'Vendor Company'}</h3>
                       <p className="text-xs text-slate-500 dark:text-gray-400 mt-1">Receipt No: {v.vendor_receipt_no || 'N/A'}</p>
                       
-                      <div className="mt-2 text-2xl font-bold font-mono text-teal-650 dark:text-teal-400">${(v.quote_amount || 0).toFixed(2)}</div>
+                      <div className="mt-2 text-2xl font-bold font-mono text-teal-600 dark:text-teal-400">${(v.quote_amount || 0).toFixed(2)}</div>
                       <div className="text-xs text-slate-500 dark:text-gray-400 mt-4 space-y-1">
                         <div>Location: <span className="text-slate-700 dark:text-white font-medium">{v.service_location || 'N/A'}</span></div>
                         <div>Quote Date: <span className="text-slate-700 dark:text-white font-medium">{v.quote_date || 'N/A'}</span></div>
@@ -725,7 +725,7 @@ const Payments = ({ community, user, paymentState, setPaymentState }) => {
                           />
                         </div>
                         <div>
-                          <label className="text-[10px] text-slate-550 dark:text-gray-400 block mb-1">Account Number</label>
+                          <label className="text-[10px] text-slate-500 dark:text-gray-400 block mb-1">Account Number</label>
                           <input
                             type="text"
                             placeholder="Account Number"

@@ -698,7 +698,7 @@ const Members = ({ community }) => {
                       setInvitePhoneCountryCode(e.target.value);
                       setInvitePhoneOnly('');
                     }}
-                    className="px-2 py-2 bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl text-sm text-slate-900 dark:text-white focus:outline-none focus:border-teal-500 cursor-pointer"
+                    className="px-2 py-2.5 bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl text-sm text-slate-900 dark:text-white focus:outline-none focus:border-teal-500 cursor-pointer"
                   >
                     <option value="+1">🇺🇸 +1</option>
                     <option value="+91">🇮🇳 +91</option>
@@ -863,7 +863,7 @@ const Members = ({ community }) => {
                       setEditPhoneCountryCode(e.target.value);
                       setEditPhoneOnly('');
                     }}
-                    className="px-2 py-2 bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl text-sm text-slate-900 dark:text-white focus:outline-none focus:border-teal-500 cursor-pointer"
+                    className="px-2 py-2.5 bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl text-sm text-slate-900 dark:text-white focus:outline-none focus:border-teal-500 cursor-pointer"
                   >
                     <option value="+1">🇺🇸 +1</option>
                     <option value="+91">🇮🇳 +91</option>
@@ -930,7 +930,7 @@ const Members = ({ community }) => {
                 <div className="grid grid-cols-2 gap-3">
                   {/* ID Proof */}
                   <div className="bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl p-3 flex flex-col gap-2">
-                    <span className="text-[10px] font-bold text-slate-550 dark:text-gray-400 block">IDENTITY PROOF</span>
+                    <span className="text-[10px] font-bold text-slate-500 dark:text-gray-400 block">IDENTITY PROOF</span>
                     {editingMember?.id_proof_url ? (
                       <a
                         href={getBaseUrl(editingMember.id_proof_url)}
@@ -949,18 +949,18 @@ const Members = ({ community }) => {
                       onChange={e => setIdFile(e.target.files[0])}
                       className="text-[10px] text-slate-500 dark:text-gray-400 w-full"
                     />
-                    {idFile && <span className="text-[10px] text-teal-650 font-semibold truncate">Ready: {idFile.name}</span>}
+                    {idFile && <span className="text-[10px] text-teal-600 font-semibold truncate">Ready: {idFile.name}</span>}
                   </div>
 
                   {/* Address Proof */}
                   <div className="bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl p-3 flex flex-col gap-2">
-                    <span className="text-[10px] font-bold text-slate-550 dark:text-gray-400 block">ADDRESS PROOF</span>
+                    <span className="text-[10px] font-bold text-slate-500 dark:text-gray-400 block">ADDRESS PROOF</span>
                     {editingMember?.address_proof_url ? (
                       <a
                         href={getBaseUrl(editingMember.address_proof_url)}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-xs text-purple-655 hover:underline font-semibold block truncate"
+                        className="text-xs text-purple-600 hover:underline font-semibold block truncate"
                       >
                         View Address Proof
                       </a>
@@ -973,7 +973,7 @@ const Members = ({ community }) => {
                       onChange={e => setAddrFile(e.target.files[0])}
                       className="text-[10px] text-slate-500 dark:text-gray-400 w-full"
                     />
-                    {addrFile && <span className="text-[10px] text-purple-650 font-semibold truncate">Ready: {addrFile.name}</span>}
+                    {addrFile && <span className="text-[10px] text-purple-600 font-semibold truncate">Ready: {addrFile.name}</span>}
                   </div>
                 </div>
               </div>

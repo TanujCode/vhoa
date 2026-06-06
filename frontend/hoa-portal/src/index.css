@@ -14,24 +14,34 @@ html:not(.dark) body {
   color: #f1f5f9;
 }
 
-/* Custom Scrollbar */
+/* Custom Scrollbar - Global & Utility */
+::-webkit-scrollbar,
 .custom-scrollbar::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
+::-webkit-scrollbar-track,
 .custom-scrollbar::-webkit-scrollbar-track {
   background: transparent;
 }
+::-webkit-scrollbar-thumb,
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background-color: rgba(255, 255, 255, 0.1);
+  background-color: rgba(0, 0, 0, 0.15);
   border-radius: 10px;
 }
+::-webkit-scrollbar-thumb:hover,
 .custom-scrollbar:hover::-webkit-scrollbar-thumb {
-  background-color: rgba(255, 255, 255, 0.2);
+  background-color: rgba(0, 0, 0, 0.25);
 }
+.dark ::-webkit-scrollbar-thumb,
 .dark .custom-scrollbar::-webkit-scrollbar-thumb {
-  background-color: rgba(255, 255, 255, 0.1);
+  background-color: rgba(255, 255, 255, 0.15);
 }
+.dark ::-webkit-scrollbar-thumb:hover,
+.dark .custom-scrollbar:hover::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.3);
+}
+.light ::-webkit-scrollbar-thumb,
 .light .custom-scrollbar::-webkit-scrollbar-thumb {
   background-color: rgba(0, 0, 0, 0.15);
 }

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { RefreshCw, Search, Plus, Trash2, Download, FileText, Folder, File, ShieldAlert } from 'lucide-react';
+import { RefreshCw, Search, Plus, Trash2, Download, FileText, Folder, File, ShieldAlert, ChevronDown } from 'lucide-react';
 import API, { getBaseUrl } from '../services/api';
 
 const DocumentModal = ({ communityId, onClose, onSuccess }) => {
@@ -50,7 +50,7 @@ const DocumentModal = ({ communityId, onClose, onSuccess }) => {
           <h3 className="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2">
             <Plus size={18} className="text-teal-500" /> Upload HOA Document
           </h3>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-655 dark:hover:text-white font-semibold text-sm">✕</button>
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 dark:hover:text-white font-semibold text-sm">✕</button>
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
@@ -74,15 +74,18 @@ const DocumentModal = ({ communityId, onClose, onSuccess }) => {
 
           <div>
             <label className="block text-xs font-bold text-slate-500 dark:text-gray-400 uppercase tracking-wider mb-2">Document Type *</label>
-            <select
-              value={form.document_type}
-              onChange={e => setForm({ ...form, document_type: e.target.value })}
-              className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-teal-500 cursor-pointer"
-            >
-              {docTypes.map(type => (
-                <option key={type} value={type}>{type.replace('_', ' ')}</option>
-              ))}
-            </select>
+            <div className="relative">
+              <select
+                value={form.document_type}
+                onChange={e => setForm({ ...form, document_type: e.target.value })}
+                className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl pl-4 pr-10 py-3 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-teal-500 cursor-pointer appearance-none"
+              >
+                {docTypes.map(type => (
+                  <option key={type} value={type} className="text-slate-900 dark:text-white">{type.replace('_', ' ')}</option>
+                ))}
+              </select>
+              <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-gray-500 pointer-events-none" size={18} />
+            </div>
           </div>
 
           <div>
@@ -317,7 +320,7 @@ const Documents = ({ community, user }) => {
                         {isManagement && (
                           <button
                             onClick={() => handleDelete(doc.document_id)}
-                            className="p-2 bg-red-500/10 hover:bg-red-500/20 dark:bg-[#3B1C1C] dark:hover:bg-[#5C2323] text-red-655 dark:text-red-400 rounded-xl transition-all"
+                            className="p-2 bg-red-500/10 hover:bg-red-500/20 dark:bg-[#3B1C1C] dark:hover:bg-[#5C2323] text-red-600 dark:text-red-400 rounded-xl transition-all"
                             title="Delete"
                           >
                             <Trash2 size={16} />
