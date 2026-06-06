@@ -60,7 +60,7 @@ export default function ClientOnboarding() {
   
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
-  const [zipWarning, setZipWarning] = useState('');
+  const [zipError, setZipError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
