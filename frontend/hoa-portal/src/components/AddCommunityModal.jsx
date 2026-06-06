@@ -359,7 +359,7 @@ const AddCommunityModal = ({ isOpen, onClose, onSuccess }) => {
         <div className="p-5 border-t border-slate-200 dark:border-white/10">
           <button 
             onClick={onClose} 
-            className="w-full py-3 text-slate-500 hover:text-slate-900 dark:text-gray-400 dark:hover:text-white text-sm font-medium transition"
+            className="w-full py-3 text-slate-500 hover:bg-red-50 hover:text-red-600 dark:text-gray-400 dark:hover:bg-red-500/10 dark:hover:text-red-400 rounded-xl text-sm font-medium transition"
           >
             Cancel
           </button>

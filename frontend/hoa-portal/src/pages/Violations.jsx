@@ -264,7 +264,7 @@ const SubmitModal = ({ communityId, onClose, onSuccess }) => {
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 rounded-xl text-sm font-medium transition text-slate-700 dark:text-white"
+              className="flex-1 py-2.5 bg-slate-100 hover:bg-red-600 hover:text-white dark:bg-white/10 dark:hover:bg-red-600 dark:hover:text-white rounded-xl text-sm font-medium transition text-slate-700 dark:text-white"
             >
               Cancel
             </button>
@@ -419,7 +419,7 @@ const CreateTypeModal = ({ communityId, onClose, onSuccess }) => {
         </div>
 
         <div className="flex gap-2 mt-4">
-          <button type="button" disabled={loading} onClick={onClose} className="px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-white/10 rounded-xl flex-1 text-slate-700 dark:text-white disabled:opacity-50">Cancel</button>
+          <button type="button" disabled={loading} onClick={onClose} className="px-4 py-2 bg-slate-100 hover:bg-red-600 hover:text-white dark:bg-white/10 dark:hover:bg-red-600 dark:hover:text-white rounded-xl flex-1 text-slate-700 dark:text-white disabled:opacity-50 transition-colors">Cancel</button>
           <button type="button" disabled={loading} onClick={handleSubmit} className="px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-xl flex-1 text-white font-medium disabled:opacity-50">
             {loading ? 'Saving...' : 'Save'}
           </button>
@@ -494,7 +494,7 @@ const DisputeModal = ({ communityId, violationId, onClose, onSuccess }) => {
             />
           </div>
           <div className="flex gap-3 pt-2">
-            <button type="button" onClick={onClose} className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-white/10 rounded-xl text-sm font-medium text-slate-700 dark:text-white">Cancel</button>
+            <button type="button" onClick={onClose} className="flex-1 py-2.5 bg-slate-100 hover:bg-red-600 hover:text-white dark:bg-white/10 dark:hover:bg-red-600 dark:hover:text-white rounded-xl text-sm font-medium text-slate-700 dark:text-white transition-colors">Cancel</button>
             <button type="submit" disabled={loading} className="flex-1 py-2.5 bg-teal-600 hover:bg-teal-500 rounded-xl text-sm font-medium text-white disabled:opacity-50">
               {loading ? 'Submitting...' : 'Submit Appeal'}
             </button>
@@ -568,7 +568,7 @@ const ResolveDisputeModal = ({ violationId, statuses, onClose, onSuccess }) => {
             </select>
           </div>
           <div className="flex gap-3 pt-2">
-            <button type="button" onClick={onClose} className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-white/10 rounded-xl text-sm font-medium text-slate-700 dark:text-white">Cancel</button>
+            <button type="button" onClick={onClose} className="flex-1 py-2.5 bg-slate-100 hover:bg-red-600 hover:text-white dark:bg-white/10 dark:hover:bg-red-600 dark:hover:text-white rounded-xl text-sm font-medium text-slate-700 dark:text-white transition-colors">Cancel</button>
             <button type="submit" disabled={loading} className="flex-1 py-2.5 bg-teal-600 hover:bg-teal-500 rounded-xl text-sm font-medium text-white disabled:opacity-50">
               {loading ? 'Resolving...' : 'Resolve Dispute'}
             </button>

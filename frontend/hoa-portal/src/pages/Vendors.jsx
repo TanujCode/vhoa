@@ -363,7 +363,7 @@ const Vendors = ({ communityId, userRole }) => {
                   </div>
 
                   <div className="pt-4 flex justify-end gap-3">
-                    <button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-2 text-slate-500 hover:text-slate-900 dark:text-gray-400 dark:hover:text-white text-sm font-medium transition-colors">Cancel</button>
+                    <button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-2 text-slate-500 hover:bg-red-50 hover:text-red-600 dark:text-gray-400 dark:hover:bg-red-500/10 dark:hover:text-red-400 rounded-lg text-sm font-medium transition-colors">Cancel</button>
                     <button type="submit" disabled={loading} className="bg-teal-600 text-white px-8 py-2 rounded-lg text-sm font-semibold hover:bg-teal-500 transition-all shadow-md shadow-teal-500/25">
                       {loading ? "Processing..." : "Onboard"}
                     </button>
@@ -544,7 +544,7 @@ const Vendors = ({ communityId, userRole }) => {
                 </div>
 
                 <div className="pt-4 flex justify-end gap-3">
-                  <button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-2 text-slate-500 hover:text-slate-900 dark:text-gray-400 dark:hover:text-white text-sm font-medium transition-colors">Cancel</button>
+                  <button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-2 text-slate-500 hover:bg-red-50 hover:text-red-600 dark:text-gray-400 dark:hover:bg-red-500/10 dark:hover:text-red-400 rounded-lg text-sm font-medium transition-colors">Cancel</button>
                   <button type="submit" disabled={loading} className="bg-teal-600 text-white px-8 py-2 rounded-lg text-sm font-semibold hover:bg-teal-500 transition-all shadow-md shadow-teal-500/25">
                     {loading ? "Processing..." : "Onboard"}
                   </button>

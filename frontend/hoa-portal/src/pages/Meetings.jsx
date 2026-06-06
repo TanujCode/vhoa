@@ -130,7 +130,7 @@ const ScheduleMeetingModal = ({ communityId, onClose, onSuccess, meeting }) => {
             />
           </div>
           <div className="flex gap-3 pt-4 flex-shrink-0">
-            <button type="button" onClick={onClose} className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 rounded-xl text-sm font-medium text-slate-700 dark:text-white">Cancel</button>
+            <button type="button" onClick={onClose} className="flex-1 py-2.5 bg-slate-100 hover:bg-red-600 hover:text-white dark:bg-white/10 dark:hover:bg-red-600 dark:hover:text-white rounded-xl text-sm font-medium text-slate-700 dark:text-white">Cancel</button>
             <button type="submit" disabled={loading} className="flex-1 py-2.5 bg-teal-600 hover:bg-teal-500 rounded-xl text-sm font-medium text-white disabled:opacity-50">
               {loading ? 'Scheduling...' : 'Schedule Meeting'}
             </button>
@@ -300,7 +300,7 @@ const CreateSurveyModal = ({ communityId, onClose, onSuccess, survey }) => {
           )}
 
           <div className="flex gap-3 pt-4 flex-shrink-0">
-            <button type="button" onClick={onClose} className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 rounded-xl text-sm font-medium text-slate-700 dark:text-white">Cancel</button>
+            <button type="button" onClick={onClose} className="flex-1 py-2.5 bg-slate-100 hover:bg-red-600 hover:text-white dark:bg-white/10 dark:hover:bg-red-600 dark:hover:text-white rounded-xl text-sm font-medium text-slate-700 dark:text-white">Cancel</button>
             <button type="submit" disabled={loading} className="flex-1 py-2.5 bg-teal-600 hover:bg-teal-500 rounded-xl text-sm font-medium text-white disabled:opacity-50">
               {loading ? 'Saving...' : survey ? 'Save Changes' : 'Create Survey'}
             </button>
