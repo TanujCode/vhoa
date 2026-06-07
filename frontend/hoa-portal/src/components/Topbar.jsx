@@ -63,7 +63,7 @@ const Topbar = ({
 
       {/* Community Section */}
       <div className="relative flex-1 lg:flex-none">
-        {isResident || isBoardMember ? (
+        {(isResident || isBoardMember) && communities.length <= 1 ? (
           <div className="flex items-center gap-1.5 sm:gap-3 px-2 py-1 sm:px-4 sm:py-2 bg-slate-100 dark:bg-[#1E3248] border border-slate-200 dark:border-white/10 rounded-2xl max-w-[130px] sm:max-w-[280px] lg:max-w-none">
             <div className="w-2 h-2 bg-teal-500 rounded-full animate-pulse flex-shrink-0"></div>
             <div className="min-w-0">
@@ -77,6 +77,7 @@ const Topbar = ({
             </div>
           </div>
         ) : (
+          // Admin / Super Admin OR Multi-Community Resident/Board Member ke liye dropdown
           <div
             className="bg-slate-100 dark:bg-[#1E3248] border border-slate-200 dark:border-white/20 rounded-2xl px-2.5 py-1.5 sm:px-4 sm:py-2 flex items-center gap-1.5 sm:gap-3 cursor-pointer hover:border-teal-500 transition min-w-[110px] max-w-[125px] sm:min-w-[240px] lg:min-w-[280px] lg:max-w-none"
             onClick={() => setIsCommDropdownOpen(!isCommDropdownOpen)}
@@ -91,7 +92,8 @@ const Topbar = ({
           </div>
         )}
 
-        {!isResident && !isBoardMember && isCommDropdownOpen && (
+        {/* Dropdown panel */}
+        {isCommDropdownOpen && (
           <div className="absolute top-[calc(100%+12px)] left-0 w-72 sm:w-80 bg-white dark:bg-[#1E3248] border border-slate-200 dark:border-white/20 rounded-3xl shadow-2xl z-50 py-3 overflow-hidden animate-in fade-in zoom-in-95">
             <div className="px-3 relative">
               <Search size={16} className="absolute left-7 top-1/2 -translate-y-1/2 text-gray-400" />

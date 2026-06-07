@@ -45,3 +45,26 @@ html:not(.dark) body {
 .light .custom-scrollbar::-webkit-scrollbar-thumb {
   background-color: rgba(0, 0, 0, 0.15);
 }
+
+/* Custom Red Hover Cancel Button class */
+.cancel-button-red-hover {
+  background-color: #f1f5f9 !important;
+  color: #334155 !important;
+  transition: all 0.2s ease-in-out !important;
+}
+
+.cancel-button-red-hover:hover {
+  background-color: #dc2626 !important;
+  color: #ffffff !important;
+}
+
+/* Dark mode */
+.dark .cancel-button-red-hover {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+  color: #ffffff !important;
+}
+
+.dark .cancel-button-red-hover:hover {
+  background-color: #dc2626 !important;
+  color: #ffffff !important;
+}

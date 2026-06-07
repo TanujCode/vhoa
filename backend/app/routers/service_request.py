@@ -181,17 +181,22 @@ def add_sr_note(
     request_id: int,
     body: ServiceRequestNoteCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(
-        require_role("super_admin", "property_manager", "board_member")
-    ),
+    current_user: User = Depends(get_verified_user),
 ):
-    """Add note — only Admin/Board/Manager"""
+    """Add note — only Admin/Board/Manager or Owner Resident"""
     try:
         sr = get_request_by_id(request_id, db)
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
 
     check_community_access(current_user, sr.community_id, db)
+
+    # Residents can only add notes to their own requests
+    if current_user.role.role_name == "resident":
+        if sr.submitted_by_id != current_user.user_id:
+            raise HTTPException(status_code=403, detail="You can only add notes to your own requests.")
+    elif current_user.role.role_name not in {"super_admin", "property_manager", "board_member"}:
+        raise HTTPException(status_code=403, detail="Role not authorized to add notes.")
 
     try:
         note = add_note(request_id, body, current_user.user_id, db)

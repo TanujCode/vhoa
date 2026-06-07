@@ -147,7 +147,7 @@ const SubmitModal = ({ communityId, onClose, onSuccess }) => {
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 py-3 bg-slate-100 hover:bg-red-600 hover:text-white dark:bg-white/10 dark:hover:bg-red-600 dark:hover:text-white text-slate-700 dark:text-white rounded-2xl text-sm font-medium transition"
+              className="flex-1 py-3 rounded-2xl text-sm font-medium cancel-button-red-hover"
             >
               Cancel
             </button>
@@ -306,7 +306,13 @@ const StatusModal = ({ request, statuses, onClose, onSuccess }) => {
             />
           </div>
           <div className="flex gap-3">
-            <button type="button" onClick={onClose} className="flex-1 py-2.5 bg-slate-100 hover:bg-red-600 hover:text-white dark:bg-white/10 dark:hover:bg-red-600 dark:hover:text-white text-slate-700 dark:text-white rounded-2xl text-sm font-medium transition">Cancel</button>
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 py-2.5 rounded-2xl text-sm font-medium cancel-button-red-hover"
+            >
+              Cancel
+            </button>
             <button type="submit" disabled={loading} className="flex-1 py-2.5 bg-teal-600 hover:bg-teal-500 text-white rounded-2xl text-sm font-medium disabled:opacity-50 transition">
               {loading ? 'Updating...' : 'Update'}
             </button>
@@ -483,7 +489,7 @@ const EditModal = ({ request, communityId, isAdmin, onClose, onSuccess }) => {
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 py-3 bg-slate-100 hover:bg-red-600 hover:text-white dark:bg-white/10 dark:hover:bg-red-600 dark:hover:text-white text-slate-700 dark:text-white rounded-2xl text-sm font-medium transition"
+              className="flex-1 py-3 rounded-2xl text-sm font-medium cancel-button-red-hover"
             >
               Cancel
             </button>
@@ -714,8 +720,8 @@ const DetailDrawer = ({
     }
   };
 
-  const isResident = ['resident'].includes(user?.role_name || user?.role || '');
-  const isOwner = request.submitted_by_id === user?.user_id;
+  const isResident = ['resident'].includes(String(user?.role_name || user?.role || '').toLowerCase());
+  const isOwner = Number(request.submitted_by_id) === Number(user?.user_id);
   const canEdit = isAdmin || (isOwner && request.status_name === 'OPEN');
   const activeAssignment = assignments[0];
 

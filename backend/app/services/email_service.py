@@ -332,3 +332,53 @@ def send_due_payment_reminder_email(
     """
     html = _wrap_in_responsive_layout(inner_html)
     return send_email(to_email, subject, html)
+
+
+def send_invite_email(to_email: str, full_name: str, temp_password: str, community_name: str, role_name: str) -> bool:
+    subject = f"Invitation to join {community_name} on VHOAS"
+    role_label = role_name.replace('_', ' ').title()
+    inner_html = f"""
+      <div style="padding: 40px 30px;">
+        <h2 style="margin: 0 0 16px; color: #ffffff;">Hello, {full_name}! 👋</h2>
+        <p style="color: #9CA3AF; line-height: 1.6;">
+          You have been invited to join the community <strong>{community_name}</strong> as a <strong>{role_label}</strong> on the VHOAS Portal.
+        </p>
+        <p style="color: #9CA3AF; line-height: 1.6;">
+          Below are your temporary login credentials:
+        </p>
+        
+        <div style="background: #162535; border-radius: 12px; padding: 20px; margin: 20px 0;">
+          <table style="width: 100%; border-collapse: collapse; font-size: 14px; color: #ffffff;">
+            <tr><td style="color: #9CA3AF; padding: 8px 0;">Email ID</td><td style="text-align: right; font-weight: bold; color: #ffffff;">{to_email}</td></tr>
+            <tr><td style="color: #9CA3AF; padding: 8px 0; border-top: 1px solid rgba(255,255,255,0.05);">Temporary Password</td><td style="text-align: right; font-weight: bold; color: #14B8A6; font-family: monospace;">{temp_password}</td></tr>
+          </table>
+        </div>
+
+        <p style="color: #9CA3AF; line-height: 1.6;">
+          Please log in using these credentials and verify/update your password in your Profile Settings as soon as possible.
+        </p>
+      </div>
+    """
+    html = _wrap_in_responsive_layout(inner_html, subtitle="")
+    return send_email(to_email, subject, html)
+
+
+def send_association_email(to_email: str, full_name: str, community_name: str, role_name: str) -> bool:
+    subject = f"You have been added to {community_name} on VHOAS"
+    role_label = role_name.replace('_', ' ').title()
+    inner_html = f"""
+      <div style="padding: 40px 30px;">
+        <h2 style="margin: 0 0 16px; color: #ffffff;">Hello, {full_name}! 👋</h2>
+        <p style="color: #9CA3AF; line-height: 1.6;">
+          You have been added to the community <strong>{community_name}</strong> as a <strong>{role_label}</strong> on the VHOAS Portal.
+        </p>
+        <p style="color: #9CA3AF; line-height: 1.6;">
+          Since you already have a registered account on VHOAS, you can log in using your existing credentials.
+        </p>
+        <p style="color: #9CA3AF; line-height: 1.6;">
+          After logging in, you can switch to <strong>{community_name}</strong> using the community selector dropdown in the Topbar.
+        </p>
+      </div>
+    """
+    html = _wrap_in_responsive_layout(inner_html, subtitle="")
+    return send_email(to_email, subject, html)
