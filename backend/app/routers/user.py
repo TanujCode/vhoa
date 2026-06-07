@@ -347,6 +347,8 @@ def invite_member(
             
             # Add to user_communities
             db.add(UserCommunity(user_id=existing_user.user_id, community_id=body.community_id))
+            if not existing_user.community_id:
+                existing_user.community_id = body.community_id
             
             # Update community's admin details if not set
             community = db.query(Community).filter(Community.community_id == body.community_id).first()
@@ -402,6 +404,8 @@ def invite_member(
                 community_id=body.community_id,
                 unit_no=body.unit_no.strip() if body.unit_no else None
             ))
+            if not existing_user.community_id:
+                existing_user.community_id = body.community_id
             db.commit()
             
             # Log the action

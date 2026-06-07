@@ -153,7 +153,13 @@ const Profile = ({ user, setUser, viewRole }) => {
 
       showMsg('success', 'Profile updated successfully!');
     } catch (err) {
-      showMsg('error', err.response?.data?.detail || 'Failed to update profile.');
+      const detail = err.response?.data?.detail;
+      const errorMsgText = typeof detail === 'string'
+        ? detail
+        : (Array.isArray(detail) && detail[0]?.msg)
+          ? detail[0].msg
+          : 'Failed to update profile.';
+      showMsg('error', errorMsgText);
     } finally {
       setSaving(false);
     }
@@ -294,7 +300,13 @@ const Profile = ({ user, setUser, viewRole }) => {
       setPwdForm({ otp_code: '', new_password: '', confirm: '' });
       setOtpSent(false);
     } catch (err) {
-      showMsg('error', err.response?.data?.detail || 'Failed to reset password.');
+      const detail = err.response?.data?.detail;
+      const errorMsgText = typeof detail === 'string'
+        ? detail
+        : (Array.isArray(detail) && detail[0]?.msg)
+          ? detail[0].msg
+          : 'Failed to reset password.';
+      showMsg('error', errorMsgText);
     } finally {
       setSaving(false);
     }
