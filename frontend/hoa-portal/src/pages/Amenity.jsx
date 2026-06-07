@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, Plus, RefreshCw, X, Clock, ChevronDown } from 'lucide-react';
+import { Calendar, Plus, RefreshCw, X, Clock, ChevronDown, Trash2 } from 'lucide-react';
 import API from '../services/api';
 import { onlyDigitsKeyPress, onlyDecimalKeyPress } from '../utils/fieldValidators';
 
@@ -110,7 +110,7 @@ const BookModal = ({ amenity, communityId, onClose, onSuccess }) => {
           )}
 
           <div className="flex gap-3 pt-2">
-            <button type="button" onClick={onClose} className="flex-1 py-2.5 bg-slate-100 hover:bg-red-600 hover:text-white dark:bg-white/10 dark:hover:bg-red-600 dark:hover:text-white text-slate-700 dark:text-white rounded-xl text-sm font-medium transition">Cancel</button>
+            <button type="button" onClick={onClose} className="flex-1 py-2.5 bg-slate-100 dark:bg-white/10 text-slate-700 dark:text-white rounded-xl text-sm font-medium transition cancel-button-red-hover">Cancel</button>
             <button type="submit" disabled={loading || !form.slot_number}
               className="flex-1 py-2.5 bg-teal-600 hover:bg-teal-500 text-white rounded-xl text-sm font-medium transition disabled:opacity-50 disabled:cursor-not-allowed">
               {loading ? 'Booking...' : 'Confirm Booking'}
@@ -286,7 +286,7 @@ const CreateAmenityModal = ({ communityId, onClose, onSuccess }) => {
             </div>
           </div>
           <div className="flex gap-3 pt-2">
-            <button type="button" onClick={onClose} className="flex-1 py-2.5 bg-slate-100 hover:bg-red-600 hover:text-white dark:bg-white/10 dark:hover:bg-red-600 dark:hover:text-white rounded-xl text-sm font-medium text-slate-700 dark:text-white transition-colors">Cancel</button>
+            <button type="button" onClick={onClose} className="flex-1 py-2.5 bg-slate-100 dark:bg-white/10 rounded-xl text-sm font-medium text-slate-700 dark:text-white transition-colors cancel-button-red-hover">Cancel</button>
             <button type="submit" disabled={loading} className="flex-1 py-2.5 bg-teal-600 hover:bg-teal-500 text-white rounded-xl text-sm font-medium transition-colors disabled:opacity-50">
               {loading ? 'Creating...' : 'Create'}
             </button>
@@ -416,7 +416,7 @@ const EditAmenityModal = ({ amenity, onClose, onSuccess }) => {
               className="w-4 h-4 rounded border-slate-300 text-teal-600 focus:ring-teal-500" />
           </div>
           <div className="flex gap-3 pt-2">
-            <button type="button" onClick={onClose} className="flex-1 py-2.5 bg-slate-100 hover:bg-red-600 hover:text-white dark:bg-white/10 dark:hover:bg-red-600 dark:hover:text-white rounded-xl text-sm font-medium text-slate-700 dark:text-white font-sans transition-colors">Cancel</button>
+            <button type="button" onClick={onClose} className="flex-1 py-2.5 bg-slate-100 dark:bg-white/10 rounded-xl text-sm font-medium text-slate-700 dark:text-white transition-colors cancel-button-red-hover">Cancel</button>
             <button type="submit" disabled={loading} className="flex-1 py-2.5 bg-teal-600 hover:bg-teal-500 text-white rounded-xl text-sm font-medium transition-colors disabled:opacity-50 font-sans">
               {loading ? 'Saving...' : 'Save Changes'}
             </button>
@@ -482,6 +482,20 @@ const Amenity = ({ community, user, setActivePage, setPaymentState }) => {
     } catch (err) { alert(err.response?.data?.detail || 'Error cancelling'); }
   };
 
+  const handleDelete = async (amenityId, amenityName) => {
+    if (!window.confirm(`Are you sure you want to delete the amenity "${amenityName}"?`)) return;
+    try {
+      setLoading(true);
+      await API.put(`/amenity/${amenityId}`, { active_status: false });
+      alert("✅ Amenity Deleted Successfully!");
+      fetchAmenities();
+    } catch (err) {
+      alert(err.response?.data?.detail || 'Error deleting amenity');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handlePay = (booking) => {
     setPaymentState({
       dueItem: {
@@ -500,22 +514,35 @@ const Amenity = ({ community, user, setActivePage, setPaymentState }) => {
   return (
     <div className="text-slate-900 dark:text-white font-sans">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
-        <div>
-          <h1 className="text-3xl font-semibold text-slate-900 dark:text-white">Amenity Booking</h1>
-          <p className="text-slate-500 dark:text-gray-400 mt-1">{community?.name}</p>
-        </div>
-        <div className="flex flex-wrap gap-2 w-full md:w-auto">
+        <div className="flex justify-between items-center w-full md:w-auto">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-semibold text-slate-900 dark:text-white">Amenity Booking</h1>
+            <p className="text-slate-500 dark:text-gray-400 mt-1">{community?.name}</p>
+          </div>
+          {/* Mobile Refresh Button */}
           <button 
             onClick={() => activeTab === 'amenities' ? fetchAmenities() : fetchBookings()}
             disabled={loading}
-            className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 rounded-2xl text-sm font-semibold transition flex items-center gap-2 text-slate-700 dark:text-white disabled:opacity-60"
+            className="md:hidden p-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 rounded-2xl text-slate-700 dark:text-white transition disabled:opacity-60"
+            title="Refresh"
+          >
+            <RefreshCw size={18} className={loading ? "animate-spin" : ""} />
+          </button>
+        </div>
+
+        <div className="flex gap-2 w-full md:w-auto">
+          {/* Desktop Refresh Button */}
+          <button 
+            onClick={() => activeTab === 'amenities' ? fetchAmenities() : fetchBookings()}
+            disabled={loading}
+            className="hidden md:flex px-5 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 rounded-2xl text-sm font-semibold transition items-center gap-2 text-slate-700 dark:text-white disabled:opacity-60"
           >
             <RefreshCw size={15} className={loading ? "animate-spin" : ""} />
             {loading ? "Refreshing..." : "Refresh"}
           </button>
           {isAdmin && (
             <button onClick={() => setShowCreateModal(true)}
-              className="px-5 py-2.5 bg-teal-600 hover:bg-teal-500 text-white rounded-2xl text-sm font-semibold transition flex items-center gap-2 shadow-lg shadow-teal-500/25">
+              className="flex-1 md:flex-none px-5 py-2.5 bg-teal-600 hover:bg-teal-500 text-white rounded-2xl text-sm font-semibold transition flex items-center justify-center gap-2 shadow-lg shadow-teal-500/25">
               <Plus size={15} /> Create Amenity
             </button>
           )}
@@ -582,12 +609,21 @@ const Amenity = ({ community, user, setActivePage, setPaymentState }) => {
 
                   <div className="flex gap-2">
                     {isAdmin && (
-                      <button
-                        onClick={() => setEditModal(a)}
-                        className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 text-slate-700 dark:text-white rounded-2xl text-sm font-medium transition border border-slate-200 dark:border-white/10 font-sans"
-                      >
-                        Edit
-                      </button>
+                      <>
+                        <button
+                          onClick={() => setEditModal(a)}
+                          className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 text-slate-700 dark:text-white rounded-2xl text-sm font-medium transition border border-slate-200 dark:border-white/10 font-sans"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleDelete(a.amenity_id, a.name)}
+                          className="p-2.5 bg-red-500/10 hover:bg-red-600 text-red-600 hover:text-white dark:bg-red-500/20 dark:hover:bg-red-600 rounded-2xl transition border border-red-500/20 dark:border-red-500/30 flex items-center justify-center"
+                          title="Delete Amenity"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </>
                     )}
                     <button
                       onClick={() => setBookModal(a)}

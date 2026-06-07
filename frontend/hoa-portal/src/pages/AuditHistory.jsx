@@ -91,9 +91,29 @@ const AuditHistory = ({ community, user }) => {
   if (!isAdmin) {
     return (
       <div className="text-slate-900 dark:text-white">
-        <div className="mb-8">
-          <h1 className="text-3xl font-semibold text-slate-900 dark:text-white">My Activity</h1>
-          <p className="text-slate-500 dark:text-gray-400 mt-1">Your recent actions</p>
+        <div className="flex justify-between items-center mb-8">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-semibold text-slate-900 dark:text-white">My Activity</h1>
+            <p className="text-slate-500 dark:text-gray-400 mt-1">Your recent actions</p>
+          </div>
+          {/* Mobile Refresh Button for non-admin */}
+          <button 
+            onClick={fetchLogs}
+            disabled={loading}
+            className="sm:hidden p-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 rounded-2xl text-slate-700 dark:text-white transition disabled:opacity-60"
+            title="Refresh"
+          >
+            <RefreshCw size={18} className={loading ? "animate-spin" : ""} />
+          </button>
+          {/* Desktop Refresh Button for non-admin */}
+          <button
+            onClick={fetchLogs}
+            disabled={loading}
+            className="hidden sm:flex px-5 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 text-slate-700 dark:text-white rounded-2xl text-sm font-semibold transition items-center gap-2 disabled:opacity-60"
+          >
+            <RefreshCw size={15} className={loading ? "animate-spin" : ""} />
+            {loading ? "Refreshing..." : "Refresh"}
+          </button>
         </div>
         <AuditTable logs={logs} loading={loading} search={search} setSearch={setSearch}
           filteredLogs={filteredLogs} getActionColor={getActionColor} getModuleIcon={getModuleIcon} formatDate={formatDate} isAdmin={false} />
@@ -104,19 +124,35 @@ const AuditHistory = ({ community, user }) => {
   return (
     <div className="text-slate-900 dark:text-white">
       {/* Header */}
-      <div className="flex justify-between items-center mb-8">
-        <div>
-          <h1 className="text-3xl font-semibold text-slate-900 dark:text-white">Audit History</h1>
-          <p className="text-slate-500 dark:text-gray-400 mt-1">{community?.name}</p>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+        <div className="flex justify-between items-center w-full sm:w-auto">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-semibold text-slate-900 dark:text-white">Audit History</h1>
+            <p className="text-slate-500 dark:text-gray-400 mt-1">{community?.name}</p>
+          </div>
+          {/* Mobile Refresh Button */}
+          <button 
+            onClick={fetchLogs}
+            disabled={loading}
+            className="sm:hidden p-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 rounded-2xl text-slate-700 dark:text-white transition disabled:opacity-60 animate-in fade-in"
+            title="Refresh"
+          >
+            <RefreshCw size={18} className={loading ? "animate-spin" : ""} />
+          </button>
         </div>
-        <button 
-          onClick={fetchLogs}
-          disabled={loading}
-          className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 text-slate-700 dark:text-white rounded-2xl text-sm font-semibold transition flex items-center gap-2 disabled:opacity-60"
-        >
-          <RefreshCw size={15} className={loading ? "animate-spin" : ""} />
-          {loading ? "Refreshing..." : "Refresh"}
-        </button>
+
+        <div className="flex gap-2 w-full sm:w-auto">
+          {/* Desktop Refresh Button */}
+          <button
+            onClick={fetchLogs}
+            disabled={loading}
+            className="hidden sm:flex px-5 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 text-slate-700 dark:text-white rounded-2xl transition items-center gap-2 disabled:opacity-60"
+            title="Refresh"
+          >
+            <RefreshCw size={15} className={loading ? "animate-spin" : ""} />
+            {loading ? "Refreshing..." : "Refresh"}
+          </button>
+        </div>
       </div>
 
       {/* View Toggle */}

@@ -198,18 +198,32 @@ const Documents = ({ community, user }) => {
     <div className="text-slate-900 dark:text-white">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
-        <div>
-          <h1 className="text-3xl font-semibold text-slate-900 dark:text-white">HOA Documents</h1>
-          <p className="text-slate-500 dark:text-gray-400 mt-1">{community?.name || 'Community Portal'}</p>
+        <div className="flex justify-between items-center w-full sm:w-auto">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-semibold text-slate-900 dark:text-white">HOA Documents</h1>
+            <p className="text-slate-500 dark:text-gray-400 mt-1">{community?.name || 'Community Portal'}</p>
+          </div>
+          {/* Mobile Refresh Button */}
+          <button 
+            onClick={fetchDocuments}
+            disabled={loading}
+            className="sm:hidden p-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 rounded-2xl text-slate-700 dark:text-white transition disabled:opacity-60 animate-in fade-in"
+            title="Refresh"
+          >
+            <RefreshCw size={18} className={loading ? "animate-spin" : ""} />
+          </button>
         </div>
+
         <div className="flex gap-2 w-full sm:w-auto">
+          {/* Desktop Refresh Button */}
           <button
             onClick={fetchDocuments}
             disabled={loading}
-            className="p-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 text-slate-700 dark:text-white rounded-2xl transition flex items-center justify-center disabled:opacity-60"
+            className="hidden sm:flex px-5 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 text-slate-700 dark:text-white rounded-2xl transition items-center gap-2 disabled:opacity-60"
             title="Refresh"
           >
             <RefreshCw size={15} className={loading ? "animate-spin" : ""} />
+            {loading ? "Refreshing..." : "Refresh"}
           </button>
           {isManagement && (
             <button

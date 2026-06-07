@@ -933,17 +933,30 @@ const Violations = ({ community, user, setActivePage, setPaymentState }) => {
     <div className="text-slate-900 dark:text-white">
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
-        <div>
-          <h1 className="text-3xl font-semibold text-slate-900 dark:text-white">Violations</h1>
-          <p className="text-slate-500 dark:text-gray-400 mt-1">
-            {community?.name} • Manage violations, disputes, and fines
-          </p>
+        <div className="flex justify-between items-center w-full md:w-auto">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-semibold text-slate-900 dark:text-white">Violations</h1>
+            <p className="text-slate-500 dark:text-gray-400 mt-1">
+              {community?.name} • Manage violations, disputes, and fines
+            </p>
+          </div>
+          {/* Mobile Refresh Button */}
+          <button 
+            onClick={fetchViolations}
+            disabled={loading}
+            className="md:hidden p-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 rounded-2xl text-slate-700 dark:text-white transition disabled:opacity-60"
+            title="Refresh"
+          >
+            <RefreshCw size={18} className={loading ? "animate-spin" : ""} />
+          </button>
         </div>
-        <div className="flex flex-wrap gap-2 w-full md:w-auto">
+
+        <div className="flex gap-2 w-full md:w-auto">
+          {/* Desktop Refresh Button */}
           <button
             onClick={fetchViolations}
             disabled={loading}
-            className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 rounded-2xl text-sm font-semibold transition flex items-center gap-2 text-slate-700 dark:text-white disabled:opacity-60"
+            className="hidden md:flex px-5 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 rounded-2xl text-sm font-semibold transition items-center gap-2 text-slate-700 dark:text-white disabled:opacity-60"
           >
             <RefreshCw size={15} className={loading ? "animate-spin" : ""} />
             {loading ? "Refreshing..." : "Refresh"}
@@ -953,13 +966,13 @@ const Violations = ({ community, user, setActivePage, setPaymentState }) => {
             <>
               <button 
                 onClick={() => setShowCreateModal(true)}
-                className="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 rounded-2xl text-sm font-semibold transition flex items-center gap-2 text-white"
+                className="flex-1 md:flex-none px-5 py-2.5 bg-blue-600 hover:bg-blue-500 rounded-2xl text-sm font-semibold transition flex items-center justify-center gap-2 text-white"
               >
                 <Plus size={15} /> Create Type
               </button>
               <button
                 onClick={() => setShowModal(true)}
-                className="px-5 py-2.5 bg-teal-600 hover:bg-teal-500 rounded-2xl text-sm font-semibold transition flex items-center gap-2 text-white"
+                className="flex-1 md:flex-none px-5 py-2.5 bg-teal-600 hover:bg-teal-500 rounded-2xl text-sm font-semibold transition flex items-center justify-center gap-2 text-white"
               >
                 <Plus size={15} />
                 Submit Violation
