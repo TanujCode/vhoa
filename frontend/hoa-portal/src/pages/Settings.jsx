@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Clock, Save, DollarSign, Eye, RefreshCw } from 'lucide-react';
 import API from '../services/api';
+import { toast } from 'react-hot-toast';
 
 const Toggle = ({ value, onChange }) => (
   <button
@@ -40,6 +41,48 @@ const Settings = ({ community }) => {
     news:            true,
   });
 
+  const [errors, setErrors] = useState({});
+
+  const validateField = (name, value) => {
+    let errorMsg = '';
+    const trimmed = (value || '').toString().trim();
+
+    if (name === 'bank_name' && trimmed) {
+      if (/[^a-zA-Z\s.\-']/.test(trimmed)) {
+        errorMsg = 'Bank name can only contain letters, spaces, dots, hyphens, and apostrophes';
+      }
+    } else if (name === 'bank_account_name' && trimmed) {
+      if (/[^a-zA-Z\s.\-']/.test(trimmed)) {
+        errorMsg = 'Account holder name can only contain letters, spaces, dots, hyphens, and apostrophes';
+      }
+    } else if (name === 'bank_account_no' && trimmed) {
+      if (!/^\d+$/.test(trimmed)) {
+        errorMsg = 'Account number must contain digits only';
+      } else if (trimmed.length < 8 || trimmed.length > 17) {
+        errorMsg = 'Account number must be between 8 and 17 digits';
+      }
+    } else if (name === 'bank_routing_no' && trimmed) {
+      if (!/^\d+$/.test(trimmed)) {
+        errorMsg = 'Routing number must contain digits only';
+      } else if (trimmed.length !== 9) {
+        errorMsg = 'Routing number must be exactly 9 digits';
+      }
+    } else if (name === 'late_fee_days') {
+      const num = parseInt(value, 10);
+      if (isNaN(num) || num < 1) {
+        errorMsg = 'Late fee days must be at least 1 day';
+      }
+    } else if (name === 'late_fee_amount') {
+      const num = parseFloat(value);
+      if (isNaN(num) || num < 0) {
+        errorMsg = 'Late fee amount cannot be negative';
+      }
+    }
+
+    setErrors(prev => ({ ...prev, [name]: errorMsg }));
+    return errorMsg;
+  };
+
   useEffect(() => {
     if (community?.community_id) fetchSettings();
   }, [community]);
@@ -47,6 +90,8 @@ const Settings = ({ community }) => {
   const fetchSettings = async () => {
     try {
       setLoading(true);
+      setErrors({});
+      // Community ki existing settings load karo
       const res = await API.get(`/community/${community.community_id}`);
       const data = res.data;
       setForm(prev => ({
@@ -73,6 +118,24 @@ const Settings = ({ community }) => {
   };
 
   const handleSave = async () => {
+    // Validate all fields
+    const bankNameErr = validateField('bank_name', form.bank_name);
+    const bankAccountNameErr = validateField('bank_account_name', form.bank_account_name);
+    const bankAccountNoErr = validateField('bank_account_no', form.bank_account_no);
+    const bankRoutingNoErr = validateField('bank_routing_no', form.bank_routing_no);
+    
+    let lateFeeDaysErr = '';
+    let lateFeeAmountErr = '';
+    if (form.late_fee_enabled) {
+      lateFeeDaysErr = validateField('late_fee_days', form.late_fee_days);
+      lateFeeAmountErr = validateField('late_fee_amount', form.late_fee_amount);
+    }
+
+    if (bankNameErr || bankAccountNameErr || bankAccountNoErr || bankRoutingNoErr || lateFeeDaysErr || lateFeeAmountErr) {
+      toast.error('Please resolve the validation errors before saving.');
+      return;
+    }
+
     try {
       setSaving(true);
       await API.put(`/community/${community.community_id}`, {
@@ -91,7 +154,7 @@ const Settings = ({ community }) => {
       setSaved(true);
       setTimeout(() => setSaved(false), 2500);
     } catch (err) {
-      alert(err.response?.data?.detail || 'Save failed');
+      toast.error(err.response?.data?.detail || 'Save failed');
     } finally {
       setSaving(false);
     }
@@ -203,25 +266,43 @@ const Settings = ({ community }) => {
 
             {form.late_fee_enabled && (
               <div className="bg-slate-50 dark:bg-[#1E3248] border border-slate-200 dark:border-0 rounded-2xl p-4 space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-slate-500 dark:text-gray-400">Late after (days)</span>
-                  <input
-                    type="number"
-                    min="1"
-                    value={form.late_fee_days}
-                    onChange={e => setForm({...form, late_fee_days: parseInt(e.target.value)})}
-                    className="w-20 bg-white dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl px-3 py-1.5 text-sm text-slate-900 dark:text-white text-center focus:outline-none focus:border-teal-500"
-                  />
+                <div className="flex flex-col space-y-1">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-slate-500 dark:text-gray-400">Late after (days)</span>
+                    <input
+                      type="number"
+                      min="1"
+                      value={form.late_fee_days}
+                      onChange={e => {
+                        const val = e.target.value ? parseInt(e.target.value, 10) : '';
+                        setForm({...form, late_fee_days: val});
+                        validateField('late_fee_days', val);
+                      }}
+                      className={`w-20 bg-white dark:bg-[#0D1B2A] border ${errors.late_fee_days ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/20 focus:border-teal-500'} rounded-xl px-3 py-1.5 text-sm text-slate-900 dark:text-white text-center focus:outline-none`}
+                    />
+                  </div>
+                  {errors.late_fee_days && (
+                    <p className="text-red-500 text-[10px] mt-1 text-right">{errors.late_fee_days}</p>
+                  )}
                 </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-slate-500 dark:text-gray-400">Late fee amount ($)</span>
-                  <input
-                    type="number"
-                    min="0"
-                    value={form.late_fee_amount}
-                    onChange={e => setForm({...form, late_fee_amount: parseFloat(e.target.value)})}
-                    className="w-20 bg-white dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl px-3 py-1.5 text-sm text-slate-900 dark:text-white text-center focus:outline-none focus:border-teal-500"
-                  />
+                <div className="flex flex-col space-y-1">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-slate-500 dark:text-gray-400">Late fee amount ($)</span>
+                    <input
+                      type="number"
+                      min="0"
+                      value={form.late_fee_amount}
+                      onChange={e => {
+                        const val = e.target.value ? parseFloat(e.target.value) : '';
+                        setForm({...form, late_fee_amount: val});
+                        validateField('late_fee_amount', val);
+                      }}
+                      className={`w-20 bg-white dark:bg-[#0D1B2A] border ${errors.late_fee_amount ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/20 focus:border-teal-500'} rounded-xl px-3 py-1.5 text-sm text-slate-900 dark:text-white text-center focus:outline-none`}
+                    />
+                  </div>
+                  {errors.late_fee_amount && (
+                    <p className="text-red-500 text-[10px] mt-1 text-right">{errors.late_fee_amount}</p>
+                  )}
                 </div>
               </div>
             )}
@@ -236,9 +317,15 @@ const Settings = ({ community }) => {
                     type="text"
                     placeholder="e.g. Chase Bank"
                     value={form.bank_name}
-                    onChange={e => setForm({...form, bank_name: e.target.value})}
-                    className="w-full bg-white dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-teal-500"
+                    onChange={e => {
+                      setForm({...form, bank_name: e.target.value});
+                      validateField('bank_name', e.target.value);
+                    }}
+                    className={`w-full bg-white dark:bg-[#0D1B2A] border ${errors.bank_name ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/20 focus:border-teal-500'} rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none`}
                   />
+                  {errors.bank_name && (
+                    <p className="text-red-500 text-xs mt-1">{errors.bank_name}</p>
+                  )}
                 </div>
                 <div>
                   <label className="block text-xs text-slate-500 dark:text-gray-400 mb-1">Account Holder Name</label>
@@ -246,25 +333,37 @@ const Settings = ({ community }) => {
                     type="text"
                     placeholder="e.g. Sunset HOA Escrow Account"
                     value={form.bank_account_name}
-                    onChange={e => setForm({...form, bank_account_name: e.target.value})}
-                    className="w-full bg-white dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-teal-500"
+                    onChange={e => {
+                      setForm({...form, bank_account_name: e.target.value});
+                      validateField('bank_account_name', e.target.value);
+                    }}
+                    className={`w-full bg-white dark:bg-[#0D1B2A] border ${errors.bank_account_name ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/20 focus:border-teal-500'} rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none`}
                   />
+                  {errors.bank_account_name && (
+                    <p className="text-red-500 text-xs mt-1">{errors.bank_account_name}</p>
+                  )}
                 </div>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className="block text-xs text-slate-500 dark:text-gray-400 mb-1">Account Number</label>
                     <input
                       type="text"
                       placeholder="Account No"
                       value={form.bank_account_no}
-                      onChange={e => setForm({...form, bank_account_no: e.target.value})}
+                      onChange={e => {
+                        setForm({...form, bank_account_no: e.target.value});
+                        validateField('bank_account_no', e.target.value);
+                      }}
                       onKeyPress={(e) => {
                         if (!/[0-9]/.test(e.key)) {
                           e.preventDefault();
                         }
                       }}
-                      className="w-full bg-white dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-teal-500"
+                      className={`w-full bg-white dark:bg-[#0D1B2A] border ${errors.bank_account_no ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/20 focus:border-teal-500'} rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none`}
                     />
+                    {errors.bank_account_no && (
+                      <p className="text-red-500 text-xs mt-1">{errors.bank_account_no}</p>
+                    )}
                   </div>
                   <div>
                     <label className="block text-xs text-slate-500 dark:text-gray-400 mb-1">Routing Number</label>
@@ -272,14 +371,20 @@ const Settings = ({ community }) => {
                       type="text"
                       placeholder="Routing No"
                       value={form.bank_routing_no}
-                      onChange={e => setForm({...form, bank_routing_no: e.target.value})}
+                      onChange={e => {
+                        setForm({...form, bank_routing_no: e.target.value});
+                        validateField('bank_routing_no', e.target.value);
+                      }}
                       onKeyPress={(e) => {
                         if (!/[0-9]/.test(e.key)) {
                           e.preventDefault();
                         }
                       }}
-                      className="w-full bg-white dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-teal-500"
+                      className={`w-full bg-white dark:bg-[#0D1B2A] border ${errors.bank_routing_no ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/20 focus:border-teal-500'} rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none`}
                     />
+                    {errors.bank_routing_no && (
+                      <p className="text-red-500 text-xs mt-1">{errors.bank_routing_no}</p>
+                    )}
                   </div>
                 </div>
               </div>

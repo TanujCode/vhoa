@@ -64,6 +64,8 @@ export default function ClientOnboarding() {
   const [zipError, setZipError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showAccountNumber, setShowAccountNumber] = useState(false);
+  const [showCardCvv, setShowCardCvv] = useState(false);
 
   const getPhoneValidationRule = (code) => {
     switch (code) {
@@ -1605,25 +1607,34 @@ export default function ClientOnboarding() {
                         </div>
                         <div>
                           <label className="block text-xs font-medium text-gray-400 mb-1">Account Number *</label>
-                          <input
-                            type="password"
-                            maxLength={17}
-                            {...register('account_number', { 
-                              required: paymentMethod === 'bank_account' ? 'Account Number is required' : false,
-                              validate: (val) => {
-                                if (paymentMethod !== 'bank_account') return true;
-                                if (!val) return 'Account Number is required';
-                                if (!/^\d{8,17}$/.test(val)) return 'Account Number must be between 8 and 17 digits';
-                                return true;
-                              }
-                            })}
-                            onKeyPress={(e) => {
-                              if (!/[0-9]/.test(e.key)) {
-                                e.preventDefault();
-                              }
-                            }}
-                            className="w-full bg-[#162535] border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-[#1D9E75] font-mono"
-                          />
+                          <div className="relative">
+                            <input
+                              type={showAccountNumber ? 'text' : 'password'}
+                              maxLength={17}
+                              {...register('account_number', { 
+                                required: paymentMethod === 'bank_account' ? 'Account Number is required' : false,
+                                validate: (val) => {
+                                  if (paymentMethod !== 'bank_account') return true;
+                                  if (!val) return 'Account Number is required';
+                                  if (!/^\d{8,17}$/.test(val)) return 'Account Number must be between 8 and 17 digits';
+                                  return true;
+                                }
+                              })}
+                              onKeyPress={(e) => {
+                                if (!/[0-9]/.test(e.key)) {
+                                  e.preventDefault();
+                                }
+                              }}
+                              className="w-full bg-[#162535] border border-white/10 rounded-xl pl-3 pr-10 py-1.5 text-xs text-white focus:outline-none focus:border-[#1D9E75] font-mono"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setShowAccountNumber(!showAccountNumber)}
+                              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition"
+                            >
+                              {showAccountNumber ? <EyeOff size={14} /> : <Eye size={14} />}
+                            </button>
+                          </div>
                           {errors.account_number && <span className="text-xs text-red-400 mt-1 block">{errors.account_number.message}</span>}
                         </div>
                       </div>
@@ -1701,25 +1712,34 @@ export default function ClientOnboarding() {
                         </div>
                         <div>
                           <label className="block text-xs font-medium text-gray-400 mb-1">CVV *</label>
-                          <input
-                            type="password"
-                            maxLength={4}
-                            {...register('card_cvv', { 
-                              required: paymentMethod === 'credit_card' ? 'CVV is required' : false,
-                              validate: (val) => {
-                                if (paymentMethod !== 'credit_card') return true;
-                                if (!val) return 'CVV is required';
-                                if (!/^\d{3,4}$/.test(val)) return 'CVV must be 3 or 4 digits';
-                                return true;
-                              }
-                            })}
-                            onKeyPress={(e) => {
-                              if (!/[0-9]/.test(e.key)) {
-                                e.preventDefault();
-                              }
-                            }}
-                            className="w-full bg-[#162535] border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-[#1D9E75] font-mono"
-                          />
+                          <div className="relative">
+                            <input
+                              type={showCardCvv ? 'text' : 'password'}
+                              maxLength={4}
+                              {...register('card_cvv', { 
+                                required: paymentMethod === 'credit_card' ? 'CVV is required' : false,
+                                validate: (val) => {
+                                  if (paymentMethod !== 'credit_card') return true;
+                                  if (!val) return 'CVV is required';
+                                  if (!/^\d{3,4}$/.test(val)) return 'CVV must be 3 or 4 digits';
+                                  return true;
+                                }
+                              })}
+                              onKeyPress={(e) => {
+                                if (!/[0-9]/.test(e.key)) {
+                                  e.preventDefault();
+                                }
+                              }}
+                              className="w-full bg-[#162535] border border-white/10 rounded-xl pl-3 pr-10 py-1.5 text-xs text-white focus:outline-none focus:border-[#1D9E75] font-mono"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setShowCardCvv(!showCardCvv)}
+                              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition"
+                            >
+                              {showCardCvv ? <EyeOff size={14} /> : <Eye size={14} />}
+                            </button>
+                          </div>
                           {errors.card_cvv && <span className="text-xs text-red-400 mt-1 block">{errors.card_cvv.message}</span>}
                         </div>
                       </div>

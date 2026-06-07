@@ -323,113 +323,85 @@ def invite_member(
         User.email_id == body.email_id.lower().strip()
     ).first()
     if existing_user:
-        # Check if the user is a Property Manager to link to another community
         existing_role = existing_user.role.role_name if existing_user.role else ""
-        if existing_role == "property_manager":
+        if existing_role == "super_admin":
+            raise HTTPException(
+                status_code=400,
+                detail="Super Admins cannot be invited to a community."
+            )
+
+        # Non-super admins cannot invite or link property managers
+        if body.role_name == "property_manager":
             if role_name != "super_admin":
                 raise HTTPException(
                     status_code=403,
                     detail="You do not have permission to associate a Property Manager with a community."
                 )
-            from app.models.user import UserCommunity
-            from app.models.community import Community
-            
-            # Check if already associated
-            assoc = db.query(UserCommunity).filter(
-                UserCommunity.user_id == existing_user.user_id,
-                UserCommunity.community_id == body.community_id
-            ).first()
-            if assoc:
-                raise HTTPException(
-                    status_code=400,
-                    detail="This Property Manager is already associated with this community."
-                )
-            
-            # Add to user_communities
-            db.add(UserCommunity(user_id=existing_user.user_id, community_id=body.community_id))
-            if not existing_user.community_id:
-                existing_user.community_id = body.community_id
-            
-            # Update community's admin details if not set
+
+        from app.models.user import UserCommunity
+        from app.models.community import Community
+
+        # Check if already associated
+        assoc = db.query(UserCommunity).filter(
+            UserCommunity.user_id == existing_user.user_id,
+            UserCommunity.community_id == body.community_id
+        ).first()
+        if assoc:
+            raise HTTPException(
+                status_code=400,
+                detail="This user is already associated with this community."
+            )
+
+        # Resolve role ID of the invited role
+        target_role = db.query(Role).filter(Role.role_name == body.role_name, Role.active_status == True).first()
+        if not target_role:
+            raise HTTPException(status_code=400, detail=f"Role '{body.role_name}' is invalid or inactive.")
+
+        # Update the user's role to the role they were invited as
+        if existing_user.role_id != target_role.role_id:
+            existing_user.role_id = target_role.role_id
+
+        # Add to user_communities
+        db.add(UserCommunity(
+            user_id=existing_user.user_id,
+            community_id=body.community_id,
+            unit_no=body.unit_no.strip() if body.unit_no else None
+        ))
+        if not existing_user.community_id:
+            existing_user.community_id = body.community_id
+
+        # Update community admin details if invited role is property_manager
+        if body.role_name == "property_manager":
             community = db.query(Community).filter(Community.community_id == body.community_id).first()
             if community:
                 if not community.admin_user_id or community.admin_email_id == existing_user.email_id:
                     community.admin_user_id = existing_user.user_id
                     community.admin_email_id = existing_user.email_id
                     community.admin_invite_status = "ACCEPTED"
-            
-            db.commit()
-            
-            # Log the action
-            log_action(
-                db=db,
-                action="ASSOCIATE_MEMBER",
-                module="user",
-                description=f"Property Manager {existing_user.email_id} linked to community {body.community_id}",
-                user_id=current_user.user_id,
-                ip_address=request.client.host,
-            )
-            # Send notification email
-            from app.services.email_service import send_association_email
-            send_association_email(
-                to_email=existing_user.email_id,
-                full_name=f"{existing_user.first_name} {existing_user.last_name}".strip(),
-                community_name=community.name if community else "HOA Portal",
-                role_name="property_manager"
-            )
-            return _to_out(existing_user, db)
-        elif existing_role == "super_admin":
-            raise HTTPException(
-                status_code=400,
-                detail="Super Admins cannot be invited to a community."
-            )
-        else:
-            # For residents and board members, allow associating them with the new community
-            from app.models.user import UserCommunity
-            
-            # Check if already associated
-            assoc = db.query(UserCommunity).filter(
-                UserCommunity.user_id == existing_user.user_id,
-                UserCommunity.community_id == body.community_id
-            ).first()
-            if assoc:
-                raise HTTPException(
-                    status_code=400,
-                    detail="This user is already associated with this community."
-                )
-            
-            # Add to user_communities
-            db.add(UserCommunity(
-                user_id=existing_user.user_id, 
-                community_id=body.community_id,
-                unit_no=body.unit_no.strip() if body.unit_no else None
-            ))
-            if not existing_user.community_id:
-                existing_user.community_id = body.community_id
-            db.commit()
-            
-            # Log the action
-            log_action(
-                db=db,
-                action="ASSOCIATE_MEMBER",
-                module="user",
-                description=f"User {existing_user.email_id} linked to community {body.community_id} (role: {body.role_name})",
-                user_id=current_user.user_id,
-                ip_address=request.client.host,
-            )
-            
-            # Send notification email
-            from app.models.community import Community
-            community_obj = db.query(Community).filter(Community.community_id == body.community_id).first()
-            community_name = community_obj.name if community_obj else "HOA Portal"
-            from app.services.email_service import send_association_email
-            send_association_email(
-                to_email=existing_user.email_id,
-                full_name=f"{existing_user.first_name} {existing_user.last_name}".strip(),
-                community_name=community_name,
-                role_name=body.role_name
-            )
-            return _to_out(existing_user, db, body.community_id)
+
+        db.commit()
+
+        # Log the action
+        log_action(
+            db=db,
+            action="ASSOCIATE_MEMBER",
+            module="user",
+            description=f"User {existing_user.email_id} linked to community {body.community_id} as {body.role_name}",
+            user_id=current_user.user_id,
+            ip_address=request.client.host,
+        )
+
+        # Send notification email
+        community_obj = db.query(Community).filter(Community.community_id == body.community_id).first()
+        community_name = community_obj.name if community_obj else "HOA Portal"
+        from app.services.email_service import send_association_email
+        send_association_email(
+            to_email=existing_user.email_id,
+            full_name=f"{existing_user.first_name} {existing_user.last_name}".strip(),
+            community_name=community_name,
+            role_name=body.role_name
+        )
+        return _to_out(existing_user, db, body.community_id)
 
     # 1.5 Check if mobile is already registered
     if body.mobile_number:

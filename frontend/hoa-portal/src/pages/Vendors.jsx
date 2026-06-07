@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Plus, X, Lock, Truck, Search, Copy, Check, Trash2 } from 'lucide-react';
 import API from "../services/api";
 import { toast } from 'react-hot-toast';
+import { checkEmail } from '../utils/emailValidation';
 
 const getPhoneValidationRule = (code) => {
   switch (code) {
@@ -12,7 +13,7 @@ const getPhoneValidationRule = (code) => {
     case '+971':
     case '+966':
     case '+61':
-      return { min: 9, max: 9, label: '9 digits' };
+      return { min: 9, max: 9, label: '9-digit number' };
     default:
       return { min: 7, max: 15, label: '7 to 15 digits' };
   }
@@ -30,6 +31,7 @@ const Vendors = ({ communityId, userRole }) => {
   const [phoneCountryCode, setPhoneCountryCode] = useState('+1');
   const [phoneOnly, setPhoneOnly] = useState('');
 
+  // Form State - Backend Schema ke hisaab se updated
   const [formData, setFormData] = useState({
     company_name: '',
     contact_person: '',
@@ -40,6 +42,8 @@ const Vendors = ({ communityId, userRole }) => {
     insurance: '',
     email: ''
   });
+
+  const [errors, setErrors] = useState({});
 
   const isAdmin = userRole === 'super_admin' || userRole === 'property_manager';
   const isBoardMember = userRole === 'board_member' || userRole === 'president' || userRole === 'director';
@@ -109,16 +113,80 @@ const Vendors = ({ communityId, userRole }) => {
     }
   };
 
+  const validateField = (name, value) => {
+    let errorMsg = '';
+    if (name === 'company_name') {
+      if (!value.trim()) {
+        errorMsg = 'Company name is required';
+      } else if (/\d/.test(value)) {
+        errorMsg = 'Company name cannot contain numbers';
+      }
+    } else if (name === 'contact_person') {
+      if (!value.trim()) {
+        errorMsg = 'Contact person is required';
+      } else if (/[^a-zA-Z\s.\-']/.test(value)) {
+        errorMsg = 'Contact person can only contain letters, spaces, dots, hyphens, and apostrophes';
+      }
+    } else if (name === 'email') {
+      if (!value.trim()) {
+        errorMsg = 'Email is required';
+      } else {
+        const res = checkEmail(value);
+        if (!res.valid) {
+          errorMsg = res.message;
+        }
+      }
+    } else if (name === 'phoneOnly') {
+      const rule = getPhoneValidationRule(phoneCountryCode);
+      if (!value) {
+        errorMsg = 'Phone number is required';
+      } else if (value.length < rule.min || value.length > rule.max) {
+        errorMsg = `Phone number must be ${rule.label} for ${phoneCountryCode}`;
+      }
+    }
+    setErrors(prev => ({ ...prev, [name]: errorMsg }));
+    return errorMsg;
+  };
+
+  useEffect(() => {
+    if (phoneOnly) {
+      validateField('phoneOnly', phoneOnly);
+    } else {
+      setErrors(prev => {
+        const copy = { ...prev };
+        delete copy.phoneOnly;
+        return copy;
+      });
+    }
+  }, [phoneCountryCode, phoneOnly]);
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setFormData({
+      company_name: '',
+      contact_person: '',
+      phone: '',
+      service_type: 'PLUMBING',
+      license_number: '',
+      expiry: '',
+      insurance: '',
+      email: ''
+    });
+    setPhoneCountryCode('+1');
+    setPhoneOnly('');
+    setErrors({});
+  };
+
   const handleOnboard = async (e) => {
     e.preventDefault();
 
-    const rule = getPhoneValidationRule(phoneCountryCode);
-    if (!phoneOnly) {
-      alert("Phone number is required");
-      return;
-    }
-    if (phoneOnly.length < rule.min || phoneOnly.length > rule.max) {
-      alert(`Phone number must be exactly ${rule.label} for ${phoneCountryCode}`);
+    const companyErr = validateField('company_name', formData.company_name);
+    const contactErr = validateField('contact_person', formData.contact_person);
+    const emailErr = validateField('email', formData.email);
+    const phoneErr = validateField('phoneOnly', phoneOnly);
+
+    if (companyErr || contactErr || emailErr || phoneErr) {
+      toast.error("Please resolve the validation errors before submitting.");
       return;
     }
 
@@ -137,14 +205,12 @@ const Vendors = ({ communityId, userRole }) => {
       };
 
       await API.post('/vendor', payload);
-      setIsModalOpen(false);
-      setFormData({ company_name: '', contact_person: '', phone: '', service_type: 'PLUMBING', license_number: '', expiry: '', insurance: '', email: '' });
-      setPhoneCountryCode('+1');
-      setPhoneOnly('');
+      closeModal();
+      toast.success("Vendor onboarded successfully!");
       fetchVendors();
     } catch (err) {
       console.error("422 Error details:", err.response?.data);
-      alert("The vendor could not be onboarded! Please check all fields.");
+      toast.error("The vendor could not be onboarded! Please check all fields.");
     } finally {
       setLoading(false);
     }
@@ -282,24 +348,46 @@ const Vendors = ({ communityId, userRole }) => {
         {/* MODAL - Onboard Vendor for Board Member */}
         {isModalOpen && (
           <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div className="bg-white dark:bg-[#1e2a3b] w-full max-w-md rounded-2xl border border-slate-200 dark:border-white/10 shadow-2xl overflow-hidden text-slate-900 dark:text-white">
+            <div className="bg-white dark:bg-[#1e2a3b] w-full max-w-md rounded-2xl border border-slate-200 dark:border-white/10 shadow-2xl overflow-y-auto max-h-[90vh] text-slate-900 dark:text-white">
               <div className="p-6">
                 <div className="flex justify-between items-start mb-1">
                   <h2 className="text-xl font-bold text-slate-900 dark:text-white">Onboard Vendor</h2>
-                  <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-slate-900 dark:text-gray-500 dark:hover:text-white"><X size={20} /></button>
+                  <button onClick={closeModal} className="text-slate-400 hover:text-slate-900 dark:text-gray-500 dark:hover:text-white"><X size={20} /></button>
                 </div>
                 <p className="text-slate-500 dark:text-gray-400 text-xs mb-6">Register a new vendor with license and insurance details.</p>
                 
                 <form onSubmit={handleOnboard} className="space-y-4">
                   <div>
                     <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Company Name *</label>
-                    <input required className="w-full bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:border-teal-500 outline-none" value={formData.company_name} onChange={(e) => setFormData({...formData, company_name: e.target.value})} />
+                    <input 
+                      required 
+                      className={`w-full bg-slate-50 dark:bg-[#111c2a] border ${errors.company_name ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/10 focus:border-teal-500'} rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none`} 
+                      value={formData.company_name} 
+                      onChange={(e) => {
+                        setFormData({...formData, company_name: e.target.value});
+                        validateField('company_name', e.target.value);
+                      }} 
+                    />
+                    {errors.company_name && (
+                      <p className="text-red-500 text-xs mt-1">{errors.company_name}</p>
+                    )}
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Contact Person *</label>
-                      <input required className="w-full bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:border-teal-500 outline-none" value={formData.contact_person} onChange={(e) => setFormData({...formData, contact_person: e.target.value})} />
+                      <input 
+                        required 
+                        className={`w-full bg-slate-50 dark:bg-[#111c2a] border ${errors.contact_person ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/10 focus:border-teal-500'} rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none`} 
+                        value={formData.contact_person} 
+                        onChange={(e) => {
+                          setFormData({...formData, contact_person: e.target.value});
+                          validateField('contact_person', e.target.value);
+                        }} 
+                      />
+                      {errors.contact_person && (
+                        <p className="text-red-500 text-xs mt-1">{errors.contact_person}</p>
+                      )}
                     </div>
                     <div>
                       <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Phone *</label>
@@ -321,7 +409,7 @@ const Vendors = ({ communityId, userRole }) => {
                           type="text"
                           maxLength={getPhoneValidationRule(phoneCountryCode).max}
                           placeholder={`${getPhoneValidationRule(phoneCountryCode).max}-digit number`}
-                          className="flex-1 bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:border-teal-500 outline-none"
+                          className={`flex-1 bg-slate-50 dark:bg-[#111c2a] border ${errors.phoneOnly ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/10 focus:border-teal-500'} rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none`}
                           value={phoneOnly}
                           onChange={(e) => setPhoneOnly(e.target.value.replace(/\D/g, ''))}
                           onKeyPress={(e) => {
@@ -331,22 +419,43 @@ const Vendors = ({ communityId, userRole }) => {
                           }}
                         />
                       </div>
+                      {errors.phoneOnly && (
+                        <p className="text-red-500 text-xs mt-1">{errors.phoneOnly}</p>
+                      )}
                     </div>
                   </div>
 
-                  <div>
-                    <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Service Type *</label>
-                    <select className="w-full bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:border-teal-500 outline-none" value={formData.service_type} onChange={(e) => setFormData({...formData, service_type: e.target.value})}>
-                      <option value="PLUMBING" className="bg-white dark:bg-[#111c2a] text-slate-900 dark:text-white">Plumbing</option>
-                      <option value="ELECTRICAL" className="bg-white dark:bg-[#111c2a] text-slate-900 dark:text-white">Electrical</option>
-                      <option value="LANDSCAPING" className="bg-white dark:bg-[#111c2a] text-slate-900 dark:text-white">Landscaping</option>
-                      <option value="SECURITY" className="bg-white dark:bg-[#111c2a] text-slate-900 dark:text-white">Security</option>
-                      <option value="CLEANING" className="bg-white dark:bg-[#111c2a] text-slate-900 dark:text-white">Cleaning</option>
-                      <option value="OTHER" className="bg-white dark:bg-[#111c2a] text-slate-900 dark:text-white">Other</option>
-                    </select>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Service Type *</label>
+                      <select className="w-full bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:border-teal-500 outline-none" value={formData.service_type} onChange={(e) => setFormData({...formData, service_type: e.target.value})}>
+                        <option value="PLUMBING" className="bg-white dark:bg-[#111c2a] text-slate-900 dark:text-white">Plumbing</option>
+                        <option value="ELECTRICAL" className="bg-white dark:bg-[#111c2a] text-slate-900 dark:text-white">Electrical</option>
+                        <option value="LANDSCAPING" className="bg-white dark:bg-[#111c2a] text-slate-900 dark:text-white">Landscaping</option>
+                        <option value="SECURITY" className="bg-white dark:bg-[#111c2a] text-slate-900 dark:text-white">Security</option>
+                        <option value="CLEANING" className="bg-white dark:bg-[#111c2a] text-slate-900 dark:text-white">Cleaning</option>
+                        <option value="OTHER" className="bg-white dark:bg-[#111c2a] text-slate-900 dark:text-white">Other</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Email *</label>
+                      <input 
+                        type="email" 
+                        required 
+                        className={`w-full bg-slate-50 dark:bg-[#111c2a] border ${errors.email ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/10 focus:border-teal-500'} rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none`} 
+                        value={formData.email} 
+                        onChange={(e) => {
+                          setFormData({...formData, email: e.target.value});
+                          validateField('email', e.target.value);
+                        }} 
+                      />
+                      {errors.email && (
+                        <p className="text-red-500 text-xs mt-1">{errors.email}</p>
+                      )}
+                    </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">License Number</label>
                       <input className="w-full bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:border-teal-500 outline-none" value={formData.license_number} onChange={(e) => setFormData({...formData, license_number: e.target.value})} />
@@ -358,12 +467,17 @@ const Vendors = ({ communityId, userRole }) => {
                   </div>
 
                   <div>
-                    <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Email *</label>
-                    <input type="email" required className="w-full bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:border-teal-500 outline-none" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} />
+                    <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Insurance Number</label>
+                    <input 
+                      className="w-full bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:border-teal-500 outline-none" 
+                      value={formData.insurance} 
+                      onChange={(e) => setFormData({...formData, insurance: e.target.value})} 
+                      placeholder="Enter insurance number or N/A"
+                    />
                   </div>
 
                   <div className="pt-4 flex justify-end gap-3">
-                    <button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-2 text-slate-500 hover:bg-red-600 hover:text-white dark:text-gray-400 dark:hover:bg-red-600 dark:hover:text-white rounded-lg text-sm font-medium transition-colors">Cancel</button>
+                    <button type="button" onClick={closeModal} className="cancel-button-red-hover px-4 py-2 text-slate-500 hover:bg-red-600 hover:text-white dark:text-gray-400 dark:hover:bg-red-600 dark:hover:text-white rounded-lg text-sm font-medium transition-colors">Cancel</button>
                     <button type="submit" disabled={loading} className="bg-teal-600 text-white px-8 py-2 rounded-lg text-sm font-semibold hover:bg-teal-500 transition-all shadow-md shadow-teal-500/25">
                       {loading ? "Processing..." : "Onboard"}
                     </button>
@@ -463,24 +577,46 @@ const Vendors = ({ communityId, userRole }) => {
       {/* MODAL - Onboard Vendor */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-[#1e2a3b] w-full max-w-md rounded-2xl border border-slate-200 dark:border-white/10 shadow-2xl overflow-hidden text-slate-900 dark:text-white">
+          <div className="bg-white dark:bg-[#1e2a3b] w-full max-w-md rounded-2xl border border-slate-200 dark:border-white/10 shadow-2xl overflow-y-auto max-h-[90vh] text-slate-900 dark:text-white">
             <div className="p-6">
               <div className="flex justify-between items-start mb-1">
                 <h2 className="text-xl font-bold text-slate-900 dark:text-white">Onboard Vendor</h2>
-                <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-slate-900 dark:text-gray-500 dark:hover:text-white"><X size={20} /></button>
+                <button onClick={closeModal} className="text-slate-400 hover:text-slate-900 dark:text-gray-500 dark:hover:text-white"><X size={20} /></button>
               </div>
               <p className="text-slate-500 dark:text-gray-400 text-xs mb-6">Register a new vendor with license and insurance details.</p>
               
               <form onSubmit={handleOnboard} className="space-y-4">
                 <div>
                   <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Company Name *</label>
-                  <input required className="w-full bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:border-teal-500 outline-none" value={formData.company_name} onChange={(e) => setFormData({...formData, company_name: e.target.value})} />
+                  <input 
+                    required 
+                    className={`w-full bg-slate-50 dark:bg-[#111c2a] border ${errors.company_name ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/10 focus:border-teal-500'} rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none`} 
+                    value={formData.company_name} 
+                    onChange={(e) => {
+                      setFormData({...formData, company_name: e.target.value});
+                      validateField('company_name', e.target.value);
+                    }} 
+                  />
+                  {errors.company_name && (
+                    <p className="text-red-500 text-xs mt-1">{errors.company_name}</p>
+                  )}
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Contact Person *</label>
-                    <input required className="w-full bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:border-teal-500 outline-none" value={formData.contact_person} onChange={(e) => setFormData({...formData, contact_person: e.target.value})} />
+                    <input 
+                      required 
+                      className={`w-full bg-slate-50 dark:bg-[#111c2a] border ${errors.contact_person ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/10 focus:border-teal-500'} rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none`} 
+                      value={formData.contact_person} 
+                      onChange={(e) => {
+                        setFormData({...formData, contact_person: e.target.value});
+                        validateField('contact_person', e.target.value);
+                      }} 
+                    />
+                    {errors.contact_person && (
+                      <p className="text-red-500 text-xs mt-1">{errors.contact_person}</p>
+                    )}
                   </div>
                   <div>
                     <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Phone *</label>
@@ -502,7 +638,7 @@ const Vendors = ({ communityId, userRole }) => {
                         type="text"
                         maxLength={getPhoneValidationRule(phoneCountryCode).max}
                         placeholder={`${getPhoneValidationRule(phoneCountryCode).max}-digit number`}
-                        className="flex-1 bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:border-teal-500 outline-none"
+                        className={`flex-1 bg-slate-50 dark:bg-[#111c2a] border ${errors.phoneOnly ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/10 focus:border-teal-500'} rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none`}
                         value={phoneOnly}
                         onChange={(e) => setPhoneOnly(e.target.value.replace(/\D/g, ''))}
                         onKeyPress={(e) => {
@@ -512,22 +648,43 @@ const Vendors = ({ communityId, userRole }) => {
                         }}
                       />
                     </div>
+                    {errors.phoneOnly && (
+                      <p className="text-red-500 text-xs mt-1">{errors.phoneOnly}</p>
+                    )}
                   </div>
                 </div>
 
-                <div>
-                  <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Service Type *</label>
-                  <select className="w-full bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:border-teal-500 outline-none" value={formData.service_type} onChange={(e) => setFormData({...formData, service_type: e.target.value})}>
-                    <option value="PLUMBING" className="bg-white dark:bg-[#111c2a] text-slate-900 dark:text-white">Plumbing</option>
-                    <option value="ELECTRICAL" className="bg-white dark:bg-[#111c2a] text-slate-900 dark:text-white">Electrical</option>
-                    <option value="LANDSCAPING" className="bg-white dark:bg-[#111c2a] text-slate-900 dark:text-white">Landscaping</option>
-                    <option value="SECURITY" className="bg-white dark:bg-[#111c2a] text-slate-900 dark:text-white">Security</option>
-                    <option value="CLEANING" className="bg-white dark:bg-[#111c2a] text-slate-900 dark:text-white">Cleaning</option>
-                    <option value="OTHER" className="bg-white dark:bg-[#111c2a] text-slate-900 dark:text-white">Other</option>
-                  </select>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Service Type *</label>
+                    <select className="w-full bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:border-teal-500 outline-none" value={formData.service_type} onChange={(e) => setFormData({...formData, service_type: e.target.value})}>
+                      <option value="PLUMBING" className="bg-white dark:bg-[#111c2a] text-slate-900 dark:text-white">Plumbing</option>
+                      <option value="ELECTRICAL" className="bg-white dark:bg-[#111c2a] text-slate-900 dark:text-white">Electrical</option>
+                      <option value="LANDSCAPING" className="bg-white dark:bg-[#111c2a] text-slate-900 dark:text-white">Landscaping</option>
+                      <option value="SECURITY" className="bg-white dark:bg-[#111c2a] text-slate-900 dark:text-white">Security</option>
+                      <option value="CLEANING" className="bg-white dark:bg-[#111c2a] text-slate-900 dark:text-white">Cleaning</option>
+                      <option value="OTHER" className="bg-white dark:bg-[#111c2a] text-slate-900 dark:text-white">Other</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Email *</label>
+                    <input 
+                      type="email" 
+                      required 
+                      className={`w-full bg-slate-50 dark:bg-[#111c2a] border ${errors.email ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/10 focus:border-teal-500'} rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none`} 
+                      value={formData.email} 
+                      onChange={(e) => {
+                        setFormData({...formData, email: e.target.value});
+                        validateField('email', e.target.value);
+                      }} 
+                    />
+                    {errors.email && (
+                      <p className="text-red-500 text-xs mt-1">{errors.email}</p>
+                    )}
+                  </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">License Number</label>
                     <input className="w-full bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:border-teal-500 outline-none" value={formData.license_number} onChange={(e) => setFormData({...formData, license_number: e.target.value})} />
@@ -539,12 +696,17 @@ const Vendors = ({ communityId, userRole }) => {
                 </div>
 
                 <div>
-                  <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Email *</label>
-                  <input type="email" required className="w-full bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:border-teal-500 outline-none" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} />
+                  <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Insurance Number</label>
+                  <input 
+                    className="w-full bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:border-teal-500 outline-none" 
+                    value={formData.insurance} 
+                    onChange={(e) => setFormData({...formData, insurance: e.target.value})} 
+                    placeholder="Enter insurance number or N/A"
+                  />
                 </div>
 
                 <div className="pt-4 flex justify-end gap-3">
-                  <button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-2 text-slate-500 hover:bg-red-600 hover:text-white dark:text-gray-400 dark:hover:bg-red-600 dark:hover:text-white rounded-lg text-sm font-medium transition-colors">Cancel</button>
+                  <button type="button" onClick={closeModal} className="cancel-button-red-hover px-4 py-2 text-slate-500 hover:bg-red-600 hover:text-white dark:text-gray-400 dark:hover:bg-red-600 dark:hover:text-white rounded-lg text-sm font-medium transition-colors">Cancel</button>
                   <button type="submit" disabled={loading} className="bg-teal-600 text-white px-8 py-2 rounded-lg text-sm font-semibold hover:bg-teal-500 transition-all shadow-md shadow-teal-500/25">
                     {loading ? "Processing..." : "Onboard"}
                   </button>

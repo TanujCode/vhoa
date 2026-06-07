@@ -52,7 +52,7 @@ const Members = ({ community }) => {
     email: '',
     mobileNumber: '',
     unit: '',
-    role: 'HOA Member'
+    role: 'Resident'
   });
   const [inviting, setInviting] = useState(false);
   const [inviteErrors, setInviteErrors] = useState({});
@@ -68,7 +68,7 @@ const Members = ({ community }) => {
     email: '',
     mobileNumber: '',
     unit: '',
-    role: 'HOA Member'
+    role: 'Resident'
   });
   const [updating, setUpdating] = useState(false);
   const [editErrors, setEditErrors] = useState({});
@@ -172,7 +172,7 @@ const Members = ({ community }) => {
         email: '',
         mobileNumber: '',
         unit: '',
-        role: 'HOA Member'
+        role: 'Resident'
       });
       setInvitePhoneCountryCode('+1');
       setInvitePhoneOnly('');
@@ -541,14 +541,14 @@ const Members = ({ community }) => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-white/5">
-                {searched.map((m) => (
+                {searched.map((m, index) => (
                   <tr key={m.user_id} className="hover:bg-slate-50 dark:hover:bg-white/5 transition-colors whitespace-nowrap group">
                     <td className="px-6 py-4">
                       <div className="flex flex-col gap-1.5">
                         <div className="flex items-center gap-2">
                           <p className="font-semibold text-slate-900 dark:text-white text-sm">{m.full_name}</p>
                           <span className="text-[10px] font-mono text-slate-500 dark:text-gray-400 bg-slate-100 dark:bg-white/5 px-1.5 py-0.5 rounded border border-slate-200/10">
-                            #{m.user_id}
+                            #{index + 1}
                           </span>
                         </div>
                         {m.role_name && (
@@ -561,8 +561,7 @@ const Members = ({ community }) => {
                             {m.role_name === 'property_manager' ? 'Property Manager' : 
                              m.role_name === 'board_member' ? 'Board Member' : 
                              m.role_name === 'super_admin' ? 'Super Admin' : 
-                             m.role_name === 'resident' ? 'Resident' : 
-                             m.role_name === 'hoa_member' ? 'HOA Member' : m.role_name}
+                             m.role_name === 'hoa_member' || m.role_name === 'resident' ? 'Resident' : m.role_name}
                           </span>
                         )}
                       </div>
@@ -747,10 +746,9 @@ const Members = ({ community }) => {
                     onChange={e => setInviteForm({...inviteForm, role: e.target.value})}
                     className="appearance-none w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl p-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-teal-500 cursor-pointer"
                   >
-                    <option className="bg-white dark:bg-[#0D1B2A] text-slate-900 dark:text-white">HOA Member</option>
+                    <option className="bg-white dark:bg-[#0D1B2A] text-slate-900 dark:text-white">Resident</option>
                     <option className="bg-white dark:bg-[#0D1B2A] text-slate-900 dark:text-white">Board Member</option>
                     <option className="bg-white dark:bg-[#0D1B2A] text-slate-900 dark:text-white">Property Manager</option>
-                    <option className="bg-white dark:bg-[#0D1B2A] text-slate-900 dark:text-white">Resident</option>
                   </select>
                 </div>
                 <div>
@@ -772,7 +770,7 @@ const Members = ({ community }) => {
                     email: '',
                     mobileNumber: '',
                     unit: '',
-                    role: 'HOA Member'
+                    role: 'Resident'
                   });
                 }}
                 className="flex-1 py-2.5 rounded-xl text-sm font-medium cancel-button-red-hover"
