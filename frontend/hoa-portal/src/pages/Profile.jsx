@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import {
   Camera, Mail, Phone, Shield, Clock,
-  CheckCircle, XCircle, Save, Key, Eye, EyeOff, User, Bell, Trash2
+  CheckCircle, XCircle, Save, Key, Eye, EyeOff, User, Bell, Trash2, ChevronDown
 } from 'lucide-react';
 import API, { getBaseUrl } from '../services/api';
 
@@ -544,9 +544,20 @@ const Profile = ({ user, setUser, viewRole }) => {
 
               <div>
                 <label className="text-xs text-slate-500 dark:text-gray-400 mb-1.5 block">Timezone</label>
-                <select value={form.time_zone} onChange={e => setForm({...form, time_zone: e.target.value})} className="w-full bg-slate-50 dark:bg-[#1E3248] border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-teal-500 cursor-pointer">
-                  {timezones.map(tz => <option key={tz.value} value={tz.value} className="text-slate-900 dark:text-white">{tz.label}</option>)}
-                </select>
+                <div className="relative">
+                  <select
+                    value={form.time_zone}
+                    onChange={e => setForm({...form, time_zone: e.target.value})}
+                    className="w-full bg-slate-50 dark:bg-[#1E3248] border border-slate-200 dark:border-white/10 rounded-xl pl-4 pr-10 py-3 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-teal-500 appearance-none cursor-pointer"
+                  >
+                    {timezones.map(tz => (
+                      <option key={tz.value} value={tz.value} className="text-slate-900 dark:text-white">
+                        {tz.label}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-gray-500 pointer-events-none" size={18} />
+                </div>
               </div>
 
               {!isStaff && (
