@@ -789,7 +789,7 @@ const ViolationDetailModal = ({ violation, isResident, statuses, onClose, onDisp
 
           <button
             onClick={onClose}
-            className="py-2.5 px-6 bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 rounded-xl text-sm font-medium text-slate-700 dark:text-white text-center"
+            className="py-2.5 px-6 bg-slate-100 hover:bg-red-600 hover:text-white dark:bg-white/10 dark:hover:bg-red-600 dark:hover:text-white rounded-xl text-sm font-medium text-slate-700 dark:text-white text-center transition-colors"
           >
             Close
           </button>
