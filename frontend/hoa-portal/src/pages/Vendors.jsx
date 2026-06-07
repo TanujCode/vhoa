@@ -348,7 +348,7 @@ const Vendors = ({ communityId, userRole }) => {
         {/* MODAL - Onboard Vendor for Board Member */}
         {isModalOpen && (
           <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div className="bg-white dark:bg-[#1e2a3b] w-full max-w-md rounded-2xl border border-slate-200 dark:border-white/10 shadow-2xl overflow-y-auto max-h-[90vh] text-slate-900 dark:text-white">
+            <div className="bg-white dark:bg-[#1e2a3b] w-full max-w-lg rounded-2xl border border-slate-200 dark:border-white/10 shadow-2xl overflow-y-auto max-h-[90vh] text-slate-900 dark:text-white">
               <div className="p-6">
                 <div className="flex justify-between items-start mb-1">
                   <h2 className="text-xl font-bold text-slate-900 dark:text-white">Onboard Vendor</h2>
@@ -373,56 +373,55 @@ const Vendors = ({ communityId, userRole }) => {
                     )}
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Contact Person *</label>
-                      <input 
-                        required 
-                        className={`w-full bg-slate-50 dark:bg-[#111c2a] border ${errors.contact_person ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/10 focus:border-teal-500'} rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none`} 
-                        value={formData.contact_person} 
-                        onChange={(e) => {
-                          setFormData({...formData, contact_person: e.target.value});
-                          validateField('contact_person', e.target.value);
-                        }} 
+                  <div>
+                    <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Contact Person *</label>
+                    <input 
+                      required 
+                      className={`w-full bg-slate-50 dark:bg-[#111c2a] border ${errors.contact_person ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/10 focus:border-teal-500'} rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none`} 
+                      value={formData.contact_person} 
+                      onChange={(e) => {
+                        setFormData({...formData, contact_person: e.target.value});
+                        validateField('contact_person', e.target.value);
+                      }} 
+                    />
+                    {errors.contact_person && (
+                      <p className="text-red-500 text-xs mt-1">{errors.contact_person}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Phone *</label>
+                    <div className="flex gap-2">
+                      <select
+                        value={phoneCountryCode}
+                        onChange={(e) => setPhoneCountryCode(e.target.value)}
+                        className="w-[92px] shrink-0 px-2 py-2 bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 rounded-lg text-sm text-slate-900 dark:text-white focus:border-teal-500 outline-none cursor-pointer"
+                      >
+                        <option value="+1">🇺🇸 +1</option>
+                        <option value="+91">🇮🇳 +91</option>
+                        <option value="+44">🇬🇧 +44</option>
+                        <option value="+971">🇦🇪 +971</option>
+                        <option value="+966">🇸🇦 +966</option>
+                        <option value="+61">🇦🇺 +61</option>
+                      </select>
+                      <input
+                        required
+                        type="text"
+                        maxLength={getPhoneValidationRule(phoneCountryCode).max}
+                        placeholder={`${getPhoneValidationRule(phoneCountryCode).max}-digit number`}
+                        className={`flex-1 bg-slate-50 dark:bg-[#111c2a] border ${errors.phoneOnly ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/10 focus:border-teal-500'} rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none`}
+                        value={phoneOnly}
+                        onChange={(e) => setPhoneOnly(e.target.value.replace(/\D/g, ''))}
+                        onKeyPress={(e) => {
+                          if (!/[0-9]/.test(e.key)) {
+                            e.preventDefault();
+                          }
+                        }}
                       />
-                      {errors.contact_person && (
-                        <p className="text-red-500 text-xs mt-1">{errors.contact_person}</p>
-                      )}
                     </div>
-                    <div>
-                      <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Phone *</label>
-                      <div className="flex gap-2">
-                        <select
-                          value={phoneCountryCode}
-                          onChange={(e) => setPhoneCountryCode(e.target.value)}
-                          className="px-2 py-2 bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 rounded-lg text-sm text-slate-900 dark:text-white focus:border-teal-500 outline-none cursor-pointer"
-                        >
-                          <option value="+1">🇺🇸 +1</option>
-                          <option value="+91">🇮🇳 +91</option>
-                          <option value="+44">🇬🇧 +44</option>
-                          <option value="+971">🇦🇪 +971</option>
-                          <option value="+966">🇸🇦 +966</option>
-                          <option value="+61">🇦🇺 +61</option>
-                        </select>
-                        <input
-                          required
-                          type="text"
-                          maxLength={getPhoneValidationRule(phoneCountryCode).max}
-                          placeholder={`${getPhoneValidationRule(phoneCountryCode).max}-digit number`}
-                          className={`flex-1 bg-slate-50 dark:bg-[#111c2a] border ${errors.phoneOnly ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/10 focus:border-teal-500'} rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none`}
-                          value={phoneOnly}
-                          onChange={(e) => setPhoneOnly(e.target.value.replace(/\D/g, ''))}
-                          onKeyPress={(e) => {
-                            if (!/[0-9]/.test(e.key)) {
-                              e.preventDefault();
-                            }
-                          }}
-                        />
-                      </div>
-                      {errors.phoneOnly && (
-                        <p className="text-red-500 text-xs mt-1">{errors.phoneOnly}</p>
-                      )}
-                    </div>
+                    {errors.phoneOnly && (
+                      <p className="text-red-500 text-xs mt-1">{errors.phoneOnly}</p>
+                    )}
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -577,7 +576,7 @@ const Vendors = ({ communityId, userRole }) => {
       {/* MODAL - Onboard Vendor */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-[#1e2a3b] w-full max-w-md rounded-2xl border border-slate-200 dark:border-white/10 shadow-2xl overflow-y-auto max-h-[90vh] text-slate-900 dark:text-white">
+          <div className="bg-white dark:bg-[#1e2a3b] w-full max-w-lg rounded-2xl border border-slate-200 dark:border-white/10 shadow-2xl overflow-y-auto max-h-[90vh] text-slate-900 dark:text-white">
             <div className="p-6">
               <div className="flex justify-between items-start mb-1">
                 <h2 className="text-xl font-bold text-slate-900 dark:text-white">Onboard Vendor</h2>
@@ -602,56 +601,55 @@ const Vendors = ({ communityId, userRole }) => {
                   )}
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Contact Person *</label>
-                    <input 
-                      required 
-                      className={`w-full bg-slate-50 dark:bg-[#111c2a] border ${errors.contact_person ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/10 focus:border-teal-500'} rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none`} 
-                      value={formData.contact_person} 
-                      onChange={(e) => {
-                        setFormData({...formData, contact_person: e.target.value});
-                        validateField('contact_person', e.target.value);
-                      }} 
+                <div>
+                  <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Contact Person *</label>
+                  <input 
+                    required 
+                    className={`w-full bg-slate-50 dark:bg-[#111c2a] border ${errors.contact_person ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/10 focus:border-teal-500'} rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none`} 
+                    value={formData.contact_person} 
+                    onChange={(e) => {
+                      setFormData({...formData, contact_person: e.target.value});
+                      validateField('contact_person', e.target.value);
+                    }} 
+                  />
+                  {errors.contact_person && (
+                    <p className="text-red-500 text-xs mt-1">{errors.contact_person}</p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Phone *</label>
+                  <div className="flex gap-2">
+                    <select
+                      value={phoneCountryCode}
+                      onChange={(e) => setPhoneCountryCode(e.target.value)}
+                      className="w-[92px] shrink-0 px-2 py-2 bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 rounded-lg text-sm text-slate-900 dark:text-white focus:border-teal-500 outline-none cursor-pointer"
+                    >
+                      <option value="+1">🇺🇸 +1</option>
+                      <option value="+91">🇮🇳 +91</option>
+                      <option value="+44">🇬🇧 +44</option>
+                      <option value="+971">🇦🇪 +971</option>
+                      <option value="+966">🇸🇦 +966</option>
+                      <option value="+61">🇦🇺 +61</option>
+                    </select>
+                    <input
+                      required
+                      type="text"
+                      maxLength={getPhoneValidationRule(phoneCountryCode).max}
+                      placeholder={`${getPhoneValidationRule(phoneCountryCode).max}-digit number`}
+                      className={`flex-1 bg-slate-50 dark:bg-[#111c2a] border ${errors.phoneOnly ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/10 focus:border-teal-500'} rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none`}
+                      value={phoneOnly}
+                      onChange={(e) => setPhoneOnly(e.target.value.replace(/\D/g, ''))}
+                      onKeyPress={(e) => {
+                        if (!/[0-9]/.test(e.key)) {
+                          e.preventDefault();
+                        }
+                      }}
                     />
-                    {errors.contact_person && (
-                      <p className="text-red-500 text-xs mt-1">{errors.contact_person}</p>
-                    )}
                   </div>
-                  <div>
-                    <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Phone *</label>
-                    <div className="flex gap-2">
-                      <select
-                        value={phoneCountryCode}
-                        onChange={(e) => setPhoneCountryCode(e.target.value)}
-                        className="px-2 py-2 bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 rounded-lg text-sm text-slate-900 dark:text-white focus:border-teal-500 outline-none cursor-pointer"
-                      >
-                        <option value="+1">🇺🇸 +1</option>
-                        <option value="+91">🇮🇳 +91</option>
-                        <option value="+44">🇬🇧 +44</option>
-                        <option value="+971">🇦🇪 +971</option>
-                        <option value="+966">🇸🇦 +966</option>
-                        <option value="+61">🇦🇺 +61</option>
-                      </select>
-                      <input
-                        required
-                        type="text"
-                        maxLength={getPhoneValidationRule(phoneCountryCode).max}
-                        placeholder={`${getPhoneValidationRule(phoneCountryCode).max}-digit number`}
-                        className={`flex-1 bg-slate-50 dark:bg-[#111c2a] border ${errors.phoneOnly ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/10 focus:border-teal-500'} rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none`}
-                        value={phoneOnly}
-                        onChange={(e) => setPhoneOnly(e.target.value.replace(/\D/g, ''))}
-                        onKeyPress={(e) => {
-                          if (!/[0-9]/.test(e.key)) {
-                            e.preventDefault();
-                          }
-                        }}
-                      />
-                    </div>
-                    {errors.phoneOnly && (
-                      <p className="text-red-500 text-xs mt-1">{errors.phoneOnly}</p>
-                    )}
-                  </div>
+                  {errors.phoneOnly && (
+                    <p className="text-red-500 text-xs mt-1">{errors.phoneOnly}</p>
+                  )}
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
