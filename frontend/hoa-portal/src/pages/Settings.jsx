@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Clock, Save, DollarSign, Eye, RefreshCw } from 'lucide-react';
+import { Clock, Save, DollarSign, Eye, RefreshCw, ChevronDown } from 'lucide-react';
 import API from '../services/api';
 import { toast } from 'react-hot-toast';
 
@@ -212,15 +212,18 @@ const Settings = ({ community }) => {
 
           <div>
             <label className="block text-sm text-slate-500 dark:text-gray-400 mb-2">Select Timezone</label>
-            <select
-              value={form.time_zone}
-              onChange={e => setForm({...form, time_zone: e.target.value})}
-              className="w-full bg-white dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl p-4 text-slate-900 dark:text-white focus:outline-none focus:border-teal-500"
-            >
-              {timezones.map(tz => (
-                <option key={tz.value} value={tz.value}>{tz.label}</option>
-              ))}
-            </select>
+            <div className="relative">
+              <select
+                value={form.time_zone}
+                onChange={e => setForm({...form, time_zone: e.target.value})}
+                className="w-full bg-white dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl pl-4 pr-10 py-3.5 text-slate-900 dark:text-white focus:outline-none focus:border-teal-500 appearance-none cursor-pointer text-sm"
+              >
+                {timezones.map(tz => (
+                  <option key={tz.value} value={tz.value} className="text-slate-900 dark:text-white">{tz.label}</option>
+                ))}
+              </select>
+              <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-gray-500 pointer-events-none" size={18} />
+            </div>
           </div>
 
           <div className="mt-4 bg-teal-50 dark:bg-teal-900/30 border border-teal-200 dark:border-teal-500/30 rounded-2xl p-4 text-sm text-teal-600 dark:text-teal-400">
