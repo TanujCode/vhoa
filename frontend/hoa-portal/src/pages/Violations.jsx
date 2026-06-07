@@ -108,7 +108,7 @@ const SubmitModal = ({ communityId, onClose, onSuccess }) => {
       <div className="bg-white dark:from-[#1E2E42] dark:to-[#162535] dark:bg-gradient-to-br rounded-3xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto custom-scrollbar border border-slate-200/80 dark:border-white/10 text-slate-900 dark:text-white shadow-2xl">
         <div className="flex items-center justify-between mb-6">
           <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Submit Violation</h3>
-          <button onClick={onClose} className="text-slate-500 hover:text-slate-900 dark:text-gray-400 dark:hover:text-white">
+          <button onClick={onClose} className="text-slate-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 transition-colors">
             <X size={20} />
           </button>
         </div>
@@ -469,7 +469,7 @@ const DisputeModal = ({ communityId, violationId, onClose, onSuccess }) => {
       <div className="bg-white dark:from-[#1E2E42] dark:to-[#162535] dark:bg-gradient-to-br rounded-3xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto custom-scrollbar border border-slate-200/80 dark:border-white/10 text-slate-900 dark:text-white shadow-2xl">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold">Dispute Violation</h3>
-          <button onClick={onClose} className="text-slate-500 hover:text-slate-900 dark:text-gray-400 dark:hover:text-white">
+          <button onClick={onClose} className="text-slate-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 transition-colors">
             <X size={20} />
           </button>
         </div>
@@ -536,7 +536,7 @@ const ResolveDisputeModal = ({ violationId, statuses, onClose, onSuccess }) => {
       <div className="bg-white dark:from-[#1E2E42] dark:to-[#162535] dark:bg-gradient-to-br rounded-3xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto custom-scrollbar border border-slate-200/80 dark:border-white/10 text-slate-900 dark:text-white shadow-2xl">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold">Address Dispute</h3>
-          <button onClick={onClose} className="text-slate-500 hover:text-slate-900 dark:text-gray-400 dark:hover:text-white">
+          <button onClick={onClose} className="text-slate-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 transition-colors">
             <X size={20} />
           </button>
         </div>
@@ -615,7 +615,7 @@ const ViolationDetailModal = ({ violation, isResident, statuses, onClose, onDisp
             <h3 className="text-xl font-bold">{violation.violation_type_name}</h3>
             <p className="text-xs text-slate-500 dark:text-gray-400 mt-1">ID: #{violation.violation_id} • Status: {violation.violation_status}</p>
           </div>
-          <button onClick={onClose} className="text-slate-500 hover:text-slate-900 dark:text-gray-400 dark:hover:text-white">
+          <button onClick={onClose} className="text-slate-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 transition-colors">
             <X size={20} />
           </button>
         </div>
@@ -735,17 +735,20 @@ const ViolationDetailModal = ({ violation, isResident, statuses, onClose, onDisp
           {!isResident && (
             <div className="flex flex-1 items-center gap-3 justify-between md:justify-start">
               <div className="flex items-center gap-2">
-                <select
-                  value={selectedStatusId}
-                  onChange={e => setSelectedStatusId(e.target.value)}
-                  className="bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-white"
-                >
-                  {statuses.map(s => (
-                    <option key={s.violation_status_id} value={s.violation_status_id}>
-                      {s.violation_status}
-                    </option>
-                  ))}
-                </select>
+                <div className="relative">
+                  <select
+                    value={selectedStatusId}
+                    onChange={e => setSelectedStatusId(e.target.value)}
+                    className="bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl pl-4 pr-10 py-2 text-sm text-slate-900 dark:text-white focus:border-teal-500 focus:outline-none appearance-none cursor-pointer"
+                  >
+                    {statuses.map(s => (
+                      <option key={s.violation_status_id} value={s.violation_status_id} className="text-slate-900 dark:text-white">
+                        {s.violation_status}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-gray-500 pointer-events-none" size={16} />
+                </div>
                 <button
                   onClick={handleStatusChangeSubmit}
                   disabled={updatingStatus}
