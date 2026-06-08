@@ -83,18 +83,8 @@ const Profile = ({ user, setUser, viewRole }) => {
   const [activeTab, setActiveTab]   = useState('profile');
   const [msg, setMsg]               = useState({ type: '', text: '' });
 
-  // ── Notification Toggles — localStorage se persist ────────────
-  const notifKey = `notif_prefs_${user?.user_id || 'guest'}`;
-
-  const getStoredNotifPrefs = () => {
-    try {
-      const stored = localStorage.getItem(notifKey);
-      if (stored) return JSON.parse(stored);
-    } catch (_) {}
-    return null;
-  };
-
-  const defaultEmailNotifications = {
+  // ── Notification Prefs — stable defaults ────────────────────────
+  const DEFAULT_EMAIL_NOTIFS = {
     newViolation: true,
     paymentOverdue: true,
     newMember: true,
@@ -102,21 +92,57 @@ const Profile = ({ user, setUser, viewRole }) => {
     weeklyDigest: true,
   };
 
-  const defaultPushNotifications = {
+  const DEFAULT_PUSH_NOTIFS = {
     allInApp: true,
     soundAlerts: false,
     smsCritical: true,
   };
 
-  const storedPrefs = getStoredNotifPrefs();
+  const readNotifPrefs = (userId) => {
+    try {
+      const key = `notif_prefs_${userId || 'guest'}`;
+      const stored = localStorage.getItem(key);
+      if (stored) return JSON.parse(stored);
+    } catch (_) {}
+    return null;
+  };
 
-  const [emailNotifications, setEmailNotifications] = useState(
-    storedPrefs?.email || defaultEmailNotifications
-  );
+  const [emailNotifications, setEmailNotifications] = useState(DEFAULT_EMAIL_NOTIFS);
+  const [pushNotifications, setPushNotifications]   = useState(DEFAULT_PUSH_NOTIFS);
 
-  const [pushNotifications, setPushNotifications] = useState(
-    storedPrefs?.push || defaultPushNotifications
-  );
+  // Load correct user-specific prefs once user.user_id is available
+  useEffect(() => {
+    if (!user?.user_id) return;
+    const prefs = readNotifPrefs(user.user_id);
+    if (prefs?.email) setEmailNotifications(prefs.email);
+    if (prefs?.push)  setPushNotifications(prefs.push);
+  }, [user?.user_id]);
+
+  // Auto-save email notif toggle changes immediately
+  const handleEmailToggle = (key) => {
+    setEmailNotifications(prev => {
+      const updated = { ...prev, [key]: !prev[key] };
+      try {
+        const notifKey = `notif_prefs_${user?.user_id || 'guest'}`;
+        const existing = readNotifPrefs(user?.user_id) || {};
+        localStorage.setItem(notifKey, JSON.stringify({ ...existing, email: updated, push: pushNotifications }));
+      } catch (_) {}
+      return updated;
+    });
+  };
+
+  // Auto-save push notif toggle changes immediately
+  const handlePushToggle = (key) => {
+    setPushNotifications(prev => {
+      const updated = { ...prev, [key]: !prev[key] };
+      try {
+        const notifKey = `notif_prefs_${user?.user_id || 'guest'}`;
+        const existing = readNotifPrefs(user?.user_id) || {};
+        localStorage.setItem(notifKey, JSON.stringify({ ...existing, email: emailNotifications, push: updated }));
+      } catch (_) {}
+      return updated;
+    });
+  };
 
   const fileRef = useRef();
 
@@ -134,17 +160,9 @@ const Profile = ({ user, setUser, viewRole }) => {
     setTimeout(() => setMsg({ type: '', text: '' }), 3000);
   };
 
-  // ── Notifications Save ────────────────────────
+  // ── Notifications Save (manual confirmation) ──────────────────
   const handleSaveNotifications = () => {
-    try {
-      localStorage.setItem(notifKey, JSON.stringify({
-        email: emailNotifications,
-        push: pushNotifications,
-      }));
-      showMsg('success', 'Notification preferences saved!');
-    } catch (_) {
-      showMsg('error', 'Failed to save preferences.');
-    }
+    showMsg('success', 'Notification preferences saved!');
   };
 
   const handleSave = async () => {
@@ -761,7 +779,7 @@ const Profile = ({ user, setUser, viewRole }) => {
                         {item.sub && <p className="text-xs text-slate-400 dark:text-gray-500">{item.sub}</p>}
                       </div>
                       <button
-                        onClick={() => setEmailNotifications(prev => ({...prev, [item.key]: !prev[item.key]}))}
+                        onClick={() => handleEmailToggle(item.key)}
                         className={`w-11 h-6 rounded-full relative transition-all ${emailNotifications[item.key] ? 'bg-teal-600' : 'bg-slate-200 dark:bg-gray-600'}`}
                       >
                         <div className={`w-5 h-5 bg-white rounded-full absolute top-0.5 transition-all ${emailNotifications[item.key] ? 'right-0.5' : 'left-0.5'}`}></div>
@@ -786,7 +804,7 @@ const Profile = ({ user, setUser, viewRole }) => {
                         {item.sub && <p className="text-xs text-slate-400 dark:text-gray-500">{item.sub}</p>}
                       </div>
                       <button
-                        onClick={() => setPushNotifications(prev => ({...prev, [item.key]: !prev[item.key]}))}
+                        onClick={() => handlePushToggle(item.key)}
                         className={`w-11 h-6 rounded-full relative transition-all ${pushNotifications[item.key] ? 'bg-teal-600' : 'bg-slate-200 dark:bg-gray-600'}`}
                       >
                         <div className={`w-5 h-5 bg-white rounded-full absolute top-0.5 transition-all ${pushNotifications[item.key] ? 'right-0.5' : 'left-0.5'}`}></div>
