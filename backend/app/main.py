@@ -76,6 +76,7 @@ def run_db_upgrades():
         # Add columns to user_communities junction table
         db.execute(text("ALTER TABLE user_communities ADD COLUMN IF NOT EXISTS unit_no VARCHAR(50);"))
         db.execute(text("ALTER TABLE user_communities ADD COLUMN IF NOT EXISTS unit_no_2 VARCHAR(50);"))
+        db.execute(text("ALTER TABLE user_communities ADD COLUMN IF NOT EXISTS role_id INTEGER REFERENCES roles(role_id) ON DELETE SET NULL;"))
         
         # Copy existing user community_id values to user_communities junction table
         db.execute(text("""
@@ -83,6 +84,14 @@ def run_db_upgrades():
             SELECT user_id, community_id FROM users
             WHERE community_id IS NOT NULL
             ON CONFLICT DO NOTHING;
+        """))
+
+        # Populate missing role_id in user_communities from users table initially
+        db.execute(text("""
+            UPDATE user_communities uc
+            SET role_id = u.role_id
+            FROM users u
+            WHERE uc.user_id = u.user_id AND uc.role_id IS NULL;
         """))
 
         # as some user_communities associations (like property managers) are intentionally NULL.

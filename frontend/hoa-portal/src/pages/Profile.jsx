@@ -83,19 +83,40 @@ const Profile = ({ user, setUser, viewRole }) => {
   const [activeTab, setActiveTab]   = useState('profile');
   const [msg, setMsg]               = useState({ type: '', text: '' });
 
-  const [emailNotifications, setEmailNotifications] = useState({
+  // ── Notification Toggles — localStorage se persist ────────────
+  const notifKey = `notif_prefs_${user?.user_id || 'guest'}`;
+
+  const getStoredNotifPrefs = () => {
+    try {
+      const stored = localStorage.getItem(notifKey);
+      if (stored) return JSON.parse(stored);
+    } catch (_) {}
+    return null;
+  };
+
+  const defaultEmailNotifications = {
     newViolation: true,
     paymentOverdue: true,
     newMember: true,
     serviceRequest: false,
     weeklyDigest: true,
-  });
+  };
 
-  const [pushNotifications, setPushNotifications] = useState({
+  const defaultPushNotifications = {
     allInApp: true,
     soundAlerts: false,
     smsCritical: true,
-  });
+  };
+
+  const storedPrefs = getStoredNotifPrefs();
+
+  const [emailNotifications, setEmailNotifications] = useState(
+    storedPrefs?.email || defaultEmailNotifications
+  );
+
+  const [pushNotifications, setPushNotifications] = useState(
+    storedPrefs?.push || defaultPushNotifications
+  );
 
   const fileRef = useRef();
 
@@ -111,6 +132,19 @@ const Profile = ({ user, setUser, viewRole }) => {
   const showMsg = (type, text) => {
     setMsg({ type, text });
     setTimeout(() => setMsg({ type: '', text: '' }), 3000);
+  };
+
+  // ── Notifications Save ────────────────────────
+  const handleSaveNotifications = () => {
+    try {
+      localStorage.setItem(notifKey, JSON.stringify({
+        email: emailNotifications,
+        push: pushNotifications,
+      }));
+      showMsg('success', 'Notification preferences saved!');
+    } catch (_) {
+      showMsg('error', 'Failed to save preferences.');
+    }
   };
 
   const handleSave = async () => {
@@ -744,7 +778,7 @@ const Profile = ({ user, setUser, viewRole }) => {
                   {[
                     { label: "All In-App Notifications", key: "allInApp" },
                     { label: "Sound Alerts", key: "soundAlerts" },
-                    { label: "SMS Alerts (critical only)", key: "smsCritical", sub: "Sent to +1 512-555-0198" },
+                    { label: "SMS Alerts (critical only)", key: "smsCritical", sub: user?.mobile_number ? `Sent to ${user.mobile_number}` : "No mobile number on file" },
                   ].map(item => (
                     <div key={item.key} className="flex items-center justify-between py-3 border-b border-slate-100 dark:border-white/10 last:border-0">
                       <div>
@@ -761,9 +795,9 @@ const Profile = ({ user, setUser, viewRole }) => {
                   ))}
                 </div>
               </div>
-              <button onClick={handleSave} disabled={saving} className="w-full py-3 bg-teal-600 hover:bg-teal-500 text-white rounded-2xl font-medium transition disabled:opacity-50 flex items-center justify-center gap-2">
+              <button onClick={handleSaveNotifications} className="w-full py-3 bg-teal-600 hover:bg-teal-500 text-white rounded-2xl font-medium transition flex items-center justify-center gap-2">
                 <Save size={16} />
-                {saving ? 'Saving...' : 'Save Changes'}
+                Save Preferences
               </button>
             </div>
           )}

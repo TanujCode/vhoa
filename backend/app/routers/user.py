@@ -178,6 +178,8 @@ def _to_out(user: User, db: Session | None = None, community_id: int | None = No
     address_proof = getattr(user, 'address_proof_url', None)
     unit_no = None
     unit_no_2 = None
+    role_id = user.role_id
+    role_name = user.role.role_name if user.role else None
 
     if db and comm_id:
         from app.models.community import CommunityJoinRequest
@@ -199,6 +201,9 @@ def _to_out(user: User, db: Session | None = None, community_id: int | None = No
         if assoc:
             unit_no = assoc.unit_no
             unit_no_2 = assoc.unit_no_2
+            if assoc.role_id:
+                role_id = assoc.role_id
+                role_name = assoc.role.role_name if assoc.role else role_name
         else:
             if getattr(user, 'community_id', None) == comm_id:
                 unit_no = getattr(user, 'unit_no', None)
@@ -222,8 +227,8 @@ def _to_out(user: User, db: Session | None = None, community_id: int | None = No
         active_status        = user.active_status,
         account_status       = user.account_status or "PENDING_VERIFICATION",
         time_zone            = user.time_zone or "America/New_York",
-        role_id              = user.role_id,
-        role_name            = user.role.role_name if user.role else None,
+        role_id              = role_id,
+        role_name            = role_name,
         user_profile_url     = user.user_profile_url,
         created_date         = user.created_date,
         last_login           = user.last_login,
@@ -357,18 +362,16 @@ def invite_member(
         if not target_role:
             raise HTTPException(status_code=400, detail=f"Role '{body.role_name}' is invalid or inactive.")
 
-        # Update the user's role to the role they were invited as
-        if existing_user.role_id != target_role.role_id:
-            existing_user.role_id = target_role.role_id
-
-        # Add to user_communities
+        # Add to user_communities with the specific role they were invited as
         db.add(UserCommunity(
             user_id=existing_user.user_id,
             community_id=body.community_id,
+            role_id=target_role.role_id,
             unit_no=body.unit_no.strip() if body.unit_no else None
         ))
         if not existing_user.community_id:
             existing_user.community_id = body.community_id
+            existing_user.role_id = target_role.role_id
 
         # Update community admin details if invited role is property_manager
         if body.role_name == "property_manager":
@@ -454,6 +457,7 @@ def invite_member(
     db.add(UserCommunity(
         user_id=new_user.user_id,
         community_id=body.community_id,
+        role_id=role.role_id,
         unit_no=body.unit_no.strip() if body.unit_no else None
     ))
     db.commit()
@@ -719,22 +723,42 @@ def admin_update_user(
         if not target_role:
             raise HTTPException(status_code=400, detail=f"Role '{body.role_name}' is invalid or inactive.")
         
-        if target_user.role_id != target_role.role_id:
-            # 1. Self-role update block
-            if user_id == current_user.user_id:
-                raise HTTPException(
-                    status_code=403,
-                    detail="You cannot modify your own role."
+        # 1. Self-role update block
+        if user_id == current_user.user_id:
+            raise HTTPException(
+                status_code=403,
+                detail="You cannot modify your own role."
+            )
+        
+        # 2. Non-super admin restrictions
+        if role_name not in ["super_admin", "property_manager", "board_member"]:
+            raise HTTPException(
+                status_code=403,
+                detail="You do not have permission to assign member roles."
+            )
+        
+        # Update in user_communities
+        if comm_context_id:
+            from app.models.user import UserCommunity
+            assoc = db.query(UserCommunity).filter(
+                UserCommunity.user_id == target_user.user_id,
+                UserCommunity.community_id == comm_context_id
+            ).first()
+            if assoc:
+                assoc.role_id = target_role.role_id
+            else:
+                assoc = UserCommunity(
+                    user_id=target_user.user_id,
+                    community_id=comm_context_id,
+                    role_id=target_role.role_id
                 )
+                db.add(assoc)
             
-            # 2. Non-super admin restrictions
-            if role_name != "super_admin":
-                if body.role_name not in ["board_member", "resident"]:
-                    raise HTTPException(
-                        status_code=403,
-                        detail="You do not have permission to assign the Property Manager or Super Admin role."
-                    )
-        target_user.role_id = target_role.role_id
+            # If target user's active/primary community is this community, also sync their active role_id
+            if target_user.community_id == comm_context_id:
+                target_user.role_id = target_role.role_id
+        else:
+            target_user.role_id = target_role.role_id
 
     target_user.modified_by_id = current_user.user_id
     db.commit()
@@ -768,6 +792,7 @@ def switch_community(
     Other users must be associated with the community in user_communities.
     """
     role_name = current_user.role.role_name if current_user.role else ""
+    target_role_id = None
     if role_name != "super_admin":
         from app.models.user import UserCommunity
         assoc = db.query(UserCommunity).filter(
@@ -779,9 +804,12 @@ def switch_community(
                 status_code=403,
                 detail="You do not have permission to access this community."
             )
+        target_role_id = assoc.role_id
             
-    # Update active community ID
+    # Update active community ID and role ID
     current_user.community_id = community_id
+    if target_role_id:
+        current_user.role_id = target_role_id
     db.commit()
     db.refresh(current_user)
     

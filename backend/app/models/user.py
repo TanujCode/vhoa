@@ -111,3 +111,6 @@ class UserCommunity(Base):
     community_id = Column(Integer, ForeignKey("communities.community_id", ondelete="CASCADE"), primary_key=True)
     unit_no      = Column(String(50), nullable=True)
     unit_no_2    = Column(String(50), nullable=True)
+    role_id      = Column(Integer, ForeignKey("roles.role_id", ondelete="SET NULL"), nullable=True)
+
+    role         = relationship("Role")
