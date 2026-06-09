@@ -43,7 +43,7 @@ def _wrap_in_responsive_layout(inner_html: str, subtitle: str = "HOA Management 
             <!-- Header -->
             <div style="background: #162535; padding: 30px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1);">
               <h1 style="margin: 0; font-size: 24px; color: #ffffff;">
-                <span style="color: #14B8A6;">V</span>HOAS
+                <span style="color: #14B8A6;">N</span>estBloq
               </h1>
               {sub_element}
             </div>
@@ -54,7 +54,7 @@ def _wrap_in_responsive_layout(inner_html: str, subtitle: str = "HOA Management 
             <!-- Footer -->
             <div style="background: #162535; padding: 20px; text-align: center; border-top: 1px solid rgba(255,255,255,0.1);">
               <p style="margin: 0; color: #6B7280; font-size: 12px;">
-                © 2026 VHOAS — HOA Management System
+                © 2026 NestBloq — HOA Management System
               </p>
             </div>
 
@@ -77,7 +77,7 @@ def send_otp_email(to_email: str, otp_code: str, otp_type: str) -> bool:
         "password_reset": "Password Reset",
     }
     label = type_labels.get(otp_type, "Verification")
-    subject = f"VHOAS — {label} OTP"
+    subject = f"NestBloq — {label} OTP"
 
     inner_html = f"""
       <div style="padding: 40px 30px; text-align: center;">
@@ -107,12 +107,12 @@ def send_otp_email(to_email: str, otp_code: str, otp_type: str) -> bool:
 
 def send_welcome_email(to_email: str, full_name: str) -> bool:
     """Registration welcome email"""
-    subject = "Welcome to VHOAS — HOA Management"
+    subject = "Welcome to NestBloq — HOA Management"
     inner_html = f"""
       <div style="padding: 40px 30px;">
         <h2 style="margin: 0 0 16px; color: #ffffff;">Welcome, {full_name}! 👋</h2>
         <p style="color: #9CA3AF; line-height: 1.6;">
-          Your account has been created successfully on VHOAS HOA Management System.
+          Your account has been created successfully on NestBloq HOA Management System.
         </p>
         <p style="color: #9CA3AF; line-height: 1.6;">
           Please verify your email address to get full access to your account.
@@ -121,6 +121,11 @@ def send_welcome_email(to_email: str, full_name: str) -> bool:
           <p style="margin: 0; color: #9CA3AF; font-size: 14px;">
             Next step: Go to your profile and verify your email address using OTP.
           </p>
+        </div>
+        <div style="margin: 30px 0; text-align: center;">
+          <a href="https://nestbloq.vercel.app/login" style="background-color: #14B8A6; color: #000000; padding: 12px 24px; font-weight: bold; font-size: 15px; text-decoration: none; border-radius: 8px; display: inline-block; box-shadow: 0 4px 6px rgba(20, 184, 166, 0.25);">
+            Log In to Portal
+          </a>
         </div>
       </div>
     """
@@ -137,7 +142,7 @@ def send_violation_email(
     remarks: str,
 ) -> bool:
     """Send email to resident when a violation is issued"""
-    subject = f"VHOAS — Violation Notice: {violation_type}"
+    subject = f"NestBloq — Violation Notice: {violation_type}"
     inner_html = f"""
       <div style="padding: 40px 30px;">
         <div style="background: #7F1D1D; border-radius: 12px; padding: 16px; margin-bottom: 24px; text-align: center; color: #ffffff; font-weight: bold;">
@@ -156,8 +161,14 @@ def send_violation_email(
         </div>
 
         <p style="color: #9CA3AF; font-size: 13px;">
-          You have 30 days to dispute this violation through the VHOAS portal.
+          You have 30 days to dispute this violation through the NestBloq portal.
         </p>
+
+        <div style="margin: 30px 0; text-align: center;">
+          <a href="https://nestbloq.vercel.app/login" style="background-color: #14B8A6; color: #000000; padding: 12px 24px; font-weight: bold; font-size: 15px; text-decoration: none; border-radius: 8px; display: inline-block; box-shadow: 0 4px 6px rgba(20, 184, 166, 0.25);">
+            Log In to Portal
+          </a>
+        </div>
       </div>
     """
     html = _wrap_in_responsive_layout(inner_html, subtitle="")
@@ -177,7 +188,7 @@ def send_booking_created_email(
     to_email: str
 ) -> bool:
     """Send amenity booking confirmation or payment due email to user/board"""
-    subject = f"VHOAS — Amenity Booking Request: {amenity_name}"
+    subject = f"NestBloq — Amenity Booking Request: {amenity_name}"
     
     if status_type == "CONFIRMED":
         status_label = "Confirmed"
@@ -214,6 +225,12 @@ def send_booking_created_email(
         <p style="color: #9CA3AF; line-height: 1.6; font-size: 14px;">
           {detail_msg}
         </p>
+
+        <div style="margin: 30px 0; text-align: center;">
+          <a href="https://nestbloq.vercel.app/login" style="background-color: #14B8A6; color: #000000; padding: 12px 24px; font-weight: bold; font-size: 15px; text-decoration: none; border-radius: 8px; display: inline-block; box-shadow: 0 4px 6px rgba(20, 184, 166, 0.25);">
+            Log In to Portal
+          </a>
+        </div>
       </div>
     """
     html = _wrap_in_responsive_layout(inner_html)
@@ -231,7 +248,7 @@ def send_payment_received_email(
     to_email: str
 ) -> bool:
     """Send payment receipt confirmation email to user/board"""
-    subject = f"VHOAS — Payment Confirmed for {amenity_name}"
+    subject = f"NestBloq — Payment Confirmed for {amenity_name}"
     inner_html = f"""
       <div style="padding: 40px 30px;">
         <div style="background: #14B8A6; border-radius: 12px; padding: 16px; margin-bottom: 24px; text-align: center; color: #000000; font-weight: bold; font-size: 18px;">
@@ -271,7 +288,7 @@ def send_general_payment_receipt_email(
     community_name: str,
     escrow_bank: str = None
 ) -> bool:
-    subject = f"VHOAS — Payment Receipt: {reason.replace('_', ' ').title()}"
+    subject = f"NestBloq — Payment Receipt: {reason.replace('_', ' ').title()}"
     escrow_info = f"<p style='color: #9CA3AF;'>Paid to Escrow Bank: <strong>{escrow_bank}</strong></p>" if escrow_bank else ""
     inner_html = f"""
       <div style="padding: 40px 30px;">

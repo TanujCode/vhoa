@@ -15,9 +15,9 @@ class Settings(BaseSettings):
     MAIL_USERNAME: str = ""
     MAIL_PASSWORD: str = ""
     MAIL_FROM: str = ""
-    MAIL_FROM_NAME: str = "VHOAS HOA Management"
+    MAIL_FROM_NAME: str = "NestBloq HOA Management"
 
-    APP_NAME: str = "HOA Management System"
+    APP_NAME: str = "NestBloq HOA Management System"
     DEBUG: bool = True
     ALLOW_ORIGINS: str = "http://localhost:5173,http://127.0.0.1:5173"
 

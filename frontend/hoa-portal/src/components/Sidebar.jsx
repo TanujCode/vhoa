@@ -107,8 +107,8 @@ const Sidebar = ({ activePage, setActivePage, isOpen, setIsOpen, user, userRole:
         
         {/* Logo */}
         <div className="h-16 flex items-center px-6 border-b border-slate-200/60 dark:border-white/10">
-          <div className="logo-mark w-8 h-8 bg-[#1D9E75] rounded-xl flex items-center justify-center text-white font-bold text-lg">VH</div>
-          <span className="ml-3 text-2xl font-semibold tracking-tight text-slate-900 dark:text-white">V<span className="text-[#1D9E75]">HOAS</span></span>
+          <div className="logo-mark w-8 h-8 bg-[#1D9E75] rounded-xl flex items-center justify-center text-white font-bold text-lg">NB</div>
+          <span className="ml-3 text-2xl font-semibold tracking-tight text-slate-900 dark:text-white">Nest<span className="text-[#1D9E75]">Bloq</span></span>
         </div>
 
         {/* Navigation */}
