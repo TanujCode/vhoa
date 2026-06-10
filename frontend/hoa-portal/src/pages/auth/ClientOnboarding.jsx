@@ -1042,7 +1042,7 @@ export default function ClientOnboarding() {
                 <div className="space-y-4">
                   <div>
                     <h3 className="text-lg font-semibold mb-2">Enter Your Contract Code</h3>
-                    <p className="text-xs text-gray-400 mb-4">Please input the unique contract code received from your VHOAS sales representative to begin setup.</p>
+                    <p className="text-xs text-gray-400 mb-4">Please input the unique contract code received from your NestBloq sales representative to begin setup.</p>
                   </div>
                   
                   <div>
@@ -1070,7 +1070,7 @@ export default function ClientOnboarding() {
                   <div className="bg-[#1c2e42] p-4 rounded-2xl border border-white/5 text-xs text-gray-400 leading-relaxed flex gap-3">
                     <Info size={24} className="text-blue-400 flex-shrink-0" />
                     <div>
-                      <strong>Don't have a contract code?</strong> Let us help you set up! Please contact sales at <a href="mailto:sales@vhoas.com" className="text-teal-400 underline font-semibold">sales@vhoas.com</a> to draft your community services contract.
+                      <strong>Don't have a contract code?</strong> Let us help you set up! Please contact sales at <a href="mailto:sales@nestbloq.com" className="text-teal-400 underline font-semibold">sales@nestbloq.com</a> to draft your community services contract.
                     </div>
                   </div>
                 </div>

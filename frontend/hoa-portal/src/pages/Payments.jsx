@@ -16,8 +16,8 @@ const Payments = ({ community, user, paymentState, setPaymentState }) => {
   // Admin/Board Views State
   const [vendorAssignments, setVendorAssignments] = useState([]);
   const [virtualHoadues, setVirtualHoadues] = useState([
-    { id: 101, title: 'VirtualHOA Platform Setup Fee', amount: 500.00, reason: 'VHOA_SETUP_FEE', status: 'PENDING', due_date: '2026-06-01' },
-    { id: 102, title: 'VirtualHOA Monthly Subscription (June 2026)', amount: 99.00, reason: 'VHOA_MONTHLY_FEE', status: 'PENDING', due_date: '2026-06-10' }
+    { id: 101, title: 'NestBloq Platform Setup Fee', amount: 500.00, reason: 'VHOA_SETUP_FEE', status: 'PENDING', due_date: '2026-06-01' },
+    { id: 102, title: 'NestBloq Monthly Subscription (June 2026)', amount: 99.00, reason: 'VHOA_MONTHLY_FEE', status: 'PENDING', due_date: '2026-06-10' }
   ]);
 
   // Wizard Modal State
