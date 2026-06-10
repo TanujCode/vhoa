@@ -60,12 +60,20 @@ const BookModal = ({ amenity, communityId, onClose, onSuccess }) => {
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="text-xs text-slate-500 dark:text-gray-400 mb-1 block">Booking Date</label>
-            <input type="date" required value={form.booking_date}
-              min={new Date().toISOString().split('T')[0]}
-              onChange={e => setForm({...form, booking_date: e.target.value})}
-              className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500" />
-          </div>
+  <label className="text-xs text-slate-500 dark:text-gray-400 mb-1 block">Booking Date</label>
+  <input 
+    type="date" 
+    required 
+    value={form.booking_date}
+    min={new Date().toISOString().split('T')[0]}
+    onChange={e => setForm({...form, booking_date: e.target.value})}
+    className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 
+               rounded-xl px-4 py-3 text-sm 
+               text-slate-900 dark:text-white 
+               focus:outline-none focus:ring-2 focus:ring-teal-500
+               dark:[color-scheme:dark]" 
+  />
+</div>
 
           {availability && (
             <div>
