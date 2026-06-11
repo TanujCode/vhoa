@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Plus, RefreshCw, X, Pin, ChevronLeft, ChevronRight } from 'lucide-react';
 import API from '../services/api';
 
+// ── Category Badge ────────────────────────────
 const CategoryBadge = ({ category }) => {
   const map = {
     GENERAL:     'bg-slate-100 text-slate-600 dark:bg-gray-500/20 dark:text-gray-400',
@@ -17,6 +18,7 @@ const CategoryBadge = ({ category }) => {
   );
 };
 
+// ── Add News Modal ────────────────────────────
 const NewsModal = ({ communityId, onClose, onSuccess }) => {
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({ title: '', content: '', category: 'GENERAL', is_pinned: false });
@@ -58,7 +60,7 @@ const NewsModal = ({ communityId, onClose, onSuccess }) => {
               <select 
                 value={form.category} 
                 onChange={e => setForm({...form, category: e.target.value})}
-                className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500 appearance-none"
+                className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500"
               >
                 {['GENERAL','MEETING','MAINTENANCE','EMERGENCY','EVENT'].map(c => (
                   <option key={c} value={c} className="bg-white dark:bg-[#0D1B2A] text-slate-900 dark:text-white">
@@ -88,6 +90,7 @@ const NewsModal = ({ communityId, onClose, onSuccess }) => {
   );
 };
 
+// ── Add FAQ Modal ─────────────────────────────
 const FAQModal = ({ communityId, onClose, onSuccess }) => {
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({ question: '', answer: '', doc_url: '' });
@@ -141,6 +144,7 @@ const FAQModal = ({ communityId, onClose, onSuccess }) => {
   );
 };
 
+// ── Main Page ─────────────────────────────────
 const News = ({ community, user }) => {
   const [activeTab, setActiveTab]   = useState('news');
   const [news, setNews]             = useState([]);
@@ -232,6 +236,7 @@ const News = ({ community, user }) => {
         ))}
       </div>
 
+      {/* ── NEWS TAB ── */}
       {activeTab === 'news' && (
         <div>
           {/* Category filter */}
@@ -271,7 +276,7 @@ const News = ({ community, user }) => {
                     </div>
                     {isAdmin && (
                       <button onClick={() => handleDeleteNews(n.news_id)}
-                        className="text-slate-400 hover:text-red-500 dark:text-gray-400 dark:hover:text-red-400 transition flex-shrink-0">
+                        className="text-slate-400 hover:text-red-500 dark:text-gray-600 dark:hover:text-red-400 transition flex-shrink-0">
                         <X size={16} />
                       </button>
                     )}
@@ -283,6 +288,7 @@ const News = ({ community, user }) => {
         </div>
       )}
 
+      {/* ── FAQ TAB ── */}
       {activeTab === 'faq' && (
         <div>
           <div className="flex justify-between items-center mb-4">
@@ -326,6 +332,7 @@ const News = ({ community, user }) => {
             </div>
           )}
 
+          {/* Pagination — max 10 per page */}
           {faqTotal.pages > 1 && (
             <div className="flex items-center justify-center gap-3 mt-6">
               <button onClick={() => setFaqPage(p => Math.max(1, p - 1))} disabled={faqPage === 1}

@@ -395,7 +395,7 @@ const Vendors = ({ communityId, userRole }) => {
                       <select
                         value={phoneCountryCode}
                         onChange={(e) => setPhoneCountryCode(e.target.value)}
-                        className="w-[92px] shrink-0 px-2 py-2 bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 rounded-lg text-sm text-slate-900 dark:text-white focus:border-teal-500 outline-none cursor-pointer"
+                        className="w-[105px] shrink-0 px-2 py-2 bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 rounded-lg text-sm text-slate-900 dark:text-white focus:border-teal-500 outline-none cursor-pointer"
                       >
                         <option value="+1">🇺🇸 +1</option>
                         <option value="+91">🇮🇳 +91</option>
@@ -623,7 +623,7 @@ const Vendors = ({ communityId, userRole }) => {
                     <select
                       value={phoneCountryCode}
                       onChange={(e) => setPhoneCountryCode(e.target.value)}
-                      className="w-[92px] shrink-0 px-2 py-2 bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 rounded-lg text-sm text-slate-900 dark:text-white focus:border-teal-500 outline-none cursor-pointer"
+                      className="w-[105px] shrink-0 px-2 py-2 bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 rounded-lg text-sm text-slate-900 dark:text-white focus:border-teal-500 outline-none cursor-pointer"
                     >
                       <option value="+1">🇺🇸 +1</option>
                       <option value="+91">🇮🇳 +91</option>

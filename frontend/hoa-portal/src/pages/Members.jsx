@@ -325,7 +325,6 @@ const Members = ({ community }) => {
     });
     setShowEditModal(true);
   };
-
   const handleEditSubmit = async (e) => {
     if (e && e.preventDefault) e.preventDefault();
 
@@ -588,7 +587,7 @@ const Members = ({ community }) => {
                             href={getBaseUrl(m.id_proof_url)}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="px-2.5 py-1 text-xs font-semibold bg-blue-500/10 hover:bg-blue-50 text-blue-600 hover:text-white rounded-xl border border-blue-500/20 transition-all"
+                            className="px-2.5 py-1 text-xs font-semibold bg-blue-500/10 hover:bg-blue-500 text-blue-600 hover:text-white rounded-xl border border-blue-500/20 transition-all"
                           >
                             ID Proof
                           </a>
@@ -598,7 +597,7 @@ const Members = ({ community }) => {
                             href={getBaseUrl(m.address_proof_url)}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="px-2.5 py-1 text-xs font-semibold bg-purple-500/10 hover:bg-purple-50 text-purple-600 hover:text-white rounded-xl border border-purple-500/20 transition-all"
+                            className="px-2.5 py-1 text-xs font-semibold bg-purple-500/10 hover:bg-purple-500 text-purple-600 hover:text-white rounded-xl border border-purple-500/20 transition-all"
                           >
                             Address Proof
                           </a>
@@ -744,7 +743,7 @@ const Members = ({ community }) => {
                   <select
                     value={inviteForm.role}
                     onChange={e => setInviteForm({...inviteForm, role: e.target.value})}
-                    className="appearance-none w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl p-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-teal-500 cursor-pointer"
+                    className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl p-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-teal-500 cursor-pointer"
                   >
                     <option className="bg-white dark:bg-[#0D1B2A] text-slate-900 dark:text-white">Resident</option>
                     <option className="bg-white dark:bg-[#0D1B2A] text-slate-900 dark:text-white">Board Member</option>
@@ -753,7 +752,7 @@ const Members = ({ community }) => {
                 </div>
                 <div>
                   <label className="block text-xs text-slate-500 dark:text-gray-400 mb-1">Community</label>
-                  <select className="appearance-none w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl p-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-teal-500 cursor-default" defaultValue={community?.name}>
+                  <select className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl p-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-teal-500 cursor-default" defaultValue={community?.name}>
                     <option className="bg-white dark:bg-[#0D1B2A] text-slate-900 dark:text-white">{community?.name}</option>
                   </select>
                 </div>
@@ -908,7 +907,7 @@ const Members = ({ community }) => {
                   <select
                     value={editForm.role}
                     onChange={e => setEditForm({...editForm, role: e.target.value})}
-                    className="appearance-none w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl p-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-teal-500 cursor-pointer"
+                    className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl p-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-teal-500 cursor-pointer"
                   >
                     <option className="bg-white dark:bg-[#0D1B2A] text-slate-900 dark:text-white">Resident</option>
                     <option className="bg-white dark:bg-[#0D1B2A] text-slate-900 dark:text-white">Board Member</option>
@@ -917,7 +916,7 @@ const Members = ({ community }) => {
                 </div>
                 <div>
                   <label className="block text-xs text-slate-500 dark:text-gray-400 mb-1">Community</label>
-                  <select className="appearance-none w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl p-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-teal-500 cursor-default" defaultValue={community?.name} disabled>
+                  <select className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl p-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-teal-500 cursor-default" defaultValue={community?.name} disabled>
                     <option className="bg-white dark:bg-[#0D1B2A] text-slate-900 dark:text-white">{community?.name}</option>
                   </select>
                 </div>

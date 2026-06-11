@@ -78,14 +78,38 @@ html:not(.dark) body {
   color-scheme: light;
 }
 
+.dark input[type="date"] {
+  color-scheme: dark;
+}
+
 input[type="date"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 0.6;
+  transition: opacity 0.15s ease-in-out;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+}
+
+/* Modern Select dropdown styling */
+select:not(.appearance-none) {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 1rem;
+  padding-right: 2.25rem !important;
   cursor: pointer;
 }
 
-.dark input[type="date"]::-webkit-calendar-picker-indicator {
-  filter: invert(1) brightness(0.9);
+.dark select:not(.appearance-none) {
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
 }
 
-.dark input[type="date"]::-webkit-calendar-picker-indicator:hover {
-  filter: invert(1) brightness(1.2);
+select:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
 }
