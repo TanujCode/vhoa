@@ -324,7 +324,7 @@ def send_due_payment_reminder_email(
     community_name: str,
     days_left: int
 ) -> bool:
-    subject = f"VHOAS — Reminder: Payment Due in {days_left} Days"
+    subject = f"NestBloq — Reminder: Payment Due in {days_left} Days"
     inner_html = f"""
       <div style="padding: 40px 30px;">
         <div style="background: #F59E0B; border-radius: 12px; padding: 16px; margin-bottom: 24px; text-align: center; color: #000000; font-weight: bold; font-size: 18px;">
@@ -343,7 +343,7 @@ def send_due_payment_reminder_email(
           </table>
         </div>
         <p style="color: #9CA3AF; line-height: 1.6; font-size: 14px;">
-          Please log in to the VHOAS portal to complete this payment.
+          Please log in to the NestBloq portal to complete this payment.
         </p>
       </div>
     """
@@ -352,13 +352,13 @@ def send_due_payment_reminder_email(
 
 
 def send_invite_email(to_email: str, full_name: str, temp_password: str, community_name: str, role_name: str) -> bool:
-    subject = f"Invitation to join {community_name} on VHOAS"
+    subject = f"Invitation to join {community_name} on NestBloq"
     role_label = role_name.replace('_', ' ').title()
     inner_html = f"""
       <div style="padding: 40px 30px;">
         <h2 style="margin: 0 0 16px; color: #ffffff;">Hello, {full_name}! 👋</h2>
         <p style="color: #9CA3AF; line-height: 1.6;">
-          You have been invited to join the community <strong>{community_name}</strong> as a <strong>{role_label}</strong> on the VHOAS Portal.
+          You have been invited to join the community <strong>{community_name}</strong> as a <strong>{role_label}</strong> on the NestBloq Portal.
         </p>
         <p style="color: #9CA3AF; line-height: 1.6;">
           Below are your temporary login credentials:
@@ -381,16 +381,16 @@ def send_invite_email(to_email: str, full_name: str, temp_password: str, communi
 
 
 def send_association_email(to_email: str, full_name: str, community_name: str, role_name: str) -> bool:
-    subject = f"You have been added to {community_name} on VHOAS"
+    subject = f"You have been added to {community_name} on NestBloq"
     role_label = role_name.replace('_', ' ').title()
     inner_html = f"""
       <div style="padding: 40px 30px;">
         <h2 style="margin: 0 0 16px; color: #ffffff;">Hello, {full_name}! 👋</h2>
         <p style="color: #9CA3AF; line-height: 1.6;">
-          You have been added to the community <strong>{community_name}</strong> as a <strong>{role_label}</strong> on the VHOAS Portal.
+          You have been added to the community <strong>{community_name}</strong> as a <strong>{role_label}</strong> on the NestBloq Portal.
         </p>
         <p style="color: #9CA3AF; line-height: 1.6;">
-          Since you already have a registered account on VHOAS, you can log in using your existing credentials.
+          Since you already have a registered account on NestBloq, you can log in using your existing credentials.
         </p>
         <p style="color: #9CA3AF; line-height: 1.6;">
           After logging in, you can switch to <strong>{community_name}</strong> using the community selector dropdown in the Topbar.

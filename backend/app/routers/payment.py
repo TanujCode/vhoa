@@ -36,7 +36,7 @@ def process_payment(
                 detail="Community context is required for community payments."
             )
         # Fallback or allow passing it if super_admin / sales_admin
-        # Wait, for VHOA subscriptions, we might have no community_id on user (e.g. sales admin),
+        # Wait, for NestBloq subscriptions, we might have no community_id on user (e.g. sales admin),
         # but let's default to community_id = 1 or a mock if needed.
         community_id = current_user.community_id or 1
 

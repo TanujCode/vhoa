@@ -16,7 +16,7 @@ export default function AuthLayout({ children }) {
               <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
             </svg>
           </div>
-          <h1 className="text-4xl font-bold mb-2">HOA Portal</h1>
+          <h1 className="text-4xl font-bold mb-2">NestBloq</h1>
           <p className="text-blue-300 font-medium mb-6">Self-Service Property Management</p>
           <p className="text-gray-400 text-sm leading-relaxed max-w-sm mx-auto mb-10">
             Join thousands of communities managing their governance with administrative precision and communal harmony.

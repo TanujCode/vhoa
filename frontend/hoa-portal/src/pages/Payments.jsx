@@ -15,9 +15,9 @@ const Payments = ({ community, user, paymentState, setPaymentState }) => {
 
   // Admin/Board Views State
   const [vendorAssignments, setVendorAssignments] = useState([]);
-  const [virtualHoadues, setVirtualHoadues] = useState([
-    { id: 101, title: 'NestBloq Platform Setup Fee', amount: 500.00, reason: 'VHOA_SETUP_FEE', status: 'PENDING', due_date: '2026-06-01' },
-    { id: 102, title: 'NestBloq Monthly Subscription (June 2026)', amount: 99.00, reason: 'VHOA_MONTHLY_FEE', status: 'PENDING', due_date: '2026-06-10' }
+  const [nestBloqDues, setNestBloqDues] = useState([
+    { id: 101, title: 'NestBloq Platform Setup Fee', amount: 500.00, reason: 'NESTBLOQ_SETUP_FEE', status: 'PENDING', due_date: '2026-06-01' },
+    { id: 102, title: 'NestBloq Monthly Subscription (June 2026)', amount: 99.00, reason: 'NESTBLOQ_MONTHLY_FEE', status: 'PENDING', due_date: '2026-06-10' }
   ]);
 
   // Wizard Modal State
@@ -108,15 +108,15 @@ const Payments = ({ community, user, paymentState, setPaymentState }) => {
         payment_method: wizard.paymentMethod,
         payer_bank_name: wizard.paymentMethod === 'BANK_TRANSFER' ? wizard.payerBankName : null,
         payer_account_no: wizard.paymentMethod === 'BANK_TRANSFER' ? wizard.payerAccountNo : null,
-        escrow_flag: !['VHOA_SETUP_FEE', 'VHOA_MONTHLY_FEE'].includes(wizard.dueItem.reason) && wizard.dueItem.escrow_flag !== false,
+        escrow_flag: !['NESTBLOQ_SETUP_FEE', 'NESTBLOQ_MONTHLY_FEE'].includes(wizard.dueItem.reason) && wizard.dueItem.escrow_flag !== false,
       };
 
       // Call backend
       const response = await API.post('/payment/pay', payload);
       
-      // Update VirtualHOA item local state if that's what was paid
-      if (['VHOA_SETUP_FEE', 'VHOA_MONTHLY_FEE'].includes(wizard.dueItem.reason)) {
-        setVirtualHoadues(prev => prev.map(d => d.id === wizard.dueItem.id ? { ...d, status: 'COMPLETED' } : d));
+      // Update NestBloq item local state if that's what was paid
+      if (['NESTBLOQ_SETUP_FEE', 'NESTBLOQ_MONTHLY_FEE'].includes(wizard.dueItem.reason)) {
+        setNestBloqDues(prev => prev.map(d => d.id === wizard.dueItem.id ? { ...d, status: 'COMPLETED' } : d));
       }
 
       setWizard(prev => ({
@@ -239,7 +239,7 @@ const Payments = ({ community, user, paymentState, setPaymentState }) => {
                 activeTab === 'virtualhoa' ? 'bg-[#1D9E75] hover:bg-[#15805d] text-white hover:text-white shadow-lg shadow-[#1D9E75]/25' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100 dark:text-gray-400 dark:hover:text-white dark:hover:bg-white/5'
               }`}
             >
-              <Zap size={16} /> VirtualHOA Invoices
+              <Zap size={16} /> NestBloq Invoices
             </button>
             <button
               onClick={() => setActiveTab('vendors')}
@@ -476,13 +476,13 @@ const Payments = ({ community, user, paymentState, setPaymentState }) => {
       {!loading && activeTab === 'virtualhoa' && isBoardOrAdmin && (
         <div className="space-y-6">
           <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 shadow-sm">
-            <h3 className="text-xl font-semibold mb-2 text-slate-900 dark:text-white">VirtualHOA Subscription Invoices</h3>
+            <h3 className="text-xl font-semibold mb-2 text-slate-900 dark:text-white">NestBloq Subscription Invoices</h3>
             <p className="text-slate-500 dark:text-gray-400 text-sm mb-6">
-              Track setup fees and license subscriptions due to the platform provider VirtualHOA.
+              Track setup fees and license subscriptions due to the platform provider NestBloq.
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {virtualHoadues.map((item) => (
+              {nestBloqDues.map((item) => (
                 <div key={item.id} className="bg-slate-50 dark:bg-[#1E3248] rounded-2xl p-6 flex flex-col justify-between border border-slate-200 dark:border-white/5 hover:border-teal-500/20 transition shadow-sm hover:shadow-md relative overflow-hidden group">
                   <div>
                     <span className="text-[10px] font-mono tracking-wider bg-slate-200 dark:bg-[#0D1B2A] text-teal-700 dark:text-teal-400 px-3 py-1 rounded-full font-bold uppercase">
@@ -505,7 +505,7 @@ const Payments = ({ community, user, paymentState, setPaymentState }) => {
                       onClick={() => handleOpenWizard({ ...item, escrow_flag: false })}
                       className="w-full mt-6 flex items-center justify-center gap-2 bg-[#1D9E75] hover:bg-[#25C490] text-white py-3 rounded-2xl font-medium transition"
                     >
-                      Pay VirtualHOA <ArrowRight size={16} />
+                      Pay NestBloq <ArrowRight size={16} />
                     </button>
                   )}
                 </div>
@@ -614,7 +614,7 @@ const Payments = ({ community, user, paymentState, setPaymentState }) => {
                       <div>
                         <label className="text-xs text-slate-500 dark:text-gray-400 block uppercase tracking-widest">Target Bank</label>
                         <div className="text-sm font-semibold text-slate-800 dark:text-white mt-1.5">
-                          {wizard.dueItem.escrow_flag !== false ? (community.bank_name || 'Community Escrow') : 'VirtualHOA Ledger'}
+                          {wizard.dueItem.escrow_flag !== false ? (community.bank_name || 'Community Escrow') : 'NestBloq Ledger'}
                         </div>
                       </div>
                     </div>

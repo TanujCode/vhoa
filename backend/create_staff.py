@@ -11,7 +11,7 @@ from app.services.token_service import hash_password
 
 def main():
     print("==================================================")
-    print(" VHOAS - Secure Staff Account Creation CLI Utility ")
+    print(" NestBloq - Secure Staff Account Creation CLI Utility ")
     print("==================================================")
     
     full_name = input("Enter Full Name: ").strip()

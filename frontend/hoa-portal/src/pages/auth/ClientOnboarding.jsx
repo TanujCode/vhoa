@@ -966,8 +966,8 @@ export default function ClientOnboarding() {
         <div className="w-full md:w-1/3 bg-[#111f2e] p-8 border-b md:border-b-0 md:border-r border-white/5 flex flex-col justify-between">
           <div>
             <div className="flex items-center gap-2 mb-8">
-              <div className="w-8 h-8 bg-[#1D9E75] rounded-xl flex items-center justify-center text-white font-bold text-sm">VH</div>
-              <span className="text-xl font-bold tracking-tight text-white">V<span className="text-[#1D9E75]">HOAS</span></span>
+              <div className="w-8 h-8 bg-[#1D9E75] rounded-xl flex items-center justify-center text-white font-bold text-xs">NB</div>
+              <span className="text-xl font-bold tracking-tight text-white">Nest<span className="text-[#1D9E75]">Bloq</span></span>
             </div>
             
             <h2 className="text-2xl font-bold mb-2">HOA Client Onboarding</h2>
