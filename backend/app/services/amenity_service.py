@@ -29,20 +29,23 @@ def get_amenity_types(db: Session) -> list[AmenityType]:
 #  AMENITY CRUD
 def create_amenity(data: AmenityCreate, created_by_id: int, db: Session) -> Amenity:
     amenity = Amenity(
-        community_id    = data.community_id,
-        amenity_type_id = data.amenity_type_id,
-        name            = data.name.strip(),
-        description     = data.description,
-        location        = data.location,
-        capacity        = data.capacity,
-        fee_enabled     = data.fee_enabled,
-        booking_fee     = data.booking_fee,
-        slot1_start     = data.slot1_start,
-        slot1_end       = data.slot1_end,
-        slot2_start     = data.slot2_start,
-        slot2_end       = data.slot2_end,
-        active_status   = True,
-        created_by_id   = created_by_id,
+        community_id        = data.community_id,
+        amenity_type_id     = data.amenity_type_id,
+        name                = data.name.strip(),
+        description         = data.description,
+        location            = data.location,
+        capacity            = data.capacity,
+        fee_enabled         = data.fee_enabled,
+        booking_fee         = data.booking_fee,
+        slot1_start         = data.slot1_start,
+        slot1_end           = data.slot1_end,
+        slot2_start         = data.slot1_start,
+        slot2_end           = data.slot1_end,
+        pool_open           = data.pool_open,
+        tentative_open_date = data.tentative_open_date,
+        is_pool_reserved    = data.is_pool_reserved,
+        active_status       = True,
+        created_by_id       = created_by_id,
     )
     db.add(amenity)
     db.commit()
@@ -73,6 +76,10 @@ def update_amenity(
 ) -> Amenity:
     amenity = get_amenity_by_id(amenity_id, db)
 
+    # Track pool_open change for email notification
+    pool_status_changed = False
+    old_pool_open = amenity.pool_open
+
     if data.name is not None:         amenity.name = data.name.strip()
     if data.description is not None:  amenity.description = data.description
     if data.location is not None:     amenity.location = data.location
@@ -81,10 +88,81 @@ def update_amenity(
     if data.booking_fee is not None:  amenity.booking_fee = data.booking_fee
     if data.active_status is not None: amenity.active_status = data.active_status
 
+    if data.slot1_start is not None:
+        amenity.slot1_start = data.slot1_start
+        amenity.slot2_start = data.slot1_start
+    if data.slot1_end is not None:
+        amenity.slot1_end = data.slot1_end
+        amenity.slot2_end = data.slot1_end
+
+    # Pool Status Fields
+    if data.pool_open is not None:
+        if data.pool_open != old_pool_open:
+            pool_status_changed = True
+        amenity.pool_open = data.pool_open
+        # If pool is now open, clear tentative date
+        if data.pool_open:
+            amenity.tentative_open_date = None
+
+    if data.tentative_open_date is not None:
+        amenity.tentative_open_date = data.tentative_open_date
+    elif data.pool_open is True:
+        # Opening pool clears tentative date
+        amenity.tentative_open_date = None
+
+    if data.is_pool_reserved is not None:
+        amenity.is_pool_reserved = data.is_pool_reserved
+
     amenity.modified_by_id = modified_by_id
     db.commit()
     db.refresh(amenity)
+
+    # Send pool status notification email if status changed
+    if pool_status_changed:
+        _send_pool_status_notification(amenity, db)
+
     return amenity
+
+
+def _send_pool_status_notification(amenity: Amenity, db: Session):
+    """Send email to all community members when pool open/close status changes."""
+    try:
+        from app.models.community import Community
+        from app.models.user import UserCommunity
+        from app.services.email_service import send_pool_status_email
+
+        community = db.query(Community).filter(
+            Community.community_id == amenity.community_id
+        ).first()
+        if not community:
+            return
+
+        # Collect all member emails in this community
+        member_user_ids = db.query(UserCommunity.user_id).filter(
+            UserCommunity.community_id == amenity.community_id
+        ).all()
+        member_ids = [r[0] for r in member_user_ids]
+
+        members = db.query(User).filter(
+            User.user_id.in_(member_ids),
+            User.active_status == True,
+            User.email_id.isnot(None)
+        ).all()
+
+        tentative_str = None
+        if amenity.tentative_open_date:
+            tentative_str = amenity.tentative_open_date.strftime("%B %d, %Y at %I:%M %p")
+
+        for member in members:
+            send_pool_status_email(
+                to_email       = member.email_id,
+                amenity_name   = amenity.name,
+                community_name = community.name,
+                pool_open      = amenity.pool_open,
+                tentative_date = tentative_str,
+            )
+    except Exception as e:
+        print(f"Pool status email failed: {e}")
 
 
 def check_availability(amenity_id: int, booking_date: date, db: Session) -> dict:
@@ -123,6 +201,16 @@ def create_booking(
     community = db.query(Community).filter(Community.community_id == data.community_id).first()
     if not community:
         raise ValueError("Community not found.")
+
+    # If pool is closed or reserved, block booking
+    if not amenity.pool_open:
+        raise ValueError("This amenity is currently closed and cannot be booked.")
+
+    if amenity.is_pool_reserved:
+        booked_by = db.query(User).filter(User.user_id == booked_by_id).first()
+        user_role = booked_by.role.role_name if (booked_by and booked_by.role) else "resident"
+        if user_role == "resident":
+            raise ValueError("This amenity is currently reserved for an event and cannot be booked by residents.")
 
     existing = db.query(AmenityBooking).filter(
         AmenityBooking.amenity_id   == data.amenity_id,

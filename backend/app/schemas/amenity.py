@@ -28,9 +28,12 @@ class AmenityCreate(BaseModel):
     booking_fee:     float = 0.0
 
     slot1_start: str = "08:00"
-    slot1_end:   str = "14:00"
-    slot2_start: str = "14:00"
-    slot2_end:   str = "20:00"
+    slot1_end:   str = "20:00"
+
+    # Pool Status Fields
+    pool_open:           bool     = True
+    tentative_open_date: datetime | None = None
+    is_pool_reserved:    bool     = False
 
     @field_validator("booking_fee")
     @classmethod
@@ -49,6 +52,15 @@ class AmenityUpdate(BaseModel):
     booking_fee: float | None = None
     active_status: bool | None = None
 
+    # Time slots
+    slot1_start: str | None = None
+    slot1_end:   str | None = None
+
+    # Pool Status Fields
+    pool_open:           bool | None     = None
+    tentative_open_date: datetime | None = None
+    is_pool_reserved:    bool | None     = None
+
 
 class AmenityOut(BaseModel):
     amenity_id:      int
@@ -63,8 +75,12 @@ class AmenityOut(BaseModel):
     booking_fee:     float
     slot1_start:     str
     slot1_end:       str
-    slot2_start:     str
-    slot2_end:       str
+    slot2_start:     str | None = None
+    slot2_end:       str | None = None
+    # Pool Status
+    pool_open:           bool = True
+    tentative_open_date: datetime | None = None
+    is_pool_reserved:    bool = False
     active_status:   bool
     created_date:    datetime
     model_config = {"from_attributes": True}

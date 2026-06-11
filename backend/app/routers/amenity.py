@@ -310,6 +310,9 @@ def _to_out(a) -> AmenityOut:
         slot1_end         = a.slot1_end,
         slot2_start       = a.slot2_start,
         slot2_end         = a.slot2_end,
+        pool_open         = a.pool_open,
+        tentative_open_date = a.tentative_open_date,
+        is_pool_reserved  = a.is_pool_reserved,
         active_status     = a.active_status,
         created_date      = a.created_date,
     )

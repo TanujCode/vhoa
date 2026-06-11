@@ -5,8 +5,8 @@ import { onlyDigitsKeyPress, onlyDecimalKeyPress } from '../utils/fieldValidator
 
 const StatusBadge = ({ status }) => {
   const map = {
-    PENDING:   'bg-amber-500/10 text-amber-600 dark:bg-amber-500/20 dark:text-amber-300',
-    APPROVED:  'bg-teal-500/10 text-teal-600 dark:bg-teal-500/20 dark:text-teal-400',
+    PENDING: 'bg-amber-500/10 text-amber-600 dark:bg-amber-500/20 dark:text-amber-300',
+    APPROVED: 'bg-teal-500/10 text-teal-600 dark:bg-teal-500/20 dark:text-teal-400',
     CANCELLED: 'bg-red-500/10 text-red-600 dark:bg-red-500/20 dark:text-red-400',
     COMPLETED: 'bg-slate-100 text-slate-600 dark:bg-gray-500/20 dark:text-gray-400',
   };
@@ -14,11 +14,11 @@ const StatusBadge = ({ status }) => {
 };
 
 const BookModal = ({ amenity, communityId, onClose, onSuccess }) => {
-  const [loading, setLoading]         = useState(false);
+  const [loading, setLoading] = useState(false);
   const [availability, setAvailability] = useState(null);
   const [form, setForm] = useState({
     booking_date: new Date().toISOString().split('T')[0],
-    slot_number:  '',
+    slot_number: '',
   });
 
   useEffect(() => {
@@ -29,7 +29,7 @@ const BookModal = ({ amenity, communityId, onClose, onSuccess }) => {
     try {
       const res = await API.get(`/amenity/${amenity.amenity_id}/availability?booking_date=${form.booking_date}`);
       setAvailability(res.data);
-    } catch {}
+    } catch { }
   };
 
   const handleSubmit = async (e) => {
@@ -37,10 +37,10 @@ const BookModal = ({ amenity, communityId, onClose, onSuccess }) => {
     setLoading(true);
     try {
       await API.post('/amenity/booking', {
-        amenity_id:   amenity.amenity_id,
+        amenity_id: amenity.amenity_id,
         community_id: communityId,
         booking_date: form.booking_date,
-        slot_number:  parseInt(form.slot_number),
+        slot_number: parseInt(form.slot_number),
       });
       onSuccess(); onClose();
     } catch (err) {
@@ -60,20 +60,20 @@ const BookModal = ({ amenity, communityId, onClose, onSuccess }) => {
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-  <label className="text-xs text-slate-500 dark:text-gray-400 mb-1 block">Booking Date</label>
-  <input 
-    type="date" 
-    required 
-    value={form.booking_date}
-    min={new Date().toISOString().split('T')[0]}
-    onChange={e => setForm({...form, booking_date: e.target.value})}
-    className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 
+            <label className="text-xs text-slate-500 dark:text-gray-400 mb-1 block">Booking Date</label>
+            <input
+              type="date"
+              required
+              value={form.booking_date}
+              min={new Date().toISOString().split('T')[0]}
+              onChange={e => setForm({ ...form, booking_date: e.target.value })}
+              className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 
                rounded-xl px-4 py-3 text-sm 
                text-slate-900 dark:text-white 
                focus:outline-none focus:ring-2 focus:ring-teal-500
-               dark:[color-scheme:dark]" 
-  />
-</div>
+               dark:[color-scheme:dark]"
+            />
+          </div>
 
           {availability && (
             <div>
@@ -81,14 +81,13 @@ const BookModal = ({ amenity, communityId, onClose, onSuccess }) => {
               <div className="space-y-2">
                 <button type="button"
                   disabled={!availability.slot_1_available}
-                  onClick={() => setForm({...form, slot_number: '1'})}
-                  className={`w-full p-3 rounded-xl border text-sm text-left transition ${
-                    form.slot_number === '1'
-                      ? 'border-teal-500 bg-teal-500/10 text-teal-600 dark:text-teal-400'
-                      : availability.slot_1_available
+                  onClick={() => setForm({ ...form, slot_number: '1' })}
+                  className={`w-full p-3 rounded-xl border text-sm text-left transition ${form.slot_number === '1'
+                    ? 'border-teal-500 bg-teal-500/10 text-teal-600 dark:text-teal-400'
+                    : availability.slot_1_available
                       ? 'border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-900 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10 dark:text-white'
                       : 'border-slate-100 bg-slate-100 text-slate-400 dark:border-white/5 dark:bg-white/5 dark:text-gray-600 cursor-not-allowed'
-                  }`}>
+                    }`}>
                   <div className="flex items-center justify-between">
                     <span>🌅 Slot 1 — {amenity.slot1_start || '08:00'} to {amenity.slot1_end || '14:00'}</span>
                     <span className={`text-xs px-2 py-0.5 rounded-full ${availability.slot_1_available ? 'bg-teal-500/10 text-teal-600 dark:bg-teal-500/20 dark:text-teal-400' : 'bg-red-500/10 text-red-600 dark:bg-red-500/20 dark:text-red-400'}`}>
@@ -98,14 +97,13 @@ const BookModal = ({ amenity, communityId, onClose, onSuccess }) => {
                 </button>
                 <button type="button"
                   disabled={!availability.slot_2_available}
-                  onClick={() => setForm({...form, slot_number: '2'})}
-                  className={`w-full p-3 rounded-xl border text-sm text-left transition ${
-                    form.slot_number === '2'
-                      ? 'border-teal-500 bg-teal-500/10 text-teal-600 dark:text-teal-400'
-                      : availability.slot_2_available
+                  onClick={() => setForm({ ...form, slot_number: '2' })}
+                  className={`w-full p-3 rounded-xl border text-sm text-left transition ${form.slot_number === '2'
+                    ? 'border-teal-500 bg-teal-500/10 text-teal-600 dark:text-teal-400'
+                    : availability.slot_2_available
                       ? 'border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-900 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10 dark:text-white'
                       : 'border-slate-100 bg-slate-100 text-slate-400 dark:border-white/5 dark:bg-white/5 dark:text-gray-600 cursor-not-allowed'
-                  }`}>
+                    }`}>
                   <div className="flex items-center justify-between">
                     <span>🌆 Slot 2 — {amenity.slot2_start || '14:00'} to {amenity.slot2_end || '20:00'}</span>
                     <span className={`text-xs px-2 py-0.5 rounded-full ${availability.slot_2_available ? 'bg-teal-500/10 text-teal-600 dark:bg-teal-500/20 dark:text-teal-400' : 'bg-red-500/10 text-red-600 dark:bg-red-500/20 dark:text-red-400'}`}>
@@ -120,7 +118,7 @@ const BookModal = ({ amenity, communityId, onClose, onSuccess }) => {
           <div className="flex gap-3 pt-2">
             <button type="button" onClick={onClose} className="flex-1 py-2.5 bg-slate-100 dark:bg-white/10 text-slate-700 dark:text-white rounded-xl text-sm font-medium transition cancel-button-red-hover">Cancel</button>
             <button type="submit" disabled={loading || !form.slot_number}
-              className="flex-1 py-2.5 bg-teal-600 hover:bg-teal-500 text-white rounded-xl text-sm font-medium transition disabled:opacity-50 disabled:cursor-not-allowed">
+              className="flex-1 py-2.5 bg-teal-600 hover:bg-teal-500 text-white rounded-xl text-sm font-medium transition disabled:opacity-50">
               {loading ? 'Booking...' : 'Confirm Booking'}
             </button>
           </div>
@@ -130,7 +128,7 @@ const BookModal = ({ amenity, communityId, onClose, onSuccess }) => {
   );
 };
 
-const CreateAmenityModal = ({ communityId, onClose, onSuccess }) => {
+const CreateAmenityModal = ({ communityId, communityName, onClose, onSuccess }) => {
   const [types, setTypes] = useState([]);
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
@@ -143,9 +141,10 @@ const CreateAmenityModal = ({ communityId, onClose, onSuccess }) => {
     fee_enabled: false,
     booking_fee: 0,
     slot1_start: '08:00',
-    slot1_end: '14:00',
-    slot2_start: '14:00',
-    slot2_end: '20:00'
+    slot1_end: '20:00',
+    pool_open: true,
+    tentative_open_date: '',
+    is_pool_reserved: false
   });
 
   useEffect(() => {
@@ -167,7 +166,8 @@ const CreateAmenityModal = ({ communityId, onClose, onSuccess }) => {
         community_id: communityId,
         amenity_type_id: parseInt(form.amenity_type_id),
         capacity: form.capacity ? parseInt(form.capacity) : null,
-        booking_fee: parseFloat(form.booking_fee) || 0.0
+        booking_fee: parseFloat(form.booking_fee) || 0.0,
+        tentative_open_date: form.tentative_open_date || null
       });
       onSuccess();
       onClose();
@@ -190,12 +190,12 @@ const CreateAmenityModal = ({ communityId, onClose, onSuccess }) => {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="text-xs text-slate-500 dark:text-gray-400 mb-1 block">Name</label>
-            <input type="text" required value={form.name} onChange={e => setForm({...form, name: e.target.value})}
+            <input type="text" required value={form.name} onChange={e => setForm({ ...form, name: e.target.value })}
               className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500" />
           </div>
           <div>
             <label className="text-xs text-slate-500 dark:text-gray-400 mb-1 block">Amenity Type</label>
-            <select required value={form.amenity_type_id} onChange={e => setForm({...form, amenity_type_id: e.target.value})}
+            <select required value={form.amenity_type_id} onChange={e => setForm({ ...form, amenity_type_id: e.target.value })}
               className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-teal-500">
               <option value="">Select type...</option>
               {types.map(t => (
@@ -204,28 +204,33 @@ const CreateAmenityModal = ({ communityId, onClose, onSuccess }) => {
             </select>
           </div>
           <div>
+            <label className="text-xs text-slate-500 dark:text-gray-400 mb-1 block">Community</label>
+            <input type="text" disabled value={communityName || 'Current Community'}
+              className="w-full bg-slate-100 dark:bg-[#0D1B2A]/50 border border-slate-200 dark:border-white/20 rounded-xl px-3 py-2 text-sm text-slate-500 dark:text-gray-400 cursor-not-allowed" />
+          </div>
+          <div>
             <label className="text-xs text-slate-500 dark:text-gray-400 mb-1 block">Description</label>
-            <textarea rows={2} value={form.description} onChange={e => setForm({...form, description: e.target.value})}
+            <textarea rows={2} value={form.description} onChange={e => setForm({ ...form, description: e.target.value })}
               className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500 resize-none" />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="text-xs text-slate-500 dark:text-gray-400 mb-1 block">Location</label>
-              <input type="text" value={form.location} onChange={e => setForm({...form, location: e.target.value})}
+              <input type="text" value={form.location} onChange={e => setForm({ ...form, location: e.target.value })}
                 className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500" />
             </div>
             <div>
               <label className="text-xs text-slate-500 dark:text-gray-400 mb-1 block">Capacity</label>
-              <input type="number" min="1" value={form.capacity} 
+              <input type="number" min="1" value={form.capacity}
                 onKeyPress={onlyDigitsKeyPress}
                 onChange={e => {
                   const val = e.target.value;
-                  setForm({...form, capacity: val});
+                  setForm({ ...form, capacity: val });
                   if (val && (isNaN(parseInt(val, 10)) || parseInt(val, 10) < 1)) {
-                    setErrors(prev => ({...prev, capacity: 'Capacity must be at least 1'}));
+                    setErrors(prev => ({ ...prev, capacity: 'Capacity must be at least 1' }));
                   } else {
                     setErrors(prev => {
-                      const next = {...prev};
+                      const next = { ...prev };
                       delete next.capacity;
                       return next;
                     });
@@ -238,24 +243,24 @@ const CreateAmenityModal = ({ communityId, onClose, onSuccess }) => {
           <div className="bg-slate-50 dark:bg-[#1e3248] p-3 rounded-2xl space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-sm text-slate-700 dark:text-gray-200 font-medium">Require Booking Fee</span>
-              <input type="checkbox" checked={form.fee_enabled} onChange={e => setForm({...form, fee_enabled: e.target.checked})}
+              <input type="checkbox" checked={form.fee_enabled} onChange={e => setForm({ ...form, fee_enabled: e.target.checked })}
                 className="w-4 h-4 rounded border-slate-300 text-teal-600 focus:ring-teal-500" />
             </div>
             {form.fee_enabled && (
               <div>
                 <label className="text-xs text-slate-500 dark:text-gray-400 mb-1 block">Booking Fee ($)</label>
-                <input type="number" min="0" step="0.01" value={form.booking_fee} 
+                <input type="number" min="0" step="0.01" value={form.booking_fee}
                   onKeyPress={onlyDecimalKeyPress}
                   onChange={e => {
                     const val = e.target.value;
-                    setForm({...form, booking_fee: val});
+                    setForm({ ...form, booking_fee: val });
                     if (val === '' || isNaN(parseFloat(val))) {
-                      setErrors(prev => ({...prev, booking_fee: 'Booking fee is required'}));
+                      setErrors(prev => ({ ...prev, booking_fee: 'Booking fee is required' }));
                     } else if (parseFloat(val) < 0) {
-                      setErrors(prev => ({...prev, booking_fee: 'Booking fee cannot be negative'}));
+                      setErrors(prev => ({ ...prev, booking_fee: 'Booking fee cannot be negative' }));
                     } else {
                       setErrors(prev => {
-                        const next = {...prev};
+                        const next = { ...prev };
                         delete next.booking_fee;
                         return next;
                       });
@@ -267,30 +272,69 @@ const CreateAmenityModal = ({ communityId, onClose, onSuccess }) => {
             )}
           </div>
           <div className="bg-slate-50 dark:bg-[#1e3248] p-3 rounded-2xl space-y-3">
-            <h4 className="text-xs font-bold text-teal-600 dark:text-teal-400 uppercase">Custom Time Slots</h4>
+            <h4 className="text-xs font-bold text-teal-600 dark:text-teal-400 uppercase">Custom Time Slot</h4>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-[10px] text-slate-500 dark:text-gray-400 mb-1 block">Slot 1 Start</label>
-                <input type="text" placeholder="08:00" value={form.slot1_start} onChange={e => setForm({...form, slot1_start: e.target.value})}
+                <label className="text-[10px] text-slate-500 dark:text-gray-400 mb-1 block">Slot Start Time</label>
+                <input type="text" placeholder="08:00" value={form.slot1_start} onChange={e => setForm({ ...form, slot1_start: e.target.value })}
                   className="w-full bg-white dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl px-3 py-1.5 text-xs text-slate-900 dark:text-white text-center focus:outline-none" />
               </div>
               <div>
-                <label className="text-[10px] text-slate-500 dark:text-gray-400 mb-1 block">Slot 1 End</label>
-                <input type="text" placeholder="14:00" value={form.slot1_end} onChange={e => setForm({...form, slot1_end: e.target.value})}
+                <label className="text-[10px] text-slate-500 dark:text-gray-400 mb-1 block">Slot End Time</label>
+                <input type="text" placeholder="20:00" value={form.slot1_end} onChange={e => setForm({ ...form, slot1_end: e.target.value })}
                   className="w-full bg-white dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl px-3 py-1.5 text-xs text-slate-900 dark:text-white text-center focus:outline-none" />
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="text-[10px] text-slate-500 dark:text-gray-400 mb-1 block">Slot 2 Start</label>
-                <input type="text" placeholder="14:00" value={form.slot2_start} onChange={e => setForm({...form, slot2_start: e.target.value})}
-                  className="w-full bg-white dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl px-3 py-1.5 text-xs text-slate-900 dark:text-white text-center focus:outline-none" />
+            
+            <div className="border-t border-slate-200 dark:border-white/10 my-2 pt-2"></div>
+            
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-slate-700 dark:text-gray-200 font-medium">Pool/Amenity Status</span>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setForm({ ...form, pool_open: true, tentative_open_date: '' })}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition ${form.pool_open ? 'bg-teal-600 text-white shadow-sm' : 'bg-slate-200 dark:bg-white/10 text-slate-700 dark:text-white'}`}
+                >
+                  Pool Open
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setForm({ ...form, pool_open: false })}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition ${!form.pool_open ? 'bg-red-600 text-white shadow-sm' : 'bg-slate-200 dark:bg-white/10 text-slate-700 dark:text-white'}`}
+                >
+                  Pool Close
+                </button>
               </div>
+            </div>
+
+            {!form.pool_open && (
               <div>
-                <label className="text-[10px] text-slate-500 dark:text-gray-400 mb-1 block">Slot 2 End</label>
-                <input type="text" placeholder="20:00" value={form.slot2_end} onChange={e => setForm({...form, slot2_end: e.target.value})}
-                  className="w-full bg-white dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl px-3 py-1.5 text-xs text-slate-900 dark:text-white text-center focus:outline-none" />
+                <label className="text-xs text-slate-500 dark:text-gray-400 mb-1 block">Tentative Open Date & Time</label>
+                <input
+                  type="datetime-local"
+                  value={form.tentative_open_date}
+                  onChange={e => setForm({ ...form, tentative_open_date: e.target.value })}
+                  className="w-full bg-white dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500 dark:[color-scheme:dark]"
+                />
               </div>
+            )}
+
+            <div className="border-t border-slate-200 dark:border-white/10 my-2 pt-2"></div>
+
+            <div className="space-y-1">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-slate-700 dark:text-gray-200 font-medium">Reserve Pool (Event/Party)</span>
+                <input
+                  type="checkbox"
+                  checked={form.is_pool_reserved}
+                  onChange={e => setForm({ ...form, is_pool_reserved: e.target.checked })}
+                  className="w-4 h-4 rounded border-slate-300 text-teal-600 focus:ring-teal-500"
+                />
+              </div>
+              <p className="text-[9px] text-slate-400 dark:text-gray-500">
+                If reserved, the pool is closed for generic homeowner bookings.
+              </p>
             </div>
           </div>
           <div className="flex gap-3 pt-2">
@@ -305,17 +349,22 @@ const CreateAmenityModal = ({ communityId, onClose, onSuccess }) => {
   );
 };
 
-const EditAmenityModal = ({ amenity, onClose, onSuccess }) => {
+const EditAmenityModal = ({ amenity, communityName, onClose, onSuccess }) => {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
   const [form, setForm] = useState({
-    name:          amenity.name || '',
-    description:   amenity.description || '',
-    location:      amenity.location || '',
-    capacity:      amenity.capacity || '',
-    fee_enabled:   amenity.fee_enabled || false,
-    booking_fee:   amenity.booking_fee || 0.0,
+    name: amenity.name || '',
+    description: amenity.description || '',
+    location: amenity.location || '',
+    capacity: amenity.capacity || '',
+    fee_enabled: amenity.fee_enabled || false,
+    booking_fee: amenity.booking_fee || 0.0,
     active_status: amenity.active_status || false,
+    slot1_start: amenity.slot1_start || '08:00',
+    slot1_end: amenity.slot1_end || '20:00',
+    pool_open: amenity.pool_open !== undefined ? amenity.pool_open : true,
+    tentative_open_date: amenity.tentative_open_date ? new Date(amenity.tentative_open_date).toISOString().slice(0, 16) : '',
+    is_pool_reserved: amenity.is_pool_reserved || false,
   });
 
   const handleSubmit = async (e) => {
@@ -329,7 +378,8 @@ const EditAmenityModal = ({ amenity, onClose, onSuccess }) => {
       await API.put(`/amenity/${amenity.amenity_id}`, {
         ...form,
         capacity: form.capacity ? parseInt(form.capacity) : null,
-        booking_fee: parseFloat(form.booking_fee) || 0.0
+        booking_fee: parseFloat(form.booking_fee) || 0.0,
+        tentative_open_date: form.tentative_open_date || null
       });
       onSuccess();
       onClose();
@@ -352,32 +402,37 @@ const EditAmenityModal = ({ amenity, onClose, onSuccess }) => {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="text-xs text-slate-500 dark:text-gray-400 mb-1 block">Name</label>
-            <input type="text" required value={form.name} onChange={e => setForm({...form, name: e.target.value})}
+            <input type="text" required value={form.name} onChange={e => setForm({ ...form, name: e.target.value })}
               className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500" />
           </div>
           <div>
+            <label className="text-xs text-slate-500 dark:text-gray-400 mb-1 block">Community</label>
+            <input type="text" disabled value={communityName || amenity.community_name || 'Current Community'}
+              className="w-full bg-slate-100 dark:bg-[#0D1B2A]/50 border border-slate-200 dark:border-white/20 rounded-xl px-3 py-2 text-sm text-slate-500 dark:text-gray-400 cursor-not-allowed" />
+          </div>
+          <div>
             <label className="text-xs text-slate-500 dark:text-gray-400 mb-1 block">Description</label>
-            <textarea rows={2} value={form.description} onChange={e => setForm({...form, description: e.target.value})}
+            <textarea rows={2} value={form.description} onChange={e => setForm({ ...form, description: e.target.value })}
               className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500 resize-none" />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="text-xs text-slate-500 dark:text-gray-400 mb-1 block">Location</label>
-              <input type="text" value={form.location} onChange={e => setForm({...form, location: e.target.value})}
+              <input type="text" value={form.location} onChange={e => setForm({ ...form, location: e.target.value })}
                 className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-teal-500" />
             </div>
             <div>
               <label className="text-xs text-slate-500 dark:text-gray-400 mb-1 block">Capacity</label>
-              <input type="number" min="1" value={form.capacity} 
+              <input type="number" min="1" value={form.capacity}
                 onKeyPress={onlyDigitsKeyPress}
                 onChange={e => {
                   const val = e.target.value;
-                  setForm({...form, capacity: val});
+                  setForm({ ...form, capacity: val });
                   if (val && (isNaN(parseInt(val, 10)) || parseInt(val, 10) < 1)) {
-                    setErrors(prev => ({...prev, capacity: 'Capacity must be at least 1'}));
+                    setErrors(prev => ({ ...prev, capacity: 'Capacity must be at least 1' }));
                   } else {
                     setErrors(prev => {
-                      const next = {...prev};
+                      const next = { ...prev };
                       delete next.capacity;
                       return next;
                     });
@@ -390,24 +445,24 @@ const EditAmenityModal = ({ amenity, onClose, onSuccess }) => {
           <div className="bg-slate-50 dark:bg-[#1e3248] p-3 rounded-2xl space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-sm text-slate-700 dark:text-gray-200 font-medium">Require Booking Fee</span>
-              <input type="checkbox" checked={form.fee_enabled} onChange={e => setForm({...form, fee_enabled: e.target.checked})}
+              <input type="checkbox" checked={form.fee_enabled} onChange={e => setForm({ ...form, fee_enabled: e.target.checked })}
                 className="w-4 h-4 rounded border-slate-300 text-teal-600 focus:ring-teal-500" />
             </div>
             {form.fee_enabled && (
               <div>
                 <label className="text-xs text-slate-500 dark:text-gray-400 mb-1 block">Booking Fee ($)</label>
-                <input type="number" min="0" step="0.01" value={form.booking_fee} 
+                <input type="number" min="0" step="0.01" value={form.booking_fee}
                   onKeyPress={onlyDecimalKeyPress}
                   onChange={e => {
                     const val = e.target.value;
-                    setForm({...form, booking_fee: val});
+                    setForm({ ...form, booking_fee: val });
                     if (val === '' || isNaN(parseFloat(val))) {
-                      setErrors(prev => ({...prev, booking_fee: 'Booking fee is required'}));
+                      setErrors(prev => ({ ...prev, booking_fee: 'Booking fee is required' }));
                     } else if (parseFloat(val) < 0) {
-                      setErrors(prev => ({...prev, booking_fee: 'Booking fee cannot be negative'}));
+                      setErrors(prev => ({ ...prev, booking_fee: 'Booking fee cannot be negative' }));
                     } else {
                       setErrors(prev => {
-                        const next = {...prev};
+                        const next = { ...prev };
                         delete next.booking_fee;
                         return next;
                       });
@@ -418,14 +473,82 @@ const EditAmenityModal = ({ amenity, onClose, onSuccess }) => {
               </div>
             )}
           </div>
+
+          <div className="bg-slate-50 dark:bg-[#1e3248] p-3 rounded-2xl space-y-3">
+            <h4 className="text-xs font-bold text-teal-600 dark:text-teal-400 uppercase">Custom Time Slot</h4>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-[10px] text-slate-500 dark:text-gray-400 mb-1 block">Slot Start Time</label>
+                <input type="text" placeholder="08:00" value={form.slot1_start} onChange={e => setForm({ ...form, slot1_start: e.target.value })}
+                  className="w-full bg-white dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl px-3 py-1.5 text-xs text-slate-900 dark:text-white text-center focus:outline-none" />
+              </div>
+              <div>
+                <label className="text-[10px] text-slate-500 dark:text-gray-400 mb-1 block">Slot End Time</label>
+                <input type="text" placeholder="20:00" value={form.slot1_end} onChange={e => setForm({ ...form, slot1_end: e.target.value })}
+                  className="w-full bg-white dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl px-3 py-1.5 text-xs text-slate-900 dark:text-white text-center focus:outline-none" />
+              </div>
+            </div>
+            
+            <div className="border-t border-slate-200 dark:border-white/10 my-2 pt-2"></div>
+            
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-slate-700 dark:text-gray-200 font-medium">Pool/Amenity Status</span>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setForm({ ...form, pool_open: true, tentative_open_date: '' })}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition ${form.pool_open ? 'bg-teal-600 text-white shadow-sm' : 'bg-slate-200 dark:bg-white/10 text-slate-700 dark:text-white'}`}
+                >
+                  Pool Open
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setForm({ ...form, pool_open: false })}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition ${!form.pool_open ? 'bg-red-600 text-white shadow-sm' : 'bg-slate-200 dark:bg-white/10 text-slate-700 dark:text-white'}`}
+                >
+                  Pool Close
+                </button>
+              </div>
+            </div>
+
+            {!form.pool_open && (
+              <div>
+                <label className="text-xs text-slate-500 dark:text-gray-400 mb-1 block">Tentative Open Date & Time</label>
+                <input
+                  type="datetime-local"
+                  value={form.tentative_open_date}
+                  onChange={e => setForm({ ...form, tentative_open_date: e.target.value })}
+                  className="w-full bg-white dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500 dark:[color-scheme:dark]"
+                />
+              </div>
+            )}
+
+            <div className="border-t border-slate-200 dark:border-white/10 my-2 pt-2"></div>
+
+            <div className="space-y-1">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-slate-700 dark:text-gray-200 font-medium">Reserve Pool (Event/Party)</span>
+                <input
+                  type="checkbox"
+                  checked={form.is_pool_reserved}
+                  onChange={e => setForm({ ...form, is_pool_reserved: e.target.checked })}
+                  className="w-4 h-4 rounded border-slate-300 text-teal-600 focus:ring-teal-500"
+                />
+              </div>
+              <p className="text-[9px] text-slate-400 dark:text-gray-500">
+                If reserved, the pool is closed for generic homeowner bookings.
+              </p>
+            </div>
+          </div>
+
           <div className="flex items-center justify-between bg-slate-50 dark:bg-[#1e3248] p-4 rounded-2xl">
             <span className="text-sm text-slate-700 dark:text-gray-200 font-medium">Active Status</span>
-            <input type="checkbox" checked={form.active_status} onChange={e => setForm({...form, active_status: e.target.checked})}
+            <input type="checkbox" checked={form.active_status} onChange={e => setForm({ ...form, active_status: e.target.checked })}
               className="w-4 h-4 rounded border-slate-300 text-teal-600 focus:ring-teal-500" />
           </div>
           <div className="flex gap-3 pt-2">
             <button type="button" onClick={onClose} className="flex-1 py-2.5 bg-slate-100 dark:bg-white/10 rounded-xl text-sm font-medium text-slate-700 dark:text-white transition-colors cancel-button-red-hover">Cancel</button>
-            <button type="submit" disabled={loading} className="flex-1 py-2.5 bg-teal-600 hover:bg-teal-500 text-white rounded-xl text-sm font-medium transition-colors disabled:opacity-50 font-sans">
+            <button type="submit" disabled={loading} className="flex-1 py-2.5 bg-teal-600 hover:bg-teal-500 text-white rounded-xl text-sm font-medium transition-colors disabled:opacity-50">
               {loading ? 'Saving...' : 'Save Changes'}
             </button>
           </div>
@@ -436,17 +559,17 @@ const EditAmenityModal = ({ amenity, onClose, onSuccess }) => {
 };
 
 const Amenity = ({ community, user, setActivePage, setPaymentState }) => {
-  const [amenities, setAmenities]   = useState([]);
-  const [bookings, setBookings]     = useState([]);
-  const [loading, setLoading]       = useState(true);
-  const [activeTab, setActiveTab]   = useState('amenities');
-  const [bookModal, setBookModal]   = useState(null);
-  const [editModal, setEditModal]   = useState(null);
+  const [amenities, setAmenities] = useState([]);
+  const [bookings, setBookings] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('amenities');
+  const [bookModal, setBookModal] = useState(null);
+  const [editModal, setEditModal] = useState(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [statusFilter, setStatusFilter] = useState('');
 
-  const role     = user?.role_name || user?.role || '';
-  const isAdmin  = ['super_admin', 'property_manager', 'board_member'].includes(role);
+  const role = user?.role_name || user?.role || '';
+  const isAdmin = ['super_admin', 'property_manager', 'board_member'].includes(role);
 
   useEffect(() => {
     if (community?.community_id) {
@@ -520,7 +643,7 @@ const Amenity = ({ community, user, setActivePage, setPaymentState }) => {
   const formatDate = (d) => d ? new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—';
 
   return (
-    <div className="text-slate-900 dark:text-white font-sans">
+    <div className="text-slate-900 dark:text-white">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
         <div className="flex justify-between items-center w-full md:w-auto">
           <div>
@@ -528,7 +651,7 @@ const Amenity = ({ community, user, setActivePage, setPaymentState }) => {
             <p className="text-slate-500 dark:text-gray-400 mt-1">{community?.name}</p>
           </div>
           {/* Mobile Refresh Button */}
-          <button 
+          <button
             onClick={() => activeTab === 'amenities' ? fetchAmenities() : fetchBookings()}
             disabled={loading}
             className="md:hidden p-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 rounded-2xl text-slate-700 dark:text-white transition disabled:opacity-60"
@@ -540,7 +663,7 @@ const Amenity = ({ community, user, setActivePage, setPaymentState }) => {
 
         <div className="flex gap-2 w-full md:w-auto">
           {/* Desktop Refresh Button */}
-          <button 
+          <button
             onClick={() => activeTab === 'amenities' ? fetchAmenities() : fetchBookings()}
             disabled={loading}
             className="hidden md:flex px-5 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 rounded-2xl text-sm font-semibold transition items-center gap-2 text-slate-700 dark:text-white disabled:opacity-60"
@@ -560,9 +683,8 @@ const Amenity = ({ community, user, setActivePage, setPaymentState }) => {
       <div className="flex gap-2 mb-6">
         {['amenities', 'bookings'].map(tab => (
           <button key={tab} onClick={() => setActiveTab(tab)}
-            className={`px-6 py-2.5 rounded-2xl text-sm font-medium transition capitalize ${
-              activeTab === tab ? 'bg-teal-600 hover:bg-teal-700 text-white hover:text-white shadow-sm' : 'bg-slate-100 hover:bg-slate-200 text-slate-600 dark:bg-white/10 dark:text-gray-400 dark:hover:bg-white/20'
-            }`}>
+            className={`px-6 py-2.5 rounded-2xl text-sm font-medium transition capitalize ${activeTab === tab ? 'bg-teal-600 hover:bg-teal-700 text-white hover:text-white shadow-sm' : 'bg-slate-100 hover:bg-slate-200 text-slate-600 dark:bg-white/10 dark:text-gray-400 dark:hover:bg-white/20'
+              }`}>
             {tab === 'amenities' ? '🏊 Amenities' : '📅 Bookings'}
           </button>
         ))}
@@ -576,7 +698,7 @@ const Amenity = ({ community, user, setActivePage, setPaymentState }) => {
             </div>
           ) : amenities.length === 0 ? (
             <div className="text-center py-20 text-slate-500 dark:text-gray-400">
-              <Calendar size={40} className="mx-auto mb-3 opacity-55" />
+              <Calendar size={40} className="mx-auto mb-3 opacity-50" />
               No amenities available.
             </div>
           ) : (
@@ -588,9 +710,24 @@ const Amenity = ({ community, user, setActivePage, setPaymentState }) => {
                       <h3 className="font-semibold text-slate-900 dark:text-white text-lg">{a.name}</h3>
                       <p className="text-xs text-slate-500 dark:text-gray-400 mt-0.5">{a.amenity_type_name}</p>
                     </div>
-                    <span className={`text-xs px-2 py-1 rounded-full ${a.active_status ? 'bg-teal-500/10 text-teal-600 dark:bg-teal-500/20 dark:text-teal-400' : 'bg-red-500/10 text-red-600 dark:bg-red-500/20 dark:text-red-400'}`}>
-                      {a.active_status ? 'Active' : 'Inactive'}
-                    </span>
+                    <div className="flex flex-col items-end gap-1.5">
+                      <span className={`text-[10px] px-2 py-0.5 rounded-full font-semibold ${a.active_status ? 'bg-teal-500/10 text-teal-600 dark:bg-teal-500/20 dark:text-teal-400' : 'bg-red-500/10 text-red-600 dark:bg-red-500/20 dark:text-red-400'}`}>
+                        {a.active_status ? 'Active' : 'Inactive'}
+                      </span>
+                      {!a.pool_open ? (
+                        <span className="text-[10px] px-2 py-0.5 bg-red-500/10 text-red-600 dark:bg-red-500/20 dark:text-red-400 rounded-full font-semibold">
+                          Closed
+                        </span>
+                      ) : a.is_pool_reserved ? (
+                        <span className="text-[10px] px-2 py-0.5 bg-amber-500/10 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400 rounded-full font-semibold">
+                          Reserved
+                        </span>
+                      ) : (
+                        <span className="text-[10px] px-2 py-0.5 bg-teal-500/10 text-teal-600 dark:bg-teal-500/20 dark:text-teal-400 rounded-full font-semibold">
+                          Open
+                        </span>
+                      )}
+                    </div>
                   </div>
 
                   {a.description && <p className="text-slate-500 dark:text-gray-400 text-sm mb-4">{a.description}</p>}
@@ -608,11 +745,13 @@ const Amenity = ({ community, user, setActivePage, setPaymentState }) => {
 
                   <div className="bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-0 rounded-2xl p-3 mb-4 text-xs space-y-1">
                     <div className="flex justify-between text-slate-500 dark:text-gray-400">
-                      <span>🌅 Slot 1</span><span className="text-slate-800 dark:text-slate-200">{a.slot1_start} - {a.slot1_end}</span>
+                      <span>🕐 Time Slot</span><span className="text-slate-800 dark:text-slate-200">{a.slot1_start} - {a.slot1_end}</span>
                     </div>
-                    <div className="flex justify-between text-slate-500 dark:text-gray-400">
-                      <span>🌆 Slot 2</span><span className="text-slate-800 dark:text-slate-200">{a.slot2_start} - {a.slot2_end}</span>
-                    </div>
+                    {!a.pool_open && a.tentative_open_date && (
+                      <div className="text-[10px] text-red-500 dark:text-red-400 font-medium pt-1 mt-1 border-t border-slate-200/50 dark:border-white/5">
+                        Tentative Open: {new Date(a.tentative_open_date).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                      </div>
+                    )}
                   </div>
 
                   <div className="flex gap-2">
@@ -635,10 +774,10 @@ const Amenity = ({ community, user, setActivePage, setPaymentState }) => {
                     )}
                     <button
                       onClick={() => setBookModal(a)}
-                      disabled={!a.active_status}
-                      className="flex-1 py-2.5 bg-teal-600 hover:bg-teal-500 text-white rounded-2xl text-sm font-medium transition disabled:opacity-50 disabled:cursor-not-allowed shadow-sm font-sans"
+                      disabled={!a.active_status || !a.pool_open || (a.is_pool_reserved && !isAdmin)}
+                      className="flex-1 py-2.5 bg-teal-600 hover:bg-teal-500 text-white rounded-2xl text-sm font-medium transition disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
                     >
-                      Book Now
+                      {!a.pool_open ? 'Closed' : (a.is_pool_reserved && !isAdmin) ? 'Reserved' : 'Book Now'}
                     </button>
                   </div>
                 </div>
@@ -700,19 +839,19 @@ const Amenity = ({ community, user, setActivePage, setPaymentState }) => {
                       <StatusBadge status={b.status} />
                       {!b.is_paid && b.fee_amount > 0 && ['PENDING', 'APPROVED'].includes(b.status) && (
                         <button onClick={() => handlePay(b)}
-                          className="px-3 py-1.5 bg-teal-600 hover:bg-teal-500 text-white rounded-xl text-xs font-medium transition shadow-sm font-sans">
+                          className="px-3 py-1.5 bg-teal-600 hover:bg-teal-500 text-white rounded-xl text-xs font-medium transition shadow-sm">
                           Pay Fee
                         </button>
                       )}
                       {isAdmin && b.status === 'PENDING' && (
                         <button onClick={() => handleApprove(b.booking_id)}
-                          className="px-3 py-1.5 bg-teal-500/10 dark:bg-teal-500/20 hover:bg-teal-500/20 dark:hover:bg-teal-500/30 text-teal-600 dark:text-teal-400 rounded-xl text-xs font-medium transition font-sans">
+                          className="px-3 py-1.5 bg-teal-500/10 dark:bg-teal-500/20 hover:bg-teal-500/20 dark:hover:bg-teal-500/30 text-teal-600 dark:text-teal-400 rounded-xl text-xs font-medium transition">
                           Approve
                         </button>
                       )}
                       {['PENDING', 'APPROVED'].includes(b.status) && (
                         <button onClick={() => handleCancel(b.booking_id)}
-                          className="px-3 py-1.5 bg-red-500/10 dark:bg-red-500/20 hover:bg-red-500/20 dark:hover:bg-red-500/30 text-red-600 dark:text-red-400 rounded-xl text-xs font-medium transition font-sans">
+                          className="px-3 py-1.5 bg-red-500/10 dark:bg-red-500/20 hover:bg-red-500/20 dark:hover:bg-red-500/30 text-red-600 dark:text-red-400 rounded-xl text-xs font-medium transition">
                           Cancel
                         </button>
                       )}
@@ -731,12 +870,12 @@ const Amenity = ({ community, user, setActivePage, setPaymentState }) => {
       )}
 
       {editModal && (
-        <EditAmenityModal amenity={editModal}
+        <EditAmenityModal amenity={editModal} communityName={community?.name}
           onClose={() => setEditModal(null)} onSuccess={() => { fetchAmenities(); }} />
       )}
 
       {showCreateModal && (
-        <CreateAmenityModal communityId={community?.community_id}
+        <CreateAmenityModal communityId={community?.community_id} communityName={community?.name}
           onClose={() => setShowCreateModal(false)} onSuccess={() => { fetchAmenities(); }} />
       )}
     </div>

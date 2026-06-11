@@ -6,22 +6,39 @@ from app.config import settings
 
 
 def _send_email_thread(to_email: str, subject: str, html_body: str):
+    username = settings.MAIL_USERNAME.strip('"').strip("'")
+    password = settings.MAIL_PASSWORD.strip('"').strip("'")
+    mail_from = settings.MAIL_FROM.strip('"').strip("'")
+    from_name = settings.MAIL_FROM_NAME.strip('"').strip("'")
+
+    msg = MIMEMultipart("alternative")
+    msg["Subject"] = subject
+    msg["From"]    = f"{from_name} <{mail_from}>"
+    msg["To"]      = to_email
+    msg.attach(MIMEText(html_body, "html"))
+
+    # Try SMTP_SSL on port 465 first
     try:
-        msg = MIMEMultipart("alternative")
-        msg["Subject"] = subject
-        msg["From"]    = f"{settings.MAIL_FROM_NAME} <{settings.MAIL_FROM}>"
-        msg["To"]      = to_email
-
-        msg.attach(MIMEText(html_body, "html"))
-
-        # Added a 10 second timeout to prevent the thread from hanging indefinitely
+        print(f"Attempting SMTP_SSL on port 465 to {to_email}...")
         with smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=10) as server:
-            server.login(settings.MAIL_USERNAME, settings.MAIL_PASSWORD)
-            server.sendmail(settings.MAIL_FROM, to_email, msg.as_string())
-
-        print(f"Email sent to {to_email}")
+            server.login(username, password)
+            server.sendmail(mail_from, to_email, msg.as_string())
+        print(f"Email sent successfully to {to_email} via port 465")
+        return
     except Exception as e:
-        print(f"Email failed: {e}")
+        print(f"SMTP_SSL port 465 failed: {e}")
+
+    # Fallback to STARTTLS on port 587
+    try:
+        print(f"Attempting SMTP+STARTTLS on port 587 to {to_email}...")
+        with smtplib.SMTP("smtp.gmail.com", 587, timeout=10) as server:
+            server.starttls()
+            server.login(username, password)
+            server.sendmail(mail_from, to_email, msg.as_string())
+        print(f"Email sent successfully to {to_email} via port 587 (fallback)")
+        return
+    except Exception as e:
+        print(f"SMTP port 587 fallback failed: {e}")
 
 
 def send_email(to_email: str, subject: str, html_body: str) -> bool:
@@ -398,4 +415,169 @@ def send_association_email(to_email: str, full_name: str, community_name: str, r
       </div>
     """
     html = _wrap_in_responsive_layout(inner_html, subtitle="")
+    return send_email(to_email, subject, html)
+
+
+def send_pool_status_email(
+    to_email: str,
+    amenity_name: str,
+    community_name: str,
+    pool_open: bool,
+    tentative_date: str = None
+) -> bool:
+    """Send pool open/closed status change notification email"""
+    subject = f"NestBloq — {amenity_name} Status Update in {community_name}"
+    
+    if pool_open:
+        status_banner = "🏊 Pool is NOW OPEN!"
+        status_color = "#14B8A6"  # Teal
+        status_details = f"Great news! The pool/amenity <strong>{amenity_name}</strong> is now open and available for bookings."
+    else:
+        status_banner = "⚠️ Pool is TEMPORARILY CLOSED"
+        status_color = "#EF4444"  # Red
+        if tentative_date:
+            status_details = f"The pool/amenity <strong>{amenity_name}</strong> is temporarily closed. It is tentatively scheduled to reopen on <strong>{tentative_date}</strong>."
+        else:
+            status_details = f"The pool/amenity <strong>{amenity_name}</strong> is temporarily closed until further notice."
+
+    inner_html = f"""
+      <div style="padding: 40px 30px;">
+        <div style="background: {status_color}; border-radius: 12px; padding: 16px; margin-bottom: 24px; text-align: center; color: #ffffff; font-weight: bold; font-size: 18px;">
+          {status_banner}
+        </div>
+        <p>Hello,</p>
+        <p style="color: #9CA3AF; line-height: 1.6; font-size: 14px;">
+          This is an official update regarding the amenities in your community <strong>{community_name}</strong>.
+        </p>
+        <div style="background: #162535; border-radius: 12px; padding: 20px; margin: 20px 0; border-left: 4px solid {status_color};">
+          <p style="margin: 0; color: #ffffff; line-height: 1.6; font-size: 15px;">
+            {status_details}
+          </p>
+        </div>
+        <div style="margin: 30px 0; text-align: center;">
+          <a href="https://nestbloq.vercel.app/login" style="background-color: #14B8A6; color: #000000; padding: 12px 24px; font-weight: bold; font-size: 15px; text-decoration: none; border-radius: 8px; display: inline-block; box-shadow: 0 4px 6px rgba(20, 184, 166, 0.25);">
+            Log In to Portal
+          </a>
+        </div>
+      </div>
+    """
+    html = _wrap_in_responsive_layout(inner_html)
+    return send_email(to_email, subject, html)
+
+
+def send_service_request_created_email(
+    to_email: str,
+    recipient_name: str,
+    request_id: int,
+    title: str,
+    service_type: str,
+    priority: str,
+    community_name: str,
+    is_admin: bool = False
+) -> bool:
+    """Send email confirmation/notification when a service request is created"""
+    subject = f"NestBloq — New Service Request #{request_id}: {title}"
+    if is_admin:
+        banner = "🛠️ New Service Request Submitted"
+        banner_color = "#3B82F6"  # Blue
+        heading = "A new service request has been submitted in your community."
+    else:
+        banner = "✅ Service Request Submitted"
+        banner_color = "#14B8A6"  # Teal
+        heading = "Your service request has been successfully submitted."
+
+    inner_html = f"""
+      <div style="padding: 40px 30px;">
+        <div style="background: {banner_color}; border-radius: 12px; padding: 16px; margin-bottom: 24px; text-align: center; color: #ffffff; font-weight: bold; font-size: 18px;">
+          {banner}
+        </div>
+        <p>Hello {recipient_name},</p>
+        <p style="color: #9CA3AF; line-height: 1.6; font-size: 14px;">
+          {heading}
+        </p>
+        
+        <div style="background: #162535; border-radius: 12px; padding: 20px; margin: 20px 0;">
+          <table style="width: 100%; border-collapse: collapse; font-size: 14px; color: #ffffff;">
+            <tr><td style="color: #9CA3AF; padding: 8px 0;">Request ID</td><td style="text-align: right; font-weight: bold; color: #ffffff;">#{request_id}</td></tr>
+            <tr><td style="color: #9CA3AF; padding: 8px 0; border-top: 1px solid rgba(255,255,255,0.05);">Title</td><td style="text-align: right; color: #ffffff;">{title}</td></tr>
+            <tr><td style="color: #9CA3AF; padding: 8px 0; border-top: 1px solid rgba(255,255,255,0.05);">Category</td><td style="text-align: right; color: #ffffff;">{service_type}</td></tr>
+            <tr><td style="color: #9CA3AF; padding: 8px 0; border-top: 1px solid rgba(255,255,255,0.05);">Priority</td><td style="text-align: right; font-weight: bold; color: {'#EF4444' if priority == 'URGENT' or priority == 'HIGH' else '#14B8A6'};">{priority}</td></tr>
+            <tr><td style="color: #9CA3AF; padding: 8px 0; border-top: 1px solid rgba(255,255,255,0.05);">Community</td><td style="text-align: right; color: #ffffff;">{community_name}</td></tr>
+          </table>
+        </div>
+
+        <div style="margin: 30px 0; text-align: center;">
+          <a href="https://nestbloq.vercel.app/login" style="background-color: #14B8A6; color: #000000; padding: 12px 24px; font-weight: bold; font-size: 15px; text-decoration: none; border-radius: 8px; display: inline-block; box-shadow: 0 4px 6px rgba(20, 184, 166, 0.25);">
+            View Request Details
+          </a>
+        </div>
+      </div>
+    """
+    html = _wrap_in_responsive_layout(inner_html)
+    return send_email(to_email, subject, html)
+
+
+def send_service_request_status_update_email(
+    to_email: str,
+    recipient_name: str,
+    request_id: int,
+    title: str,
+    old_status: str,
+    new_status: str,
+    community_name: str,
+    note: str = None
+) -> bool:
+    """Send email update to resident when their service request status changes"""
+    subject = f"NestBloq — Service Request #{request_id} Updated: {new_status}"
+    
+    # Custom color/banner based on status
+    status_colors = {
+        "OPEN": "#9CA3AF",
+        "APPROVED": "#10B981",
+        "IN_PROGRESS": "#3B82F6",
+        "VENDOR_ASSIGNED": "#8B5CF6",
+        "ON_HOLD": "#F59E0B",
+        "CLOSED": "#14B8A6",
+        "CANCELLED": "#EF4444",
+    }
+    banner_color = status_colors.get(new_status, "#14B8A6")
+    
+    note_section = ""
+    if note:
+        note_section = f"""
+        <div style="background: #162535; border-radius: 12px; padding: 20px; margin: 20px 0; border-left: 4px solid #3B82F6;">
+          <p style="margin: 0; color: #9CA3AF; font-size: 13px; font-weight: bold; text-transform: uppercase;">Latest Update/Note</p>
+          <p style="margin: 8px 0 0; color: #ffffff; font-size: 14px; line-height: 1.5;">{note}</p>
+        </div>
+        """
+
+    inner_html = f"""
+      <div style="padding: 40px 30px;">
+        <div style="background: {banner_color}; border-radius: 12px; padding: 16px; margin-bottom: 24px; text-align: center; color: #ffffff; font-weight: bold; font-size: 18px;">
+          🛠️ Request Updated to {new_status.replace('_', ' ')}
+        </div>
+        <p>Hello {recipient_name},</p>
+        <p style="color: #9CA3AF; line-height: 1.6; font-size: 14px;">
+          The status of your service request in <strong>{community_name}</strong> has been updated.
+        </p>
+
+        <div style="background: #162535; border-radius: 12px; padding: 20px; margin: 20px 0;">
+          <table style="width: 100%; border-collapse: collapse; font-size: 14px; color: #ffffff;">
+            <tr><td style="color: #9CA3AF; padding: 8px 0;">Request ID</td><td style="text-align: right; font-weight: bold; color: #ffffff;">#{request_id}</td></tr>
+            <tr><td style="color: #9CA3AF; padding: 8px 0; border-top: 1px solid rgba(255,255,255,0.05);">Title</td><td style="text-align: right; color: #ffffff;">{title}</td></tr>
+            <tr><td style="color: #9CA3AF; padding: 8px 0; border-top: 1px solid rgba(255,255,255,0.05);">Previous Status</td><td style="text-align: right; color: #9CA3AF; text-decoration: line-through;">{old_status.replace('_', ' ')}</td></tr>
+            <tr><td style="color: #9CA3AF; padding: 8px 0; border-top: 1px solid rgba(255,255,255,0.05);">New Status</td><td style="text-align: right; font-weight: bold; color: {banner_color};">{new_status.replace('_', ' ')}</td></tr>
+          </table>
+        </div>
+
+        {note_section}
+
+        <div style="margin: 30px 0; text-align: center;">
+          <a href="https://nestbloq.vercel.app/login" style="background-color: #14B8A6; color: #000000; padding: 12px 24px; font-weight: bold; font-size: 15px; text-decoration: none; border-radius: 8px; display: inline-block; box-shadow: 0 4px 6px rgba(20, 184, 166, 0.25);">
+            View Full Progress History
+          </a>
+        </div>
+      </div>
+    """
+    html = _wrap_in_responsive_layout(inner_html)
     return send_email(to_email, subject, html)

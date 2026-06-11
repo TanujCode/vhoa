@@ -119,6 +119,52 @@ def create_service_request(
     db.add(request)
     db.commit()
     db.refresh(request)
+
+    # ── Email Notifications ──
+    try:
+        from app.services.email_service import send_service_request_created_email
+        
+        # Resident info
+        submitted_by = db.query(User).filter(User.user_id == submitted_by_id).first()
+        resident_name = f"{submitted_by.first_name} {submitted_by.last_name}".strip() if submitted_by else "Resident"
+        
+        community = db.query(Community).filter(Community.community_id == data.community_id).first()
+        community_name = community.name if community else "Community"
+        
+        if submitted_by and submitted_by.email_id:
+            send_service_request_created_email(
+                to_email=submitted_by.email_id,
+                recipient_name=resident_name,
+                request_id=request.request_id,
+                title=request.title,
+                service_type=stype.type_name,
+                priority=request.priority,
+                community_name=community_name,
+                is_admin=False
+            )
+            
+        # Board/Admin info
+        if community:
+            board_emails = filter(None, [
+                community.president_email_id,
+                community.secretary_email_id,
+                community.treasurer_email_id,
+                community.admin_email_id
+            ])
+            for email in set(board_emails):
+                send_service_request_created_email(
+                    to_email=email,
+                    recipient_name="Board Member/Admin",
+                    request_id=request.request_id,
+                    title=request.title,
+                    service_type=stype.type_name,
+                    priority=request.priority,
+                    community_name=community_name,
+                    is_admin=True
+                )
+    except Exception as e:
+        print(f"Error sending service request creation email: {e}")
+
     return request
 
 
@@ -278,6 +324,29 @@ def update_status(
 
     db.commit()
     db.refresh(request)
+
+    # ── Email Notification on Status Change ──
+    if current_status != target_status:
+        try:
+            resident = request.submitted_by
+            if resident and resident.email_id:
+                resident_name = f"{resident.first_name} {resident.last_name}".strip()
+                community_name = request.community.name if request.community else "Community"
+                
+                from app.services.email_service import send_service_request_status_update_email
+                send_service_request_status_update_email(
+                    to_email=resident.email_id,
+                    recipient_name=resident_name,
+                    request_id=request.request_id,
+                    title=request.title,
+                    old_status=current_status,
+                    new_status=target_status,
+                    community_name=community_name,
+                    note=data.note
+                )
+        except Exception as email_err:
+            print(f"Error sending service request status update email: {email_err}")
+
     return request
 
 

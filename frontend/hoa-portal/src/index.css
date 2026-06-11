@@ -68,3 +68,24 @@ html:not(.dark) body {
   background-color: #dc2626 !important;
   color: #ffffff !important;
 }
+
+/* Color Scheme & Date Picker styling for dark mode */
+.dark {
+  color-scheme: dark;
+}
+
+.light {
+  color-scheme: light;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+}
+
+.dark input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1) brightness(0.9);
+}
+
+.dark input[type="date"]::-webkit-calendar-picker-indicator:hover {
+  filter: invert(1) brightness(1.2);
+}

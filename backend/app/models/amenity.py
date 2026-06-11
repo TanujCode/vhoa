@@ -47,6 +47,11 @@ class Amenity(Base):
     slot2_start     = Column(String(10), default="14:00")
     slot2_end       = Column(String(10), default="20:00")
 
+    # Pool Status
+    pool_open           = Column(Boolean, default=True, nullable=False)
+    tentative_open_date = Column(DateTime(timezone=True), nullable=True)
+    is_pool_reserved    = Column(Boolean, default=False, nullable=False)
+
     active_status   = Column(Boolean, default=True)
     created_by_id   = Column(Integer, ForeignKey("users.user_id"), nullable=True)
     created_date    = Column(DateTime(timezone=True), server_default=func.now())
