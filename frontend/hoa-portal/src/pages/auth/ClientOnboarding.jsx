@@ -575,6 +575,7 @@ export default function ClientOnboarding() {
   };
 
   const fetchCaptcha = async () => {
+    // Instantly show a local math captcha — no delay!
     setCaptcha(generateLocalCaptcha());
     setValue('captcha_answer', '');
 
@@ -1159,7 +1160,7 @@ export default function ClientOnboarding() {
                             validate: (val) => {
                               if (!val) return 'Mobile phone is required';
                               if (val.length < ownerPhoneRule.min || val.length > ownerPhoneRule.max) {
-                                  return `Phone must be exactly ${ownerPhoneRule.label} for ${countryCode}`;
+                                return `Phone must be exactly ${ownerPhoneRule.label} for ${countryCode}`;
                               }
                               return true;
                             }

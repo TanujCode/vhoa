@@ -3,6 +3,7 @@ import { AlertTriangle, Plus, RefreshCw, ChevronDown, X, Search, ArrowUpRight, D
 import API, { getBaseUrl } from '../services/api';
 import { onlyDecimalKeyPress, onlyDigitsKeyPress } from '../utils/fieldValidators';
 
+// ── Status Badge ──────────────────────────────
 const StatusBadge = ({ status }) => {
   const map = {
     OPEN:        'bg-red-500/20 text-red-400',
@@ -20,6 +21,7 @@ const StatusBadge = ({ status }) => {
   );
 };
 
+// ── Submit Violation Modal ────────────────────
 const SubmitModal = ({ communityId, onClose, onSuccess }) => {
   const [types, setTypes]     = useState([]);
   const [residents, setResidents] = useState([]);
@@ -115,7 +117,7 @@ const SubmitModal = ({ communityId, onClose, onSuccess }) => {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="text-xs text-slate-500 dark:text-gray-400 mb-1 block">Violation Type</label>
+            <label className="text-xs text-slate-500 dark:text-gray-400 mb-1 block">Violation Type <span className="text-red-500">*</span></label>
             <select
               required
               value={form.violation_type_id}
@@ -202,7 +204,7 @@ const SubmitModal = ({ communityId, onClose, onSuccess }) => {
           </div>
 
           <div>
-            <label className="text-xs text-slate-500 dark:text-gray-400 mb-1 block">Violation Date</label>
+            <label className="text-xs text-slate-500 dark:text-gray-400 mb-1 block">Violation Date <span className="text-red-500">*</span></label>
             <input
               type="date"
               required
@@ -213,7 +215,7 @@ const SubmitModal = ({ communityId, onClose, onSuccess }) => {
           </div>
 
           <div>
-            <label className="text-xs text-slate-500 dark:text-gray-400 mb-1 block">Fine Amount ($)</label>
+            <label className="text-xs text-slate-500 dark:text-gray-400 mb-1 block">Fine Amount ($) <span className="text-red-500">*</span></label>
             <input
               type="number"
               min="0"
@@ -264,7 +266,7 @@ const SubmitModal = ({ communityId, onClose, onSuccess }) => {
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 py-2.5 bg-slate-100 hover:bg-red-600 hover:text-white dark:bg-white/10 dark:hover:bg-red-600 dark:hover:text-white rounded-xl text-sm font-medium transition text-slate-700 dark:text-white"
+              className="flex-1 py-2.5 border border-teal-600 text-teal-600 bg-transparent hover:bg-teal-50 dark:border-teal-500 dark:text-teal-500 dark:hover:bg-teal-950/20 rounded-xl text-sm font-medium transition"
             >
               Cancel
             </button>
@@ -282,6 +284,7 @@ const SubmitModal = ({ communityId, onClose, onSuccess }) => {
   );
 };
 
+// ── Create Violation Type Modal ───────────────
 const CreateTypeModal = ({ communityId, onClose, onSuccess }) => {
   const [formData, setFormData] = useState({ name: '', description: '', amount: 0, late_charge: 0, due_days: 30 });
   const [errors, setErrors] = useState({});
@@ -329,9 +332,10 @@ const CreateTypeModal = ({ communityId, onClose, onSuccess }) => {
         </div>
         
         <div className="mb-3">
-          <input 
-            className="w-full p-2 bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500" 
+          <textarea 
+            className="w-full p-2 bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 resize-none" 
             placeholder="Description" 
+            rows={3}
             value={formData.description}
             onChange={e => setFormData({...formData, description: e.target.value})} 
           />
@@ -419,7 +423,7 @@ const CreateTypeModal = ({ communityId, onClose, onSuccess }) => {
         </div>
 
         <div className="flex gap-2 mt-4">
-          <button type="button" disabled={loading} onClick={onClose} className="px-4 py-2 bg-slate-100 hover:bg-red-600 hover:text-white dark:bg-white/10 dark:hover:bg-red-600 dark:hover:text-white rounded-xl flex-1 text-slate-700 dark:text-white disabled:opacity-50 transition-colors">Cancel</button>
+          <button type="button" disabled={loading} onClick={onClose} className="px-4 py-2 border border-blue-600 text-blue-600 bg-transparent hover:bg-blue-50 dark:border-blue-500 dark:text-blue-500 dark:hover:bg-blue-950/20 rounded-xl flex-1 disabled:opacity-50 transition-colors font-medium">Cancel</button>
           <button type="button" disabled={loading} onClick={handleSubmit} className="px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-xl flex-1 text-white font-medium disabled:opacity-50">
             {loading ? 'Saving...' : 'Save'}
           </button>
@@ -429,6 +433,7 @@ const CreateTypeModal = ({ communityId, onClose, onSuccess }) => {
   );
 };
 
+// ── Dispute Submission Modal ──────────────────
 const DisputeModal = ({ communityId, violationId, onClose, onSuccess }) => {
   const [description, setDescription] = useState('');
   const [file, setFile] = useState(null);
@@ -505,6 +510,7 @@ const DisputeModal = ({ communityId, violationId, onClose, onSuccess }) => {
   );
 };
 
+// ── Dispute Resolution Modal ──────────────────
 const ResolveDisputeModal = ({ violationId, statuses, onClose, onSuccess }) => {
   const [resolution, setResolution] = useState('');
   const [statusId, setStatusId] = useState('');
@@ -579,6 +585,7 @@ const ResolveDisputeModal = ({ violationId, statuses, onClose, onSuccess }) => {
   );
 };
 
+// ── Violation Detail Modal ────────────────────
 const ViolationDetailModal = ({ violation, isResident, statuses, onClose, onDispute, onResolve, onStatusChange, onPay }) => {
   const [selectedStatusId, setSelectedStatusId] = useState(violation.violation_status_id || '');
   const [updatingStatus, setUpdatingStatus] = useState(false);
@@ -802,6 +809,7 @@ const ViolationDetailModal = ({ violation, isResident, statuses, onClose, onDisp
   );
 };
 
+// ── Main Violations Page ──────────────────────
 const Violations = ({ community, user, setActivePage, setPaymentState }) => {
   const [violations, setViolations] = useState([]);
   const [loading, setLoading]       = useState(true);
@@ -819,6 +827,7 @@ const Violations = ({ community, user, setActivePage, setPaymentState }) => {
   const [resolveViolationId, setResolveViolationId] = useState(null);
   const [allStatuses, setAllStatuses] = useState([]);
 
+  // Role Check
   const role = user?.role_name || user?.role?.role_name || user?.role || '';
   const isResident = role.toLowerCase() === 'resident';
 
@@ -845,8 +854,9 @@ const Violations = ({ community, user, setActivePage, setPaymentState }) => {
 
 
 
+      // Update selected violation to get fresh changes inside the open detail view
       if (selectedViolation) {
-        const fresh = res.data.find(item => item.violation_id === selectedViolation.violation_id);
+        const fresh = all.find(item => item.violation_id === selectedViolation.violation_id);
         if (fresh) {
           setSelectedViolation(fresh);
         }
@@ -921,6 +931,7 @@ const Violations = ({ community, user, setActivePage, setPaymentState }) => {
   };
 
   const filteredViolations = violations.filter(v => {
+    // If viewing as resident, only show violations belonging to the current user
     if (isResident && v.client_id !== user?.user_id) {
       return false;
     }
@@ -1023,16 +1034,16 @@ const Violations = ({ community, user, setActivePage, setPaymentState }) => {
             </div>
 
              <div className="relative">
-              <Filter className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-gray-500 pointer-events-none" size={16} />
               <select
                 value={statusFilter}
                 onChange={e => setStatusFilter(e.target.value)}
-                className="bg-slate-50 dark:bg-[#1e3248] border border-slate-200 dark:border-white/10 rounded-2xl pl-9 pr-4 py-2.5 text-sm text-slate-900 dark:text-white focus:border-teal-500 focus:outline-none appearance-none cursor-pointer"
+                className="bg-slate-50 dark:bg-[#1e3248] border border-slate-200 dark:border-white/10 rounded-2xl pl-4 pr-10 py-2.5 text-sm text-slate-900 dark:text-white focus:border-teal-500 focus:outline-none appearance-none cursor-pointer"
               >
                 {statuses.map(s => (
-                  <option key={s} value={s} className="text-slate-900 dark:text-white">{s || 'All Statuses'}</option>
+                  <option key={s} value={s} className="text-slate-900 dark:text-white">{s || 'Filter'}</option>
                 ))}
               </select>
+              <Filter className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-gray-500 pointer-events-none" size={15} />
             </div>
           </div>
         </div>

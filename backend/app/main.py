@@ -103,6 +103,7 @@ def run_db_upgrades():
             WHERE uc.user_id = u.user_id AND uc.role_id IS NULL;
         """))
 
+        # Note: Do not copy existing user unit numbers globally to user_communities on every startup,
         # as some user_communities associations (like property managers) are intentionally NULL.
         pass
         
@@ -110,10 +111,11 @@ def run_db_upgrades():
         community_7_exists = db.execute(text("SELECT 1 FROM communities WHERE community_id = 7")).fetchone()
         if community_7_exists:
             db.execute(text("UPDATE users SET role_id = 3, community_id = 7 WHERE email_id IN ('tanujtongse@gmail.com', 'rajeshtongse042@gmail.com');"))
+            db.execute(text("UPDATE users SET community_id = 7 WHERE role_id = 3;"))
             db.execute(text("""
                 INSERT INTO user_communities (user_id, community_id)
                 SELECT user_id, 7 FROM users
-                WHERE email_id IN ('tanujtongse@gmail.com', 'rajeshtongse042@gmail.com')
+                WHERE role_id = 3
                 ON CONFLICT DO NOTHING;
             """))
         
@@ -153,9 +155,8 @@ def seed_roles():
     db = SessionLocal()
     try:
         from app.models.user import Role
-        existing_roles = {r.role_name for r in db.query(Role).all()}
         for r in default_roles:
-            if r["role_name"] not in existing_roles:
+            if not db.query(Role).filter(Role.role_name == r["role_name"]).first():
                 db.add(Role(**r))
         db.commit()
         print("✅ Roles seeded.")
@@ -215,9 +216,8 @@ def seed_amenity_types():
     db = SessionLocal()
     try:
         from app.models.amenity import AmenityType
-        existing_types = {t.type_name for t in db.query(AmenityType).all()}
         for t in default_types:
-            if t["type_name"] not in existing_types:
+            if not db.query(AmenityType).filter(AmenityType.type_name == t["type_name"]).first():
                 db.add(AmenityType(**t))
         db.commit()
         print("✅ Amenity types seeded.")
@@ -255,17 +255,13 @@ def seed_custom_users():
                 db.commit()
                 print("✅ Super admin seeded.")
             else:
-                # Optimize: only update if state is mismatch, avoiding redundant hashing & DB write on every boot
-                if (super_user.role_id != super_admin_role.role_id or 
-                    not super_user.active_status or 
-                    super_user.account_status != "ACTIVE" or 
-                    not super_user.email_id_is_verified):
-                    super_user.role_id = super_admin_role.role_id
-                    super_user.active_status = True
-                    super_user.account_status = "ACTIVE"
-                    super_user.email_id_is_verified = True
-                    db.commit()
-                    print("✅ Super admin status updated.")
+                super_user.password = hash_password("Super1234")
+                super_user.role_id = super_admin_role.role_id
+                super_user.active_status = True
+                super_user.account_status = "ACTIVE"
+                super_user.email_id_is_verified = True
+                db.commit()
+                print("✅ Super admin updated.")
 
         # 2. Sales Person (Sales Admin)
         sales_email = "tanujtongse0732@gmail.com"
@@ -289,17 +285,13 @@ def seed_custom_users():
                 db.commit()
                 print("✅ Sales admin seeded.")
             else:
-                # Optimize: only update if state is mismatch
-                if (sales_user.role_id != sales_role.role_id or 
-                    not sales_user.active_status or 
-                    sales_user.account_status != "ACTIVE" or 
-                    not sales_user.email_id_is_verified):
-                    sales_user.role_id = sales_role.role_id
-                    sales_user.active_status = True
-                    sales_user.account_status = "ACTIVE"
-                    sales_user.email_id_is_verified = True
-                    db.commit()
-                    print("✅ Sales admin status updated.")
+                sales_user.password = hash_password("Sales1234")
+                sales_user.role_id = sales_role.role_id
+                sales_user.active_status = True
+                sales_user.account_status = "ACTIVE"
+                sales_user.email_id_is_verified = True
+                db.commit()
+                print("✅ Sales admin updated.")
 
     except Exception as e:
         db.rollback()
@@ -313,7 +305,7 @@ seed_roles()
 seed_violation_statuses()
 seed_sr_statuses()
 seed_locations()
-seed_default_service_types_for_all_communities()
+seed_default_service_types_for_all_communities()   # ← Yeh important hai
 seed_amenity_types()
 seed_custom_users()
 

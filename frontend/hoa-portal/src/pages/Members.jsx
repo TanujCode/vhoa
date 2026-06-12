@@ -7,6 +7,7 @@ import {
   validateUnitNo, 
   onlyLettersKeyPress 
 } from '../utils/fieldValidators';
+import { formatUsPhone } from '../utils/phoneFormatter';
 
 const getPhoneValidationRule = (code) => {
   switch (code) {
@@ -577,7 +578,7 @@ const Members = ({ community }) => {
                     </td>
 
                     <td className="px-6 py-4">
-                      <p className="text-slate-500 dark:text-gray-400 text-xs">{m.mobile_number || '—'}</p>
+                      <p className="text-slate-500 dark:text-gray-400 text-xs">{formatUsPhone(m.mobile_number)}</p>
                     </td>
 
                     <td className="px-6 py-4">
@@ -740,21 +741,27 @@ const Members = ({ community }) => {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs text-slate-500 dark:text-gray-400 mb-1">Role</label>
-                  <select
-                    value={inviteForm.role}
-                    onChange={e => setInviteForm({...inviteForm, role: e.target.value})}
-                    className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl p-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-teal-500 cursor-pointer"
-                  >
-                    <option className="bg-white dark:bg-[#0D1B2A] text-slate-900 dark:text-white">Resident</option>
-                    <option className="bg-white dark:bg-[#0D1B2A] text-slate-900 dark:text-white">Board Member</option>
-                    <option className="bg-white dark:bg-[#0D1B2A] text-slate-900 dark:text-white">Property Manager</option>
-                  </select>
+                  <div className="relative">
+                    <select
+                      value={inviteForm.role}
+                      onChange={e => setInviteForm({...inviteForm, role: e.target.value})}
+                      className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl p-2.5 pr-10 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-teal-500 cursor-pointer appearance-none"
+                    >
+                      <option className="bg-white dark:bg-[#0D1B2A] text-slate-900 dark:text-white">Resident</option>
+                      <option className="bg-white dark:bg-[#0D1B2A] text-slate-900 dark:text-white">Board Member</option>
+                      <option className="bg-white dark:bg-[#0D1B2A] text-slate-900 dark:text-white">Property Manager</option>
+                    </select>
+                    <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                  </div>
                 </div>
                 <div>
                   <label className="block text-xs text-slate-500 dark:text-gray-400 mb-1">Community</label>
-                  <select className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl p-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-teal-500 cursor-default" defaultValue={community?.name}>
-                    <option className="bg-white dark:bg-[#0D1B2A] text-slate-900 dark:text-white">{community?.name}</option>
-                  </select>
+                  <div className="relative">
+                    <select className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl p-2.5 pr-10 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-teal-500 cursor-default appearance-none" defaultValue={community?.name}>
+                      <option className="bg-white dark:bg-[#0D1B2A] text-slate-900 dark:text-white">{community?.name}</option>
+                    </select>
+                    <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                  </div>
                 </div>
               </div>
             </div>
@@ -904,21 +911,27 @@ const Members = ({ community }) => {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs text-slate-500 dark:text-gray-400 mb-1">Role</label>
-                  <select
-                    value={editForm.role}
-                    onChange={e => setEditForm({...editForm, role: e.target.value})}
-                    className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl p-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-teal-500 cursor-pointer"
-                  >
-                    <option className="bg-white dark:bg-[#0D1B2A] text-slate-900 dark:text-white">Resident</option>
-                    <option className="bg-white dark:bg-[#0D1B2A] text-slate-900 dark:text-white">Board Member</option>
-                    <option className="bg-white dark:bg-[#0D1B2A] text-slate-900 dark:text-white">Property Manager</option>
-                  </select>
+                  <div className="relative">
+                    <select
+                      value={editForm.role}
+                      onChange={e => setEditForm({...editForm, role: e.target.value})}
+                      className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl p-2.5 pr-10 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-teal-500 cursor-pointer appearance-none"
+                    >
+                      <option className="bg-white dark:bg-[#0D1B2A] text-slate-900 dark:text-white">Resident</option>
+                      <option className="bg-white dark:bg-[#0D1B2A] text-slate-900 dark:text-white">Board Member</option>
+                      <option className="bg-white dark:bg-[#0D1B2A] text-slate-900 dark:text-white">Property Manager</option>
+                    </select>
+                    <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                  </div>
                 </div>
                 <div>
                   <label className="block text-xs text-slate-500 dark:text-gray-400 mb-1">Community</label>
-                  <select className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl p-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-teal-500 cursor-default" defaultValue={community?.name} disabled>
-                    <option className="bg-white dark:bg-[#0D1B2A] text-slate-900 dark:text-white">{community?.name}</option>
-                  </select>
+                  <div className="relative">
+                    <select className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl p-2.5 pr-10 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-teal-500 cursor-default appearance-none" defaultValue={community?.name} disabled>
+                      <option className="bg-white dark:bg-[#0D1B2A] text-slate-900 dark:text-white">{community?.name}</option>
+                    </select>
+                    <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                  </div>
                 </div>
               </div>
 

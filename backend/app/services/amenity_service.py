@@ -39,6 +39,7 @@ def create_amenity(data: AmenityCreate, created_by_id: int, db: Session) -> Amen
         booking_fee         = data.booking_fee,
         slot1_start         = data.slot1_start,
         slot1_end           = data.slot1_end,
+        # Keep slot2 defaults for backward compat
         slot2_start         = data.slot1_start,
         slot2_end           = data.slot1_end,
         pool_open           = data.pool_open,
@@ -165,11 +166,17 @@ def _send_pool_status_notification(amenity: Amenity, db: Session):
         print(f"Pool status email failed: {e}")
 
 
+# ══════════════════════════════════════════════
+#  AVAILABILITY CHECK
+# ══════════════════════════════════════════════
 def check_availability(amenity_id: int, booking_date: date, db: Session) -> dict:
     """
     Check which slots are available on a given date.
     Use DB level lock to handle race conditions during booking.
     """
+    amenity = get_amenity_by_id(amenity_id, db)
+
+    # Check active bookings on that date
     existing = db.query(AmenityBooking).filter(
         AmenityBooking.amenity_id   == amenity_id,
         AmenityBooking.booking_date == booking_date,
@@ -179,15 +186,20 @@ def check_availability(amenity_id: int, booking_date: date, db: Session) -> dict
 
     booked_slots = {b.slot_number for b in existing}
 
+    slot_time = f"{amenity.slot1_start} - {amenity.slot1_end}"
+
     return {
         "booking_date":     booking_date,
         "slot_1_available": 1 not in booked_slots,
         "slot_2_available": 2 not in booked_slots,
-        "slot_1_time":      "8:00 AM - 2:00 PM",
-        "slot_2_time":      "2:00 PM - 8:00 PM",
+        "slot_1_time":      slot_time,
+        "slot_2_time":      slot_time,
     }
 
 
+# ══════════════════════════════════════════════
+#  BOOKING — CREATE (Race condition safe)
+# ══════════════════════════════════════════════
 def create_booking(
     data: BookingCreate,
     booked_by_id: int,
@@ -212,6 +224,7 @@ def create_booking(
         if user_role == "resident":
             raise ValueError("This amenity is currently reserved for an event and cannot be booked by residents.")
 
+    # ── Race condition check (DB locking first) ────────────────────
     existing = db.query(AmenityBooking).filter(
         AmenityBooking.amenity_id   == data.amenity_id,
         AmenityBooking.booking_date == data.booking_date,
@@ -226,21 +239,17 @@ def create_booking(
             f"{data.booking_date}. Try the second slot."
         )
 
-    # Slot timing set 
-    if data.slot_number == 1:
-        slot_start = amenity.slot1_start
-        slot_end   = amenity.slot1_end
-        slot_time_str = "8:00 AM - 2:00 PM"
-    else:
-        slot_start = amenity.slot2_start
-        slot_end   = amenity.slot2_end
-        slot_time_str = "2:00 PM - 8:00 PM"
+    # Slot timing set
+    slot_start = amenity.slot1_start
+    slot_end   = amenity.slot1_end
+    slot_time_str = f"{slot_start} - {slot_end}"
 
     # Fee calculate based on community setting & amenity fee setting
     fee_amount = 0.0
     if community.amenity_fee_enabled and amenity.fee_enabled:
         fee_amount = amenity.booking_fee or 0.0
 
+    # Payment due date — 1 day before booking
     payment_due = data.booking_date - timedelta(days=1) if fee_amount > 0 else None
 
     booking = AmenityBooking(
@@ -263,9 +272,10 @@ def create_booking(
     except IntegrityError:
         db.rollback()
         raise ValueError("This slot has already been booked by another user. Please choose a different slot.")
-    
+
     db.refresh(booking)
 
+    # ── Email Notifications ──
     booked_by = db.query(User).filter(User.user_id == booked_by_id).first()
     booked_by_name = ""
     if booked_by:
@@ -314,6 +324,9 @@ def create_booking(
     return booking
 
 
+# ══════════════════════════════════════════════
+#  BOOKING — GET ALL
+# ══════════════════════════════════════════════
 def get_bookings(
     community_id: int, db: Session,
     amenity_id: int | None = None,
@@ -327,12 +340,12 @@ def get_bookings(
         from zoneinfo import ZoneInfo
         comm = db.query(Community).filter(Community.community_id == community_id).first()
         comm_tz = comm.time_zone if comm and comm.time_zone else "America/New_York"
-        
+
         tz = ZoneInfo(comm_tz)
         now_in_tz = datetime.now(tz)
         today = now_in_tz.date()
         now_time_str = now_in_tz.strftime("%H:%M")
-        
+
         # 1. Bookings where booking_date is yesterday or older (APPROVED -> COMPLETED, PENDING -> CANCELLED)
         past_approved = db.query(AmenityBooking).filter(
             AmenityBooking.community_id == community_id,
@@ -340,14 +353,14 @@ def get_bookings(
             AmenityBooking.booking_date < today,
             AmenityBooking.active_status == True
         ).all()
-        
+
         past_pending = db.query(AmenityBooking).filter(
             AmenityBooking.community_id == community_id,
             AmenityBooking.status == "PENDING",
             AmenityBooking.booking_date < today,
             AmenityBooking.active_status == True
         ).all()
-        
+
         # 2. Bookings where booking_date is today, but slot_end time has passed
         today_past_approved = db.query(AmenityBooking).filter(
             AmenityBooking.community_id == community_id,
@@ -356,7 +369,7 @@ def get_bookings(
             AmenityBooking.slot_end <= now_time_str,
             AmenityBooking.active_status == True
         ).all()
-        
+
         today_past_pending = db.query(AmenityBooking).filter(
             AmenityBooking.community_id == community_id,
             AmenityBooking.status == "PENDING",
@@ -364,17 +377,17 @@ def get_bookings(
             AmenityBooking.slot_end <= now_time_str,
             AmenityBooking.active_status == True
         ).all()
-        
+
         updated = False
         for b in (past_approved + today_past_approved):
             b.status = "COMPLETED"
             updated = True
-            
+
         for b in (past_pending + today_past_pending):
             b.status = "CANCELLED"
             b.cancel_reason = "System Auto-Cancelled: Slot expired without approval."
             updated = True
-            
+
         if updated:
             db.commit()
     except Exception as e:
@@ -395,6 +408,9 @@ def get_bookings(
     return query.order_by(AmenityBooking.booking_date.desc()).offset(skip).limit(limit).all()
 
 
+# ══════════════════════════════════════════════
+#  BOOKING — APPROVE
+# ══════════════════════════════════════════════
 def approve_booking(booking_id: int, approved_by_id: int, db: Session) -> AmenityBooking:
     booking = db.query(AmenityBooking).filter(
         AmenityBooking.booking_id    == booking_id,
@@ -411,6 +427,9 @@ def approve_booking(booking_id: int, approved_by_id: int, db: Session) -> Amenit
     return booking
 
 
+# ══════════════════════════════════════════════
+#  BOOKING — CANCEL
+# ══════════════════════════════════════════════
 def cancel_booking(
     booking_id: int,
     cancelled_by_id: int,
@@ -442,6 +461,9 @@ def cancel_booking(
     return booking
 
 
+# ══════════════════════════════════════════════
+#  BOOKING — PAY (SIMULATION)
+# ══════════════════════════════════════════════
 def pay_booking(booking_id: int, user_id: int, db: Session) -> AmenityBooking:
     from app.models.community import Community
     from app.services.email_service import send_payment_received_email
@@ -469,8 +491,8 @@ def pay_booking(booking_id: int, user_id: int, db: Session) -> AmenityBooking:
         parts = [booked_by.first_name, booked_by.middle_name, booked_by.last_name]
         booked_by_name = " ".join(filter(None, parts))
 
-    slot_time_str = "8:00 AM - 2:00 PM" if booking.slot_number == 1 else "2:00 PM - 8:00 PM"
-    
+    slot_time_str = f"{booking.slot_start} - {booking.slot_end}"
+
     community = db.query(Community).filter(Community.community_id == booking.community_id).first()
     community_name = community.name if community else "Community"
 

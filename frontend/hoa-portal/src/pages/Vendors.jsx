@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Plus, X, Lock, Truck, Search, Copy, Check, Trash2 } from 'lucide-react';
 import API from "../services/api";
 import { toast } from 'react-hot-toast';
+import { formatUsPhone } from '../utils/phoneFormatter';
 import { checkEmail } from '../utils/emailValidation';
 
 const getPhoneValidationRule = (code) => {
@@ -311,7 +312,7 @@ const Vendors = ({ communityId, userRole }) => {
                           {v.company_name}
                         </div>
                         <div className="text-[10px] text-slate-500 dark:text-gray-400">
-                          {v.contact_person} | {v.phone}
+                          {v.contact_person} | {formatUsPhone(v.phone)}
                         </div>
                       </td>
                       <td className="px-6 py-4">
@@ -539,7 +540,7 @@ const Vendors = ({ communityId, userRole }) => {
                         {v.company_name}
                       </div>
                       <div className="text-[10px] text-slate-500 dark:text-gray-400">
-                        {v.contact_person} | {v.phone}
+                        {v.contact_person} | {formatUsPhone(v.phone)}
                       </div>
                     </td>
                     <td className="px-6 py-4">

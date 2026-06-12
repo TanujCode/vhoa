@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { RefreshCw, Search, Plus, Trash2, Download, FileText, Folder, File, ShieldAlert, ChevronDown } from 'lucide-react';
+import { RefreshCw, Search, Plus, Trash2, Download, FileText, Folder, File, ShieldAlert, ChevronDown, Eye } from 'lucide-react';
 import API, { getBaseUrl } from '../services/api';
 
 const DocumentModal = ({ communityId, onClose, onSuccess }) => {
@@ -307,7 +307,14 @@ const Documents = ({ community, user }) => {
                           📄
                         </div>
                         <div>
-                          <p className="font-medium text-slate-800 dark:text-white">{doc.document_name}</p>
+                          <a
+                            href={getBaseUrl(doc.document_url)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="font-medium text-slate-800 dark:text-white hover:text-teal-600 dark:hover:text-teal-400 hover:underline transition-all"
+                          >
+                            {doc.document_name}
+                          </a>
                           <p className="text-xs text-slate-400 mt-0.5 truncate max-w-xs">{doc.document_url.split('/').pop()}</p>
                         </div>
                       </div>
@@ -327,7 +334,15 @@ const Documents = ({ community, user }) => {
                           target="_blank"
                           rel="noopener noreferrer"
                           className="p-2 bg-teal-500/10 hover:bg-teal-500/20 dark:bg-teal-500/20 dark:hover:bg-teal-500/30 text-teal-600 dark:text-teal-400 rounded-xl transition-all"
-                          title="Download / View"
+                          title="View Document"
+                        >
+                          <Eye size={16} />
+                        </a>
+                        <a
+                          href={getBaseUrl(doc.document_url)}
+                          download
+                          className="p-2 bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 text-slate-600 dark:text-gray-300 rounded-xl transition-all"
+                          title="Download Document"
                         >
                           <Download size={16} />
                         </a>

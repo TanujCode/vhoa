@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Wrench, Plus, RefreshCw, X, ChevronDown, MessageSquare, UserCheck, Edit, Clock, Landmark, User, DollarSign } from 'lucide-react';
+import { Wrench, Plus, RefreshCw, X, ChevronDown, MessageSquare, UserCheck, Edit, Clock, Landmark, User, DollarSign, Filter } from 'lucide-react';
 import API from '../services/api';
 import { onlyDigitsKeyPress, onlyDecimalKeyPress } from '../utils/fieldValidators';
 
@@ -437,7 +437,7 @@ const EditModal = ({ request, communityId, isAdmin, onClose, onSuccess }) => {
               placeholder="Brief title of the issue..." 
               value={form.title}
               onChange={e => setForm({...form, title: e.target.value})}
-              className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl px-4 py-3 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-550 focus:outline-none focus:border-teal-500"
+              className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl px-4 py-3 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 focus:outline-none focus:border-teal-500"
             />
           </div>
 
@@ -510,7 +510,7 @@ const EditModal = ({ request, communityId, isAdmin, onClose, onSuccess }) => {
                   value={form.payment_id}
                   onKeyPress={onlyDigitsKeyPress}
                   onChange={e => setForm({...form, payment_id: e.target.value})}
-                  className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl px-4 py-3 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-550 focus:outline-none focus:border-teal-500"
+                  className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl px-4 py-3 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 focus:outline-none focus:border-teal-500"
                 />
               </div>
             </>
@@ -649,6 +649,7 @@ const DetailDrawer = ({
     try {
       let assignmentToUpdate = assignments[0];
       if (!assignmentToUpdate) {
+        // Automatically create a VendorAssignment record on the fly
         const createRes = await API.post('/vendor/assignment', {
           vendor_id: request.vendor_id,
           request_id: request.request_id,
@@ -906,7 +907,7 @@ const DetailDrawer = ({
 
         {/* Dynamic Action / Quote details Section */}
         {assignmentsLoading ? (
-          <div className="flex justify-center py-4 bg-slate-50 dark:bg-white/5 rounded-2xl p-5 border border-slate-200 dark:border-white/5">
+          <div className="flex justify-center py-4 bg-slate-50 dark:bg-white/5 rounded-2xl border border-slate-200 dark:border-white/5">
             <div className="w-5 h-5 border-2 border-teal-500 border-t-transparent rounded-full animate-spin"></div>
           </div>
         ) : (
@@ -1426,14 +1427,14 @@ const ServiceRequests = ({ community, user, setActivePage, setPaymentState }) =>
               onChange={e => setStatusFilter(e.target.value)}
               className="bg-slate-50 dark:bg-[#1E3248] border border-slate-200 dark:border-white/10 rounded-2xl pl-4 pr-10 py-2.5 text-sm text-slate-900 dark:text-white focus:border-teal-500 focus:outline-none appearance-none cursor-pointer"
             >
-              <option value="" className="text-slate-900 dark:text-white">All Status</option>
+              <option value="" className="text-slate-900 dark:text-white">Filter</option>
               <option value="OPEN" className="text-slate-900 dark:text-white">Open</option>
               <option value="APPROVED" className="text-slate-900 dark:text-white">Approved</option>
               <option value="IN_PROGRESS" className="text-slate-900 dark:text-white">In Progress</option>
               <option value="VENDOR_ASSIGNED" className="text-slate-900 dark:text-white">Vendor Assigned</option>
               <option value="CLOSED" className="text-slate-900 dark:text-white">Closed</option>
             </select>
-            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-gray-500 pointer-events-none" size={16} />
+            <Filter className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-gray-500 pointer-events-none" size={15} />
           </div>
         </div>
 

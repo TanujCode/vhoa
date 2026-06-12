@@ -19,8 +19,10 @@ router = APIRouter(prefix="/user", tags=["User"])
 
 
 
+# ══════════════════════════════════════════════
 #  GET /api/user/profile
 #  Apna profile dekho
+# ══════════════════════════════════════════════
 @router.get("/profile", response_model=UserOut)
 def get_profile(
     db: Session = Depends(get_db),
@@ -30,7 +32,10 @@ def get_profile(
     return _to_out(current_user, db)
 
 
+# ══════════════════════════════════════════════
 #  PUT /api/user/profile
+#  Name, mobile update karo
+# ══════════════════════════════════════════════
 @router.put("/profile", response_model=UserOut)
 def update_profile(
     body: ProfileUpdateRequest,
@@ -47,10 +52,11 @@ Only the fields you send will be updated — the rest will remain unchanged.
     - last_name
     - mobile_number
     """
+    # Mobile duplicate check — koi aur same number use kar raha ho
     if body.mobile_number:
         existing = db.query(User).filter(
             User.mobile_number == body.mobile_number,
-            User.user_id != current_user.user_id
+            User.user_id != current_user.user_id   # apna hi number ignore karo
         ).first()
         if existing:
             raise HTTPException(
@@ -71,14 +77,12 @@ Only the fields you send will be updated — the rest will remain unchanged.
         current_user.time_zone = body.time_zone
     if "unit_no_2" in body.model_fields_set:
         role_name = current_user.role.role_name if current_user.role else "resident"
-        new_unit = body.unit_no_2.strip() if body.unit_no_2 else None
-        old_unit = current_user.unit_no_2.strip() if current_user.unit_no_2 else None
-        if role_name == "resident" and new_unit != old_unit:
+        if role_name == "resident":
             raise HTTPException(
                 status_code=403,
                 detail="Residents cannot modify their own unit numbers. Please contact a Board Member or Property Manager."
             )
-        unit_no_2_val = new_unit
+        unit_no_2_val = body.unit_no_2.strip() if body.unit_no_2 else None
         current_user.unit_no_2 = unit_no_2_val
         if current_user.community_id:
             from app.models.user import UserCommunity
@@ -101,7 +105,10 @@ Only the fields you send will be updated — the rest will remain unchanged.
     return _to_out(current_user, db)
 
 
+# ══════════════════════════════════════════════
 #  POST /api/user/profile/picture
+#  Profile picture upload karo
+# ══════════════════════════════════════════════
 @router.post("/profile/picture", response_model=UserOut)
 async def upload_profile_picture(
     file: UploadFile = File(..., description="Profile picture (JPEG, PNG, WebP — max 5MB)"),
@@ -116,6 +123,7 @@ async def upload_profile_picture(
     - The old picture will be automatically replaced.
     """
     import base64
+    # Type check
     allowed_types = {"image/jpeg", "image/png", "image/jpg", "image/webp"}
     if file.content_type not in allowed_types:
         raise HTTPException(
@@ -123,6 +131,7 @@ async def upload_profile_picture(
             detail=f"Only image files allowed (JPEG, PNG, WebP). You uploaded: {file.content_type}"
         )
 
+    # Size check
     contents = await file.read()
     if len(contents) > 5 * 1024 * 1024:
         raise HTTPException(
@@ -164,7 +173,9 @@ def delete_picture(
     return _to_out(current_user, db)
 
 
+# ══════════════════════════════════════════════
 #  HELPER
+# ══════════════════════════════════════════════
 def _to_out(user: User, db: Session | None = None, community_id: int | None = None) -> UserOut:
     parts = [user.first_name]
     if user.middle_name:
@@ -183,6 +194,7 @@ def _to_out(user: User, db: Session | None = None, community_id: int | None = No
 
     if db and comm_id:
         from app.models.community import CommunityJoinRequest
+        # Fetch the most recent join request to get verification documents if they exist
         req = db.query(CommunityJoinRequest).filter(
             CommunityJoinRequest.user_id == user.user_id,
             CommunityJoinRequest.community_id == comm_id
@@ -205,6 +217,7 @@ def _to_out(user: User, db: Session | None = None, community_id: int | None = No
                 role_id = assoc.role_id
                 role_name = assoc.role.role_name if assoc.role else role_name
         else:
+            # Fallback to user columns only if the active/primary community matches the context
             if getattr(user, 'community_id', None) == comm_id:
                 unit_no = getattr(user, 'unit_no', None)
                 unit_no_2 = getattr(user, 'unit_no_2', None)
@@ -240,7 +253,10 @@ def _to_out(user: User, db: Session | None = None, community_id: int | None = No
         address_proof_url    = address_proof,
     )
 
+# ══════════════════════════════════════════════
 #  GET /api/user/community/{community_id}
+#  Community ke saare members
+# ══════════════════════════════════════════════
 @router.get("/community/{community_id}", response_model=list[UserOut])
 def get_community_members(
     community_id: int,
@@ -251,6 +267,7 @@ def get_community_members(
     current_user: User = Depends(get_current_user),
 ):
     """Fetch all the users in the community"""
+    # Security/Role Check
     role_name = current_user.role.role_name if current_user.role else ""
     if role_name != "super_admin":
         from app.models.user import UserCommunity
@@ -288,7 +305,10 @@ def get_community_members(
     return [_to_out(u, db, community_id) for u in users]
 
 
+# ══════════════════════════════════════════════
 #  POST /api/user/invite
+#  Invite a member to the community
+# ══════════════════════════════════════════════
 @router.post("/invite", response_model=UserOut)
 def invite_member(
     request: Request,
@@ -490,8 +510,10 @@ def invite_member(
     return _to_out(new_user, db)
 
 
+# ══════════════════════════════════════════════
 #  PUT /api/user/{user_id}/status
 #  Update user's status (Approve, Deactivate, etc.)
+# ══════════════════════════════════════════════
 @router.put("/{user_id}/status", response_model=UserOut)
 def update_user_status(
     user_id: int,
@@ -512,10 +534,12 @@ def update_user_status(
             detail="You do not have permission to update member status."
         )
 
+    # 1. Fetch the target user
     target_user = db.query(User).filter(User.user_id == user_id).first()
     if not target_user:
         raise HTTPException(status_code=404, detail="User not found.")
 
+    # 2. Check community constraints
     if role_name != "super_admin":
         from app.models.user import UserCommunity
         assoc = db.query(UserCommunity).filter(
@@ -537,6 +561,7 @@ def update_user_status(
     db.commit()
     db.refresh(target_user)
 
+    # 4. Log the action
     log_action(
         db=db,
         action="UPDATE_USER_STATUS",
@@ -549,8 +574,10 @@ def update_user_status(
     return _to_out(target_user, db)
 
 
+# ══════════════════════════════════════════════
 #  DELETE /api/user/{user_id}
 #  Soft delete a member (active_status = False)
+# ══════════════════════════════════════════════
 @router.delete("/{user_id}", status_code=200)
 def delete_user(
     user_id: int,
@@ -569,10 +596,12 @@ def delete_user(
             detail="You do not have permission to delete members."
         )
 
+    # 1. Fetch the target user
     target_user = db.query(User).filter(User.user_id == user_id).first()
     if not target_user:
         raise HTTPException(status_code=404, detail="User not found.")
 
+    # 2. Check community constraints
     if role_name != "super_admin":
         from app.models.user import UserCommunity
         assoc = db.query(UserCommunity).filter(
@@ -609,8 +638,10 @@ def delete_user(
     return {"message": "Member successfully deleted."}
 
 
+# ══════════════════════════════════════════════
 #  PUT /api/user/{user_id}
 #  Admin update member details
+# ══════════════════════════════════════════════
 @router.put("/{user_id}", response_model=UserOut)
 def admin_update_user(
     user_id: int,
@@ -635,6 +666,7 @@ def admin_update_user(
     if not target_user:
         raise HTTPException(status_code=404, detail="User not found.")
 
+    # 2. Check community constraints & role permissions
     if role_name != "super_admin":
         target_role_name = target_user.role.role_name if target_user.role else ""
         if target_role_name in ["super_admin", "property_manager"]:
@@ -665,6 +697,7 @@ def admin_update_user(
     if body.email_id is not None:
         new_email = body.email_id.lower().strip()
         if new_email != target_user.email_id.lower():
+            # Check unique email constraint
             existing = db.query(User).filter(User.email_id == new_email).first()
             if existing:
                 raise HTTPException(status_code=400, detail="This email address is already registered.")
@@ -777,8 +810,10 @@ def admin_update_user(
     return _to_out(target_user, db)
 
 
+# ══════════════════════════════════════════════
 #  POST /api/user/switch-community/{community_id}
 #  Switch active community
+# ══════════════════════════════════════════════
 @router.post("/switch-community/{community_id}", response_model=UserOut)
 def switch_community(
     community_id: int,
@@ -826,8 +861,10 @@ def switch_community(
     return _to_out(current_user, db)
 
 
+# ══════════════════════════════════════════════
 #  POST /api/user/profile/id-proof
 #  Self-upload ID proof
+# ══════════════════════════════════════════════
 @router.post("/profile/id-proof", response_model=UserOut)
 async def upload_my_id_proof(
     file: UploadFile = File(...),
@@ -842,8 +879,10 @@ async def upload_my_id_proof(
     return _to_out(current_user, db)
 
 
+# ══════════════════════════════════════════════
 #  POST /api/user/profile/address-proof
 #  Self-upload Address proof
+# ══════════════════════════════════════════════
 @router.post("/profile/address-proof", response_model=UserOut)
 async def upload_my_address_proof(
     file: UploadFile = File(...),
@@ -858,8 +897,10 @@ async def upload_my_address_proof(
     return _to_out(current_user, db)
 
 
+# ══════════════════════════════════════════════
 #  POST /api/user/{user_id}/id-proof
 #  Admin upload ID proof for a user
+# ══════════════════════════════════════════════
 @router.post("/{user_id}/id-proof", response_model=UserOut)
 async def upload_user_id_proof(
     user_id: int,
@@ -892,8 +933,10 @@ async def upload_user_id_proof(
     return _to_out(target_user, db)
 
 
+# ══════════════════════════════════════════════
 #  POST /api/user/{user_id}/address-proof
 #  Admin upload Address proof for a user
+# ══════════════════════════════════════════════
 @router.post("/{user_id}/address-proof", response_model=UserOut)
 async def upload_user_address_proof(
     user_id: int,

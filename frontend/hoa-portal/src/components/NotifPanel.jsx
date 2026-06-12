@@ -82,7 +82,7 @@ const NotifPanel = ({ isOpen, onClose, notifications = [], onMarkAllRead, lastRe
   };
 
   return (
-    <div className={`fixed top-16 right-0 h-[calc(100vh-4rem)] w-full sm:w-96 bg-white dark:bg-[#162535] border-l border-slate-200 dark:border-white/10 shadow-2xl transform transition-transform duration-300 z-50 ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+    <div className={`fixed top-16 right-0 h-[calc(100vh-4rem)] w-96 bg-white dark:bg-[#162535] border-l border-slate-200 dark:border-white/10 shadow-2xl transform transition-transform duration-300 z-50 ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}>
 
       {/* Header */}
       <div className="p-5 border-b border-slate-200 dark:border-white/10 flex items-center justify-between bg-white dark:bg-[#1E3248] sticky top-0">
@@ -122,7 +122,11 @@ const NotifPanel = ({ isOpen, onClose, notifications = [], onMarkAllRead, lastRe
               >
                 <div className="flex gap-4">
                   <div className={`w-9 h-9 rounded-2xl flex-shrink-0 flex items-center justify-center ${details.color.replace('text-', 'bg-').replace('400', '500')}/10`}>
-                    <IconComponent size={20} className={details.color} />
+                    {IconComponent === Bell ? (
+                      <span className={`w-3 h-3 rounded-full flex-shrink-0 ${isUnread ? 'bg-red-500 animate-pulse' : 'bg-white border border-slate-300 dark:border-white/20'}`} />
+                    ) : (
+                      <IconComponent size={20} className={details.color} />
+                    )}
                   </div>
                   
                   <div className="flex-1 min-w-0">

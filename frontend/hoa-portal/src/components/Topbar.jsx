@@ -74,9 +74,9 @@ const Topbar = ({
               </p>
             </div>
             {(activeCommunity?.community_code || "OAK-2291") && (
-              <div className="hidden sm:block text-[10px] sm:text-xs font-mono font-bold text-teal-600 dark:text-teal-400 bg-teal-500/10 dark:bg-teal-500/20 px-2.5 py-0.5 rounded-full flex-shrink-0 border border-teal-500/20">
+              <span className="hidden sm:block text-xs sm:text-sm font-extrabold text-teal-600 dark:text-teal-400 flex-shrink-0">
                 {activeCommunity?.community_code || "OAK-2291"}
-              </div>
+              </span>
             )}
           </div>
         ) : (
@@ -91,7 +91,7 @@ const Topbar = ({
                 {activeCommunity?.name || "Select Community"}
               </span>
               {activeCommunity?.community_code && (
-                <span className="hidden sm:block text-[10px] sm:text-xs font-mono font-bold text-teal-600 dark:text-teal-400 bg-teal-500/10 dark:bg-teal-500/20 px-2.5 py-0.5 rounded-full flex-shrink-0 border border-teal-500/20">
+                <span className="hidden sm:block text-xs sm:text-sm font-extrabold text-teal-600 dark:text-teal-400 flex-shrink-0">
                   {activeCommunity.community_code}
                 </span>
               )}
@@ -190,18 +190,18 @@ const Topbar = ({
                 className="w-full h-full object-cover"
                 onError={(e) => {
                   e.target.style.display = 'none';
-                  e.target.parentElement.innerHTML = `<span class="text-xs sm:text-sm">${getInitials(user?.full_name || user?.name)}</span>`;
+                  e.target.parentElement.innerHTML = `<span class="text-xs sm:text-sm">${getInitials(user?.name)}</span>`;
                 }}
               />
             ) : (
-              <span className="text-xs sm:text-sm tracking-tighter">{getInitials(user?.full_name || user?.name)}</span>
+              <span className="text-xs sm:text-sm tracking-tighter">{getInitials(user?.name)}</span>
             )}
           </div>
 
           {isUserDropdownOpen && (
             <div className="absolute right-0 top-[calc(100%+12px)] w-60 bg-white dark:bg-[#1E3248] border border-slate-200 dark:border-white/20 rounded-3xl shadow-2xl z-50 py-2 overflow-hidden animate-in fade-in slide-in-from-top-2">
               <div className="px-4 py-4 border-b border-slate-100 dark:border-white/5 bg-slate-50/50 dark:bg-white/5">
-                <p className="font-bold text-gray-900 dark:text-white truncate">{user?.full_name || user?.name || "User"}</p>
+                <p className="font-bold text-gray-900 dark:text-white truncate">{user?.name || "User"}</p>
                 <p className="text-[10px] text-teal-500 font-mono uppercase font-black tracking-widest mt-0.5">
                   {(viewAsResident && canSwitchView) ? "resident" : (user?.role || "resident").replace('_', ' ')}
                 </p>

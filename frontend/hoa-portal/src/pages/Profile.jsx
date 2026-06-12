@@ -4,6 +4,7 @@ import {
   CheckCircle, XCircle, Save, Key, Eye, EyeOff, User, Bell, Trash2, ChevronDown
 } from 'lucide-react';
 import API, { getBaseUrl } from '../services/api';
+import { formatUsPhone } from '../utils/phoneFormatter';
 
 const getPhoneValidationRule = (code) => {
   switch (code) {
@@ -37,6 +38,7 @@ const parsePhoneNumber = (fullNumber) => {
 };
 
 const Profile = ({ user, setUser, viewRole }) => {
+  // ── Form State ────────────────────────────
   const [form, setForm] = useState({
     first_name:    user?.first_name    || '',
     middle_name:   user?.middle_name   || '',
@@ -68,6 +70,7 @@ const Profile = ({ user, setUser, viewRole }) => {
 
   const [unitInput, setUnitInput] = useState('');
 
+  // ── Password State ────────────────────────
   const [pwdForm, setPwdForm] = useState({
     otp_code:     '',
     new_password: '',
@@ -77,6 +80,7 @@ const Profile = ({ user, setUser, viewRole }) => {
   const [otpSent, setOtpSent]       = useState(false);
   const [otpCode, setOtpCode]       = useState('');
 
+  // ── UI State ──────────────────────────────
   const [saving, setSaving]         = useState(false);
   const [uploading, setUploading]   = useState(false);
   const [sendingOtp, setSendingOtp] = useState(false);
@@ -165,6 +169,7 @@ const Profile = ({ user, setUser, viewRole }) => {
     showMsg('success', 'Notification preferences saved!');
   };
 
+  // ── Profile Update ────────────────────────
   const handleSave = async () => {
     try {
       setSaving(true);
@@ -177,6 +182,7 @@ const Profile = ({ user, setUser, viewRole }) => {
         setUnitInput('');
       }
 
+      // Check phone validation
       if (phoneNumberOnly) {
         const rule = getPhoneValidationRule(phoneCountryCode);
         if (phoneNumberOnly.length < rule.min || phoneNumberOnly.length > rule.max) {
@@ -217,6 +223,7 @@ const Profile = ({ user, setUser, viewRole }) => {
     }
   };
 
+  // ── Profile Picture Upload ────────────────
   const handlePictureUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -233,6 +240,7 @@ const Profile = ({ user, setUser, viewRole }) => {
       // Update React state
       setUser(prev => {
         const updated = { ...prev, user_profile_url: newUrl };
+        // Persist to localStorage so re-login shows the new picture
         try {
           const stored = localStorage.getItem('user');
           if (stored) {
@@ -250,6 +258,7 @@ const Profile = ({ user, setUser, viewRole }) => {
     }
   };
 
+  //  Remove Profile Picture Logic ────────────────
   const handleRemovePicture = async () => {
     if (!window.confirm("Are you sure you want to remove this photo?")) return;
     try {
@@ -320,6 +329,7 @@ const Profile = ({ user, setUser, viewRole }) => {
     }
   };
 
+  // ── Send OTP for password reset ───────────
   const handleSendOtp = async () => {
     try {
       setSendingOtp(true);
@@ -336,6 +346,7 @@ const Profile = ({ user, setUser, viewRole }) => {
     }
   };
 
+  // ── Password Reset ────────────────────────
   const handlePasswordReset = async () => {
     if (pwdForm.new_password !== pwdForm.confirm) {
       showMsg('error', 'Passwords do not match!');
@@ -390,22 +401,37 @@ const Profile = ({ user, setUser, viewRole }) => {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
+        {/* ── Left Column — Avatar + Info ── */}
         <div className="space-y-5">
 
           {/* Avatar Card */}
           <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 flex flex-col items-center text-center text-slate-900 dark:text-white">
-            <div className="relative mb-4 group">
-              {user?.user_profile_url ? (
-                <img
-                  src={getBaseUrl(user.user_profile_url)}
-                  alt="Profile"
-                  className="w-28 h-28 rounded-3xl object-cover"
-                />
-              ) : (
-                <div className="w-28 h-28 bg-gradient-to-br from-teal-500 to-blue-600 rounded-3xl flex items-center justify-center text-4xl font-bold text-white">
-                  {user?.initials || <User size={40} />}
-                </div>
-              )}
+            <div className="relative mb-4 group w-28 h-28">
+              <div className="w-full h-full rounded-3xl overflow-hidden relative">
+                {user?.user_profile_url ? (
+                  <>
+                    <img
+                      src={getBaseUrl(user.user_profile_url)}
+                      alt="Profile"
+                      className="w-full h-full object-cover"
+                    />
+                    {/* Black overlay with center Delete button on hover */}
+                    <div className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                      <button
+                        onClick={handleRemovePicture}
+                        className="p-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl transition-all transform hover:scale-110 shadow-lg"
+                        title="Remove Photo"
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-br from-teal-500 to-blue-600 flex items-center justify-center text-4xl font-bold text-white">
+                    {user?.initials || <User size={40} />}
+                  </div>
+                )}
+              </div>
               
               {/* Camera Button */}
               <button
@@ -415,17 +441,6 @@ const Profile = ({ user, setUser, viewRole }) => {
               >
                 <Camera size={16} />
               </button>
-
-              {/* Remove Button */}
-              {user?.user_profile_url && (
-                <button
-                  onClick={handleRemovePicture}
-                  className="absolute -top-2 -right-2 w-8 h-8 bg-red-500 hover:bg-red-600 text-white rounded-lg flex items-center justify-center transition-all shadow-lg z-20 border-2 border-white dark:border-[#162535] opacity-0 group-hover:opacity-100"
-                  title="Remove Photo"
-                >
-                  <Trash2 size={14} />
-                </button>
-              )}
 
               <input
                 ref={fileRef}
@@ -517,6 +532,7 @@ const Profile = ({ user, setUser, viewRole }) => {
           </div>
         </div>
 
+        {/* ── Right Column — Tabs ── */}
         <div className="lg:col-span-2">
 
           {/* Tabs */}
@@ -540,6 +556,7 @@ const Profile = ({ user, setUser, viewRole }) => {
             ))}
           </div>
 
+          {/* ── Profile Tab ── */}
           {activeTab === 'profile' && (
             <div className="bg-white dark:bg-[#162535] border border-slate-200 dark:border-white/10 rounded-3xl p-6 space-y-5 text-slate-900 dark:text-white">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -758,6 +775,7 @@ const Profile = ({ user, setUser, viewRole }) => {
             </div>
           )}
 
+          {/* ── New Notifications Tab ── */}
           {activeTab === 'notifications' && (
             <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-8 space-y-8 text-slate-900 dark:text-white">
               {/* Email Notifications */}
@@ -796,7 +814,7 @@ const Profile = ({ user, setUser, viewRole }) => {
                   {[
                     { label: "All In-App Notifications", key: "allInApp" },
                     { label: "Sound Alerts", key: "soundAlerts" },
-                    { label: "SMS Alerts (critical only)", key: "smsCritical", sub: user?.mobile_number ? `Sent to ${user.mobile_number}` : "No mobile number on file" },
+                    { label: "SMS Alerts (critical only)", key: "smsCritical", sub: user?.mobile_number ? `Sent to ${formatUsPhone(user.mobile_number)}` : "No mobile number on file" },
                   ].map(item => (
                     <div key={item.key} className="flex items-center justify-between py-3 border-b border-slate-100 dark:border-white/10 last:border-0">
                       <div>
@@ -820,6 +838,7 @@ const Profile = ({ user, setUser, viewRole }) => {
             </div>
           )}
 
+          {/* ── Password Tab ── */}
           {activeTab === 'password' && (
             <div className="bg-white dark:bg-[#162535] border border-slate-200 dark:border-white/10 rounded-3xl p-6 space-y-5 text-slate-900 dark:text-white">
               <p className="text-slate-500 dark:text-gray-400 text-sm">
