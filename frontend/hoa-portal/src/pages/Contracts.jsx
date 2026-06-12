@@ -12,6 +12,7 @@ import {
   validateBusinessName, validateAmount, validatePositiveInt,
   onlyLettersKeyPress, onlyZipKeyPress, onlyDigitsKeyPress, onlyDecimalKeyPress
 } from '../utils/fieldValidators';
+import { formatPhoneAsYouType } from '../utils/phoneFormatter';
 
 export default function Contracts() {
   const [contracts, setContracts] = useState([]);
@@ -32,22 +33,6 @@ export default function Contracts() {
   const [addressSelected, setAddressSelected] = useState(false);
   const addressTimeoutRef = useRef(null);
 
-  // Form setup
-  const getPhoneValidationRule = (code) => {
-    switch (code) {
-      case '+1':
-      case '+91':
-      case '+44':
-        return { min: 10, max: 10, label: '10 digits' };
-      case '+971':
-      case '+966':
-      case '+61':
-        return { min: 9, max: 9, label: '9 digits' };
-      default:
-        return { min: 7, max: 15, label: '7 to 15 digits' };
-    }
-  };
-
   const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm({
     mode: 'onTouched',
     defaultValues: {
@@ -60,13 +45,11 @@ export default function Contracts() {
       client_zip_code: '',
       client_country: 'USA',
       client_phone_number: '',
-      client_phone_country_code: '+1',
       client_phone_only: '',
       client_email_address: '',
       business_name: '',
       business_address: '',
       business_phone_number: '',
-      business_phone_country_code: '+1',
       business_phone_only: '',
       client_preferred_communication_channel: 'email',
       plan_selected: 'Standard',
@@ -81,10 +64,6 @@ export default function Contracts() {
 
   // Watch fields
   const selectedPlan = watch('plan_selected');
-  const clientPhoneCountryCode = watch('client_phone_country_code') || '+1';
-  const businessPhoneCountryCode = watch('business_phone_country_code') || '+1';
-  const clientPhoneRule = getPhoneValidationRule(clientPhoneCountryCode);
-  const businessPhoneRule = getPhoneValidationRule(businessPhoneCountryCode);
 
   useEffect(() => {
     // Load current user from storage to prepopulate sales agent details
@@ -207,7 +186,7 @@ export default function Contracts() {
     const link = `${window.location.origin}/onboarding?code=${code}`;
     navigator.clipboard.writeText(link);
     setSuccessMsg('Public onboarding link copied to clipboard!');
-    setTimeout(() => setSuccessMsg(''), 3500);
+    setTimeout(() => setSuccessMsg(''), 3000);
   };
 
   const onSubmit = async (data) => {
@@ -219,8 +198,8 @@ export default function Contracts() {
       // Clean numeric inputs
       const payload = {
         ...data,
-        client_phone_number: data.client_phone_only ? `${data.client_phone_country_code}${data.client_phone_only}` : '',
-        business_phone_number: data.business_phone_only ? `${data.business_phone_country_code}${data.business_phone_only}` : '',
+        client_phone_number: data.client_phone_only ? `+1${data.client_phone_only.replace(/\D/g, '')}` : '',
+        business_phone_number: data.business_phone_only ? `+1${data.business_phone_only.replace(/\D/g, '')}` : '',
         annual_renewal_fee: data.annual_renewal_fee ? parseFloat(data.annual_renewal_fee) : null,
         one_time_set_up: data.one_time_set_up ? parseFloat(data.one_time_set_up) : null,
         size_of_the_community: data.size_of_the_community ? parseInt(data.size_of_the_community, 10) : null,
@@ -608,38 +587,27 @@ export default function Contracts() {
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-slate-500 dark:text-gray-400 mb-1">Client Phone *</label>
-                    <div className="flex gap-2">
-                      <select
-                        {...register('client_phone_country_code')}
-                        className="px-3 py-2.5 bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl text-sm text-slate-900 dark:text-white focus:outline-none focus:border-[#1D9E75] cursor-pointer"
-                      >
-                        <option value="+1">🇺🇸 +1</option>
-                        <option value="+91">🇮🇳 +91</option>
-                        <option value="+44">🇬🇧 +44</option>
-                        <option value="+971">🇦🇪 +971</option>
-                        <option value="+966">🇸🇦 +966</option>
-                        <option value="+61">🇦🇺 +61</option>
-                      </select>
+                    <div className="relative">
                       <input
                         type="text"
-                        maxLength={clientPhoneRule.max}
+                        maxLength={14}
                         {...register('client_phone_only', { 
                           required: 'Phone number is required',
                           validate: (val) => {
                             if (!val) return 'Phone number is required';
-                            if (val.length < clientPhoneRule.min || val.length > clientPhoneRule.max) {
-                              return `Phone must be exactly ${clientPhoneRule.label} for ${clientPhoneCountryCode}`;
+                            const digits = val.replace(/\D/g, '');
+                            if (digits.length !== 10) {
+                              return 'Phone must be exactly 10 digits';
                             }
                             return true;
                           }
                         })}
-                        onKeyPress={(e) => {
-                          if (!/[0-9]/.test(e.key)) {
-                            e.preventDefault();
-                          }
+                        onChange={(e) => {
+                          const formatted = formatPhoneAsYouType(e.target.value);
+                          setValue('client_phone_only', formatted);
                         }}
-                        placeholder={`${clientPhoneRule.max}-digit number`}
-                        className="flex-1 bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl px-4 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-[#1D9E75] placeholder-slate-400 dark:placeholder-gray-500"
+                        placeholder="(123) 456-7890"
+                        className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl px-4 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-[#1D9E75] placeholder-slate-400 dark:placeholder-gray-500"
                       />
                     </div>
                     {errors.client_phone_only && <span className="text-xs text-red-400 mt-1">{errors.client_phone_only.message}</span>}
@@ -757,7 +725,7 @@ export default function Contracts() {
                     <button
                       type="button"
                       onClick={handleResetAddress}
-                      className="underline text-teal-600 dark:text-teal-400 hover:text-teal-500 dark:hover:text-teal-300 font-semibold cursor-pointer"
+                      className="underline text-teal-600 dark:text-teal-400 hover:text-teal-500 dark:hover:text-teal-350 font-semibold cursor-pointer"
                     >
                       Reset / Edit Address
                     </button>
@@ -787,37 +755,26 @@ export default function Contracts() {
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-slate-500 dark:text-gray-400 mb-1">Business Phone</label>
-                    <div className="flex gap-2">
-                      <select
-                        {...register('business_phone_country_code')}
-                        className="px-3 py-2.5 bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl text-sm text-slate-900 dark:text-white focus:outline-none focus:border-[#1D9E75] cursor-pointer"
-                      >
-                        <option value="+1">🇺🇸 +1</option>
-                        <option value="+91">🇮🇳 +91</option>
-                        <option value="+44">🇬🇧 +44</option>
-                        <option value="+971">🇦🇪 +971</option>
-                        <option value="+966">🇸🇦 +966</option>
-                        <option value="+61">🇦🇺 +61</option>
-                      </select>
+                    <div className="relative">
                       <input
                         type="text"
-                        maxLength={businessPhoneRule.max}
+                        maxLength={14}
                         {...register('business_phone_only', {
                           validate: (val) => {
                             if (!val) return true; // Optional field
-                            if (val.length < businessPhoneRule.min || val.length > businessPhoneRule.max) {
-                              return `Phone must be exactly ${businessPhoneRule.label} for ${businessPhoneCountryCode}`;
+                            const digits = val.replace(/\D/g, '');
+                            if (digits.length !== 10) {
+                              return 'Phone must be exactly 10 digits';
                             }
                             return true;
                           }
                         })}
-                        onKeyPress={(e) => {
-                          if (!/[0-9]/.test(e.key)) {
-                            e.preventDefault();
-                          }
+                        onChange={(e) => {
+                          const formatted = formatPhoneAsYouType(e.target.value);
+                          setValue('business_phone_only', formatted);
                         }}
-                        placeholder={`${businessPhoneRule.max}-digit number`}
-                        className="flex-1 bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl px-4 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-[#1D9E75] placeholder-slate-400 dark:placeholder-gray-500"
+                        placeholder="(123) 456-7890"
+                        className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl px-4 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-[#1D9E75] placeholder-slate-400 dark:placeholder-gray-500"
                       />
                     </div>
                     {errors.business_phone_only && <span className="text-xs text-red-400 mt-1">{errors.business_phone_only.message}</span>}

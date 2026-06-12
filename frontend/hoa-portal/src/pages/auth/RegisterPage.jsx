@@ -7,6 +7,7 @@ import API from '../../services/api';
 import { useGoogleLogin } from '@react-oauth/google';
 import { validateEmail } from '../../utils/emailValidation';
 import { validateName, onlyLettersKeyPress } from '../../utils/fieldValidators';
+import { formatPhoneAsYouType } from '../../utils/phoneFormatter';
 
 export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -35,6 +36,7 @@ export default function RegisterPage() {
     try {
       setRefreshing(true);
       const res = await API.get('/auth/captcha', { timeout: 2000 });
+      // If user hasn't started typing in the new captcha answer yet, we can safely sync with backend JWT captcha
       const currentAnswer = watch('captchaAnswer');
       if (!currentAnswer || currentAnswer.trim() === '') {
         setCaptcha({
@@ -54,21 +56,6 @@ export default function RegisterPage() {
     API.get('/auth/captcha', { timeout: 2000 }).catch(() => {});
   }, []);
 
-  const getPhoneValidationRule = (code) => {
-    switch (code) {
-      case '+1':
-      case '+91':
-      case '+44':
-        return { min: 10, max: 10, label: '10 digits' };
-      case '+971':
-      case '+966':
-      case '+61':
-        return { min: 9, max: 9, label: '9 digits' };
-      default:
-        return { min: 7, max: 15, label: '7 to 15 digits' };
-    }
-  };
-
   const {
     register,
     handleSubmit,
@@ -78,14 +65,11 @@ export default function RegisterPage() {
   } = useForm({
     mode: 'onTouched',
     defaultValues: {
-      countryCode: '+1',
       mobileNumberOnly: ''
     }
   });
 
-  const countryCode = watch('countryCode') || '+1';
-  const phoneRule = getPhoneValidationRule(countryCode);
-
+  // Password value track karne ke liye for confirm password match
   const password = watch('password');
 
   const onSubmit = async (data) => {
@@ -95,11 +79,11 @@ export default function RegisterPage() {
     try {
       const response = await API.post('/auth/register', {
         full_name: data.fullName,
-        email_id: data.email,
+        email_id: data.email, // Backend `email_id` expect kar raha hai
         password: data.password,
         confirm_password: data.confirmPassword, // Naya field
         role: 'resident', // Public signup is restricted to Resident accounts only
-        mobile_number: data.mobileNumberOnly ? `${data.countryCode}${data.mobileNumberOnly}` : '', // Prepend country code
+        mobile_number: data.mobileNumberOnly ? `+1${data.mobileNumberOnly.replace(/\D/g, '')}` : '', // Prepend country code +1
         time_zone: 'America/New_York', // Default timezone
         captcha_token: captcha.token,
         captcha_answer: data.captchaAnswer,
@@ -339,43 +323,30 @@ export default function RegisterPage() {
           <label className="block text-xs font-bold text-gray-700 tracking-wider mb-1">
             MOBILE NUMBER (Optional)
           </label>
-          <div className="flex gap-2">
-            <select
-              {...register('countryCode')}
-              className="px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 bg-white focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none dark:text-gray-900 dark:bg-white cursor-pointer"
-            >
-              <option value="+1">🇺🇸 +1</option>
-              <option value="+91">🇮🇳 +91</option>
-              <option value="+44">🇬🇧 +44</option>
-              <option value="+971">🇦🇪 +971</option>
-              <option value="+966">🇸🇦 +966</option>
-              <option value="+61">🇦🇺 +61</option>
-            </select>
-            <div className="relative flex-1">
-              <input
-                type="text"
-                maxLength={phoneRule.max}
-                {...register('mobileNumberOnly', {
-                  validate: (val) => {
-                    if (!val) return true; // Optional field
-                    if (val.length < phoneRule.min || val.length > phoneRule.max) {
-                      return `Mobile number must be exactly ${phoneRule.label} for ${countryCode}`;
-                    }
-                    return true;
+          <div className="relative">
+            <input
+              type="text"
+              maxLength={14}
+              {...register('mobileNumberOnly', {
+                validate: (val) => {
+                  if (!val) return true; // Optional field
+                  const digits = val.replace(/\D/g, '');
+                  if (digits.length !== 10) {
+                    return `Mobile number must be exactly 10 digits`;
                   }
-                })}
-                onKeyPress={(e) => {
-                  if (!/[0-9]/.test(e.key)) {
-                    e.preventDefault();
-                  }
-                }}
-                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none pl-10 text-sm text-gray-900 bg-white dark:text-gray-900 dark:bg-white ${
-                  errors.mobileNumberOnly ? 'border-red-500' : 'border-gray-300'
-                }`}
-                placeholder={`${phoneRule.max}-digit number`}
-              />
-              <Phone className="w-4 h-4 text-gray-400 absolute left-3 top-3" />
-            </div>
+                  return true;
+                }
+              })}
+              onChange={(e) => {
+                const formatted = formatPhoneAsYouType(e.target.value);
+                setValue('mobileNumberOnly', formatted);
+              }}
+              className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none pl-10 text-sm text-gray-900 bg-white dark:text-gray-900 dark:bg-white ${
+                errors.mobileNumberOnly ? 'border-red-500' : 'border-gray-300'
+              }`}
+              placeholder="(123) 456-7890"
+            />
+            <Phone className="w-4 h-4 text-gray-400 absolute left-3 top-3" />
           </div>
           {errors.mobileNumberOnly && (
             <p className="text-red-500 text-xs mt-1">{errors.mobileNumberOnly.message}</p>
