@@ -40,6 +40,7 @@ const StatusBadge = ({ booking }) => {
 const BookModal = ({ amenity, communityId, onClose, onSuccess }) => {
   const [loading, setLoading] = useState(false);
   const [availability, setAvailability] = useState(null);
+  const [confirmTick, setConfirmTick] = useState(false);
   const [form, setForm] = useState({
     booking_date: new Date().toISOString().split('T')[0],
     slot_number: '',
@@ -141,14 +142,28 @@ const BookModal = ({ amenity, communityId, onClose, onSuccess }) => {
                   </div>
                 </button>
               </div>
+
+              {/* Confirm Booking checkbox field */}
+              <div className="flex items-center gap-2 mt-4 bg-slate-50 dark:bg-[#0D1B2A]/30 p-3 rounded-xl border border-slate-200 dark:border-white/10">
+                <input
+                  type="checkbox"
+                  id="confirm-booking-tick"
+                  checked={confirmTick}
+                  onChange={(e) => setConfirmTick(e.target.checked)}
+                  className="w-4 h-4 rounded border-slate-300 text-teal-600 focus:ring-teal-500 cursor-pointer animate-pulse"
+                />
+                <label htmlFor="confirm-booking-tick" className="text-sm text-slate-700 dark:text-gray-300 font-medium cursor-pointer select-none">
+                  Confirm Booking
+                </label>
+              </div>
             </div>
           )}
 
           <div className="flex gap-3 pt-2">
             <button type="button" onClick={onClose} className="flex-1 py-2.5 bg-slate-100 dark:bg-white/10 text-slate-700 dark:text-white rounded-xl text-sm font-medium transition cancel-button-red-hover">Cancel</button>
-            <button type="submit" disabled={loading || !form.slot_number}
+            <button type="submit" disabled={loading || !form.slot_number || !confirmTick}
               className="flex-1 py-2.5 bg-teal-600 hover:bg-teal-500 text-white rounded-xl text-sm font-medium transition disabled:opacity-50">
-              {loading ? 'Booking...' : 'Confirm Booking'}
+              {loading ? 'Booking...' : (amenity.fee_enabled && amenity.booking_fee > 0 ? 'Proceed to Pay' : 'Confirm Booking')}
             </button>
           </div>
         </form>
@@ -883,7 +898,7 @@ const Amenity = ({ community, user, setActivePage, setPaymentState }) => {
                           Approve
                         </button>
                       )}
-                      {['PENDING', 'APPROVED'].includes(b.status) && (
+                      {b.status === 'PENDING' && (
                         <button onClick={() => handleCancel(b.booking_id)}
                           className="px-3 py-1.5 bg-red-500/10 dark:bg-red-500/20 hover:bg-red-500/20 dark:hover:bg-red-500/30 text-red-600 dark:text-red-400 rounded-xl text-xs font-medium transition">
                           Cancel

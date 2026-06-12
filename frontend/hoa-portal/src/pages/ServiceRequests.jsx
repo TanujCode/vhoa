@@ -21,13 +21,21 @@ const StatusBadge = ({ status }) => {
 };
 
 const PriorityBadge = ({ priority }) => {
-  const map = { 
-    LOW: 'text-slate-500 dark:text-gray-400', 
-    NORMAL: 'text-blue-600 dark:text-blue-400', 
-    HIGH: 'text-orange-600 dark:text-orange-400', 
-    URGENT: 'text-red-600 dark:text-red-400' 
+  const config = {
+    LOW: { label: 'Low', color: 'bg-green-500 text-green-600 dark:text-green-400' },
+    NORMAL: { label: 'Medium', color: 'bg-yellow-500 text-yellow-600 dark:text-yellow-400 font-medium' },
+    HIGH: { label: 'High', color: 'bg-red-500 text-red-600 dark:text-red-400' },
+    URGENT: { label: 'Urgent', color: 'bg-red-500 text-red-600 dark:text-red-400' }
   };
-  return <span className={`text-xs font-medium ${map[priority] || 'text-slate-500 dark:text-gray-400'}`}>● {priority}</span>;
+  const item = config[priority] || { label: priority, color: 'bg-gray-400 text-gray-500 dark:text-gray-400' };
+  const parts = item.color.split(' ');
+  const circleColor = parts[0];
+  const textColor = parts.slice(1).join(' ');
+  return (
+    <span className={`inline-flex items-center gap-1.5 text-xs font-semibold ${textColor}`}>
+      {item.label} <span className={`w-2 h-2 rounded-full ${circleColor}`}></span>
+    </span>
+  );
 };
 
 
@@ -128,18 +136,30 @@ const SubmitModal = ({ communityId, onClose, onSuccess }) => {
           </div>
 
           <div>
-            <label className="text-xs text-slate-500 dark:text-gray-400 mb-1.5 block">Priority</label>
-            <div className="relative">
-              <select 
-                value={form.priority} 
-                onChange={e => setForm({...form, priority: e.target.value})}
-                className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl pl-4 pr-10 py-3 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-teal-500 appearance-none cursor-pointer"
-              >
-                <option value="NORMAL" className="text-slate-900 dark:text-white">Normal</option>
-                <option value="HIGH" className="text-slate-900 dark:text-white">High</option>
-                <option value="URGENT" className="text-slate-900 dark:text-white">Urgent</option>
-              </select>
-              <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-gray-500 pointer-events-none" size={18} />
+            <label className="text-xs text-slate-500 dark:text-gray-400 mb-2 block">Priority</label>
+            <div className="grid grid-cols-3 gap-2.5">
+              {[
+                { value: 'LOW', label: 'Low', color: 'bg-green-500', activeClass: 'border-green-500 bg-green-500/10 text-green-700 dark:text-green-400' },
+                { value: 'NORMAL', label: 'Medium', color: 'bg-yellow-500', activeClass: 'border-yellow-500 bg-yellow-500/10 text-yellow-700 dark:text-yellow-400' },
+                { value: 'HIGH', label: 'High', color: 'bg-red-500', activeClass: 'border-red-500 bg-red-500/10 text-red-700 dark:text-red-400' },
+              ].map((opt) => {
+                const isActive = form.priority === opt.value;
+                return (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => setForm({ ...form, priority: opt.value })}
+                    className={`flex items-center justify-between px-3 py-2.5 rounded-2xl border text-sm font-semibold transition ${
+                      isActive
+                        ? `${opt.activeClass} border-2`
+                        : 'border-slate-200 dark:border-white/10 text-slate-600 dark:text-gray-400 hover:bg-slate-50 dark:hover:bg-white/5 bg-transparent'
+                    }`}
+                  >
+                    <span>{opt.label}</span>
+                    <span className={`w-2.5 h-2.5 rounded-full ${opt.color} flex-shrink-0 ml-1.5`}></span>
+                  </button>
+                );
+              })}
             </div>
           </div>
 
@@ -434,19 +454,30 @@ const EditModal = ({ request, communityId, isAdmin, onClose, onSuccess }) => {
           </div>
 
           <div>
-            <label className="text-xs text-slate-500 dark:text-gray-400 mb-1.5 block">Priority</label>
-            <div className="relative">
-              <select 
-                value={form.priority} 
-                onChange={e => setForm({...form, priority: e.target.value})}
-                className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl pl-4 pr-10 py-3 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-teal-500 appearance-none cursor-pointer"
-              >
-                <option value="LOW" className="text-slate-900 dark:text-white">Low</option>
-                <option value="NORMAL" className="text-slate-900 dark:text-white">Normal</option>
-                <option value="HIGH" className="text-slate-900 dark:text-white">High</option>
-                <option value="URGENT" className="text-slate-900 dark:text-white">Urgent</option>
-              </select>
-              <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-gray-500 pointer-events-none" size={18} />
+            <label className="text-xs text-slate-500 dark:text-gray-400 mb-2 block">Priority</label>
+            <div className="grid grid-cols-3 gap-2.5">
+              {[
+                { value: 'LOW', label: 'Low', color: 'bg-green-500', activeClass: 'border-green-500 bg-green-500/10 text-green-700 dark:text-green-400' },
+                { value: 'NORMAL', label: 'Medium', color: 'bg-yellow-500', activeClass: 'border-yellow-500 bg-yellow-500/10 text-yellow-700 dark:text-yellow-400' },
+                { value: 'HIGH', label: 'High', color: 'bg-red-500', activeClass: 'border-red-500 bg-red-500/10 text-red-700 dark:text-red-400' },
+              ].map((opt) => {
+                const isActive = (form.priority === opt.value) || (opt.value === 'HIGH' && form.priority === 'URGENT');
+                return (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => setForm({ ...form, priority: opt.value })}
+                    className={`flex items-center justify-between px-3 py-2.5 rounded-2xl border text-sm font-semibold transition ${
+                      isActive
+                        ? `${opt.activeClass} border-2`
+                        : 'border-slate-200 dark:border-white/10 text-slate-600 dark:text-gray-400 hover:bg-slate-50 dark:hover:bg-white/5 bg-transparent'
+                    }`}
+                  >
+                    <span>{opt.label}</span>
+                    <span className={`w-2.5 h-2.5 rounded-full ${opt.color} flex-shrink-0 ml-1.5`}></span>
+                  </button>
+                );
+              })}
             </div>
           </div>
 

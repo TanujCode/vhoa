@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { AlertTriangle, Plus, RefreshCw, ChevronDown, X, Search, ArrowUpRight, Download } from 'lucide-react';
+import { AlertTriangle, Plus, RefreshCw, ChevronDown, X, Search, ArrowUpRight, Download, Filter } from 'lucide-react';
 import API, { getBaseUrl } from '../services/api';
 import { onlyDecimalKeyPress, onlyDigitsKeyPress } from '../utils/fieldValidators';
 
@@ -1022,17 +1022,17 @@ const Violations = ({ community, user, setActivePage, setPaymentState }) => {
               />
             </div>
 
-            <div className="relative">
+             <div className="relative">
+              <Filter className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-gray-500 pointer-events-none" size={16} />
               <select
                 value={statusFilter}
                 onChange={e => setStatusFilter(e.target.value)}
-                className="bg-slate-50 dark:bg-[#1e3248] border border-slate-200 dark:border-white/10 rounded-2xl pl-4 pr-10 py-2.5 text-sm text-slate-900 dark:text-white focus:border-teal-500 focus:outline-none appearance-none cursor-pointer"
+                className="bg-slate-50 dark:bg-[#1e3248] border border-slate-200 dark:border-white/10 rounded-2xl pl-9 pr-4 py-2.5 text-sm text-slate-900 dark:text-white focus:border-teal-500 focus:outline-none appearance-none cursor-pointer"
               >
                 {statuses.map(s => (
                   <option key={s} value={s} className="text-slate-900 dark:text-white">{s || 'All Statuses'}</option>
                 ))}
               </select>
-              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-gray-500 pointer-events-none" size={16} />
             </div>
           </div>
         </div>

@@ -64,29 +64,37 @@ const Topbar = ({
       {/* Community Section */}
       <div className="relative flex-1 lg:flex-none">
         {(isResident || isBoardMember) && communities.length <= 1 ? (
-          <div className="flex items-center gap-1.5 sm:gap-3 px-2 py-1 sm:px-4 sm:py-2 bg-slate-100 dark:bg-[#1E3248] border border-slate-200 dark:border-white/10 rounded-2xl max-w-[130px] sm:max-w-[280px] lg:max-w-none">
+          // Board Member + Resident ke liye Fixed Community (jaise HTML mein hai)
+          <div className="flex items-center gap-1.5 sm:gap-3 max-w-[130px] sm:max-w-[280px] lg:max-w-none select-none">
             <div className="w-2 h-2 bg-teal-500 rounded-full animate-pulse flex-shrink-0"></div>
             <div className="min-w-0">
               <p className="text-[8px] sm:text-[10px] text-slate-500 dark:text-gray-400 font-mono uppercase tracking-widest leading-none mb-0.5 truncate">MY COMMUNITY</p>
-              <p className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white leading-none truncate">
+              <p className="text-xs sm:text-base font-extrabold text-slate-900 dark:text-white leading-none truncate">
                 {activeCommunity?.name || "Oakwood Estates"}
               </p>
             </div>
-            <div className="hidden sm:block ml-auto text-[10px] font-mono text-teal-600 dark:text-teal-400 bg-teal-500/10 px-2.5 py-0.5 rounded flex-shrink-0">
-              {activeCommunity?.community_code || "OAK-2291"}
-            </div>
+            {(activeCommunity?.community_code || "OAK-2291") && (
+              <div className="hidden sm:block text-[10px] sm:text-xs font-mono font-bold text-teal-600 dark:text-teal-400 bg-teal-500/10 dark:bg-teal-500/20 px-2.5 py-0.5 rounded-full flex-shrink-0 border border-teal-500/20">
+                {activeCommunity?.community_code || "OAK-2291"}
+              </div>
+            )}
           </div>
         ) : (
           // Admin / Super Admin OR Multi-Community Resident/Board Member ke liye dropdown
           <div
-            className="bg-slate-100 dark:bg-[#1E3248] border border-slate-200 dark:border-white/20 rounded-2xl px-2.5 py-1.5 sm:px-4 sm:py-2 flex items-center gap-1.5 sm:gap-3 cursor-pointer hover:border-teal-500 transition min-w-[110px] max-w-[125px] sm:min-w-[240px] lg:min-w-[280px] lg:max-w-none"
+            className="flex items-center gap-2 cursor-pointer transition select-none hover:opacity-85"
             onClick={() => setIsCommDropdownOpen(!isCommDropdownOpen)}
           >
-            <div className="w-2 h-2 bg-teal-500 rounded-full flex-shrink-0"></div>
-            <div className="min-w-0 flex-1">
-              <p className="text-xs sm:text-sm font-semibold truncate text-gray-900 dark:text-white">
+            <div className="w-2 h-2 bg-teal-500 rounded-full flex-shrink-0 animate-pulse"></div>
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white truncate">
                 {activeCommunity?.name || "Select Community"}
-              </p>
+              </span>
+              {activeCommunity?.community_code && (
+                <span className="hidden sm:block text-[10px] sm:text-xs font-mono font-bold text-teal-600 dark:text-teal-400 bg-teal-500/10 dark:bg-teal-500/20 px-2.5 py-0.5 rounded-full flex-shrink-0 border border-teal-500/20">
+                  {activeCommunity.community_code}
+                </span>
+              )}
             </div>
             <ChevronDown size={14} className="text-gray-400 flex-shrink-0 transition-transform sm:w-4 sm:h-4" style={{ transform: isCommDropdownOpen ? 'rotate(180deg)' : 'none' }} />
           </div>
