@@ -64,86 +64,93 @@ const Topbar = ({
       {/* Community Section */}
       <div className="relative flex-1 lg:flex-none">
         {(isResident || isBoardMember) && communities.length <= 1 ? (
-          // Board Member + Resident ke liye Fixed Community (jaise HTML mein hai)
-          <div className="flex items-center gap-1.5 sm:gap-3 max-w-[130px] sm:max-w-[340px] lg:max-w-none select-none">
-            <div className="w-2 h-2 bg-teal-500 rounded-full animate-pulse flex-shrink-0"></div>
+          // Board Member + Resident ke liye Fixed Community
+          <div className="flex items-center gap-2 sm:gap-3 max-w-[180px] sm:max-w-[420px] lg:max-w-none select-none">
+            <div className="w-2.5 h-2.5 bg-teal-500 rounded-full animate-pulse flex-shrink-0"></div>
             <div className="min-w-0">
-              <p className="text-[8px] sm:text-[10px] text-slate-500 dark:text-gray-400 font-mono uppercase tracking-widest leading-none mb-0.5 truncate">MY COMMUNITY</p>
-              <p className="text-xs sm:text-base font-extrabold text-slate-900 dark:text-white leading-none truncate">
-                {activeCommunity?.name || "Oakwood Estates"}
-              </p>
+              <p className="text-[9px] sm:text-[10px] text-slate-400 dark:text-gray-400 font-semibold uppercase tracking-widest leading-normal mb-0.5 truncate">MY COMMUNITY</p>
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="text-sm sm:text-lg font-bold text-slate-900 dark:text-white leading-tight truncate">
+                  {activeCommunity?.name || "Oakwood Estates"}
+                </span>
+                {(activeCommunity?.community_code || "OAK-2291") && (
+                  <span className="hidden sm:inline-block text-[9px] sm:text-[10px] font-bold px-2 py-0.5 bg-sky-50 text-sky-700 dark:bg-sky-500/10 dark:text-sky-400 rounded-lg border border-sky-200 dark:border-sky-500/20 flex-shrink-0 ml-1 shadow-sm">
+                    {activeCommunity?.community_code || "OAK-2291"}
+                  </span>
+                )}
+              </div>
             </div>
-            {(activeCommunity?.community_code || "OAK-2291") && (
-              <span className="hidden sm:inline-block text-[10px] font-bold px-2 py-0.5 bg-teal-500/10 text-teal-600 dark:bg-teal-500/20 dark:text-teal-400 rounded-lg border border-teal-500/20 flex-shrink-0 ml-1.5">
-                {activeCommunity?.community_code || "OAK-2291"}
-              </span>
-            )}
           </div>
         ) : (
           // Admin / Super Admin OR Multi-Community Resident/Board Member ke liye dropdown
-          <div
-            className="flex items-center gap-2 cursor-pointer transition select-none hover:opacity-85"
-            onClick={() => setIsCommDropdownOpen(!isCommDropdownOpen)}
-          >
-            <div className="w-2 h-2 bg-teal-500 rounded-full flex-shrink-0 animate-pulse"></div>
-            <div className="flex items-center gap-2 min-w-0">
-              <span className="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white truncate">
-                {activeCommunity?.name || "Select Community"}
-              </span>
-              {activeCommunity?.community_code && (
-                <span className="hidden sm:inline-block text-[10px] font-bold px-2 py-0.5 bg-teal-500/10 text-teal-600 dark:bg-teal-500/20 dark:text-teal-400 rounded-lg border border-teal-500/20 flex-shrink-0 ml-1.5">
-                  {activeCommunity.community_code}
-                </span>
-              )}
-            </div>
-            <ChevronDown size={14} className="text-gray-400 flex-shrink-0 transition-transform sm:w-4 sm:h-4" style={{ transform: isCommDropdownOpen ? 'rotate(180deg)' : 'none' }} />
-          </div>
-        )}
-
-        {/* Dropdown panel */}
-        {isCommDropdownOpen && (
-          <div className="absolute top-[calc(100%+12px)] left-0 w-72 sm:w-80 bg-white dark:bg-[#1E3248] border border-slate-200 dark:border-white/20 rounded-3xl shadow-2xl z-50 py-3 overflow-hidden animate-in fade-in zoom-in-95">
-            <div className="px-3 relative">
-              <Search size={16} className="absolute left-7 top-1/2 -translate-y-1/2 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full bg-slate-100 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:border-teal-500 dark:text-white"
-              />
-            </div>
-
-            <div className="max-h-64 overflow-y-auto px-2 mt-3 custom-scrollbar">
-              {filteredCommunities.map((comm) => (
-                <div
-                  key={comm.community_id}
-                  onClick={() => { 
-                    setActiveCommunity(comm); 
-                    setIsCommDropdownOpen(false); 
-                  }}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-2xl mx-1 cursor-pointer transition hover:bg-slate-100 dark:hover:bg-white/10 ${
-                    activeCommunity?.community_id === comm.community_id ? 'bg-teal-50 dark:bg-teal-500/10 border border-teal-500/20' : ''
-                  }`}
-                >
-                  <div className="w-2 h-2 rounded-full bg-teal-500"></div>
-                  <p className="font-medium text-gray-900 dark:text-white truncate">{comm.name}</p>
-                </div>
-              ))}
-            </div>
-
-            {user?.role === 'super_admin' && (
+          <div className="flex items-center gap-2 sm:gap-3 max-w-[180px] sm:max-w-[420px] lg:max-w-none select-none">
+            <div className="w-2.5 h-2.5 bg-teal-500 rounded-full flex-shrink-0 animate-pulse"></div>
+            <div className="min-w-0">
+              <p className="text-[9px] sm:text-[10px] text-slate-400 dark:text-gray-400 font-semibold uppercase tracking-widest leading-normal mb-0.5 truncate">
+                {user?.role === 'super_admin' ? 'MANAGING' : 'MY COMMUNITY'}
+              </p>
               <div
-                className="mx-3 mt-3 border-t border-slate-200 dark:border-white/10 pt-3 px-4 py-3 text-teal-500 hover:bg-teal-500/5 rounded-2xl cursor-pointer flex items-center gap-2 text-sm font-bold transition"
-                onClick={() => { setIsCommDropdownOpen(false); setShowAddModal(true); }}
+                className="flex items-center gap-2 cursor-pointer transition select-none hover:opacity-80"
+                onClick={() => setIsCommDropdownOpen(!isCommDropdownOpen)}
               >
-                <Plus size={18} /> Add New Community
+                <span className="text-sm sm:text-lg font-bold text-slate-900 dark:text-white leading-tight truncate">
+                  {activeCommunity?.name || "Select Community"}
+                </span>
+                {activeCommunity?.community_code && (
+                  <span className="hidden sm:inline-block text-[9px] sm:text-[10px] font-bold px-2 py-0.5 bg-sky-50 text-sky-700 dark:bg-sky-500/10 dark:text-sky-400 rounded-lg border border-sky-200 dark:border-sky-500/20 flex-shrink-0 ml-1 shadow-sm">
+                    {activeCommunity.community_code}
+                  </span>
+                )}
+                <ChevronDown size={16} className="text-gray-400 dark:text-gray-500 flex-shrink-0 transition-transform" style={{ transform: isCommDropdownOpen ? 'rotate(180deg)' : 'none' }} />
               </div>
-            )}
+            </div>
           </div>
         )}
       </div>
 
+      {/* Dropdown panel */}
+      {isCommDropdownOpen && (
+        <div className="absolute top-[calc(100%+12px)] left-0 w-72 sm:w-80 bg-white dark:bg-[#1E3248] border border-slate-200 dark:border-white/20 rounded-3xl shadow-2xl z-50 py-3 overflow-hidden animate-in fade-in zoom-in-95">
+          <div className="px-3 relative">
+            <Search size={16} className="absolute left-7 top-1/2 -translate-y-1/2 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full bg-slate-100 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:border-teal-500 dark:text-white"
+            />
+          </div>
+
+          <div className="max-h-64 overflow-y-auto px-2 mt-3 custom-scrollbar">
+            {filteredCommunities.map((comm) => (
+              <div
+                key={comm.community_id}
+                onClick={() => { 
+                  setActiveCommunity(comm); 
+                  setIsCommDropdownOpen(false); 
+                }}
+                className={`flex items-center gap-3 px-4 py-3 rounded-2xl mx-1 cursor-pointer transition hover:bg-slate-100 dark:hover:bg-white/10 ${
+                  activeCommunity?.community_id === comm.community_id ? 'bg-teal-50 dark:bg-teal-500/10 border border-teal-500/20' : ''
+                }`}
+              >
+                <div className="w-2 h-2 rounded-full bg-teal-500"></div>
+                <p className="font-medium text-gray-900 dark:text-white truncate">{comm.name}</p>
+              </div>
+            ))}
+          </div>
+
+          {user?.role === 'super_admin' && (
+            <div
+              className="mx-3 mt-3 border-t border-slate-200 dark:border-white/10 pt-3 px-4 py-3 text-teal-500 hover:bg-teal-500/5 rounded-2xl cursor-pointer flex items-center gap-2 text-sm font-bold transition"
+              onClick={() => { setIsCommDropdownOpen(false); setShowAddModal(true); }}
+            >
+              <Plus size={18} /> Add New Community
+            </div>
+          )}
+        </div>
+      )}
+      
       {/* Right Side Actions */}
       <div className="ml-auto flex items-center gap-1 sm:gap-2 lg:gap-4 flex-shrink-0">
         
