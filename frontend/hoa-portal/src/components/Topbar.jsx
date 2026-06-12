@@ -65,7 +65,7 @@ const Topbar = ({
       <div className="relative flex-1 lg:flex-none">
         {(isResident || isBoardMember) && communities.length <= 1 ? (
           // Board Member + Resident ke liye Fixed Community (jaise HTML mein hai)
-          <div className="flex items-center gap-1.5 sm:gap-3 max-w-[130px] sm:max-w-[280px] lg:max-w-none select-none">
+          <div className="flex items-center gap-1.5 sm:gap-3 max-w-[130px] sm:max-w-[340px] lg:max-w-none select-none">
             <div className="w-2 h-2 bg-teal-500 rounded-full animate-pulse flex-shrink-0"></div>
             <div className="min-w-0">
               <p className="text-[8px] sm:text-[10px] text-slate-500 dark:text-gray-400 font-mono uppercase tracking-widest leading-none mb-0.5 truncate">MY COMMUNITY</p>
@@ -74,7 +74,7 @@ const Topbar = ({
               </p>
             </div>
             {(activeCommunity?.community_code || "OAK-2291") && (
-              <span className="hidden sm:block text-xs sm:text-sm font-extrabold text-teal-600 dark:text-teal-400 flex-shrink-0">
+              <span className="hidden sm:inline-block text-[10px] font-bold px-2 py-0.5 bg-teal-500/10 text-teal-600 dark:bg-teal-500/20 dark:text-teal-400 rounded-lg border border-teal-500/20 flex-shrink-0 ml-1.5">
                 {activeCommunity?.community_code || "OAK-2291"}
               </span>
             )}
@@ -91,7 +91,7 @@ const Topbar = ({
                 {activeCommunity?.name || "Select Community"}
               </span>
               {activeCommunity?.community_code && (
-                <span className="hidden sm:block text-xs sm:text-sm font-extrabold text-teal-600 dark:text-teal-400 flex-shrink-0">
+                <span className="hidden sm:inline-block text-[10px] font-bold px-2 py-0.5 bg-teal-500/10 text-teal-600 dark:bg-teal-500/20 dark:text-teal-400 rounded-lg border border-teal-500/20 flex-shrink-0 ml-1.5">
                   {activeCommunity.community_code}
                 </span>
               )}
@@ -178,9 +178,19 @@ const Topbar = ({
         </button>
 
         {/* User Profile */}
-        <div className="relative ml-1 sm:ml-2">
+        <div className="relative ml-1 sm:ml-2 flex items-center gap-2">
+          <div className="hidden sm:flex flex-col text-right select-none mr-1.5">
+            <span className="text-xs sm:text-sm font-bold text-slate-800 dark:text-white leading-tight tracking-tight">
+              {user?.name || "User"}
+            </span>
+            <span className="text-[9px] sm:text-[10px] text-teal-600 dark:text-[#25C490] font-bold uppercase tracking-wider leading-none mt-0.5">
+              {(viewAsResident && canSwitchView) 
+                ? "Resident" 
+                : (user?.role || "resident").split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}
+            </span>
+          </div>
           <div
-            className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center font-bold text-white cursor-pointer hover:ring-2 ring-teal-500/5 transition-all overflow-hidden border border-white/10 bg-gradient-to-br from-teal-500 to-blue-600 shadow-lg"
+            className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center font-bold text-white cursor-pointer hover:ring-2 ring-teal-500/5 transition-all overflow-hidden border border-white/10 bg-gradient-to-br from-teal-500 to-blue-600 shadow-lg flex-shrink-0"
             onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
           >
             {user?.user_profile_url ? (
