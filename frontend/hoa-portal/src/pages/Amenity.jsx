@@ -3,14 +3,38 @@ import { Calendar, Plus, RefreshCw, X, Clock, ChevronDown, Trash2 } from 'lucide
 import API from '../services/api';
 import { onlyDigitsKeyPress, onlyDecimalKeyPress } from '../utils/fieldValidators';
 
-const StatusBadge = ({ status }) => {
-  const map = {
-    PENDING: 'bg-amber-500/10 text-amber-600 dark:bg-amber-500/20 dark:text-amber-300',
-    APPROVED: 'bg-teal-500/10 text-teal-600 dark:bg-teal-500/20 dark:text-teal-400',
-    CANCELLED: 'bg-red-500/10 text-red-600 dark:bg-red-500/20 dark:text-red-400',
-    COMPLETED: 'bg-slate-100 text-slate-600 dark:bg-gray-500/20 dark:text-gray-400',
-  };
-  return <span className={`px-3 py-1 rounded-full text-xs font-semibold ${map[status] || 'bg-gray-500/10 text-gray-600 dark:bg-gray-500/20 dark:text-gray-400'}`}>{status}</span>;
+const StatusBadge = ({ booking }) => {
+  const status = booking?.status;
+  const isUnpaid = booking?.fee_amount > 0 && !booking?.is_paid;
+  
+  let displayStatus = status;
+  let badgeClass = 'bg-gray-500/10 text-gray-600 dark:bg-gray-500/20 dark:text-gray-400';
+  
+  if (status === 'APPROVED') {
+    if (isUnpaid) {
+      displayStatus = 'PAYMENT PENDING';
+      badgeClass = 'bg-amber-500/10 text-amber-600 dark:bg-amber-500/20 dark:text-amber-300';
+    } else {
+      displayStatus = 'Amenity booked';
+      badgeClass = 'bg-teal-500/10 text-teal-600 dark:bg-teal-500/20 dark:text-teal-400';
+    }
+  } else if (status === 'PENDING') {
+    if (isUnpaid) {
+      displayStatus = 'PAYMENT PENDING';
+      badgeClass = 'bg-amber-500/10 text-amber-600 dark:bg-amber-500/20 dark:text-amber-300';
+    } else {
+      displayStatus = 'PENDING';
+      badgeClass = 'bg-amber-500/10 text-amber-600 dark:bg-amber-500/20 dark:text-amber-300';
+    }
+  } else if (status === 'CANCELLED') {
+    displayStatus = 'CANCELLED';
+    badgeClass = 'bg-red-500/10 text-red-600 dark:bg-red-500/20 dark:text-red-400';
+  } else if (status === 'COMPLETED') {
+    displayStatus = 'COMPLETED';
+    badgeClass = 'bg-slate-100 text-slate-600 dark:bg-gray-500/20 dark:text-gray-400';
+  }
+  
+  return <span className={`px-3 py-1 rounded-full text-xs font-semibold ${badgeClass}`}>{displayStatus}</span>;
 };
 
 const BookModal = ({ amenity, communityId, onClose, onSuccess }) => {
@@ -42,6 +66,11 @@ const BookModal = ({ amenity, communityId, onClose, onSuccess }) => {
         booking_date: form.booking_date,
         slot_number: parseInt(form.slot_number),
       });
+      if (amenity.fee_enabled && amenity.booking_fee > 0) {
+        alert("The Amenity will be booked only if the Payment is made");
+      } else {
+        alert("Amenity booked successfully!");
+      }
       onSuccess(); onClose();
     } catch (err) {
       alert(err.response?.data?.detail || 'Booking failed');
@@ -829,6 +858,11 @@ const Amenity = ({ community, user, setActivePage, setPaymentState }) => {
                           ${b.fee_amount} {b.is_paid ? '✓ Paid' : '⚠ Unpaid'}
                         </span>}
                       </div>
+                      {b.fee_amount > 0 && !b.is_paid && ['PENDING', 'APPROVED'].includes(b.status) && (
+                        <div className="mt-2 text-[10px] sm:text-xs text-amber-600 dark:text-amber-400 bg-amber-500/10 dark:bg-amber-500/20 border border-amber-500/20 dark:border-amber-500/30 px-2.5 py-1 rounded-xl inline-flex items-center gap-1.5 w-fit font-medium">
+                          <span>⚠ The Amenity will be booked only if the Payment is made</span>
+                        </div>
+                      )}
                       {b.is_refunded && (
                         <div className="mt-2 text-xs text-teal-600 dark:text-teal-400 bg-teal-500/10 dark:bg-teal-500/20 border border-teal-500/20 dark:border-teal-500/30 px-3 py-1.5 rounded-xl inline-flex items-center gap-1.5 w-fit">
                           <span>💵 Refunded: ${b.refund_amount} on {formatDate(b.refund_date)}</span>
@@ -836,7 +870,7 @@ const Amenity = ({ community, user, setActivePage, setPaymentState }) => {
                       )}
                     </div>
                     <div className="flex items-center gap-3 flex-shrink-0">
-                      <StatusBadge status={b.status} />
+                      <StatusBadge booking={b} />
                       {!b.is_paid && b.fee_amount > 0 && ['PENDING', 'APPROVED'].includes(b.status) && (
                         <button onClick={() => handlePay(b)}
                           className="px-3 py-1.5 bg-teal-600 hover:bg-teal-500 text-white rounded-xl text-xs font-medium transition shadow-sm">

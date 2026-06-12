@@ -43,6 +43,15 @@ def run_db_upgrades():
         for col_name, col_type in columns_to_add_bookings:
             db.execute(text(f"ALTER TABLE amenity_bookings ADD COLUMN IF NOT EXISTS {col_name} {col_type};"))
         
+        # Add columns to amenities table
+        columns_to_add_amenities = [
+            ("pool_open", "BOOLEAN DEFAULT TRUE"),
+            ("tentative_open_date", "TIMESTAMP WITH TIME ZONE"),
+            ("is_pool_reserved", "BOOLEAN DEFAULT FALSE")
+        ]
+        for col_name, col_type in columns_to_add_amenities:
+            db.execute(text(f"ALTER TABLE amenities ADD COLUMN IF NOT EXISTS {col_name} {col_type};"))
+        
         # Create partial unique index to prevent race conditions on duplicate inserts
         db.execute(text("""
             CREATE UNIQUE INDEX IF NOT EXISTS idx_amenity_booking_unique_slot 
