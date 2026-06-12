@@ -2,8 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Search, ChevronDown, UserPlus, Mail, Phone, X } from 'lucide-react';
 import API, { getBaseUrl } from '../services/api';
 import { checkEmail } from '../utils/emailValidation';
-import { 
-const { validateName, validateUnitNo, onlyLettersKeyPress } = require('../utils/fieldValidators');
+import { validateName, validateUnitNo, onlyLettersKeyPress } from '../utils/fieldValidators';
 import { formatUsPhone, formatPhoneAsYouType } from '../utils/phoneFormatter';
 
 const getPhoneValidationRule = (code) => {
