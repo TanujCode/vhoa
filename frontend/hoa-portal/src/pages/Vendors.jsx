@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Plus, X, Lock, Truck, Search, Copy, Check, Trash2 } from 'lucide-react';
 import API from "../services/api";
 import { toast } from 'react-hot-toast';
-import { formatUsPhone } from '../utils/phoneFormatter';
+import { formatUsPhone, formatPhoneAsYouType } from '../utils/phoneFormatter';
 import { checkEmail } from '../utils/emailValidation';
 
 const getPhoneValidationRule = (code) => {
@@ -138,11 +138,11 @@ const Vendors = ({ communityId, userRole }) => {
         }
       }
     } else if (name === 'phoneOnly') {
-      const rule = getPhoneValidationRule(phoneCountryCode);
+      const digits = value.replace(/\D/g, '');
       if (!value) {
         errorMsg = 'Phone number is required';
-      } else if (value.length < rule.min || value.length > rule.max) {
-        errorMsg = `Phone number must be ${rule.label} for ${phoneCountryCode}`;
+      } else if (digits.length !== 10) {
+        errorMsg = 'Phone number must be exactly 10 digits';
       }
     }
     setErrors(prev => ({ ...prev, [name]: errorMsg }));
@@ -198,7 +198,7 @@ const Vendors = ({ communityId, userRole }) => {
         company_name: formData.company_name,
         contact_person: formData.contact_person,
         email: formData.email,
-        phone: `${phoneCountryCode}${phoneOnly}`,
+        phone: `+1${phoneOnly.replace(/\D/g, '')}`,
         category: formData.service_type, 
         license_number: formData.license_number || null,
         license_expiry: formData.expiry || null,
@@ -284,8 +284,16 @@ const Vendors = ({ communityId, userRole }) => {
                 placeholder="Search vendors..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-2xl pl-10 pr-4 py-2.5 text-sm text-slate-900 dark:text-white focus:border-teal-500 outline-none"
+                className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-2xl pl-10 pr-10 py-2.5 text-sm text-slate-900 dark:text-white focus:border-teal-500 outline-none"
               />
+              {searchTerm && (
+                <button
+                  onClick={() => setSearchTerm('')}
+                  className="absolute right-3 top-3 text-slate-400 hover:text-slate-600 dark:hover:text-white"
+                >
+                  <X size={16} />
+                </button>
+              )}
             </div>
           </div>
 
@@ -392,34 +400,19 @@ const Vendors = ({ communityId, userRole }) => {
 
                   <div>
                     <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Phone *</label>
-                    <div className="flex gap-2">
-                      <select
-                        value={phoneCountryCode}
-                        onChange={(e) => setPhoneCountryCode(e.target.value)}
-                        className="w-[105px] shrink-0 px-2 py-2 bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 rounded-lg text-sm text-slate-900 dark:text-white focus:border-teal-500 outline-none cursor-pointer"
-                      >
-                        <option value="+1">🇺🇸 +1</option>
-                        <option value="+91">🇮🇳 +91</option>
-                        <option value="+44">🇬🇧 +44</option>
-                        <option value="+971">🇦🇪 +971</option>
-                        <option value="+966">🇸🇦 +966</option>
-                        <option value="+61">🇦🇺 +61</option>
-                      </select>
-                      <input
-                        required
-                        type="text"
-                        maxLength={getPhoneValidationRule(phoneCountryCode).max}
-                        placeholder={`${getPhoneValidationRule(phoneCountryCode).max}-digit number`}
-                        className={`flex-1 bg-slate-50 dark:bg-[#111c2a] border ${errors.phoneOnly ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/10 focus:border-teal-500'} rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none`}
-                        value={phoneOnly}
-                        onChange={(e) => setPhoneOnly(e.target.value.replace(/\D/g, ''))}
-                        onKeyPress={(e) => {
-                          if (!/[0-9]/.test(e.key)) {
-                            e.preventDefault();
-                          }
-                        }}
-                      />
-                    </div>
+                    <input
+                      required
+                      type="text"
+                      maxLength={14}
+                      placeholder="(123) 456-7890"
+                      className={`w-full bg-slate-50 dark:bg-[#111c2a] border ${errors.phoneOnly ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/10 focus:border-teal-500'} rounded-lg px-3 py-2 text-sm font-sans text-slate-900 dark:text-white outline-none`}
+                      value={phoneOnly}
+                      onChange={(e) => {
+                        const formatted = formatPhoneAsYouType(e.target.value);
+                        setPhoneOnly(formatted);
+                        validateField('phoneOnly', formatted);
+                      }}
+                    />
                     {errors.phoneOnly && (
                       <p className="text-red-500 text-xs mt-1">{errors.phoneOnly}</p>
                     )}
@@ -442,6 +435,7 @@ const Vendors = ({ communityId, userRole }) => {
                       <input 
                         type="email" 
                         required 
+                        placeholder="abc@gmail.com"
                         className={`w-full bg-slate-50 dark:bg-[#111c2a] border ${errors.email ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/10 focus:border-teal-500'} rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none`} 
                         value={formData.email} 
                         onChange={(e) => {
@@ -457,8 +451,8 @@ const Vendors = ({ communityId, userRole }) => {
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">License Number</label>
-                      <input className="w-full bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:border-teal-500 outline-none" value={formData.license_number} onChange={(e) => setFormData({...formData, license_number: e.target.value})} />
+                      <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">License Number *</label>
+                      <input required className="w-full bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:border-teal-500 outline-none" value={formData.license_number} onChange={(e) => setFormData({...formData, license_number: e.target.value})} />
                     </div>
                     <div>
                       <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Expiry</label>
@@ -467,8 +461,9 @@ const Vendors = ({ communityId, userRole }) => {
                   </div>
 
                   <div>
-                    <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Insurance Number</label>
+                    <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Insurance Number *</label>
                     <input 
+                      required
                       className="w-full bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:border-teal-500 outline-none" 
                       value={formData.insurance} 
                       onChange={(e) => setFormData({...formData, insurance: e.target.value})} 
@@ -510,8 +505,28 @@ const Vendors = ({ communityId, userRole }) => {
       </div>
 
       <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-xl overflow-hidden shadow-sm">
-        <div className="p-4 border-b border-slate-200 dark:border-white/10 text-slate-800 dark:text-white font-medium text-sm flex items-center gap-2">
-          <Truck size={16} /> Registered Vendors
+        <div className="p-5 border-b border-slate-200 dark:border-white/10 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div className="text-slate-800 dark:text-white font-medium text-sm flex items-center gap-2">
+            <Truck size={16} /> Registered Vendors
+          </div>
+          <div className="relative w-full sm:w-72">
+            <Search className="absolute left-3 top-3 text-slate-400" size={18} />
+            <input
+              type="text"
+              placeholder="Search vendors..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-2xl pl-10 pr-10 py-2.5 text-sm text-slate-900 dark:text-white focus:border-teal-500 outline-none"
+            />
+            {searchTerm && (
+              <button
+                onClick={() => setSearchTerm('')}
+                className="absolute right-3 top-3 text-slate-400 hover:text-slate-600 dark:hover:text-white"
+              >
+                <X size={16} />
+              </button>
+            )}
+          </div>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">
@@ -532,8 +547,8 @@ const Vendors = ({ communityId, userRole }) => {
                     <div className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-teal-600 dark:border-teal-400 border-t-transparent"></div>
                   </td>
                 </tr>
-              ) : vendors.length > 0 ? (
-                vendors.map((v) => (
+              ) : filteredVendors.length > 0 ? (
+                filteredVendors.map((v) => (
                   <tr key={v.vendor_id || v.id} className="hover:bg-slate-50 dark:hover:bg-white/5 transition-colors group">
                     <td className="px-6 py-4">
                       <div className="text-slate-900 dark:text-white font-medium group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">
@@ -620,34 +635,19 @@ const Vendors = ({ communityId, userRole }) => {
 
                 <div>
                   <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Phone *</label>
-                  <div className="flex gap-2">
-                    <select
-                      value={phoneCountryCode}
-                      onChange={(e) => setPhoneCountryCode(e.target.value)}
-                      className="w-[105px] shrink-0 px-2 py-2 bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 rounded-lg text-sm text-slate-900 dark:text-white focus:border-teal-500 outline-none cursor-pointer"
-                    >
-                      <option value="+1">🇺🇸 +1</option>
-                      <option value="+91">🇮🇳 +91</option>
-                      <option value="+44">🇬🇧 +44</option>
-                      <option value="+971">🇦🇪 +971</option>
-                      <option value="+966">🇸🇦 +966</option>
-                      <option value="+61">🇦🇺 +61</option>
-                    </select>
-                    <input
-                      required
-                      type="text"
-                      maxLength={getPhoneValidationRule(phoneCountryCode).max}
-                      placeholder={`${getPhoneValidationRule(phoneCountryCode).max}-digit number`}
-                      className={`flex-1 bg-slate-50 dark:bg-[#111c2a] border ${errors.phoneOnly ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/10 focus:border-teal-500'} rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none`}
-                      value={phoneOnly}
-                      onChange={(e) => setPhoneOnly(e.target.value.replace(/\D/g, ''))}
-                      onKeyPress={(e) => {
-                        if (!/[0-9]/.test(e.key)) {
-                          e.preventDefault();
-                        }
-                      }}
-                    />
-                  </div>
+                  <input
+                    required
+                    type="text"
+                    maxLength={14}
+                    placeholder="(123) 456-7890"
+                    className={`w-full bg-slate-50 dark:bg-[#111c2a] border ${errors.phoneOnly ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/10 focus:border-teal-500'} rounded-lg px-3 py-2 text-sm font-sans text-slate-900 dark:text-white outline-none`}
+                    value={phoneOnly}
+                    onChange={(e) => {
+                      const formatted = formatPhoneAsYouType(e.target.value);
+                      setPhoneOnly(formatted);
+                      validateField('phoneOnly', formatted);
+                    }}
+                  />
                   {errors.phoneOnly && (
                     <p className="text-red-500 text-xs mt-1">{errors.phoneOnly}</p>
                   )}
@@ -670,6 +670,7 @@ const Vendors = ({ communityId, userRole }) => {
                     <input 
                       type="email" 
                       required 
+                      placeholder="abc@gmail.com"
                       className={`w-full bg-slate-50 dark:bg-[#111c2a] border ${errors.email ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/10 focus:border-teal-500'} rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none`} 
                       value={formData.email} 
                       onChange={(e) => {
@@ -685,8 +686,8 @@ const Vendors = ({ communityId, userRole }) => {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">License Number</label>
-                    <input className="w-full bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:border-teal-500 outline-none" value={formData.license_number} onChange={(e) => setFormData({...formData, license_number: e.target.value})} />
+                    <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">License Number *</label>
+                    <input required className="w-full bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:border-teal-500 outline-none" value={formData.license_number} onChange={(e) => setFormData({...formData, license_number: e.target.value})} />
                   </div>
                   <div>
                     <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Expiry</label>
@@ -695,8 +696,9 @@ const Vendors = ({ communityId, userRole }) => {
                 </div>
 
                 <div>
-                  <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Insurance Number</label>
+                  <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Insurance Number *</label>
                   <input 
+                    required
                     className="w-full bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:border-teal-500 outline-none" 
                     value={formData.insurance} 
                     onChange={(e) => setFormData({...formData, insurance: e.target.value})} 

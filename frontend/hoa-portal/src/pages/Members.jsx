@@ -3,11 +3,8 @@ import { Search, ChevronDown, UserPlus, Mail, Phone, X } from 'lucide-react';
 import API, { getBaseUrl } from '../services/api';
 import { checkEmail } from '../utils/emailValidation';
 import { 
-  validateName, 
-  validateUnitNo, 
-  onlyLettersKeyPress 
-} from '../utils/fieldValidators';
-import { formatUsPhone } from '../utils/phoneFormatter';
+const { validateName, validateUnitNo, onlyLettersKeyPress } = require('../utils/fieldValidators');
+import { formatUsPhone, formatPhoneAsYouType } from '../utils/phoneFormatter';
 
 const getPhoneValidationRule = (code) => {
   switch (code) {
@@ -137,9 +134,9 @@ const Members = ({ community }) => {
     }
 
     if (invitePhoneOnly) {
-      const rule = getPhoneValidationRule(invitePhoneCountryCode);
-      if (invitePhoneOnly.length < rule.min || invitePhoneOnly.length > rule.max) {
-        alert(`Mobile number must be exactly ${rule.label} for ${invitePhoneCountryCode}`);
+      const digits = invitePhoneOnly.replace(/\D/g, '');
+      if (digits.length !== 10) {
+        alert("Mobile number must be exactly 10 digits.");
         return;
       }
     }
@@ -159,7 +156,7 @@ const Members = ({ community }) => {
         first_name: inviteForm.firstName.trim(),
         last_name: inviteForm.lastName.trim(),
         email_id: inviteForm.email.trim(),
-        mobile_number: invitePhoneOnly ? `${invitePhoneCountryCode}${invitePhoneOnly}` : null,
+        mobile_number: invitePhoneOnly ? `+1${invitePhoneOnly.replace(/\D/g, '')}` : null,
         unit_no: inviteForm.unit.trim() || null,
         role_name: mappedRole,
         community_id: community.community_id
@@ -310,8 +307,8 @@ const Members = ({ community }) => {
     }
 
     const parsed = parsePhoneNumber(member.mobile_number || '');
-    setEditPhoneCountryCode(parsed.countryCode);
-    setEditPhoneOnly(parsed.numberOnly);
+    setEditPhoneCountryCode('+1');
+    setEditPhoneOnly(formatPhoneAsYouType(parsed.numberOnly));
 
     setIdFile(null);
     setAddrFile(null);
@@ -346,9 +343,9 @@ const Members = ({ community }) => {
     }
     // Phone validation (optional)
     if (editPhoneOnly) {
-      const rule = getPhoneValidationRule(editPhoneCountryCode);
-      if (editPhoneOnly.length < rule.min || editPhoneOnly.length > rule.max) {
-        alert(`Mobile number must be exactly ${rule.label} for ${editPhoneCountryCode}`);
+      const digits = editPhoneOnly.replace(/\D/g, '');
+      if (digits.length !== 10) {
+        alert("Mobile number must be exactly 10 digits.");
         return;
       }
     }
@@ -387,7 +384,7 @@ const Members = ({ community }) => {
         first_name: editForm.firstName.trim(),
         last_name: editForm.lastName.trim(),
         email_id: editForm.email.trim(),
-        mobile_number: editPhoneOnly ? `${editPhoneCountryCode}${editPhoneOnly}` : null,
+        mobile_number: editPhoneOnly ? `+1${editPhoneOnly.replace(/\D/g, '')}` : null,
         unit_no: editForm.unit.trim() || null,
         role_name: mappedRole
       });
@@ -690,36 +687,17 @@ const Members = ({ community }) => {
 
               <div>
                 <label className="block text-xs text-slate-500 dark:text-gray-400 mb-1">Mobile Number (Optional)</label>
-                <div className="flex gap-2">
-                  <select
-                    value={invitePhoneCountryCode}
-                    onChange={e => {
-                      setInvitePhoneCountryCode(e.target.value);
-                      setInvitePhoneOnly('');
-                    }}
-                    className="px-2 py-2.5 bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl text-sm text-slate-900 dark:text-white focus:outline-none focus:border-teal-500 cursor-pointer"
-                  >
-                    <option value="+1">🇺🇸 +1</option>
-                    <option value="+91">🇮🇳 +91</option>
-                    <option value="+44">🇬🇧 +44</option>
-                    <option value="+971">🇦🇪 +971</option>
-                    <option value="+966">🇸🇦 +966</option>
-                    <option value="+61">🇦🇺 +61</option>
-                  </select>
-                  <input
-                    type="text"
-                    value={invitePhoneOnly}
-                    maxLength={getPhoneValidationRule(invitePhoneCountryCode).max}
-                    placeholder={`${getPhoneValidationRule(invitePhoneCountryCode).max}-digit number`}
-                    onChange={e => setInvitePhoneOnly(e.target.value.replace(/\D/g, ''))}
-                    onKeyPress={e => {
-                      if (!/[0-9]/.test(e.key)) {
-                        e.preventDefault();
-                      }
-                    }}
-                    className="flex-1 bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl p-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-teal-500 placeholder-slate-400 dark:placeholder-gray-500"
-                  />
-                </div>
+                <input
+                  type="text"
+                  value={invitePhoneOnly}
+                  maxLength={14}
+                  placeholder="(123) 456-7890"
+                  onChange={e => {
+                    const formatted = formatPhoneAsYouType(e.target.value);
+                    setInvitePhoneOnly(formatted);
+                  }}
+                  className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl p-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-teal-500 placeholder-slate-400 dark:placeholder-gray-500"
+                />
               </div>
 
               <div>
@@ -860,36 +838,17 @@ const Members = ({ community }) => {
 
               <div>
                 <label className="block text-xs text-slate-500 dark:text-gray-400 mb-1">Mobile Number (Optional)</label>
-                <div className="flex gap-2">
-                  <select
-                    value={editPhoneCountryCode}
-                    onChange={e => {
-                      setEditPhoneCountryCode(e.target.value);
-                      setEditPhoneOnly('');
-                    }}
-                    className="px-2 py-2.5 bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl text-sm text-slate-900 dark:text-white focus:outline-none focus:border-teal-500 cursor-pointer"
-                  >
-                    <option value="+1">🇺🇸 +1</option>
-                    <option value="+91">🇮🇳 +91</option>
-                    <option value="+44">🇬🇧 +44</option>
-                    <option value="+971">🇦🇪 +971</option>
-                    <option value="+966">🇸🇦 +966</option>
-                    <option value="+61">🇦🇺 +61</option>
-                  </select>
-                  <input
-                    type="text"
-                    value={editPhoneOnly}
-                    maxLength={getPhoneValidationRule(editPhoneCountryCode).max}
-                    placeholder={`${getPhoneValidationRule(editPhoneCountryCode).max}-digit number`}
-                    onChange={e => setEditPhoneOnly(e.target.value.replace(/\D/g, ''))}
-                    onKeyPress={e => {
-                      if (!/[0-9]/.test(e.key)) {
-                        e.preventDefault();
-                      }
-                    }}
-                    className="flex-1 bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl p-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-teal-500 placeholder-slate-400 dark:placeholder-gray-500"
-                  />
-                </div>
+                <input
+                  type="text"
+                  value={editPhoneOnly}
+                  maxLength={14}
+                  placeholder="(123) 456-7890"
+                  onChange={e => {
+                    const formatted = formatPhoneAsYouType(e.target.value);
+                    setEditPhoneOnly(formatted);
+                  }}
+                  className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl p-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-teal-500 placeholder-slate-400 dark:placeholder-gray-500"
+                />
               </div>
 
               <div>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Wrench, Plus, RefreshCw, X, ChevronDown, MessageSquare, UserCheck, Edit, Clock, Landmark, User, DollarSign, Filter } from 'lucide-react';
+import { Wrench, Plus, RefreshCw, X, ChevronDown, MessageSquare, UserCheck, Edit, Clock, Landmark, User, DollarSign, Filter, Zap, Leaf, Shield, Sparkles } from 'lucide-react';
 import API from '../services/api';
 import { onlyDigitsKeyPress, onlyDecimalKeyPress } from '../utils/fieldValidators';
 
@@ -36,6 +36,26 @@ const PriorityBadge = ({ priority }) => {
       {item.label} <span className={`w-2 h-2 rounded-full ${circleColor}`}></span>
     </span>
   );
+};
+
+const getRequestIconDetails = (typeName) => {
+  const name = (typeName || '').toLowerCase();
+  if (name.includes('plumb')) {
+    return { Icon: Wrench, bg: 'bg-blue-500/10 dark:bg-blue-500/20', text: 'text-blue-600 dark:text-blue-400' };
+  }
+  if (name.includes('elect')) {
+    return { Icon: Zap, bg: 'bg-amber-500/10 dark:bg-amber-500/20', text: 'text-amber-600 dark:text-amber-400' };
+  }
+  if (name.includes('landscap') || name.includes('garden') || name.includes('tree') || name.includes('lawn')) {
+    return { Icon: Leaf, bg: 'bg-emerald-500/10 dark:bg-emerald-500/20', text: 'text-emerald-600 dark:text-emerald-400' };
+  }
+  if (name.includes('secur') || name.includes('guard') || name.includes('lock') || name.includes('cctv')) {
+    return { Icon: Shield, bg: 'bg-rose-500/10 dark:bg-rose-500/20', text: 'text-rose-600 dark:text-rose-400' };
+  }
+  if (name.includes('clean') || name.includes('swee') || name.includes('housekeep') || name.includes('pest') || name.includes('trash') || name.includes('wash')) {
+    return { Icon: Sparkles, bg: 'bg-purple-500/10 dark:bg-purple-500/20', text: 'text-purple-600 dark:text-purple-400' };
+  }
+  return { Icon: Wrench, bg: 'bg-blue-500/10 dark:bg-blue-500/20', text: 'text-blue-600 dark:text-blue-400' };
 };
 
 
@@ -756,13 +776,18 @@ const DetailDrawer = ({
   const isOwner = Number(request.submitted_by_id) === Number(user?.user_id);
   const canEdit = isAdmin || (isOwner && request.status_name === 'OPEN');
   const activeAssignment = assignments[0];
+  const showQuoteForm = isAdmin && (((activeAssignment && activeAssignment.status === 'ASSIGNED') || (!activeAssignment && request.vendor_id)));
 
   return (
     <div className="flex flex-col h-full text-slate-900 dark:text-white">
       {/* Header */}
       <div className="p-6 border-b border-slate-200 dark:border-white/10 flex items-center justify-between bg-gradient-to-r from-slate-50 to-blue-50/20 dark:from-[#1E2E42] dark:to-[#162535]">
         <div className="flex items-center gap-2">
-          <Wrench className="text-teal-600 dark:text-teal-400" size={20} />
+          {(() => {
+            const details = getRequestIconDetails(request.type_name);
+            const RequestIcon = details.Icon;
+            return <RequestIcon className="text-teal-600 dark:text-teal-400" size={20} />;
+          })()}
           <h3 className="text-lg font-semibold truncate max-w-[280px] text-slate-900 dark:text-white">Request #{request.request_id}</h3>
         </div>
         <div className="flex items-center gap-3">
@@ -968,13 +993,22 @@ const DetailDrawer = ({
                       </div>
                     </div>
 
-                    <button
-                      type="submit"
-                      disabled={quoteSubmitting}
-                      className="w-full py-2.5 bg-teal-600 hover:bg-teal-500 text-white rounded-xl text-xs font-semibold transition disabled:opacity-50"
-                    >
-                      {quoteSubmitting ? "Submitting..." : "Submit Quote Details"}
-                    </button>
+                    <div className="flex gap-3">
+                      <button
+                        type="submit"
+                        disabled={quoteSubmitting}
+                        className="flex-1 py-2.5 bg-teal-600 hover:bg-teal-500 text-white rounded-xl text-sm font-semibold transition disabled:opacity-50"
+                      >
+                        {quoteSubmitting ? "Submitting..." : "Submit Quote Details"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={onStatusUpdate}
+                        className="flex-1 py-2.5 border border-teal-600 text-teal-600 bg-transparent hover:bg-teal-50 dark:border-teal-500 dark:text-teal-500 dark:hover:bg-teal-950/20 rounded-xl text-sm font-semibold transition flex items-center justify-center gap-1.5"
+                      >
+                        <UserCheck size={14} /> Update Status
+                      </button>
+                    </div>
                   </form>
                 ) : (
                   <div className="bg-blue-500/5 border border-blue-500/20 dark:border-blue-500/30 rounded-2xl p-4 text-sm text-blue-700 dark:text-blue-300">
@@ -1114,7 +1148,7 @@ const DetailDrawer = ({
         )}
 
         {/* Action Button for Status Update (Admin only) */}
-        {isAdmin && !['CLOSED','CANCELLED'].includes(request.status_name) && (
+        {isAdmin && !['CLOSED','CANCELLED'].includes(request.status_name) && !showQuoteForm && (
           <button 
             onClick={onStatusUpdate}
             className="w-full py-3 bg-teal-600 hover:bg-teal-500 rounded-2xl text-sm font-semibold transition flex items-center justify-center gap-2 shadow-lg shadow-teal-900/30 text-white"
@@ -1458,9 +1492,15 @@ const ServiceRequests = ({ community, user, setActivePage, setPaymentState }) =>
                   selectedRequest?.request_id === req.request_id ? 'bg-slate-50 dark:bg-white/5 border-l-4 border-teal-500' : ''
                 }`}
               >
-                <div className="w-12 h-12 bg-blue-500/10 dark:bg-blue-500/20 rounded-2xl flex items-center justify-center flex-shrink-0">
-                  <Wrench size={22} className="text-blue-600 dark:text-blue-400" />
-                </div>
+                {(() => {
+                  const details = getRequestIconDetails(req.type_name);
+                  const RequestIcon = details.Icon;
+                  return (
+                    <div className={`w-12 h-12 ${details.bg} rounded-2xl flex items-center justify-center flex-shrink-0`}>
+                      <RequestIcon size={22} className={details.text} />
+                    </div>
+                  );
+                })()}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start justify-between gap-3">
                     <div>
@@ -1498,7 +1538,7 @@ const ServiceRequests = ({ community, user, setActivePage, setPaymentState }) =>
                           e.stopPropagation();
                           setEditingRequest(req);
                         }}
-                        className="px-3 py-1.5 bg-slate-100 hover:bg-red-600 hover:text-white dark:bg-white/10 dark:hover:bg-red-600 dark:hover:text-white text-slate-700 dark:text-gray-300 rounded-xl text-xs font-medium transition flex items-center gap-1"
+                        className="px-3 py-1.5 bg-slate-100 hover:bg-red-600 hover:text-white dark:bg-white/10 dark:hover:bg-red-600 dark:hover:text-white text-red-600 dark:text-red-400 rounded-xl text-xs font-medium transition flex items-center gap-1"
                       >
                         <Edit size={12} /> Edit Details
                       </button>

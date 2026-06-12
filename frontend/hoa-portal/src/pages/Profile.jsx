@@ -4,7 +4,7 @@ import {
   CheckCircle, XCircle, Save, Key, Eye, EyeOff, User, Bell, Trash2, ChevronDown
 } from 'lucide-react';
 import API, { getBaseUrl } from '../services/api';
-import { formatUsPhone } from '../utils/phoneFormatter';
+import { formatUsPhone, formatPhoneAsYouType } from '../utils/phoneFormatter';
 
 const getPhoneValidationRule = (code) => {
   switch (code) {
@@ -49,13 +49,13 @@ const Profile = ({ user, setUser, viewRole }) => {
   });
 
   const initialPhone = parsePhoneNumber(user?.mobile_number || '');
-  const [phoneCountryCode, setPhoneCountryCode] = useState(initialPhone.countryCode);
-  const [phoneNumberOnly, setPhoneNumberOnly] = useState(initialPhone.numberOnly);
+  const [phoneCountryCode, setPhoneCountryCode] = useState('+1');
+  const [phoneNumberOnly, setPhoneNumberOnly] = useState(formatPhoneAsYouType(initialPhone.numberOnly));
 
   useEffect(() => {
     const parsed = parsePhoneNumber(user?.mobile_number || '');
-    setPhoneCountryCode(parsed.countryCode);
-    setPhoneNumberOnly(parsed.numberOnly);
+    setPhoneCountryCode('+1');
+    setPhoneNumberOnly(formatPhoneAsYouType(parsed.numberOnly));
   }, [user?.mobile_number]);
 
   const [secondaryUnits, setSecondaryUnits] = useState(
@@ -184,9 +184,9 @@ const Profile = ({ user, setUser, viewRole }) => {
 
       // Check phone validation
       if (phoneNumberOnly) {
-        const rule = getPhoneValidationRule(phoneCountryCode);
-        if (phoneNumberOnly.length < rule.min || phoneNumberOnly.length > rule.max) {
-          showMsg('error', `Mobile number must be exactly ${rule.label} for ${phoneCountryCode}`);
+        const digits = phoneNumberOnly.replace(/\D/g, '');
+        if (digits.length !== 10) {
+          showMsg('error', 'Mobile number must be exactly 10 digits.');
           setSaving(false);
           return;
         }
@@ -194,7 +194,7 @@ const Profile = ({ user, setUser, viewRole }) => {
 
       const payload = {
         ...form,
-        mobile_number: phoneNumberOnly ? `${phoneCountryCode}${phoneNumberOnly}` : '',
+        mobile_number: phoneNumberOnly ? `+1${phoneNumberOnly.replace(/\D/g, '')}` : '',
         unit_no_2: finalUnits.join(', ')
       };
       const res = await API.put('/user/profile', payload);
@@ -582,33 +582,17 @@ const Profile = ({ user, setUser, viewRole }) => {
 
               <div>
                 <label className="text-xs text-slate-500 dark:text-gray-400 mb-1.5 block">Mobile Number</label>
-                <div className="flex gap-2">
-                  <select
-                    value={phoneCountryCode}
-                    onChange={e => setPhoneCountryCode(e.target.value)}
-                    className="px-3 py-3 bg-slate-50 dark:bg-[#1E3248] border border-slate-200 dark:border-white/10 rounded-xl text-sm text-slate-900 dark:text-white focus:outline-none focus:border-teal-500 cursor-pointer"
-                  >
-                    <option value="+1">🇺🇸 +1</option>
-                    <option value="+91">🇮🇳 +91</option>
-                    <option value="+44">🇬🇧 +44</option>
-                    <option value="+971">🇦🇪 +971</option>
-                    <option value="+966">🇸🇦 +966</option>
-                    <option value="+61">🇦🇺 +61</option>
-                  </select>
-                  <input
-                    type="text"
-                    value={phoneNumberOnly}
-                    maxLength={getPhoneValidationRule(phoneCountryCode).max}
-                    onChange={e => setPhoneNumberOnly(e.target.value.replace(/\D/g, ''))}
-                    onKeyPress={(e) => {
-                      if (!/[0-9]/.test(e.key)) {
-                        e.preventDefault();
-                      }
-                    }}
-                    placeholder={`${getPhoneValidationRule(phoneCountryCode).max}-digit number`}
-                    className="flex-1 bg-slate-50 dark:bg-[#1E3248] border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-600 focus:outline-none focus:border-teal-500"
-                  />
-                </div>
+                <input
+                  type="text"
+                  value={phoneNumberOnly}
+                  maxLength={14}
+                  onChange={e => {
+                    const formatted = formatPhoneAsYouType(e.target.value);
+                    setPhoneNumberOnly(formatted);
+                  }}
+                  placeholder="(123) 456-7890"
+                  className="w-full bg-slate-50 dark:bg-[#1E3248] border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-600 focus:outline-none focus:border-teal-500"
+                />
               </div>
 
               <div>
