@@ -172,6 +172,40 @@ def run_db_upgrades():
 
 run_db_upgrades()
 
+
+def backfill_user_codes():
+    """Assign user_code to all existing users who don't have one (one-time migration)."""
+    db = SessionLocal()
+    try:
+        from app.models.user import User
+        from app.utils.user_code import generate_user_code
+        users_without_code = db.query(User).filter(
+            (User.user_code == None) | (User.user_code == '')
+        ).all()
+        if not users_without_code:
+            return
+        count = 0
+        for user in users_without_code:
+            try:
+                code = generate_user_code(db, user.first_name, user.last_name, signup_date=user.created_date)
+                user.user_code = code
+                db.flush()  # flush to avoid duplicate within same run
+                count += 1
+            except Exception as ue:
+                db.rollback()
+                print(f"  ⚠️  Could not generate code for user {user.user_id}: {ue}")
+        db.commit()
+        if count > 0:
+            print(f"✅ Backfilled user_code for {count} existing user(s).")
+    except Exception as e:
+        db.rollback()
+        print(f"⚠️  user_code backfill warning: {e}")
+    finally:
+        db.close()
+
+
+backfill_user_codes()
+
 # Create upload folders
 os.makedirs("uploads/profile_pictures", exist_ok=True)
 os.makedirs("uploads/community_documents", exist_ok=True)
