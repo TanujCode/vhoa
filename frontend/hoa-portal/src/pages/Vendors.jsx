@@ -301,41 +301,41 @@ const Vendors = ({ communityId, userRole }) => {
             <table className="w-full text-left text-sm">
               <thead className="bg-slate-50 dark:bg-white/5 border-b border-slate-200 dark:border-white/10 uppercase text-[10px] tracking-wider font-bold text-slate-500 dark:text-gray-400">
                 <tr>
-                  <th className="px-6 py-4">Vendor</th>
-                  <th className="px-6 py-4">Service Type</th>
-                  <th className="px-6 py-4">License #</th>
-                  <th className="px-6 py-4">Insurance</th>
-                  <th className="px-6 py-4 text-right">Status</th>
-                  <th className="px-6 py-4 text-right">Actions</th>
+                  <th className="px-3 py-4">Vendor</th>
+                  <th className="px-3 py-4 whitespace-nowrap">Service Type</th>
+                  <th className="px-3 py-4 whitespace-nowrap">License #</th>
+                  <th className="px-3 py-4">Insurance</th>
+                  <th className="px-3 py-4 text-right whitespace-nowrap">Status</th>
+                  <th className="px-3 py-4 text-right whitespace-nowrap">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-white/5 text-slate-700 dark:text-gray-300">
                 {loading ? (
-                  <tr><td colSpan="6" className="px-6 py-12 text-center text-slate-500 dark:text-gray-400">Loading...</td></tr>
+                  <tr><td colSpan="6" className="px-3 py-12 text-center text-slate-500 dark:text-gray-400">Loading...</td></tr>
                 ) : filteredVendors.length > 0 ? (
                   filteredVendors.map((v) => (
                     <tr key={v.vendor_id || v.id} className="hover:bg-slate-50 dark:hover:bg-white/5 transition-colors group">
-                      <td className="px-6 py-4">
+                      <td className="px-3 py-4">
                         <div className="text-slate-900 dark:text-white font-medium group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">
                           {v.company_name}
                         </div>
-                        <div className="text-[10px] text-slate-500 dark:text-gray-400">
+                        <div className="text-[10px] text-slate-500 dark:text-gray-400 whitespace-nowrap">
                           {v.contact_person} | {formatUsPhone(v.phone)}
                         </div>
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="px-3 py-4 whitespace-nowrap">
                         <span className="bg-teal-500/10 text-teal-600 dark:bg-teal-500/20 dark:text-teal-400 px-2 py-0.5 rounded text-[10px] font-bold border border-teal-500/20">
                           {v.category}
                         </span>
                       </td>
-                      <td className="px-6 py-4 font-mono text-xs text-slate-500 dark:text-gray-400">{v.license_number || 'N/A'}</td>
-                      <td className="px-6 py-4 text-xs text-slate-600 dark:text-gray-300">{v.insurance_number || "N/A"}</td>
-                      <td className="px-6 py-4 text-right">
+                      <td className="px-3 py-4 font-mono text-xs text-slate-500 dark:text-gray-400 whitespace-nowrap">{v.license_number || 'N/A'}</td>
+                      <td className="px-3 py-4 text-xs text-slate-600 dark:text-gray-300">{v.insurance_number || "N/A"}</td>
+                      <td className="px-3 py-4 text-right whitespace-nowrap">
                         <span className={`px-2 py-1 rounded text-[10px] font-bold border ${v.active_status ? 'text-teal-600 dark:text-teal-400 bg-teal-500/10 dark:bg-teal-500/20 border-teal-500/20' : 'text-slate-500 dark:text-gray-400 bg-slate-100 dark:bg-white/5 border-slate-200 dark:border-white/10'}`}>
                           {v.active_status ? 'ACTIVE' : 'INACTIVE'}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-right">
+                      <td className="px-3 py-4 text-right whitespace-nowrap">
                         <button
                           onClick={() => handleDelete(v.vendor_id)}
                           className="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 p-1 rounded transition-colors"
@@ -532,45 +532,45 @@ const Vendors = ({ communityId, userRole }) => {
           <table className="w-full text-left text-sm">
             <thead className="bg-slate-50 dark:bg-white/5 border-b border-slate-200 dark:border-white/10 uppercase text-[10px] tracking-wider font-bold text-slate-500 dark:text-gray-400">
               <tr>
-                <th className="px-6 py-4">Vendor</th>
-                <th className="px-6 py-4">Service Type</th>
-                <th className="px-6 py-4">License #</th>
-                <th className="px-6 py-4">Insurance</th>
-                <th className="px-6 py-4 text-right">Status</th>
-                <th className="px-6 py-4 text-right">Actions</th>
+                <th className="px-3 py-4">Vendor</th>
+                <th className="px-3 py-4 whitespace-nowrap">Service Type</th>
+                <th className="px-3 py-4 whitespace-nowrap">License #</th>
+                <th className="px-3 py-4">Insurance</th>
+                <th className="px-3 py-4 text-right whitespace-nowrap">Status</th>
+                <th className="px-3 py-4 text-right whitespace-nowrap">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-white/5 text-slate-700 dark:text-gray-300">
               {loading ? (
                 <tr>
-                  <td colSpan="6" className="px-6 py-12 text-center">
+                  <td colSpan="6" className="px-3 py-12 text-center">
                     <div className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-teal-600 dark:border-teal-400 border-t-transparent"></div>
                   </td>
                 </tr>
               ) : filteredVendors.length > 0 ? (
                 filteredVendors.map((v) => (
                   <tr key={v.vendor_id || v.id} className="hover:bg-slate-50 dark:hover:bg-white/5 transition-colors group">
-                    <td className="px-6 py-4">
+                    <td className="px-3 py-4">
                       <div className="text-slate-900 dark:text-white font-medium group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">
                         {v.company_name}
                       </div>
-                      <div className="text-[10px] text-slate-500 dark:text-gray-400">
+                      <div className="text-[10px] text-slate-500 dark:text-gray-400 whitespace-nowrap">
                         {v.contact_person} | {formatUsPhone(v.phone)}
                       </div>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-3 py-4 whitespace-nowrap">
                       <span className="bg-teal-500/10 text-teal-600 dark:bg-teal-500/20 dark:text-teal-400 px-2 py-0.5 rounded text-[10px] font-bold border border-teal-500/20">
                         {v.category}
                       </span>
                     </td>
-                    <td className="px-6 py-4 font-mono text-xs text-slate-500 dark:text-gray-400">{v.license_number || 'N/A'}</td>
-                    <td className="px-6 py-4 text-xs text-slate-600 dark:text-gray-300">{v.insurance_number || "N/A"}</td>
-                    <td className="px-6 py-4 text-right">
+                    <td className="px-3 py-4 font-mono text-xs text-slate-500 dark:text-gray-400 whitespace-nowrap">{v.license_number || 'N/A'}</td>
+                    <td className="px-3 py-4 text-xs text-slate-600 dark:text-gray-300">{v.insurance_number || "N/A"}</td>
+                    <td className="px-3 py-4 text-right whitespace-nowrap">
                       <span className={`px-2 py-1 rounded text-[10px] font-bold border ${v.active_status ? 'text-teal-600 dark:text-teal-400 bg-teal-500/10 dark:bg-teal-500/20 border-teal-500/20' : 'text-slate-500 dark:text-gray-400 bg-slate-100 dark:bg-white/5 border-slate-200 dark:border-white/10'}`}>
                         {v.active_status ? 'ACTIVE' : 'INACTIVE'}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-right">
+                    <td className="px-3 py-4 text-right whitespace-nowrap">
                       <button
                         onClick={() => handleDelete(v.vendor_id)}
                         className="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 p-1 rounded transition-colors"

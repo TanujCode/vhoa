@@ -46,12 +46,12 @@ def update_profile(
    Update your profile. 
 Only the fields you send will be updated — the rest will remain unchanged.
 
-     Body (sab optional):
-     - first_name
-     - middle_name
-     - last_name
-     - mobile_number
-     """
+    Body (sab optional):
+    - first_name
+    - middle_name
+    - last_name
+    - mobile_number
+    """
     # Mobile duplicate check — koi aur same number use kar raha ho
     if body.mobile_number:
         existing = db.query(User).filter(
@@ -263,7 +263,6 @@ def _to_out(user: User, db: Session | None = None, community_id: int | None = No
         id_proof_url         = id_proof,
         address_proof_url    = address_proof,
     )
-
 
 # ══════════════════════════════════════════════
 #  GET /api/user/community/{community_id}

@@ -360,20 +360,20 @@ export default function Contracts() {
           <table className="w-full text-left border-collapse min-w-[1000px]">
             <thead>
               <tr className="border-b border-slate-200/80 dark:border-white/10 text-slate-500 dark:text-gray-400 text-xs font-semibold uppercase tracking-wider bg-slate-100/50 dark:bg-[#0D1622]/50">
-                <th className="py-4 px-6">Contract Code</th>
-                <th className="py-4 px-6">Client / Business</th>
-                <th className="py-4 px-6">Plan Info</th>
-                <th className="py-4 px-6">Pricing details</th>
-                <th className="py-4 px-6">Status</th>
-                <th className="py-4 px-6">Sales Agent</th>
-                <th className="py-4 px-6 text-center">Actions</th>
+                <th className="px-3 py-4">Contract Code</th>
+                <th className="px-3 py-4">Client / Business</th>
+                <th className="px-3 py-4">Plan Info</th>
+                <th className="px-3 py-4">Pricing details</th>
+                <th className="px-3 py-4">Status</th>
+                <th className="px-3 py-4">Sales Agent</th>
+                <th className="px-3 py-4 text-center">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200/60 dark:divide-white/5 text-sm">
               {filteredContracts.map((contract) => (
                 <tr key={contract.contract_id} className="hover:bg-slate-100/30 dark:hover:bg-white/5 transition duration-150">
                   {/* Code */}
-                  <td className="py-4 px-6">
+                  <td className="px-3 py-4 whitespace-nowrap">
                     <div className="flex items-center gap-2">
                       <span className="font-mono font-bold text-[#1D9E75] dark:text-[#25C490] text-base bg-[#1D9E75]/10 dark:bg-[#25C490]/10 px-3 py-1 rounded-xl">
                         {contract.contract_code}
@@ -393,7 +393,7 @@ export default function Contracts() {
                   </td>
 
                   {/* Client & Business */}
-                  <td className="py-4 px-6">
+                  <td className="px-3 py-4">
                     <div>
                       <div className="font-medium text-slate-900 dark:text-white">
                         {contract.client_first_name} {contract.client_last_name}
@@ -408,7 +408,7 @@ export default function Contracts() {
                   </td>
 
                   {/* Plan selected & community size */}
-                  <td className="py-4 px-6">
+                  <td className="px-3 py-4 whitespace-nowrap">
                     <div>
                       <span className="text-xs font-semibold bg-blue-500/10 text-blue-600 dark:text-blue-400 px-2 py-0.5 rounded-lg border border-blue-500/10">
                         {contract.plan_selected || 'Custom'}
@@ -423,7 +423,7 @@ export default function Contracts() {
                   </td>
 
                   {/* Pricing details */}
-                  <td className="py-4 px-6">
+                  <td className="px-3 py-4 whitespace-nowrap">
                     <div>
                       <div className="text-xs text-slate-500 dark:text-gray-400">
                         Setup Fee: <span className="text-slate-800 dark:text-white font-bold">${contract.one_time_set_up || '0'}</span>
@@ -435,7 +435,7 @@ export default function Contracts() {
                   </td>
 
                   {/* Status */}
-                  <td className="py-4 px-6">
+                  <td className="px-3 py-4 whitespace-nowrap">
                     <span className={`inline-flex items-center gap-1.5 text-xs px-3 py-1 rounded-full font-medium ${
                       contract.status === 'ACTIVE'
                         ? 'bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400'
@@ -451,7 +451,7 @@ export default function Contracts() {
                   </td>
 
                   {/* Sales agent */}
-                  <td className="py-4 px-6">
+                  <td className="px-3 py-4 whitespace-nowrap">
                     <div className="text-xs text-slate-700 dark:text-gray-300">
                       <div>{contract.sales_agent_name || 'System Admin'}</div>
                       <div className="text-[10px] text-slate-400 dark:text-gray-500 font-mono">
@@ -461,7 +461,7 @@ export default function Contracts() {
                   </td>
 
                   {/* Actions */}
-                  <td className="py-4 px-6 text-center">
+                  <td className="px-3 py-4 text-center whitespace-nowrap">
                     <div className="flex items-center justify-center gap-2">
                       {contract.status === 'ACTIVE' && (
                         <button

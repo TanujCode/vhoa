@@ -1063,13 +1063,13 @@ const Violations = ({ community, user, setActivePage, setPaymentState }) => {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-slate-200 dark:border-white/10 text-slate-500 dark:text-gray-400 text-sm">
-                  <th className="text-left p-5">Member</th>
-                  <th className="text-left p-5">Type</th>
-                  <th className="text-left p-5">Fine</th>
-                  <th className="text-left p-5">Date</th>
-                  <th className="text-left p-5">Due Date</th>
-                  <th className="text-left p-5">Status</th>
-                  <th className="text-left p-5">Disputed</th>
+                  <th className="text-left px-3 py-4">Member</th>
+                  <th className="text-left px-3 py-4">Type</th>
+                  <th className="text-left px-3 py-4 whitespace-nowrap">Fine</th>
+                  <th className="text-left px-3 py-4 whitespace-nowrap">Date</th>
+                  <th className="text-left px-3 py-4 whitespace-nowrap">Due Date</th>
+                  <th className="text-left px-3 py-4 whitespace-nowrap">Status</th>
+                  <th className="text-left px-3 py-4 whitespace-nowrap">Disputed</th>
                 </tr>
               </thead>
               <tbody>
@@ -1079,13 +1079,13 @@ const Violations = ({ community, user, setActivePage, setPaymentState }) => {
                     onClick={() => setSelectedViolation(v)}
                     className="border-b border-slate-100 dark:border-white/5 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors cursor-pointer"
                   >
-                    <td className="p-5 font-medium text-slate-900 dark:text-white">
+                    <td className="px-3 py-4 font-medium text-slate-900 dark:text-white">
                       {v.client_name || `User #${v.client_id}`}
                     </td>
-                    <td className="p-5 text-slate-500 dark:text-gray-400">
+                    <td className="px-3 py-4 text-slate-500 dark:text-gray-400">
                       {v.violation_type_name || '—'}
                     </td>
-                    <td className="p-5 font-mono text-slate-900 dark:text-white">
+                    <td className="px-3 py-4 font-mono text-slate-900 dark:text-white whitespace-nowrap">
                       ${v.amount}
                       {v.late_charge_applied > 0 && (
                         <span className="text-red-600 dark:text-red-400 text-xs ml-1">
@@ -1093,16 +1093,16 @@ const Violations = ({ community, user, setActivePage, setPaymentState }) => {
                         </span>
                       )}
                     </td>
-                    <td className="p-5 text-slate-500 dark:text-gray-400">
+                    <td className="px-3 py-4 text-slate-500 dark:text-gray-400 whitespace-nowrap">
                       {formatDate(v.violation_date)}
                     </td>
-                    <td className="p-5 text-slate-500 dark:text-gray-400">
+                    <td className="px-3 py-4 text-slate-500 dark:text-gray-400 whitespace-nowrap">
                       {formatDate(v.violation_due_date)}
                     </td>
-                    <td className="p-5">
+                    <td className="px-3 py-4 whitespace-nowrap">
                       <StatusBadge status={v.violation_status} />
                     </td>
-                    <td className="p-5">
+                    <td className="px-3 py-4 whitespace-nowrap">
                       {v.is_disputed ? (
                         <span className="text-amber-600 dark:text-amber-400 text-xs font-medium">
                           {v.dispute_resolved ? '✓ Resolved' : '⏳ Pending'}

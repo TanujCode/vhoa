@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import API, { getBaseUrl } from "../services/api";
 
+// ── Stat Card (Premium) ─────────────────────────────
 const StatCard = ({ label, value, icon: Icon, color, sub, subColor, onClick }) => (
   <div 
     onClick={onClick}
@@ -26,6 +27,7 @@ const StatCard = ({ label, value, icon: Icon, color, sub, subColor, onClick }) =
   </div>
 );
 
+// ── Activity Item ─────────────────────────────
 const ActivityItem = ({ icon: Icon, color, title, time, status }) => (
   <div className="flex items-center gap-3 py-3.5 border-b border-slate-100 dark:border-white/5 last:border-0 hover:bg-slate-50/50 dark:hover:bg-white/[0.01] px-2 rounded-xl transition duration-150">
     <div className={`w-8.5 h-8.5 rounded-xl flex items-center justify-center flex-shrink-0 ${color}`}>
@@ -47,6 +49,7 @@ const ActivityItem = ({ icon: Icon, color, title, time, status }) => (
   </div>
 );
 
+// ── Property Manager Dashboard ────────────────────────────
 const PropertyManagerDashboard = ({ community, user, setActivePage }) => {
   const [stats, setStats]           = useState(null);
   const [violations, setViolations] = useState([]);
@@ -200,7 +203,7 @@ const PropertyManagerDashboard = ({ community, user, setActivePage }) => {
 
       {/* Community Banner & Occupancy Cap Card */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 bg-gradient-to-br from-slate-50 to-blue-55 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 flex flex-col sm:flex-row items-center gap-6 shadow-sm dark:shadow-none">
+        <div className="lg:col-span-2 bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 flex flex-col sm:flex-row items-center gap-6 shadow-sm dark:shadow-none">
           <div className="w-16 h-16 bg-[#1D9E75]/20 text-[#25C490] rounded-2xl flex items-center justify-center flex-shrink-0 border border-[#1D9E75]/30">
             <Building2 size={32} />
           </div>
@@ -267,6 +270,7 @@ const PropertyManagerDashboard = ({ community, user, setActivePage }) => {
           </div>
         </div>
 
+        {/* To-Do Checklist Widget */}
         <div className="lg:col-span-2 bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 shadow-sm dark:shadow-none flex flex-col">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-bold text-slate-900 dark:text-white">Daily PM Checklist</h3>
@@ -401,56 +405,56 @@ const PropertyManagerDashboard = ({ community, user, setActivePage }) => {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-slate-50 dark:bg-[#0d1622] text-xs font-semibold uppercase text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-white/10">
-                  <th className="p-4">Resident Name</th>
-                  <th className="p-4">Email</th>
-                  <th className="p-4">Unit / Block</th>
-                  <th className="p-4">Requested Date</th>
-                  <th className="p-4">Verification Docs</th>
-                  <th className="p-4 text-right">Actions</th>
+                  <th className="px-3 py-4">Resident Name</th>
+                  <th className="px-3 py-4">Email</th>
+                  <th className="px-3 py-4">Unit / Block</th>
+                  <th className="px-3 py-4">Requested Date</th>
+                  <th className="px-3 py-4">Verification Docs</th>
+                  <th className="px-3 py-4 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200 dark:divide-white/10 text-sm">
                 {joinRequests.map((req) => (
                   <tr key={req.request_id} className="hover:bg-slate-50/50 dark:hover:bg-white/5 transition-colors">
-                    <td className="p-4 font-medium text-gray-900 dark:text-white">{req.full_name}</td>
-                    <td className="p-4 text-gray-500 dark:text-gray-400">{req.email_id || req.email}</td>
-                    <td className="p-4">
-                      <span className="px-2 py-1 text-xs font-mono bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded">
+                    <td className="px-3 py-4 font-medium text-gray-950 dark:text-white">{req.full_name}</td>
+                    <td className="px-3 py-4 text-gray-500 dark:text-gray-400 break-all">{req.email_id || req.email}</td>
+                    <td className="px-3 py-4">
+                      <span className="px-2 py-1 text-xs font-mono bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded whitespace-nowrap">
                         Unit {req.unit_no || 'N/A'}
                       </span>
                     </td>
-                    <td className="p-4 text-xs text-gray-400 font-mono">
+                    <td className="px-3 py-4 text-xs text-gray-400 font-mono whitespace-nowrap">
                       {req.created_at ? new Date(req.created_at).toLocaleDateString() : 'Recent'}
                     </td>
-                    <td className="p-4">
+                    <td className="px-3 py-4">
                       <div className="flex gap-2">
                         {req.id_proof_url ? (
                           <a
                             href={getBaseUrl(req.id_proof_url)}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="px-2.5 py-1 text-xs font-semibold bg-blue-500/10 hover:bg-blue-500 text-blue-600 hover:text-white rounded-xl border border-blue-500/20 transition-all"
+                            className="px-2.5 py-1 text-xs font-semibold bg-blue-500/10 hover:bg-blue-500 text-blue-600 hover:text-white rounded-xl border border-blue-500/20 transition-all whitespace-nowrap"
                           >
                             ID Proof
                           </a>
                         ) : (
-                          <span className="text-xs text-gray-400 font-mono">No ID</span>
+                          <span className="text-xs text-gray-400 font-mono whitespace-nowrap">No ID</span>
                         )}
                         {req.address_proof_url ? (
                           <a
                             href={getBaseUrl(req.address_proof_url)}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="px-2.5 py-1 text-xs font-semibold bg-purple-500/10 hover:bg-purple-500 text-purple-600 hover:text-white rounded-xl border border-purple-500/20 transition-all"
+                            className="px-2.5 py-1 text-xs font-semibold bg-purple-500/10 hover:bg-purple-500 text-purple-600 hover:text-white rounded-xl border border-purple-500/20 transition-all whitespace-nowrap"
                           >
                             Address Proof
                           </a>
                         ) : (
-                          <span className="text-xs text-gray-400 font-mono">No Address</span>
+                          <span className="text-xs text-gray-400 font-mono whitespace-nowrap">No Address</span>
                         )}
                       </div>
                     </td>
-                    <td className="p-4 text-right">
+                    <td className="px-3 py-4 text-right">
                       <div className="flex items-center justify-end space-x-2">
                         <button
                           disabled={actionId !== null}

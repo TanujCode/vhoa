@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import { getContracts } from '../services/contractService';
 
+// ── Sales Stat Card ─────────────────────────────────
 const SalesStatCard = ({ label, value, icon: Icon, color, sub, prefix = "" }) => (
   <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 transition-all duration-300 hover:border-slate-200 dark:hover:border-white/20 hover:-translate-y-1 shadow-sm dark:shadow-none">
     <div className="flex items-center justify-between mb-3">
@@ -260,26 +261,26 @@ export default function SalesDashboard({ setActivePage }) {
                 <table className="w-full text-left border-collapse min-w-[700px]">
                   <thead>
                     <tr className="border-b border-slate-100 dark:border-white/5 text-slate-500 dark:text-gray-400 text-xs font-semibold uppercase tracking-wider">
-                      <th className="py-3 px-4">Client Name</th>
-                      <th className="py-3 px-4">Business / Management</th>
-                      <th className="py-3 px-4 font-mono">Contract Code</th>
-                      <th className="py-3 px-4">Plan Selected</th>
-                      <th className="py-3 px-4">Max Units</th>
-                      <th className="py-3 px-4">Setup Fee</th>
-                      <th className="py-3 px-4 text-right">Renewal Fee</th>
+                      <th className="px-3 py-4">Client Name</th>
+                      <th className="px-3 py-4 whitespace-nowrap">Business / Management</th>
+                      <th className="px-3 py-4 font-mono whitespace-nowrap">Contract Code</th>
+                      <th className="px-3 py-4 whitespace-nowrap">Plan Selected</th>
+                      <th className="px-3 py-4 whitespace-nowrap">Max Units</th>
+                      <th className="px-3 py-4 whitespace-nowrap">Setup Fee</th>
+                      <th className="px-3 py-4 text-right whitespace-nowrap">Renewal Fee</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-white/5 text-sm">
                     {onboardedContracts.slice(0, 5).map((contract) => (
                       <tr key={contract.contract_id} className="hover:bg-slate-50/50 dark:hover:bg-white/[0.01] transition">
-                        <td className="py-3.5 px-4 font-medium text-slate-900 dark:text-white">
+                        <td className="px-3 py-4 font-medium text-slate-900 dark:text-white">
                           {contract.client_first_name} {contract.client_last_name}
                           <div className="text-[10px] text-slate-500 dark:text-gray-500 font-normal">{contract.client_email_address}</div>
                         </td>
-                        <td className="py-3.5 px-4 text-slate-700 dark:text-gray-300 font-medium">
+                        <td className="px-3 py-4 text-slate-700 dark:text-gray-300 font-medium">
                           {contract.business_name || "N/A"}
                         </td>
-                        <td className="py-3.5 px-4 font-mono">
+                        <td className="px-3 py-4 font-mono whitespace-nowrap">
                           <div className="flex items-center gap-1.5">
                             <span className="text-teal-700 dark:text-[#25C490] font-bold bg-teal-50 dark:bg-[#25C490]/10 px-2 py-0.5 rounded text-xs">{contract.contract_code}</span>
                             <button
@@ -295,18 +296,18 @@ export default function SalesDashboard({ setActivePage }) {
                             </button>
                           </div>
                         </td>
-                        <td className="py-3.5 px-4">
+                        <td className="px-3 py-4 whitespace-nowrap">
                           <span className="text-xs font-bold bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400 px-2 py-0.5 rounded-lg border border-blue-100 dark:border-blue-500/10">
                             {contract.plan_selected || "Custom"}
                           </span>
                         </td>
-                        <td className="py-3.5 px-4 font-mono text-slate-700 dark:text-gray-300">
+                        <td className="px-3 py-4 font-mono text-slate-700 dark:text-gray-300 whitespace-nowrap">
                           {contract.size_of_the_community || "Unlimited"}
                         </td>
-                        <td className="py-3.5 px-4 font-mono text-slate-700 dark:text-gray-300">
+                        <td className="px-3 py-4 font-mono text-slate-700 dark:text-gray-300 whitespace-nowrap">
                           ${parseFloat(contract.one_time_set_up || 0).toLocaleString()}
                         </td>
-                        <td className="py-3.5 px-4 font-mono text-right text-emerald-700 dark:text-emerald-400 font-medium">
+                        <td className="px-3 py-4 font-mono text-right text-emerald-700 dark:text-emerald-400 font-medium whitespace-nowrap">
                           ${parseFloat(contract.annual_renewal_fee || 0).toLocaleString()}
                         </td>
                       </tr>

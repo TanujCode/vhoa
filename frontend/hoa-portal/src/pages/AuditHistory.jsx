@@ -218,37 +218,37 @@ const AuditTable = ({ logs, loading, filteredLogs, getActionColor, getModuleIcon
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-slate-200 dark:border-white/10 text-slate-500 dark:text-gray-400 text-xs uppercase tracking-wider">
-              <th className="text-left p-5">Action</th>
-              <th className="text-left p-5">Module</th>
-              <th className="text-left p-5">Description</th>
-              {isAdmin && <th className="text-left p-5">User</th>}
-              <th className="text-left p-5">IP</th>
-              <th className="text-left p-5">Time</th>
+              <th className="text-left px-3 py-4">Action</th>
+              <th className="text-left px-3 py-4 whitespace-nowrap">Module</th>
+              <th className="text-left px-3 py-4">Description</th>
+              {isAdmin && <th className="text-left px-3 py-4 whitespace-nowrap">User</th>}
+              <th className="text-left px-3 py-4 whitespace-nowrap">IP</th>
+              <th className="text-left px-3 py-4 whitespace-nowrap">Time</th>
             </tr>
           </thead>
           <tbody>
             {filteredLogs.map(log => (
               <tr key={log.audit_id} className="border-b border-slate-100 dark:border-white/5 hover:bg-slate-50 dark:hover:bg-white/5 transition">
-                <td className="p-5">
+                <td className="px-3 py-4 whitespace-nowrap">
                   <span className={`px-2 py-1 rounded-lg text-xs font-medium ${getActionColor(log.action)}`}>
                     {log.action}
                   </span>
                 </td>
-                <td className="p-5 text-slate-500 dark:text-gray-400 text-xs">
+                <td className="px-3 py-4 text-slate-500 dark:text-gray-400 text-xs whitespace-nowrap">
                   {getModuleIcon(log.module)} {log.module}
                 </td>
-                <td className="p-5 text-slate-700 dark:text-gray-300 text-xs max-w-xs truncate">
+                <td className="px-3 py-4 text-slate-700 dark:text-gray-300 text-xs max-w-xs truncate">
                   {log.description ? cleanDescription(log.description) : '—'}
                 </td>
                 {isAdmin && (
-                  <td className="p-5 text-slate-500 dark:text-gray-400 text-xs whitespace-nowrap">
+                  <td className="px-3 py-4 text-slate-500 dark:text-gray-400 text-xs whitespace-nowrap">
                     {log.user_name || `User #${log.user_id}` || '—'}
                   </td>
                 )}
-                <td className="p-5 text-slate-400 dark:text-gray-500 text-xs font-mono">
+                <td className="px-3 py-4 text-slate-400 dark:text-gray-500 text-xs font-mono whitespace-nowrap">
                   {log.ip_address || '—'}
                 </td>
-                <td className="p-5 text-slate-500 dark:text-gray-400 text-xs whitespace-nowrap">
+                <td className="px-3 py-4 text-slate-500 dark:text-gray-400 text-xs whitespace-nowrap">
                   {formatDate(log.created_at)}
                 </td>
               </tr>

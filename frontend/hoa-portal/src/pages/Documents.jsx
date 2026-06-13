@@ -105,18 +105,18 @@ const DocumentModal = ({ communityId, onClose, onSuccess }) => {
             </div>
           </div>
 
-          <div className="flex justify-end gap-3 pt-4 border-t border-slate-200 dark:border-white/10">
+          <div className="flex gap-3 pt-4 border-t border-slate-200 dark:border-white/10 w-full">
             <button
               type="button"
               onClick={onClose}
-              className="px-5 py-2.5 bg-slate-100 hover:bg-red-600 hover:text-white dark:bg-white/10 dark:hover:bg-red-600 dark:hover:text-white text-slate-600 dark:text-gray-300 rounded-xl text-sm transition"
+              className="flex-1 py-2.5 bg-slate-100 hover:bg-red-600 hover:text-white dark:bg-white/10 dark:hover:bg-red-600 dark:hover:text-white text-slate-600 dark:text-gray-300 rounded-xl text-sm font-medium transition"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="px-6 py-2.5 bg-teal-600 hover:bg-teal-500 text-white rounded-xl text-sm font-medium transition disabled:opacity-50"
+              className="flex-1 py-2.5 bg-teal-600 hover:bg-teal-500 text-white rounded-xl text-sm font-medium transition disabled:opacity-50"
             >
               {loading ? 'Uploading...' : 'Upload'}
             </button>
@@ -292,42 +292,42 @@ const Documents = ({ community, user }) => {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-slate-200 dark:border-white/10 text-slate-500 dark:text-gray-400 text-xs uppercase tracking-wider">
-                  <th className="text-left p-5">Name</th>
-                  <th className="text-left p-5">Category</th>
-                  <th className="text-left p-5">Uploaded Date</th>
-                  <th className="text-right p-5">Actions</th>
+                  <th className="text-left px-3 py-4">Name</th>
+                  <th className="text-left px-3 py-4 whitespace-nowrap">Category</th>
+                  <th className="text-left px-3 py-4 whitespace-nowrap">Uploaded Date</th>
+                  <th className="text-right px-3 py-4 whitespace-nowrap">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredDocs.map(doc => (
                   <tr key={doc.document_id} className="border-b border-slate-100 dark:border-white/5 hover:bg-slate-100/50 dark:hover:bg-white/5 transition-all">
-                    <td className="p-5">
+                    <td className="px-3 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-teal-500/10 dark:bg-teal-500/20 text-teal-600 dark:text-teal-400 rounded-xl flex items-center justify-center text-lg font-bold">
+                        <div className="w-10 h-10 bg-teal-500/10 dark:bg-teal-500/20 text-teal-600 dark:text-teal-400 rounded-xl flex items-center justify-center text-lg font-bold flex-shrink-0">
                           📄
                         </div>
-                        <div>
+                        <div className="min-w-0">
                           <a
                             href={getBaseUrl(doc.document_url)}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="font-medium text-slate-800 dark:text-white hover:text-teal-600 dark:hover:text-teal-400 hover:underline transition-all"
+                            className="font-medium text-slate-800 dark:text-white hover:text-teal-600 dark:hover:text-teal-400 hover:underline transition-all block truncate max-w-xs sm:max-w-md"
                           >
                             {doc.document_name}
                           </a>
-                          <p className="text-xs text-slate-400 mt-0.5 truncate max-w-xs">{doc.document_url.split('/').pop()}</p>
+                          <p className="text-xs text-slate-400 mt-0.5 truncate max-w-[200px] sm:max-w-xs">{doc.document_url.split('/').pop()}</p>
                         </div>
                       </div>
                     </td>
-                    <td className="p-5">
+                    <td className="px-3 py-4 whitespace-nowrap">
                       <span className="px-3 py-1 bg-slate-100 dark:bg-white/10 text-slate-700 dark:text-gray-300 rounded-full text-xs font-semibold uppercase tracking-wider">
                         {getDocTypeIcon(doc.document_type)} {doc.document_type}
                       </span>
                     </td>
-                    <td className="p-5 text-slate-500 dark:text-gray-400 text-xs">
+                    <td className="px-3 py-4 text-slate-500 dark:text-gray-400 text-xs whitespace-nowrap">
                       {formatDate(doc.created_date)}
                     </td>
-                    <td className="p-5">
+                    <td className="px-3 py-4 whitespace-nowrap">
                       <div className="flex justify-end gap-2">
                         <a
                           href={getBaseUrl(doc.document_url)}

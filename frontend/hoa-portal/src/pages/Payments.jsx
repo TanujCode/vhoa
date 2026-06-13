@@ -260,6 +260,7 @@ const Payments = ({ community, user, paymentState, setPaymentState }) => {
         </div>
       )}
 
+      {/* Tab Contents */}
       {!loading && activeTab === 'pay' && (
         <div>
           {dues.length === 0 ? (
@@ -426,37 +427,37 @@ const Payments = ({ community, user, paymentState, setPaymentState }) => {
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="bg-slate-50 dark:bg-[#1E3248] text-xs text-slate-500 dark:text-gray-400 font-medium uppercase border-b border-slate-200 dark:border-white/5">
-                    <th className="p-4">Transaction ID</th>
-                    <th className="p-4">Reason</th>
-                    <th className="p-4">Payment Date</th>
-                    <th className="p-4">Method</th>
-                    <th className="p-4 text-right">Amount</th>
-                    <th className="p-4 text-center">Status</th>
+                    <th className="px-3 py-4 whitespace-nowrap">Transaction ID</th>
+                    <th className="px-3 py-4">Reason</th>
+                    <th className="px-3 py-4 whitespace-nowrap">Payment Date</th>
+                    <th className="px-3 py-4 whitespace-nowrap">Method</th>
+                    <th className="px-3 py-4 text-right whitespace-nowrap">Amount</th>
+                    <th className="px-3 py-4 text-center whitespace-nowrap">Status</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-white/5 text-sm text-slate-700 dark:text-gray-300">
                   {history.map((h) => (
                     <tr key={h.payment_id} className="hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
-                      <td className="p-4 font-mono text-xs text-teal-600 dark:text-teal-400">
+                      <td className="px-3 py-4 font-mono text-xs text-teal-600 dark:text-teal-400 whitespace-nowrap">
                         {h.gateway_token || `TXN_${h.payment_id}`}
                       </td>
-                      <td className="p-4">
+                      <td className="px-3 py-4">
                         <div className="font-semibold text-slate-900 dark:text-white">{h.reason.replace('_', ' ').toUpperCase()}</div>
                         <div className="text-xs text-slate-400 dark:text-gray-500">Ref ID: {h.reference_id || 'N/A'}</div>
                       </td>
-                      <td className="p-4 text-xs text-slate-500 dark:text-gray-400">
+                      <td className="px-3 py-4 text-xs text-slate-500 dark:text-gray-400 whitespace-nowrap">
                         {new Date(h.payment_date).toLocaleString()}
                       </td>
-                      <td className="p-4 text-xs">
+                      <td className="px-3 py-4 text-xs whitespace-nowrap">
                         {h.payment_method?.replace('_', ' ') || 'SANDBOX'}
                         {h.payer_bank_name && (
                           <div className="text-slate-400 dark:text-gray-500 text-[10px]">{h.payer_bank_name} (*{h.payer_account_no?.slice(-4)})</div>
                         )}
                       </td>
-                      <td className="p-4 text-right font-mono font-semibold text-teal-600 dark:text-teal-400">
+                      <td className="px-3 py-4 text-right font-mono font-semibold text-teal-600 dark:text-teal-400 whitespace-nowrap">
                         ${h.amount.toFixed(2)}
                       </td>
-                      <td className="p-4 text-center">
+                      <td className="px-3 py-4 text-center whitespace-nowrap">
                         <span className={`inline-block px-2.5 py-1 rounded-full text-xs font-semibold ${
                           h.status === 'COMPLETED' ? 'bg-teal-500/10 text-teal-600 dark:bg-teal-500/20 dark:text-teal-400' : 'bg-amber-500/10 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400'
                         }`}>
