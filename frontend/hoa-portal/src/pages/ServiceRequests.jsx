@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Wrench, Plus, RefreshCw, X, ChevronDown, MessageSquare, UserCheck, Edit, Clock, Landmark, User, DollarSign, Filter, Zap, Leaf, Shield, Sparkles } from 'lucide-react';
+import { Wrench, Plus, RefreshCw, X, ChevronDown, MessageSquare, UserCheck, Edit, Clock, Landmark, User, DollarSign, Filter, Zap, Leaf, Shield, Sparkles, Paintbrush, Bug, Hammer, Wind, Droplets, Search } from 'lucide-react';
 import API from '../services/api';
 import { onlyDigitsKeyPress, onlyDecimalKeyPress } from '../utils/fieldValidators';
 
@@ -40,22 +40,34 @@ const PriorityBadge = ({ priority }) => {
 
 const getRequestIconDetails = (typeName) => {
   const name = (typeName || '').toLowerCase();
-  if (name.includes('plumb')) {
-    return { Icon: Wrench, bg: 'bg-blue-500/10 dark:bg-blue-500/20', text: 'text-blue-600 dark:text-blue-400' };
+  if (name.includes('paint') || name.includes('color') || name.includes('wall') || name.includes('brush')) {
+    return { Icon: Paintbrush, bg: 'bg-rose-500/10 dark:bg-rose-500/20', text: 'text-rose-600 dark:text-rose-400' };
   }
-  if (name.includes('elect')) {
+  if (name.includes('plumb') || name.includes('leak') || name.includes('water') || name.includes('pipe') || name.includes('drain')) {
+    return { Icon: Droplets, bg: 'bg-sky-500/10 dark:bg-sky-500/20', text: 'text-sky-600 dark:text-sky-400' };
+  }
+  if (name.includes('elect') || name.includes('light') || name.includes('power') || name.includes('wire') || name.includes('bulb')) {
     return { Icon: Zap, bg: 'bg-amber-500/10 dark:bg-amber-500/20', text: 'text-amber-600 dark:text-amber-400' };
   }
-  if (name.includes('landscap') || name.includes('garden') || name.includes('tree') || name.includes('lawn')) {
+  if (name.includes('landscap') || name.includes('garden') || name.includes('tree') || name.includes('lawn') || name.includes('grass')) {
     return { Icon: Leaf, bg: 'bg-emerald-500/10 dark:bg-emerald-500/20', text: 'text-emerald-600 dark:text-emerald-400' };
   }
-  if (name.includes('secur') || name.includes('guard') || name.includes('lock') || name.includes('cctv')) {
-    return { Icon: Shield, bg: 'bg-rose-500/10 dark:bg-rose-500/20', text: 'text-rose-600 dark:text-rose-400' };
+  if (name.includes('secur') || name.includes('guard') || name.includes('lock') || name.includes('cctv') || name.includes('key')) {
+    return { Icon: Shield, bg: 'bg-indigo-500/10 dark:bg-indigo-500/20', text: 'text-indigo-600 dark:text-indigo-400' };
   }
-  if (name.includes('clean') || name.includes('swee') || name.includes('housekeep') || name.includes('pest') || name.includes('trash') || name.includes('wash')) {
-    return { Icon: Sparkles, bg: 'bg-purple-500/10 dark:bg-purple-500/20', text: 'text-purple-600 dark:text-purple-400' };
+  if (name.includes('clean') || name.includes('swee') || name.includes('housekeep') || name.includes('trash') || name.includes('wash') || name.includes('garbage')) {
+    return { Icon: Sparkles, bg: 'bg-teal-500/10 dark:bg-teal-500/20', text: 'text-teal-600 dark:text-teal-400' };
   }
-  return { Icon: Wrench, bg: 'bg-blue-500/10 dark:bg-blue-500/20', text: 'text-blue-600 dark:text-blue-400' };
+  if (name.includes('pest') || name.includes('bug') || name.includes('insect') || name.includes('termite')) {
+    return { Icon: Bug, bg: 'bg-orange-500/10 dark:bg-orange-500/20', text: 'text-orange-600 dark:text-orange-400' };
+  }
+  if (name.includes('carpenter') || name.includes('wood') || name.includes('door') || name.includes('furniture') || name.includes('repair')) {
+    return { Icon: Hammer, bg: 'bg-amber-700/10 dark:bg-amber-700/20', text: 'text-amber-700 dark:text-amber-500' };
+  }
+  if (name.includes('ac') || name.includes('hvac') || name.includes('heat') || name.includes('cool') || name.includes('air')) {
+    return { Icon: Wind, bg: 'bg-cyan-500/10 dark:bg-cyan-500/20', text: 'text-cyan-600 dark:text-cyan-400' };
+  }
+  return { Icon: Wrench, bg: 'bg-slate-500/10 dark:bg-slate-500/20', text: 'text-slate-600 dark:text-slate-400' };
 };
 
 
@@ -1258,6 +1270,17 @@ const ServiceRequests = ({ community, user, setActivePage, setPaymentState }) =>
   const [allStatuses, setAllStatuses] = useState([]);
   const [stats, setStats] = useState({ open: 0, approved: 0, inProgress: 0, closed: 0 });
 
+  // Management Utilities: Search, Filter, Sort, Pagination
+  const [searchQuery, setSearchQuery] = useState('');
+  const [priorityFilter, setPriorityFilter] = useState('');
+  const [sortBy, setSortBy] = useState('newest');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, priorityFilter, statusFilter, sortBy]);
+
   // Selected details drawer states
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [selectedDetails, setSelectedDetails] = useState(null);
@@ -1287,8 +1310,8 @@ const ServiceRequests = ({ community, user, setActivePage, setPaymentState }) =>
     try {
       setLoading(true);
       const url = statusFilter
-        ? `/service-request/${community.community_id}?status=${statusFilter}&limit=50`
-        : `/service-request/${community.community_id}?limit=50`;
+        ? `/service-request/${community.community_id}?status=${statusFilter}&limit=1000`
+        : `/service-request/${community.community_id}?limit=1000`;
       const res = await API.get(url);
       const all = res.data || [];
       // Resident mode is active -> only show requests submitted by this user (to mock/simulate a real resident view correctly)
@@ -1383,6 +1406,42 @@ const ServiceRequests = ({ community, user, setActivePage, setPaymentState }) =>
     }
   };
 
+  // ── Local filtering, sorting, and pagination ──
+  const filteredRequests = requests.filter(req => {
+    const query = searchQuery.toLowerCase().trim();
+    const matchesSearch = !query || 
+      (req.title || '').toLowerCase().includes(query) ||
+      (req.description || '').toLowerCase().includes(query) ||
+      (req.submitted_by_name || '').toLowerCase().includes(query) ||
+      (req.type_name || '').toLowerCase().includes(query) ||
+      (String(req.request_id) === query);
+
+    const matchesPriority = !priorityFilter || req.priority === priorityFilter;
+    return matchesSearch && matchesPriority;
+  });
+
+  const sortedRequests = [...filteredRequests].sort((a, b) => {
+    if (sortBy === 'newest') {
+      return new Date(b.created_date) - new Date(a.created_date);
+    }
+    if (sortBy === 'oldest') {
+      return new Date(a.created_date) - new Date(b.created_date);
+    }
+    if (sortBy === 'priority') {
+      const priorityMap = { URGENT: 4, HIGH: 3, NORMAL: 2, LOW: 1 };
+      const aVal = priorityMap[a.priority] || 0;
+      const bVal = priorityMap[b.priority] || 0;
+      if (bVal !== aVal) return bVal - aVal;
+      return new Date(b.created_date) - new Date(a.created_date);
+    }
+    return 0;
+  });
+
+  const totalItems = sortedRequests.length;
+  const totalPages = Math.ceil(totalItems / itemsPerPage) || 1;
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedRequests = sortedRequests.slice(startIndex, startIndex + itemsPerPage);
+
   const handleAcceptAndPayQuote = (asm) => {
     if (setPaymentState && setActivePage) {
       setPaymentState({
@@ -1452,102 +1511,181 @@ const ServiceRequests = ({ community, user, setActivePage, setPaymentState }) =>
       </div>
 
       {/* Table */}
-      <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl overflow-hidden">
-        <div className="p-6 border-b border-slate-200 dark:border-white/10 flex items-center justify-between">
-          <h2 className="font-semibold text-slate-900 dark:text-white">{isResident ? 'My Requests' : 'All Requests'}</h2>
-          <div className="relative">
-            <select 
-              value={statusFilter} 
-              onChange={e => setStatusFilter(e.target.value)}
-              className="bg-slate-50 dark:bg-[#1E3248] border border-slate-200 dark:border-white/10 rounded-2xl pl-4 pr-10 py-2.5 text-sm text-slate-900 dark:text-white focus:border-teal-500 focus:outline-none appearance-none cursor-pointer"
-            >
-              <option value="" className="text-slate-900 dark:text-white">Filter</option>
-              <option value="OPEN" className="text-slate-900 dark:text-white">Open</option>
-              <option value="APPROVED" className="text-slate-900 dark:text-white">Approved</option>
-              <option value="IN_PROGRESS" className="text-slate-900 dark:text-white">In Progress</option>
-              <option value="VENDOR_ASSIGNED" className="text-slate-900 dark:text-white">Vendor Assigned</option>
-              <option value="CLOSED" className="text-slate-900 dark:text-white">Closed</option>
-            </select>
-            <Filter className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-gray-500 pointer-events-none" size={15} />
+      <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl overflow-hidden shadow-lg">
+        <div className="p-6 border-b border-slate-200 dark:border-white/10 flex flex-col lg:flex-row gap-4 lg:items-center justify-between">
+          <h2 className="font-bold text-slate-900 dark:text-white text-lg flex-shrink-0">{isResident ? 'My Requests' : 'All Requests'}</h2>
+          
+          <div className="flex flex-col sm:flex-row flex-wrap items-center gap-3 w-full lg:w-auto lg:justify-end">
+            {/* Search Bar */}
+            <div className="relative w-full sm:w-60">
+              <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-gray-500 pointer-events-none" />
+              <input
+                type="text"
+                placeholder="Search requests..."
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                className="w-full bg-slate-100/60 dark:bg-[#1E3248] border border-slate-200/80 dark:border-white/10 rounded-2xl pl-10 pr-4 py-2.5 text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 focus:border-teal-500 focus:outline-none transition-all shadow-inner"
+              />
+            </div>
+
+            {/* Status Filter */}
+            <div className="relative w-full sm:w-auto">
+              <select 
+                value={statusFilter} 
+                onChange={e => setStatusFilter(e.target.value)}
+                className="w-full sm:w-auto bg-slate-100/60 dark:bg-[#1E3248] border border-slate-200/80 dark:border-white/10 rounded-2xl pl-4 pr-10 py-2.5 text-xs text-slate-900 dark:text-white focus:border-teal-500 focus:outline-none appearance-none cursor-pointer transition-colors"
+              >
+                <option value="" className="text-slate-900 dark:text-white">Status (All)</option>
+                <option value="OPEN" className="text-slate-900 dark:text-white">Open</option>
+                <option value="APPROVED" className="text-slate-900 dark:text-white">Approved</option>
+                <option value="IN_PROGRESS" className="text-slate-900 dark:text-white">In Progress</option>
+                <option value="VENDOR_ASSIGNED" className="text-slate-900 dark:text-white">Vendor Assigned</option>
+                <option value="ON_HOLD" className="text-slate-900 dark:text-white">On Hold</option>
+                <option value="CLOSED" className="text-slate-900 dark:text-white">Closed</option>
+                <option value="CANCELLED" className="text-slate-900 dark:text-white">Cancelled</option>
+              </select>
+              <Filter className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-gray-500 pointer-events-none" size={13} />
+            </div>
+
+            {/* Priority Filter */}
+            <div className="relative w-full sm:w-auto">
+              <select 
+                value={priorityFilter} 
+                onChange={e => setPriorityFilter(e.target.value)}
+                className="w-full sm:w-auto bg-slate-100/60 dark:bg-[#1E3248] border border-slate-200/80 dark:border-white/10 rounded-2xl pl-4 pr-10 py-2.5 text-xs text-slate-900 dark:text-white focus:border-teal-500 focus:outline-none appearance-none cursor-pointer transition-colors"
+              >
+                <option value="" className="text-slate-900 dark:text-white">Priority (All)</option>
+                <option value="LOW" className="text-slate-900 dark:text-white">Low</option>
+                <option value="NORMAL" className="text-slate-900 dark:text-white">Medium</option>
+                <option value="HIGH" className="text-slate-900 dark:text-white">High</option>
+                <option value="URGENT" className="text-slate-900 dark:text-white">Urgent</option>
+              </select>
+              <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-gray-500 pointer-events-none" size={13} />
+            </div>
+
+            {/* Sort By */}
+            <div className="relative w-full sm:w-auto">
+              <select 
+                value={sortBy} 
+                onChange={e => setSortBy(e.target.value)}
+                className="w-full sm:w-auto bg-slate-100/60 dark:bg-[#1E3248] border border-slate-200/80 dark:border-white/10 rounded-2xl pl-4 pr-10 py-2.5 text-xs text-slate-900 dark:text-white focus:border-teal-500 focus:outline-none appearance-none cursor-pointer transition-colors"
+              >
+                <option value="newest" className="text-slate-900 dark:text-white">Newest First</option>
+                <option value="oldest" className="text-slate-900 dark:text-white">Oldest First</option>
+                <option value="priority" className="text-slate-900 dark:text-white">Highest Priority</option>
+              </select>
+              <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-gray-500 pointer-events-none" size={13} />
+            </div>
           </div>
         </div>
 
         {loading && requests.length === 0 ? (
-          <div className="p-16 text-center text-slate-500 dark:text-gray-400">
+          <div className="p-16 text-center text-slate-500 dark:text-gray-400 bg-white/40 dark:bg-transparent">
             <div className="w-8 h-8 border-2 border-teal-500 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
             Loading...
           </div>
-        ) : requests.length === 0 ? (
-          <div className="p-16 text-center text-slate-500 dark:text-gray-400">
+        ) : paginatedRequests.length === 0 ? (
+          <div className="p-16 text-center text-slate-500 dark:text-gray-400 bg-white/40 dark:bg-transparent">
             <Wrench size={32} className="mx-auto mb-3 opacity-50" />
-            {isResident ? 'You have no service requests.' : 'No service requests found.'}
+            {searchQuery || priorityFilter || statusFilter ? 'No matching requests found.' : (isResident ? 'You have no service requests.' : 'No service requests found.')}
           </div>
         ) : (
-          <div className="divide-y divide-slate-100 dark:divide-white/5">
-            {requests.map((req) => (
-              <div 
-                key={req.request_id} 
-                onClick={() => setSelectedRequest(req)}
-                className={`p-6 hover:bg-slate-50 dark:hover:bg-white/5 transition flex gap-4 cursor-pointer ${
-                  selectedRequest?.request_id === req.request_id ? 'bg-slate-50 dark:bg-white/5 border-l-4 border-teal-500' : ''
-                }`}
-              >
-                {(() => {
-                  const details = getRequestIconDetails(req.type_name);
-                  const RequestIcon = details.Icon;
-                  return (
-                    <div className={`w-12 h-12 ${details.bg} rounded-2xl flex items-center justify-center flex-shrink-0`}>
-                      <RequestIcon size={22} className={details.text} />
+          <>
+            <div className="divide-y divide-slate-100 dark:divide-white/5 bg-white/40 dark:bg-transparent">
+              {paginatedRequests.map((req) => (
+                <div 
+                  key={req.request_id} 
+                  onClick={() => setSelectedRequest(req)}
+                  className={`p-6 hover:bg-slate-50 dark:hover:bg-white/5 transition flex gap-4 cursor-pointer ${
+                    selectedRequest?.request_id === req.request_id ? 'bg-slate-50 dark:bg-white/5 border-l-4 border-teal-500' : ''
+                  }`}
+                >
+                  {(() => {
+                    const details = getRequestIconDetails(req.type_name);
+                    const RequestIcon = details.Icon;
+                    return (
+                      <div className={`w-12 h-12 ${details.bg} rounded-2xl flex items-center justify-center flex-shrink-0 shadow-sm`}>
+                        <RequestIcon size={22} className={details.text} />
+                      </div>
+                    );
+                  })()}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <h3 className="font-semibold text-slate-900 dark:text-white text-base leading-tight hover:text-teal-600 dark:hover:text-teal-400 transition-colors">{req.title}</h3>
+                        <p className="text-slate-500 dark:text-gray-400 text-sm mt-1 line-clamp-2 leading-relaxed">{req.description}</p>
+                      </div>
+                      <StatusBadge status={req.status_name} />
                     </div>
-                  );
-                })()}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <h3 className="font-semibold text-slate-900 dark:text-white">{req.title}</h3>
-                      <p className="text-slate-500 dark:text-gray-400 text-sm mt-1 line-clamp-2">{req.description}</p>
+                    <div className="flex flex-wrap gap-4 mt-3 text-xs text-slate-500 dark:text-gray-400">
+                      <span>Type: <span className="text-slate-800 dark:text-gray-300 font-medium">{req.type_name || '—'}</span></span>
+                      {isAdmin && <span>By: <span className="text-slate-800 dark:text-gray-300 font-medium">{req.submitted_by_name || '—'}</span></span>}
+                      <span>Date: <span className="text-slate-800 dark:text-gray-300 font-medium">{formatUserFriendlyDate(req.created_date)}</span></span>
+                      <PriorityBadge priority={req.priority} />
                     </div>
-                    <StatusBadge status={req.status_name} />
-                  </div>
-                  <div className="flex flex-wrap gap-4 mt-3 text-xs text-slate-500 dark:text-gray-400">
-                    <span>Type: <span className="text-slate-800 dark:text-gray-300">{req.type_name || '—'}</span></span>
-                    {isAdmin && <span>By: <span className="text-slate-800 dark:text-gray-300">{req.submitted_by_name || '—'}</span></span>}
-                    <span>Date: <span className="text-slate-800 dark:text-gray-300">{formatUserFriendlyDate(req.created_date)}</span></span>
-                    <PriorityBadge priority={req.priority} />
-                  </div>
-                  <div className="flex gap-2 mt-3" onClick={e => e.stopPropagation()}>
-                    {isResident && req.status_name === 'OPEN' && (
-                      <button 
-                        onClick={() => handleCancel(req)}
-                        className="px-3 py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400 rounded-xl text-xs font-medium transition"
-                      >
-                        Cancel Request
-                      </button>
-                    )}
-                    {isAdmin && !['CLOSED','CANCELLED'].includes(req.status_name) && (
-                      <button 
-                        onClick={() => setStatusModal(req)}
-                        className="px-3 py-1.5 bg-teal-500/10 hover:bg-teal-500/20 text-teal-600 dark:text-teal-400 rounded-xl text-xs font-medium transition flex items-center gap-1"
-                      >
-                        <UserCheck size={12} /> Update Status
-                      </button>
-                    )}
-                    {(isAdmin || (isResident && req.submitted_by_id === user?.user_id && req.status_name === 'OPEN')) && (
-                      <button 
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setEditingRequest(req);
-                        }}
-                        className="px-3 py-1.5 bg-slate-100 hover:bg-red-600 hover:text-white dark:bg-white/10 dark:hover:bg-red-600 dark:hover:text-white text-red-600 dark:text-red-400 rounded-xl text-xs font-medium transition flex items-center gap-1"
-                      >
-                        <Edit size={12} /> Edit Details
-                      </button>
-                    )}
+                    <div className="flex gap-2 mt-3" onClick={e => e.stopPropagation()}>
+                      {isResident && req.status_name === 'OPEN' && (
+                        <button 
+                          onClick={() => handleCancel(req)}
+                          className="px-3 py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400 rounded-xl text-xs font-medium transition"
+                        >
+                          Cancel Request
+                        </button>
+                      )}
+                      {isAdmin && !['CLOSED','CANCELLED'].includes(req.status_name) && (
+                        <button 
+                          onClick={() => setStatusModal(req)}
+                          className="px-3 py-1.5 bg-teal-500/10 hover:bg-teal-500/20 text-teal-600 dark:text-teal-400 rounded-xl text-xs font-medium transition flex items-center gap-1 shadow-sm active:scale-95"
+                        >
+                          <UserCheck size={12} /> Update Status
+                        </button>
+                      )}
+                      {(isAdmin || (isResident && req.submitted_by_id === user?.user_id && req.status_name === 'OPEN')) && (
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setEditingRequest(req);
+                          }}
+                          className="px-3 py-1.5 bg-slate-100 hover:bg-red-600 hover:text-white dark:bg-white/10 dark:hover:bg-red-600 dark:hover:text-white text-red-600 dark:text-red-400 rounded-xl text-xs font-medium transition flex items-center gap-1 shadow-sm active:scale-95"
+                        >
+                          <Edit size={12} /> Edit Details
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
+              ))}
+            </div>
+
+            {/* Pagination Footer */}
+            {totalPages > 1 && (
+              <div className="p-6 border-t border-slate-200 dark:border-white/10 flex items-center justify-between flex-wrap gap-4 bg-slate-50/50 dark:bg-[#162535]">
+                <span className="text-sm text-slate-500 dark:text-gray-400 font-medium">
+                  Showing <span className="font-bold text-slate-900 dark:text-white">{startIndex + 1}</span> to{' '}
+                  <span className="font-bold text-slate-900 dark:text-white">
+                    {Math.min(startIndex + itemsPerPage, totalItems)}
+                  </span>{' '}
+                  of <span className="font-bold text-slate-900 dark:text-white">{totalItems}</span> requests
+                </span>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                    disabled={currentPage === 1}
+                    className="px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-[#1E3248] dark:hover:bg-white/10 text-slate-700 dark:text-white border border-slate-200 dark:border-white/10 rounded-xl text-xs font-bold transition disabled:opacity-50 active:scale-95"
+                  >
+                    Previous
+                  </button>
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                    disabled={currentPage === totalPages}
+                    className="px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-[#1E3248] dark:hover:bg-white/10 text-slate-700 dark:text-white border border-slate-200 dark:border-white/10 rounded-xl text-xs font-bold transition disabled:opacity-50 active:scale-95"
+                  >
+                    Next
+                  </button>
+                </div>
               </div>
-            ))}
-          </div>
+            )}
+          </>
         )}
       </div>
 

@@ -1,9 +1,9 @@
 import React from 'react';
 import { Bell, CheckCircle, AlertTriangle, Clock } from 'lucide-react';
 
-const NotifPanel = ({ isOpen, onClose, notifications = [], onMarkAllRead, lastReadTimestamp }) => {
+const NotifPanel = ({ isOpen, onClose, notifications = [], onMarkAllRead, lastReadTimestamp, readNotificationIds = [], onNotifClick }) => {
   const lastRead = lastReadTimestamp !== undefined ? lastReadTimestamp : Number(localStorage.getItem('last_read_notifications') || 0);
-  const unreadCount = notifications.filter(n => new Date(n.created_at).getTime() > lastRead).length;
+  const unreadCount = notifications.filter(n => new Date(n.created_at).getTime() > lastRead && !readNotificationIds.includes(n.audit_id)).length;
 
   // Helper to format/clean description to look professional
   const cleanDescription = (desc) => {
@@ -113,24 +113,24 @@ const NotifPanel = ({ isOpen, onClose, notifications = [], onMarkAllRead, lastRe
         ) : (
           notifications.map((log) => {
             const details = getNotifDetails(log);
-            const isUnread = new Date(log.created_at).getTime() > lastRead;
+            const isUnread = new Date(log.created_at).getTime() > lastRead && !readNotificationIds.includes(log.audit_id);
             const IconComponent = details.icon;
             return (
               <div 
                 key={log.audit_id}
-                className={`p-5 border-b border-slate-100 dark:border-white/5 hover:bg-slate-50 dark:hover:bg-white/5 transition ${isUnread ? 'bg-teal-50/50 dark:bg-teal-900/10' : ''}`}
+                onClick={() => onNotifClick && onNotifClick(log)}
+                className={`p-5 border-b border-slate-100 dark:border-white/5 hover:bg-slate-50 dark:hover:bg-white/5 cursor-pointer transition-colors duration-200 ${isUnread ? 'bg-teal-50/50 dark:bg-teal-900/10' : ''}`}
               >
                 <div className="flex gap-4">
-                  <div className={`w-9 h-9 rounded-2xl flex-shrink-0 flex items-center justify-center ${details.color.replace('text-', 'bg-').replace('400', '500')}/10`}>
-                    {IconComponent === Bell ? (
-                      <span className={`w-3 h-3 rounded-full flex-shrink-0 ${isUnread ? 'bg-red-500 animate-pulse' : 'bg-white border border-slate-300 dark:border-white/20'}`} />
-                    ) : (
-                      <IconComponent size={20} className={details.color} />
-                    )}
+                  <div className={`w-9 h-9 rounded-2xl flex-shrink-0 flex items-center justify-center transition-colors duration-200 ${isUnread ? 'bg-red-500/10' : 'bg-slate-100 dark:bg-white/5'}`}>
+                    <span className={`w-3 h-3 rounded-full flex-shrink-0 transition-all duration-300 ${isUnread ? 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)] animate-pulse' : 'bg-white border border-slate-300 dark:border-white/40'}`} />
                   </div>
                   
                   <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-gray-900 dark:text-white text-[15px] truncate">{details.title}</p>
+                    <p className="font-semibold text-gray-900 dark:text-white text-[15px] truncate flex items-center gap-1.5">
+                      <IconComponent size={14} className={details.color} />
+                      {details.title}
+                    </p>
                     <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 leading-snug break-words">
                       {cleanDescription(log.description)}
                     </p>

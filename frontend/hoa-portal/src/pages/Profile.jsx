@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import {
   Camera, Mail, Phone, Shield, Clock,
-  CheckCircle, XCircle, Save, Key, Eye, EyeOff, User, Bell, Trash2, ChevronDown
+  CheckCircle, XCircle, Save, Key, Eye, EyeOff, User, Bell, Trash2, ChevronDown, Edit
 } from 'lucide-react';
 import API, { getBaseUrl } from '../services/api';
 import { formatUsPhone, formatPhoneAsYouType } from '../utils/phoneFormatter';
@@ -69,6 +69,41 @@ const Profile = ({ user, setUser, viewRole }) => {
   }, [user?.unit_no_2]);
 
   const [unitInput, setUnitInput] = useState('');
+  const [isEditing, setIsEditing] = useState(false);
+
+  // Sync user prop updates
+  useEffect(() => {
+    if (user) {
+      setForm({
+        first_name:    user.first_name    || '',
+        middle_name:   user.middle_name   || '',
+        last_name:     user.last_name     || '',
+        mobile_number: user.mobile_number || '',
+        time_zone:     user.time_zone     || 'America/New_York',
+        unit_no_2:     user.unit_no_2     || '',
+      });
+    }
+  }, [user]);
+
+  const resetForm = () => {
+    if (user) {
+      setForm({
+        first_name:    user.first_name    || '',
+        middle_name:   user.middle_name   || '',
+        last_name:     user.last_name     || '',
+        mobile_number: user.mobile_number || '',
+        time_zone:     user.time_zone     || 'America/New_York',
+        unit_no_2:     user.unit_no_2     || '',
+      });
+      const parsed = parsePhoneNumber(user.mobile_number || '');
+      setPhoneCountryCode('+1');
+      setPhoneNumberOnly(formatPhoneAsYouType(parsed.numberOnly));
+      setSecondaryUnits(
+        user.unit_no_2 ? user.unit_no_2.split(',').map(u => u.trim()).filter(Boolean) : []
+      );
+      setUnitInput('');
+    }
+  };
 
   // ── Password State ────────────────────────
   const [pwdForm, setPwdForm] = useState({
@@ -188,7 +223,7 @@ const Profile = ({ user, setUser, viewRole }) => {
         if (digits.length !== 10) {
           showMsg('error', 'Mobile number must be exactly 10 digits.');
           setSaving(false);
-          return;
+          return false;
         }
       }
 
@@ -210,6 +245,7 @@ const Profile = ({ user, setUser, viewRole }) => {
       }));
 
       showMsg('success', 'Profile updated successfully!');
+      return true;
     } catch (err) {
       const detail = err.response?.data?.detail;
       const errorMsgText = typeof detail === 'string'
@@ -218,6 +254,7 @@ const Profile = ({ user, setUser, viewRole }) => {
           ? detail[0].msg
           : 'Failed to update profile.';
       showMsg('error', errorMsgText);
+      return false;
     } finally {
       setSaving(false);
     }
@@ -562,15 +599,15 @@ const Profile = ({ user, setUser, viewRole }) => {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <label className="text-xs text-slate-500 dark:text-gray-400 mb-1.5 block">First Name</label>
-                  <input type="text" value={form.first_name} onChange={e => setForm({...form, first_name: e.target.value})} className="w-full bg-slate-50 dark:bg-[#1E3248] border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-teal-500" />
+                  <input type="text" value={form.first_name} onChange={e => setForm({...form, first_name: e.target.value})} disabled={!isEditing} className={`w-full border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-teal-500 transition-colors ${!isEditing ? 'bg-slate-100/50 dark:bg-white/5 cursor-not-allowed text-slate-500 dark:text-gray-400' : 'bg-slate-50 dark:bg-[#1E3248] text-slate-900 dark:text-white'}`} />
                 </div>
                 <div>
                   <label className="text-xs text-slate-500 dark:text-gray-400 mb-1.5 block">Middle Name</label>
-                  <input type="text" value={form.middle_name} onChange={e => setForm({...form, middle_name: e.target.value})} placeholder="Optional" className="w-full bg-slate-50 dark:bg-[#1E3248] border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-600 focus:outline-none focus:border-teal-500" />
+                  <input type="text" value={form.middle_name} onChange={e => setForm({...form, middle_name: e.target.value})} disabled={!isEditing} placeholder={isEditing ? "Optional" : ""} className={`w-full border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-teal-500 transition-colors ${!isEditing ? 'bg-slate-100/50 dark:bg-white/5 cursor-not-allowed text-slate-500 dark:text-gray-400' : 'bg-slate-50 dark:bg-[#1E3248] text-slate-900 dark:text-white'}`} />
                 </div>
                 <div>
                   <label className="text-xs text-slate-500 dark:text-gray-400 mb-1.5 block">Last Name</label>
-                  <input type="text" value={form.last_name} onChange={e => setForm({...form, last_name: e.target.value})} className="w-full bg-slate-50 dark:bg-[#1E3248] border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-teal-500" />
+                  <input type="text" value={form.last_name} onChange={e => setForm({...form, last_name: e.target.value})} disabled={!isEditing} className={`w-full border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-teal-500 transition-colors ${!isEditing ? 'bg-slate-100/50 dark:bg-white/5 cursor-not-allowed text-slate-500 dark:text-gray-400' : 'bg-slate-50 dark:bg-[#1E3248] text-slate-900 dark:text-white'}`} />
                 </div>
               </div>
 
@@ -590,8 +627,9 @@ const Profile = ({ user, setUser, viewRole }) => {
                     const formatted = formatPhoneAsYouType(e.target.value);
                     setPhoneNumberOnly(formatted);
                   }}
-                  placeholder="(123) 456-7890"
-                  className="w-full bg-slate-50 dark:bg-[#1E3248] border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-600 focus:outline-none focus:border-teal-500"
+                  disabled={!isEditing}
+                  placeholder={isEditing ? "(123) 456-7890" : "Not set"}
+                  className={`w-full border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-teal-500 transition-colors ${!isEditing ? 'bg-slate-100/50 dark:bg-white/5 cursor-not-allowed text-slate-500 dark:text-gray-400' : 'bg-slate-50 dark:bg-[#1E3248] text-slate-900 dark:text-white'}`}
                 />
               </div>
 
@@ -601,15 +639,16 @@ const Profile = ({ user, setUser, viewRole }) => {
                   <select
                     value={form.time_zone}
                     onChange={e => setForm({...form, time_zone: e.target.value})}
-                    className="w-full bg-slate-50 dark:bg-[#1E3248] border border-slate-200 dark:border-white/10 rounded-xl pl-4 pr-10 py-3 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-teal-500 appearance-none cursor-pointer"
+                    disabled={!isEditing}
+                    className={`w-full border border-slate-200 dark:border-white/10 rounded-xl pl-4 pr-10 py-3 text-sm focus:outline-none focus:border-teal-500 appearance-none transition-colors ${!isEditing ? 'bg-slate-100/50 dark:bg-white/5 cursor-not-allowed text-slate-500 dark:text-gray-400' : 'bg-slate-50 dark:bg-[#1E3248] text-slate-900 dark:text-white cursor-pointer'}`}
                   >
                     {timezones.map(tz => (
-                      <option key={tz.value} value={tz.value} className="text-slate-900 dark:text-white">
+                       <option key={tz.value} value={tz.value} className="text-slate-900 dark:text-white">
                         {tz.label}
                       </option>
                     ))}
                   </select>
-                  <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-gray-500 pointer-events-none" size={18} />
+                  <ChevronDown className={`absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none transition-colors ${!isEditing ? 'text-slate-400 dark:text-gray-600' : 'text-slate-400 dark:text-gray-500'}`} size={18} />
                 </div>
               </div>
 
@@ -623,39 +662,40 @@ const Profile = ({ user, setUser, viewRole }) => {
                     </div>
                     <div>
                       <label className="text-xs text-slate-500 dark:text-gray-400 mb-1.5 block">Secondary Units / Addresses (P2)</label>
-                      <div className="flex flex-wrap gap-2 p-3 bg-slate-50 dark:bg-[#1E3248] border border-slate-200 dark:border-white/10 rounded-xl min-h-[46px] items-center">
+                      <div className={`flex flex-wrap gap-2 p-3 border border-slate-200 dark:border-white/10 rounded-xl min-h-[46px] items-center transition-colors ${!isEditing ? 'bg-slate-100/50 dark:bg-white/5' : 'bg-slate-50 dark:bg-[#1E3248]'}`}>
                         {secondaryUnits.map((unit, idx) => (
                           <span key={idx} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold bg-teal-500/10 text-teal-700 dark:bg-teal-500/20 dark:text-teal-400 border border-teal-500/20">
                             {unit}
-                            {!isResident && (
+                            {!isResident && isEditing && (
                               <button type="button" onClick={() => setSecondaryUnits(secondaryUnits.filter((_, i) => i !== idx))} className="hover:text-red-500 transition-colors ml-1">
                                 <XCircle size={12} />
                               </button>
                             )}
                           </span>
                         ))}
-                        {!isResident ? (
+                        {!isResident && isEditing ? (
                           <input
                             type="text"
                             value={unitInput}
                             onChange={(e) => setUnitInput(e.target.value)}
+                            disabled={!isEditing}
                             placeholder={secondaryUnits.length === 0 ? "e.g. Unit 2B, press Enter to add" : "Add unit..."}
                             onKeyDown={(e) => {
                               if (e.key === 'Enter') {
                                 e.preventDefault();
                                 const val = unitInput.trim();
-                                if (val && !secondaryUnits.includes(val)) {
-                                  setSecondaryUnits([...secondaryUnits, val]);
-                                  setUnitInput('');
+                                  if (val && !secondaryUnits.includes(val)) {
+                                    setSecondaryUnits([...secondaryUnits, val]);
+                                    setUnitInput('');
+                                  }
                                 }
-                              }
-                            }}
-                            className="flex-1 bg-transparent border-0 outline-none text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-600 focus:ring-0 p-0 min-w-[120px]"
-                          />
-                        ) : (
-                          secondaryUnits.length === 0 && <span className="text-xs text-slate-400 dark:text-gray-500">No secondary units assigned</span>
-                        )}
-                      </div>
+                              }}
+                              className="flex-1 bg-transparent border-0 outline-none text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-600 focus:ring-0 p-0 min-w-[120px]"
+                            />
+                          ) : (
+                            secondaryUnits.length === 0 && <span className="text-xs text-slate-400 dark:text-gray-500">No secondary units assigned</span>
+                          )}
+                        </div>
                       <p className="text-xs text-slate-400 dark:text-gray-600 mt-1">
                         {isResident 
                           ? "Residents cannot modify their own unit numbers. Please contact a Board Member or Property Manager to request changes." 
@@ -752,10 +792,40 @@ const Profile = ({ user, setUser, viewRole }) => {
                 </>
               )}
 
-              <button onClick={handleSave} disabled={saving} className="w-full py-3 bg-teal-600 hover:bg-teal-500 text-white rounded-2xl font-medium transition disabled:opacity-50 flex items-center justify-center gap-2">
-                <Save size={16} />
-                {saving ? 'Saving...' : 'Save Changes'}
-              </button>
+              {!isEditing ? (
+                <button 
+                  onClick={() => setIsEditing(true)} 
+                  className="w-full py-3 bg-teal-600 hover:bg-teal-500 text-white rounded-2xl font-medium transition flex items-center justify-center gap-2"
+                >
+                  <Edit size={16} /> Edit Profile
+                </button>
+              ) : (
+                <div className="flex gap-3">
+                  <button 
+                    type="button"
+                    onClick={() => {
+                      setIsEditing(false);
+                      resetForm();
+                    }} 
+                    className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 text-slate-700 dark:text-white rounded-2xl font-medium transition flex items-center justify-center gap-2"
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    onClick={async () => {
+                      const success = await handleSave();
+                      if (success) {
+                        setIsEditing(false);
+                      }
+                    }} 
+                    disabled={saving} 
+                    className="flex-1 py-3 bg-teal-600 hover:bg-teal-500 text-white rounded-2xl font-medium transition disabled:opacity-50 flex items-center justify-center gap-2"
+                  >
+                    <Save size={16} />
+                    {saving ? 'Saving...' : 'Save Changes'}
+                  </button>
+                </div>
+              )}
             </div>
           )}
 
@@ -797,7 +867,6 @@ const Profile = ({ user, setUser, viewRole }) => {
                 <div className="space-y-4">
                   {[
                     { label: "All In-App Notifications", key: "allInApp" },
-                    { label: "Sound Alerts", key: "soundAlerts" },
                     { label: "SMS Alerts (critical only)", key: "smsCritical", sub: user?.mobile_number ? `Sent to ${formatUsPhone(user.mobile_number)}` : "No mobile number on file" },
                   ].map(item => (
                     <div key={item.key} className="flex items-center justify-between py-3 border-b border-slate-100 dark:border-white/10 last:border-0">

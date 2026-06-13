@@ -1201,7 +1201,7 @@ export default function ClientOnboarding() {
                   <div className="p-4 bg-[#1f3246] rounded-2xl border border-white/5 space-y-3">
                     <label className="block text-xs font-semibold text-gray-400 uppercase">Your Role in the HOA *</label>
                     <div className="flex gap-4">
-                      <label className="flex items-center gap-2 cursor-pointer text-sm font-semibold">
+                      <label className="flex items-center gap-2 cursor-pointer text-sm">
                         <input
                           type="radio"
                           value="Admin"
@@ -1210,10 +1210,10 @@ export default function ClientOnboarding() {
                         />
                         <div>
                           <span className="font-bold block">Admin (Property Manager)</span>
-                          <span className="text-[10px] text-gray-400 font-normal">Responsible for operations & vendor coordination</span>
+                          <span className="text-[10px] text-gray-400">Responsible for operations & vendor coordination</span>
                         </div>
                       </label>
-                      <label className="flex items-center gap-2 cursor-pointer text-sm font-semibold">
+                      <label className="flex items-center gap-2 cursor-pointer text-sm">
                         <input
                           type="radio"
                           value="Board Member"
@@ -1222,7 +1222,7 @@ export default function ClientOnboarding() {
                         />
                         <div>
                           <span className="font-bold block">Board Member</span>
-                          <span className="text-[10px] text-gray-400 font-normal">Elected president, treasurer, or secretary governance representative</span>
+                          <span className="text-[10px] text-gray-400">Elected president, treasurer, or secretary governance representative</span>
                         </div>
                       </label>
                     </div>

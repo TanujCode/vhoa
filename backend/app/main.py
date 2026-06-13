@@ -81,6 +81,8 @@ def run_db_upgrades():
         db.execute(text("ALTER TABLE community_join_requests ADD COLUMN IF NOT EXISTS unit_no VARCHAR(50);"))
         db.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS id_proof_url TEXT;"))
         db.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS address_proof_url TEXT;"))
+        db.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS user_code VARCHAR(30);"))
+        db.execute(text("CREATE UNIQUE INDEX IF NOT EXISTS idx_users_user_code ON users (user_code);"))
         
         # Add columns to user_communities junction table
         db.execute(text("ALTER TABLE user_communities ADD COLUMN IF NOT EXISTS unit_no VARCHAR(50);"))

@@ -51,10 +51,11 @@ def run_db_upgrades():
         # Add visible_tabs column to communities table
         db.execute(text('ALTER TABLE communities ADD COLUMN IF NOT EXISTS visible_tabs TEXT;'))
         
-        # Add unit_no column to users and community_join_requests
         db.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS unit_no VARCHAR(50);"))
         db.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS unit_no_2 VARCHAR(50);"))
         db.execute(text("ALTER TABLE community_join_requests ADD COLUMN IF NOT EXISTS unit_no VARCHAR(50);"))
+        db.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS user_code VARCHAR(30);"))
+        db.execute(text("CREATE UNIQUE INDEX IF NOT EXISTS idx_users_user_code ON users (user_code);"))
         
         # Add columns to user_communities junction table
         db.execute(text("ALTER TABLE user_communities ADD COLUMN IF NOT EXISTS unit_no VARCHAR(50);"))
@@ -68,6 +69,7 @@ def run_db_upgrades():
             ON CONFLICT DO NOTHING;
         """))
 
+        # Note: Do not copy existing user unit numbers globally to user_communities,
         # as some user_communities associations (like property managers) are intentionally NULL.
         pass
         

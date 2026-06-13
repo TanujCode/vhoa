@@ -54,6 +54,13 @@ const AdminPortal = () => {
   const [badgeClearedTimestamp, setBadgeClearedTimestamp] = useState(() => {
     return Number(localStorage.getItem('last_read_notifications') || 0);
   });
+  const [readNotificationIds, setReadNotificationIds] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('read_notification_ids') || '[]');
+    } catch (_) {
+      return [];
+    }
+  });
 
   // Track previous unread count to detect NEW notifications
   const prevUnreadRef = useRef(0);
@@ -269,7 +276,10 @@ const AdminPortal = () => {
     }
   }, [activeCommunity, user]);
 
-  const unreadCount = notifications.filter(n => new Date(n.created_at).getTime() > badgeClearedTimestamp).length;
+  const unreadCount = notifications.filter(n => 
+    new Date(n.created_at).getTime() > badgeClearedTimestamp &&
+    !readNotificationIds.includes(n.audit_id)
+  ).length;
 
   // Sound alert jab naya notification aaye
   useEffect(() => {
@@ -312,7 +322,39 @@ const AdminPortal = () => {
       localStorage.setItem('last_read_notifications', String(threshold));
       setLastReadTimestamp(threshold);
       setBadgeClearedTimestamp(threshold);
+      localStorage.setItem('read_notification_ids', '[]');
+      setReadNotificationIds([]);
     }
+  };
+
+  const handleNotifClick = (log) => {
+    if (!log) return;
+    
+    // Mark as read immediately
+    const currentReadIds = [...readNotificationIds];
+    if (!currentReadIds.includes(log.audit_id)) {
+      currentReadIds.push(log.audit_id);
+      localStorage.setItem('read_notification_ids', JSON.stringify(currentReadIds));
+      setReadNotificationIds(currentReadIds);
+    }
+    
+    // Map module to page name
+    const module = log.module || "";
+    if (module === 'service_request') {
+      setActivePage('servicereq');
+    } else if (module === 'violation') {
+      setActivePage('violations');
+    } else if (module === 'payment') {
+      setActivePage('payments');
+    } else if (module === 'news') {
+      setActivePage('news');
+    } else if (module === 'meeting') {
+      setActivePage('meetings');
+    } else if (module === 'document') {
+      setActivePage('documents');
+    }
+    
+    setIsNotifOpen(false);
   };
 
   const isResident = user?.role_id === 4 || user?.role === 'resident';
@@ -474,14 +516,20 @@ const AdminPortal = () => {
           localStorage.setItem('last_read_notifications', String(threshold));
           setLastReadTimestamp(threshold);
           setBadgeClearedTimestamp(threshold);
+          localStorage.setItem('read_notification_ids', '[]');
+          setReadNotificationIds([]);
         }}
         notifications={notifications}
         lastReadTimestamp={lastReadTimestamp}
+        readNotificationIds={readNotificationIds}
+        onNotifClick={handleNotifClick}
         onMarkAllRead={() => {
           const threshold = getReadThresholdTimestamp();
           localStorage.setItem('last_read_notifications', String(threshold));
           setLastReadTimestamp(threshold);
           setBadgeClearedTimestamp(threshold);
+          localStorage.setItem('read_notification_ids', '[]');
+          setReadNotificationIds([]);
         }}
       />
     </div>
