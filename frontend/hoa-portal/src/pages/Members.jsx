@@ -540,13 +540,14 @@ const Members = ({ community }) => {
                 {searched.map((m, index) => (
                   <tr key={m.user_id} className="hover:bg-slate-50 dark:hover:bg-white/5 transition-colors whitespace-nowrap group">
                     <td className="px-6 py-4">
-                      <div className="flex flex-col gap-1.5">
-                        <div className="flex items-center gap-2">
-                          <p className="font-semibold text-slate-900 dark:text-white text-sm">{m.full_name}</p>
-                          <span className="text-[10px] font-mono text-slate-500 dark:text-gray-400 bg-slate-100 dark:bg-white/5 px-1.5 py-0.5 rounded border border-slate-200/10">
-                            #{index + 1}
-                          </span>
-                        </div>
+                      <div className="flex flex-col gap-1">
+                        <p className="font-semibold text-slate-900 dark:text-white text-sm">{m.full_name}</p>
+                        <span
+                          className="text-[10px] font-mono text-slate-400 dark:text-gray-500"
+                          title="Member ID"
+                        >
+                          {m.user_code || `#${m.user_id}`}
+                        </span>
                         {m.role_name && (
                           <span className={`inline-block px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider w-max ${
                             m.role_name === 'super_admin' ? 'bg-red-500/10 text-red-600 dark:bg-red-500/20 dark:text-red-400 border border-red-500/20' :
