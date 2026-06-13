@@ -177,29 +177,42 @@ def backfill_user_codes():
     """Assign user_code to all existing users who don't have one (one-time migration)."""
     db = SessionLocal()
     try:
+        # Step 1: Check if user_code column exists and count nulls via raw SQL
+        try:
+            result = db.execute(text("SELECT COUNT(*) FROM users WHERE user_code IS NULL OR user_code = ''")).fetchone()
+            null_count = result[0] if result else 0
+            print(f"🔍 Backfill check: {null_count} user(s) have NULL/empty user_code")
+        except Exception as check_e:
+            print(f"⚠️  Backfill column check failed (column may not exist): {check_e}")
+            return
+
+        if null_count == 0:
+            print("ℹ️  Backfill skipped: all users already have user_code")
+            return
+
+        # Step 2: Load users without code
         from app.models.user import User
         from app.utils.user_code import generate_user_code
         users_without_code = db.query(User).filter(
             (User.user_code == None) | (User.user_code == '')
         ).all()
-        if not users_without_code:
-            return
+        print(f"🔍 ORM found {len(users_without_code)} user(s) to backfill")
+
         count = 0
         for user in users_without_code:
             try:
                 code = generate_user_code(db, user.first_name, user.last_name, signup_date=user.created_date)
                 user.user_code = code
-                db.flush()  # flush to avoid duplicate within same run
+                db.flush()
                 count += 1
             except Exception as ue:
                 db.rollback()
-                print(f"  ⚠️  Could not generate code for user {user.user_id}: {ue}")
+                print(f"  ⚠️  Could not generate code for user {user.user_id} ({user.first_name}): {ue}")
         db.commit()
-        if count > 0:
-            print(f"✅ Backfilled user_code for {count} existing user(s).")
+        print(f"✅ Backfilled user_code for {count} existing user(s).")
     except Exception as e:
         db.rollback()
-        print(f"⚠️  user_code backfill warning: {e}")
+        print(f"⚠️  user_code backfill error: {e}")
     finally:
         db.close()
 
