@@ -21,74 +21,115 @@ except Exception as e:
     raise e
 
 def run_db_upgrades():
+    """Run each DDL upgrade in its own transaction so one failure doesn't block others."""
+
+    def _safe_execute(sql: str, label: str = ""):
+        """Execute a single DDL statement in its own transaction."""
+        _db = SessionLocal()
+        try:
+            _db.execute(text(sql))
+            _db.commit()
+        except Exception as _e:
+            _db.rollback()
+            # Ignore "already exists" type errors (idempotent), print others
+            err_str = str(_e).lower()
+            if "already exists" not in err_str and "duplicate" not in err_str:
+                print(f"  ⚠️  DDL warning [{label}]: {_e}")
+        finally:
+            _db.close()
+
+    # ── communities table ─────────────────────────────────────────
+    for col_name, col_type in [
+        ("amenity_fee_enabled", "BOOLEAN DEFAULT FALSE"),
+        ("violation_fee_enabled", "BOOLEAN DEFAULT FALSE"),
+        ("late_fee_enabled", "BOOLEAN DEFAULT FALSE"),
+        ("late_fee_days", "INTEGER DEFAULT 7"),
+        ("late_fee_amount", "DOUBLE PRECISION DEFAULT 25.0"),
+        ("bank_name", "VARCHAR(255)"),
+        ("bank_account_no", "VARCHAR(255)"),
+        ("bank_routing_no", "VARCHAR(255)"),
+        ("bank_account_name", "VARCHAR(255)"),
+        ("visible_tabs", "TEXT"),
+    ]:
+        _safe_execute(
+            f"ALTER TABLE communities ADD COLUMN IF NOT EXISTS {col_name} {col_type};",
+            f"communities.{col_name}"
+        )
+
+    # ── amenity_bookings table ────────────────────────────────────
+    for col_name, col_type in [
+        ("is_refunded", "BOOLEAN DEFAULT FALSE"),
+        ("refund_date", "TIMESTAMP WITH TIME ZONE"),
+        ("refund_amount", "DOUBLE PRECISION DEFAULT 0.0"),
+    ]:
+        _safe_execute(
+            f"ALTER TABLE amenity_bookings ADD COLUMN IF NOT EXISTS {col_name} {col_type};",
+            f"amenity_bookings.{col_name}"
+        )
+
+    # ── amenities table ───────────────────────────────────────────
+    for col_name, col_type in [
+        ("pool_open", "BOOLEAN DEFAULT TRUE"),
+        ("tentative_open_date", "TIMESTAMP WITH TIME ZONE"),
+        ("is_pool_reserved", "BOOLEAN DEFAULT FALSE"),
+    ]:
+        _safe_execute(
+            f"ALTER TABLE amenities ADD COLUMN IF NOT EXISTS {col_name} {col_type};",
+            f"amenities.{col_name}"
+        )
+
+    # Partial unique index for amenity bookings
+    _safe_execute("""
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_amenity_booking_unique_slot
+        ON amenity_bookings (amenity_id, booking_date, slot_number)
+        WHERE active_status = true AND status IN ('PENDING', 'APPROVED');
+    """, "idx_amenity_booking_unique_slot")
+
+    # ── audit_logs table ──────────────────────────────────────────
+    _safe_execute("ALTER TABLE audit_logs ADD COLUMN IF NOT EXISTS request_id INTEGER;", "audit_logs.request_id")
+
+    # ── users table ───────────────────────────────────────────────
+    for col_name, col_type in [
+        ("unit_no", "VARCHAR(50)"),
+        ("unit_no_2", "VARCHAR(50)"),
+        ("id_proof_url", "TEXT"),
+        ("address_proof_url", "TEXT"),
+        ("user_code", "VARCHAR(30)"),
+    ]:
+        _safe_execute(
+            f"ALTER TABLE users ADD COLUMN IF NOT EXISTS {col_name} {col_type};",
+            f"users.{col_name}"
+        )
+
+    _safe_execute(
+        "CREATE UNIQUE INDEX IF NOT EXISTS idx_users_user_code ON users (user_code);",
+        "idx_users_user_code"
+    )
+
+    # ── community_join_requests table ────────────────────────────
+    _safe_execute(
+        "ALTER TABLE community_join_requests ADD COLUMN IF NOT EXISTS unit_no VARCHAR(50);",
+        "community_join_requests.unit_no"
+    )
+
+    # ── user_communities junction table ──────────────────────────
+    for col_name, col_type in [
+        ("unit_no", "VARCHAR(50)"),
+        ("unit_no_2", "VARCHAR(50)"),
+    ]:
+        _safe_execute(
+            f"ALTER TABLE user_communities ADD COLUMN IF NOT EXISTS {col_name} {col_type};",
+            f"user_communities.{col_name}"
+        )
+
+    _safe_execute(
+        "ALTER TABLE user_communities ADD COLUMN IF NOT EXISTS role_id INTEGER REFERENCES roles(role_id) ON DELETE SET NULL;",
+        "user_communities.role_id"
+    )
+
+    # ── Data migrations (run in one transaction) ──────────────────
     db = SessionLocal()
     try:
-        # Add columns to communities table
-        columns_to_add_community = [
-            ("amenity_fee_enabled", "BOOLEAN DEFAULT FALSE"),
-            ("violation_fee_enabled", "BOOLEAN DEFAULT FALSE"),
-            ("late_fee_enabled", "BOOLEAN DEFAULT FALSE"),
-            ("late_fee_days", "INTEGER DEFAULT 7"),
-            ("late_fee_amount", "DOUBLE PRECISION DEFAULT 25.0")
-        ]
-        for col_name, col_type in columns_to_add_community:
-            db.execute(text(f"ALTER TABLE communities ADD COLUMN IF NOT EXISTS {col_name} {col_type};"))
-        
-        # Add columns to amenity_bookings table
-        columns_to_add_bookings = [
-            ("is_refunded", "BOOLEAN DEFAULT FALSE"),
-            ("refund_date", "TIMESTAMP WITH TIME ZONE"),
-            ("refund_amount", "DOUBLE PRECISION DEFAULT 0.0")
-        ]
-        for col_name, col_type in columns_to_add_bookings:
-            db.execute(text(f"ALTER TABLE amenity_bookings ADD COLUMN IF NOT EXISTS {col_name} {col_type};"))
-        
-        # Add columns to amenities table
-        columns_to_add_amenities = [
-            ("pool_open", "BOOLEAN DEFAULT TRUE"),
-            ("tentative_open_date", "TIMESTAMP WITH TIME ZONE"),
-            ("is_pool_reserved", "BOOLEAN DEFAULT FALSE")
-        ]
-        for col_name, col_type in columns_to_add_amenities:
-            db.execute(text(f"ALTER TABLE amenities ADD COLUMN IF NOT EXISTS {col_name} {col_type};"))
-        
-        # Create partial unique index to prevent race conditions on duplicate inserts
-        db.execute(text("""
-            CREATE UNIQUE INDEX IF NOT EXISTS idx_amenity_booking_unique_slot 
-            ON amenity_bookings (amenity_id, booking_date, slot_number) 
-            WHERE active_status = true AND status IN ('PENDING', 'APPROVED');
-        """))
-        
-        # Add request_id column to audit_logs table
-        db.execute(text("ALTER TABLE audit_logs ADD COLUMN IF NOT EXISTS request_id INTEGER;"))
-        
-        # Add bank details columns to communities table
-        columns_to_add_community_banking = [
-            ("bank_name", "VARCHAR(255)"),
-            ("bank_account_no", "VARCHAR(255)"),
-            ("bank_routing_no", "VARCHAR(255)"),
-            ("bank_account_name", "VARCHAR(255)")
-        ]
-        for col_name, col_type in columns_to_add_community_banking:
-            db.execute(text(f"ALTER TABLE communities ADD COLUMN IF NOT EXISTS {col_name} {col_type};"))
-        
-        # Add visible_tabs column to communities table
-        db.execute(text('ALTER TABLE communities ADD COLUMN IF NOT EXISTS visible_tabs TEXT;'))
-        
-        # Add unit_no column to users and community_join_requests
-        db.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS unit_no VARCHAR(50);"))
-        db.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS unit_no_2 VARCHAR(50);"))
-        db.execute(text("ALTER TABLE community_join_requests ADD COLUMN IF NOT EXISTS unit_no VARCHAR(50);"))
-        db.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS id_proof_url TEXT;"))
-        db.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS address_proof_url TEXT;"))
-        db.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS user_code VARCHAR(30);"))
-        db.execute(text("CREATE UNIQUE INDEX IF NOT EXISTS idx_users_user_code ON users (user_code);"))
-        
-        # Add columns to user_communities junction table
-        db.execute(text("ALTER TABLE user_communities ADD COLUMN IF NOT EXISTS unit_no VARCHAR(50);"))
-        db.execute(text("ALTER TABLE user_communities ADD COLUMN IF NOT EXISTS unit_no_2 VARCHAR(50);"))
-        db.execute(text("ALTER TABLE user_communities ADD COLUMN IF NOT EXISTS role_id INTEGER REFERENCES roles(role_id) ON DELETE SET NULL;"))
-        
         # Copy existing user community_id values to user_communities junction table
         db.execute(text("""
             INSERT INTO user_communities (user_id, community_id)
@@ -97,7 +138,7 @@ def run_db_upgrades():
             ON CONFLICT DO NOTHING;
         """))
 
-        # Populate missing role_id in user_communities from users table initially
+        # Populate missing role_id in user_communities from users table
         db.execute(text("""
             UPDATE user_communities uc
             SET role_id = u.role_id
@@ -105,10 +146,6 @@ def run_db_upgrades():
             WHERE uc.user_id = u.user_id AND uc.role_id IS NULL;
         """))
 
-        # Note: Do not copy existing user unit numbers globally to user_communities on every startup,
-        # as some user_communities associations (like property managers) are intentionally NULL.
-        pass
-        
         # Force specific board member emails to be board_member (role_id=3) and community_id=7 if it exists
         community_7_exists = db.execute(text("SELECT 1 FROM communities WHERE community_id = 7")).fetchone()
         if community_7_exists:
@@ -120,17 +157,16 @@ def run_db_upgrades():
                 WHERE role_id = 3
                 ON CONFLICT DO NOTHING;
             """))
-        
+
         # Restore tanujtongse132@gmail.com to super_admin and clean up community mappings
         db.execute(text("UPDATE users SET role_id = 1, community_id = NULL WHERE email_id = 'tanujtongse132@gmail.com';"))
         db.execute(text("DELETE FROM user_communities WHERE user_id = (SELECT user_id FROM users WHERE email_id = 'tanujtongse132@gmail.com');"))
-        
+
         db.commit()
-        
         print("✅ Database DDL upgrades completed.")
     except Exception as e:
         db.rollback()
-        print(f"❌ Database DDL upgrades failed: {e}")
+        print(f"❌ Database data migrations failed: {e}")
     finally:
         db.close()
 

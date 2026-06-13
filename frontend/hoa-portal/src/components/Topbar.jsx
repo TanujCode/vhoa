@@ -65,12 +65,12 @@ const Topbar = ({
       <div className="relative flex-1 lg:flex-none">
         {(isResident || isBoardMember) && communities.length <= 1 ? (
           // Board Member + Resident ke liye Fixed Community
-          <div className="flex items-center gap-2 sm:gap-3 max-w-[180px] sm:max-w-[420px] lg:max-w-none select-none">
-            <div className="w-2.5 h-2.5 bg-teal-500 rounded-full animate-pulse flex-shrink-0"></div>
+          <div className="flex items-center gap-1.5 sm:gap-3 max-w-[150px] xs:max-w-[200px] sm:max-w-[420px] lg:max-w-none select-none">
+            <div className="hidden sm:block w-2.5 h-2.5 bg-teal-500 rounded-full animate-pulse flex-shrink-0"></div>
             <div className="min-w-0">
               <p className="text-[9px] sm:text-[10px] text-slate-400 dark:text-gray-400 font-semibold uppercase tracking-widest leading-normal mb-0.5 truncate">MY COMMUNITY</p>
               <div className="flex items-center gap-2 min-w-0">
-                <span className="text-sm sm:text-lg font-bold text-slate-900 dark:text-white leading-tight truncate">
+                <span className="text-[14px] xs:text-[16px] sm:text-lg font-bold text-slate-900 dark:text-white leading-tight truncate">
                   {activeCommunity?.name || "Oakwood Estates"}
                 </span>
                 {(activeCommunity?.community_code || "OAK-2291") && (
@@ -83,17 +83,17 @@ const Topbar = ({
           </div>
         ) : (
           // Admin / Super Admin OR Multi-Community Resident/Board Member ke liye dropdown
-          <div className="flex items-center gap-2 sm:gap-3 max-w-[180px] sm:max-w-[420px] lg:max-w-none select-none">
-            <div className="w-2.5 h-2.5 bg-teal-500 rounded-full flex-shrink-0 animate-pulse"></div>
+          <div className="flex items-center gap-1.5 sm:gap-3 max-w-[150px] xs:max-w-[200px] sm:max-w-[420px] lg:max-w-none select-none">
+            <div className="hidden sm:block w-2.5 h-2.5 bg-teal-500 rounded-full flex-shrink-0 animate-pulse"></div>
             <div className="min-w-0">
               <p className="text-[9px] sm:text-[10px] text-slate-400 dark:text-gray-400 font-semibold uppercase tracking-widest leading-normal mb-0.5 truncate">
                 {user?.role === 'super_admin' ? 'MANAGING' : 'MY COMMUNITY'}
               </p>
               <div
-                className="flex items-center gap-2 cursor-pointer transition select-none hover:opacity-80"
+                className="flex items-center gap-1 cursor-pointer transition select-none hover:opacity-80"
                 onClick={() => setIsCommDropdownOpen(!isCommDropdownOpen)}
               >
-                <span className="text-sm sm:text-lg font-bold text-slate-900 dark:text-white leading-tight truncate">
+                <span className="text-[14px] xs:text-[16px] sm:text-lg font-bold text-slate-900 dark:text-white leading-tight truncate">
                   {activeCommunity?.name || "Select Community"}
                 </span>
                 {activeCommunity?.community_code && (
@@ -101,7 +101,7 @@ const Topbar = ({
                     {activeCommunity.community_code}
                   </span>
                 )}
-                <ChevronDown size={16} className="text-gray-400 dark:text-gray-500 flex-shrink-0 transition-transform" style={{ transform: isCommDropdownOpen ? 'rotate(180deg)' : 'none' }} />
+                <ChevronDown size={14} className="text-gray-400 dark:text-gray-500 flex-shrink-0 transition-transform" style={{ transform: isCommDropdownOpen ? 'rotate(180deg)' : 'none' }} />
               </div>
             </div>
           </div>
@@ -152,7 +152,7 @@ const Topbar = ({
       </div>
 
       {/* Right Side Actions */}
-      <div className="ml-auto flex items-center gap-1 sm:gap-2 lg:gap-4 flex-shrink-0">
+      <div className="ml-auto flex items-center gap-1.5 sm:gap-2 lg:gap-4 flex-shrink-0">
         
         {canSwitchView && (
           <button

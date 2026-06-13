@@ -1,5 +1,5 @@
 import React from 'react';
-import { Bell, CheckCircle, AlertTriangle, Clock } from 'lucide-react';
+import { Bell, CheckCircle, AlertTriangle, Clock, Calendar } from 'lucide-react';
 
 const NotifPanel = ({ isOpen, onClose, notifications = [], onMarkAllRead, lastReadTimestamp, readNotificationIds = [], onNotifClick }) => {
   const lastRead = lastReadTimestamp !== undefined ? lastReadTimestamp : Number(localStorage.getItem('last_read_notifications') || 0);
@@ -51,7 +51,7 @@ const NotifPanel = ({ isOpen, onClose, notifications = [], onMarkAllRead, lastRe
     const module = log.module || "";
     
     let details = {
-      title: action.replace(/_/g, ' '),
+      title: action.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' '),
       icon: Bell,
       color: "text-slate-400"
     };
@@ -66,23 +66,30 @@ const NotifPanel = ({ isOpen, onClose, notifications = [], onMarkAllRead, lastRe
       details.color = "text-blue-400";
       if (action.includes("CREATE")) details.title = "New Service Request";
       else if (action.includes("STATUS") || action.includes("DETAILS")) details.title = "Service Request Updated";
-    } else if (module === 'payment') {
+    } else if (module === 'payment' || action.includes("PAYMENT")) {
       details.icon = CheckCircle;
       details.color = "text-teal-400";
-      if (action.includes("RECEIVE") || action.includes("CREATE")) details.title = "Payment Processed";
+      if (action.includes("RECEIVE") || action.includes("CREATE") || action.includes("MAKE")) details.title = "Payment Processed";
+      else details.title = "Payment Updated";
     } else if (module === 'auth') {
       details.icon = Bell;
       details.color = "text-amber-400";
       if (action === 'LOGIN_FAILED') details.title = "Failed Login Attempt";
       else if (action === 'ACCOUNT_LOCKED') details.title = "Account Locked";
       else if (action === 'LOGIN') details.title = "User Logged In";
+    } else if (module === 'booking' || module === 'amenity_booking' || action.includes("BOOKING")) {
+      details.icon = Calendar;
+      details.color = "text-emerald-400";
+      if (action.includes("CREATE")) details.title = "Booking Created";
+      else if (action.includes("CANCEL")) details.title = "Booking Cancelled";
+      else details.title = "Booking Updated";
     }
 
     return details;
   };
 
   return (
-    <div className={`fixed top-16 right-0 h-[calc(100vh-4rem)] w-96 bg-white dark:bg-[#162535] border-l border-slate-200 dark:border-white/10 shadow-2xl transform transition-transform duration-300 z-50 ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+    <div className={`fixed top-16 left-0 sm:left-auto right-0 h-[calc(100vh-4rem)] w-full sm:w-96 bg-white dark:bg-[#162535] border-l border-slate-200 dark:border-white/10 shadow-2xl transform transition-transform duration-300 z-50 ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}>
 
       {/* Header */}
       <div className="p-5 border-b border-slate-200 dark:border-white/10 flex items-center justify-between bg-white dark:bg-[#1E3248] sticky top-0">
