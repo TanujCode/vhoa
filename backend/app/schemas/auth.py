@@ -75,6 +75,7 @@ class RegisterRequest(BaseModel):
 #  USER RESPONSE
 class UserOut(BaseModel):
     user_id:              int
+    user_code:            str | None = None
     first_name:           str
     middle_name:          str | None
     last_name:            str
