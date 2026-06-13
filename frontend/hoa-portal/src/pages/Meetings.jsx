@@ -412,6 +412,11 @@ const Meetings = ({ community, user }) => {
     return new Date() > new Date(expiryStr);
   };
 
+  const isMeetingExpired = (meetingDateStr) => {
+    if (!meetingDateStr) return true;
+    return new Date() > new Date(meetingDateStr);
+  };
+
   return (
     <div className="text-slate-900 dark:text-white">
       {/* Header */}
@@ -473,107 +478,120 @@ const Meetings = ({ community, user }) => {
           </div>
         ) : (
           <div className="space-y-4">
-            {meetings.map((meeting) => (
-              <div
-                key={meeting.meeting_id}
-                className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 shadow-sm flex flex-col md:flex-row justify-between gap-6"
-              >
-                <div className="flex-1 space-y-3">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="flex items-center gap-1 text-xs text-teal-600 dark:text-teal-400 bg-teal-500/10 px-2.5 py-1 rounded-full font-semibold">
-                      <Clock size={12} />
-                      {formatDateTime(meeting.meeting_date)}
-                    </span>
-                    {meeting.location && (
-                      <span className="flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400 bg-blue-500/10 px-2.5 py-1 rounded-full font-semibold">
-                        <MapPin size={12} />
-                        {meeting.location}
+            {meetings.map((meeting) => {
+              const expired = isMeetingExpired(meeting.meeting_date);
+              return (
+                <div
+                  key={meeting.meeting_id}
+                  className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 shadow-sm flex flex-col md:flex-row justify-between gap-6"
+                >
+                  <div className="flex-1 space-y-3">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="flex items-center gap-1 text-xs text-teal-600 dark:text-teal-400 bg-teal-500/10 px-2.5 py-1 rounded-full font-semibold">
+                        <Clock size={12} />
+                        {formatDateTime(meeting.meeting_date)}
                       </span>
-                    )}
-                    {meeting.meeting_link && (
-                      <a
-                        href={meeting.meeting_link}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-1 text-xs text-purple-600 dark:text-purple-400 bg-purple-500/10 px-2.5 py-1 rounded-full font-semibold hover:underline"
-                      >
-                        <Video size={12} />
-                        Join Virtual <ExternalLink size={10} />
-                      </a>
-                    )}
-                  </div>
-                  <div className="flex justify-between items-start gap-4">
-                    <h3 className="text-xl font-bold text-slate-900 dark:text-white">{meeting.title}</h3>
-                    {isAdmin && (
-                      <div className="flex items-center gap-2 flex-shrink-0">
-                        <button
-                          onClick={() => setEditingMeeting(meeting)}
-                          className="p-1.5 hover:bg-slate-200 dark:hover:bg-white/10 rounded-lg text-slate-500 hover:text-slate-800 dark:text-gray-400 dark:hover:text-white transition"
-                          title="Edit Meeting"
+                      {meeting.location && (
+                        <span className="flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400 bg-blue-500/10 px-2.5 py-1 rounded-full font-semibold">
+                          <MapPin size={12} />
+                          {meeting.location}
+                        </span>
+                      )}
+                      {meeting.meeting_link && (
+                        <a
+                          href={meeting.meeting_link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-1 text-xs text-purple-600 dark:text-purple-400 bg-purple-500/10 px-2.5 py-1 rounded-full font-semibold hover:underline"
                         >
-                          <Edit2 size={14} />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteMeeting(meeting.meeting_id)}
-                          className="p-1.5 hover:bg-red-500/15 rounded-lg text-slate-400 hover:text-red-500 transition"
-                          title="Delete Meeting"
-                        >
-                          <Trash2 size={14} />
-                        </button>
-                      </div>
-                    )}
+                          <Video size={12} />
+                          Join Virtual <ExternalLink size={10} />
+                        </a>
+                      )}
+                    </div>
+                    <div className="flex justify-between items-start gap-4">
+                      <h3 className="text-xl font-bold text-slate-900 dark:text-white">{meeting.title}</h3>
+                      {isAdmin && (
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          <button
+                            onClick={() => setEditingMeeting(meeting)}
+                            className="p-1.5 hover:bg-slate-200 dark:hover:bg-white/10 rounded-lg text-slate-500 hover:text-slate-800 dark:text-gray-400 dark:hover:text-white transition"
+                            title="Edit Meeting"
+                          >
+                            <Edit2 size={14} />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteMeeting(meeting.meeting_id)}
+                            className="p-1.5 hover:bg-red-500/15 rounded-lg text-slate-400 hover:text-red-500 transition"
+                            title="Delete Meeting"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                    <p className="text-slate-600 dark:text-gray-300 text-sm leading-relaxed whitespace-pre-line">{meeting.description}</p>
+                    
+                    {/* RSVP count badges */}
+                    <div className="flex gap-4 pt-2 text-xs text-slate-500 dark:text-gray-400 border-t border-slate-200/50 dark:border-white/5 pt-3">
+                      <span className="flex items-center gap-1"><Users size={14} className="text-teal-600 dark:text-teal-400" /> RSVP Summary:</span>
+                      <span className="font-semibold text-emerald-600 dark:text-emerald-400">{meeting.rsvp_yes_count} Yes</span>
+                      <span>·</span>
+                      <span className="font-semibold text-red-500">{meeting.rsvp_no_count} No</span>
+                      <span>·</span>
+                      <span className="font-semibold text-amber-500">{meeting.rsvp_maybe_count} Maybe</span>
+                    </div>
                   </div>
-                  <p className="text-slate-600 dark:text-gray-300 text-sm leading-relaxed whitespace-pre-line">{meeting.description}</p>
-                  
-                  {/* RSVP count badges */}
-                  <div className="flex gap-4 pt-2 text-xs text-slate-500 dark:text-gray-400 border-t border-slate-200/50 dark:border-white/5 pt-3">
-                    <span className="flex items-center gap-1"><Users size={14} className="text-teal-600 dark:text-teal-400" /> RSVP Summary:</span>
-                    <span className="font-semibold text-emerald-600 dark:text-emerald-400">{meeting.rsvp_yes_count} Yes</span>
-                    <span>·</span>
-                    <span className="font-semibold text-red-500">{meeting.rsvp_no_count} No</span>
-                    <span>·</span>
-                    <span className="font-semibold text-amber-500">{meeting.rsvp_maybe_count} Maybe</span>
-                  </div>
-                </div>
 
-                {/* RSVP Actions Column */}
-                <div className="flex flex-col justify-center items-center md:items-start gap-2 border-t md:border-t-0 md:border-l border-slate-200/50 dark:border-white/5 pt-4 md:pt-0 pl-0 md:pl-6 w-full md:w-auto md:min-w-max flex-shrink-0">
-                  <span className="text-xs font-semibold text-slate-500 dark:text-gray-400 mb-1 text-center md:text-left">Your Attendance:</span>
-                  <div className="flex flex-row items-center gap-2 w-full md:w-auto">
-                    <button
-                      onClick={() => handleRsvp(meeting.meeting_id, 'YES')}
-                      className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 ${
-                        meeting.user_rsvp === 'YES'
-                          ? 'bg-emerald-600 text-white shadow-md shadow-emerald-500/20'
-                          : 'bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-700 dark:text-gray-300'
-                      }`}
-                    >
-                      <CheckCircle size={12} /> Yes
-                    </button>
-                    <button
-                      onClick={() => handleRsvp(meeting.meeting_id, 'NO')}
-                      className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 ${
-                        meeting.user_rsvp === 'NO'
-                          ? 'bg-red-600 text-white shadow-md shadow-red-500/20'
-                          : 'bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-700 dark:text-gray-300'
-                      }`}
-                    >
-                      No
-                    </button>
-                    <button
-                      onClick={() => handleRsvp(meeting.meeting_id, 'MAYBE')}
-                      className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 ${
-                        meeting.user_rsvp === 'MAYBE'
-                          ? 'bg-amber-500 text-white shadow-md shadow-amber-500/20'
-                          : 'bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-700 dark:text-gray-300'
-                      }`}
-                    >
-                      Maybe
-                    </button>
+                  {/* RSVP Actions Column */}
+                  <div className="flex flex-col justify-center items-center md:items-start gap-2 border-t md:border-t-0 md:border-l border-slate-200/50 dark:border-white/5 pt-4 md:pt-0 pl-0 md:pl-6 w-full md:w-auto md:min-w-max flex-shrink-0">
+                    <span className="text-xs font-semibold text-slate-500 dark:text-gray-400 mb-1 text-center md:text-left flex items-center gap-1.5">
+                      Your Attendance:
+                      {expired && (
+                        <span className="text-[9px] uppercase bg-slate-200 dark:bg-white/10 text-slate-500 dark:text-gray-400 px-1.5 py-0.5 rounded font-bold">
+                          Ended
+                        </span>
+                      )}
+                    </span>
+                    <div className="flex flex-row items-center gap-2 w-full md:w-auto">
+                      <button
+                        disabled={expired}
+                        onClick={() => handleRsvp(meeting.meeting_id, 'YES')}
+                        className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed ${
+                          meeting.user_rsvp === 'YES'
+                            ? 'bg-emerald-600 text-white shadow-md shadow-emerald-500/20'
+                            : 'bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-700 dark:text-gray-300'
+                        }`}
+                      >
+                        <CheckCircle size={12} /> Yes
+                      </button>
+                      <button
+                        disabled={expired}
+                        onClick={() => handleRsvp(meeting.meeting_id, 'NO')}
+                        className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed ${
+                          meeting.user_rsvp === 'NO'
+                            ? 'bg-red-600 text-white shadow-md shadow-red-500/20'
+                            : 'bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-700 dark:text-gray-300'
+                        }`}
+                      >
+                        No
+                      </button>
+                      <button
+                        disabled={expired}
+                        onClick={() => handleRsvp(meeting.meeting_id, 'MAYBE')}
+                        className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed ${
+                          meeting.user_rsvp === 'MAYBE'
+                            ? 'bg-amber-500 text-white shadow-md shadow-amber-500/20'
+                            : 'bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-700 dark:text-gray-300'
+                        }`}
+                      >
+                        Maybe
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )
       ) : (

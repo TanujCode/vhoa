@@ -527,19 +527,19 @@ const Members = ({ community }) => {
             <table className="w-full text-left">
               <thead>
                 <tr className="border-b border-slate-200 dark:border-white/5 text-[10px] uppercase tracking-wider text-slate-500 dark:text-gray-400 font-bold whitespace-nowrap">
-                  <th className="px-6 py-4">MEMBER</th>
-                  <th className="px-6 py-4">UNIT / ADDRESS</th>
-                  <th className="px-6 py-4">EMAIL</th>
-                  <th className="px-6 py-4">PHONE</th>
-                  <th className="px-6 py-4">VERIFICATION</th>
-                  <th className="px-6 py-4">STATUS</th>
-                  <th className="px-6 py-4">ACTION</th>
+                  <th className="px-3 py-4">MEMBER</th>
+                  <th className="px-3 py-4">UNIT / ADDRESS</th>
+                  <th className="px-3 py-4">EMAIL</th>
+                  <th className="px-3 py-4">PHONE</th>
+                  <th className="px-3 py-4">VERIFICATION</th>
+                  <th className="px-3 py-4">STATUS</th>
+                  <th className="px-3 py-4">ACTION</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-white/5">
                 {searched.map((m, index) => (
-                  <tr key={m.user_id} className="hover:bg-slate-50 dark:hover:bg-white/5 transition-colors whitespace-nowrap group">
-                    <td className="px-6 py-4">
+                  <tr key={m.user_id} className="hover:bg-slate-50 dark:hover:bg-white/5 transition-colors group">
+                    <td className="px-3 py-4">
                       <div className="flex flex-col gap-1">
                         <p className="font-semibold text-slate-900 dark:text-white text-sm">{m.full_name}</p>
                         <span
@@ -564,21 +564,21 @@ const Members = ({ community }) => {
                       </div>
                     </td>
 
-                    <td className="px-6 py-4">
+                    <td className="px-3 py-4">
                       <p className="text-slate-500 dark:text-gray-400 text-xs">
                         {m.unit_no || '—'}
                       </p>
                     </td>
 
-                    <td className="px-6 py-4">
-                      <p className="text-slate-500 dark:text-gray-400 text-xs">{m.email_id}</p>
+                    <td className="px-3 py-4">
+                      <p className="text-slate-500 dark:text-gray-400 text-xs break-all">{m.email_id}</p>
                     </td>
 
-                    <td className="px-6 py-4">
+                    <td className="px-3 py-4 whitespace-nowrap">
                       <p className="text-slate-500 dark:text-gray-400 text-xs">{formatUsPhone(m.mobile_number)}</p>
                     </td>
 
-                    <td className="px-6 py-4">
+                    <td className="px-3 py-4 whitespace-nowrap">
                       <div className="flex gap-2">
                         {m.id_proof_url ? (
                           <a
@@ -606,11 +606,11 @@ const Members = ({ community }) => {
                       </div>
                     </td>
 
-                    <td className="px-6 py-4">
+                    <td className="px-3 py-4 whitespace-nowrap">
                       {getNewStatusBadge(m.account_status)}
                     </td>
 
-                    <td className="px-6 py-4">
+                    <td className="px-3 py-4 whitespace-nowrap">
                       {getActionBtn(m)}
                     </td>
                   </tr>
