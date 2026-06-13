@@ -429,4 +429,4 @@ app.include_router(report.router,          prefix="/api")
 
 @app.get("/", tags=["Health"])
 def health():
-    return {"status": "running", "app": settings.APP_NAME}
+    return {"status": "running", "app": settings.APP_NAME, "version": "2.1.0"}
