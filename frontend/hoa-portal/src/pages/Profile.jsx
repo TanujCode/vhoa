@@ -289,7 +289,8 @@ const Profile = ({ user, setUser, viewRole }) => {
       });
       showMsg('success', 'Profile picture updated!');
     } catch (err) {
-      showMsg('error', 'Failed to upload picture.');
+      const detail = err.response?.data?.detail || 'Failed to upload picture.';
+      showMsg('error', typeof detail === 'string' ? detail : 'Failed to upload picture.');
     } finally {
       setUploading(false);
     }
@@ -531,7 +532,7 @@ const Profile = ({ user, setUser, viewRole }) => {
             <div className="text-sm space-y-2">
               <div className="flex justify-between">
                 <span className="text-slate-500 dark:text-gray-400">User ID</span>
-                <span className="font-mono text-slate-800 dark:text-slate-200">#{user?.user_id}</span>
+                <span className="font-mono text-slate-800 dark:text-slate-200">{user?.user_code || `#${user?.user_id}`}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-500 dark:text-gray-400">Role</span>

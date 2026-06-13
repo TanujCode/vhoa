@@ -1033,39 +1033,41 @@ const DetailDrawer = ({
 
             {/* Status QUOTE_GIVEN: Render quote details, accept/pay option */}
             {activeAssignment && activeAssignment.status === 'QUOTE_GIVEN' && (
-              <div className="bg-teal-500/5 rounded-2xl p-5 border border-teal-500/20 dark:border-teal-500/30 space-y-4 animate-fadeIn">
-                <div className="flex justify-between items-center">
-                  <h4 className="text-xs text-teal-600 dark:text-teal-400 font-bold uppercase tracking-wider">Vendor Quote Offered</h4>
-                  <span className="text-[10px] bg-teal-500/20 text-teal-600 dark:text-teal-400 px-2 py-0.5 rounded-full font-semibold">QUOTE GIVEN</span>
-                </div>
-                
-                <div className="space-y-2.5 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-slate-500 dark:text-gray-400">Vendor:</span>
-                    <span className="font-medium text-slate-800 dark:text-white">{activeAssignment.company_name || vendorDetails?.company_name || 'Vendor'}</span>
+              <>
+                <div className="bg-teal-500/5 rounded-2xl p-5 border border-teal-500/20 dark:border-teal-500/30 space-y-4 animate-fadeIn">
+                  <div className="flex justify-between items-center">
+                    <h4 className="text-xs text-teal-600 dark:text-teal-400 font-bold uppercase tracking-wider">Vendor Quote Offered</h4>
+                    <span className="text-[10px] bg-teal-500/20 text-teal-600 dark:text-teal-400 px-2 py-0.5 rounded-full font-semibold">QUOTE GIVEN</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-500 dark:text-gray-400">Quote Amount:</span>
-                    <span className="font-mono font-bold text-teal-600 dark:text-teal-400">${(activeAssignment.quote_amount || 0).toFixed(2)}</span>
+                  
+                  <div className="space-y-2.5 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-slate-500 dark:text-gray-400">Vendor:</span>
+                      <span className="font-medium text-slate-800 dark:text-white">{activeAssignment.company_name || vendorDetails?.company_name || 'Vendor'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-500 dark:text-gray-400">Quote Amount:</span>
+                      <span className="font-mono font-bold text-teal-600 dark:text-teal-400">${(activeAssignment.quote_amount || 0).toFixed(2)}</span>
+                    </div>
+                    {activeAssignment.vendor_receipt_no && (
+                      <div className="flex justify-between">
+                        <span className="text-slate-500 dark:text-gray-400">Receipt No:</span>
+                        <span className="font-medium text-slate-800 dark:text-white">{activeAssignment.vendor_receipt_no}</span>
+                      </div>
+                    )}
+                    {activeAssignment.quote_date && (
+                      <div className="flex justify-between">
+                        <span className="text-slate-500 dark:text-gray-400">Quote Date:</span>
+                        <span className="font-medium text-slate-800 dark:text-white">{activeAssignment.quote_date}</span>
+                      </div>
+                    )}
+                    {activeAssignment.service_location && (
+                      <div className="flex justify-between">
+                        <span className="text-slate-500 dark:text-gray-400">Service Location:</span>
+                        <span className="font-medium text-slate-800 dark:text-white">{activeAssignment.service_location}</span>
+                      </div>
+                    )}
                   </div>
-                  {activeAssignment.vendor_receipt_no && (
-                    <div className="flex justify-between">
-                      <span className="text-slate-500 dark:text-gray-400">Receipt No:</span>
-                      <span className="font-medium text-slate-800 dark:text-white">{activeAssignment.vendor_receipt_no}</span>
-                    </div>
-                  )}
-                  {activeAssignment.quote_date && (
-                    <div className="flex justify-between">
-                      <span className="text-slate-500 dark:text-gray-400">Quote Date:</span>
-                      <span className="font-medium text-slate-800 dark:text-white">{activeAssignment.quote_date}</span>
-                    </div>
-                  )}
-                  {activeAssignment.service_location && (
-                    <div className="flex justify-between">
-                      <span className="text-slate-500 dark:text-gray-400">Service Location:</span>
-                      <span className="font-medium text-slate-800 dark:text-white">{activeAssignment.service_location}</span>
-                    </div>
-                  )}
                 </div>
 
                 {isOwner && (
@@ -1076,7 +1078,7 @@ const DetailDrawer = ({
                     <DollarSign size={16} /> Accept & Pay Quote
                   </button>
                 )}
-              </div>
+              </>
             )}
 
             {/* Status APPROVED: Quote paid/funded. Admin verifies VCC and payouts. Resident sees completion instruction */}

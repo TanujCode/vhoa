@@ -123,9 +123,19 @@ async def upload_profile_picture(
     - The old picture will be automatically replaced.
     """
     import base64
-    # Type check
+    # Type check with fallback for generic or missing content types
+    content_type = file.content_type
+    if not content_type or content_type == "application/octet-stream":
+        ext = file.filename.split(".")[-1].lower() if file.filename else ""
+        if ext in {"jpg", "jpeg"}:
+            content_type = "image/jpeg"
+        elif ext == "png":
+            content_type = "image/png"
+        elif ext == "webp":
+            content_type = "image/webp"
+
     allowed_types = {"image/jpeg", "image/png", "image/jpg", "image/webp"}
-    if file.content_type not in allowed_types:
+    if content_type not in allowed_types:
         raise HTTPException(
             status_code=400,
             detail=f"Only image files allowed (JPEG, PNG, WebP). You uploaded: {file.content_type}"
@@ -145,7 +155,7 @@ async def upload_profile_picture(
 
     # Convert new picture to base64
     encoded = base64.b64encode(contents).decode("utf-8")
-    url = f"data:{file.content_type};base64,{encoded}"
+    url = f"data:{content_type};base64,{encoded}"
 
     # DB mein URL update
     current_user.user_profile_url = url
