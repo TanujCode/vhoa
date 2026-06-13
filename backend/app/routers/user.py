@@ -228,6 +228,7 @@ def _to_out(user: User, db: Session | None = None, community_id: int | None = No
 
     return UserOut(
         user_id              = user.user_id,
+        user_code            = user.user_code,
         first_name           = user.first_name,
         middle_name          = user.middle_name,
         last_name            = user.last_name,
@@ -452,10 +453,15 @@ def invite_member(
     random_pass = secrets.token_urlsafe(12)
     hashed_pass = hash_password(random_pass)
 
+    # 3.5 Generate alphanumeric user code
+    from app.utils.user_code import generate_user_code
+    u_code = generate_user_code(db, body.first_name, body.last_name, body.community_id)
+
     # 4. Create the new user
     new_user = User(
         first_name=body.first_name.strip(),
         last_name=body.last_name.strip(),
+        user_code=u_code,
         email_id=body.email_id.lower().strip(),
         mobile_number=body.mobile_number.strip() if body.mobile_number else None,
         unit_no=body.unit_no.strip() if body.unit_no else None,

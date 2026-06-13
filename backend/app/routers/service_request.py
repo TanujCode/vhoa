@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.dependencies.auth import get_verified_user, require_role, check_community_access
+from app.dependencies.auth import get_verified_user, require_role
 from app.models.user import User
 from app.models.service_request import ServiceRequestStatus
 from app.schemas.service_request import (
@@ -41,7 +41,6 @@ def create_sr_type(
     ),
 ):
     """Create a new service request type — Plumbing, Electrical etc."""
-    check_community_access(current_user, body.community_id, db)
     return create_type(body, db)
 
 
@@ -52,7 +51,6 @@ def get_sr_types(
     current_user: User = Depends(get_verified_user),
 ):
     """View all service request types for a community"""
-    check_community_access(current_user, community_id, db)
     return get_types(community_id, db)
 
 
@@ -66,10 +64,9 @@ def create(
 ):
     """
    Create a New Service Request. 
-   All verified users can do this. 
-   The status will automatically be set to 'Open'.
+All verified users can do this. 
+The status will automatically be set to 'Open'.
     """
-    check_community_access(current_user, body.community_id, db)
     try:
         sr = create_service_request(body, current_user.user_id, db)
     except ValueError as e:
@@ -89,16 +86,15 @@ def get_all(
     community_id: int,
     status: str | None = Query(default=None),
     skip:   int        = Query(default=0, ge=0),
-    limit:  int        = Query(default=20, ge=1, le=100),
+    limit:  int        = Query(default=20, ge=1, le=5000),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_verified_user),
 ):
     """
   View community service requests.
-  Resident → Only your own
-  Admin/Manager/Board → Everyone
+Resident → Only your own
+Admin/Manager/Board → Everyone
     """
-    check_community_access(current_user, community_id, db)
     submitted_by_id = None
     if current_user.role.role_name == "resident":
         submitted_by_id = current_user.user_id
@@ -118,8 +114,6 @@ def get_one(
         sr = get_request_by_id(request_id, db)
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
-
-    check_community_access(current_user, sr.community_id, db)
 
     # Residents can only view their own requests
     if current_user.role.role_name == "resident":
@@ -150,13 +144,6 @@ def change_status(
     → Any  → ON_HOLD
     → Any  → CLOSED
     """
-    try:
-        sr = get_request_by_id(request_id, db)
-    except ValueError as e:
-        raise HTTPException(status_code=404, detail=str(e))
-
-    check_community_access(current_user, sr.community_id, db)
-
     try:
         sr = update_status(
             request_id, body,
@@ -189,8 +176,6 @@ def add_sr_note(
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
 
-    check_community_access(current_user, sr.community_id, db)
-
     # Residents can only add notes to their own requests
     if current_user.role.role_name == "resident":
         if sr.submitted_by_id != current_user.user_id:
@@ -215,20 +200,15 @@ def delete(
 ):
     """Delete service request (soft delete)"""
     try:
-        sr = get_request_by_id(request_id, db)
-    except ValueError as e:
-        raise HTTPException(status_code=404, detail=str(e))
-
-    check_community_access(current_user, sr.community_id, db)
-
-    try:
         delete_request(request_id, current_user.user_id, db)
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
     return {"message": f"Service Request {request_id} has been deleted."}
 
 
+# ══════════════════════════════════════════════
 #  HELPERS
+# ══════════════════════════════════════════════
 def _get_full_name(user) -> str | None:
     if not user:
         return None
@@ -282,13 +262,6 @@ def update_details(
 ):
     """Edit service request details (title, description, priority, type, etc.)"""
     try:
-        sr = get_request_by_id(request_id, db)
-    except ValueError as e:
-        raise HTTPException(status_code=404, detail=str(e))
-
-    check_community_access(current_user, sr.community_id, db)
-
-    try:
         sr = update_service_request(
             request_id = request_id,
             data = body,
@@ -312,8 +285,6 @@ def get_history(
         sr = get_request_by_id(request_id, db)
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
-
-    check_community_access(current_user, sr.community_id, db)
 
     # Resident can only view history of their own requests
     if current_user.role.role_name == "resident" and sr.submitted_by_id != current_user.user_id:

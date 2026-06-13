@@ -236,14 +236,17 @@ def seed_custom_users():
         from app.services.token_service import hash_password
 
         # 1. Super Admin
+        from app.utils.user_code import generate_user_code
         super_admin_email = "tanujtongse132@gmail.com"
         super_admin_role = db.query(Role).filter(Role.role_name == "super_admin").first()
         if super_admin_role:
             super_user = db.query(User).filter(User.email_id == super_admin_email).first()
             if not super_user:
+                u_code = generate_user_code(db, "Super", "Admin")
                 super_user = User(
                     first_name="Super",
                     last_name="Admin",
+                    user_code=u_code,
                     email_id=super_admin_email,
                     password=hash_password("Super1234"),
                     role_id=super_admin_role.role_id,
@@ -262,6 +265,8 @@ def seed_custom_users():
                 super_user.active_status = True
                 super_user.account_status = "ACTIVE"
                 super_user.email_id_is_verified = True
+                if not super_user.user_code:
+                    super_user.user_code = generate_user_code(db, "Super", "Admin")
                 db.commit()
                 print("✅ Super admin updated.")
 
@@ -271,9 +276,11 @@ def seed_custom_users():
         if sales_role:
             sales_user = db.query(User).filter(User.email_id == sales_email).first()
             if not sales_user:
+                u_code = generate_user_code(db, "Sales", "Person")
                 sales_user = User(
                     first_name="Sales",
                     last_name="Person",
+                    user_code=u_code,
                     email_id=sales_email,
                     password=hash_password("Sales1234"),
                     role_id=sales_role.role_id,
@@ -292,6 +299,8 @@ def seed_custom_users():
                 sales_user.active_status = True
                 sales_user.account_status = "ACTIVE"
                 sales_user.email_id_is_verified = True
+                if not sales_user.user_code:
+                    sales_user.user_code = generate_user_code(db, "Sales", "Person")
                 db.commit()
                 print("✅ Sales admin updated.")
 

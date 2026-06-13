@@ -37,7 +37,7 @@ router = APIRouter(prefix="/auth", tags=["Auth"])
 
 
 
-from sqlalchemy import func
+from sqlalchemy import func # 🔥 Check this import above
 
 def _verify_captcha(captcha_token: str, captcha_answer: str):
     if not captcha_token:
@@ -45,6 +45,7 @@ def _verify_captcha(captcha_token: str, captcha_answer: str):
     if not captcha_answer:
         raise HTTPException(status_code=400, detail="Captcha answer is required.")
         
+    # Check for local captcha format: "local_captcha_math:X+Y"
     if captcha_token.startswith("local_captcha_math:"):
         try:
             expr = captcha_token.split(":", 1)[1]
@@ -75,11 +76,13 @@ def register(request: Request, body: RegisterRequest, db: Session = Depends(get_
     _verify_captcha(body.captcha_token, body.captcha_answer)
 
     try:
+        # 1. Register the user simply first
         user = register_user(body, db)
         
         # Safe string formats for matching
         user_email_clean = user.email_id.strip().lower()
 
+        # 🔥 AUTO-LINK WITH CASE INSENSITIVE LOWERCASE MATCHING
         community = db.query(Community).filter(
             (func.lower(Community.president_email_id) == user_email_clean) |
             (func.lower(Community.secretary_email_id) == user_email_clean) |
@@ -108,7 +111,7 @@ def register(request: Request, body: RegisterRequest, db: Session = Depends(get_
                 community.admin_invite_status = "ACCEPTED"
             
             db.commit()
-            db.refresh(user)
+            db.refresh(user)  # 🔥 Refresh is required so data goes into UserOut schema
 
             # Link in user_communities table
             from app.models.user import UserCommunity
@@ -143,7 +146,19 @@ def login(request: Request, body: LoginRequest, db: Session = Depends(get_db)):
     _verify_captcha(body.captcha_token, body.captcha_answer)
 
     try:
-        # 1. Login user directly (no email verification required)
+        # 1. Get the user first to check
+        user = db.query(User).filter(User.email_id == body.email_id.lower().strip()).first()
+        
+        if not user:
+            raise ValueError("Invalid email or password")
+
+        # 2. REAL FIX: Check if verified or not
+        # (Confirm column name according to your DB, usually email_id_is_verified)
+        if hasattr(user, 'email_id_is_verified') and not user.email_id_is_verified:
+            # If not verified, throw error
+            raise ValueError("Email not verified. Please verify your email first.")
+
+        # 3. If verified, only then call login_user
         result = login_user(body.email_id, body.password, db)
 
     except ValueError as e:
@@ -156,7 +171,9 @@ def login(request: Request, body: LoginRequest, db: Session = Depends(get_db)):
             user_id     = user_obj.user_id if user_obj else None,
             ip_address  = request.client.host,
         )
-        raise HTTPException(status_code=401, detail=str(e))
+        # Will send 403 here if there is a verification issue
+        status_code = 403 if "verified" in str(e).lower() else 401
+        raise HTTPException(status_code=status_code, detail=str(e))
 
     user = result["user"]
     log_action(
@@ -173,7 +190,7 @@ def login(request: Request, body: LoginRequest, db: Session = Depends(get_db)):
         session_token      = result["session_token"],
         access_expires_in  = result["access_expires_in"],
         session_expires_in = result["session_expires_in"],
-        user               = _to_out(user, db)
+        user               = _to_out(user, db) # User info bhi bhejo taaki React role check kar sake
     )
 
 
@@ -195,6 +212,7 @@ def google_auth(request: Request, body: GoogleLoginRequest, db: Session = Depend
 
     email = email.lower().strip()
     
+    # 2. Check if user exists
     user = db.query(User).filter(User.email_id == email).first()
     
     if not user:
@@ -210,11 +228,26 @@ def google_auth(request: Request, body: GoogleLoginRequest, db: Session = Depend
         
         # Generate random password
         random_password = secrets.token_urlsafe(16)
+
+        # Auto-link to community if matching emails
+        community = db.query(Community).filter(
+            (func.lower(Community.president_email_id) == email) |
+            (func.lower(Community.secretary_email_id) == email) |
+            (func.lower(Community.treasurer_email_id) == email) |
+            (func.lower(Community.admin_email_id) == email)
+        ).first()
+
+        community_id = community.community_id if community else None
+
+        # Generate user code
+        from app.utils.user_code import generate_user_code
+        u_code = generate_user_code(db, first_name, last_name, community_id)
         
         user = User(
             first_name=first_name,
             middle_name=middle_name,
             last_name=last_name,
+            user_code=u_code,
             email_id=email,
             password=hash_password(random_password),
             role_id=role.role_id,
@@ -225,23 +258,14 @@ def google_auth(request: Request, body: GoogleLoginRequest, db: Session = Depend
             mobile_is_verified=False,
             user_profile_url=google_user.get("picture"),
             time_zone="America/New_York",
-            login_attempts=0
+            login_attempts=0,
+            community_id=community_id
         )
         db.add(user)
         db.commit()
         db.refresh(user)
-        
-        # Auto-link to community if matching emails
-        community = db.query(Community).filter(
-            (func.lower(Community.president_email_id) == email) |
-            (func.lower(Community.secretary_email_id) == email) |
-            (func.lower(Community.treasurer_email_id) == email) |
-            (func.lower(Community.admin_email_id) == email)
-        ).first()
 
         if community:
-            user.community_id = community.community_id
-            
             if community.president_email_id.strip().lower() == email:
                 community.president_user_id = user.user_id
                 community.president_invite_status = "ACCEPTED"
@@ -257,16 +281,6 @@ def google_auth(request: Request, body: GoogleLoginRequest, db: Session = Depend
             
             db.commit()
             db.refresh(user)
-            
-            # Link in user_communities table
-            from app.models.user import UserCommunity
-            assoc = db.query(UserCommunity).filter(
-                UserCommunity.user_id == user.user_id,
-                UserCommunity.community_id == community.community_id
-            ).first()
-            if not assoc:
-                db.add(UserCommunity(user_id=user.user_id, community_id=community.community_id))
-                db.commit()
             print(f"🔥 Google Registration Auto-Linked: {email} with Community {community.community_id}")
             
         log_action(
@@ -278,6 +292,7 @@ def google_auth(request: Request, body: GoogleLoginRequest, db: Session = Depend
             ip_address=request.client.host,
         )
     else:
+        # User exists, check status
         if not user.active_status or user.account_status == "INACTIVE":
             raise HTTPException(status_code=400, detail="Account is inactive. Contact admin.")
             
@@ -287,17 +302,6 @@ def google_auth(request: Request, body: GoogleLoginRequest, db: Session = Depend
             user.account_status = "ACTIVE"
             db.commit()
             db.refresh(user)
-            
-        # Ensure user_communities association exists if user has community_id
-        if user.community_id:
-            from app.models.user import UserCommunity
-            assoc = db.query(UserCommunity).filter(
-                UserCommunity.user_id == user.user_id,
-                UserCommunity.community_id == user.community_id
-            ).first()
-            if not assoc:
-                db.add(UserCommunity(user_id=user.user_id, community_id=user.community_id))
-                db.commit()
             
         log_action(
             db=db,
@@ -377,6 +381,7 @@ def get_me(
     address_proof = getattr(user, 'address_proof_url', None)
     if user.community_id and (not id_proof or not address_proof):
         from app.models.community import CommunityJoinRequest
+        # Fetch the most recent join request to get verification documents if they exist
         req = db.query(CommunityJoinRequest).filter(
             CommunityJoinRequest.user_id == user.user_id,
             CommunityJoinRequest.community_id == user.community_id
@@ -401,6 +406,7 @@ def get_me(
 
     return UserOut(
         user_id              = user.user_id,
+        user_code            = user.user_code,
         first_name           = user.first_name,
         middle_name          = user.middle_name,
         last_name            = user.last_name,
@@ -418,6 +424,7 @@ def get_me(
         user_profile_url     = user.user_profile_url,
         created_date         = user.created_date,
         last_login           = user.last_login,
+        # 🔥 Yeh dono important hain
         community_id         = user.community_id,
         community_name       = community_name,
         unit_no              = unit_no,
@@ -436,6 +443,7 @@ def send_otp(request: Request, body: SendOtpRequest, db: Session = Depends(get_d
 
     try:
         if body.otp_type == "password_reset":
+            # Yeh naya function email check karta hai
             otp_code, user = send_otp_for_password_reset(body.email_id, db)
         else:
             user = db.query(User).filter(User.email_id == body.email_id.lower()).first()
@@ -443,6 +451,7 @@ def send_otp(request: Request, body: SendOtpRequest, db: Session = Depends(get_d
                 raise ValueError("This email is not registered with us.")
             otp_code = generate_otp(user.user_id, body.otp_type, db)
 
+        # Email bhejo
         success = send_otp_email(user.email_id, otp_code, body.otp_type)
 
         if success:
@@ -534,6 +543,7 @@ def _to_out(user: User, db: Session | None = None, community_id: int | None = No
 
     if db and comm_id:
         from app.models.community import CommunityJoinRequest
+        # Fetch the most recent join request to get verification documents if they exist
         req = db.query(CommunityJoinRequest).filter(
             CommunityJoinRequest.user_id == user.user_id,
             CommunityJoinRequest.community_id == comm_id
@@ -553,6 +563,7 @@ def _to_out(user: User, db: Session | None = None, community_id: int | None = No
             unit_no = assoc.unit_no
             unit_no_2 = assoc.unit_no_2
         else:
+            # Fallback to user columns only if the active/primary community matches the context
             if getattr(user, 'community_id', None) == comm_id:
                 unit_no = getattr(user, 'unit_no', None)
                 unit_no_2 = getattr(user, 'unit_no_2', None)
@@ -575,6 +586,7 @@ def _to_out(user: User, db: Session | None = None, community_id: int | None = No
 
     return UserOut(
         user_id              = user.user_id,
+        user_code            = user.user_code,
         first_name           = user.first_name,
         middle_name          = user.middle_name,
         last_name            = user.last_name,
@@ -634,6 +646,7 @@ def onboard_client(request: Request, body: ClientOnboardRequest, db: Session = D
     if contract.status != "ACTIVE":
         raise HTTPException(status_code=400, detail=f"Contract is currently in '{contract.status}' status and cannot be onboarded.")
 
+    # 3. Check duplicate user email and mobile
     existing_user = db.query(User).filter(User.email_id == body.email_id.lower().strip()).first()
     if existing_user:
         raise HTTPException(status_code=400, detail="This email is already registered.")
@@ -643,12 +656,14 @@ def onboard_client(request: Request, body: ClientOnboardRequest, db: Session = D
         if existing_mobile:
             raise HTTPException(status_code=400, detail="This mobile number is already registered.")
 
+    # 4. Check role
     role_name = "property_manager" if body.role_selected == "Admin" else "board_member"
     role = db.query(Role).filter(Role.role_name == role_name).first()
     if not role:
         raise HTTPException(status_code=500, detail=f"Role '{role_name}' is not seeded in the database.")
 
     try:
+        # Create address for the HOA/Community
         address = Address(
             address=body.hoa_address.strip(),
             city=body.hoa_city.strip(),
@@ -686,11 +701,16 @@ def onboard_client(request: Request, body: ClientOnboardRequest, db: Session = D
         db.commit()
         db.refresh(community)
 
+        # Generate alphanumeric user code
+        from app.utils.user_code import generate_user_code
+        u_code = generate_user_code(db, body.first_name, body.last_name, community.community_id)
+
         # Create client user
         user = User(
             first_name=body.first_name.strip(),
             middle_name=body.middle_name.strip() if body.middle_name else None,
             last_name=body.last_name.strip(),
+            user_code=u_code,
             email_id=body.email_id.lower().strip(),
             mobile_number=body.mobile_number,
             password=hash_password(body.password),
@@ -737,6 +757,7 @@ def onboard_client(request: Request, body: ClientOnboardRequest, db: Session = D
         db.refresh(user)
         db.refresh(contract)
 
+        # Seed service types for the new community
         seed_default_service_types_for_all_communities(db)
 
         # Log action
