@@ -464,7 +464,8 @@ def seed_custom_users():
         db.close()
 
 
-# ==================== RUN ALL SEEDS ====================
+# ==================== RUN DATABASE UPGRADES & SEEDS ====================
+run_db_upgrades()
 seed_roles()
 seed_violation_statuses()
 seed_sr_statuses()
@@ -473,7 +474,7 @@ seed_default_service_types_for_all_communities()   # ← Yeh important hai
 seed_amenity_types()
 seed_custom_users()
 
-print("All seeding completed successfully!")
+print("All database upgrades and seeding completed successfully!")
 
 # ==================== FASTAPI APP ====================
 app = FastAPI(

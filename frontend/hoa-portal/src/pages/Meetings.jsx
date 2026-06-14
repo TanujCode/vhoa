@@ -1086,8 +1086,8 @@ const Meetings = ({ community, user }) => {
                       </div>
                     )}
 
-                    {/* Record Meeting Button for admins if transcript doesn't exist */}
-                    {!meeting.transcript && isAdmin && (
+                    {/* Record Meeting Button for admins if transcript and recording don't exist */}
+                    {!meeting.transcript && !meeting.recording_url && isAdmin && (
                       <div className="pt-1">
                         {expired ? (
                           <span className="text-slate-400 dark:text-gray-500 text-xs italic flex items-center gap-1.5 pt-1">
