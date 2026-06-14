@@ -278,6 +278,12 @@ def update_meeting(meeting_id: int, data: MeetingUpdate, user_id: int, db: Sessi
     if not meeting:
         raise ValueError("Meeting not found.")
 
+    # Prevent editing expired meetings
+    now = datetime.now(timezone.utc)
+    m_date = meeting.meeting_date.replace(tzinfo=timezone.utc) if meeting.meeting_date.tzinfo is None else meeting.meeting_date
+    if now > m_date:
+        raise ValueError("This meeting has already ended and cannot be modified.")
+
     if data.title is not None:
         meeting.title = data.title.strip()
     if data.description is not None:

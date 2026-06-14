@@ -855,9 +855,10 @@ const Meetings = ({ community, user }) => {
                       {isAdmin && (
                         <div className="flex items-center gap-2 flex-shrink-0">
                           <button
+                            disabled={expired}
                             onClick={() => setEditingMeeting(meeting)}
-                            className="p-1.5 hover:bg-slate-200 dark:hover:bg-white/10 rounded-lg text-slate-500 hover:text-slate-800 dark:text-gray-400 dark:hover:text-white transition"
-                            title="Edit Meeting"
+                            className="p-1.5 hover:bg-slate-200 dark:hover:bg-white/10 rounded-lg text-slate-500 hover:text-slate-800 dark:text-gray-400 dark:hover:text-white transition disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+                            title={expired ? "Meeting has ended and cannot be edited" : "Edit Meeting"}
                           >
                             <Edit2 size={14} />
                           </button>
