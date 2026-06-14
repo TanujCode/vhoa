@@ -127,6 +127,16 @@ def run_db_upgrades():
         "user_communities.role_id"
     )
 
+    # ── meetings table columns (recording_url and transcript) ─────
+    for col_name, col_type in [
+        ("recording_url", "VARCHAR(500)"),
+        ("transcript", "TEXT"),
+    ]:
+        _safe_execute(
+            f"ALTER TABLE meetings ADD COLUMN IF NOT EXISTS {col_name} {col_type};",
+            f"meetings.{col_name}"
+        )
+
     # ── Data migrations (run in one transaction) ──────────────────
     db = SessionLocal()
     try:
@@ -218,6 +228,65 @@ def backfill_user_codes():
 
 
 backfill_user_codes()
+
+
+def migrate_duplicate_suffixes():
+    """Migrate user codes to ensure unique sequential suffixes globally if duplicate 0001 suffixes exist."""
+    from datetime import datetime
+    db = SessionLocal()
+    try:
+        from app.models.user import User
+        users = db.query(User).order_by(User.user_id).all()
+        if not users:
+            return
+
+        # Check if more than one user has a user_code ending with '0001'
+        count_0001 = sum(1 for u in users if u.user_code and u.user_code.endswith("0001"))
+        if count_0001 <= 1:
+            print("ℹ️  User code sequence migration skipped: suffixes are already unique.")
+            return
+
+        print(f"🔄 Running user code sequence migration for {len(users)} users...")
+        
+        for idx, user in enumerate(users, start=1):
+            # 1. Determine Country Code
+            country_code = "US"
+            if user.community_id:
+                from app.models.community import Community
+                comp = db.query(Community).filter(Community.community_id == user.community_id).first()
+                if comp and comp.address and comp.address.country:
+                    code = comp.address.country.country_code
+                    if code and len(code.strip()) >= 2:
+                        country_code = code.strip().upper()[:2]
+
+            # 2. First 4 letters of the name
+            name_str = "".join(c for c in (user.first_name or "") if c.isalpha()).upper()
+            if len(name_str) < 4:
+                last_clean = "".join(c for c in (user.last_name or "") if c.isalpha()).upper()
+                name_str += last_clean
+            name_str = (name_str + "XXXX")[:4]
+
+            # 3. Sign up date
+            use_date = user.created_date if user.created_date else datetime.now()
+            date_str = use_date.strftime("%m%d%Y")
+
+            prefix = f"{country_code}{name_str}{date_str}"
+            seq_str = f"{idx:04d}"
+            new_code = f"{prefix}{seq_str}"
+            
+            user.user_code = new_code
+            print(f"  Updating user {user.user_id} ({user.first_name} {user.last_name}): -> {new_code}")
+            
+        db.commit()
+        print("✅ User code sequence migration completed successfully.")
+    except Exception as e:
+        db.rollback()
+        print(f"⚠️  User code sequence migration failed: {e}")
+    finally:
+        db.close()
+
+
+migrate_duplicate_suffixes()
 
 # Create upload folders
 os.makedirs("uploads/profile_pictures", exist_ok=True)

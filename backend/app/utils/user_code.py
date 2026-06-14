@@ -31,16 +31,16 @@ def generate_user_code(
     use_date = signup_date if signup_date else datetime.now()
     date_str = use_date.strftime("%m%d%Y")
 
-    # 4. Sequence number — find next available seq for this prefix
+    # 4. Global Sequence number — find max sequence suffix from all existing users in the system
     prefix = f"{country_code}{name_str}{date_str}"
 
     from app.models.user import User
-    existing = db.query(User.user_code).filter(User.user_code.like(f"{prefix}%")).all()
+    existing = db.query(User.user_code).all()
 
     max_seq = 0
     for row in existing:
         code = row[0]
-        if code and len(code) == len(prefix) + 4:
+        if code and len(code) >= 4:
             seq_part = code[-4:]
             if seq_part.isdigit():
                 max_seq = max(max_seq, int(seq_part))

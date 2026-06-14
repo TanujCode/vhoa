@@ -49,3 +49,14 @@ export const deleteSurvey = async (surveyId) => {
   const res = await API.delete(`/meeting-survey/surveys/${surveyId}`);
   return res.data;
 };
+
+export const diarizeMeetingAudio = async (meetingId, audioBlob) => {
+  const formData = new FormData();
+  formData.append('file', audioBlob, 'recording.webm');
+  const res = await API.post(`/meeting-survey/meetings/${meetingId}/diarize`, formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+  return res.data;
+};

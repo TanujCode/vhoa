@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Plus, X, Calendar, Video, MapPin, Users, CheckCircle, Clock, ExternalLink, Edit2, Trash2 } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Plus, X, Calendar, Video, MapPin, Users, CheckCircle, Clock, ExternalLink, Edit2, Trash2, Mic, Play, Pause, Square, MessageSquare, Volume2 } from 'lucide-react';
 import {
   getMeetings,
   createMeeting,
@@ -10,8 +10,10 @@ import {
   updateMeeting,
   deleteMeeting,
   updateSurvey,
-  deleteSurvey
+  deleteSurvey,
+  diarizeMeetingAudio
 } from '../services/meetingSurveyService';
+import { getBaseUrl } from '../services/api';
 
 // ── Schedule Meeting Modal ────────────────────────────
 const ScheduleMeetingModal = ({ communityId, onClose, onSuccess, meeting }) => {
@@ -313,6 +315,341 @@ const CreateSurveyModal = ({ communityId, onClose, onSuccess, survey }) => {
   );
 };
 
+// ── Meeting Recorder Modal ────────────────────────────
+const MeetingRecorderModal = ({ meeting, onClose, onSuccess }) => {
+  const [status, setStatus] = useState('idle'); // idle, recording, paused, processing
+  const [duration, setDuration] = useState(0);
+  const [processingStep, setProcessingStep] = useState(0);
+  
+  const mediaRecorderRef = useRef(null);
+  const audioChunksRef = useRef([]);
+  const timerRef = useRef(null);
+  const audioContextRef = useRef(null);
+  const analyserRef = useRef(null);
+  const dataArrayRef = useRef(null);
+  const sourceRef = useRef(null);
+  const canvasRef = useRef(null);
+  const animationFrameRef = useRef(null);
+  const streamRef = useRef(null);
+
+  // Timer effect
+  useEffect(() => {
+    if (status === 'recording') {
+      timerRef.current = setInterval(() => {
+        setDuration(prev => prev + 1);
+      }, 1000);
+    } else {
+      clearInterval(timerRef.current);
+    }
+    return () => clearInterval(timerRef.current);
+  }, [status]);
+
+  // Canvas visualizer loop
+  const drawVisualizer = () => {
+    if (!canvasRef.current || !analyserRef.current) return;
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+    const bufferLength = analyserRef.current.frequencyBinCount;
+    const dataArray = dataArrayRef.current;
+
+    const draw = () => {
+      if (status !== 'recording' && status !== 'paused') return;
+      animationFrameRef.current = requestAnimationFrame(draw);
+      
+      analyserRef.current.getByteFrequencyData(dataArray);
+      
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.2)'; // Tailwind dark slate-900 with opacity
+      if (document.documentElement.classList.contains('dark') || canvas.closest('.dark')) {
+        ctx.fillStyle = 'rgba(13, 27, 42, 0.2)';
+      } else {
+        ctx.fillStyle = 'rgba(248, 250, 252, 0.2)'; // slate-50
+      }
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      const barWidth = (canvas.width / bufferLength) * 2.5;
+      let barHeight;
+      let x = 0;
+
+      for (let i = 0; i < bufferLength; i++) {
+        barHeight = dataArray[i] / 2;
+        
+        // Premium teal gradient
+        ctx.fillStyle = `rgb(13, ${148 + barHeight}, ${136})`;
+        ctx.fillRect(x, canvas.height - barHeight, barWidth - 1, barHeight);
+
+        x += barWidth;
+      }
+    };
+    draw();
+  };
+
+  // Start recording
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      streamRef.current = stream;
+      
+      // Setup Web Audio API for visualizer
+      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      audioContextRef.current = audioContext;
+      
+      const analyser = audioContext.createAnalyser();
+      analyser.fftSize = 256;
+      analyserRef.current = analyser;
+      
+      const source = audioContext.createMediaStreamSource(stream);
+      sourceRef.current = source;
+      source.connect(analyser);
+      
+      const bufferLength = analyser.frequencyBinCount;
+      dataArrayRef.current = new Uint8Array(bufferLength);
+
+      // Setup MediaRecorder
+      const options = { mimeType: 'audio/webm' };
+      let mediaRecorder;
+      try {
+        mediaRecorder = new MediaRecorder(stream, options);
+      } catch (err) {
+        mediaRecorder = new MediaRecorder(stream);
+      }
+      
+      mediaRecorderRef.current = mediaRecorder;
+      audioChunksRef.current = [];
+
+      mediaRecorder.ondataavailable = (e) => {
+        if (e.data && e.data.size > 0) {
+          audioChunksRef.current.push(e.data);
+        }
+      };
+
+      mediaRecorder.onstop = async () => {
+        setStatus('processing');
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        
+        // Run AI processing steps loading animation
+        const steps = [
+          'Uploading recording file...',
+          'Initializing AI speech model...',
+          'Analyzing voices and speech patterns...',
+          'Identifying speakers (Speaker Diarization)...',
+          'Formatting diarized transcript bubbles...',
+          'Completing...'
+        ];
+        
+        for (let i = 0; i < steps.length; i++) {
+          setProcessingStep(i);
+          await new Promise(r => setTimeout(r, 1200));
+        }
+
+        try {
+          await diarizeMeetingAudio(meeting.meeting_id, audioBlob);
+          onSuccess();
+          onClose();
+        } catch (err) {
+          alert('Error processing audio diarization: ' + (err.response?.data?.detail || err.message));
+          setStatus('idle');
+          setDuration(0);
+        }
+      };
+
+      mediaRecorder.start();
+      setStatus('recording');
+      setTimeout(drawVisualizer, 100);
+    } catch (err) {
+      alert('Could not access microphone: ' + err.message);
+    }
+  };
+
+  // Pause recording
+  const pauseRecording = () => {
+    if (mediaRecorderRef.current && status === 'recording') {
+      mediaRecorderRef.current.pause();
+      setStatus('paused');
+      if (audioContextRef.current) {
+        audioContextRef.current.suspend();
+      }
+    }
+  };
+
+  // Resume recording
+  const resumeRecording = () => {
+    if (mediaRecorderRef.current && status === 'paused') {
+      mediaRecorderRef.current.resume();
+      setStatus('recording');
+      if (audioContextRef.current) {
+        audioContextRef.current.resume();
+      }
+      setTimeout(drawVisualizer, 100);
+    }
+  };
+
+  // Stop recording
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && (status === 'recording' || status === 'paused')) {
+      mediaRecorderRef.current.stop();
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
+      }
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+    }
+  };
+
+  // Format seconds to mm:ss
+  const formatTime = (secs) => {
+    const m = Math.floor(secs / 60).toString().padStart(2, '0');
+    const s = (secs % 60).toString().padStart(2, '0');
+    return `${m}:${s}`;
+  };
+
+  // Clean up visualizer resources on unmount
+  useEffect(() => {
+    return () => {
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
+      }
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+      if (audioContextRef.current) {
+        audioContextRef.current.close();
+      }
+    };
+  }, []);
+
+  const steps = [
+    'Uploading recording file...',
+    'Initializing AI speech model...',
+    'Analyzing voices and speech patterns...',
+    'Identifying speakers (Speaker Diarization)...',
+    'Formatting diarized transcript bubbles...',
+    'Completing...'
+  ];
+
+  return (
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-white dark:bg-gradient-to-br dark:from-[#1E2E42] dark:to-[#162535] rounded-3xl p-6 w-full max-w-md border border-slate-200/80 dark:border-white/10 text-slate-900 dark:text-white shadow-2xl flex flex-col items-center">
+        
+        {status !== 'processing' ? (
+          <>
+            <div className="w-full flex items-center justify-between mb-6">
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white">Record Meeting Session</h3>
+              <button onClick={onClose} className="text-slate-400 hover:text-slate-900 dark:text-gray-400 dark:hover:text-white"><X size={20} /></button>
+            </div>
+            
+            <div className="text-center w-full mb-6">
+              <h4 className="text-sm font-semibold text-teal-600 dark:text-teal-400 uppercase tracking-wider mb-1">Active Meeting</h4>
+              <p className="text-base font-bold text-slate-800 dark:text-white truncate px-4">{meeting.title}</p>
+            </div>
+
+            {/* Visualizer Area */}
+            <div className="w-full h-40 bg-slate-50 dark:bg-[#0D1B2A] rounded-2xl border border-slate-200 dark:border-white/5 overflow-hidden flex flex-col justify-center items-center relative mb-6">
+              {status === 'idle' && (
+                <div className="flex flex-col items-center text-slate-400 dark:text-gray-500">
+                  <Mic size={40} className="animate-pulse mb-2" />
+                  <span className="text-xs">Microphone ready to capture</span>
+                </div>
+              )}
+              {(status === 'recording' || status === 'paused') && (
+                <canvas ref={canvasRef} width="350" height="160" className="w-full h-full" />
+              )}
+              
+              {status === 'paused' && (
+                <div className="absolute inset-0 bg-black/40 flex items-center justify-center backdrop-blur-sm">
+                  <span className="bg-slate-800 text-white text-xs font-bold px-3 py-1.5 rounded-full uppercase tracking-wider">Recording Paused</span>
+                </div>
+              )}
+            </div>
+
+            {/* Duration Timer */}
+            <div className="text-4xl font-mono font-bold text-slate-800 dark:text-white mb-8">
+              {formatTime(duration)}
+            </div>
+
+            {/* Controls */}
+            <div className="flex items-center gap-4 w-full justify-center">
+              {status === 'idle' ? (
+                <button
+                  onClick={startRecording}
+                  className="flex items-center gap-2 px-6 py-3 bg-teal-600 hover:bg-teal-500 text-white rounded-2xl font-bold transition shadow-lg shadow-teal-500/20"
+                >
+                  <Mic size={18} /> Start Recording
+                </button>
+              ) : (
+                <>
+                  {status === 'recording' ? (
+                    <button
+                      onClick={pauseRecording}
+                      className="p-4 bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-700 dark:text-white rounded-2xl font-bold transition"
+                      title="Pause Recording"
+                    >
+                      <Pause size={20} />
+                    </button>
+                  ) : (
+                    <button
+                      onClick={resumeRecording}
+                      className="p-4 bg-teal-600/10 hover:bg-teal-600/25 text-teal-600 dark:text-teal-400 rounded-2xl font-bold transition animate-bounce"
+                      title="Resume Recording"
+                    >
+                      <Play size={20} />
+                    </button>
+                  )}
+                  
+                  <button
+                    onClick={stopRecording}
+                    className="flex items-center gap-2 px-6 py-3.5 bg-red-600 hover:bg-red-500 text-white rounded-2xl font-bold transition shadow-lg shadow-red-500/25"
+                  >
+                    <Square size={16} /> Stop & Process AI
+                  </button>
+                </>
+              )}
+            </div>
+          </>
+        ) : (
+          /* Processing Screen */
+          <div className="w-full py-8 text-center flex flex-col items-center">
+            <div className="relative mb-6">
+              <div className="w-16 h-16 border-4 border-teal-500/30 border-t-teal-500 rounded-full animate-spin"></div>
+              <Mic size={24} className="text-teal-500 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 animate-bounce" />
+            </div>
+            
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">Analyzing Meeting Audio</h3>
+            <p className="text-xs text-slate-500 dark:text-gray-400 max-w-xs mb-6 leading-relaxed">
+              We are uploading and running speaker diarization on your meeting session using AI. Please do not close this modal.
+            </p>
+            
+            {/* Steps Progress Checklist */}
+            <div className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200/50 dark:border-white/5 rounded-2xl p-4 text-left space-y-2.5">
+              {steps.map((step, idx) => (
+                <div key={idx} className="flex items-center gap-2.5 text-xs">
+                  {processingStep > idx ? (
+                    <span className="text-emerald-500 font-bold">✓</span>
+                  ) : processingStep === idx ? (
+                    <span className="w-1.5 h-1.5 bg-teal-500 rounded-full animate-ping"></span>
+                  ) : (
+                    <span className="w-1.5 h-1.5 bg-slate-300 dark:bg-gray-600 rounded-full"></span>
+                  )}
+                  <span className={`font-semibold ${
+                    processingStep === idx 
+                      ? 'text-teal-600 dark:text-teal-400' 
+                      : processingStep > idx 
+                        ? 'text-slate-400 dark:text-gray-500 line-through' 
+                        : 'text-slate-500 dark:text-gray-400'
+                  }`}>
+                    {step}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+
 // ── Main Page Component ──────────────────────────────
 const Meetings = ({ community, user }) => {
   const [activeTab, setActiveTab] = useState('meetings');
@@ -324,6 +661,10 @@ const Meetings = ({ community, user }) => {
   const [showSurveyModal, setShowSurveyModal] = useState(false);
   const [editingMeeting, setEditingMeeting] = useState(null);
   const [editingSurvey, setEditingSurvey] = useState(null);
+  
+  const [showRecorderModal, setShowRecorderModal] = useState(false);
+  const [recordingMeeting, setRecordingMeeting] = useState(null);
+  const [expandedTranscriptMeetingId, setExpandedTranscriptMeetingId] = useState(null);
 
   const role = user?.role_name || user?.role || '';
   const isAdmin = ['super_admin', 'property_manager', 'board_member'].includes(role);
@@ -532,6 +873,77 @@ const Meetings = ({ community, user }) => {
                     </div>
                     <p className="text-slate-600 dark:text-gray-300 text-sm leading-relaxed whitespace-pre-line">{meeting.description}</p>
                     
+                    {/* Recording & Transcript Block */}
+                    {(meeting.recording_url || meeting.transcript) && (
+                      <div className="mt-4 p-4 bg-slate-100/50 dark:bg-black/20 rounded-2xl border border-slate-200/50 dark:border-white/5 space-y-3">
+                        {meeting.recording_url && (
+                          <div className="flex items-center gap-3">
+                            <Volume2 size={16} className="text-teal-600 dark:text-teal-400 flex-shrink-0" />
+                            <audio 
+                              src={getBaseUrl(meeting.recording_url)} 
+                              controls 
+                              className="w-full max-w-md h-8 text-xs accent-teal-600"
+                            />
+                          </div>
+                        )}
+                        {meeting.transcript && (
+                          <div>
+                            <button
+                              onClick={() => setExpandedTranscriptMeetingId(expandedTranscriptMeetingId === meeting.meeting_id ? null : meeting.meeting_id)}
+                              className="flex items-center gap-1.5 text-xs font-semibold text-teal-600 dark:text-teal-400 hover:underline"
+                            >
+                              <MessageSquare size={14} />
+                              {expandedTranscriptMeetingId === meeting.meeting_id ? 'Hide Meeting AI Transcript' : 'View Meeting AI Transcript'}
+                            </button>
+                            
+                            {expandedTranscriptMeetingId === meeting.meeting_id && (
+                              <div className="mt-3 bg-white dark:bg-[#0D1B2A] rounded-xl p-4 border border-slate-200/60 dark:border-white/5 max-h-60 overflow-y-auto custom-scrollbar text-xs leading-relaxed space-y-2.5">
+                                {meeting.transcript.split('\n').map((line, lIdx) => {
+                                  if (!line.trim()) return null;
+                                  
+                                  if (line.startsWith('[') && line.endsWith(']')) {
+                                    return (
+                                      <p key={lIdx} className="text-slate-400 dark:text-gray-500 font-mono italic text-[10px] text-center border-b border-slate-250/20 pb-1.5 mb-2">
+                                        {line}
+                                      </p>
+                                    );
+                                  }
+                                  
+                                  const colonIdx = line.indexOf(':');
+                                  if (colonIdx > 0) {
+                                    const speaker = line.slice(0, colonIdx);
+                                    const speech = line.slice(colonIdx + 1);
+                                    return (
+                                      <div key={lIdx} className="flex flex-col gap-0.5">
+                                        <span className="font-bold text-teal-600 dark:text-teal-400 tracking-wide">{speaker}</span>
+                                        <span className="text-slate-700 dark:text-gray-300 bg-slate-50 dark:bg-white/5 px-2.5 py-1.5 rounded-lg border-l-2 border-teal-500">{speech}</span>
+                                      </div>
+                                    );
+                                  }
+                                  return <p key={lIdx} className="text-slate-700 dark:text-gray-300">{line}</p>;
+                                })}
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Record Meeting Button for admins if transcript doesn't exist */}
+                    {!meeting.transcript && isAdmin && (
+                      <div className="pt-1">
+                        <button
+                          onClick={() => {
+                            setRecordingMeeting(meeting);
+                            setShowRecorderModal(true);
+                          }}
+                          className="flex items-center gap-1.5 px-3 py-1.5 bg-teal-600/10 hover:bg-teal-600 text-teal-600 hover:text-white dark:text-teal-400 dark:hover:text-white text-xs font-semibold rounded-xl transition border border-teal-500/20"
+                        >
+                          <Mic size={14} /> Record & Process AI Transcript
+                        </button>
+                      </div>
+                    )}
+
                     {/* RSVP count badges */}
                     <div className="flex gap-4 pt-2 text-xs text-slate-500 dark:text-gray-400 border-t border-slate-200/50 dark:border-white/5 pt-3">
                       <span className="flex items-center gap-1"><Users size={14} className="text-teal-600 dark:text-teal-400" /> RSVP Summary:</span>
@@ -718,6 +1130,13 @@ const Meetings = ({ community, user }) => {
           communityId={community?.community_id}
           survey={editingSurvey}
           onClose={() => { setShowSurveyModal(false); setEditingSurvey(null); }}
+          onSuccess={fetchData}
+        />
+      )}
+      {showRecorderModal && recordingMeeting && (
+        <MeetingRecorderModal
+          meeting={recordingMeeting}
+          onClose={() => { setShowRecorderModal(false); setRecordingMeeting(null); }}
           onSuccess={fetchData}
         />
       )}
