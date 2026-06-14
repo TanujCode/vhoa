@@ -600,3 +600,22 @@ def diarize_meeting_audio(
         transcript=meeting.transcript,
         summary=meeting.summary
     )
+
+
+@router.get("/debug-db")
+def debug_database_meetings(db: Session = Depends(get_db)):
+    from app.models.meeting_survey import Meeting
+    meetings = db.query(Meeting).all()
+    results = []
+    for m in meetings:
+        results.append({
+            "meeting_id": m.meeting_id,
+            "title": m.title,
+            "recording_url": m.recording_url,
+            "transcript_len": len(m.transcript) if m.transcript else None,
+            "transcript_val": m.transcript,
+            "summary_len": len(m.summary) if m.summary else None,
+            "summary_val": m.summary,
+        })
+    return results
+
