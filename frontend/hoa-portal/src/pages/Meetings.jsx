@@ -838,7 +838,7 @@ const Meetings = ({ community, user }) => {
                           {meeting.location}
                         </span>
                       )}
-                      {meeting.meeting_link && (
+                      {meeting.meeting_link && !expired && (
                         <a
                           href={meeting.meeting_link}
                           target="_blank"
