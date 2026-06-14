@@ -87,7 +87,8 @@ def get_community_meetings(community_id: int, user_id: int, db: Session) -> list
                 rsvp_no_count=no_count,
                 rsvp_maybe_count=maybe_count,
                 recording_url=m.recording_url,
-                transcript=m.transcript
+                transcript=m.transcript,
+                summary=m.summary
             )
         )
     return results

@@ -318,6 +318,7 @@ const CreateSurveyModal = ({ communityId, onClose, onSuccess, survey }) => {
 // ── Meeting Recorder Modal ────────────────────────────
 const MeetingRecorderModal = ({ meeting, onClose, onSuccess }) => {
   const [status, setStatus] = useState('idle'); // idle, recording, paused, processing
+  const [recordingType, setRecordingType] = useState('physical'); // physical, virtual
   const [duration, setDuration] = useState(0);
   const [processingStep, setProcessingStep] = useState(0);
   
@@ -386,31 +387,80 @@ const MeetingRecorderModal = ({ meeting, onClose, onSuccess }) => {
   // Start recording
   const startRecording = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      streamRef.current = stream;
-      
-      // Setup Web Audio API for visualizer
-      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-      audioContextRef.current = audioContext;
-      
-      const analyser = audioContext.createAnalyser();
-      analyser.fftSize = 256;
-      analyserRef.current = analyser;
-      
-      const source = audioContext.createMediaStreamSource(stream);
-      sourceRef.current = source;
-      source.connect(analyser);
-      
-      const bufferLength = analyser.frequencyBinCount;
+      let finalStream;
+      let micStream;
+      let displayStream;
+
+      if (recordingType === 'virtual') {
+        try {
+          displayStream = await navigator.mediaDevices.getDisplayMedia({
+            video: { width: 1, height: 1, frameRate: 1 },
+            audio: true
+          });
+        } catch (err) {
+          console.error("Display media selection cancelled/failed", err);
+          return; // User cancelled screen sharing
+        }
+
+        const displayAudioTracks = displayStream.getAudioTracks();
+        if (displayAudioTracks.length === 0) {
+          displayStream.getTracks().forEach(track => track.stop());
+          alert("Error: Please make sure to check the 'Share tab audio' or 'Share system audio' checkbox in the browser prompt when recording virtual meetings.");
+          return;
+        }
+
+        micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+        // Setup Web Audio API for mixing
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        audioContextRef.current = audioContext;
+
+        const analyser = audioContext.createAnalyser();
+        analyser.fftSize = 256;
+        analyserRef.current = analyser;
+
+        const micSource = audioContext.createMediaStreamSource(micStream);
+        const displaySource = audioContext.createMediaStreamSource(new MediaStream([displayAudioTracks[0]]));
+
+        const destination = audioContext.createMediaStreamDestination();
+
+        // Connect both to mixed output
+        micSource.connect(analyser); // Visualize mic input
+        micSource.connect(destination);
+        displaySource.connect(destination);
+
+        finalStream = destination.stream;
+        streamRef.current = [...micStream.getTracks(), ...displayStream.getTracks()];
+      } else {
+        // Physical mode
+        micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        
+        // Setup Web Audio for visualizer
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        audioContextRef.current = audioContext;
+        
+        const analyser = audioContext.createAnalyser();
+        analyser.fftSize = 256;
+        analyserRef.current = analyser;
+        
+        const source = audioContext.createMediaStreamSource(micStream);
+        sourceRef.current = source;
+        source.connect(analyser);
+        
+        finalStream = micStream;
+        streamRef.current = micStream.getTracks();
+      }
+
+      const bufferLength = analyserRef.current.frequencyBinCount;
       dataArrayRef.current = new Uint8Array(bufferLength);
 
       // Setup MediaRecorder
       const options = { mimeType: 'audio/webm' };
       let mediaRecorder;
       try {
-        mediaRecorder = new MediaRecorder(stream, options);
+        mediaRecorder = new MediaRecorder(finalStream, options);
       } catch (err) {
-        mediaRecorder = new MediaRecorder(stream);
+        mediaRecorder = new MediaRecorder(finalStream);
       }
       
       mediaRecorderRef.current = mediaRecorder;
@@ -432,7 +482,7 @@ const MeetingRecorderModal = ({ meeting, onClose, onSuccess }) => {
           'Initializing AI speech model...',
           'Analyzing voices and speech patterns...',
           'Identifying speakers (Speaker Diarization)...',
-          'Formatting diarized transcript bubbles...',
+          'Extracting AI Summary & Action Items...',
           'Completing...'
         ];
         
@@ -488,7 +538,7 @@ const MeetingRecorderModal = ({ meeting, onClose, onSuccess }) => {
     if (mediaRecorderRef.current && (status === 'recording' || status === 'paused')) {
       mediaRecorderRef.current.stop();
       if (streamRef.current) {
-        streamRef.current.getTracks().forEach(track => track.stop());
+        streamRef.current.forEach(track => track.stop());
       }
       if (animationFrameRef.current) {
         cancelAnimationFrame(animationFrameRef.current);
@@ -507,7 +557,7 @@ const MeetingRecorderModal = ({ meeting, onClose, onSuccess }) => {
   useEffect(() => {
     return () => {
       if (streamRef.current) {
-        streamRef.current.getTracks().forEach(track => track.stop());
+        streamRef.current.forEach(track => track.stop());
       }
       if (animationFrameRef.current) {
         cancelAnimationFrame(animationFrameRef.current);
@@ -523,7 +573,7 @@ const MeetingRecorderModal = ({ meeting, onClose, onSuccess }) => {
     'Initializing AI speech model...',
     'Analyzing voices and speech patterns...',
     'Identifying speakers (Speaker Diarization)...',
-    'Formatting diarized transcript bubbles...',
+    'Extracting AI Summary & Action Items...',
     'Completing...'
   ];
 
@@ -543,12 +593,44 @@ const MeetingRecorderModal = ({ meeting, onClose, onSuccess }) => {
               <p className="text-base font-bold text-slate-800 dark:text-white truncate px-4">{meeting.title}</p>
             </div>
 
+            {status === 'idle' && (
+              /* Recording Type Selector */
+              <div className="w-full grid grid-cols-2 gap-3 mb-6">
+                <button
+                  type="button"
+                  onClick={() => setRecordingType('physical')}
+                  className={`p-4 rounded-2xl border flex flex-col items-center justify-center text-center gap-2 transition ${
+                    recordingType === 'physical'
+                      ? 'border-teal-500 bg-teal-500/5 text-teal-600 dark:text-teal-400 font-bold'
+                      : 'border-slate-200 dark:border-white/10 text-slate-550 dark:text-gray-400 hover:border-slate-350 dark:hover:border-white/20'
+                  }`}
+                >
+                  <Mic size={22} />
+                  <span className="text-xs font-bold">Physical Meeting</span>
+                  <span className="text-[9px] text-slate-450 dark:text-gray-500 leading-tight">Records only your mic.</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setRecordingType('virtual')}
+                  className={`p-4 rounded-2xl border flex flex-col items-center justify-center text-center gap-2 transition ${
+                    recordingType === 'virtual'
+                      ? 'border-teal-500 bg-teal-500/5 text-teal-600 dark:text-teal-400 font-bold'
+                      : 'border-slate-200 dark:border-white/10 text-slate-550 dark:text-gray-400 hover:border-slate-350 dark:hover:border-white/20'
+                  }`}
+                >
+                  <Video size={22} />
+                  <span className="text-xs font-bold">Virtual Call</span>
+                  <span className="text-[9px] text-slate-450 dark:text-gray-500 leading-tight">Captures Mic + Tab Audio.</span>
+                </button>
+              </div>
+            )}
+
             {/* Visualizer Area */}
             <div className="w-full h-40 bg-slate-50 dark:bg-[#0D1B2A] rounded-2xl border border-slate-200 dark:border-white/5 overflow-hidden flex flex-col justify-center items-center relative mb-6">
               {status === 'idle' && (
                 <div className="flex flex-col items-center text-slate-400 dark:text-gray-500">
                   <Mic size={40} className="animate-pulse mb-2" />
-                  <span className="text-xs">Microphone ready to capture</span>
+                  <span className="text-xs font-semibold">Ready to record ({recordingType === 'physical' ? 'Mic Only' : 'Mic + Tab'})</span>
                 </div>
               )}
               {(status === 'recording' || status === 'paused') && (
@@ -616,7 +698,7 @@ const MeetingRecorderModal = ({ meeting, onClose, onSuccess }) => {
             
             <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">Analyzing Meeting Audio</h3>
             <p className="text-xs text-slate-500 dark:text-gray-400 max-w-xs mb-6 leading-relaxed">
-              We are uploading and running speaker diarization on your meeting session using AI. Please do not close this modal.
+              We are uploading, transcribing, and extracting AI meeting summaries. Please do not close this modal.
             </p>
             
             {/* Steps Progress Checklist */}
@@ -665,6 +747,7 @@ const Meetings = ({ community, user }) => {
   const [showRecorderModal, setShowRecorderModal] = useState(false);
   const [recordingMeeting, setRecordingMeeting] = useState(null);
   const [expandedTranscriptMeetingId, setExpandedTranscriptMeetingId] = useState(null);
+  const [activeMeetingTab, setActiveMeetingTab] = useState({});
 
   const role = user?.role_name || user?.role || '';
   const isAdmin = ['super_admin', 'property_manager', 'board_member'].includes(role);
@@ -875,7 +958,7 @@ const Meetings = ({ community, user }) => {
                     <p className="text-slate-600 dark:text-gray-300 text-sm leading-relaxed whitespace-pre-line">{meeting.description}</p>
                     
                     {/* Recording & Transcript Block */}
-                    {(meeting.recording_url || meeting.transcript) && (
+                    {(meeting.recording_url || meeting.transcript || meeting.summary) && (
                       <div className="mt-4 p-4 bg-slate-100/50 dark:bg-black/20 rounded-2xl border border-slate-200/50 dark:border-white/5 space-y-3">
                         {meeting.recording_url && (
                           <div className="flex items-center gap-3">
@@ -887,42 +970,115 @@ const Meetings = ({ community, user }) => {
                             />
                           </div>
                         )}
-                        {meeting.transcript && (
+                        {(meeting.summary || meeting.transcript) && (
                           <div>
                             <button
                               onClick={() => setExpandedTranscriptMeetingId(expandedTranscriptMeetingId === meeting.meeting_id ? null : meeting.meeting_id)}
                               className="flex items-center gap-1.5 text-xs font-semibold text-teal-600 dark:text-teal-400 hover:underline"
                             >
                               <MessageSquare size={14} />
-                              {expandedTranscriptMeetingId === meeting.meeting_id ? 'Hide Meeting AI Transcript' : 'View Meeting AI Transcript'}
+                              {expandedTranscriptMeetingId === meeting.meeting_id ? 'Hide AI Summary & Transcript' : 'View AI Summary & Transcript'}
                             </button>
                             
                             {expandedTranscriptMeetingId === meeting.meeting_id && (
-                              <div className="mt-3 bg-white dark:bg-[#0D1B2A] rounded-xl p-4 border border-slate-200/60 dark:border-white/5 max-h-60 overflow-y-auto custom-scrollbar text-xs leading-relaxed space-y-2.5">
-                                {meeting.transcript.split('\n').map((line, lIdx) => {
-                                  if (!line.trim()) return null;
-                                  
-                                  if (line.startsWith('[') && line.endsWith(']')) {
-                                    return (
-                                      <p key={lIdx} className="text-slate-400 dark:text-gray-500 font-mono italic text-[10px] text-center border-b border-slate-250/20 pb-1.5 mb-2">
-                                        {line}
-                                      </p>
-                                    );
-                                  }
-                                  
-                                  const colonIdx = line.indexOf(':');
-                                  if (colonIdx > 0) {
-                                    const speaker = line.slice(0, colonIdx);
-                                    const speech = line.slice(colonIdx + 1);
-                                    return (
-                                      <div key={lIdx} className="flex flex-col gap-0.5">
-                                        <span className="font-bold text-teal-600 dark:text-teal-400 tracking-wide">{speaker}</span>
-                                        <span className="text-slate-700 dark:text-gray-300 bg-slate-50 dark:bg-white/5 px-2.5 py-1.5 rounded-lg border-l-2 border-teal-500">{speech}</span>
-                                      </div>
-                                    );
-                                  }
-                                  return <p key={lIdx} className="text-slate-700 dark:text-gray-300">{line}</p>;
-                                })}
+                              <div className="mt-3 space-y-3">
+                                {/* Tab Selectors */}
+                                <div className="flex gap-2 border-b border-slate-200/50 dark:border-white/5 pb-2">
+                                  <button
+                                    type="button"
+                                    onClick={() => setActiveMeetingTab({ ...activeMeetingTab, [meeting.meeting_id]: 'summary' })}
+                                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
+                                      (activeMeetingTab[meeting.meeting_id] || 'summary') === 'summary'
+                                        ? 'bg-teal-600/10 text-teal-600 dark:text-teal-400 shadow-sm'
+                                        : 'text-slate-500 hover:text-slate-800 dark:text-gray-400 dark:hover:text-white'
+                                    }`}
+                                  >
+                                    📝 AI Summary & Action Items
+                                  </button>
+                                  {meeting.transcript && (
+                                    <button
+                                      type="button"
+                                      onClick={() => setActiveMeetingTab({ ...activeMeetingTab, [meeting.meeting_id]: 'transcript' })}
+                                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
+                                        activeMeetingTab[meeting.meeting_id] === 'transcript'
+                                          ? 'bg-teal-600/10 text-teal-600 dark:text-teal-400 shadow-sm'
+                                          : 'text-slate-500 hover:text-slate-800 dark:text-gray-400 dark:hover:text-white'
+                                      }`}
+                                    >
+                                      🗣️ Full AI Transcript
+                                    </button>
+                                  )}
+                                </div>
+
+                                {/* Tab Contents */}
+                                {(activeMeetingTab[meeting.meeting_id] || 'summary') === 'summary' ? (
+                                  /* Summary Content */
+                                  <div className="bg-white dark:bg-[#0D1B2A] rounded-xl p-4 border border-slate-200/60 dark:border-white/5 text-xs leading-relaxed space-y-2 max-h-60 overflow-y-auto custom-scrollbar text-slate-700 dark:text-gray-300 font-medium">
+                                    {meeting.summary ? (
+                                      meeting.summary.split('\n').map((line, sIdx) => {
+                                        if (!line.trim()) return null;
+                                        // Format bullet points beautifully
+                                        if (line.startsWith('•') || line.startsWith('*')) {
+                                          const cleanLine = line.replace(/^[•*\s]+/, '');
+                                          
+                                          // Parse bold markers **
+                                          const boldRegex = /\*\*(.*?)\*\*/g;
+                                          const parts = [];
+                                          let lastIndex = 0;
+                                          let match;
+                                          while ((match = boldRegex.exec(cleanLine)) !== null) {
+                                            if (match.index > lastIndex) {
+                                              parts.push(cleanLine.substring(lastIndex, match.index));
+                                            }
+                                            parts.push(<strong key={match.index} className="text-teal-600 dark:text-teal-400 font-bold">{match[1]}</strong>);
+                                            lastIndex = boldRegex.lastIndex;
+                                          }
+                                          if (lastIndex < cleanLine.length) {
+                                            parts.push(cleanLine.substring(lastIndex));
+                                          }
+
+                                          return (
+                                            <div key={sIdx} className="flex gap-2 items-start pl-1">
+                                              <span className="text-teal-500 flex-shrink-0 mt-0.5 font-bold">✓</span>
+                                              <span>{parts.length > 0 ? parts : cleanLine}</span>
+                                            </div>
+                                          );
+                                        }
+                                        return <p key={sIdx}>{line}</p>;
+                                      })
+                                    ) : (
+                                      <p className="text-slate-400 dark:text-gray-500 italic">No summary generated for this meeting.</p>
+                                    )}
+                                  </div>
+                                ) : (
+                                  /* Transcript Content */
+                                  <div className="bg-white dark:bg-[#0D1B2A] rounded-xl p-4 border border-slate-200/60 dark:border-white/5 max-h-60 overflow-y-auto custom-scrollbar text-xs leading-relaxed space-y-2.5">
+                                    {meeting.transcript.split('\n').map((line, lIdx) => {
+                                      if (!line.trim()) return null;
+                                      
+                                      if (line.startsWith('[') && line.endsWith(']')) {
+                                        return (
+                                          <p key={lIdx} className="text-slate-400 dark:text-gray-500 font-mono italic text-[10px] text-center border-b border-slate-250/20 pb-1.5 mb-2">
+                                            {line}
+                                          </p>
+                                        );
+                                      }
+                                      
+                                      const colonIdx = line.indexOf(':');
+                                      if (colonIdx > 0) {
+                                        const speaker = line.slice(0, colonIdx);
+                                        const speech = line.slice(colonIdx + 1);
+                                        return (
+                                          <div key={lIdx} className="flex flex-col gap-0.5">
+                                            <span className="font-bold text-teal-600 dark:text-teal-400 tracking-wide">{speaker}</span>
+                                            <span className="text-slate-700 dark:text-gray-300 bg-slate-50 dark:bg-white/5 px-2.5 py-1.5 rounded-lg border-l-2 border-teal-500">{speech}</span>
+                                          </div>
+                                        );
+                                      }
+                                      return <p key={lIdx} className="text-slate-700 dark:text-gray-300">{line}</p>;
+                                    })}
+                                  </div>
+                                )}
                               </div>
                             )}
                           </div>

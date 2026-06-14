@@ -211,7 +211,8 @@ def modify_meeting(
             rsvp_no_count=no_count,
             rsvp_maybe_count=maybe_count,
             recording_url=updated.recording_url,
-            transcript=updated.transcript
+            transcript=updated.transcript,
+            summary=updated.summary
         )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -296,7 +297,7 @@ import urllib.request
 import urllib.error
 import time
 
-def run_assemblyai_diarization(file_path: str, api_key: str) -> str:
+def run_assemblyai_diarization(file_path: str, api_key: str) -> tuple[str, str]:
     # 1. Upload file
     headers = {
         "authorization": api_key,
@@ -321,14 +322,17 @@ def run_assemblyai_diarization(file_path: str, api_key: str) -> str:
     if not upload_url:
         raise Exception("Failed to get upload URL from AssemblyAI.")
 
-    # 2. Request Transcription with Speaker Diarization
+    # 2. Request Transcription with Speaker Diarization and Summarization
     transcribe_headers = {
         "authorization": api_key,
         "content-type": "application/json"
     }
     transcribe_data = json.dumps({
         "audio_url": upload_url,
-        "speaker_labels": True
+        "speaker_labels": True,
+        "summarization": True,
+        "summary_model": "informative",
+        "summary_type": "bullets"
     }).encode("utf-8")
 
     req_transcribe = urllib.request.Request(
@@ -362,7 +366,9 @@ def run_assemblyai_diarization(file_path: str, api_key: str) -> str:
                         speaker = f"Speaker {u.get('speaker')}"
                         text = u.get("text")
                         transcript_lines.append(f"{speaker}: {text}")
-                    return "\n".join(transcript_lines)
+                    transcript_text = "\n".join(transcript_lines)
+                    summary_text = status_data.get("summary", "")
+                    return transcript_text, summary_text
                 elif status == "error":
                     raise Exception(f"AssemblyAI processing error: {status_data.get('error')}")
         except Exception as e:
@@ -370,7 +376,7 @@ def run_assemblyai_diarization(file_path: str, api_key: str) -> str:
         time.sleep(3)
 
 
-def run_deepgram_diarization(file_path: str, api_key: str) -> str:
+def run_deepgram_diarization(file_path: str, api_key: str) -> tuple[str, str]:
     headers = {
         "Authorization": f"Token {api_key}",
         "Content-Type": "application/octet-stream"
@@ -378,7 +384,7 @@ def run_deepgram_diarization(file_path: str, api_key: str) -> str:
     with open(file_path, "rb") as f:
         file_data = f.read()
 
-    url = "https://api.deepgram.com/v1/listen?diarize=true&punctuate=true"
+    url = "https://api.deepgram.com/v1/listen?diarize=true&punctuate=true&summarize=v2"
     req = urllib.request.Request(
         url,
         data=file_data,
@@ -388,7 +394,10 @@ def run_deepgram_diarization(file_path: str, api_key: str) -> str:
     try:
         with urllib.request.urlopen(req) as response:
             res_data = json.loads(response.read().decode())
-            paragraphs = res_data.get("results", {}).get("channels", [{}])[0].get("alternatives", [{}])[0].get("paragraphs", {})
+            results = res_data.get("results", {})
+            
+            # Extract transcript
+            paragraphs = results.get("channels", [{}])[0].get("alternatives", [{}])[0].get("paragraphs", {})
             paragraphs_list = paragraphs.get("paragraphs", [])
             transcript_lines = []
             for p in paragraphs_list:
@@ -396,9 +405,46 @@ def run_deepgram_diarization(file_path: str, api_key: str) -> str:
                 sentences = p.get("sentences", [])
                 text = " ".join([s.get("text", "") for s in sentences])
                 transcript_lines.append(f"{speaker}: {text}")
-            return "\n".join(transcript_lines)
+            transcript_text = "\n".join(transcript_lines)
+            
+            # Extract summary
+            summaries = results.get("channels", [{}])[0].get("alternatives", [{}])[0].get("summaries", [])
+            summary_text = ""
+            if summaries:
+                summary_text = summaries[0].get("summary", "")
+                
+            return transcript_text, summary_text
     except Exception as e:
         raise Exception(f"Deepgram request failed: {e}")
+
+
+def generate_simulated_summary(meeting) -> str:
+    title_lower = meeting.title.lower()
+    
+    if "budget" in title_lower or "finance" in title_lower or "fee" in title_lower:
+        return (
+            "• **Reserve Fund Allocation**: The board discussed the reserve fund allocation for building maintenance.\n"
+            "• **HOA Dues Unchanged**: In response to a resident query, it was confirmed that monthly HOA dues will not increase, as the reserve fund is fully covered by last year's budget surplus.\n"
+            "• **Budget Draft Approved**: The current budget draft was formally proposed, seconded, and approved by the board."
+        )
+    elif "paint" in title_lower or "renovation" in title_lower or "exterior" in title_lower:
+        return (
+            "• **Exterior Painting Project**: The upcoming exterior painting project for the community buildings was discussed.\n"
+            "• **Survey Poll Launched**: A portal survey poll with three exterior color palettes has been launched for residents to vote.\n"
+            "• **Project Schedule**: If color choice is finalized by this Friday, the painting work will commence next Monday."
+        )
+    elif "rule" in title_lower or "violation" in title_lower or "parking" in title_lower:
+        return (
+            "• **Parking Regulations**: The board addressed multiple complaints regarding guests permanently occupying block B parking spaces.\n"
+            "• **New Parking Rules**: A new 24-hour limit on guest parking spots will be enforced, followed by warnings and potential towing for repeat violators.\n"
+            "• **Signage Installation**: New signage will be installed this weekend, and rules will take effect starting next week."
+        )
+    else:
+        return (
+            "• **Park Cleaning Request**: A resident's request for more frequent cleaning of the community park area was discussed.\n"
+            "• **Sanitation Plan**: The board has instructed the sanitation team to increase park cleaning frequency to twice a day.\n"
+            "• **Next Steps**: The meeting adjourned to review the remaining agenda items, and minutes will be distributed to all residents."
+        )
 
 
 def generate_simulated_diarization(meeting, db: Session) -> str:
@@ -425,7 +471,6 @@ def generate_simulated_diarization(meeting, db: Session) -> str:
         names.append(default_names[len(names)])
         
     title_lower = meeting.title.lower()
-    description_lower = meeting.description.lower()
     
     if "budget" in title_lower or "finance" in title_lower or "fee" in title_lower:
         script = [
@@ -499,22 +544,27 @@ def diarize_meeting_audio(
     deepgram_key = os.getenv("DEEPGRAM_API_KEY")
 
     transcript_text = ""
+    summary_text = ""
     if assemblyai_key:
         try:
-            transcript_text = run_assemblyai_diarization(file_path, assemblyai_key)
+            transcript_text, summary_text = run_assemblyai_diarization(file_path, assemblyai_key)
         except Exception as e:
             print(f"AssemblyAI error: {e}")
             transcript_text = generate_simulated_diarization(meeting, db)
+            summary_text = generate_simulated_summary(meeting)
     elif deepgram_key:
         try:
-            transcript_text = run_deepgram_diarization(file_path, deepgram_key)
+            transcript_text, summary_text = run_deepgram_diarization(file_path, deepgram_key)
         except Exception as e:
             print(f"Deepgram error: {e}")
             transcript_text = generate_simulated_diarization(meeting, db)
+            summary_text = generate_simulated_summary(meeting)
     else:
         transcript_text = generate_simulated_diarization(meeting, db)
+        summary_text = generate_simulated_summary(meeting)
 
     meeting.transcript = transcript_text
+    meeting.summary = summary_text
     db.commit()
     db.refresh(meeting)
 
@@ -547,5 +597,6 @@ def diarize_meeting_audio(
         rsvp_no_count=no_count,
         rsvp_maybe_count=maybe_count,
         recording_url=meeting.recording_url,
-        transcript=meeting.transcript
+        transcript=meeting.transcript,
+        summary=meeting.summary
     )

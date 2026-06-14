@@ -20,6 +20,7 @@ class Meeting(Base):
     active_status = Column(Boolean, default=True)
     recording_url = Column(String(500), nullable=True)
     transcript    = Column(Text, nullable=True)
+    summary       = Column(Text, nullable=True)
 
     created_by_id  = Column(Integer, ForeignKey("users.user_id"), nullable=True)
     created_date   = Column(DateTime(timezone=True), server_default=func.now())

@@ -127,10 +127,11 @@ def run_db_upgrades():
         "user_communities.role_id"
     )
 
-    # ── meetings table columns (recording_url and transcript) ─────
+    # ── meetings table columns (recording_url, transcript, and summary) ─────
     for col_name, col_type in [
         ("recording_url", "VARCHAR(500)"),
         ("transcript", "TEXT"),
+        ("summary", "TEXT"),
     ]:
         _safe_execute(
             f"ALTER TABLE meetings ADD COLUMN IF NOT EXISTS {col_name} {col_type};",

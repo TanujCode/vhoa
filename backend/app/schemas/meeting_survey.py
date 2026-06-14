@@ -39,6 +39,7 @@ class MeetingOut(BaseModel):
     rsvp_maybe_count: int = 0
     recording_url:    str | None = None
     transcript:       str | None = None
+    summary:          str | None = None
 
     model_config = {"from_attributes": True}
 
