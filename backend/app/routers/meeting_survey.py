@@ -604,18 +604,45 @@ def diarize_meeting_audio(
 
 @router.get("/debug-db")
 def debug_database_meetings(db: Session = Depends(get_db)):
+    import os
     from app.models.meeting_survey import Meeting
     meetings = db.query(Meeting).all()
     results = []
     for m in meetings:
+        file_exists = False
+        file_size = 0
+        if m.recording_url:
+            # strip leading slash
+            rel_path = m.recording_url.lstrip("/")
+            if os.path.exists(rel_path):
+                file_exists = True
+                file_size = os.path.getsize(rel_path)
+        
         results.append({
             "meeting_id": m.meeting_id,
             "title": m.title,
             "recording_url": m.recording_url,
+            "file_exists": file_exists,
+            "file_size_bytes": file_size,
             "transcript_len": len(m.transcript) if m.transcript else None,
             "transcript_val": m.transcript,
             "summary_len": len(m.summary) if m.summary else None,
             "summary_val": m.summary,
         })
-    return results
+    
+    assembly_key = os.getenv("ASSEMBLYAI_API_KEY")
+    deepgram_key = os.getenv("DEEPGRAM_API_KEY")
+    
+    return {
+        "meetings": results,
+        "env_keys": {
+            "assemblyai_set": bool(assembly_key),
+            "assemblyai_len": len(assembly_key) if assembly_key else 0,
+            "assemblyai_preview": f"{assembly_key[:4]}...{assembly_key[-4:]}" if assembly_key and len(assembly_key) > 8 else None,
+            "deepgram_set": bool(deepgram_key),
+            "deepgram_len": len(deepgram_key) if deepgram_key else 0,
+            "deepgram_preview": f"{deepgram_key[:4]}...{deepgram_key[-4:]}" if deepgram_key and len(deepgram_key) > 8 else None,
+        }
+    }
+
 
