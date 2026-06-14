@@ -373,7 +373,7 @@ def run_assemblyai_diarization(file_path: str, api_key: str) -> str:
 def run_deepgram_diarization(file_path: str, api_key: str) -> str:
     headers = {
         "Authorization": f"Token {api_key}",
-        "Content-Type": "audio/wav"
+        "Content-Type": "application/octet-stream"
     }
     with open(file_path, "rb") as f:
         file_data = f.read()
