@@ -932,15 +932,21 @@ const Meetings = ({ community, user }) => {
                     {/* Record Meeting Button for admins if transcript doesn't exist */}
                     {!meeting.transcript && isAdmin && (
                       <div className="pt-1">
-                        <button
-                          onClick={() => {
-                            setRecordingMeeting(meeting);
-                            setShowRecorderModal(true);
-                          }}
-                          className="flex items-center gap-1.5 px-3 py-1.5 bg-teal-600/10 hover:bg-teal-600 text-teal-600 hover:text-white dark:text-teal-400 dark:hover:text-white text-xs font-semibold rounded-xl transition border border-teal-500/20"
-                        >
-                          <Mic size={14} /> Record & Process AI Transcript
-                        </button>
+                        {expired ? (
+                          <span className="text-slate-400 dark:text-gray-500 text-xs italic flex items-center gap-1.5 pt-1">
+                            <Clock size={12} /> Meeting has ended. Recording is disabled.
+                          </span>
+                        ) : (
+                          <button
+                            onClick={() => {
+                              setRecordingMeeting(meeting);
+                              setShowRecorderModal(true);
+                            }}
+                            className="flex items-center gap-1.5 px-3 py-1.5 bg-teal-600/10 hover:bg-teal-600 text-teal-600 hover:text-white dark:text-teal-400 dark:hover:text-white text-xs font-semibold rounded-xl transition border border-teal-500/20"
+                          >
+                            <Mic size={14} /> Record & Process AI Transcript
+                          </button>
+                        )}
                       </div>
                     )}
 
