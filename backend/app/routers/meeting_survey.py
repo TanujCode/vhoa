@@ -646,3 +646,52 @@ def debug_database_meetings(db: Session = Depends(get_db)):
     }
 
 
+@router.get("/debug-diarize-test")
+def debug_diarize_test(db: Session = Depends(get_db)):
+    import os
+    import urllib.request
+    import json
+    
+    file_path = "uploads/meeting_recordings/meeting_10_1781495189.webm"
+    api_key = os.getenv("DEEPGRAM_API_KEY")
+    if not api_key:
+        return {"error": "DEEPGRAM_API_KEY not set"}
+        
+    if not os.path.exists(file_path):
+        return {"error": f"File not found: {file_path}"}
+        
+    headers = {
+        "Authorization": f"Token {api_key}",
+        "Content-Type": "application/octet-stream"
+    }
+    with open(file_path, "rb") as f:
+        file_data = f.read()
+
+    url = "https://api.deepgram.com/v1/listen?diarize=true&punctuate=true&paragraphs=true&summarize=v2"
+    req = urllib.request.Request(
+        url,
+        data=file_data,
+        headers=headers,
+        method="POST"
+    )
+    try:
+        with urllib.request.urlopen(req) as response:
+            res_data = json.loads(response.read().decode())
+            results = res_data.get("results", {})
+            channels = results.get("channels", [{}])
+            alternatives = channels[0].get("alternatives", [{}])
+            
+            return {
+                "success": True,
+                "paragraphs_exists": "paragraphs" in alternatives[0],
+                "summaries_exists": "summaries" in alternatives[0],
+                "paragraphs_keys": list(alternatives[0].get("paragraphs", {}).keys()) if "paragraphs" in alternatives[0] else [],
+                "summaries_len": len(alternatives[0].get("summaries", [])) if "summaries" in alternatives[0] else 0,
+                "alternatives_keys": list(alternatives[0].keys()),
+                "transcript": alternatives[0].get("transcript", "")[:500]
+            }
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+
+
