@@ -1198,10 +1198,10 @@ const Meetings = ({ community, user }) => {
                                                     setRenameSpeakerOldLabel(speaker);
                                                     setShowRenameSpeakerModal(true);
                                                   }}
-                                                  className="opacity-0 group-hover:opacity-100 p-0.5 hover:bg-teal-500/10 text-slate-400 hover:text-teal-500 dark:hover:text-teal-400 rounded transition cursor-pointer"
+                                                  className="p-1 hover:bg-teal-500/10 text-slate-450 dark:text-gray-400 hover:text-teal-500 dark:hover:text-teal-400 rounded transition cursor-pointer ml-1 inline-flex items-center justify-center opacity-70 hover:opacity-100"
                                                   title={`Rename speaker "${speaker}"`}
                                                 >
-                                                  <Edit2 size={10} />
+                                                  <Edit2 size={11} />
                                                 </button>
                                               )}
                                             </span>
