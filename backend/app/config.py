@@ -26,3 +26,9 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
+
+import os
+if os.getenv("RENDER") == "true":
+    BASE_UPLOAD_DIR = "/opt/render/project/src/uploads"
+else:
+    BASE_UPLOAD_DIR = "uploads"

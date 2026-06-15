@@ -551,8 +551,10 @@ def diarize_meeting_audio(
     if not meeting:
         raise HTTPException(status_code=404, detail="Meeting not found.")
 
-    upload_dir = "uploads/meeting_recordings"
+    from app.config import BASE_UPLOAD_DIR
+    upload_dir = os.path.join(BASE_UPLOAD_DIR, "meeting_recordings")
     os.makedirs(upload_dir, exist_ok=True)
+
     
     file_extension = os.path.splitext(file.filename)[1] or ".webm"
     filename = f"meeting_{meeting_id}_{int(time.time())}{file_extension}"

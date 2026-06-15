@@ -290,12 +290,13 @@ def migrate_duplicate_suffixes():
 migrate_duplicate_suffixes()
 
 # Create upload folders
-os.makedirs("uploads/profile_pictures", exist_ok=True)
-os.makedirs("uploads/community_documents", exist_ok=True)
-os.makedirs("uploads/violation_documents", exist_ok=True)
-os.makedirs("uploads/vendor_docs", exist_ok=True)
-os.makedirs("uploads/identity_proofs", exist_ok=True)
-os.makedirs("uploads/address_proofs", exist_ok=True)
+from app.config import BASE_UPLOAD_DIR
+os.makedirs(os.path.join(BASE_UPLOAD_DIR, "profile_pictures"), exist_ok=True)
+os.makedirs(os.path.join(BASE_UPLOAD_DIR, "community_documents"), exist_ok=True)
+os.makedirs(os.path.join(BASE_UPLOAD_DIR, "violation_documents"), exist_ok=True)
+os.makedirs(os.path.join(BASE_UPLOAD_DIR, "vendor_docs"), exist_ok=True)
+os.makedirs(os.path.join(BASE_UPLOAD_DIR, "identity_proofs"), exist_ok=True)
+os.makedirs(os.path.join(BASE_UPLOAD_DIR, "address_proofs"), exist_ok=True)
 
 
 def seed_roles():
@@ -493,7 +494,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
+from app.config import BASE_UPLOAD_DIR
+app.mount("/uploads", StaticFiles(directory=BASE_UPLOAD_DIR), name="uploads")
 
 app.include_router(auth.router,            prefix="/api")
 app.include_router(user.router,            prefix="/api")

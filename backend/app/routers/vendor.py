@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request, UploadFil
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.dependencies.auth import get_verified_user, require_role, check_community_access
+from app.dependencies.auth import get_verified_user, require_role
 from app.models.user import User
 from app.schemas.vendor import (
     VendorCreate, VendorOut, VendorUpdate,
@@ -29,14 +29,14 @@ def create(
     current_user: User = Depends(require_role("super_admin", "property_manager", "board_member")),
 ):
     """Onboard a new vendor and auto-generate access code"""
-    check_community_access(current_user, body.community_id, db)
     vendor = create_vendor(body, current_user.user_id, db)
     
     # --- AUTO GENERATE CODE START ---
+    # Jaise hi vendor create ho, uska pehla code auto-generate kar do
     try:
         generate_vendor_access_code(vendor.vendor_id, db)
     except Exception as e:
-        print(f"Auto-gen failed: {e}")
+        print(f"Auto-gen failed: {e}") # Sirf log karo taaki vendor creation na ruke
     # --- AUTO GENERATE CODE END ---
 
     log_action(db, "CREATE_VENDOR", "vendor",
@@ -56,7 +56,6 @@ def get_all(
     current_user: User = Depends(get_verified_user),
 ):
     """All the vendors in the community"""
-    check_community_access(current_user, community_id, db)
     vendors = get_vendors(community_id, db, category, status, skip, limit)
     return [_to_out(v, db) for v in vendors]
 
@@ -69,12 +68,9 @@ def get_one(
 ):
     """Get details of a specific vendor"""
     try:
-        vendor = get_vendor_by_id(vendor_id, db)
+        return _to_out(get_vendor_by_id(vendor_id, db), db)
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
-    
-    check_community_access(current_user, vendor.community_id, db)
-    return _to_out(vendor, db)
 
 
 @router.put("/{vendor_id}", response_model=VendorOut)
@@ -85,13 +81,6 @@ def update(
     current_user: User = Depends(require_role("super_admin", "property_manager", "board_member")),
 ):
     """Update a vendor"""
-    try:
-        vendor = get_vendor_by_id(vendor_id, db)
-    except ValueError as e:
-        raise HTTPException(status_code=404, detail=str(e))
-
-    check_community_access(current_user, vendor.community_id, db)
-
     try:
         return _to_out(update_vendor(vendor_id, body, current_user.user_id, db), db)
     except ValueError as e:
@@ -105,13 +94,6 @@ def delete(
     current_user: User = Depends(require_role("super_admin", "property_manager", "board_member")),
 ):
     """Delete a vendor"""
-    try:
-        vendor = get_vendor_by_id(vendor_id, db)
-    except ValueError as e:
-        raise HTTPException(status_code=404, detail=str(e))
-
-    check_community_access(current_user, vendor.community_id, db)
-
     try:
         delete_vendor(vendor_id, current_user.user_id, db)
     except ValueError as e:
@@ -131,13 +113,6 @@ def gen_access_code(
     48 hours valid.
     The Admin/Board generates it → and gives it to the Member.
     """
-    try:
-        vendor = get_vendor_by_id(vendor_id, db)
-    except ValueError as e:
-        raise HTTPException(status_code=404, detail=str(e))
-
-    check_community_access(current_user, vendor.community_id, db)
-
     try:
         code = generate_vendor_access_code(vendor_id, db)
     except ValueError as e:
@@ -160,13 +135,6 @@ def gen_contract_code(
     Give this code to the vendor once the work is complete.
     """
     try:
-        vendor = get_vendor_by_id(vendor_id, db)
-    except ValueError as e:
-        raise HTTPException(status_code=404, detail=str(e))
-
-    check_community_access(current_user, vendor.community_id, db)
-
-    try:
         code = generate_contract_code(vendor_id, db)
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
@@ -178,26 +146,17 @@ def gen_contract_code(
 
 @router.post("/verify-access-code", response_model=list[VendorOut])
 def verify_code(
-    access_code: str,
+    access_code: str, # Query param that was fixed on the frontend
     db: Session = Depends(get_db),
     current_user: User = Depends(get_verified_user),
 ):
-    from app.models.vendor import Vendor
-    vendor = db.query(Vendor).filter(
-        Vendor.vendor_access_code == access_code,
-        Vendor.access_code_used == False,
-        Vendor.active_status == True,
-    ).first()
-    if not vendor:
-        raise HTTPException(status_code=400, detail="Invalid or already used access code.")
-
-    check_community_access(current_user, vendor.community_id, db)
-
     try:
         # 1. Call logic
         vendors = verify_vendor_access_code(access_code, db)
         
         # 2. Note: Inside verify_vendor_access_code function, 
+        # 'access_code_used' must be set to True in the database.
+        # If not happening there, check db.commit() here.
         
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -213,29 +172,17 @@ async def upload_license(
     current_user: User = Depends(require_role("super_admin", "property_manager", "board_member")),
 ):
     """Upload License document."""
-    vendor = get_vendor_by_id(vendor_id, db)
-    if not vendor:
-        raise HTTPException(status_code=404, detail="Vendor not found.")
-    
-    check_community_access(current_user, vendor.community_id, db)
-
-    # Validate file type and size
-    ALLOWED = {"application/pdf", "image/jpeg", "image/png", "application/msword",
-               "application/vnd.openxmlformats-officedocument.wordprocessingml.document"}
-    if file.content_type not in ALLOWED:
-        raise HTTPException(status_code=400, detail="Only PDF, Word documents, and images (JPEG/PNG) are allowed.")
-
-    contents = await file.read()
-    if len(contents) > 10 * 1024 * 1024:
-        raise HTTPException(status_code=400, detail="File exceeds 10MB limit.")
-
     import os, uuid
-    os.makedirs("uploads/vendor_docs", exist_ok=True)
+    from app.config import BASE_UPLOAD_DIR
+    upload_dir = os.path.join(BASE_UPLOAD_DIR, "vendor_docs")
+    os.makedirs(upload_dir, exist_ok=True)
+    contents = await file.read()
     ext = file.filename.split(".")[-1].lower()
     filename = f"license_{vendor_id}_{uuid.uuid4().hex}.{ext}"
-    with open(f"uploads/vendor_docs/{filename}", "wb") as f:
+    filepath = os.path.join(upload_dir, filename)
+    with open(filepath, "wb") as f:
         f.write(contents)
-    
+    vendor = get_vendor_by_id(vendor_id, db)
     vendor.license_doc_url = f"/uploads/vendor_docs/{filename}"
     db.commit()
     return {"license_doc_url": vendor.license_doc_url}
@@ -249,32 +196,21 @@ async def upload_insurance(
     current_user: User = Depends(require_role("super_admin", "property_manager", "board_member")),
 ):
     """Upload Insurance document"""
-    vendor = get_vendor_by_id(vendor_id, db)
-    if not vendor:
-        raise HTTPException(status_code=404, detail="Vendor not found.")
-    
-    check_community_access(current_user, vendor.community_id, db)
-
-    # Validate file type and size
-    ALLOWED = {"application/pdf", "image/jpeg", "image/png", "application/msword",
-               "application/vnd.openxmlformats-officedocument.wordprocessingml.document"}
-    if file.content_type not in ALLOWED:
-        raise HTTPException(status_code=400, detail="Only PDF, Word documents, and images (JPEG/PNG) are allowed.")
-
-    contents = await file.read()
-    if len(contents) > 10 * 1024 * 1024:
-        raise HTTPException(status_code=400, detail="File exceeds 10MB limit.")
-
     import os, uuid
-    os.makedirs("uploads/vendor_docs", exist_ok=True)
+    from app.config import BASE_UPLOAD_DIR
+    upload_dir = os.path.join(BASE_UPLOAD_DIR, "vendor_docs")
+    os.makedirs(upload_dir, exist_ok=True)
+    contents = await file.read()
     ext = file.filename.split(".")[-1].lower()
     filename = f"insurance_{vendor_id}_{uuid.uuid4().hex}.{ext}"
-    with open(f"uploads/vendor_docs/{filename}", "wb") as f:
+    filepath = os.path.join(upload_dir, filename)
+    with open(filepath, "wb") as f:
         f.write(contents)
-    
+    vendor = get_vendor_by_id(vendor_id, db)
     vendor.insurance_doc_url = f"/uploads/vendor_docs/{filename}"
     db.commit()
     return {"insurance_doc_url": vendor.insurance_doc_url}
+
 
 
 #  ASSIGNMENTS
@@ -286,7 +222,6 @@ def create_assignment(
     current_user: User = Depends(require_role("super_admin", "property_manager", "board_member")),
 ):
     """Assign a vendor to a service request"""
-    check_community_access(current_user, body.community_id, db)
     try:
         assignment = assign_vendor(body, current_user.user_id, db)
     except ValueError as e:
@@ -306,7 +241,6 @@ def get_all_assignments(
     current_user: User = Depends(get_verified_user),
 ):
     """View Assignments"""
-    check_community_access(current_user, community_id, db)
     assignments = get_assignments(community_id, db, vendor_id, request_id)
     return [_assignment_to_out(a) for a in assignments]
 
@@ -319,13 +253,6 @@ def update_assignment_endpoint(
     current_user: User = Depends(get_verified_user),
 ):
     """Update an assignment — quote, status etc."""
-    from app.models.vendor import VendorAssignment
-    assignment = db.query(VendorAssignment).filter(VendorAssignment.assignment_id == assignment_id).first()
-    if not assignment:
-        raise HTTPException(status_code=404, detail="Assignment not found.")
-
-    check_community_access(current_user, assignment.community_id, db)
-
     try:
         return _assignment_to_out(update_assignment(assignment_id, body, db))
     except ValueError as e:
@@ -340,7 +267,6 @@ def give_feedback(
     current_user: User = Depends(get_verified_user),
 ):
     """Give feedback to a vendor — 1 to 5 stars"""
-    check_community_access(current_user, body.community_id, db)
     return add_feedback(body, current_user.user_id, db)
 
 
