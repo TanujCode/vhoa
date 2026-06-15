@@ -11,9 +11,10 @@ import {
   deleteMeeting,
   updateSurvey,
   deleteSurvey,
-  diarizeMeetingAudio
+  diarizeMeetingAudio,
+  renameSpeaker
 } from '../services/meetingSurveyService';
-import { getBaseUrl } from '../services/api';
+import API, { getBaseUrl } from '../services/api';
 
 // ── Schedule Meeting Modal ────────────────────────────
 const ScheduleMeetingModal = ({ communityId, onClose, onSuccess, meeting }) => {
@@ -314,6 +315,104 @@ const CreateSurveyModal = ({ communityId, onClose, onSuccess, survey }) => {
     </div>
   );
 };
+
+
+// ── Rename Speaker Modal ──────────────────────────────
+const RenameSpeakerModal = ({ meetingId, oldLabel, members, onClose, onSuccess }) => {
+  const [loading, setLoading] = useState(false);
+  const [customName, setCustomName] = useState('');
+  const [selectedMember, setSelectedMember] = useState('');
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const finalName = selectedMember || customName.trim();
+    if (!finalName) {
+      alert('Please select a community member or type a custom name.');
+      return;
+    }
+    
+    setLoading(true);
+    try {
+      await renameSpeaker(meetingId, oldLabel, finalName);
+      alert(`Successfully renamed "${oldLabel}" to "${finalName}".`);
+      onSuccess();
+      onClose();
+    } catch (err) {
+      alert(err.response?.data?.detail || 'Error renaming speaker');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-white dark:bg-gradient-to-br dark:from-[#1E2E42] dark:to-[#162535] rounded-3xl p-6 w-full max-w-md border border-slate-200/80 dark:border-white/10 text-slate-900 dark:text-white shadow-2xl flex flex-col">
+        <div className="flex items-center justify-between mb-4 flex-shrink-0">
+          <h3 className="text-lg font-bold text-slate-900 dark:text-white">
+            Rename Speaker
+          </h3>
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-900 dark:text-gray-400 dark:hover:text-white"><X size={20} /></button>
+        </div>
+        
+        <div className="mb-4 bg-slate-50 dark:bg-black/20 p-3.5 rounded-2xl border border-slate-200/50 dark:border-white/5 text-xs text-slate-600 dark:text-gray-400">
+          Changing speaker label for <span className="font-bold text-teal-600 dark:text-teal-400 font-mono">"{oldLabel}"</span>. This will rename all occurrences of this speaker across the entire meeting transcript.
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="text-xs font-semibold text-slate-500 dark:text-gray-400 mb-1.5 block">Select Community Member</label>
+            <div className="relative">
+              <select
+                value={selectedMember}
+                onChange={e => {
+                  setSelectedMember(e.target.value);
+                  if (e.target.value) {
+                    setCustomName(''); // Clear custom name if member selected
+                  }
+                }}
+                className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl p-2.5 pr-10 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-teal-500 cursor-pointer appearance-none"
+              >
+                <option value="">-- Type custom name instead --</option>
+                {members.map(m => {
+                  const roleLabel = m.role_name === 'super_admin' ? 'Super Admin' : 
+                                    m.role_name === 'property_manager' ? 'Property Manager' : 
+                                    m.role_name === 'board_member' ? 'Board Member' : 'Resident';
+                  const label = `${m.full_name} (${roleLabel})`;
+                  return (
+                    <option key={m.user_id} value={label}>
+                      {label}
+                    </option>
+                  );
+                })}
+              </select>
+              <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+            </div>
+          </div>
+
+          <div>
+            <label className="text-xs font-semibold text-slate-500 dark:text-gray-400 mb-1.5 block">Or Enter Custom Name</label>
+            <input
+              type="text"
+              placeholder="e.g. Guest Speaker, John Doe"
+              value={customName}
+              disabled={!!selectedMember}
+              onChange={e => setCustomName(e.target.value)}
+              className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-teal-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            />
+          </div>
+
+          <div className="flex gap-3 pt-4 flex-shrink-0">
+            <button type="button" onClick={onClose} className="flex-1 py-2.5 bg-slate-100 hover:bg-red-600 hover:text-white dark:bg-white/10 dark:hover:bg-red-600 dark:hover:text-white rounded-xl text-sm font-medium text-slate-700 dark:text-white transition">Cancel</button>
+            <button type="submit" disabled={loading} className="flex-1 py-2.5 bg-teal-600 hover:bg-teal-500 rounded-xl text-sm font-medium text-white transition disabled:opacity-50 shadow-md shadow-teal-500/25">
+              {loading ? 'Renaming...' : 'Rename Speaker'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
 
 // ── Meeting Recorder Modal ────────────────────────────
 const MeetingRecorderModal = ({ meeting, onClose, onSuccess }) => {
@@ -749,14 +848,33 @@ const Meetings = ({ community, user }) => {
   const [expandedTranscriptMeetingId, setExpandedTranscriptMeetingId] = useState(null);
   const [activeMeetingTab, setActiveMeetingTab] = useState({});
 
+  // Speaker Renaming states
+  const [showRenameSpeakerModal, setShowRenameSpeakerModal] = useState(false);
+  const [renameSpeakerMeetingId, setRenameSpeakerMeetingId] = useState(null);
+  const [renameSpeakerOldLabel, setRenameSpeakerOldLabel] = useState('');
+  const [members, setMembers] = useState([]);
+
   const role = user?.role_name || user?.role || '';
   const isAdmin = ['super_admin', 'property_manager', 'board_member'].includes(role);
+
+  const fetchMembers = async () => {
+    if (!community?.community_id) return;
+    try {
+      const res = await API.get(`/user/community/${community.community_id}?limit=100`);
+      setMembers(res.data || []);
+    } catch (err) {
+      console.error('Error fetching members:', err);
+    }
+  };
 
   useEffect(() => {
     if (community?.community_id) {
       fetchData();
+      if (isAdmin) {
+        fetchMembers();
+      }
     }
-  }, [community, activeTab]);
+  }, [community, activeTab, isAdmin]);
 
   const fetchData = async () => {
     setLoading(true);
@@ -1069,8 +1187,24 @@ const Meetings = ({ community, user }) => {
                                         const speaker = line.slice(0, colonIdx);
                                         const speech = line.slice(colonIdx + 1);
                                         return (
-                                          <div key={lIdx} className="flex flex-col gap-0.5">
-                                            <span className="font-bold text-teal-600 dark:text-teal-400 tracking-wide">{speaker}</span>
+                                          <div key={lIdx} className="flex flex-col gap-0.5 group">
+                                            <span className="flex items-center gap-1.5 font-bold text-teal-600 dark:text-teal-400 tracking-wide">
+                                              <span>{speaker}</span>
+                                              {isAdmin && (
+                                                <button
+                                                  type="button"
+                                                  onClick={() => {
+                                                    setRenameSpeakerMeetingId(meeting.meeting_id);
+                                                    setRenameSpeakerOldLabel(speaker);
+                                                    setShowRenameSpeakerModal(true);
+                                                  }}
+                                                  className="opacity-0 group-hover:opacity-100 p-0.5 hover:bg-teal-500/10 text-slate-400 hover:text-teal-500 dark:hover:text-teal-400 rounded transition cursor-pointer"
+                                                  title={`Rename speaker "${speaker}"`}
+                                                >
+                                                  <Edit2 size={10} />
+                                                </button>
+                                              )}
+                                            </span>
                                             <span className="text-slate-700 dark:text-gray-300 bg-slate-50 dark:bg-white/5 px-2.5 py-1.5 rounded-lg border-l-2 border-teal-500">{speech}</span>
                                           </div>
                                         );
@@ -1300,6 +1434,15 @@ const Meetings = ({ community, user }) => {
         <MeetingRecorderModal
           meeting={recordingMeeting}
           onClose={() => { setShowRecorderModal(false); setRecordingMeeting(null); }}
+          onSuccess={fetchData}
+        />
+      )}
+      {showRenameSpeakerModal && renameSpeakerMeetingId && (
+        <RenameSpeakerModal
+          meetingId={renameSpeakerMeetingId}
+          oldLabel={renameSpeakerOldLabel}
+          members={members}
+          onClose={() => { setShowRenameSpeakerModal(false); setRenameSpeakerMeetingId(null); setRenameSpeakerOldLabel(''); }}
           onSuccess={fetchData}
         />
       )}

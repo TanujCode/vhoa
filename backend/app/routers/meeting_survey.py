@@ -6,7 +6,8 @@ from app.dependencies.auth import get_current_user, require_role
 from app.models.user import User
 from app.schemas.meeting_survey import (
     MeetingCreate, MeetingOut, MeetingRSVPCreate, MeetingRSVPOut,
-    SurveyCreate, SurveyOut, SurveyVoteCreate, MeetingUpdate, SurveyUpdate
+    SurveyCreate, SurveyOut, SurveyVoteCreate, MeetingUpdate, SurveyUpdate,
+    SpeakerRenameRequest
 )
 from app.services.meeting_survey_service import (
     create_meeting, get_community_meetings, rsvp_meeting,
@@ -595,6 +596,81 @@ def diarize_meeting_audio(
     db.refresh(meeting)
 
     # Return the updated MeetingOut
+    creator = db.query(User).filter(User.user_id == meeting.created_by_id).first()
+    creator_name = f"{creator.first_name or ''} {creator.last_name or ''}".strip() if creator else "System"
+
+    from app.models.meeting_survey import MeetingRSVP
+    rsvps = db.query(MeetingRSVP).filter(MeetingRSVP.meeting_id == meeting_id).all()
+    yes_count = sum(1 for r in rsvps if r.status == "YES")
+    no_count = sum(1 for r in rsvps if r.status == "NO")
+    maybe_count = sum(1 for r in rsvps if r.status == "MAYBE")
+    user_rsvp_record = next((r for r in rsvps if r.user_id == current_user.user_id), None)
+    user_rsvp_status = user_rsvp_record.status if user_rsvp_record else None
+
+    return MeetingOut(
+        meeting_id=meeting.meeting_id,
+        community_id=meeting.community_id,
+        title=meeting.title,
+        description=meeting.description,
+        meeting_date=meeting.meeting_date,
+        location=meeting.location,
+        meeting_link=meeting.meeting_link,
+        active_status=meeting.active_status,
+        created_by_id=meeting.created_by_id,
+        created_by_name=creator_name,
+        created_date=meeting.created_date,
+        user_rsvp=user_rsvp_status,
+        rsvp_yes_count=yes_count,
+        rsvp_no_count=no_count,
+        rsvp_maybe_count=maybe_count,
+        recording_url=meeting.recording_url,
+        transcript=meeting.transcript,
+        summary=meeting.summary
+    )
+
+
+@router.post("/meetings/{meeting_id}/rename-speaker", response_model=MeetingOut)
+def rename_speaker_in_transcript(
+    meeting_id: int,
+    body: SpeakerRenameRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("super_admin", "property_manager", "board_member")),
+):
+    from app.models.meeting_survey import Meeting
+    meeting = db.query(Meeting).filter(Meeting.meeting_id == meeting_id, Meeting.active_status == True).first()
+    if not meeting:
+        raise HTTPException(status_code=404, detail="Meeting not found.")
+    
+    # Check if the user is super admin, or pm/board member of the SAME community
+    role_name = current_user.role.role_name if current_user.role else None
+    if role_name != "super_admin" and current_user.community_id != meeting.community_id:
+        raise HTTPException(status_code=403, detail="You do not have permission to manage meetings for this community.")
+
+    old_label = body.old_label.strip()
+    new_label = body.new_label.strip()
+
+    if not old_label:
+        raise HTTPException(status_code=400, detail="Old label cannot be empty.")
+    if not new_label:
+        raise HTTPException(status_code=400, detail="New label cannot be empty.")
+
+    if meeting.transcript:
+        lines = meeting.transcript.split("\n")
+        updated_lines = []
+        old_lbl_colon = f"{old_label}:"
+        new_lbl_colon = f"{new_label}:"
+        
+        for line in lines:
+            if line.startswith(old_lbl_colon):
+                # Replace prefix
+                line = new_lbl_colon + line[len(old_lbl_colon):]
+            updated_lines.append(line)
+            
+        meeting.transcript = "\n".join(updated_lines)
+        db.commit()
+        db.refresh(meeting)
+
+    # Return updated MeetingOut structure
     creator = db.query(User).filter(User.user_id == meeting.created_by_id).first()
     creator_name = f"{creator.first_name or ''} {creator.last_name or ''}".strip() if creator else "System"
 

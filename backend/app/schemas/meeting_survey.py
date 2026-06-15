@@ -153,3 +153,9 @@ class SurveyUpdate(BaseModel):
         if v is not None and len(v.strip()) < 3:
             raise ValueError("The title must be at least 3 characters long.")
         return v.strip() if v else v
+
+
+class SpeakerRenameRequest(BaseModel):
+    old_label: str
+    new_label: str
+

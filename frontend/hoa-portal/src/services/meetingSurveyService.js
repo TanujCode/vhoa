@@ -60,3 +60,12 @@ export const diarizeMeetingAudio = async (meetingId, audioBlob) => {
   });
   return res.data;
 };
+
+export const renameSpeaker = async (meetingId, oldLabel, newLabel) => {
+  const res = await API.post(`/meeting-survey/meetings/${meetingId}/rename-speaker`, {
+    old_label: oldLabel,
+    new_label: newLabel
+  });
+  return res.data;
+};
+
