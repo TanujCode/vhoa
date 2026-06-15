@@ -365,8 +365,19 @@ def run_assemblyai_diarization(file_path: str, api_key: str) -> tuple[str, str]:
                     for u in utterances:
                         speaker = f"Speaker {u.get('speaker')}"
                         text = u.get("text")
-                        transcript_lines.append(f"{speaker}: {text}")
+                        if text and text.strip():
+                            transcript_lines.append(f"{speaker}: {text.strip()}")
                     transcript_text = "\n".join(transcript_lines)
+                    
+                    # Fallback to plain text if utterances are empty
+                    if not transcript_text.strip():
+                        raw_text = status_data.get("text", "")
+                        if raw_text:
+                            transcript_text = f"Speaker A: {raw_text}"
+                            
+                    if not transcript_text.strip():
+                        raise Exception("AssemblyAI returned empty transcript.")
+                        
                     summary_text = status_data.get("summary", "")
                     return transcript_text, summary_text
                 elif status == "error":
@@ -384,7 +395,8 @@ def run_deepgram_diarization(file_path: str, api_key: str) -> tuple[str, str]:
     with open(file_path, "rb") as f:
         file_data = f.read()
 
-    url = "https://api.deepgram.com/v1/listen?diarize=true&punctuate=true&summarize=v2"
+    # Use utterances=true and summarize=v2
+    url = "https://api.deepgram.com/v1/listen?diarize=true&punctuate=true&utterances=true&summarize=v2"
     req = urllib.request.Request(
         url,
         data=file_data,
@@ -396,22 +408,36 @@ def run_deepgram_diarization(file_path: str, api_key: str) -> tuple[str, str]:
             res_data = json.loads(response.read().decode())
             results = res_data.get("results", {})
             
-            # Extract transcript
-            paragraphs = results.get("channels", [{}])[0].get("alternatives", [{}])[0].get("paragraphs", {})
-            paragraphs_list = paragraphs.get("paragraphs", [])
+            # Extract transcript using utterances
+            utterances = results.get("utterances", [])
             transcript_lines = []
-            for p in paragraphs_list:
-                speaker = f"Speaker {p.get('speaker', 0)}"
-                sentences = p.get("sentences", [])
-                text = " ".join([s.get("text", "") for s in sentences])
-                transcript_lines.append(f"{speaker}: {text}")
+            for u in utterances:
+                speaker = f"Speaker {u.get('speaker', 0)}"
+                text = u.get("transcript", "")
+                if text and text.strip():
+                    transcript_lines.append(f"{speaker}: {text.strip()}")
+            
+            # Fallback if utterances is not populated
+            if not transcript_lines:
+                channels = results.get("channels", [{}])
+                if channels:
+                    alternatives = channels[0].get("alternatives", [{}])
+                    if alternatives:
+                        raw_transcript = alternatives[0].get("transcript", "")
+                        if raw_transcript and raw_transcript.strip():
+                            transcript_lines = [f"Speaker 0: {raw_transcript.strip()}"]
+            
             transcript_text = "\n".join(transcript_lines)
             
-            # Extract summary
-            summaries = results.get("channels", [{}])[0].get("alternatives", [{}])[0].get("summaries", [])
-            summary_text = ""
-            if summaries:
-                summary_text = summaries[0].get("summary", "")
+            # Extract summary from results["summary"]["short"]
+            summary_obj = results.get("summary", {})
+            summary_text = summary_obj.get("short", "")
+            if not summary_text:
+                summary_text = summary_obj.get("text", "")
+                
+            # If transcript is empty, raise an exception to fall back to simulated engine
+            if not transcript_text.strip():
+                raise Exception("Deepgram returned empty transcript.")
                 
             return transcript_text, summary_text
     except Exception as e:
