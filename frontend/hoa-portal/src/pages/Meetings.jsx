@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Plus, X, Calendar, Video, MapPin, Users, CheckCircle, Clock, ExternalLink, Edit2, Trash2, Mic, Play, Pause, Square, MessageSquare, Volume2 } from 'lucide-react';
+import { Plus, X, Calendar, Video, MapPin, Users, CheckCircle, Clock, ExternalLink, Edit2, Trash2, Mic, Play, Pause, Square, MessageSquare, Volume2, ChevronDown } from 'lucide-react';
 import {
   getMeetings,
   createMeeting,
