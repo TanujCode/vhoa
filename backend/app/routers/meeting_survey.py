@@ -396,7 +396,7 @@ def run_deepgram_diarization(file_path: str, api_key: str) -> tuple[str, str]:
         file_data = f.read()
 
     # Use utterances=true and summarize=v2
-    url = "https://api.deepgram.com/v1/listen?diarize=true&punctuate=true&utterances=true&summarize=v2"
+    url = "https://api.deepgram.com/v1/listen?diarize_model=latest&punctuate=true&utterances=true&summarize=v2"
     req = urllib.request.Request(
         url,
         data=file_data,
