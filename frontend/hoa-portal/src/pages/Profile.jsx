@@ -801,14 +801,14 @@ const Profile = ({ user, setUser, viewRole }) => {
                   <Edit size={16} /> Edit Profile
                 </button>
               ) : (
-                <div className="flex gap-3">
+                <div className="flex flex-col-reverse sm:flex-row gap-3 pt-2">
                   <button 
                     type="button"
                     onClick={() => {
                       setIsEditing(false);
                       resetForm();
                     }} 
-                    className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 text-slate-700 dark:text-white rounded-2xl font-medium transition flex items-center justify-center gap-2"
+                    className="w-full sm:flex-1 py-3 bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 text-slate-700 dark:text-white rounded-2xl font-medium transition flex items-center justify-center gap-2 cursor-pointer"
                   >
                     Cancel
                   </button>
@@ -820,10 +820,10 @@ const Profile = ({ user, setUser, viewRole }) => {
                       }
                     }} 
                     disabled={saving} 
-                    className="flex-1 py-3 bg-teal-600 hover:bg-teal-500 text-white rounded-2xl font-medium transition disabled:opacity-50 flex items-center justify-center gap-2"
+                    className="w-full sm:flex-1 py-3 bg-teal-600 hover:bg-teal-500 text-white rounded-2xl font-medium transition disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-teal-500/10"
                   >
-                    <Save size={16} />
-                    {saving ? 'Saving...' : 'Save Changes'}
+                    <Save size={16} className="flex-shrink-0" />
+                    <span>{saving ? 'Saving...' : 'Save Changes'}</span>
                   </button>
                 </div>
               )}
@@ -938,10 +938,21 @@ const Profile = ({ user, setUser, viewRole }) => {
                     <input type="password" placeholder="Re-enter new password" value={pwdForm.confirm} onChange={e => setPwdForm({...pwdForm, confirm: e.target.value})} className="w-full bg-slate-50 dark:bg-[#1E3248] border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-600 focus:outline-none focus:border-teal-500" />
                   </div>
 
-                  <div className="flex gap-3">
-                    <button onClick={handleSendOtp} disabled={sendingOtp} className="px-4 py-3 bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 text-slate-700 dark:text-white rounded-2xl text-sm transition disabled:opacity-50">Resend OTP</button>
-                    <button onClick={handlePasswordReset} disabled={saving} className="flex-1 py-3 bg-teal-600 hover:bg-teal-500 text-white rounded-2xl font-medium transition disabled:opacity-50 flex items-center justify-center gap-2">
-                      <Key size={16} /> {saving ? 'Updating...' : 'Update Password'}
+                  <div className="flex flex-col-reverse sm:flex-row gap-3 pt-2">
+                    <button 
+                      onClick={handleSendOtp} 
+                      disabled={sendingOtp} 
+                      className="w-full sm:w-auto px-5 py-3 bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 text-slate-700 dark:text-white rounded-2xl text-sm font-medium transition disabled:opacity-50 cursor-pointer text-center"
+                    >
+                      Resend OTP
+                    </button>
+                    <button 
+                      onClick={handlePasswordReset} 
+                      disabled={saving} 
+                      className="w-full sm:flex-1 py-3 bg-teal-600 hover:bg-teal-500 text-white rounded-2xl font-medium transition disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-teal-500/10"
+                    >
+                      <Key size={16} className="flex-shrink-0" />
+                      <span>{saving ? 'Updating...' : 'Update Password'}</span>
                     </button>
                   </div>
                 </div>
