@@ -80,57 +80,57 @@ const ScheduleMeetingModal = ({ communityId, onClose, onSuccess, meeting }) => {
           </h3>
           <button onClick={onClose} className="text-slate-400 hover:text-slate-900 dark:text-gray-400 dark:hover:text-white"><X size={20} /></button>
         </div>
-        <form onSubmit={handleSubmit} className="space-y-4 overflow-y-auto custom-scrollbar flex-1 pr-1">
+        <form onSubmit={handleSubmit} className="space-y-3.5 overflow-y-auto custom-scrollbar flex-1 pr-1">
           <div>
-            <label className="text-xs font-semibold text-slate-500 dark:text-gray-400 mb-1 block">Meeting Title *</label>
+            <label className="text-xs font-semibold text-slate-500 dark:text-gray-400 mb-1.5 block">Meeting Title *</label>
             <input
               required
               type="text"
               placeholder="e.g. Monthly HOA Budget Review"
               value={form.title}
               onChange={e => setForm({...form, title: e.target.value})}
-              className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-teal-500"
+              className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl px-4 py-2 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 focus:outline-none focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10 transition-all"
             />
           </div>
           <div>
-            <label className="text-xs font-semibold text-slate-500 dark:text-gray-400 mb-1 block">Description & Agenda *</label>
+            <label className="text-xs font-semibold text-slate-500 dark:text-gray-400 mb-1.5 block">Description & Agenda *</label>
             <textarea
               required
-              rows={4}
+              rows={3}
               placeholder="Provide meeting agenda and details..."
               value={form.description}
               onChange={e => setForm({...form, description: e.target.value})}
-              className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-teal-500 resize-none"
+              className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl px-4 py-2 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 focus:outline-none focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10 transition-all resize-none"
             />
           </div>
           <div>
-            <label className="text-xs font-semibold text-slate-500 dark:text-gray-400 mb-1 block">Date & Time *</label>
+            <label className="text-xs font-semibold text-slate-500 dark:text-gray-400 mb-1.5 block">Date & Time *</label>
             <input
               required
               type="datetime-local"
               value={form.meeting_date}
               onChange={e => setForm({...form, meeting_date: e.target.value})}
-              className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
+              className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl px-4 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10 transition-all"
             />
           </div>
           <div>
-            <label className="text-xs font-semibold text-slate-500 dark:text-gray-400 mb-1 block">Physical Location (optional)</label>
+            <label className="text-xs font-semibold text-slate-500 dark:text-gray-400 mb-1.5 block">Physical Location (optional)</label>
             <input
               type="text"
               placeholder="e.g. Community Center Hall A"
               value={form.location}
               onChange={e => setForm({...form, location: e.target.value})}
-              className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-teal-500"
+              className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl px-4 py-2 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 focus:outline-none focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10 transition-all"
             />
           </div>
           <div>
-            <label className="text-xs font-semibold text-slate-500 dark:text-gray-400 mb-1 block">Meeting Link / Video URL (optional)</label>
+            <label className="text-xs font-semibold text-slate-500 dark:text-gray-400 mb-1.5 block">Meeting Link / Video URL (optional)</label>
             <input
               type="url"
               placeholder="e.g. https://zoom.us/j/..."
               value={form.meeting_link}
               onChange={e => setForm({...form, meeting_link: e.target.value})}
-              className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-teal-500"
+              className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl px-4 py-2 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 focus:outline-none focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10 transition-all"
             />
           </div>
           <div className="flex gap-3 pt-4 flex-shrink-0">
