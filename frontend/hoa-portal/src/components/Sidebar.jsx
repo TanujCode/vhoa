@@ -112,7 +112,7 @@ const Sidebar = ({ activePage, setActivePage, isOpen, setIsOpen, user, userRole:
         
         {/* Logo */}
         <div className="h-16 flex items-center px-6 border-b border-slate-200/60 dark:border-white/10">
-          <img src={isDark ? logoDark : logoLight} alt="NestBloq" className="h-9 w-auto object-contain" />
+          <img src={isDark ? logoDark : logoLight} alt="NestBloq" className="h-10 w-auto object-contain" />
         </div>
 
         {/* Navigation */}
