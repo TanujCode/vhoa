@@ -7,8 +7,7 @@ import {
 } from 'lucide-react';
 import { getBaseUrl } from '../services/api';
 import { useTheme } from '../context/ThemeContext';
-import logoLight from '../assets/logo_light.png';
-import logoDark from '../assets/logo_dark.png';
+import Logo from './marketing/Logo';
 
 const Sidebar = ({ activePage, setActivePage, isOpen, setIsOpen, user, userRole: propRole, activeCommunity }) => {
   const userRole = propRole || user?.role || 'resident';
@@ -112,7 +111,7 @@ const Sidebar = ({ activePage, setActivePage, isOpen, setIsOpen, user, userRole:
         
         {/* Logo */}
         <div className="h-16 flex items-center px-6 border-b border-slate-200/60 dark:border-white/10">
-          <img src={isDark ? logoDark : logoLight} alt="NestBloq" className="h-10 w-auto object-contain" />
+          <Logo variant={isDark ? "dark" : "light"} className="h-10 w-auto" />
         </div>
 
         {/* Navigation */}

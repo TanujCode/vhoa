@@ -1,5 +1,5 @@
 import React from 'react';
-import logoDark from '../../assets/logo_dark.png';
+import Logo from '../marketing/Logo';
 
 export default function AuthLayout({ children }) {
   return (
@@ -13,7 +13,7 @@ export default function AuthLayout({ children }) {
       <div className="hidden md:flex md:w-1/2 bg-[#0A2240] text-white flex-col justify-center items-center p-12 relative overflow-hidden">
         <div className="max-w-md text-center">
           <div className="flex justify-center mb-6">
-            <img src={logoDark} alt="NestBloq" className="h-16 w-auto object-contain" />
+            <Logo variant="auth" className="h-24 w-auto" />
           </div>
           <p className="text-blue-300 font-medium mb-6">Self-Service Property Management</p>
           <p className="text-gray-400 text-sm leading-relaxed max-w-sm mx-auto mb-10">
