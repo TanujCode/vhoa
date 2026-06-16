@@ -6,9 +6,14 @@ import {
   ClipboardList, Info, Building2
 } from 'lucide-react';
 import { getBaseUrl } from '../services/api';
+import { useTheme } from '../context/ThemeContext';
+import logoLight from '../assets/logo_light.png';
+import logoDark from '../assets/logo_dark.png';
 
 const Sidebar = ({ activePage, setActivePage, isOpen, setIsOpen, user, userRole: propRole, activeCommunity }) => {
   const userRole = propRole || user?.role || 'resident';
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
 
   const getProfileImage = (url) => {
     if (!url) return null;
@@ -107,8 +112,7 @@ const Sidebar = ({ activePage, setActivePage, isOpen, setIsOpen, user, userRole:
         
         {/* Logo */}
         <div className="h-16 flex items-center px-6 border-b border-slate-200/60 dark:border-white/10">
-          <div className="logo-mark w-8 h-8 bg-[#1D9E75] rounded-xl flex items-center justify-center text-white font-bold text-lg">NB</div>
-          <span className="ml-3 text-2xl font-semibold tracking-tight text-slate-900 dark:text-white">Nest<span className="text-[#1D9E75]">Bloq</span></span>
+          <img src={isDark ? logoDark : logoLight} alt="NestBloq" className="h-9 w-auto object-contain" />
         </div>
 
         {/* Navigation */}

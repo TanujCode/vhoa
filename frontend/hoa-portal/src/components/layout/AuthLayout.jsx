@@ -1,4 +1,5 @@
 import React from 'react';
+import logoDark from '../../assets/logo_dark.png';
 
 export default function AuthLayout({ children }) {
   return (
@@ -11,12 +12,9 @@ export default function AuthLayout({ children }) {
       {/* Right Hero / Branding Container */}
       <div className="hidden md:flex md:w-1/2 bg-[#0A2240] text-white flex-col justify-center items-center p-12 relative overflow-hidden">
         <div className="max-w-md text-center">
-          <div className="w-16 h-16 bg-white/10 rounded-2xl flex items-center justify-center mx-auto mb-6 backdrop-blur-sm border border-white/10">
-            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-            </svg>
+          <div className="flex justify-center mb-6">
+            <img src={logoDark} alt="NestBloq" className="h-16 w-auto object-contain" />
           </div>
-          <h1 className="text-4xl font-bold mb-2">NestBloq</h1>
           <p className="text-blue-300 font-medium mb-6">Self-Service Property Management</p>
           <p className="text-gray-400 text-sm leading-relaxed max-w-sm mx-auto mb-10">
             Join thousands of communities managing their governance with administrative precision and communal harmony.
