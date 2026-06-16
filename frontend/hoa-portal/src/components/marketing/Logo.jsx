@@ -38,7 +38,7 @@ export default function Logo({ className = "h-9", variant = "currentColor", forc
   return (
     <svg
       className={className}
-      viewBox="0 0 220 50"
+      viewBox="0 0 240 50"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
     >
@@ -95,9 +95,9 @@ export default function Logo({ className = "h-9", variant = "currentColor", forc
       </text>
 
       {/* --- LETTERS OQ (Overlapping Blue Circles) --- */}
-      {/* Circle 1 (O) */}
+      {/* Circle 1 (O) — shifted right to avoid overlapping L */}
       <circle
-        cx="174"
+        cx="190"
         cy="28"
         r="11"
         stroke={shapeStroke}
@@ -106,7 +106,7 @@ export default function Logo({ className = "h-9", variant = "currentColor", forc
       />
       {/* Circle 2 (Q) */}
       <circle
-        cx="191"
+        cx="207"
         cy="28"
         r="11"
         stroke={shapeStroke}
@@ -115,7 +115,7 @@ export default function Logo({ className = "h-9", variant = "currentColor", forc
       />
       {/* Q Tail */}
       <path
-        d="M197 35 C201 39 204 41 208 42"
+        d="M213 35 C217 39 220 41 224 42"
         stroke={shapeStroke}
         strokeWidth="4"
         strokeLinecap="round"
