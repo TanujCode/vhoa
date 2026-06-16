@@ -38,7 +38,7 @@ export default function Logo({ className = "h-9", variant = "currentColor", forc
   return (
     <svg
       className={className}
-      viewBox="0 0 240 50"
+      viewBox="0 0 250 54"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
     >
@@ -52,11 +52,11 @@ export default function Logo({ className = "h-9", variant = "currentColor", forc
 
       {/* --- LETTER N --- */}
       <text
-        x="8"
-        y="42"
+        x="4"
+        y="47"
         fontFamily="'Plus Jakarta Sans', 'Inter', sans-serif"
         fontWeight="800"
-        fontSize="34"
+        fontSize="36"
         fill={textFill}
         className={textClass}
       >
@@ -66,56 +66,56 @@ export default function Logo({ className = "h-9", variant = "currentColor", forc
       {/* --- LETTER E (House Roof + 3 Bars) --- */}
       {/* House Roof Triangle */}
       <path
-        d="M44 19 L60 5 L76 19 Z"
+        d="M45 20 L61 4 L77 20 Z"
         fill={shapeFill}
       />
-      {/* 4 Window Panes Inside Roof */}
-      <rect x="57.5" y="11" width="2" height="2" fill={windowFill} />
-      <rect x="60.5" y="11" width="2" height="2" fill={windowFill} />
-      <rect x="57.5" y="14" width="2" height="2" fill={windowFill} />
-      <rect x="60.5" y="14" width="2" height="2" fill={windowFill} />
+      {/* Window Panes Inside Roof */}
+      <rect x="58" y="10" width="3" height="3" fill={windowFill} />
+      <rect x="62" y="10" width="3" height="3" fill={windowFill} />
+      <rect x="58" y="14" width="3" height="3" fill={windowFill} />
+      <rect x="62" y="14" width="3" height="3" fill={windowFill} />
 
-      {/* 3 Horizontal Bars of E */}
-      <rect x="44" y="23" width="32" height="4" rx="2" fill={shapeFill} />
-      <rect x="44" y="31" width="32" height="4" rx="2" fill={shapeFill} />
-      <rect x="44" y="39" width="32" height="4" rx="2" fill={shapeFill} />
+      {/* 3 Horizontal Bars of E (matching original logo) */}
+      <rect x="45" y="24" width="32" height="5" rx="2.5" fill={shapeFill} />
+      <rect x="45" y="33" width="32" height="5" rx="2.5" fill={shapeFill} />
+      <rect x="45" y="42" width="32" height="5" rx="2.5" fill={shapeFill} />
 
       {/* --- LETTERS STBL --- */}
       <text
-        x="81"
-        y="42"
+        x="82"
+        y="47"
         fontFamily="'Plus Jakarta Sans', 'Inter', sans-serif"
         fontWeight="800"
-        fontSize="34"
+        fontSize="36"
         fill={textFill}
-        letterSpacing="1"
+        letterSpacing="0"
         className={textClass}
       >
         STBL
       </text>
 
-      {/* --- LETTERS OQ (Overlapping Blue Circles) --- */}
-      {/* Circle 1 (O) — shifted right to avoid overlapping L */}
+      {/* --- LETTERS OQ (Overlapping Blue Circles, matching original logo) --- */}
+      {/* Circle 1 (O) */}
       <circle
-        cx="190"
-        cy="28"
-        r="11"
+        cx="196"
+        cy="29"
+        r="13"
         stroke={shapeStroke}
         strokeWidth="4"
         fill="none"
       />
-      {/* Circle 2 (Q) */}
+      {/* Circle 2 (Q) — overlaps O slightly, matching logo */}
       <circle
-        cx="207"
-        cy="28"
-        r="11"
+        cx="215"
+        cy="29"
+        r="13"
         stroke={shapeStroke}
         strokeWidth="4"
         fill="none"
       />
-      {/* Q Tail */}
+      {/* Q Tail — diagonal, matching original */}
       <path
-        d="M213 35 C217 39 220 41 224 42"
+        d="M222 38 L232 48"
         stroke={shapeStroke}
         strokeWidth="4"
         strokeLinecap="round"
