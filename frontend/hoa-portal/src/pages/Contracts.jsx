@@ -344,7 +344,7 @@ export default function Contracts() {
         </div>
       </div>
 
-      {/* Table Section */}
+      {/* Cards Section */}
       {loading && contracts.length === 0 ? (
         <div className="text-center py-20 text-gray-400">
           <div className="w-8 h-8 border-2 border-teal-500 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
@@ -356,149 +356,137 @@ export default function Contracts() {
           No contracts found matching your filters.
         </div>
       ) : (
-        <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl overflow-x-auto shadow-sm dark:shadow-none">
-          <table className="w-full text-left border-collapse min-w-[1000px]">
-            <thead>
-              <tr className="border-b border-slate-200/80 dark:border-white/10 text-slate-500 dark:text-gray-400 text-xs font-semibold uppercase tracking-wider bg-slate-100/50 dark:bg-[#0D1622]/50">
-                <th className="px-3 py-4">Contract Code</th>
-                <th className="px-3 py-4">Client / Business</th>
-                <th className="px-3 py-4">Plan Info</th>
-                <th className="px-3 py-4">Pricing details</th>
-                <th className="px-3 py-4">Status</th>
-                <th className="px-3 py-4">Sales Agent</th>
-                <th className="px-3 py-4 text-center">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-200/60 dark:divide-white/5 text-sm">
-              {filteredContracts.map((contract) => (
-                <tr key={contract.contract_id} className="hover:bg-slate-100/30 dark:hover:bg-white/5 transition duration-150">
-                  {/* Code */}
-                  <td className="px-3 py-4 whitespace-nowrap">
-                    <div className="flex items-center gap-2">
-                      <span className="font-mono font-bold text-[#1D9E75] dark:text-[#25C490] text-base bg-[#1D9E75]/10 dark:bg-[#25C490]/10 px-3 py-1 rounded-xl">
-                        {contract.contract_code}
-                      </span>
-                      <button
-                        onClick={() => handleCopyCode(contract.contract_code)}
-                        className="text-slate-400 hover:text-slate-700 dark:text-gray-500 dark:hover:text-white transition"
-                        title="Copy Code"
-                      >
-                        {copiedCode === contract.contract_code ? (
-                          <Check size={16} className="text-green-500" />
-                        ) : (
-                          <Copy size={16} />
-                        )}
-                      </button>
-                    </div>
-                  </td>
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+          {filteredContracts.map((contract) => (
+            <div
+              key={contract.contract_id}
+              className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-5 shadow-sm dark:shadow-none hover:shadow-md dark:hover:border-white/20 transition-all duration-200 flex flex-col gap-4"
+            >
+              {/* Top Row: Code + Status */}
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="font-mono font-bold text-[#1D9E75] dark:text-[#25C490] bg-[#1D9E75]/10 dark:bg-[#25C490]/10 px-3 py-1 rounded-xl text-sm">
+                    {contract.contract_code}
+                  </span>
+                  <button
+                    onClick={() => handleCopyCode(contract.contract_code)}
+                    className="text-slate-400 hover:text-slate-700 dark:text-gray-500 dark:hover:text-white transition"
+                    title="Copy Code"
+                  >
+                    {copiedCode === contract.contract_code ? (
+                      <Check size={15} className="text-green-500" />
+                    ) : (
+                      <Copy size={15} />
+                    )}
+                  </button>
+                </div>
 
-                  {/* Client & Business */}
-                  <td className="px-3 py-4">
-                    <div>
-                      <div className="font-medium text-slate-900 dark:text-white">
-                        {contract.client_first_name} {contract.client_last_name}
-                      </div>
-                      <div className="text-xs text-slate-500 dark:text-gray-400">{contract.client_email_address}</div>
-                      {contract.business_name && (
-                        <div className="text-xs font-semibold text-slate-700 dark:text-gray-300 mt-1 italic">
-                          🏢 {contract.business_name}
-                        </div>
-                      )}
-                    </div>
-                  </td>
+                <span className={`inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full font-semibold whitespace-nowrap flex-shrink-0 ${
+                  contract.status === 'ACTIVE'
+                    ? 'bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400'
+                    : contract.status === 'ONBOARDED'
+                    ? 'bg-blue-500/10 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400'
+                    : 'bg-slate-200/60 dark:bg-gray-500/20 text-slate-600 dark:text-gray-400'
+                }`}>
+                  {contract.status === 'ACTIVE' && <CheckCircle size={11} />}
+                  {contract.status === 'ONBOARDED' && <CheckCircle size={11} />}
+                  {contract.status === 'DRAFT' && <Clock size={11} />}
+                  {contract.status}
+                </span>
+              </div>
 
-                  {/* Plan selected & community size */}
-                  <td className="px-3 py-4 whitespace-nowrap">
-                    <div>
-                      <span className="text-xs font-semibold bg-blue-500/10 text-blue-600 dark:text-blue-400 px-2 py-0.5 rounded-lg border border-blue-500/10">
-                        {contract.plan_selected || 'Custom'}
-                      </span>
-                      <div className="text-xs text-slate-500 dark:text-gray-400 mt-1">
-                        Max Units: <span className="text-slate-800 dark:text-white font-mono font-semibold">{contract.size_of_the_community || 'Unlimited'}</span>
-                      </div>
-                      <div className="text-[10px] text-slate-400 dark:text-gray-500 uppercase tracking-tighter">
-                        Cycle: {contract.renewal_cycle}
-                      </div>
+              {/* Client / Business */}
+              <div className="border-t border-slate-200/60 dark:border-white/5 pt-3">
+                <div className="flex items-start gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-sky-500 to-blue-600 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+                    {(contract.client_first_name?.[0] || '?').toUpperCase()}
+                  </div>
+                  <div className="min-w-0">
+                    <div className="font-semibold text-slate-900 dark:text-white text-sm truncate">
+                      {contract.client_first_name} {contract.client_last_name}
                     </div>
-                  </td>
-
-                  {/* Pricing details */}
-                  <td className="px-3 py-4 whitespace-nowrap">
-                    <div>
-                      <div className="text-xs text-slate-500 dark:text-gray-400">
-                        Setup Fee: <span className="text-slate-800 dark:text-white font-bold">${contract.one_time_set_up || '0'}</span>
+                    <div className="text-xs text-slate-500 dark:text-gray-400 truncate">{contract.client_email_address}</div>
+                    {contract.business_name && (
+                      <div className="text-xs font-medium text-slate-700 dark:text-gray-300 mt-0.5 flex items-center gap-1">
+                        <Building size={11} className="text-slate-400 flex-shrink-0" />
+                        <span className="truncate">{contract.business_name}</span>
                       </div>
-                      <div className="text-xs text-slate-500 dark:text-gray-400">
-                        Renewal Fee: <span className="text-[#1D9E75] dark:text-[#25C490] font-bold">${contract.annual_renewal_fee || '0'}</span>
-                      </div>
-                    </div>
-                  </td>
+                    )}
+                  </div>
+                </div>
+              </div>
 
-                  {/* Status */}
-                  <td className="px-3 py-4 whitespace-nowrap">
-                    <span className={`inline-flex items-center gap-1.5 text-xs px-3 py-1 rounded-full font-medium ${
-                      contract.status === 'ACTIVE'
-                        ? 'bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400'
-                        : contract.status === 'ONBOARDED'
-                        ? 'bg-blue-500/10 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400'
-                        : 'bg-slate-200/60 dark:bg-gray-500/20 text-slate-600 dark:text-gray-400'
-                    }`}>
-                      {contract.status === 'ACTIVE' && <CheckCircle size={12} />}
-                      {contract.status === 'ONBOARDED' && <CheckCircle size={12} />}
-                      {contract.status === 'DRAFT' && <Clock size={12} />}
-                      {contract.status}
-                    </span>
-                  </td>
+              {/* Plan + Pricing row */}
+              <div className="grid grid-cols-2 gap-3 border-t border-slate-200/60 dark:border-white/5 pt-3">
+                <div>
+                  <div className="text-[10px] text-slate-400 dark:text-gray-500 uppercase tracking-wider mb-1.5 font-semibold">Plan Info</div>
+                  <span className="text-xs font-semibold bg-blue-500/10 text-blue-600 dark:text-blue-400 px-2 py-0.5 rounded-lg border border-blue-500/10">
+                    {contract.plan_selected || 'Custom'}
+                  </span>
+                  <div className="text-xs text-slate-500 dark:text-gray-400 mt-1.5">
+                    Max Units: <span className="font-mono font-semibold text-slate-800 dark:text-white">{contract.size_of_the_community || '∞'}</span>
+                  </div>
+                  <div className="text-[10px] text-slate-400 dark:text-gray-500 uppercase tracking-tighter mt-0.5">
+                    Cycle: {contract.renewal_cycle}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-[10px] text-slate-400 dark:text-gray-500 uppercase tracking-wider mb-1.5 font-semibold">Pricing</div>
+                  <div className="text-xs text-slate-500 dark:text-gray-400">
+                    Setup: <span className="font-bold text-slate-800 dark:text-white">${contract.one_time_set_up || '0'}</span>
+                  </div>
+                  <div className="text-xs text-slate-500 dark:text-gray-400 mt-1">
+                    Renewal: <span className="font-bold text-[#1D9E75] dark:text-[#25C490]">${contract.annual_renewal_fee || '0'}</span>
+                  </div>
+                </div>
+              </div>
 
-                  {/* Sales agent */}
-                  <td className="px-3 py-4 whitespace-nowrap">
-                    <div className="text-xs text-slate-700 dark:text-gray-300">
-                      <div>{contract.sales_agent_name || 'System Admin'}</div>
-                      <div className="text-[10px] text-slate-400 dark:text-gray-500 font-mono">
-                        {new Date(contract.created_date).toLocaleDateString()}
-                      </div>
-                    </div>
-                  </td>
+              {/* Sales Agent + Date */}
+              <div className="flex items-center justify-between border-t border-slate-200/60 dark:border-white/5 pt-3">
+                <div className="text-xs">
+                  <div className="text-slate-700 dark:text-gray-300 font-medium">{contract.sales_agent_name || 'System Admin'}</div>
+                  <div className="text-[10px] text-slate-400 dark:text-gray-500 font-mono mt-0.5">
+                    {new Date(contract.created_date).toLocaleDateString()}
+                  </div>
+                </div>
 
-                  {/* Actions */}
-                  <td className="px-3 py-4 text-center whitespace-nowrap">
-                    <div className="flex items-center justify-center gap-2">
-                      {contract.status === 'ACTIVE' && (
-                        <button
-                          onClick={() => handleCopyLink(contract.contract_code)}
-                          className="px-3 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-white/10 dark:hover:bg-white/20 dark:text-white rounded-lg text-xs font-medium transition"
-                          title="Copy Onboarding link"
-                        >
-                          Copy Link
-                        </button>
-                      )}
-                      {contract.status !== 'ONBOARDED' && (
-                        <button
-                          onClick={() => toggleStatus(contract.contract_id, contract.status)}
-                          className={`px-3 py-1 rounded-lg text-xs font-medium transition ${
-                            contract.status === 'ACTIVE'
-                              ? 'bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-400'
-                              : 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400'
-                          }`}
-                        >
-                          {contract.status === 'ACTIVE' ? 'Set Draft' : 'Activate'}
-                        </button>
-                      )}
-                      <button
-                        onClick={() => handleDeleteContract(contract.contract_id)}
-                        className="p-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-lg transition"
-                        title="Delete Contract"
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                {/* Actions */}
+                <div className="flex items-center gap-2">
+                  {contract.status === 'ACTIVE' && (
+                    <button
+                      onClick={() => handleCopyLink(contract.contract_code)}
+                      className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-white/10 dark:hover:bg-white/20 dark:text-white rounded-lg text-xs font-medium transition"
+                      title="Copy Onboarding link"
+                    >
+                      Copy Link
+                    </button>
+                  )}
+                  {contract.status !== 'ONBOARDED' && (
+                    <button
+                      onClick={() => toggleStatus(contract.contract_id, contract.status)}
+                      className={`px-2.5 py-1 rounded-lg text-xs font-medium transition ${
+                        contract.status === 'ACTIVE'
+                          ? 'bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-400'
+                          : 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400'
+                      }`}
+                    >
+                      {contract.status === 'ACTIVE' ? 'Set Draft' : 'Activate'}
+                    </button>
+                  )}
+                  <button
+                    onClick={() => handleDeleteContract(contract.contract_id)}
+                    className="p-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-lg transition"
+                    title="Delete Contract"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       )}
+
 
       {/* Modal - Create Contract */}
       {isModalOpen && (
