@@ -12,20 +12,21 @@ import API, { getBaseUrl } from "../services/api";
 const StatCard = ({ label, value, icon: Icon, color, sub, subColor, onClick }) => (
   <div 
     onClick={onClick}
-    className={`bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 transition-all duration-300 hover:border-slate-200 dark:hover:border-white/20 hover:-translate-y-1 shadow-sm dark:shadow-none ${onClick ? 'cursor-pointer hover:border-teal-500/40 dark:hover:border-teal-400/40' : ''}`}
+    className={`bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-3 sm:p-6 transition-all duration-300 hover:border-slate-200 dark:hover:border-white/20 hover:-translate-y-1 shadow-sm dark:shadow-none ${onClick ? 'cursor-pointer hover:border-teal-500/40 dark:hover:border-teal-400/40' : ''}`}
   >
-    <div className="flex items-center justify-between mb-3">
-      <p className="text-slate-500 dark:text-gray-400 text-sm font-medium">{label}</p>
-      <div className={`w-10 h-10 rounded-2xl flex items-center justify-center ${color} shadow-inner`}>
-        <Icon size={18} className="text-white" />
+    <div className="flex items-center justify-between mb-2 sm:mb-3">
+      <p className="text-slate-500 dark:text-gray-400 text-xs sm:text-sm font-medium leading-tight pr-1">{label}</p>
+      <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-2xl flex items-center justify-center ${color} shadow-inner flex-shrink-0`}>
+        <Icon size={15} className="text-white" />
       </div>
     </div>
-    <p className={`text-4xl font-mono font-bold mt-1 ${subColor || 'text-slate-900 dark:text-white'}`}>
+    <p className={`text-2xl sm:text-4xl font-mono font-bold mt-1 ${subColor || 'text-slate-900 dark:text-white'}`}>
       {value ?? '—'}
     </p>
-    {sub && <p className="text-xs text-slate-400 dark:text-gray-500 mt-2 font-sans">{sub}</p>}
+    {sub && <p className="text-[10px] sm:text-xs text-slate-400 dark:text-gray-500 mt-1 sm:mt-2 font-sans leading-tight">{sub}</p>}
   </div>
 );
+
 
 // ── Activity Item ─────────────────────────────
 const ActivityItem = ({ icon: Icon, color, title, time, status }) => (
@@ -189,8 +190,8 @@ const PropertyManagerDashboard = ({ community, user, setActivePage }) => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">Property Manager Portal</h1>
-          <p className="text-slate-500 dark:text-gray-400 mt-1">{community.name} • Overview of your managed community</p>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-white">Property Manager Portal</h1>
+          <p className="text-slate-500 dark:text-gray-400 mt-1 text-sm">{community.name} • Overview of your managed community</p>
         </div>
         <button
           onClick={() => fetchDashboardData(community.community_id)}
@@ -240,7 +241,7 @@ const PropertyManagerDashboard = ({ community, user, setActivePage }) => {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
         <StatCard label="Registered Members" value={totalOwners} icon={Users} color="bg-teal-600" subColor="text-teal-600 dark:text-teal-400" sub="Active Homeowners" onClick={() => setActivePage?.('members')} />
         <StatCard label="Open Violations" value={stats?.active_violations ?? 0} icon={ShieldAlert} color="bg-red-600" subColor="text-red-600 dark:text-red-400" sub="Require compliance tracking" onClick={() => setActivePage?.('violations')} />
         <StatCard label="Service Requests" value={stats?.open_requests ?? 0} icon={Wrench} color="bg-blue-600" subColor="text-blue-600 dark:text-blue-400" sub="Awaiting technician routing" onClick={() => setActivePage?.('servicereq')} />
@@ -401,83 +402,80 @@ const PropertyManagerDashboard = ({ community, user, setActivePage }) => {
             <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">Everything is cleared up! 👍</p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-slate-50 dark:bg-[#0d1622] text-xs font-semibold uppercase text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-white/10">
-                  <th className="px-3 py-4">Resident Name</th>
-                  <th className="px-3 py-4">Email</th>
-                  <th className="px-3 py-4">Unit / Block</th>
-                  <th className="px-3 py-4">Requested Date</th>
-                  <th className="px-3 py-4">Verification Docs</th>
-                  <th className="px-3 py-4 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200 dark:divide-white/10 text-sm">
-                {joinRequests.map((req) => (
-                  <tr key={req.request_id} className="hover:bg-slate-50/50 dark:hover:bg-white/5 transition-colors">
-                    <td className="px-3 py-4 font-medium text-gray-950 dark:text-white">{req.full_name}</td>
-                    <td className="px-3 py-4 text-gray-500 dark:text-gray-400 break-all">{req.email_id || req.email}</td>
-                    <td className="px-3 py-4">
-                      <span className="px-2 py-1 text-xs font-mono bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded whitespace-nowrap">
-                        Unit {req.unit_no || 'N/A'}
-                      </span>
-                    </td>
-                    <td className="px-3 py-4 text-xs text-gray-400 font-mono whitespace-nowrap">
-                      {req.created_at ? new Date(req.created_at).toLocaleDateString() : 'Recent'}
-                    </td>
-                    <td className="px-3 py-4">
-                      <div className="flex gap-2">
-                        {req.id_proof_url ? (
-                          <a
-                            href={getBaseUrl(req.id_proof_url)}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="px-2.5 py-1 text-xs font-semibold bg-blue-500/10 hover:bg-blue-500 text-blue-600 hover:text-white rounded-xl border border-blue-500/20 transition-all whitespace-nowrap"
-                          >
-                            ID Proof
-                          </a>
-                        ) : (
-                          <span className="text-xs text-gray-400 font-mono whitespace-nowrap">No ID</span>
-                        )}
-                        {req.address_proof_url ? (
-                          <a
-                            href={getBaseUrl(req.address_proof_url)}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="px-2.5 py-1 text-xs font-semibold bg-purple-500/10 hover:bg-purple-500 text-purple-600 hover:text-white rounded-xl border border-purple-500/20 transition-all whitespace-nowrap"
-                          >
-                            Address Proof
-                          </a>
-                        ) : (
-                          <span className="text-xs text-gray-400 font-mono whitespace-nowrap">No Address</span>
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-3 py-4 text-right">
-                      <div className="flex items-center justify-end space-x-2">
-                        <button
-                          disabled={actionId !== null}
-                          onClick={() => handleRequestAction(req.request_id, 'APPROVE')}
-                          className="flex items-center justify-center p-1.5 bg-emerald-500/10 hover:bg-emerald-500 text-emerald-500 hover:text-white rounded-lg transition-all disabled:opacity-50"
-                          title="Approve Resident"
-                        >
-                          <Check className="w-4 h-4" />
-                        </button>
-                        <button
-                          disabled={actionId !== null}
-                          onClick={() => handleRequestAction(req.request_id, 'REJECT')}
-                          className="flex items-center justify-center p-1.5 bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white rounded-lg transition-all disabled:opacity-50"
-                          title="Reject Request"
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="p-4 sm:p-6 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+            {joinRequests.map((req) => (
+              <div
+                key={req.request_id}
+                className="bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl p-4 flex flex-col gap-3"
+              >
+                {/* Name + Email */}
+                <div className="flex items-start gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-teal-500 to-blue-600 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+                    {(req.full_name?.[0] || '?').toUpperCase()}
+                  </div>
+                  <div className="min-w-0">
+                    <div className="font-semibold text-slate-900 dark:text-white text-sm truncate">{req.full_name}</div>
+                    <div className="text-xs text-slate-500 dark:text-gray-400 truncate">{req.email_id || req.email}</div>
+                  </div>
+                </div>
+
+                {/* Unit + Date */}
+                <div className="flex items-center justify-between text-xs">
+                  <span className="px-2 py-1 font-mono bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded">
+                    Unit {req.unit_no || 'N/A'}
+                  </span>
+                  <span className="text-slate-400 dark:text-gray-500 font-mono">
+                    {req.created_at ? new Date(req.created_at).toLocaleDateString() : 'Recent'}
+                  </span>
+                </div>
+
+                {/* Docs */}
+                <div className="flex gap-2 flex-wrap">
+                  {req.id_proof_url ? (
+                    <a
+                      href={getBaseUrl(req.id_proof_url)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-2.5 py-1 text-xs font-semibold bg-blue-500/10 hover:bg-blue-500 text-blue-600 hover:text-white rounded-xl border border-blue-500/20 transition-all"
+                    >
+                      ID Proof
+                    </a>
+                  ) : (
+                    <span className="text-xs text-gray-400 font-mono">No ID</span>
+                  )}
+                  {req.address_proof_url ? (
+                    <a
+                      href={getBaseUrl(req.address_proof_url)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-2.5 py-1 text-xs font-semibold bg-purple-500/10 hover:bg-purple-500 text-purple-600 hover:text-white rounded-xl border border-purple-500/20 transition-all"
+                    >
+                      Address Proof
+                    </a>
+                  ) : (
+                    <span className="text-xs text-gray-400 font-mono">No Address</span>
+                  )}
+                </div>
+
+                {/* Actions */}
+                <div className="flex gap-2 pt-1 border-t border-slate-100 dark:border-white/5">
+                  <button
+                    disabled={actionId !== null}
+                    onClick={() => handleRequestAction(req.request_id, 'APPROVE')}
+                    className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-emerald-500/10 hover:bg-emerald-500 text-emerald-600 hover:text-white rounded-xl text-xs font-semibold transition-all disabled:opacity-50"
+                  >
+                    <Check className="w-3.5 h-3.5" /> Approve
+                  </button>
+                  <button
+                    disabled={actionId !== null}
+                    onClick={() => handleRequestAction(req.request_id, 'REJECT')}
+                    className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white rounded-xl text-xs font-semibold transition-all disabled:opacity-50"
+                  >
+                    <X className="w-3.5 h-3.5" /> Reject
+                  </button>
+                </div>
+              </div>
+            ))}
           </div>
         )}
       </div>
