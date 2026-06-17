@@ -1598,34 +1598,43 @@ const ServiceRequests = ({ community, user, setActivePage, setPaymentState }) =>
                 <div 
                   key={req.request_id} 
                   onClick={() => setSelectedRequest(req)}
-                  className={`p-6 hover:bg-slate-50 dark:hover:bg-white/5 transition flex gap-4 cursor-pointer ${
+                  className={`p-4 sm:p-6 hover:bg-slate-50 dark:hover:bg-white/5 transition flex gap-3 cursor-pointer ${
                     selectedRequest?.request_id === req.request_id ? 'bg-slate-50 dark:bg-white/5 border-l-4 border-teal-500' : ''
                   }`}
                 >
+                  {/* Icon */}
                   {(() => {
                     const details = getRequestIconDetails(req.type_name);
                     const RequestIcon = details.Icon;
                     return (
-                      <div className={`w-12 h-12 ${details.bg} rounded-2xl flex items-center justify-center flex-shrink-0 shadow-sm`}>
-                        <RequestIcon size={22} className={details.text} />
+                      <div className={`w-10 h-10 sm:w-12 sm:h-12 ${details.bg} rounded-2xl flex items-center justify-center flex-shrink-0 shadow-sm`}>
+                        <RequestIcon size={20} className={details.text} />
                       </div>
                     );
                   })()}
+
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <h3 className="font-semibold text-slate-900 dark:text-white text-base leading-tight hover:text-teal-600 dark:hover:text-teal-400 transition-colors">{req.title}</h3>
-                        <p className="text-slate-500 dark:text-gray-400 text-sm mt-1 line-clamp-2 leading-relaxed">{req.description}</p>
+                    {/* Title + Status — stacked on mobile, side-by-side on sm+ */}
+                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-1 sm:gap-3">
+                      <div className="min-w-0">
+                        <h3 className="font-semibold text-slate-900 dark:text-white text-sm sm:text-base leading-tight hover:text-teal-600 dark:hover:text-teal-400 transition-colors break-words">{req.title}</h3>
+                        <p className="text-slate-500 dark:text-gray-400 text-xs sm:text-sm mt-0.5 line-clamp-2 leading-relaxed">{req.description}</p>
                       </div>
-                      <StatusBadge status={req.status_name} />
+                      <div className="flex-shrink-0">
+                        <StatusBadge status={req.status_name} />
+                      </div>
                     </div>
-                    <div className="flex flex-wrap gap-4 mt-3 text-xs text-slate-500 dark:text-gray-400">
+
+                    {/* Meta info */}
+                    <div className="flex flex-wrap gap-x-3 gap-y-1 mt-2 text-xs text-slate-500 dark:text-gray-400">
                       <span>Type: <span className="text-slate-800 dark:text-gray-300 font-medium">{req.type_name || '—'}</span></span>
                       {isAdmin && <span>By: <span className="text-slate-800 dark:text-gray-300 font-medium">{req.submitted_by_name || '—'}</span></span>}
-                      <span>Date: <span className="text-slate-800 dark:text-gray-300 font-medium">{formatUserFriendlyDate(req.created_date)}</span></span>
+                      <span className="hidden sm:inline">Date: <span className="text-slate-800 dark:text-gray-300 font-medium">{formatUserFriendlyDate(req.created_date)}</span></span>
                       <PriorityBadge priority={req.priority} />
                     </div>
-                    <div className="flex gap-2 mt-3" onClick={e => e.stopPropagation()}>
+
+                    {/* Action Buttons */}
+                    <div className="flex flex-wrap gap-2 mt-2" onClick={e => e.stopPropagation()}>
                       {isResident && req.status_name === 'OPEN' && (
                         <button 
                           onClick={() => handleCancel(req)}
