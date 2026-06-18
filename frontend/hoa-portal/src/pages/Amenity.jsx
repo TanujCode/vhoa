@@ -859,54 +859,71 @@ const Amenity = ({ community, user, setActivePage, setPaymentState }) => {
             ) : (
               <div className="divide-y divide-slate-100 dark:divide-white/5">
                 {bookings.map(b => (
-                  <div key={b.booking_id} className="p-5 hover:bg-slate-50 dark:hover:bg-white/5 transition flex items-center gap-4">
-                    <div className="w-12 h-12 bg-teal-500/10 dark:bg-teal-500/20 rounded-2xl flex items-center justify-center flex-shrink-0">
-                      <Calendar size={22} className="text-teal-600 dark:text-teal-400" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-slate-900 dark:text-white">{b.amenity_name}</h3>
-                      <div className="flex flex-wrap gap-3 mt-1.5 text-xs text-slate-500 dark:text-gray-400">
-                        <span>📅 {formatDate(b.booking_date)}</span>
-                        <span>🕐 {b.slot_start} - {b.slot_end}</span>
-                        {isAdmin && <span>👤 {b.booked_by_name}</span>}
-                        {b.fee_amount > 0 && <span className={b.is_paid ? 'text-teal-600 dark:text-teal-400 font-medium' : 'text-red-600 dark:text-red-400 font-medium'}>
-                          ${b.fee_amount} {b.is_paid ? '✓ Paid' : '⚠ Unpaid'}
-                        </span>}
+                  <div key={b.booking_id} className="p-4 sm:p-5 hover:bg-slate-50 dark:hover:bg-white/5 transition">
+                    {/* Top row: icon + name + status badge */}
+                    <div className="flex items-start gap-3">
+                      <div className="w-10 h-10 sm:w-12 sm:h-12 bg-teal-500/10 dark:bg-teal-500/20 rounded-2xl flex items-center justify-center flex-shrink-0">
+                        <Calendar size={20} className="text-teal-600 dark:text-teal-400" />
                       </div>
-                      {b.fee_amount > 0 && !b.is_paid && ['PENDING', 'APPROVED'].includes(b.status) && (
-                        <div className="mt-2 text-[10px] sm:text-xs text-amber-600 dark:text-amber-400 bg-amber-500/10 dark:bg-amber-500/20 border border-amber-500/20 dark:border-amber-500/30 px-2.5 py-1 rounded-xl inline-flex items-center gap-1.5 w-fit font-medium">
-                          <span>⚠ The Amenity will be booked only if the Payment is made</span>
+                      <div className="flex-1 min-w-0">
+                        {/* Name + status - stacked on mobile */}
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
+                          <h3 className="font-semibold text-slate-900 dark:text-white text-sm sm:text-base truncate">{b.amenity_name}</h3>
+                          <div className="flex-shrink-0"><StatusBadge booking={b} /></div>
                         </div>
-                      )}
-                      {b.is_refunded && (
-                        <div className="mt-2 text-xs text-teal-600 dark:text-teal-400 bg-teal-500/10 dark:bg-teal-500/20 border border-teal-500/20 dark:border-teal-500/30 px-3 py-1.5 rounded-xl inline-flex items-center gap-1.5 w-fit">
-                          <span>💵 Refunded: ${b.refund_amount} on {formatDate(b.refund_date)}</span>
+
+                        {/* Meta info */}
+                        <div className="flex flex-wrap gap-x-3 gap-y-1 mt-1.5 text-xs text-slate-500 dark:text-gray-400">
+                          <span>📅 {formatDate(b.booking_date)}</span>
+                          <span>🕐 {b.slot_start} - {b.slot_end}</span>
+                          {isAdmin && <span>👤 {b.booked_by_name}</span>}
+                          {b.fee_amount > 0 && (
+                            <span className={b.is_paid ? 'text-teal-600 dark:text-teal-400 font-medium' : 'text-red-600 dark:text-red-400 font-medium'}>
+                              ${b.fee_amount} {b.is_paid ? '✓ Paid' : '⚠ Unpaid'}
+                            </span>
+                          )}
                         </div>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-3 flex-shrink-0">
-                      <StatusBadge booking={b} />
-                      {!b.is_paid && b.fee_amount > 0 && ['PENDING', 'APPROVED'].includes(b.status) && (
-                        <button onClick={() => handlePay(b)}
-                          className="px-3 py-1.5 bg-teal-600 hover:bg-teal-500 text-white rounded-xl text-xs font-medium transition shadow-sm">
-                          Pay Fee
-                        </button>
-                      )}
-                      {isAdmin && b.status === 'PENDING' && (
-                        <button onClick={() => handleApprove(b.booking_id)}
-                          className="px-3 py-1.5 bg-teal-500/10 dark:bg-teal-500/20 hover:bg-teal-500/20 dark:hover:bg-teal-500/30 text-teal-600 dark:text-teal-400 rounded-xl text-xs font-medium transition">
-                          Approve
-                        </button>
-                      )}
-                      {b.status === 'PENDING' && (
-                        <button onClick={() => handleCancel(b.booking_id)}
-                          className="px-3 py-1.5 bg-red-500/10 dark:bg-red-500/20 hover:bg-red-500/20 dark:hover:bg-red-500/30 text-red-600 dark:text-red-400 rounded-xl text-xs font-medium transition">
-                          Cancel
-                        </button>
-                      )}
+
+                        {/* Warning banner */}
+                        {b.fee_amount > 0 && !b.is_paid && ['PENDING', 'APPROVED'].includes(b.status) && (
+                          <div className="mt-2 text-[10px] sm:text-xs text-amber-600 dark:text-amber-400 bg-amber-500/10 dark:bg-amber-500/20 border border-amber-500/20 dark:border-amber-500/30 px-2.5 py-1 rounded-xl inline-flex items-center gap-1.5 w-fit font-medium">
+                            <span>⚠ Payment required to confirm booking</span>
+                          </div>
+                        )}
+                        {b.is_refunded && (
+                          <div className="mt-2 text-xs text-teal-600 dark:text-teal-400 bg-teal-500/10 dark:bg-teal-500/20 border border-teal-500/20 dark:border-teal-500/30 px-3 py-1.5 rounded-xl inline-flex items-center gap-1.5 w-fit">
+                            <span>💵 Refunded: ${b.refund_amount} on {formatDate(b.refund_date)}</span>
+                          </div>
+                        )}
+
+                        {/* Action Buttons */}
+                        <div className="flex flex-wrap gap-2 mt-2">
+                          {/* Pay Fee — show for all communities when fee > 0 and unpaid */}
+                          {!b.is_paid && b.fee_amount > 0 && ['PENDING', 'APPROVED'].includes(b.status) && (
+                            <button onClick={() => handlePay(b)}
+                              className="px-3 py-1.5 bg-teal-600 hover:bg-teal-500 text-white rounded-xl text-xs font-semibold transition shadow-sm flex items-center gap-1">
+                              💳 Pay Fee
+                            </button>
+                          )}
+                          {isAdmin && b.status === 'PENDING' && (
+                            <button onClick={() => handleApprove(b.booking_id)}
+                              className="px-3 py-1.5 bg-teal-500/10 dark:bg-teal-500/20 hover:bg-teal-500/20 dark:hover:bg-teal-500/30 text-teal-600 dark:text-teal-400 rounded-xl text-xs font-medium transition">
+                              ✓ Approve
+                            </button>
+                          )}
+                          {b.status === 'PENDING' && (
+                            <button onClick={() => handleCancel(b.booking_id)}
+                              className="px-3 py-1.5 bg-red-500/10 dark:bg-red-500/20 hover:bg-red-500/20 dark:hover:bg-red-500/30 text-red-600 dark:text-red-400 rounded-xl text-xs font-medium transition">
+                              ✕ Cancel
+                            </button>
+                          )}
+                        </div>
+                      </div>
                     </div>
                   </div>
                 ))}
+              </div>
+
               </div>
             )}
           </div>

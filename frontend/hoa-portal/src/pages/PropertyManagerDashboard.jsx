@@ -272,24 +272,24 @@ const PropertyManagerDashboard = ({ community, user, setActivePage }) => {
         </div>
 
         {/* To-Do Checklist Widget */}
-        <div className="lg:col-span-2 bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 shadow-sm dark:shadow-none flex flex-col">
+        <div className="lg:col-span-2 bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-4 sm:p-6 shadow-sm dark:shadow-none flex flex-col">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-bold text-slate-900 dark:text-white">Daily PM Checklist</h3>
-            <span className="text-xs text-slate-400 dark:text-gray-500 font-mono">{tasks.filter(t => t.completed).length}/{tasks.length} Completed</span>
+            <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">Daily PM Checklist</h3>
+            <span className="text-xs text-slate-400 dark:text-gray-500 font-mono ml-2 flex-shrink-0">{tasks.filter(t => t.completed).length}/{tasks.length} Done</span>
           </div>
 
           {/* Add Task Form */}
           <form onSubmit={handleAddTask} className="flex gap-2 mb-4">
             <input
               type="text"
-              placeholder="Add temporary operational task..."
+              placeholder="Add task..."
               value={newTaskText}
               onChange={(e) => setNewTaskText(e.target.value)}
-              className="flex-1 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-[#1D9E75] placeholder-slate-400 dark:placeholder-gray-500"
+              className="flex-1 min-w-0 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl px-3 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-[#1D9E75] placeholder-slate-400 dark:placeholder-gray-500"
             />
             <button
               type="submit"
-              className="px-4 py-2.5 bg-[#1D9E75] hover:bg-[#15805d] rounded-xl text-white text-sm font-semibold transition"
+              className="flex-shrink-0 w-10 h-10 bg-[#1D9E75] hover:bg-[#15805d] rounded-xl text-white flex items-center justify-center transition"
             >
               <Plus size={18} />
             </button>
@@ -332,10 +332,10 @@ const PropertyManagerDashboard = ({ community, user, setActivePage }) => {
       {/* Recent Activity - 2 Columns */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Recent Violations */}
-        <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 shadow-sm dark:shadow-none">
+        <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-4 sm:p-6 shadow-sm dark:shadow-none">
           <div className="flex items-center justify-between mb-4 border-b border-slate-100 dark:border-white/5 pb-2">
-            <h3 className="text-lg font-bold text-slate-900 dark:text-white">Recent Compliance Issues</h3>
-            <button onClick={() => setActivePage('violations')} className="text-xs text-teal-600 dark:text-[#25C490] hover:underline">View All</button>
+            <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">Recent Compliance</h3>
+            <button onClick={() => setActivePage('violations')} className="text-xs text-teal-600 dark:text-[#25C490] hover:underline flex-shrink-0 ml-2">View All</button>
           </div>
           {violations.length === 0 ? (
             <p className="text-slate-500 dark:text-gray-400 py-10 text-center text-sm">No recent violations recorded</p>
@@ -356,10 +356,10 @@ const PropertyManagerDashboard = ({ community, user, setActivePage }) => {
         </div>
 
         {/* Recent Service Requests */}
-        <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 shadow-sm dark:shadow-none">
+        <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-4 sm:p-6 shadow-sm dark:shadow-none">
           <div className="flex items-center justify-between mb-4 border-b border-slate-100 dark:border-white/5 pb-2">
-            <h3 className="text-lg font-bold text-slate-900 dark:text-white">Recent Service Requests</h3>
-            <button onClick={() => setActivePage('servicereq')} className="text-xs text-teal-600 dark:text-[#25C490] hover:underline">View All</button>
+            <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">Recent Service Reqs</h3>
+            <button onClick={() => setActivePage('servicereq')} className="text-xs text-teal-600 dark:text-[#25C490] hover:underline flex-shrink-0 ml-2">View All</button>
           </div>
           {requests.length === 0 ? (
             <p className="text-slate-500 dark:text-gray-400 py-10 text-center text-sm">No pending requests logged</p>
