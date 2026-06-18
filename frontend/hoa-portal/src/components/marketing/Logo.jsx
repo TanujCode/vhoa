@@ -1,39 +1,47 @@
-import React from 'react';
+import React, { useId } from 'react';
+import { useTheme } from '../../context/ThemeContext';
 
 /**
- * NestBloq Logo — SVG with textLength to guarantee consistent layout
- * across all platforms regardless of font loading state.
+ * NestBloq Logo — Premium pure SVG implementation.
+ * Renders sharp scalable vector shapes matching the design specifications exactly.
+ * Applies drop shadow filters for realistic 3D depth, resolves gradient conflicts
+ * using unique IDs, and adjusts colors dynamically to look perfect on both light
+ * and dark backgrounds.
  *
  * variants: "currentColor" | "light" | "dark" | "auth" | "white"
  */
 export default function Logo({ className = 'h-9', variant = 'currentColor', forceWhite = false }) {
-  const v = forceWhite ? 'white' : variant;
+  const uniqueId = useId().replace(/:/g, '');
+  const gradientId = `nb_g_${uniqueId}`;
 
-  const textFill =
-    v === 'white'               ? '#ffffff'
-    : v === 'auth' || v === 'dark' ? '#ffffff'
-    : v === 'light'             ? '#0f172a'
-    : 'currentColor';
+  let theme = 'light';
+  try {
+    const context = useTheme();
+    if (context && context.theme) {
+      theme = context.theme;
+    }
+  } catch (e) {
+    // Fallback if rendered outside ThemeContext
+  }
 
-  const iconStroke = v === 'white' ? '#ffffff' : 'url(#nb_g)';
-  const iconFill   = v === 'white' ? '#ffffff' : 'url(#nb_g)';
+  // Determine if background context is dark vs light
+  const isDarkBg =
+    forceWhite ||
+    variant === 'white' ||
+    variant === 'auth' ||
+    variant === 'dark' ||
+    (variant === 'currentColor' && theme === 'dark');
 
-  const windowFill =
-    v === 'white'  ? '#10b981'
-    : v === 'auth' ? '#0A2240'
-    : v === 'dark' ? '#162535'
-    : v === 'light'? '#dbeafe'
-    : '#ffffff';
-
-  /*
-   * Layout — viewBox "0 0 228 56"
-   * N      : x=3,  forced width=26px  → ends x=29
-   * [E]    : x=33, width=28px         → ends x=61  (4px gap after N)
-   * STBL   : x=65, forced width=90px  → ends x=155 (4px gap after E)
-   * O circ : cx=169, r=13             → left=156   (1px gap after STBL)
-   * Q circ : cx=186, r=13             → overlaps O by 9px
-   * Q tail : (193,43)→(207,54)
-   */
+  // Colors based on theme/variant context
+  const textFill = isDarkBg ? '#ffffff' : '#0F172A';
+  const startColor = isDarkBg ? '#74B9FF' : '#5BA4F5';
+  const endColor = isDarkBg ? '#3882F6' : '#1D68DF';
+  const circleColor = isDarkBg ? '#3882F6' : '#1D68DF';
+  
+  // Shadow colors based on background
+  const shadowColor = isDarkBg ? 'rgba(0, 0, 0, 0.5)' : 'rgba(15, 23, 42, 0.25)';
+  const circleShadowColor = isDarkBg ? 'rgba(0, 0, 0, 0.35)' : 'rgba(15, 23, 42, 0.15)';
+  const overlapShadowColor = isDarkBg ? 'rgba(0, 0, 0, 0.5)' : 'rgba(15, 23, 42, 0.3)';
 
   return (
     <svg
@@ -42,11 +50,12 @@ export default function Logo({ className = 'h-9', variant = 'currentColor', forc
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       aria-label="NestBloq"
+      style={{ display: 'inline-block', height: '100%', width: 'auto' }}
     >
       <defs>
-        <linearGradient id="nb_g" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#74B9FF" />
-          <stop offset="100%" stopColor="#4A90D9" />
+        <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor={startColor} />
+          <stop offset="100%" stopColor={endColor} />
         </linearGradient>
       </defs>
 
@@ -62,18 +71,21 @@ export default function Logo({ className = 'h-9', variant = 'currentColor', forc
         fill={textFill}
       >N</text>
 
-      {/* ── E  (house icon) ───────────────────── */}
-      {/* Roof triangle */}
-      <path d="M33 21 L47 4 L61 21 Z" fill={iconFill} />
-      {/* Window panes */}
-      <rect x="44"   y="10"   width="3" height="3" rx="0.5" fill={windowFill} />
-      <rect x="48.5" y="10"   width="3" height="3" rx="0.5" fill={windowFill} />
-      <rect x="44"   y="14.5" width="3" height="3" rx="0.5" fill={windowFill} />
-      <rect x="48.5" y="14.5" width="3" height="3" rx="0.5" fill={windowFill} />
+      {/* ── E (House Icon) with Drop Shadow ── */}
+      <g style={{ filter: `drop-shadow(0px 2.5px 2px ${shadowColor})` }}>
+        {/* Roof triangle */}
+        <path d="M33 21 L47 4 L61 21 Z" fill={`url(#${gradientId})`} />
+        {/* Window panes */}
+        <rect x="44" y="10" width="3" height="3" rx="0.5" fill="#ffffff" />
+        <rect x="48.5" y="10" width="3" height="3" rx="0.5" fill="#ffffff" />
+        <rect x="44" y="14.5" width="3" height="3" rx="0.5" fill="#ffffff" />
+        <rect x="48.5" y="14.5" width="3" height="3" rx="0.5" fill="#ffffff" />
+      </g>
+
       {/* 3 bars (E body) */}
-      <rect x="33" y="24" width="28" height="5" rx="2.5" fill={iconFill} />
-      <rect x="33" y="32" width="28" height="5" rx="2.5" fill={iconFill} />
-      <rect x="33" y="40" width="28" height="5" rx="2.5" fill={iconFill} />
+      <rect x="33" y="24" width="28" height="5" rx="2.5" fill={`url(#${gradientId})`} />
+      <rect x="33" y="32" width="28" height="5" rx="2.5" fill={`url(#${gradientId})`} />
+      <rect x="33" y="40" width="28" height="5" rx="2.5" fill={`url(#${gradientId})`} />
 
       {/* ── STBL ──────────────────────────────── */}
       <text
@@ -87,19 +99,26 @@ export default function Logo({ className = 'h-9', variant = 'currentColor', forc
         fill={textFill}
       >STBL</text>
 
-      {/* ── OQ ────────────────────────────────── */}
-      {/* O circle — vertically centered at cy=33 (mid of cap height) */}
-      <circle cx="169" cy="33" r="13" stroke={iconStroke} strokeWidth="4.5" fill="none" />
-      {/* Q circle — overlaps O */}
-      <circle cx="186" cy="33" r="13" stroke={iconStroke} strokeWidth="4.5" fill="none" />
-      {/* Q tail — diagonal down-right */}
-      <line
-        x1="193" y1="42"
-        x2="207" y2="54"
-        stroke={iconStroke}
+      {/* ── OQ Overlap & Shadows ──────────────── */}
+      {/* O circle */}
+      <circle
+        cx="169"
+        cy="33"
+        r="13"
+        stroke={circleColor}
         strokeWidth="4.5"
-        strokeLinecap="round"
+        fill="none"
+        style={{ filter: `drop-shadow(0px 1.5px 2px ${circleShadowColor})` }}
       />
+
+      {/* Q group with shadow casting on O */}
+      <g style={{ filter: `drop-shadow(-2px 1.5px 2px ${overlapShadowColor})` }}>
+        {/* Q circle */}
+        <circle cx="186" cy="33" r="13" stroke={circleColor} strokeWidth="4.5" fill="none" />
+        {/* Wavy Q tail */}
+        <path d="M 191 41 C 193 46, 196 50, 206 50" stroke={circleColor} strokeWidth="4.5" strokeLinecap="round" fill="none" />
+      </g>
     </svg>
   );
 }
+
