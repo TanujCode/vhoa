@@ -923,8 +923,6 @@ const Amenity = ({ community, user, setActivePage, setPaymentState }) => {
                   </div>
                 ))}
               </div>
-
-              </div>
             )}
           </div>
         </div>
