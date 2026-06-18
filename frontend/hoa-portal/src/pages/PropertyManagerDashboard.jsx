@@ -274,7 +274,7 @@ const PropertyManagerDashboard = ({ community, user, setActivePage }) => {
         {/* To-Do Checklist Widget */}
         <div className="lg:col-span-2 bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-4 sm:p-6 shadow-sm dark:shadow-none flex flex-col">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">Daily PM Checklist</h3>
+            <h3 className="text-sm sm:text-lg font-bold text-slate-900 dark:text-white">Daily PM Checklist</h3>
             <span className="text-xs text-slate-400 dark:text-gray-500 font-mono ml-2 flex-shrink-0">{tasks.filter(t => t.completed).length}/{tasks.length} Done</span>
           </div>
 
