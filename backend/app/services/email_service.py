@@ -113,6 +113,11 @@ def send_otp_email(to_email: str, otp_code: str, otp_type: str) -> bool:
         <p style="color: #9CA3AF; font-size: 13px; margin: 0;">
           ⏰ This code expires in <strong style="color: #ffffff;">10 minutes</strong>
         </p>
+        <div style="margin: 30px 0; text-align: center;">
+          <a href="https://nestbloq.vercel.app/login" style="background-color: #14B8A6; color: #000000; padding: 12px 24px; font-weight: bold; font-size: 15px; text-decoration: none; border-radius: 8px; display: inline-block; box-shadow: 0 4px 6px rgba(20, 184, 166, 0.25);">
+            Log In to Portal
+          </a>
+        </div>
         <p style="color: #6B7280; font-size: 12px; margin: 16px 0 0;">
           If you did not request this, please ignore this email.
         </p>
@@ -289,6 +294,11 @@ def send_payment_received_email(
         <p style="color: #9CA3AF; line-height: 1.6; font-size: 14px;">
           Enjoy your reservation! Let us know if you have any questions.
         </p>
+        <div style="margin: 30px 0; text-align: center;">
+          <a href="https://nestbloq.vercel.app/login" style="background-color: #14B8A6; color: #000000; padding: 12px 24px; font-weight: bold; font-size: 15px; text-decoration: none; border-radius: 8px; display: inline-block; box-shadow: 0 4px 6px rgba(20, 184, 166, 0.25);">
+            Log In to Portal
+          </a>
+        </div>
       </div>
     """
     html = _wrap_in_responsive_layout(inner_html)
@@ -305,6 +315,7 @@ def send_general_payment_receipt_email(
     community_name: str,
     escrow_bank: str = None
 ) -> bool:
+    """Send general payment receipt"""
     subject = f"NestBloq — Payment Receipt: {reason.replace('_', ' ').title()}"
     escrow_info = f"<p style='color: #9CA3AF;'>Paid to Escrow Bank: <strong>{escrow_bank}</strong></p>" if escrow_bank else ""
     inner_html = f"""
@@ -326,6 +337,11 @@ def send_general_payment_receipt_email(
           </table>
         </div>
         {escrow_info}
+        <div style="margin: 30px 0; text-align: center;">
+          <a href="https://nestbloq.vercel.app/login" style="background-color: #14B8A6; color: #000000; padding: 12px 24px; font-weight: bold; font-size: 15px; text-decoration: none; border-radius: 8px; display: inline-block; box-shadow: 0 4px 6px rgba(20, 184, 166, 0.25);">
+            Log In to Portal
+          </a>
+        </div>
       </div>
     """
     html = _wrap_in_responsive_layout(inner_html)
@@ -341,6 +357,7 @@ def send_due_payment_reminder_email(
     community_name: str,
     days_left: int
 ) -> bool:
+    """Send due payment reminder email"""
     subject = f"NestBloq — Reminder: Payment Due in {days_left} Days"
     inner_html = f"""
       <div style="padding: 40px 30px;">
@@ -362,6 +379,11 @@ def send_due_payment_reminder_email(
         <p style="color: #9CA3AF; line-height: 1.6; font-size: 14px;">
           Please log in to the NestBloq portal to complete this payment.
         </p>
+        <div style="margin: 30px 0; text-align: center;">
+          <a href="https://nestbloq.vercel.app/login" style="background-color: #14B8A6; color: #000000; padding: 12px 24px; font-weight: bold; font-size: 15px; text-decoration: none; border-radius: 8px; display: inline-block; box-shadow: 0 4px 6px rgba(20, 184, 166, 0.25);">
+            Log In to Portal
+          </a>
+        </div>
       </div>
     """
     html = _wrap_in_responsive_layout(inner_html)
@@ -369,6 +391,7 @@ def send_due_payment_reminder_email(
 
 
 def send_invite_email(to_email: str, full_name: str, temp_password: str, community_name: str, role_name: str) -> bool:
+    """Send email invitation to join community"""
     subject = f"Invitation to join {community_name} on NestBloq"
     role_label = role_name.replace('_', ' ').title()
     inner_html = f"""
@@ -388,7 +411,13 @@ def send_invite_email(to_email: str, full_name: str, temp_password: str, communi
           </table>
         </div>
 
-        <p style="color: #9CA3AF; line-height: 1.6;">
+        <div style="margin: 30px 0; text-align: center;">
+          <a href="https://nestbloq.vercel.app/login" style="background-color: #14B8A6; color: #000000; padding: 12px 24px; font-weight: bold; font-size: 15px; text-decoration: none; border-radius: 8px; display: inline-block; box-shadow: 0 4px 6px rgba(20, 184, 166, 0.25);">
+            Log In to Portal
+          </a>
+        </div>
+
+        <p style="color: #9CA3AF; line-height: 1.6; font-size: 13px;">
           Please log in using these credentials and verify/update your password in your Profile Settings as soon as possible.
         </p>
       </div>
@@ -398,6 +427,7 @@ def send_invite_email(to_email: str, full_name: str, temp_password: str, communi
 
 
 def send_association_email(to_email: str, full_name: str, community_name: str, role_name: str) -> bool:
+    """Send email when added to an association"""
     subject = f"You have been added to {community_name} on NestBloq"
     role_label = role_name.replace('_', ' ').title()
     inner_html = f"""
@@ -409,7 +439,12 @@ def send_association_email(to_email: str, full_name: str, community_name: str, r
         <p style="color: #9CA3AF; line-height: 1.6;">
           Since you already have a registered account on NestBloq, you can log in using your existing credentials.
         </p>
-        <p style="color: #9CA3AF; line-height: 1.6;">
+        <div style="margin: 30px 0; text-align: center;">
+          <a href="https://nestbloq.vercel.app/login" style="background-color: #14B8A6; color: #000000; padding: 12px 24px; font-weight: bold; font-size: 15px; text-decoration: none; border-radius: 8px; display: inline-block; box-shadow: 0 4px 6px rgba(20, 184, 166, 0.25);">
+            Log In to Portal
+          </a>
+        </div>
+        <p style="color: #9CA3AF; line-height: 1.6; font-size: 13px;">
           After logging in, you can switch to <strong>{community_name}</strong> using the community selector dropdown in the Topbar.
         </p>
       </div>
