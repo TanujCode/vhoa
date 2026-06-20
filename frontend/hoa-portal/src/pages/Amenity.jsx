@@ -712,7 +712,6 @@ const Amenity = ({ community, user, setActivePage, setPaymentState }) => {
     return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   };
 
-
   return (
     <div className="text-slate-900 dark:text-white">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">

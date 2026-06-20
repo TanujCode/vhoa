@@ -6,12 +6,23 @@ import AdminPortal from './pages/auth/AdminPortal';
 import ForgotPassword from './pages/auth/ForgotPassword';
 import SearchAndJoinHOA from './pages/SearchAndJoinHOA';
 import VerifyOtpPage from './pages/VerifyOtpPage';
-import WaitingApproval from './pages/WaitingApproval';
+import WaitingApproval from './pages/WaitingApproval'; // 🔥 Waiting page ko import kiya
 import ClientOnboarding from './pages/auth/ClientOnboarding';
 
+// Marketing pages
+import LandingPage from './pages/marketing/LandingPage';
+import FeaturesPage from './pages/marketing/FeaturesPage';
+import PricingPage from './pages/marketing/PricingPage';
+import AboutPage from './pages/marketing/AboutPage';
+import ContactPage from './pages/marketing/ContactPage';
+import HowItWorksPage from './pages/marketing/HowItWorksPage';
+
+
+// Smart Protected Route with Security Check
 const ProtectedRoute = () => {
   const token = localStorage.getItem('token') || sessionStorage.getItem('token') || localStorage.getItem('access_token') || sessionStorage.getItem('access_token');
   
+  // Agar token nahi hai toh seedha login pe bhejo
   if (!token) {
     return <Navigate to="/login" replace />;
   }
@@ -35,6 +46,14 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
+        {/* --- Marketing Routes --- */}
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/features" element={<FeaturesPage />} />
+        <Route path="/how-it-works" element={<HowItWorksPage />} />
+        <Route path="/pricing" element={<PricingPage />} />
+        <Route path="/about" element={<AboutPage />} />
+        <Route path="/contact" element={<ContactPage />} />
+
         {/* --- Public Routes --- */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
@@ -44,8 +63,10 @@ export default function App() {
 
         {/* --- Private/Protected Routes --- */}
         <Route element={<ProtectedRoute />}>
+          {/* 1. User register ke baad yahan aayenge community search karne */}
           <Route path="/join-community" element={<SearchAndJoinHOA />} />
           
+          {/* 2. 🔥 NEW ROUTE: Submit karne ke baad waiting lock standard map */}
           <Route path="/waiting-approval" element={<WaitingApproval />} />
           
           {/* 3. Final Main Dashboard Portal view */}
@@ -53,8 +74,7 @@ export default function App() {
         </Route>
 
         {/* --- Redirects & Fallbacks --- */}
-        <Route path="/" element={<Navigate to="/login" replace />} />
-        <Route path="*" element={<Navigate to="/login" replace />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
   );
