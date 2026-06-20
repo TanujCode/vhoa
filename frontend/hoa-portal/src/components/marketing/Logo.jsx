@@ -50,7 +50,6 @@ export default function Logo({ className = 'h-9', variant = 'currentColor', forc
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       aria-label="NestBloq"
-      style={{ display: 'inline-block', height: '100%', width: 'auto' }}
     >
       <defs>
         <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="100%">
