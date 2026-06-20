@@ -111,7 +111,7 @@ const Sidebar = ({ activePage, setActivePage, isOpen, setIsOpen, user, userRole:
         
         {/* Logo */}
         <div className="h-16 flex items-center px-4 border-b border-slate-200/60 dark:border-white/10">
-          <Logo variant={isDark ? "dark" : "light"} className="h-8 w-auto" />
+          <Logo variant={isDark ? "dark" : "light"} className="h-9 w-auto" />
         </div>
 
         {/* Navigation */}
