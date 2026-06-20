@@ -10,6 +10,43 @@ from app.schemas.amenity import (
 )
 
 
+from zoneinfo import ZoneInfo
+
+
+def get_slot_times(start_str: str, end_str: str) -> tuple[str, str, str, str]:
+    """
+    Given total operational hours (e.g. "08:00" to "20:00"),
+    calculate the midpoint and split the day into two equal slots.
+    """
+    try:
+        t1 = datetime.strptime(start_str.strip(), "%H:%M")
+        t2 = datetime.strptime(end_str.strip(), "%H:%M")
+        delta = (t2 - t1).total_seconds()
+        if delta < 0:
+            delta += 24 * 3600
+        mid = t1 + timedelta(seconds=delta / 2)
+        mid_str = mid.strftime("%H:%M")
+        return start_str.strip(), mid_str, mid_str, end_str.strip()
+    except Exception:
+        return start_str.strip(), "14:00", "14:00", end_str.strip()
+
+
+def get_amenity_slots(amenity: Amenity) -> tuple[str, str, str, str]:
+    """
+    Return slot timings for slot 1 and slot 2.
+    If the legacy database record has identical timings for slot 1 and slot 2,
+    automatically split them in half dynamically on the fly.
+    """
+    s1_start = amenity.slot1_start.strip() if amenity.slot1_start else "08:00"
+    s1_end = amenity.slot1_end.strip() if amenity.slot1_end else "14:00"
+    s2_start = amenity.slot2_start.strip() if amenity.slot2_start else "14:00"
+    s2_end = amenity.slot2_end.strip() if amenity.slot2_end else "20:00"
+    
+    if s1_start == s2_start and s1_end == s2_end:
+        return get_slot_times(s1_start, s1_end)
+    return s1_start, s1_end, s2_start, s2_end
+
+
 #  AMENITY TYPE
 def create_amenity_type(data: AmenityTypeCreate, db: Session) -> AmenityType:
     atype = AmenityType(
@@ -28,6 +65,7 @@ def get_amenity_types(db: Session) -> list[AmenityType]:
 
 #  AMENITY CRUD
 def create_amenity(data: AmenityCreate, created_by_id: int, db: Session) -> Amenity:
+    s1_start, s1_end, s2_start, s2_end = get_slot_times(data.slot1_start, data.slot1_end)
     amenity = Amenity(
         community_id        = data.community_id,
         amenity_type_id     = data.amenity_type_id,
@@ -37,11 +75,10 @@ def create_amenity(data: AmenityCreate, created_by_id: int, db: Session) -> Amen
         capacity            = data.capacity,
         fee_enabled         = data.fee_enabled,
         booking_fee         = data.booking_fee,
-        slot1_start         = data.slot1_start,
-        slot1_end           = data.slot1_end,
-        # Keep slot2 defaults for backward compat
-        slot2_start         = data.slot1_start,
-        slot2_end           = data.slot1_end,
+        slot1_start         = s1_start,
+        slot1_end           = s1_end,
+        slot2_start         = s2_start,
+        slot2_end           = s2_end,
         pool_open           = data.pool_open,
         tentative_open_date = data.tentative_open_date,
         is_pool_reserved    = data.is_pool_reserved,
@@ -89,12 +126,14 @@ def update_amenity(
     if data.booking_fee is not None:  amenity.booking_fee = data.booking_fee
     if data.active_status is not None: amenity.active_status = data.active_status
 
-    if data.slot1_start is not None:
-        amenity.slot1_start = data.slot1_start
-        amenity.slot2_start = data.slot1_start
-    if data.slot1_end is not None:
-        amenity.slot1_end = data.slot1_end
-        amenity.slot2_end = data.slot1_end
+    if data.slot1_start is not None or data.slot1_end is not None:
+        start = data.slot1_start if data.slot1_start is not None else amenity.slot1_start
+        end = data.slot1_end if data.slot1_end is not None else (amenity.slot2_end if amenity.slot2_end else amenity.slot1_end)
+        s1_start, s1_end, s2_start, s2_end = get_slot_times(start, end)
+        amenity.slot1_start = s1_start
+        amenity.slot1_end = s1_end
+        amenity.slot2_start = s2_start
+        amenity.slot2_end = s2_end
 
     # Pool Status Fields
     if data.pool_open is not None:
@@ -186,14 +225,14 @@ def check_availability(amenity_id: int, booking_date: date, db: Session) -> dict
 
     booked_slots = {b.slot_number for b in existing}
 
-    slot_time = f"{amenity.slot1_start} - {amenity.slot1_end}"
+    s1_start, s1_end, s2_start, s2_end = get_amenity_slots(amenity)
 
     return {
         "booking_date":     booking_date,
         "slot_1_available": 1 not in booked_slots,
         "slot_2_available": 2 not in booked_slots,
-        "slot_1_time":      slot_time,
-        "slot_2_time":      slot_time,
+        "slot_1_time":      f"{s1_start} - {s1_end}",
+        "slot_2_time":      f"{s2_start} - {s2_end}",
     }
 
 
@@ -213,6 +252,13 @@ def create_booking(
     community = db.query(Community).filter(Community.community_id == data.community_id).first()
     if not community:
         raise ValueError("Community not found.")
+
+    # Timezone-aware past date check
+    comm_tz = community.time_zone if community.time_zone else "America/New_York"
+    tz = ZoneInfo(comm_tz)
+    today_in_tz = datetime.now(tz).date()
+    if data.booking_date < today_in_tz:
+        raise ValueError("The booking date cannot be in the past.")
 
     # If pool is closed or reserved, block booking
     if not amenity.pool_open:
@@ -240,8 +286,13 @@ def create_booking(
         )
 
     # Slot timing set
-    slot_start = amenity.slot1_start
-    slot_end   = amenity.slot1_end
+    s1_start, s1_end, s2_start, s2_end = get_amenity_slots(amenity)
+    if data.slot_number == 1:
+        slot_start = s1_start
+        slot_end   = s1_end
+    else:
+        slot_start = s2_start
+        slot_end   = s2_end
     slot_time_str = f"{slot_start} - {slot_end}"
 
     # Fee calculate based on community setting & amenity fee setting

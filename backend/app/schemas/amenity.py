@@ -102,12 +102,7 @@ class BookingCreate(BaseModel):
             raise ValueError("The slot number should be 1 or 2.")
         return v
 
-    @field_validator("booking_date")
-    @classmethod
-    def date_future(cls, v):
-        if v < date.today():
-            raise ValueError("The booking date cannot be in the past.")
-        return v
+
 
 
 class BookingCancelRequest(BaseModel):

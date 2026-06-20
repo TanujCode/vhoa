@@ -41,8 +41,12 @@ const BookModal = ({ amenity, communityId, onClose, onSuccess }) => {
   const [loading, setLoading] = useState(false);
   const [availability, setAvailability] = useState(null);
   const [confirmTick, setConfirmTick] = useState(false);
+  
+  // Local today string (YYYY-MM-DD)
+  const localToday = new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().split('T')[0];
+
   const [form, setForm] = useState({
-    booking_date: new Date().toISOString().split('T')[0],
+    booking_date: localToday,
     slot_number: '',
   });
 
@@ -95,7 +99,7 @@ const BookModal = ({ amenity, communityId, onClose, onSuccess }) => {
               type="date"
               required
               value={form.booking_date}
-              min={new Date().toISOString().split('T')[0]}
+              min={localToday}
               onChange={e => setForm({ ...form, booking_date: e.target.value })}
               className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 
                rounded-xl px-4 py-3 text-sm 
@@ -119,7 +123,7 @@ const BookModal = ({ amenity, communityId, onClose, onSuccess }) => {
                       : 'border-slate-100 bg-slate-100 text-slate-400 dark:border-white/5 dark:bg-white/5 dark:text-gray-600 cursor-not-allowed'
                     }`}>
                   <div className="flex items-center justify-between">
-                    <span>🌅 Slot 1 — {amenity.slot1_start || '08:00'} to {amenity.slot1_end || '14:00'}</span>
+                    <span>🌅 Slot 1 — {availability.slot_1_time}</span>
                     <span className={`text-xs px-2 py-0.5 rounded-full ${availability.slot_1_available ? 'bg-teal-500/10 text-teal-600 dark:bg-teal-500/20 dark:text-teal-400' : 'bg-red-500/10 text-red-600 dark:bg-red-500/20 dark:text-red-400'}`}>
                       {availability.slot_1_available ? 'Available' : 'Booked'}
                     </span>
@@ -135,7 +139,7 @@ const BookModal = ({ amenity, communityId, onClose, onSuccess }) => {
                       : 'border-slate-100 bg-slate-100 text-slate-400 dark:border-white/5 dark:bg-white/5 dark:text-gray-600 cursor-not-allowed'
                     }`}>
                   <div className="flex items-center justify-between">
-                    <span>🌆 Slot 2 — {amenity.slot2_start || '14:00'} to {amenity.slot2_end || '20:00'}</span>
+                    <span>🌆 Slot 2 — {availability.slot_2_time}</span>
                     <span className={`text-xs px-2 py-0.5 rounded-full ${availability.slot_2_available ? 'bg-teal-500/10 text-teal-600 dark:bg-teal-500/20 dark:text-teal-400' : 'bg-red-500/10 text-red-600 dark:bg-red-500/20 dark:text-red-400'}`}>
                       {availability.slot_2_available ? 'Available' : 'Booked'}
                     </span>
@@ -257,7 +261,7 @@ const CreateAmenityModal = ({ communityId, communityName, onClose, onSuccess }) 
             <textarea rows={2} value={form.description} onChange={e => setForm({ ...form, description: e.target.value })}
               className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500 resize-none" />
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="text-xs text-slate-500 dark:text-gray-400 mb-1 block">Location</label>
               <input type="text" value={form.location} onChange={e => setForm({ ...form, location: e.target.value })}
@@ -396,6 +400,16 @@ const CreateAmenityModal = ({ communityId, communityName, onClose, onSuccess }) 
 const EditAmenityModal = ({ amenity, communityName, onClose, onSuccess }) => {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
+  
+  const toLocalISOString = (dateInput) => {
+    if (!dateInput) return '';
+    const d = new Date(dateInput);
+    if (isNaN(d.getTime())) return '';
+    const offset = d.getTimezoneOffset();
+    const localTime = new Date(d.getTime() - (offset * 60 * 1000));
+    return localTime.toISOString().slice(0, 16);
+  };
+
   const [form, setForm] = useState({
     name: amenity.name || '',
     description: amenity.description || '',
@@ -405,9 +419,9 @@ const EditAmenityModal = ({ amenity, communityName, onClose, onSuccess }) => {
     booking_fee: amenity.booking_fee || 0.0,
     active_status: amenity.active_status || false,
     slot1_start: amenity.slot1_start || '08:00',
-    slot1_end: amenity.slot1_end || '20:00',
+    slot1_end: amenity.slot2_end || amenity.slot1_end || '20:00',
     pool_open: amenity.pool_open !== undefined ? amenity.pool_open : true,
-    tentative_open_date: amenity.tentative_open_date ? new Date(amenity.tentative_open_date).toISOString().slice(0, 16) : '',
+    tentative_open_date: toLocalISOString(amenity.tentative_open_date),
     is_pool_reserved: amenity.is_pool_reserved || false,
   });
 
@@ -459,7 +473,7 @@ const EditAmenityModal = ({ amenity, communityName, onClose, onSuccess }) => {
             <textarea rows={2} value={form.description} onChange={e => setForm({ ...form, description: e.target.value })}
               className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500 resize-none" />
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="text-xs text-slate-500 dark:text-gray-400 mb-1 block">Location</label>
               <input type="text" value={form.location} onChange={e => setForm({ ...form, location: e.target.value })}
@@ -684,7 +698,20 @@ const Amenity = ({ community, user, setActivePage, setPaymentState }) => {
     setActivePage('payments');
   };
 
-  const formatDate = (d) => d ? new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—';
+  const formatDate = (dateStr) => {
+    if (!dateStr) return '—';
+    const dateOnly = dateStr.includes('T') ? dateStr.split('T')[0] : dateStr;
+    const parts = dateOnly.split('-');
+    if (parts.length === 3) {
+      const year = parseInt(parts[0], 10);
+      const month = parseInt(parts[1], 10) - 1;
+      const day = parseInt(parts[2], 10);
+      const d = new Date(year, month, day);
+      return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    }
+    return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  };
+
 
   return (
     <div className="text-slate-900 dark:text-white">
@@ -789,7 +816,7 @@ const Amenity = ({ community, user, setActivePage, setPaymentState }) => {
 
                   <div className="bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-0 rounded-2xl p-3 mb-4 text-xs space-y-1">
                     <div className="flex justify-between text-slate-500 dark:text-gray-400">
-                      <span>🕐 Time Slot</span><span className="text-slate-800 dark:text-slate-200">{a.slot1_start} - {a.slot1_end}</span>
+                      <span>🕐 Time Slot</span><span className="text-slate-800 dark:text-slate-200">{a.slot1_start} - {a.slot2_end || a.slot1_end}</span>
                     </div>
                     {!a.pool_open && a.tentative_open_date && (
                       <div className="text-[10px] text-red-500 dark:text-red-400 font-medium pt-1 mt-1 border-t border-slate-200/50 dark:border-white/5">
