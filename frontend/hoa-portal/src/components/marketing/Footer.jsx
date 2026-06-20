@@ -25,8 +25,8 @@ export default function Footer() {
   const links = {
     Product: [
       { name: 'Features', path: '/features' },
-      { name: 'How It Works', path: '/how-it-works' },
-      { name: 'Pricing', path: '/pricing' },
+      { name: 'How It Works', path: '/#how-it-works' },
+      { name: 'Pricing', path: '#' },
       { name: 'Security', path: '#' },
       { name: 'Integrations', path: '#' },
     ],
@@ -37,8 +37,8 @@ export default function Footer() {
       { name: 'Self-Managed', path: '#' },
     ],
     Company: [
-      { name: 'About Us', path: '/about' },
-      { name: 'Contact Sales', path: '/contact' },
+      { name: 'About Us', path: '#' },
+      { name: 'Contact Sales', path: '#' },
       { name: 'Careers', path: '#' },
       { name: 'Press', path: '#' },
     ]

@@ -869,7 +869,7 @@ export default function LandingPage() {
                   Start for Free
                   <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
                 </Link>
-                <Link to="/how-it-works" className="px-7 py-3.5 text-sm font-semibold text-slate-700 dark:text-slate-300 rounded-xl border border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/5 hover:border-violet-300 dark:hover:border-violet-500/30 transition-all duration-200 flex items-center gap-2 group">
+                <Link to="#how-it-works" className="px-7 py-3.5 text-sm font-semibold text-slate-700 dark:text-slate-300 rounded-xl border border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/5 hover:border-violet-300 dark:hover:border-violet-500/30 transition-all duration-200 flex items-center gap-2 group">
                   <span className="w-6 h-6 rounded-full bg-violet-500/10 flex items-center justify-center">
                     <Play className="w-3 h-3 fill-violet-500 text-violet-500 ml-0.5" />
                   </span>
@@ -1262,7 +1262,7 @@ export default function LandingPage() {
               FAQs
             </div>
             <h2 className="font-display text-4xl font-black text-slate-900 dark:text-white tracking-tight">Everything you need to know</h2>
-            <p className="text-slate-500 dark:text-slate-400">Can't find an answer? <Link to="/contact" className="text-violet-500 hover:text-violet-600 font-medium">Contact our team →</Link></p>
+            <p className="text-slate-500 dark:text-slate-400">Can't find an answer? <Link to="#" className="text-violet-500 hover:text-violet-600 font-medium">Contact our team →</Link></p>
           </div>
           <div className="space-y-3">
             {faqs.map((faq, i) => (
@@ -1311,7 +1311,7 @@ export default function LandingPage() {
                   Get Started Free
                   <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
                 </Link>
-                <Link to="/contact" className="px-8 py-4 bg-white/10 hover:bg-white/20 border border-white/25 text-white font-semibold text-sm rounded-2xl transition-all flex items-center justify-center gap-2">
+                <Link to="#" className="px-8 py-4 bg-white/10 hover:bg-white/20 border border-white/25 text-white font-semibold text-sm rounded-2xl transition-all flex items-center justify-center gap-2">
                   <Phone className="w-4 h-4" />
                   Talk to Sales
                 </Link>

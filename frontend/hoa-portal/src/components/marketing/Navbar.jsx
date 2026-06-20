@@ -39,10 +39,10 @@ export default function Navbar() {
 
   const navLinks = [
     { name: 'Features', path: '/features' },
-    { name: 'How It Works', path: '/how-it-works' },
-    { name: 'Pricing', path: '/pricing' },
-    { name: 'About', path: '/about' },
-    { name: 'Contact', path: '/contact' },
+    { name: 'How It Works', path: '/#how-it-works' },
+    { name: 'Pricing', path: '#' },
+    { name: 'About', path: '#' },
+    { name: 'Contact', path: '#' },
   ];
 
   const megaMenuData = [
