@@ -31,10 +31,10 @@ export default function Footer() {
       { name: 'Integrations', path: '#' },
     ],
     Solutions: [
-      { name: 'HOA Boards', path: '#' },
-      { name: 'Property Managers', path: '#' },
-      { name: 'Resident Portal', path: '#' },
-      { name: 'Self-Managed', path: '#' },
+      { name: 'Rental Property Management', path: '/#solutions?type=rental' },
+      { name: 'Condo Management', path: '/#solutions?type=condo' },
+      { name: 'Apartment Portal', path: '/#solutions?type=apartment' },
+      { name: 'HOA Governance', path: '/#solutions?type=hoa' },
     ],
     Company: [
       { name: 'About Us', path: '#' },

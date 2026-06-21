@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import {
   ArrowRight, Play, CheckCircle, Zap,
   ChevronDown, ChevronUp, Star, UserPlus, Mail,
@@ -27,6 +27,11 @@ import featureFinance from '../../assets/feature_finance.png';
 import featureMaintenance from '../../assets/feature_maintenance.png';
 import featureSecurity from '../../assets/feature_security.png';
 import featureCopilot from '../../assets/feature_copilot.png';
+
+import solutionRental from '../../assets/solution_rental.png';
+import solutionCondo from '../../assets/solution_condo.png';
+import solutionApartment from '../../assets/solution_apartment.png';
+import solutionHoa from '../../assets/solution_hoa.png';
 
 /* ─── Hero Image Slideshow Slides ────────────────────── */
 const slides = [
@@ -680,6 +685,169 @@ export default function LandingPage() {
   const [openFaq, setOpenFaq] = useState(null);
   const [activeFeature, setActiveFeature] = useState(0);
 
+  const location = useLocation();
+  const solutionsSectionRef = useRef(null);
+  const [activeSolution, setActiveSolution] = useState('rental');
+
+  // Parse URL search query for solutions tab
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const type = params.get('type');
+    const validTypes = ['rental', 'condo', 'apartment', 'hoa'];
+    if (type && validTypes.includes(type)) {
+      setActiveSolution(type);
+      setTimeout(() => {
+        if (solutionsSectionRef.current) {
+          solutionsSectionRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 150);
+    } else if (location.hash === '#solutions') {
+      setTimeout(() => {
+        if (solutionsSectionRef.current) {
+          solutionsSectionRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 150);
+    }
+  }, [location]);
+
+  /* ─── Simulator State: Rental ─── */
+  const [rentalUnits, setRentalUnits] = useState([
+    { id: '101', occupant: 'Sarah Jenkins', rent: 1850, status: 'Paid', date: 'June 1' },
+    { id: '102', occupant: 'Marcus Vance', rent: 2100, status: 'Overdue', date: 'June 5' },
+    { id: '103', occupant: 'Aria Sterling', rent: 1950, status: 'Paid', date: 'June 2' },
+    { id: '104', occupant: 'N/A', rent: 2000, status: 'Vacant', date: '-' }
+  ]);
+  const [rentalSendingId, setRentalSendingId] = useState(null);
+
+  const sendRentalNotice = (id) => {
+    setRentalSendingId(id);
+    setTimeout(() => {
+      setRentalUnits(prev => prev.map(unit => {
+        if (unit.id === id) {
+          return { ...unit, status: 'Notice Sent' };
+        }
+        return unit;
+      }));
+      setRentalSendingId(null);
+    }, 1200);
+  };
+
+  const resetRentalDemo = () => {
+    setRentalUnits([
+      { id: '101', occupant: 'Sarah Jenkins', rent: 1850, status: 'Paid', date: 'June 1' },
+      { id: '102', occupant: 'Marcus Vance', rent: 2100, status: 'Overdue', date: 'June 5' },
+      { id: '103', occupant: 'Aria Sterling', rent: 1950, status: 'Paid', date: 'June 2' },
+      { id: '104', occupant: 'N/A', rent: 2000, status: 'Vacant', date: '-' }
+    ]);
+  };
+
+  /* ─── Simulator State: Condo ─── */
+  const [selectedFacility, setSelectedFacility] = useState('pool');
+  const [bookedSlots, setBookedSlots] = useState({
+    'pool_09:00': true,
+    'gym_13:00': true,
+    'tennis_15:00': true
+  });
+  const [bookingMsg, setBookingMsg] = useState(null);
+
+  const toggleSlot = (facility, time) => {
+    const slotKey = `${facility}_${time}`;
+    if (bookedSlots[slotKey]) {
+      setBookedSlots(prev => {
+        const next = { ...prev };
+        delete next[slotKey];
+        return next;
+      });
+      setBookingMsg(null);
+    } else {
+      setBookedSlots(prev => ({ ...prev, [slotKey]: true }));
+      const rsvCode = `RSV-${Math.random().toString(36).substr(2, 5).toUpperCase()}`;
+      setBookingMsg(`Booking confirmed for ${time}! Reference: ${rsvCode}`);
+      setTimeout(() => setBookingMsg(null), 4000);
+    }
+  };
+
+  /* ─── Simulator State: Apartment ─── */
+  const [apartmentTickets, setApartmentTickets] = useState([
+    { id: 'T-802', title: 'Elevator C Braking Noise', priority: 'High', status: 'Unassigned', contractor: 'None' },
+    { id: 'T-803', title: 'Basement Parking Pipe Leak', priority: 'High', status: 'Unassigned', contractor: 'None' },
+    { id: 'T-804', title: 'Breezeway Light Replacement', priority: 'Low', status: 'Completed', contractor: 'Elite Electrics' }
+  ]);
+  const [assigningTicketId, setAssigningTicketId] = useState(null);
+  const [dispatchStatus, setDispatchStatus] = useState(null);
+
+  const assignTicket = (ticketId, vendor) => {
+    setAssigningTicketId(ticketId);
+    setDispatchStatus("Connecting with vendor network...");
+    setTimeout(() => {
+      setDispatchStatus(`Generating temporary gate pass OTP for ${vendor}...`);
+      setTimeout(() => {
+        setApartmentTickets(prev => prev.map(t => {
+          if (t.id === ticketId) {
+            return { ...t, status: 'Dispatched', contractor: vendor };
+          }
+          return t;
+        }));
+        setAssigningTicketId(null);
+        setDispatchStatus(null);
+      }, 1000);
+    }, 1000);
+  };
+
+  const resetApartmentDemo = () => {
+    setApartmentTickets([
+      { id: 'T-802', title: 'Elevator C Braking Noise', priority: 'High', status: 'Unassigned', contractor: 'None' },
+      { id: 'T-803', title: 'Basement Parking Pipe Leak', priority: 'High', status: 'Unassigned', contractor: 'None' },
+      { id: 'T-804', title: 'Breezeway Light Replacement', priority: 'Low', status: 'Completed', contractor: 'Elite Electrics' }
+    ]);
+  };
+
+  /* ─── Simulator State: HOA e-Voting ─── */
+  const [voteStats, setVoteStats] = useState({ approve: 68, reject: 32 });
+  const [userChoice, setUserChoice] = useState(null);
+  const [votesAuditLogs, setVotesAuditLogs] = useState([
+    { time: '10:42 AM', action: 'Member #182 verified by credential hash.', hash: '8f2a...c011' },
+    { time: '10:45 AM', action: 'Member #094 cast encrypted vote.', hash: '9b3e...44fd' }
+  ]);
+
+  const castVote = (choice) => {
+    if (userChoice === choice) return;
+
+    setVoteStats(prev => {
+      let nextApprove = prev.approve;
+      let nextReject = prev.reject;
+
+      if (choice === 'approve') {
+        nextApprove += 1;
+        if (userChoice === 'reject') nextReject -= 1;
+      } else {
+        nextReject += 1;
+        if (userChoice === 'approve') nextApprove -= 1;
+      }
+
+      return { approve: nextApprove, reject: nextReject };
+    });
+
+    setUserChoice(choice);
+    
+    // Add audit log
+    const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    const mockHash = Math.random().toString(16).substr(2, 8) + '...' + Math.random().toString(16).substr(2, 4);
+    setVotesAuditLogs(prev => [
+      { time: now, action: `You cast verified vote: ${choice.toUpperCase()}`, hash: mockHash },
+      ...prev
+    ]);
+  };
+
+  const resetHoaDemo = () => {
+    setVoteStats({ approve: 68, reject: 32 });
+    setUserChoice(null);
+    setVotesAuditLogs([
+      { time: '10:42 AM', action: 'Member #182 verified by credential hash.', hash: '8f2a...c011' },
+      { time: '10:45 AM', action: 'Member #094 cast encrypted vote.', hash: '9b3e...44fd' }
+    ]);
+  };
+
   const toggleFaq = (i) => setOpenFaq(openFaq === i ? null : i);
 
   const testimonials = [
@@ -928,8 +1096,153 @@ export default function LandingPage() {
       </section>
 
       {/* ═══════════════════════════════════════════════════════
-          SCROLLING MARQUEE
+          SOLUTIONS SECTION (Interactive Use Cases & Simulators)
       ═══════════════════════════════════════════════════════ */}
+      <section 
+        id="solutions" 
+        ref={solutionsSectionRef}
+        className="relative py-28 px-5 sm:px-8 border-t border-slate-200/40 dark:border-white/[0.04] overflow-hidden bg-white dark:bg-[#07060f]"
+      >
+        {/* Background glow effects */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[600px] bg-gradient-radial from-violet-500/[0.03] dark:from-violet-500/[0.06] to-transparent rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -right-32 top-1/4 w-96 h-96 bg-indigo-500/[0.03] dark:bg-indigo-500/[0.05] rounded-full blur-3xl pointer-events-none" />
+
+        <div className="max-w-7xl mx-auto relative z-10">
+          {/* Header */}
+          <div className="text-center max-w-3xl mx-auto mb-20 space-y-4">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-violet-500/10 border border-violet-500/20 text-xs font-bold text-violet-600 dark:text-violet-400 uppercase tracking-wider">
+              <Sparkles className="w-3.5 h-3.5 animate-pulse" />
+              Solutions for Every Property Type
+            </div>
+            <h2 className="text-4xl sm:text-5xl font-black text-slate-900 dark:text-white tracking-tight leading-[1.1]">
+              Tailored Portals for <span className="gradient-text">Your Community Scale.</span>
+            </h2>
+            <p className="text-base sm:text-lg text-slate-500 dark:text-slate-400 font-normal leading-relaxed">
+              NestBloq unifies administrative workflow and resident experiences across all community frameworks. Click a use-case below to test its interactive live simulator.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+            {/* Left Column: Interactive Tab Cards */}
+            <div className="lg:col-span-5 flex flex-col gap-4">
+              {[
+                {
+                  id: 'rental',
+                  title: 'Rental Property Management',
+                  tagline: 'Rent Roll & Vacancy Tracker',
+                  desc: 'Automating rent collection schedules, payment reminders, and tenant portals with zero friction.',
+                  icon: Wallet,
+                  colorClass: 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20',
+                  activeBorder: 'border-emerald-500/30 dark:border-emerald-500/20 bg-emerald-500/[0.03] dark:bg-emerald-950/10'
+                },
+                {
+                  id: 'condo',
+                  title: 'Condo Association Management',
+                  tagline: 'Shared Amenity Scheduler',
+                  desc: 'Enable seamless slot reservations for shared facilities like swimming pools, clubhouses, and gyms.',
+                  icon: CalendarRange,
+                  colorClass: 'text-violet-500 bg-violet-500/10 border-violet-500/20',
+                  activeBorder: 'border-violet-500/30 dark:border-violet-500/20 bg-violet-500/[0.03] dark:bg-violet-950/10'
+                },
+                {
+                  id: 'apartment',
+                  title: 'Apartment Complex Portal',
+                  tagline: 'Work Order & Dispatch Desk',
+                  desc: 'Collaborative work ticket dispatches, maintenance logs, and visitor directories for unified operations.',
+                  icon: Wrench,
+                  colorClass: 'text-blue-500 bg-blue-500/10 border-blue-500/20',
+                  activeBorder: 'border-blue-500/30 dark:border-blue-500/20 bg-blue-500/[0.03] dark:bg-blue-950/10'
+                },
+                {
+                  id: 'hoa',
+                  title: 'Homeowner Association (HOA)',
+                  tagline: 'Assemblies & e-Voting',
+                  desc: 'E-voting on society resolutions, regulatory bylaws audits, and quarterly security audits with absolute transparency.',
+                  icon: Users,
+                  colorClass: 'text-indigo-500 bg-indigo-500/10 border-indigo-500/20',
+                  activeBorder: 'border-indigo-500/30 dark:border-indigo-500/20 bg-indigo-500/[0.03] dark:bg-indigo-950/10'
+                }
+              ].map((solution) => {
+                const isActive = activeSolution === solution.id;
+                const IconComponent = solution.icon;
+                return (
+                  <button
+                    key={solution.id}
+                    onClick={() => setActiveSolution(solution.id)}
+                    className={`p-5 rounded-2xl border text-left transition-all duration-300 transform group hover:-translate-y-0.5 ${
+                      isActive 
+                        ? `${solution.activeBorder} border-transparent shadow-[0_15px_30px_rgba(0,0,0,0.02)]` 
+                        : 'border-slate-200/60 dark:border-white/[0.05] bg-white/50 dark:bg-white/[0.01] hover:bg-slate-50 dark:hover:bg-white/[0.02] hover:border-slate-300 dark:hover:border-white/10'
+                    }`}
+                  >
+                    <div className="flex gap-4">
+                      <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 border ${solution.colorClass}`}>
+                        <IconComponent className="w-5 h-5" />
+                      </div>
+                      <div className="space-y-1 flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">{solution.tagline}</span>
+                          {isActive && <span className="w-1.5 h-1.5 rounded-full bg-violet-500 animate-ping" />}
+                        </div>
+                        <h3 className={`text-base font-black transition-colors ${isActive ? 'text-violet-600 dark:text-violet-400' : 'text-slate-800 dark:text-slate-200 group-hover:text-slate-900 dark:group-hover:text-white'}`}>
+                          {solution.title}
+                        </h3>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 font-normal leading-relaxed mt-1">
+                          {solution.desc}
+                        </p>
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Right Column: High-Fidelity Use Case Wallpapers */}
+            <div className="lg:col-span-7 h-full">
+              <div className="relative overflow-hidden rounded-3xl border border-slate-200/60 dark:border-white/[0.08] shadow-2xl aspect-[4/3] w-full bg-slate-100 dark:bg-[#120f26]">
+                <img
+                  src={solutionRental}
+                  alt="Rental Property Management"
+                  className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ${activeSolution === 'rental' ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+                />
+                <img
+                  src={solutionCondo}
+                  alt="Condo Management"
+                  className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ${activeSolution === 'condo' ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+                />
+                <img
+                  src={solutionApartment}
+                  alt="Apartment Portal"
+                  className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ${activeSolution === 'apartment' ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+                />
+                <img
+                  src={solutionHoa}
+                  alt="HOA Governance"
+                  className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ${activeSolution === 'hoa' ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+                />
+                
+                {/* Visual Glassmorphic Info Badge */}
+                <div className="absolute bottom-5 left-5 right-5 p-4 rounded-2xl bg-black/45 backdrop-blur-md border border-white/10 text-white space-y-1 text-left">
+                  <div className="flex items-center gap-1.5 text-violet-400 font-bold uppercase tracking-wider text-[10px]">
+                    <Sparkles className="w-3.5 h-3.5" />
+                    <span>NestBloq Solutions</span>
+                  </div>
+                  <h4 className="text-sm font-black tracking-tight">
+                    {activeSolution === 'rental' && 'Modern Living Spaces & Tenant Ledger Management'}
+                    {activeSolution === 'condo' && 'Clubhouse Amenities Scheduler & Shared Pool Reservations'}
+                    {activeSolution === 'apartment' && 'High-Rise Complex Maintenance & Vendor Logs Desk'}
+                    {activeSolution === 'hoa' && 'Transparent Governance, e-Voting Resolutions & Compliance Audits'}
+                  </h4>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════════════════
+          SCROLLING MARQUEE
+          ═══════════════════════════════════════════════════════ */}
       <div className="relative py-7 border-y border-slate-200/40 dark:border-white/[0.04] bg-slate-50/40 dark:bg-white/[0.01] backdrop-blur-sm overflow-hidden before:absolute before:left-0 before:top-0 before:h-full before:w-32 before:bg-gradient-to-r before:from-white dark:before:from-[#07060f] before:to-transparent before:z-10 after:absolute after:right-0 after:top-0 after:h-full after:w-32 after:bg-gradient-to-l after:from-white dark:after:from-[#07060f] after:to-transparent after:z-10">
         <div className="flex gap-8 animate-marquee whitespace-nowrap">
           {['Sunrise Heights', 'Green Park Society', 'Maple Heights Enclave', 'Prestige Lakeside', 'Royal Palms HOA', 'Emerald Springs Apts', 'Blue Ridge Condos', 'Silver Oak Society', 'Sunrise Heights', 'Green Park Society', 'Maple Heights Enclave', 'Prestige Lakeside', 'Royal Palms HOA', 'Emerald Springs Apts', 'Blue Ridge Condos', 'Silver Oak Society'].map((name, i) => (

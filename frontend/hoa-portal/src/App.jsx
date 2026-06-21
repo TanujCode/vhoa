@@ -17,6 +17,12 @@ import AboutPage from './pages/marketing/AboutPage';
 import ContactPage from './pages/marketing/ContactPage';
 import HowItWorksPage from './pages/marketing/HowItWorksPage';
 
+// Solution subpages
+import RentalSolutionPage from './pages/marketing/solutions/RentalSolutionPage';
+import CondoSolutionPage from './pages/marketing/solutions/CondoSolutionPage';
+import ApartmentSolutionPage from './pages/marketing/solutions/ApartmentSolutionPage';
+import HoaSolutionPage from './pages/marketing/solutions/HoaSolutionPage';
+
 
 // Smart Protected Route with Security Check
 const ProtectedRoute = () => {
@@ -53,6 +59,10 @@ export default function App() {
         <Route path="/pricing" element={<PricingPage />} />
         <Route path="/about" element={<AboutPage />} />
         <Route path="/contact" element={<ContactPage />} />
+        <Route path="/solutions/rental" element={<RentalSolutionPage />} />
+        <Route path="/solutions/condo" element={<CondoSolutionPage />} />
+        <Route path="/solutions/apartment" element={<ApartmentSolutionPage />} />
+        <Route path="/solutions/hoa" element={<HoaSolutionPage />} />
 
         {/* --- Public Routes --- */}
         <Route path="/login" element={<LoginPage />} />

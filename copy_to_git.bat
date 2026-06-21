@@ -1,3 +1,7 @@
+@echo off
+echo === Copying all files to GitHub repo... ===
+
+REM ─── EXISTING FILES ───────────────────────────────────────────────────────
 copy /Y "d:\Vhoa_Management\frontend\hoa-portal\src\pages\Violations.jsx" "D:\github code cc\vhoa\frontend\hoa-portal\src\pages\Violations.jsx"
 copy /Y "d:\Vhoa_Management\frontend\hoa-portal\src\pages\ServiceRequests.jsx" "D:\github code cc\vhoa\frontend\hoa-portal\src\pages\ServiceRequests.jsx"
 copy /Y "d:\Vhoa_Management\frontend\hoa-portal\src\pages\Amenity.jsx" "D:\github code cc\vhoa\frontend\hoa-portal\src\pages\Amenity.jsx"
@@ -39,5 +43,44 @@ copy /Y "d:\Vhoa_Management\backend\app\schemas\meeting_survey.py" "D:\github co
 copy /Y "d:\Vhoa_Management\backend\app\routers\meeting_survey.py" "D:\github code cc\vhoa\backend\app\routers\meeting_survey.py"
 copy /Y "d:\Vhoa_Management\frontend\hoa-portal\src\services\meetingSurveyService.js" "D:\github code cc\vhoa\frontend\hoa-portal\src\services\meetingSurveyService.js"
 copy /Y "d:\Vhoa_Management\backend\app\services\meeting_survey_service.py" "D:\github code cc\vhoa\backend\app\services\meeting_survey_service.py"
-echo Done!
 
+REM ─── NEW FILES (Marketing Redesign + AI Assistant) ────────────────────────
+echo.
+echo === Copying new marketing + AI Assistant files... ===
+
+REM Navbar
+copy /Y "d:\Vhoa_Management\frontend\hoa-portal\src\components\marketing\Navbar.jsx" "D:\github code cc\vhoa\frontend\hoa-portal\src\components\marketing\Navbar.jsx"
+
+REM AI Assistant
+copy /Y "d:\Vhoa_Management\frontend\hoa-portal\src\components\marketing\InteractiveAssistant.jsx" "D:\github code cc\vhoa\frontend\hoa-portal\src\components\marketing\InteractiveAssistant.jsx"
+
+REM Footer
+copy /Y "d:\Vhoa_Management\frontend\hoa-portal\src\components\marketing\Footer.jsx" "D:\github code cc\vhoa\frontend\hoa-portal\src\components\marketing\Footer.jsx"
+
+REM Logo
+copy /Y "d:\Vhoa_Management\frontend\hoa-portal\src\components\marketing\Logo.jsx" "D:\github code cc\vhoa\frontend\hoa-portal\src\components\marketing\Logo.jsx"
+
+REM ROI Calculator
+copy /Y "d:\Vhoa_Management\frontend\hoa-portal\src\components\marketing\RoiCalculator.jsx" "D:\github code cc\vhoa\frontend\hoa-portal\src\components\marketing\RoiCalculator.jsx"
+
+REM Solution Pages
+copy /Y "d:\Vhoa_Management\frontend\hoa-portal\src\pages\marketing\solutions\HoaSolutionPage.jsx" "D:\github code cc\vhoa\frontend\hoa-portal\src\pages\marketing\solutions\HoaSolutionPage.jsx"
+copy /Y "d:\Vhoa_Management\frontend\hoa-portal\src\pages\marketing\solutions\ApartmentSolutionPage.jsx" "D:\github code cc\vhoa\frontend\hoa-portal\src\pages\marketing\solutions\ApartmentSolutionPage.jsx"
+copy /Y "d:\Vhoa_Management\frontend\hoa-portal\src\pages\marketing\solutions\CondoSolutionPage.jsx" "D:\github code cc\vhoa\frontend\hoa-portal\src\pages\marketing\solutions\CondoSolutionPage.jsx"
+copy /Y "d:\Vhoa_Management\frontend\hoa-portal\src\pages\marketing\solutions\RentalSolutionPage.jsx" "D:\github code cc\vhoa\frontend\hoa-portal\src\pages\marketing\solutions\RentalSolutionPage.jsx"
+
+REM App.jsx and main entry
+copy /Y "d:\Vhoa_Management\frontend\hoa-portal\src\App.jsx" "D:\github code cc\vhoa\frontend\hoa-portal\src\App.jsx"
+
+echo.
+echo === All files copied! Now pushing to GitHub... ===
+
+REM ─── GIT PUSH ────────────────────────────────────────────────────────────
+cd /d "D:\github code cc\vhoa"
+git add .
+git commit -m "feat: Marketing redesign - Premium Navbar, AI Assistant (GPT-like bilingual), Solution Pages overhaul"
+git push
+
+echo.
+echo === Done! Check GitHub to confirm. ===
+pause

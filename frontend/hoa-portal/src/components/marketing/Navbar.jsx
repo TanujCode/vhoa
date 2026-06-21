@@ -12,6 +12,9 @@ export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const location = useLocation();
   const megaMenuRef = useRef(null);
+  const solutionsMenuRef = useRef(null);
+  const [solutionsMenuOpen, setSolutionsMenuOpen] = useState(false);
+  const [mobileSolutionsOpen, setMobileSolutionsOpen] = useState(false);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -25,6 +28,9 @@ export default function Navbar() {
       if (megaMenuRef.current && !megaMenuRef.current.contains(event.target)) {
         setMegaMenuOpen(false);
       }
+      if (solutionsMenuRef.current && !solutionsMenuRef.current.contains(event.target)) {
+        setSolutionsMenuOpen(false);
+      }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
@@ -33,16 +39,26 @@ export default function Navbar() {
   // Close mega menu on route changes
   useEffect(() => {
     setMegaMenuOpen(false);
+    setSolutionsMenuOpen(false);
     setMobileMenuOpen(false);
     setMobileFeaturesOpen(false);
+    setMobileSolutionsOpen(false);
   }, [location]);
 
   const navLinks = [
     { name: 'Features', path: '/features' },
+    { name: 'Solutions', path: '#solutions' },
     { name: 'How It Works', path: '/#how-it-works' },
     { name: 'Pricing', path: '#' },
     { name: 'About', path: '#' },
     { name: 'Contact', path: '#' },
+  ];
+
+  const solutionsData = [
+    { name: 'Rental Property Management', desc: 'Rent rolls, tenant directory, pay reminders', path: '/solutions/rental' },
+    { name: 'Condo Association Management', desc: 'Amenities blocks, shared facility booking', path: '/solutions/condo' },
+    { name: 'Apartment Complex Portal', desc: 'Work order Kanban dispatches, resident roster', path: '/solutions/apartment' },
+    { name: 'HOA Governance & Assemblies', desc: 'e-Voting voting resolutions, bylaws audits', path: '/solutions/hoa' },
   ];
 
   const megaMenuData = [
@@ -92,13 +108,13 @@ export default function Navbar() {
 
   return (
     <nav
-      className={`sticky top-0 z-50 transition-all duration-300 ${
+      className={`sticky top-0 z-50 w-full transition-all duration-300 ${
         scrolled
-          ? 'bg-white/92 dark:bg-[#07060f]/92 backdrop-blur-2xl border-b border-black/[0.07] dark:border-white/[0.07] shadow-sm shadow-violet-900/5'
-          : 'bg-white/70 dark:bg-[#07060f]/70 backdrop-blur-xl border-b border-transparent'
+          ? 'bg-white/80 dark:bg-[#07060f]/85 backdrop-blur-xl border-b border-slate-200/50 dark:border-white/[0.06] shadow-[0_8px_30px_rgb(0,0,0,0.03)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.3)]'
+          : 'bg-white/50 dark:bg-[#07060f]/50 backdrop-blur-md border-b border-transparent'
       }`}
     >
-      <div className="max-w-7xl mx-auto px-5 sm:px-8">
+      <div className="max-w-7xl mx-auto px-5 sm:px-8 relative">
         <div className="flex items-center justify-between h-16">
 
           {/* Logo */}
@@ -109,12 +125,61 @@ export default function Navbar() {
           {/* Desktop Nav */}
           <div className="hidden md:flex items-center gap-1">
             {navLinks.map((link) => {
+              if (link.name === 'Solutions') {
+                return (
+                  <div
+                    key={link.name}
+                    ref={solutionsMenuRef}
+                    className="relative py-2"
+                    onMouseEnter={() => setSolutionsMenuOpen(true)}
+                    onMouseLeave={() => setSolutionsMenuOpen(false)}
+                  >
+                    <button
+                      onClick={() => setSolutionsMenuOpen(!solutionsMenuOpen)}
+                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center gap-1 outline-none ${
+                        isActive(link.path) || solutionsMenuOpen
+                          ? 'text-violet-600 dark:text-violet-400 bg-violet-500/8 dark:bg-violet-500/12'
+                          : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100/80 dark:hover:bg-white/5'
+                      }`}
+                    >
+                      {link.name}
+                      <ChevronDown
+                        size={14}
+                        className={`transition-transform duration-200 ${solutionsMenuOpen ? 'rotate-180 text-violet-500' : 'text-slate-400'}`}
+                      />
+                    </button>
+
+                    {/* Solutions Dropdown Menu */}
+                    {solutionsMenuOpen && (
+                      <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-72 bg-white dark:bg-[#07060f] border border-slate-200 dark:border-white/[0.08] shadow-[0_20px_50px_rgba(0,0,0,0.12)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.4)] rounded-2xl p-4 z-50 animate-fade-in-up">
+                        <div className="flex flex-col gap-1">
+                          {solutionsData.map((item, idx) => (
+                            <Link
+                              key={idx}
+                              to={item.path}
+                              className="p-3 rounded-xl hover:bg-violet-500/5 dark:hover:bg-violet-500/10 transition-colors text-left group"
+                            >
+                              <p className="text-xs font-bold text-slate-800 dark:text-slate-200 group-hover:text-violet-500 transition-colors">
+                                {item.name}
+                              </p>
+                              <span className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5 block font-medium font-display">
+                                {item.desc}
+                              </span>
+                            </Link>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              }
+
               if (link.name === 'Features') {
                 return (
                   <div
                     key={link.name}
                     ref={megaMenuRef}
-                    className="relative py-2"
+                    className="py-2"
                     onMouseEnter={() => setMegaMenuOpen(true)}
                     onMouseLeave={() => setMegaMenuOpen(false)}
                   >
@@ -135,12 +200,12 @@ export default function Navbar() {
 
                     {/* Mega Menu Dropdown */}
                     {megaMenuOpen && (
-                      <div className="absolute top-full left-1/2 -translate-x-[40%] mt-2 w-[900px] bg-white/98 dark:bg-[#120824]/98 backdrop-blur-2xl border border-slate-200/60 dark:border-white/[0.08] shadow-[0_20px_50px_rgba(0,0,0,0.12)] dark:shadow-[0_20px_50px_rgba(18,8,36,0.5)] rounded-3xl p-8 z-50 animate-fade-in-up">
+                      <div className="absolute top-full left-1/2 -translate-x-1/2 md:-translate-x-[40%] lg:-translate-x-1/2 mt-2 w-[95vw] md:w-[720px] lg:w-[880px] bg-white dark:bg-[#07060f] border border-slate-200 dark:border-white/[0.08] shadow-[0_20px_50px_rgba(0,0,0,0.12)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.4)] rounded-3xl p-6 md:p-8 z-50 animate-fade-in-up">
                         {/* 3D Stack / Glow highlights */}
                         <div className="absolute top-0 left-10 w-40 h-40 bg-violet-500/10 dark:bg-violet-500/20 rounded-full blur-3xl -z-10 pointer-events-none" />
                         <div className="absolute bottom-0 right-10 w-40 h-40 bg-indigo-500/10 dark:bg-indigo-500/20 rounded-full blur-3xl -z-10 pointer-events-none" />
 
-                        <div className="grid grid-cols-4 gap-6 relative z-10">
+                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 relative z-10">
                           {megaMenuData.map((cat, catIdx) => (
                             <div key={catIdx} className="space-y-4">
                               <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-white/[0.04]">
@@ -160,7 +225,7 @@ export default function Navbar() {
                                       <p className="text-xs font-bold text-slate-800 dark:text-slate-200 group-hover/item:text-violet-600 dark:group-hover/item:text-violet-400">
                                         {item.name}
                                       </p>
-                                      <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5 leading-normal font-normal">
+                                      <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5 leading-normal font-normal font-display">
                                         {item.desc}
                                       </p>
                                     </Link>
@@ -195,7 +260,7 @@ export default function Navbar() {
           <div className="hidden md:flex items-center gap-3">
             <button
               onClick={toggleTheme}
-              className="p-2 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/8 transition-all duration-200"
+              className="p-2 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/8 transition-all duration-200 animate-pulse-glow"
               title="Toggle theme"
             >
               {theme === 'dark'
@@ -241,6 +306,41 @@ export default function Navbar() {
         <div className="md:hidden border-t border-slate-100 dark:border-white/[0.06] bg-white/95 dark:bg-[#07060f]/95 backdrop-blur-2xl">
           <div className="px-5 py-4 space-y-1">
             {navLinks.map((link) => {
+              if (link.name === 'Solutions') {
+                return (
+                  <div key={link.name} className="space-y-1">
+                    <button
+                      onClick={() => setMobileSolutionsOpen(!mobileSolutionsOpen)}
+                      className="w-full text-left px-4 py-2.5 rounded-xl text-sm font-medium transition-all flex items-center justify-between text-slate-600 dark:text-slate-355"
+                    >
+                      <span>Solutions</span>
+                      <ChevronDown
+                        size={16}
+                        className={`transition-transform duration-200 ${mobileSolutionsOpen ? 'rotate-180 text-violet-500' : ''}`}
+                      />
+                    </button>
+                    {mobileSolutionsOpen && (
+                      <div className="pl-4 pr-2 py-1 space-y-2 border-l border-slate-100 dark:border-white/5 ml-4 flex flex-col">
+                        {solutionsData.map((item, idx) => (
+                          <Link
+                            key={idx}
+                            to={item.path}
+                            className="p-2 rounded-lg hover:bg-violet-500/5 dark:hover:bg-violet-500/10 text-left transition-colors"
+                          >
+                            <p className="text-xs font-bold text-slate-700 dark:text-slate-200">
+                              {item.name}
+                            </p>
+                            <span className="text-[9px] text-slate-400 mt-0.5 block font-medium">
+                              {item.desc}
+                            </span>
+                          </Link>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              }
+
               if (link.name === 'Features') {
                 return (
                   <div key={link.name} className="space-y-1">
@@ -306,7 +406,7 @@ export default function Navbar() {
               <Link
                 to="/login"
                 onClick={() => setMobileMenuOpen(false)}
-                className="w-full text-center py-2.5 rounded-xl text-sm font-medium text-slate-700 dark:text-slate-350 border border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/5 transition-all"
+                className="w-full text-center py-2.5 rounded-xl text-sm font-medium text-slate-700 dark:text-slate-355 border border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/5 transition-all"
               >
                 Sign in
               </Link>
