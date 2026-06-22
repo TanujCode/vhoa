@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { 
   ArrowRight, CheckCircle, DollarSign, ShieldAlert, Calendar, Bot, 
-  Send, Check, Activity, Shield, Sliders, Wrench, Users, User, Play, Clock, Sparkles, X
+  Send, Check, Activity, Shield, Sliders, Wrench, Users, User, Play, Clock, Sparkles, X, Search
 } from 'lucide-react';
 import Navbar from '../../components/marketing/Navbar';
 import Footer from '../../components/marketing/Footer';
@@ -23,7 +23,13 @@ export default function FeaturesPage() {
     assistant: assistantRef,
     kanban: kanbanRef,
     amenities: amenitiesRef,
-    rbac: rbacRef
+    rbac: rbacRef,
+    violations: ledgerRef,
+    otp_gate: kanbanRef,
+    voting: rbacRef,
+    announcements: rbacRef,
+    audit_logs: rbacRef,
+    roster: rbacRef
   };
 
   // State parsing
@@ -152,6 +158,131 @@ export default function FeaturesPage() {
   // 5. Role Switcher State
   const [selectedRole, setSelectedRole] = useState('board');
 
+  // 6. Violations Sandbox State
+  const [violationsList, setViolationsList] = useState([
+    { id: 1, type: "Trash can left out", resident: "Aarav Sharma", fine: 50, date: "2026-06-20", status: "Open" },
+    { id: 2, type: "Unapproved yard structures", resident: "Sneha Reddy", fine: 250, date: "2026-06-18", status: "Appealed" },
+    { id: 3, type: "Overnight guest parking", resident: "Kabir Mehta", fine: 100, date: "2026-06-15", status: "Paid" }
+  ]);
+  const [violationAlert, setViolationAlert] = useState('');
+
+  const handleSimulateCitation = () => {
+    const newItem = {
+      id: Date.now(),
+      type: "Commercial vehicle parking",
+      resident: "Rohan Das",
+      fine: 150,
+      date: new Date().toISOString().slice(0, 10),
+      status: "Open"
+    };
+    setViolationsList(prev => [newItem, ...prev]);
+    setViolationAlert("New citation issued: $150 fine logged for Rohan Das.");
+    setTimeout(() => setViolationAlert(''), 4000);
+  };
+
+  const handlePayViolationLocal = (id) => {
+    setViolationsList(prev => prev.map(v => v.id === id ? { ...v, status: 'Paid' } : v));
+    setViolationAlert("Fine settled successfully via online portal payment.");
+    setTimeout(() => setViolationAlert(''), 4000);
+  };
+
+  // 7. OTP Gate Sandbox State
+  const [otpCode, setOtpCode] = useState('');
+  const [otpLogs, setOtpLogs] = useState([
+    { time: "14:20 PM", event: "Vendor Gate Access Granted (FedEx Express)", ip: "Gate 1 A" },
+    { time: "11:05 AM", event: "Vendor Gate Access Granted (Pest Control)", ip: "Gate 2 B" }
+  ]);
+
+  const handleGenerateOTP = () => {
+    const randomOtp = Math.floor(100000 + Math.random() * 900000);
+    setOtpCode(String(randomOtp));
+    
+    const newLog = {
+      time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+      event: `Temp Access Code Generated (${randomOtp})`,
+      ip: "Admin Portal"
+    };
+    setOtpLogs(prev => [newLog, ...prev]);
+  };
+
+  // 8. Pinned Announcements Sandbox State
+  const [announcementsList, setAnnouncementsList] = useState([
+    { id: 1, text: "Clubhouse pool closed for chemical treatment on Wednesday 9:00 AM - 1:00 PM.", date: "Just now", channels: ["SMS", "Portal"], views: 24 },
+    { id: 2, text: "Annual HOA Board Meeting scheduled for July 12th in the Community Hall.", date: "2 days ago", channels: ["Email", "Portal"], views: 142 }
+  ]);
+  const [announcementInput, setAnnouncementInput] = useState('');
+  const [notifySms, setNotifySms] = useState(true);
+  const [notifyEmail, setNotifyEmail] = useState(true);
+  const [announcementAlert, setAnnouncementAlert] = useState('');
+
+  const handlePostAnnouncement = (e) => {
+    e.preventDefault();
+    if (!announcementInput.trim()) return;
+    
+    const channels = ["Portal"];
+    if (notifySms) channels.push("SMS");
+    if (notifyEmail) channels.push("Email");
+
+    const newItem = {
+      id: Date.now(),
+      text: announcementInput.trim(),
+      date: "Just now",
+      channels,
+      views: 1
+    };
+
+    setAnnouncementsList(prev => [newItem, ...prev]);
+    setAnnouncementInput('');
+    setAnnouncementAlert(`Announcement broadcast successfully to all residents via ${channels.join(' & ')}!`);
+    setTimeout(() => setAnnouncementAlert(''), 4000);
+  };
+
+  // 9. IP Audit Logs Sandbox State
+  const [auditLogsList, setAuditLogsList] = useState([
+    { id: 1, action: "User Login Successful", user: "Vikash Sharma (Board)", ip: "192.168.1.42", location: "New York, US", time: "15:24 PM" },
+    { id: 2, action: "Reconciliation Invoice Generated", user: "Auto-Reconcile System", ip: "10.0.4.15", location: "AWS Server (US-East)", time: "15:02 PM" },
+    { id: 3, action: "Bylaw Amendment Approved", user: "Vikash Sharma (Board)", ip: "192.168.1.42", location: "New York, US", time: "14:15 PM" },
+    { id: 4, action: "Security Gate Passcode Verified", user: "Vendor Guest (FedEx)", ip: "172.56.21.9", location: "Gate 1 Controller", time: "14:02 PM" }
+  ]);
+  const [auditSearch, setAuditSearch] = useState('');
+  const [auditAlert, setAuditAlert] = useState('');
+
+  const handleSimulateLogAction = () => {
+    const newItem = {
+      id: Date.now(),
+      action: "Vendor Dispatched via Kanban",
+      user: "Neha Patel (Manager)",
+      ip: "98.244.15.89",
+      location: "San Jose, US",
+      time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
+    };
+    setAuditLogsList(prev => [newItem, ...prev]);
+    setAuditAlert("Simulated compliance action logged: Neha Patel dispatched vendor.");
+    setTimeout(() => setAuditAlert(''), 4000);
+  };
+
+  // 10. E-Voting Sandbox State
+  const [hasVoted, setHasVoted] = useState(false);
+  const [voteCounts, setVoteCounts] = useState({ yes: 28, no: 12 });
+  const [votingAlert, setVotingAlert] = useState('');
+
+  const handleCastVote = (option) => {
+    if (hasVoted) return;
+    setVoteCounts(prev => ({ ...prev, [option]: prev[option] + 1 }));
+    setHasVoted(true);
+    setVotingAlert(`Your vote for "${option.toUpperCase()}" has been cryptographically recorded!`);
+    setTimeout(() => setVotingAlert(''), 4500);
+  };
+
+  // 11. Roster Sandbox State
+  const [rosterSearch, setRosterSearch] = useState('');
+  const [rosterList, setRosterList] = useState([
+    { name: "Aarav Sharma", unit: "Unit 302", email: "aarav@nestbloq.com", phone: "+1 (555) 019-2834", status: "Owner" },
+    { name: "Sneha Reddy", unit: "Unit 104", email: "sneha@nestbloq.com", phone: "+1 (555) 014-9922", status: "Owner" },
+    { name: "Kabir Mehta", unit: "Unit 405", email: "kabir@nestbloq.com", phone: "+1 (555) 018-4720", status: "Resident" },
+    { name: "Neha Patel", unit: "Unit 212", email: "neha.p@nestbloq.com", phone: "+1 (555) 012-3844", status: "Board Member" }
+  ]);
+
   // Features Detail Data Dictionary
   const featureDetailsData = {
     ledger: {
@@ -217,6 +348,84 @@ export default function FeaturesPage() {
         "Public document library hosts bylaws, manuals, and files.",
         "Digital Assemblies support virtual voting on community items.",
         "Audit logs capture logins, status updates, and client IP addresses."
+      ]
+    },
+    violations: {
+      title: "Violation Fines & Citation",
+      tagline: "Transparent enforcement, dispute handling, and payment cycles",
+      color: "from-amber-500 to-red-500",
+      accent: "text-amber-400 dark:text-amber-300",
+      desc: "Maintain community standards and visual curb appeal. Issue compliance notices, calculate late fee accumulation, track dispute history, and collect fines online.",
+      benefits: [
+        "Create standard violation types with pre-set fine schedules.",
+        "Residents can file disputes with document upload proofs directly online.",
+        "Integrates with NestPay to allow quick self-service fine settlements.",
+        "Generates certified mail compliance notification letters."
+      ]
+    },
+    otp_gate: {
+      title: "Direct OTP Vendor Gate",
+      tagline: "Temporary access codes for secure utility arrivals",
+      color: "from-sky-500 to-indigo-500",
+      accent: "text-sky-400 dark:text-sky-300",
+      desc: "Provide secure temporary access to community facilities, gates, and services. Generate one-time passcodes (OTP) for utility teams, guests, and delivery companies.",
+      benefits: [
+        "Generate short-lived, self-expiring security gate PIN codes.",
+        "Vendors receive codes instantly via automated SMS notifications.",
+        "Audit trail logs exact entry timestamps for absolute accountability.",
+        "Revoke or edit access permissions in real-time from the Board dashboard."
+      ]
+    },
+    voting: {
+      title: "Digital Assemblies & E-Voting",
+      tagline: "Cryptographically verified voting on HOA matters",
+      color: "from-indigo-500 to-violet-600",
+      accent: "text-indigo-400 dark:text-indigo-300",
+      desc: "Run virtual elections and pass bylaws securely. Set up interactive community polls, verify owner credentials, and cast anonymous ballots.",
+      benefits: [
+        "Create custom ballots with multiple options and approval thresholds.",
+        "Verify votes using secure SHA-256 cryptographic signatures.",
+        "Interactive community polls to gather resident sentiment quickly.",
+        "Automatic quorum checks to validate board voting outcomes."
+      ]
+    },
+    announcements: {
+      title: "Pinned Announcements & Broadcasts",
+      tagline: "Multi-channel community alerts via SMS, email, and portal",
+      color: "from-violet-500 to-fuchsia-500",
+      accent: "text-violet-400 dark:text-violet-300",
+      desc: "Broadcast important updates to your community instantly. Keep owners notified about water shutdowns, paving, board elections, or holiday closures.",
+      benefits: [
+        "Draft and send alerts across SMS, email, and resident portals simultaneously.",
+        "Pin critical warnings to the top of the resident home feeds.",
+        "Read-receipt indicators track exactly who has viewed the notice.",
+        "Scheduled delivery for planned community maintenance notifications."
+      ]
+    },
+    audit_logs: {
+      title: "Compliance & Action IP Audit Logs",
+      tagline: "Unalterable activity logs for absolute transparency",
+      color: "from-teal-500 to-blue-600",
+      accent: "text-teal-400 dark:text-teal-300",
+      desc: "Track every state change, document upload, status update, and login. Provide complete transparency for board decisions and vendor payouts.",
+      benefits: [
+        "Every log record captures the user, action type, timestamp, and client IP.",
+        "Immutable logs prevent unauthorized deletions or back-dating.",
+        "Searchable audit index simplifies compliance checks.",
+        "Alerts board on unusual login locations or consecutive failed tries."
+      ]
+    },
+    roster: {
+      title: "Community Roster Directory",
+      tagline: "Verified profile database of homeowner accounts",
+      color: "from-violet-500 to-indigo-500",
+      accent: "text-violet-400 dark:text-violet-300",
+      desc: "Manage owner records in a secure, unified database. Track occupancy statuses, unit numbers, contact numbers, and login logs.",
+      benefits: [
+        "Manage unit numbers, owner contact profiles, and email registries.",
+        "Residents can control their visibility level in the public directory.",
+        "Quick directory search filters by unit number or owner name.",
+        "Seamless billing updates linked directly to account profile logs."
       ]
     }
   };
@@ -621,7 +830,7 @@ export default function FeaturesPage() {
                 <p className="text-[8px] text-slate-400 font-bold uppercase">Dues Balance</p>
                 <p className="text-sm font-black text-amber-400 mt-0.5">$0.00</p>
               </div>
-              <div className="p-2 bg-white/[0.03] border border-white/[0.05] rounded-lg text-center">
+<div className="p-2 bg-white/[0.03] border border-white/[0.05] rounded-lg text-center">
                 <p className="text-[8px] text-slate-400 font-bold uppercase">Work Orders</p>
                 <p className="text-sm font-black text-amber-400 mt-0.5">0 Active</p>
               </div>
@@ -634,6 +843,373 @@ export default function FeaturesPage() {
       </div>
     </div>
   );
+
+  const renderViolationsSandbox = (isGrid = false) => (
+    <div className="w-full bg-gradient-to-br from-[#4c249f] via-[#1a0b3f] to-[#0a0319] border border-amber-500/20 hover:border-amber-500/40 rounded-3xl p-6 sm:p-8 space-y-6 text-white transition-all duration-300">
+      <div className="flex justify-between items-center pb-3 border-b border-white/10">
+        <div className="flex items-center gap-2">
+          <ShieldAlert className="w-4 h-4 text-amber-450" />
+          <span className="text-xs font-bold tracking-wider text-slate-355 uppercase">Fines & Citations Simulator</span>
+        </div>
+        <button
+          onClick={handleSimulateCitation}
+          className="px-3 py-1.5 bg-gradient-to-r from-amber-500 to-red-500 hover:from-amber-600 hover:to-red-600 text-white font-extrabold rounded-lg text-[10px] shadow-md flex items-center gap-1 transition-all active:scale-95"
+        >
+          ➕ Issue Citation
+        </button>
+      </div>
+
+      {violationAlert && (
+        <div className="p-3 bg-amber-500/15 border border-amber-500/35 rounded-xl text-xs text-amber-300 font-semibold animate-fade-in-up text-left">
+          {violationAlert}
+        </div>
+      )}
+
+      <div className="space-y-3 text-left">
+        <p className="text-xs font-bold text-slate-350 uppercase tracking-wider">Active Community Citations</p>
+        <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
+          {violationsList.map((v) => (
+            <div key={v.id} className="flex items-center justify-between p-3 bg-white/[0.02] border border-white/[0.04] rounded-xl text-xs">
+              <div className="space-y-0.5">
+                <p className="font-extrabold text-slate-200">{v.type}</p>
+                <p className="text-slate-450 font-medium">Resident: {v.resident} • <span className="font-mono text-amber-400">${v.fine}</span></p>
+              </div>
+              {v.status === 'Paid' ? (
+                <span className="px-2 py-0.5 bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 font-bold rounded-lg text-[9px]">
+                  ✓ Settled
+                </span>
+              ) : v.status === 'Appealed' ? (
+                <span className="px-2 py-0.5 bg-blue-500/10 border border-blue-500/25 text-blue-400 font-bold rounded-lg text-[9px] animate-pulse">
+                  ⏳ Appealed
+                </span>
+              ) : (
+                <button
+                  onClick={() => handlePayViolationLocal(v.id)}
+                  className="px-2.5 py-1 bg-white/10 hover:bg-white/20 border border-white/15 text-slate-200 font-bold rounded-lg text-[9px] transition-all"
+                >
+                  Pay Fine
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderOtpGateSandbox = (isGrid = false) => (
+    <div className="w-full bg-gradient-to-br from-[#4c249f] via-[#1a0b3f] to-[#0a0319] border border-sky-500/20 hover:border-sky-500/40 rounded-3xl p-6 sm:p-8 space-y-6 text-white transition-all duration-300">
+      <div className="flex justify-between items-center pb-3 border-b border-white/10">
+        <div className="flex items-center gap-2">
+          <Clock className="w-4 h-4 text-sky-400" />
+          <span className="text-xs font-bold tracking-wider text-slate-355 uppercase">OTP Gate Passcode Generator</span>
+        </div>
+        <span className="text-[10px] bg-sky-500/10 text-sky-400 border border-sky-500/20 px-2 py-0.5 rounded-md font-bold">Secure Gate IP</span>
+      </div>
+
+      <div className="bg-white/[0.02] border border-white/[0.06] p-5 rounded-2xl text-center space-y-4">
+        {otpCode ? (
+          <div className="space-y-1">
+            <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider">Active Temporary Passcode</p>
+            <p className="text-4xl font-mono font-black text-sky-400 tracking-widest">{otpCode}</p>
+            <p className="text-[10px] text-emerald-400 font-bold">Expires in 15:00 minutes • Authorized</p>
+          </div>
+        ) : (
+          <div className="space-y-1 py-2">
+            <p className="text-xs text-slate-450 font-medium">Click below to generate a temporary secure passcode for arriving utility teams or delivery staff.</p>
+          </div>
+        )}
+        <button
+          onClick={handleGenerateOTP}
+          className="w-full py-2.5 bg-gradient-to-r from-sky-500 to-indigo-500 hover:from-sky-600 hover:to-indigo-600 text-white font-extrabold rounded-xl text-xs shadow-md transition-all active:scale-95"
+        >
+          Generate Gate Passcode
+        </button>
+      </div>
+
+      <div className="space-y-3 text-left">
+        <p className="text-xs font-bold text-slate-355 uppercase tracking-wider">Gate Access Logs</p>
+        <div className="space-y-2 max-h-40 overflow-y-auto pr-1">
+          {otpLogs.map((log, idx) => (
+            <div key={idx} className="flex justify-between items-center p-2.5 bg-white/[0.01] border border-white/[0.04] rounded-lg text-[10px]">
+              <div>
+                <p className="font-extrabold text-slate-200">{log.event}</p>
+                <p className="text-slate-500 text-[8px]">{log.time} • Source: {log.ip}</p>
+              </div>
+              <span className="px-1.5 py-0.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/15 rounded text-[8px] font-bold">OK</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderVotingSandbox = (isGrid = false) => {
+    const totalVotes = voteCounts.yes + voteCounts.no;
+    const yesPercent = Math.round((voteCounts.yes / totalVotes) * 100) || 0;
+    const noPercent = Math.round((voteCounts.no / totalVotes) * 100) || 0;
+
+    return (
+      <div className="w-full bg-gradient-to-br from-[#4c249f] via-[#1a0b3f] to-[#0a0319] border border-indigo-500/20 hover:border-indigo-500/40 rounded-3xl p-6 sm:p-8 space-y-6 text-white transition-all duration-300">
+        <div className="flex justify-between items-center pb-3 border-b border-white/10">
+          <div className="flex items-center gap-2">
+            <Sliders className="w-4 h-4 text-indigo-400" />
+            <span className="text-xs font-bold tracking-wider text-slate-355 uppercase">Digital Ballot Simulator</span>
+          </div>
+          <span className="text-[10px] bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 px-2 py-0.5 rounded-md font-bold">SHA-256 Verified</span>
+        </div>
+
+        {votingAlert && (
+          <div className="p-3 bg-emerald-500/15 border border-emerald-500/35 rounded-xl text-xs text-emerald-300 font-semibold animate-fade-in-up text-left">
+            {votingAlert}
+          </div>
+        )}
+
+        <div className="bg-white/[0.02] border border-white/[0.06] p-4.5 rounded-2xl text-left space-y-3.5">
+          <div className="space-y-1">
+            <span className="px-1.5 py-0.5 bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 rounded text-[8px] font-bold uppercase tracking-wide">Active Ballot</span>
+            <h4 className="text-xs font-extrabold text-slate-200">Should the HOA approve the $15,000 budget for tennis court resurfacing?</h4>
+          </div>
+
+          {!hasVoted ? (
+            <div className="flex gap-2">
+              <button
+                onClick={() => handleCastVote('yes')}
+                className="flex-1 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold rounded-lg text-xs transition-all active:scale-95"
+              >
+                ✓ Approve (Yes)
+              </button>
+              <button
+                onClick={() => handleCastVote('no')}
+                className="flex-1 py-2 bg-red-600 hover:bg-red-500 text-white font-extrabold rounded-lg text-xs transition-all active:scale-95"
+              >
+                ✗ Reject (No)
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-3 pt-1">
+              <div>
+                <div className="flex justify-between text-[10px] text-slate-350 font-bold mb-1">
+                  <span>Approve (Yes)</span>
+                  <span>{voteCounts.yes} votes ({yesPercent}%)</span>
+                </div>
+                <div className="w-full bg-white/5 h-2 rounded-full overflow-hidden border border-white/[0.04]">
+                  <div className="bg-emerald-500 h-full transition-all duration-500" style={{ width: `${yesPercent}%` }} />
+                </div>
+              </div>
+              <div>
+                <div className="flex justify-between text-[10px] text-slate-355 font-bold mb-1">
+                  <span>Reject (No)</span>
+                  <span>{voteCounts.no} votes ({noPercent}%)</span>
+                </div>
+                <div className="w-full bg-white/5 h-2 rounded-full overflow-hidden border border-white/[0.04]">
+                  <div className="bg-red-500 h-full transition-all duration-500" style={{ width: `${noPercent}%` }} />
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="text-[9px] text-slate-500 text-left leading-relaxed">
+          * Voting is fully anonymous and encrypted. Results are updated in real-time as residents submit their choices.
+        </div>
+      </div>
+    );
+  };
+
+  const renderAnnouncementsSandbox = (isGrid = false) => (
+    <div className="w-full bg-gradient-to-br from-[#4c249f] via-[#1a0b3f] to-[#0a0319] border border-violet-500/20 hover:border-violet-500/40 rounded-3xl p-6 sm:p-8 space-y-6 text-white transition-all duration-300">
+      <div className="flex justify-between items-center pb-3 border-b border-white/10">
+        <div className="flex items-center gap-2">
+          <Send className="w-4 h-4 text-violet-400" />
+          <span className="text-xs font-bold tracking-wider text-slate-355 uppercase">Announcement Broadcaster</span>
+        </div>
+        <span className="text-[10px] bg-violet-500/10 text-violet-400 border border-violet-500/20 px-2 py-0.5 rounded-md font-bold">142 Members Linked</span>
+      </div>
+
+      {announcementAlert && (
+        <div className="p-3 bg-violet-500/15 border border-violet-500/35 rounded-xl text-xs text-violet-300 font-semibold animate-fade-in-up text-left">
+          {announcementAlert}
+        </div>
+      )}
+
+      <form onSubmit={handlePostAnnouncement} className="space-y-3.5 text-left">
+        <textarea
+          required
+          rows={2}
+          value={announcementInput}
+          onChange={(e) => setAnnouncementInput(e.target.value)}
+          placeholder="Type an announcement to pin..."
+          className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-violet-500 resize-none"
+        />
+        <div className="flex items-center justify-between">
+          <div className="flex gap-4">
+            <label className="flex items-center gap-1.5 text-[10px] text-slate-400 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={notifySms}
+                onChange={(e) => setNotifySms(e.target.checked)}
+                className="accent-violet-500"
+              />
+              <span>Send SMS</span>
+            </label>
+            <label className="flex items-center gap-1.5 text-[10px] text-slate-400 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={notifyEmail}
+                onChange={(e) => setNotifyEmail(e.target.checked)}
+                className="accent-violet-500"
+              />
+              <span>Send Email</span>
+            </label>
+          </div>
+          <button
+            type="submit"
+            className="px-4 py-2 bg-gradient-to-r from-violet-500 to-fuchsia-500 hover:from-violet-600 hover:to-fuchsia-600 text-white font-extrabold rounded-lg text-[10px] transition-all"
+          >
+            Broadcast
+          </button>
+        </div>
+      </form>
+
+      <div className="space-y-3 text-left">
+        <p className="text-xs font-bold text-slate-350 uppercase tracking-wider">Pinned Announcements</p>
+        <div className="space-y-2.5 max-h-40 overflow-y-auto pr-1">
+          {announcementsList.map((ann) => (
+            <div key={ann.id} className="p-3 bg-white/[0.02] border border-white/[0.04] rounded-xl space-y-2">
+              <div className="flex justify-between items-center text-[8px] text-slate-450">
+                <span>📅 {ann.date}</span>
+                <span className="font-extrabold">Views: {ann.views} residents</span>
+              </div>
+              <p className="text-[10px] font-medium leading-relaxed text-slate-200">{ann.text}</p>
+              <div className="flex gap-1">
+                {ann.channels.map((ch) => (
+                  <span key={ch} className="px-1.5 py-0.5 bg-violet-500/10 border border-violet-500/20 text-violet-400 text-[7px] font-bold uppercase rounded">
+                    {ch}
+                  </span>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderAuditLogsSandbox = (isGrid = false) => {
+    const filteredLogs = auditLogsList.filter(l => 
+      l.action.toLowerCase().includes(auditSearch.toLowerCase()) ||
+      l.user.toLowerCase().includes(auditSearch.toLowerCase()) ||
+      l.ip.toLowerCase().includes(auditSearch.toLowerCase())
+    );
+
+    return (
+      <div className="w-full bg-gradient-to-br from-[#4c249f] via-[#1a0b3f] to-[#0a0319] border border-teal-500/20 hover:border-teal-500/40 rounded-3xl p-6 sm:p-8 space-y-6 text-white transition-all duration-300">
+        <div className="flex justify-between items-center pb-3 border-b border-white/10">
+          <div className="flex items-center gap-2">
+            <Activity className="w-4 h-4 text-teal-400" />
+            <span className="text-xs font-bold tracking-wider text-slate-355 uppercase">Compliance IP Audit Tracker</span>
+          </div>
+          <button
+            type="button"
+            onClick={handleSimulateLogAction}
+            className="px-2.5 py-1.5 bg-gradient-to-r from-teal-500 to-blue-500 hover:from-teal-600 hover:to-blue-600 text-white font-extrabold rounded-lg text-[9px] shadow-md transition-all active:scale-95"
+          >
+            ⚡ Simulate Event
+          </button>
+        </div>
+
+        {auditAlert && (
+          <div className="p-2.5 bg-teal-500/10 border border-teal-500/20 rounded-xl text-[10px] text-teal-300 font-semibold animate-fade-in-up text-left">
+            {auditAlert}
+          </div>
+        )}
+
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-505" size={12} />
+          <input
+            type="text"
+            value={auditSearch}
+            onChange={(e) => setAuditSearch(e.target.value)}
+            placeholder="Search audit trail logs..."
+            className="w-full bg-white/5 border border-white/10 rounded-xl pl-9 pr-4 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-teal-500"
+          />
+        </div>
+
+        <div className="space-y-3.5 text-left">
+          <p className="text-xs font-bold text-slate-350 uppercase tracking-wider">Unalterable Operations Log</p>
+          <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
+            {filteredLogs.map((log) => (
+              <div key={log.id} className="p-3 bg-white/[0.02] border border-white/[0.04] rounded-xl text-[10px] space-y-1">
+                <div className="flex justify-between items-center text-[8px] text-slate-500">
+                  <span>⏱️ {log.time}</span>
+                  <span className="font-mono text-teal-400 bg-teal-500/10 px-1.5 py-0.5 rounded">{log.ip}</span>
+                </div>
+                <p className="font-extrabold text-slate-200">{log.action}</p>
+                <p className="text-[9px] text-slate-450">Actor: {log.user} • Location: {log.location}</p>
+              </div>
+            ))}
+            {filteredLogs.length === 0 && (
+              <div className="text-center text-slate-500 text-[10px] py-4">No matching logs found.</div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const renderRosterSandbox = (isGrid = false) => {
+    const filteredRoster = rosterList.filter(r =>
+      r.name.toLowerCase().includes(rosterSearch.toLowerCase()) ||
+      r.unit.toLowerCase().includes(rosterSearch.toLowerCase())
+    );
+
+    return (
+      <div className="w-full bg-gradient-to-br from-[#4c249f] via-[#1a0b3f] to-[#0a0319] border border-violet-500/20 hover:border-violet-500/40 rounded-3xl p-6 sm:p-8 space-y-6 text-white transition-all duration-300">
+        <div className="flex justify-between items-center pb-3 border-b border-white/10">
+          <div className="flex items-center gap-2">
+            <Users className="w-4 h-4 text-violet-400" />
+            <span className="text-xs font-bold tracking-wider text-slate-355 uppercase">Verified Roster Directory</span>
+          </div>
+          <span className="text-[10px] bg-violet-500/10 text-violet-400 border border-violet-500/20 px-2 py-0.5 rounded-md font-bold">Active Roster</span>
+        </div>
+
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-505" size={12} />
+          <input
+            type="text"
+            value={rosterSearch}
+            onChange={(e) => setRosterSearch(e.target.value)}
+            placeholder="Search roster by name or unit..."
+            className="w-full bg-white/5 border border-white/10 rounded-xl pl-9 pr-4 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-violet-500"
+          />
+        </div>
+
+        <div className="space-y-3.5 text-left">
+          <p className="text-xs font-bold text-slate-350 uppercase tracking-wider">Resident Directory Entries</p>
+          <div className="space-y-2.5 max-h-48 overflow-y-auto pr-1">
+            {filteredRoster.map((res, idx) => (
+              <div key={idx} className="p-3 bg-white/[0.02] border border-white/[0.04] rounded-xl text-[10px] flex justify-between items-center">
+                <div className="space-y-0.5">
+                  <p className="font-extrabold text-slate-200">{res.name}</p>
+                  <p className="text-slate-450 text-[8px] font-mono">{res.email} • {res.phone}</p>
+                </div>
+                <div className="text-right space-y-1">
+                  <span className="block text-[8px] font-mono font-extrabold text-slate-300">{res.unit}</span>
+                  <span className="inline-block px-1.5 py-0.5 bg-violet-500/15 border border-violet-500/25 text-violet-300 rounded text-[7px] font-bold uppercase tracking-wide">
+                    {res.status}
+                  </span>
+                </div>
+              </div>
+            ))}
+            {filteredRoster.length === 0 && (
+              <div className="text-center text-slate-500 text-[10px] py-4">No directory records found.</div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-[#120824] transition-colors duration-250 font-sans text-slate-900 dark:text-slate-100">
@@ -704,6 +1280,12 @@ export default function FeaturesPage() {
               {activeTab === 'kanban' && renderKanbanSandbox(false)}
               {activeTab === 'amenities' && renderAmenitiesSandbox(false)}
               {activeTab === 'rbac' && renderRbacSandbox(false)}
+              {activeTab === 'violations' && renderViolationsSandbox(false)}
+              {activeTab === 'otp_gate' && renderOtpGateSandbox(false)}
+              {activeTab === 'voting' && renderVotingSandbox(false)}
+              {activeTab === 'announcements' && renderAnnouncementsSandbox(false)}
+              {activeTab === 'audit_logs' && renderAuditLogsSandbox(false)}
+              {activeTab === 'roster' && renderRosterSandbox(false)}
             </div>
           </div>
         </div>

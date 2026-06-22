@@ -66,7 +66,7 @@ export default function Navbar() {
       icon: <CreditCard className="w-4 h-4 text-emerald-500" />,
       items: [
         { name: "Online Dues Payments", desc: "Secure automated credit card/ACH billing", tab: "ledger" },
-        { name: "Violation Fines Citation", desc: "Issue compliance charges & late penalties", tab: "rbac" },
+        { name: "Violation Fines Citation", desc: "Issue compliance charges & late penalties", tab: "violations" },
         { name: "Account Ledger Reports", desc: "Interactive statements & financial outputs", tab: "ledger" },
         { name: "Automated Late Fees", desc: "Custom percentages & flat rate grace rules", tab: "ledger" },
       ]
@@ -78,17 +78,17 @@ export default function Navbar() {
         { name: "Maintenance Ticket Desk", desc: "Log requests, attach photos, track vendor ETAs", tab: "kanban" },
         { name: "Amenity Facility Scheduler", desc: "Smart double-booking pool & clubhouse blocks", tab: "amenities" },
         { name: "Vendor Dispatch Kanban", desc: "Assign work orders to trusted local contractors", tab: "kanban" },
-        { name: "Direct OTP Vendor Gate", desc: "Temporary gate security passcode OTP dispatches", tab: "kanban" },
+        { name: "Direct OTP Vendor Gate", desc: "Temporary gate security passcode OTP dispatches", tab: "otp_gate" },
       ]
     },
     {
       category: "Governance & Voting",
       icon: <FileText className="w-4 h-4 text-indigo-500" />,
       items: [
-        { name: "Digital Assemblies & E-Voting", desc: "Conduct virtual HOA meetings & pass laws", tab: "rbac" },
-        { name: "Interactive Community Polls", desc: "Collect opinions on upcoming board proposals", tab: "rbac" },
-        { name: "Pinned Announcements", desc: "Official updates via SMS, email & dashboard", tab: "rbac" },
-        { name: "Action IP Audit Logs", desc: "Track system access details & compliance IP audits", tab: "rbac" },
+        { name: "Digital Assemblies & E-Voting", desc: "Conduct virtual HOA meetings & pass laws", tab: "voting" },
+        { name: "Interactive Community Polls", desc: "Collect opinions on upcoming board proposals", tab: "voting" },
+        { name: "Pinned Announcements", desc: "Official updates via SMS, email & dashboard", tab: "announcements" },
+        { name: "Action IP Audit Logs", desc: "Track system access details & compliance IP audits", tab: "audit_logs" },
       ]
     },
     {
@@ -98,7 +98,7 @@ export default function Navbar() {
         { name: "NestBloq AI Assistant", desc: "24/7 conversational bylaws & query answers", tab: "assistant" },
         { name: "Auto-Resolved Queries", desc: "Instant response system with zero admin overhead", tab: "assistant" },
         { name: "Role-Based Access Control", desc: "Granular workspaces for Board, Manager, Resident", tab: "rbac" },
-        { name: "Community Roster Directory", desc: "Secure profile database of verified homeowners", tab: "rbac" },
+        { name: "Community Roster Directory", desc: "Secure profile database of verified homeowners", tab: "roster" },
       ]
     }
   ];
