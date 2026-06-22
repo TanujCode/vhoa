@@ -169,7 +169,7 @@ const SubmitModal = ({ communityId, onClose, onSuccess }) => {
 
           <div>
             <label className="text-xs text-slate-500 dark:text-gray-400 mb-2 block">Priority</label>
-            <div className="grid grid-cols-3 gap-2.5">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
               {[
                 { value: 'LOW', label: 'Low', color: 'bg-green-500', activeClass: 'border-green-500 bg-green-500/10 text-green-700 dark:text-green-400' },
                 { value: 'NORMAL', label: 'Medium', color: 'bg-yellow-500', activeClass: 'border-yellow-500 bg-yellow-500/10 text-yellow-700 dark:text-yellow-400' },
@@ -487,7 +487,7 @@ const EditModal = ({ request, communityId, isAdmin, onClose, onSuccess }) => {
 
           <div>
             <label className="text-xs text-slate-500 dark:text-gray-400 mb-2 block">Priority</label>
-            <div className="grid grid-cols-3 gap-2.5">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
               {[
                 { value: 'LOW', label: 'Low', color: 'bg-green-500', activeClass: 'border-green-500 bg-green-500/10 text-green-700 dark:text-green-400' },
                 { value: 'NORMAL', label: 'Medium', color: 'bg-yellow-500', activeClass: 'border-yellow-500 bg-yellow-500/10 text-yellow-700 dark:text-yellow-400' },
@@ -1462,10 +1462,10 @@ const ServiceRequests = ({ community, user, setActivePage, setPaymentState }) =>
   return (
     <div className="text-slate-900 dark:text-white">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
-        <div className="flex justify-between items-center w-full md:w-auto">
+        <div className="flex justify-between items-start w-full md:w-auto gap-4">
           <div>
             <h1 className="text-2xl sm:text-3xl font-semibold text-slate-900 dark:text-white">Service Requests</h1>
-            <p className="text-slate-500 dark:text-gray-400 mt-1 flex items-center gap-2">
+            <p className="text-slate-500 dark:text-gray-400 mt-1 flex flex-wrap items-center gap-2">
               {community?.name}
               {isResident && <span className="text-xs bg-blue-500/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400 px-2 py-0.5 rounded-full font-medium">My Requests</span>}
               {isAdmin && <span className="text-xs bg-teal-500/10 text-teal-600 dark:bg-teal-500/20 dark:text-teal-400 px-2 py-0.5 rounded-full font-medium">All Requests</span>}
@@ -1475,14 +1475,14 @@ const ServiceRequests = ({ community, user, setActivePage, setPaymentState }) =>
           <button 
             onClick={handleRefreshAll} 
             disabled={loading}
-            className="md:hidden p-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 rounded-2xl text-slate-700 dark:text-white transition disabled:opacity-60"
+            className="md:hidden p-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 rounded-2xl text-slate-700 dark:text-white transition disabled:opacity-60 flex-shrink-0"
             title="Refresh"
           >
             <RefreshCw size={18} className={loading ? "animate-spin" : ""} />
           </button>
         </div>
 
-        <div className="flex gap-2 w-full md:w-auto">
+        <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
           {/* Desktop Refresh Button */}
           <button 
             onClick={handleRefreshAll} 
@@ -1491,7 +1491,7 @@ const ServiceRequests = ({ community, user, setActivePage, setPaymentState }) =>
           >
             <RefreshCw size={15} className={loading ? "animate-spin" : ""} /> {loading ? "Refreshing..." : "Refresh"}
           </button>
-          <button onClick={() => setShowModal(true)} className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-teal-600 hover:bg-teal-500 text-white px-5 py-2.5 rounded-2xl text-sm font-semibold transition">
+          <button onClick={() => setShowModal(true)} className="w-full sm:w-auto flex items-center justify-center gap-2 bg-teal-600 hover:bg-teal-500 text-white px-5 py-2.5 rounded-2xl text-sm font-semibold transition">
             <Plus size={15} /> New Request
           </button>
         </div>

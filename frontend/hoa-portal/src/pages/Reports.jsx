@@ -32,6 +32,7 @@ const Reports = ({ community, user, setActivePage }) => {
         responseType: 'blob', // Important: response is binary CSV file
       });
       
+      // Create a local URL for the downloadable blob
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement('a');
       link.href = url;
@@ -70,21 +71,23 @@ const Reports = ({ community, user, setActivePage }) => {
   return (
     <div className="text-slate-900 dark:text-white">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+      <div className="flex justify-between items-start mb-8 gap-4">
         <div>
-          <h1 className="text-3xl font-semibold text-slate-900 dark:text-white flex items-center gap-2">
-            <BarChart2 className="text-teal-500" size={28} /> Reports & Analytics
-          </h1>
+          <div className="flex flex-wrap items-center gap-3">
+            <h1 className="text-2xl sm:text-3xl font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+              <BarChart2 className="text-teal-500" size={28} /> Reports & Analytics
+            </h1>
+            <button
+              onClick={fetchStats}
+              disabled={loading}
+              className="p-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 text-slate-700 dark:text-white rounded-2xl transition flex items-center justify-center disabled:opacity-60 flex-shrink-0"
+              title="Refresh Stats"
+            >
+              <RefreshCw size={15} className={loading ? "animate-spin" : ""} />
+            </button>
+          </div>
           <p className="text-slate-500 dark:text-gray-400 mt-1">{community?.name || 'Community Portal'}</p>
         </div>
-        <button
-          onClick={fetchStats}
-          disabled={loading}
-          className="p-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 text-slate-700 dark:text-white rounded-2xl transition flex items-center justify-center disabled:opacity-60"
-          title="Refresh Stats"
-        >
-          <RefreshCw size={15} className={loading ? "animate-spin" : ""} />
-        </button>
       </div>
 
       {/* Overview Cards */}

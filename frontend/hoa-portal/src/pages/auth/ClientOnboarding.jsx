@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import Logo from '../../components/marketing/Logo';
 import { 
   Building, User, Shield, CreditCard, CheckCircle, 
   AlertCircle, ChevronRight, ChevronLeft, RefreshCw, KeyRound, Globe2, Landmark, Info,
@@ -947,8 +948,7 @@ export default function ClientOnboarding() {
         <div className="w-full md:w-1/3 bg-[#111f2e] p-8 border-b md:border-b-0 md:border-r border-white/5 flex flex-col justify-between">
           <div>
             <div className="flex items-center gap-2 mb-8">
-              <div className="w-8 h-8 bg-[#1D9E75] rounded-xl flex items-center justify-center text-white font-bold text-xs">NB</div>
-              <span className="text-xl font-bold tracking-tight text-white">Nest<span className="text-[#1D9E75]">Bloq</span></span>
+              <Logo variant="white" className="h-7 text-white" />
             </div>
             
             <h2 className="text-2xl font-bold mb-2">HOA Client Onboarding</h2>

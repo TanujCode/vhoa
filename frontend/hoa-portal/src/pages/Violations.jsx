@@ -965,7 +965,7 @@ const Violations = ({ community, user, setActivePage, setPaymentState }) => {
           </button>
         </div>
 
-        <div className="flex gap-2 w-full md:w-auto">
+        <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
           {/* Desktop Refresh Button */}
           <button
             onClick={fetchViolations}
@@ -980,13 +980,13 @@ const Violations = ({ community, user, setActivePage, setPaymentState }) => {
             <>
               <button 
                 onClick={() => setShowCreateModal(true)}
-                className="flex-1 md:flex-none px-5 py-2.5 bg-blue-600 hover:bg-blue-500 rounded-2xl text-sm font-semibold transition flex items-center justify-center gap-2 text-white"
+                className="w-full sm:w-auto px-5 py-2.5 bg-blue-600 hover:bg-blue-500 rounded-2xl text-sm font-semibold transition flex items-center justify-center gap-2 text-white"
               >
                 <Plus size={15} /> Create Type
               </button>
               <button
                 onClick={() => setShowModal(true)}
-                className="flex-1 md:flex-none px-5 py-2.5 bg-teal-600 hover:bg-teal-500 rounded-2xl text-sm font-semibold transition flex items-center justify-center gap-2 text-white"
+                className="w-full sm:w-auto px-5 py-2.5 bg-teal-600 hover:bg-teal-500 rounded-2xl text-sm font-semibold transition flex items-center justify-center gap-2 text-white"
               >
                 <Plus size={15} />
                 Submit Violation
@@ -997,47 +997,47 @@ const Violations = ({ community, user, setActivePage, setPaymentState }) => {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-5 mb-8">
-        <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 shadow-sm">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-5 mb-8">
+        <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-4 sm:p-6 shadow-sm">
           <p className="text-slate-500 dark:text-gray-400 text-sm">Total Open</p>
-          <p className="text-5xl font-mono font-bold text-red-600 dark:text-red-400 mt-2">{stats.open}</p>
+          <p className="text-3xl sm:text-5xl font-mono font-bold text-red-600 dark:text-red-400 mt-2">{stats.open}</p>
         </div>
-        <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 shadow-sm">
+        <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-4 sm:p-6 shadow-sm">
           <p className="text-slate-500 dark:text-gray-400 text-sm">Paid</p>
-          <p className="text-5xl font-mono font-bold text-teal-600 dark:text-teal-400 mt-2">{stats.paid}</p>
+          <p className="text-3xl sm:text-5xl font-mono font-bold text-teal-600 dark:text-teal-400 mt-2">{stats.paid}</p>
         </div>
-        <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 shadow-sm">
+        <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-4 sm:p-6 shadow-sm">
           <p className="text-slate-500 dark:text-gray-400 text-sm">Disputed</p>
-          <p className="text-5xl font-mono font-bold text-amber-600 dark:text-amber-400 mt-2">{stats.disputed}</p>
+          <p className="text-3xl sm:text-5xl font-mono font-bold text-amber-600 dark:text-amber-400 mt-2">{stats.disputed}</p>
         </div>
-        <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 shadow-sm">
+        <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-4 sm:p-6 shadow-sm">
           <p className="text-slate-500 dark:text-gray-400 text-sm">Closed</p>
-          <p className="text-5xl font-mono font-bold text-slate-500 dark:text-gray-400 mt-2">{stats.closed}</p>
+          <p className="text-3xl sm:text-5xl font-mono font-bold text-slate-500 dark:text-gray-400 mt-2">{stats.closed}</p>
         </div>
       </div>
 
       {/* Table Section */}
       <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl overflow-hidden shadow-sm">
-        <div className="p-6 border-b border-slate-200 dark:border-white/10 flex items-center justify-between">
+        <div className="p-6 border-b border-slate-200 dark:border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <h2 className="font-semibold text-slate-900 dark:text-white">All Violations</h2>
 
-          <div className="flex items-center gap-3">
-            <div className="relative">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
+            <div className="relative w-full sm:w-64">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-gray-500" size={18} />
               <input
                 type="text"
                 placeholder="Search violations..."
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
-                className="w-72 bg-slate-50 dark:bg-[#1e3248] border border-slate-200 dark:border-white/10 rounded-2xl pl-10 pr-4 py-2.5 text-sm text-slate-900 dark:text-white focus:border-teal-500 outline-none placeholder-slate-400 dark:placeholder-gray-500"
+                className="w-full bg-slate-50 dark:bg-[#1e3248] border border-slate-200 dark:border-white/10 rounded-2xl pl-10 pr-4 py-2.5 text-sm text-slate-900 dark:text-white focus:border-teal-500 outline-none placeholder-slate-400 dark:placeholder-gray-500"
               />
             </div>
 
-             <div className="relative">
+            <div className="relative w-full sm:w-auto">
               <select
                 value={statusFilter}
                 onChange={e => setStatusFilter(e.target.value)}
-                className="bg-slate-50 dark:bg-[#1e3248] border border-slate-200 dark:border-white/10 rounded-2xl pl-4 pr-10 py-2.5 text-sm text-slate-900 dark:text-white focus:border-teal-500 focus:outline-none appearance-none cursor-pointer"
+                className="w-full bg-slate-50 dark:bg-[#1e3248] border border-slate-200 dark:border-white/10 rounded-2xl pl-4 pr-10 py-2.5 text-sm text-slate-900 dark:text-white focus:border-teal-500 focus:outline-none appearance-none cursor-pointer"
               >
                 {statuses.map(s => (
                   <option key={s} value={s} className="text-slate-900 dark:text-white">{s || 'Filter'}</option>
