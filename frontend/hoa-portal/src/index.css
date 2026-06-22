@@ -401,51 +401,55 @@ html:not(.dark) .premium-card:hover {
 }
 
 /* Background overrides */
-.dark .bg-\[\#0D1B2A\], .dark .bg-\[\#0d1b2a\],
-.dark [class*="bg-[#0D1B2A]"], .dark [class*="bg-[#0d1b2a]"] {
+.dark [class~="bg-[#0D1B2A]"], .dark [class~="bg-[#0d1b2a]"] {
   background-color: #080B11 !important;
 }
-.dark .bg-\[\#162535\], .dark .bg-\[\#162535\],
-.dark [class*="bg-[#162535]"] {
+.dark [class~="bg-[#162535]"], .dark [class~="bg-[#162535]"] {
   background-color: #090C15 !important;
 }
-.dark .bg-\[\#1E3248\], .dark .bg-\[\#1e3248\],
-.dark [class*="bg-[#1E3248]"], .dark [class*="bg-[#1e3248]"] {
+.dark [class~="bg-[#1E3248]"], .dark [class~="bg-[#1e3248]"] {
   background-color: #121829 !important;
 }
 
 /* Gradient overrides for card backgrounds */
-.dark .from-\[\#1E2E42\], .dark .from-\[\#1e2e42\],
-.dark [class*="from-[#1E2E42]"], .dark [class*="from-[#1e2e42]"] {
+.dark [class~="from-[#1E2E42]"], .dark [class~="from-[#1e2e42]"] {
   --tw-gradient-from: #13192B !important;
   --tw-gradient-to: rgba(19, 25, 43, 0) !important;
   --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important;
 }
-.dark .to-\[\#162535\], .dark .to-\[\#162535\],
-.dark [class*="to-[#162535]"] {
+.dark [class~="to-[#162535]"], .dark [class~="to-[#162535]"] {
   --tw-gradient-to: #0F1422 !important;
 }
 
 /* Sidebar active element overrides */
-.dark .bg-\[\#1D9E75\]\/10, .dark .bg-\[\#1d9e75\]\/10,
-.dark [class*="bg-[#1D9E75]/10"], .dark [class*="bg-[#1d9e75]/10"] {
+.dark [class~="bg-[#1D9E75]/10"], .dark [class~="bg-[#1d9e75]/10"] {
   background-color: rgba(99, 102, 241, 0.12) !important;
 }
-.dark .border-\[\#1D9E75\], .dark .border-\[\#1d9e75\],
-.dark [class*="border-[#1D9E75]"], .dark [class*="border-[#1d9e75]"] {
+.dark [class~="border-[#1D9E75]"], .dark [class~="border-[#1d9e75]"] {
   border-color: #6366F1 !important;
 }
-.dark .text-\[\#25C490\], .dark .text-\[\#25c490\],
-.dark [class*="text-[#25C490]"], .dark [class*="text-[#25c490]"] {
+.dark [class~="text-[#25C490]"], .dark [class~="text-[#25c490]"] {
   color: #818CF8 !important;
 }
-.dark .text-\[\#1D9E75\], .dark .text-\[\#1d9e75\],
-.dark [class*="text-[#1D9E75]"], .dark [class*="text-[#1d9e75]"] {
+.dark [class~="text-[#1D9E75]"], .dark [class~="text-[#1d9e75]"] {
   color: #6366F1 !important;
 }
-.dark .bg-\[\#1D9E75\], .dark .bg-\[\#1d9e75\],
-.dark [class*="bg-[#1D9E75]"], .dark [class*="bg-[#1d9e75]"] {
+.dark [class~="bg-[#1D9E75]"], .dark [class~="bg-[#1d9e75]"] {
   background-color: #6366F1 !important;
+}
+
+/* Specific badge/initials/layout icon background highlights */
+.dark [class~="bg-[#1D9E75]/20"], .dark [class~="bg-[#1d9e75]/20"] {
+  background-color: rgba(99, 102, 241, 0.18) !important;
+}
+.dark [class~="border-[#1D9E75]/30"], .dark [class~="border-[#1d9e75]/30"] {
+  border-color: rgba(99, 102, 241, 0.3) !important;
+}
+.dark [class~="bg-[#25C490]/10"], .dark [class~="bg-[#25c490]/10"] {
+  background-color: rgba(99, 102, 241, 0.12) !important;
+}
+.dark [class~="border-[#25C490]/20"], .dark [class~="border-[#25c490]/20"] {
+  border-color: rgba(99, 102, 241, 0.2) !important;
 }
 
 /* General teal to purple/indigo transitions in dark mode */
