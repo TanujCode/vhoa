@@ -395,6 +395,10 @@ html:not(.dark) .premium-card:hover {
   to { width: 100%; }
 }
 
+.animate-progress-bar {
+  animation: progress 4.5s linear forwards;
+}
+
 /* ─── Dark Theme Overrides to Match Reference Image ─── */
 .dark body {
   background-color: #080B11 !important;

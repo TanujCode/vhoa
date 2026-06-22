@@ -74,19 +74,17 @@ const slides = [
 const HeroImage = ({ isDark }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
-  const timerRef = useRef(null);
 
   // Auto-play cycling effect
   useEffect(() => {
-    if (!isHovered) {
-      timerRef.current = setInterval(() => {
-        setCurrentIndex((prev) => (prev + 1) % slides.length);
-      }, 4500);
-    }
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
-    };
-  }, [isHovered]);
+    if (isHovered) return;
+    
+    const timer = setTimeout(() => {
+      setCurrentIndex((prev) => (prev + 1) % slides.length);
+    }, 4500);
+    
+    return () => clearTimeout(timer);
+  }, [currentIndex, isHovered]);
 
   const handleCardClick = (offset, index) => {
     if (offset !== 0) {
@@ -200,9 +198,11 @@ const HeroImage = ({ isDark }) => {
                           >
                             {isActive && (
                               <div 
-                                className="absolute inset-y-0 left-0 bg-gradient-to-r from-violet-400 to-indigo-500 animate-[progress_4.5s_linear_infinite]"
+                                key={`${dotIndex}-${isHovered}`}
+                                className="absolute inset-y-0 left-0 bg-gradient-to-r from-violet-400 to-indigo-500 animate-progress-bar"
                                 style={{
-                                  animationPlayState: isHovered ? 'paused' : 'running'
+                                  animationPlayState: isHovered ? 'paused' : 'running',
+                                  width: isHovered ? '0%' : 'auto'
                                 }}
                               />
                             )}

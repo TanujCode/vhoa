@@ -134,154 +134,62 @@ export default function FeaturesPage() {
   };
 
   // 4. AI Assistant Chat State
-  const [chatMessages, setChatMessages] = useState([
-    { sender: 'ai', text: "Hello! I am NestBloq Assistant. Click a prompt below to see how I handle resident lookups instantly:" }
-  ]);
-  const [isTyping, setIsTyping] = useState(false);
+  const chatMessages = [
+    { sender: 'ai', text: "Hello! I am the NestBloq AI Assistant. Ask me anything about community rules, scheduling, or payments." },
+    { sender: 'user', text: "🗓️ Trash pickup schedule?" },
+    { sender: 'ai', text: "Trash pickup is scheduled for Tuesdays and Fridays at 7:00 AM. Recyclables are collected on Wednesdays." }
+  ];
   const prompts = [
     { q: "🗓️ Trash pickup schedule?", a: "Trash pickup is scheduled for Tuesdays and Fridays at 7:00 AM. Recyclables are collected on Wednesdays." },
     { q: "💳 How to pay maintenance?", a: "You can pay dues securely online in seconds. Just navigate to the 'Payments' tab in your resident portal, choose your method (ACH/Card), and clear it instantly." },
     { q: "🏊 Guest rules for the pool?", a: "Residents can host up to 4 guests at the Clubhouse pool. Guests must be accompanied by an adult homeowner at all times. Operating hours are 6:00 AM - 10:00 PM." }
   ];
 
-  const handleSendPrompt = (prompt) => {
-    if (isTyping) return;
-    setChatMessages(prev => [...prev, { sender: 'user', text: prompt.q }]);
-    setIsTyping(true);
-    
-    setTimeout(() => {
-      setIsTyping(false);
-      setChatMessages(prev => [...prev, { sender: 'ai', text: prompt.a }]);
-    }, 1000);
-  };
-
   // 5. Role Switcher State
   const [selectedRole, setSelectedRole] = useState('board');
+  const isTyping = false;
 
   // 6. Violations Sandbox State
-  const [violationsList, setViolationsList] = useState([
+  const violationsList = [
     { id: 1, type: "Trash can left out", resident: "Aarav Sharma", fine: 50, date: "2026-06-20", status: "Open" },
     { id: 2, type: "Unapproved yard structures", resident: "Sneha Reddy", fine: 250, date: "2026-06-18", status: "Appealed" },
     { id: 3, type: "Overnight guest parking", resident: "Kabir Mehta", fine: 100, date: "2026-06-15", status: "Paid" }
-  ]);
-  const [violationAlert, setViolationAlert] = useState('');
-
-  const handleSimulateCitation = () => {
-    const newItem = {
-      id: Date.now(),
-      type: "Commercial vehicle parking",
-      resident: "Rohan Das",
-      fine: 150,
-      date: new Date().toISOString().slice(0, 10),
-      status: "Open"
-    };
-    setViolationsList(prev => [newItem, ...prev]);
-    setViolationAlert("New citation issued: $150 fine logged for Rohan Das.");
-    setTimeout(() => setViolationAlert(''), 4000);
-  };
-
-  const handlePayViolationLocal = (id) => {
-    setViolationsList(prev => prev.map(v => v.id === id ? { ...v, status: 'Paid' } : v));
-    setViolationAlert("Fine settled successfully via online portal payment.");
-    setTimeout(() => setViolationAlert(''), 4000);
-  };
+  ];
 
   // 7. OTP Gate Sandbox State
-  const [otpCode, setOtpCode] = useState('');
-  const [otpLogs, setOtpLogs] = useState([
+  const otpCode = '482915';
+  const otpLogs = [
     { time: "14:20 PM", event: "Vendor Gate Access Granted (FedEx Express)", ip: "Gate 1 A" },
     { time: "11:05 AM", event: "Vendor Gate Access Granted (Pest Control)", ip: "Gate 2 B" }
-  ]);
-
-  const handleGenerateOTP = () => {
-    const randomOtp = Math.floor(100000 + Math.random() * 900000);
-    setOtpCode(String(randomOtp));
-    
-    const newLog = {
-      time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
-      event: `Temp Access Code Generated (${randomOtp})`,
-      ip: "Admin Portal"
-    };
-    setOtpLogs(prev => [newLog, ...prev]);
-  };
+  ];
 
   // 8. Pinned Announcements Sandbox State
-  const [announcementsList, setAnnouncementsList] = useState([
-    { id: 1, text: "Clubhouse pool closed for chemical treatment on Wednesday 9:00 AM - 1:00 PM.", date: "Just now", channels: ["SMS", "Portal"], views: 24 },
-    { id: 2, text: "Annual HOA Board Meeting scheduled for July 12th in the Community Hall.", date: "2 days ago", channels: ["Email", "Portal"], views: 142 }
-  ]);
-  const [announcementInput, setAnnouncementInput] = useState('');
-  const [notifySms, setNotifySms] = useState(true);
-  const [notifyEmail, setNotifyEmail] = useState(true);
-  const [announcementAlert, setAnnouncementAlert] = useState('');
-
-  const handlePostAnnouncement = (e) => {
-    e.preventDefault();
-    if (!announcementInput.trim()) return;
-    
-    const channels = ["Portal"];
-    if (notifySms) channels.push("SMS");
-    if (notifyEmail) channels.push("Email");
-
-    const newItem = {
-      id: Date.now(),
-      text: announcementInput.trim(),
-      date: "Just now",
-      channels,
-      views: 1
-    };
-
-    setAnnouncementsList(prev => [newItem, ...prev]);
-    setAnnouncementInput('');
-    setAnnouncementAlert(`Announcement broadcast successfully to all residents via ${channels.join(' & ')}!`);
-    setTimeout(() => setAnnouncementAlert(''), 4000);
-  };
+  const announcementsList = [
+    { id: 1, text: "Annual elevator safety inspection tomorrow between 9:00 AM and 4:00 PM.", date: "Just now", channels: ["SMS", "Email", "Portal"], views: 42 },
+    { id: 2, text: "Clubhouse pool closed for chemical treatment on Wednesday 9:00 AM - 1:00 PM.", date: "1 day ago", channels: ["SMS", "Portal"], views: 114 },
+    { id: 3, text: "Annual HOA Board Meeting scheduled for July 12th in the Community Hall.", date: "3 days ago", channels: ["Email", "Portal"], views: 142 }
+  ];
 
   // 9. IP Audit Logs Sandbox State
-  const [auditLogsList, setAuditLogsList] = useState([
+  const auditLogsList = [
     { id: 1, action: "User Login Successful", user: "Vikash Sharma (Board)", ip: "192.168.1.42", location: "New York, US", time: "15:24 PM" },
     { id: 2, action: "Reconciliation Invoice Generated", user: "Auto-Reconcile System", ip: "10.0.4.15", location: "AWS Server (US-East)", time: "15:02 PM" },
     { id: 3, action: "Bylaw Amendment Approved", user: "Vikash Sharma (Board)", ip: "192.168.1.42", location: "New York, US", time: "14:15 PM" },
     { id: 4, action: "Security Gate Passcode Verified", user: "Vendor Guest (FedEx)", ip: "172.56.21.9", location: "Gate 1 Controller", time: "14:02 PM" }
-  ]);
+  ];
   const [auditSearch, setAuditSearch] = useState('');
-  const [auditAlert, setAuditAlert] = useState('');
-
-  const handleSimulateLogAction = () => {
-    const newItem = {
-      id: Date.now(),
-      action: "Vendor Dispatched via Kanban",
-      user: "Neha Patel (Manager)",
-      ip: "98.244.15.89",
-      location: "San Jose, US",
-      time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
-    };
-    setAuditLogsList(prev => [newItem, ...prev]);
-    setAuditAlert("Simulated compliance action logged: Neha Patel dispatched vendor.");
-    setTimeout(() => setAuditAlert(''), 4000);
-  };
 
   // 10. E-Voting Sandbox State
-  const [hasVoted, setHasVoted] = useState(false);
-  const [voteCounts, setVoteCounts] = useState({ yes: 28, no: 12 });
-  const [votingAlert, setVotingAlert] = useState('');
-
-  const handleCastVote = (option) => {
-    if (hasVoted) return;
-    setVoteCounts(prev => ({ ...prev, [option]: prev[option] + 1 }));
-    setHasVoted(true);
-    setVotingAlert(`Your vote for "${option.toUpperCase()}" has been cryptographically recorded!`);
-    setTimeout(() => setVotingAlert(''), 4500);
-  };
+  const voteCounts = { yes: 29, no: 12 };
 
   // 11. Roster Sandbox State
   const [rosterSearch, setRosterSearch] = useState('');
-  const [rosterList, setRosterList] = useState([
+  const rosterList = [
     { name: "Aarav Sharma", unit: "Unit 302", email: "aarav@nestbloq.com", phone: "+1 (555) 019-2834", status: "Owner" },
     { name: "Sneha Reddy", unit: "Unit 104", email: "sneha@nestbloq.com", phone: "+1 (555) 014-9922", status: "Owner" },
     { name: "Kabir Mehta", unit: "Unit 405", email: "kabir@nestbloq.com", phone: "+1 (555) 018-4720", status: "Resident" },
     { name: "Neha Patel", unit: "Unit 212", email: "neha.p@nestbloq.com", phone: "+1 (555) 012-3844", status: "Board Member" }
-  ]);
+  ];
 
   // Features Detail Data Dictionary
   const featureDetailsData = {
@@ -443,27 +351,12 @@ export default function FeaturesPage() {
       <div className="flex justify-between items-center pb-3 border-b border-white/10">
         <div className="flex items-center gap-2">
           <DollarSign className="w-4 h-4 text-emerald-400" />
-          <span className="text-xs font-bold tracking-wider text-slate-355 uppercase">NestPay Billing Simulator</span>
+          <span className="text-xs font-bold tracking-wider text-slate-355 uppercase">NestPay Billing Panel</span>
         </div>
         <div className="flex items-center gap-2">
-          {isGrid && (
-            <Link 
-              to="/features?tab=ledger"
-              className="text-slate-400 hover:text-white p-1 hover:bg-white/10 rounded-lg transition-colors"
-              title="Open Dedicated Page"
-            >
-              <Sparkles className="w-3.5 h-3.5 text-violet-400 animate-pulse" />
-            </Link>
-          )}
           <span className="text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-md font-bold">Auto-Sync On</span>
         </div>
       </div>
-
-      {financeAlert && (
-        <div className="p-3 bg-emerald-500/15 border border-emerald-500/35 rounded-xl text-xs text-emerald-300 font-semibold animate-fade-in-up text-left">
-          {financeAlert}
-        </div>
-      )}
 
       <div className="grid grid-cols-2 gap-4 text-left">
         <div className="bg-white/[0.03] border border-white/[0.06] p-4 rounded-2xl shadow-inner">
@@ -477,7 +370,7 @@ export default function FeaturesPage() {
       </div>
 
       <div className="space-y-2 text-left">
-        <p className="text-xs font-bold text-slate-300 uppercase tracking-wider">Dues Ledger Simulation</p>
+        <p className="text-xs font-bold text-slate-300 uppercase tracking-wider">Dues Ledger Accounts</p>
         <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
           {transactions.map((tx) => (
             <div key={tx.id} className="flex items-center justify-between p-3 bg-white/[0.02] border border-white/[0.04] rounded-xl text-xs">
@@ -490,17 +383,9 @@ export default function FeaturesPage() {
                   <Check className="w-3 h-3" /> Cleared
                 </span>
               ) : (
-                <button
-                  onClick={() => handleSimulatePayment(tx.id)}
-                  disabled={tx.loading}
-                  className="px-3 py-1.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 disabled:from-slate-700 disabled:to-slate-800 disabled:cursor-not-allowed text-white font-extrabold rounded-lg text-[10px] shadow-md shadow-emerald-500/15 flex items-center gap-1.5 transition-all active:scale-95"
-                >
-                  {tx.loading ? (
-                    <Clock className="w-3 h-3 animate-spin" />
-                  ) : (
-                    <>💰 Simulate Pay</>
-                  )}
-                </button>
+                <span className="flex items-center gap-1 px-2.5 py-1 bg-amber-500/10 border border-amber-500/25 text-amber-400 font-bold rounded-lg text-[10px]">
+                  ⏳ Outstanding
+                </span>
               )}
             </div>
           ))}
@@ -524,21 +409,12 @@ export default function FeaturesPage() {
           <span className="text-xs font-bold tracking-wider text-slate-355 uppercase">AI Resident Assistant</span>
         </div>
         <div className="flex items-center gap-2">
-          {isGrid && (
-            <Link 
-              to="/features?tab=assistant"
-              className="text-slate-400 hover:text-white p-1 hover:bg-white/10 rounded-lg transition-colors"
-              title="Open Dedicated Page"
-            >
-              <Sparkles className="w-3.5 h-3.5 text-violet-400 animate-pulse" />
-            </Link>
-          )}
-          <span className="text-[10px] bg-rose-500/10 text-rose-400 border border-rose-500/20 px-2 py-0.5 rounded-md font-bold">24/7 Live</span>
+          <span className="text-[10px] bg-rose-500/10 text-rose-400 border border-rose-500/20 px-2 py-0.5 rounded-md font-bold opacity-60">24/7 Live</span>
         </div>
       </div>
 
       {/* Chat Log */}
-      <div className="h-56 overflow-y-auto bg-white/[0.02] border border-white/[0.04] p-4 rounded-2xl space-y-3.5 flex flex-col justify-end">
+      <div className="h-56 overflow-y-auto bg-white/[0.02] border border-white/[0.04] p-4 rounded-2xl space-y-3.5 flex flex-col justify-end pointer-events-none">
         {chatMessages.map((msg, idx) => (
           <div key={idx} className={`flex gap-2 items-start text-[11px] ${msg.sender === 'user' ? 'justify-end' : ''}`}>
             {msg.sender === 'ai' && (
@@ -567,17 +443,15 @@ export default function FeaturesPage() {
 
       {/* Preset Prompt Chips */}
       <div className="space-y-1.5 text-left">
-        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Tap to simulate query:</p>
+        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Example Resident Queries:</p>
         <div className="flex flex-wrap gap-2">
           {prompts.map((p, idx) => (
-            <button
+            <span
               key={idx}
-              onClick={() => handleSendPrompt(p)}
-              disabled={isTyping}
-              className="px-3 py-1.5 bg-white/[0.03] border border-white/[0.06] hover:bg-white/[0.07] hover:border-rose-500/30 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg text-[10px] font-semibold text-rose-300 transition-all active:scale-95"
+              className="px-3 py-1.5 bg-white/[0.03] border border-white/[0.06] rounded-lg text-[10px] font-semibold text-rose-300 select-none"
             >
               {p.q}
-            </button>
+            </span>
           ))}
         </div>
       </div>
@@ -598,22 +472,7 @@ export default function FeaturesPage() {
           <Wrench className="w-4 h-4 text-amber-400" />
           <span className="text-xs font-bold tracking-wider text-slate-355 uppercase">Dispatch Kanban</span>
         </div>
-        {isGrid && (
-          <Link 
-            to="/features?tab=kanban"
-            className="text-slate-400 hover:text-white p-1 hover:bg-white/10 rounded-lg transition-colors"
-            title="Open Dedicated Page"
-          >
-            <Sparkles className="w-3.5 h-3.5 text-violet-400 animate-pulse" />
-          </Link>
-        )}
       </div>
-
-      {ticketAlert && (
-        <div className="mt-2 p-2 bg-amber-500/10 border border-amber-500/20 rounded-xl text-[10px] text-amber-300 font-semibold animate-fade-in-up text-left">
-          {ticketAlert}
-        </div>
-      )}
 
       <div className="space-y-3 mt-4 text-left">
         <div className="bg-white/[0.02] border border-white/[0.04] p-3 rounded-2xl space-y-3">
@@ -632,13 +491,9 @@ export default function FeaturesPage() {
               <p className="text-[10px] font-extrabold leading-snug text-slate-200">{t.title}</p>
               
               {t.status === 'todo' && (
-                <button
-                  onClick={() => handleDispatchVendor(t.id)}
-                  disabled={t.loading}
-                  className="w-full py-1 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 disabled:from-slate-700 disabled:cursor-not-allowed text-white font-extrabold rounded text-[8px] flex items-center justify-center gap-1 transition-all"
-                >
-                  {t.loading ? <Clock className="w-2.5 h-2.5 animate-spin" /> : <>Dispatch Technician</>}
-                </button>
+                <span className="w-full py-1 text-center bg-slate-800 text-slate-450 font-extrabold rounded text-[8px] flex items-center justify-center gap-1 select-none">
+                  Awaiting Dispatch
+                </span>
               )}
               {t.status === 'progress' && (
                 <div className="flex items-center gap-1 text-[8px] text-amber-400 font-bold bg-amber-500/10 border border-amber-500/20 p-1 rounded justify-center">
@@ -667,65 +522,25 @@ export default function FeaturesPage() {
           <Calendar className="w-4 h-4 text-indigo-400" />
           <span className="text-xs font-bold tracking-wider text-slate-355 uppercase">Amenities Grid</span>
         </div>
-        {isGrid && (
-          <Link 
-            to="/features?tab=amenities"
-            className="text-slate-400 hover:text-white p-1 hover:bg-white/10 rounded-lg transition-colors"
-            title="Open Dedicated Page"
-          >
-            <Sparkles className="w-3.5 h-3.5 text-violet-400 animate-pulse" />
-          </Link>
-        )}
       </div>
-
-      {amenityAlert && (
-        <div className="mt-2 p-2 bg-indigo-500/15 border border-indigo-500/35 rounded-xl text-[10px] text-indigo-300 font-semibold animate-fade-in-up text-left">
-          {amenityAlert}
-        </div>
-      )}
 
       <div className="space-y-3 mt-4 text-left">
         <div className="grid grid-cols-2 gap-2">
           {slots.map((s, idx) => (
             <div key={idx} className={`p-3 border rounded-xl flex flex-col justify-between h-20 transition-all ${s.theme}`}>
               <div>
-                <p className="text-[9px] font-bold text-slate-350">{s.time}</p>
+                <p className="text-[9px] font-bold text-slate-355">{s.time}</p>
                 <p className="text-[8px] font-medium mt-0.5">{s.status}</p>
               </div>
               {s.status === 'Available' && (
-                <button
-                  onClick={() => handleBookSlotClick(idx)}
-                  className="w-fit px-2 py-0.5 bg-gradient-to-r from-violet-500 to-indigo-600 hover:from-violet-600 hover:to-indigo-700 text-white font-bold rounded text-[8px] transition-all"
-                >
-                  Book Pool
-                </button>
+                <span className="w-fit px-2 py-0.5 bg-emerald-500/10 text-emerald-450 border border-emerald-500/25 rounded text-[8px] font-bold select-none">
+                  Available
+                </span>
               )}
             </div>
           ))}
         </div>
       </div>
-
-      {bookingIndex !== null && (
-        <form onSubmit={confirmBooking} className="mt-3 p-3 bg-white/[0.03] border border-white/[0.06] rounded-xl space-y-2 animate-fade-in-up text-left">
-          <p className="text-[9px] font-bold text-slate-200">Confirm pool at {slots[bookingIndex].time}</p>
-          <div className="flex gap-1.5">
-            <input
-              type="text"
-              required
-              value={bookingUnit}
-              onChange={(e) => setBookingUnit(e.target.value)}
-              placeholder="Unit (e.g. 104)"
-              className="flex-1 px-2 py-1.5 border border-white/10 rounded-lg bg-white/5 text-[10px] text-slate-100 placeholder-slate-505 focus:outline-none focus:border-violet-500"
-            />
-            <button
-              type="submit"
-              className="px-3 py-1.5 bg-gradient-to-r from-violet-500 to-indigo-500 text-white font-bold rounded-lg text-[9px]"
-            >
-              Save
-            </button>
-          </div>
-        </form>
-      )}
     </div>
   );
 
@@ -743,15 +558,6 @@ export default function FeaturesPage() {
           <Shield className="w-4 h-4 text-violet-400" />
           <span className="text-xs font-bold tracking-wider text-slate-355 uppercase">Access Levels</span>
         </div>
-        {isGrid && (
-          <Link 
-            to="/features?tab=rbac"
-            className="text-slate-400 hover:text-white p-1 hover:bg-white/10 rounded-lg transition-colors"
-            title="Open Dedicated Page"
-          >
-            <Sparkles className="w-3.5 h-3.5 text-violet-400 animate-pulse" />
-          </Link>
-        )}
       </div>
 
       <div className="flex justify-center gap-1.5 p-1 bg-white/[0.03] border border-white/[0.06] rounded-xl mt-3">
@@ -830,12 +636,12 @@ export default function FeaturesPage() {
                 <p className="text-[8px] text-slate-400 font-bold uppercase">Dues Balance</p>
                 <p className="text-sm font-black text-amber-400 mt-0.5">$0.00</p>
               </div>
-<div className="p-2 bg-white/[0.03] border border-white/[0.05] rounded-lg text-center">
+              <div className="p-2 bg-white/[0.03] border border-white/[0.05] rounded-lg text-center">
                 <p className="text-[8px] text-slate-400 font-bold uppercase">Work Orders</p>
                 <p className="text-sm font-black text-amber-400 mt-0.5">0 Active</p>
               </div>
             </div>
-            <p className="text-[9px] text-slate-450 leading-relaxed italic">
+            <p className="text-[9px] text-slate-455 leading-relaxed italic">
               Homeowner portal. Submit dispatch service request, reserve community spaces, and sync billing invoices.
             </p>
           </div>
@@ -849,21 +655,10 @@ export default function FeaturesPage() {
       <div className="flex justify-between items-center pb-3 border-b border-white/10">
         <div className="flex items-center gap-2">
           <ShieldAlert className="w-4 h-4 text-amber-450" />
-          <span className="text-xs font-bold tracking-wider text-slate-355 uppercase">Fines & Citations Simulator</span>
+          <span className="text-xs font-bold tracking-wider text-slate-355 uppercase">Fines & Citations Panel</span>
         </div>
-        <button
-          onClick={handleSimulateCitation}
-          className="px-3 py-1.5 bg-gradient-to-r from-amber-500 to-red-500 hover:from-amber-600 hover:to-red-600 text-white font-extrabold rounded-lg text-[10px] shadow-md flex items-center gap-1 transition-all active:scale-95"
-        >
-          ➕ Issue Citation
-        </button>
+        <span className="text-[10px] bg-red-500/10 text-red-400 border border-red-500/20 px-2 py-0.5 rounded-md font-bold">Enforcement Desk</span>
       </div>
-
-      {violationAlert && (
-        <div className="p-3 bg-amber-500/15 border border-amber-500/35 rounded-xl text-xs text-amber-300 font-semibold animate-fade-in-up text-left">
-          {violationAlert}
-        </div>
-      )}
 
       <div className="space-y-3 text-left">
         <p className="text-xs font-bold text-slate-350 uppercase tracking-wider">Active Community Citations</p>
@@ -879,16 +674,13 @@ export default function FeaturesPage() {
                   ✓ Settled
                 </span>
               ) : v.status === 'Appealed' ? (
-                <span className="px-2 py-0.5 bg-blue-500/10 border border-blue-500/25 text-blue-400 font-bold rounded-lg text-[9px] animate-pulse">
+                <span className="px-2 py-0.5 bg-blue-500/10 border border-blue-500/25 text-blue-400 font-bold rounded-lg text-[9px]">
                   ⏳ Appealed
                 </span>
               ) : (
-                <button
-                  onClick={() => handlePayViolationLocal(v.id)}
-                  className="px-2.5 py-1 bg-white/10 hover:bg-white/20 border border-white/15 text-slate-200 font-bold rounded-lg text-[9px] transition-all"
-                >
-                  Pay Fine
-                </button>
+                <span className="px-2 py-0.5 bg-red-500/10 border border-red-500/25 text-red-405 font-bold rounded-lg text-[9px]">
+                  ⚠️ Unpaid
+                </span>
               )}
             </div>
           ))}
@@ -908,20 +700,14 @@ export default function FeaturesPage() {
       </div>
 
       <div className="bg-white/[0.02] border border-white/[0.06] p-5 rounded-2xl text-center space-y-4">
-        {otpCode ? (
-          <div className="space-y-1">
-            <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider">Active Temporary Passcode</p>
-            <p className="text-4xl font-mono font-black text-sky-400 tracking-widest">{otpCode}</p>
-            <p className="text-[10px] text-emerald-400 font-bold">Expires in 15:00 minutes • Authorized</p>
-          </div>
-        ) : (
-          <div className="space-y-1 py-2">
-            <p className="text-xs text-slate-450 font-medium">Click below to generate a temporary secure passcode for arriving utility teams or delivery staff.</p>
-          </div>
-        )}
+        <div className="space-y-1">
+          <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider">Active Temporary Passcode</p>
+          <p className="text-4xl font-mono font-black text-sky-400 tracking-widest">{otpCode}</p>
+          <p className="text-[10px] text-emerald-400 font-bold">Expires in 14m 58s • Authorized</p>
+        </div>
         <button
-          onClick={handleGenerateOTP}
-          className="w-full py-2.5 bg-gradient-to-r from-sky-500 to-indigo-500 hover:from-sky-600 hover:to-indigo-600 text-white font-extrabold rounded-xl text-xs shadow-md transition-all active:scale-95"
+          disabled
+          className="w-full py-2.5 bg-slate-800 text-slate-500 font-extrabold rounded-xl text-xs cursor-not-allowed select-none"
         >
           Generate Gate Passcode
         </button>
@@ -934,7 +720,7 @@ export default function FeaturesPage() {
             <div key={idx} className="flex justify-between items-center p-2.5 bg-white/[0.01] border border-white/[0.04] rounded-lg text-[10px]">
               <div>
                 <p className="font-extrabold text-slate-200">{log.event}</p>
-                <p className="text-slate-500 text-[8px]">{log.time} • Source: {log.ip}</p>
+                <p className="text-slate-555 text-[8px]">{log.time} • Source: {log.ip}</p>
               </div>
               <span className="px-1.5 py-0.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/15 rounded text-[8px] font-bold">OK</span>
             </div>
@@ -954,16 +740,10 @@ export default function FeaturesPage() {
         <div className="flex justify-between items-center pb-3 border-b border-white/10">
           <div className="flex items-center gap-2">
             <Sliders className="w-4 h-4 text-indigo-400" />
-            <span className="text-xs font-bold tracking-wider text-slate-355 uppercase">Digital Ballot Simulator</span>
+            <span className="text-xs font-bold tracking-wider text-slate-355 uppercase">Digital Ballot Results</span>
           </div>
           <span className="text-[10px] bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 px-2 py-0.5 rounded-md font-bold">SHA-256 Verified</span>
         </div>
-
-        {votingAlert && (
-          <div className="p-3 bg-emerald-500/15 border border-emerald-500/35 rounded-xl text-xs text-emerald-300 font-semibold animate-fade-in-up text-left">
-            {votingAlert}
-          </div>
-        )}
 
         <div className="bg-white/[0.02] border border-white/[0.06] p-4.5 rounded-2xl text-left space-y-3.5">
           <div className="space-y-1">
@@ -971,43 +751,26 @@ export default function FeaturesPage() {
             <h4 className="text-xs font-extrabold text-slate-200">Should the HOA approve the $15,000 budget for tennis court resurfacing?</h4>
           </div>
 
-          {!hasVoted ? (
-            <div className="flex gap-2">
-              <button
-                onClick={() => handleCastVote('yes')}
-                className="flex-1 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold rounded-lg text-xs transition-all active:scale-95"
-              >
-                ✓ Approve (Yes)
-              </button>
-              <button
-                onClick={() => handleCastVote('no')}
-                className="flex-1 py-2 bg-red-600 hover:bg-red-500 text-white font-extrabold rounded-lg text-xs transition-all active:scale-95"
-              >
-                ✗ Reject (No)
-              </button>
-            </div>
-          ) : (
-            <div className="space-y-3 pt-1">
-              <div>
-                <div className="flex justify-between text-[10px] text-slate-350 font-bold mb-1">
-                  <span>Approve (Yes)</span>
-                  <span>{voteCounts.yes} votes ({yesPercent}%)</span>
-                </div>
-                <div className="w-full bg-white/5 h-2 rounded-full overflow-hidden border border-white/[0.04]">
-                  <div className="bg-emerald-500 h-full transition-all duration-500" style={{ width: `${yesPercent}%` }} />
-                </div>
+          <div className="space-y-3 pt-1">
+            <div>
+              <div className="flex justify-between text-[10px] text-slate-350 font-bold mb-1">
+                <span>Approve (Yes)</span>
+                <span>{voteCounts.yes} votes ({yesPercent}%)</span>
               </div>
-              <div>
-                <div className="flex justify-between text-[10px] text-slate-355 font-bold mb-1">
-                  <span>Reject (No)</span>
-                  <span>{voteCounts.no} votes ({noPercent}%)</span>
-                </div>
-                <div className="w-full bg-white/5 h-2 rounded-full overflow-hidden border border-white/[0.04]">
-                  <div className="bg-red-500 h-full transition-all duration-500" style={{ width: `${noPercent}%` }} />
-                </div>
+              <div className="w-full bg-white/5 h-2 rounded-full overflow-hidden border border-white/[0.04]">
+                <div className="bg-emerald-500 h-full transition-all duration-500" style={{ width: `${yesPercent}%` }} />
               </div>
             </div>
-          )}
+            <div>
+              <div className="flex justify-between text-[10px] text-slate-355 font-bold mb-1">
+                <span>Reject (No)</span>
+                <span>{voteCounts.no} votes ({noPercent}%)</span>
+              </div>
+              <div className="w-full bg-white/5 h-2 rounded-full overflow-hidden border border-white/[0.04]">
+                <div className="bg-red-500 h-full transition-all duration-500" style={{ width: `${noPercent}%` }} />
+              </div>
+            </div>
+          </div>
         </div>
 
         <div className="text-[9px] text-slate-500 text-left leading-relaxed">
@@ -1027,45 +790,37 @@ export default function FeaturesPage() {
         <span className="text-[10px] bg-violet-500/10 text-violet-400 border border-violet-500/20 px-2 py-0.5 rounded-md font-bold">142 Members Linked</span>
       </div>
 
-      {announcementAlert && (
-        <div className="p-3 bg-violet-500/15 border border-violet-500/35 rounded-xl text-xs text-violet-300 font-semibold animate-fade-in-up text-left">
-          {announcementAlert}
-        </div>
-      )}
-
-      <form onSubmit={handlePostAnnouncement} className="space-y-3.5 text-left">
+      <form className="space-y-3.5 text-left">
         <textarea
-          required
-          rows={2}
-          value={announcementInput}
-          onChange={(e) => setAnnouncementInput(e.target.value)}
-          placeholder="Type an announcement to pin..."
-          className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-violet-500 resize-none"
+          disabled
+          value="Urgent: Annual elevator safety inspection tomorrow between 9:00 AM and 4:00 PM."
+          className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-xs text-slate-300 placeholder-slate-500 cursor-not-allowed resize-none"
         />
         <div className="flex items-center justify-between">
           <div className="flex gap-4">
-            <label className="flex items-center gap-1.5 text-[10px] text-slate-400 cursor-pointer select-none">
+            <label className="flex items-center gap-1.5 text-[10px] text-slate-500 cursor-not-allowed select-none">
               <input
                 type="checkbox"
-                checked={notifySms}
-                onChange={(e) => setNotifySms(e.target.checked)}
-                className="accent-violet-500"
+                checked={true}
+                disabled
+                className="accent-violet-500 cursor-not-allowed"
               />
               <span>Send SMS</span>
             </label>
-            <label className="flex items-center gap-1.5 text-[10px] text-slate-400 cursor-pointer select-none">
+            <label className="flex items-center gap-1.5 text-[10px] text-slate-500 cursor-not-allowed select-none">
               <input
                 type="checkbox"
-                checked={notifyEmail}
-                onChange={(e) => setNotifyEmail(e.target.checked)}
-                className="accent-violet-500"
+                checked={true}
+                disabled
+                className="accent-violet-500 cursor-not-allowed"
               />
               <span>Send Email</span>
             </label>
           </div>
           <button
-            type="submit"
-            className="px-4 py-2 bg-gradient-to-r from-violet-500 to-fuchsia-500 hover:from-violet-600 hover:to-fuchsia-600 text-white font-extrabold rounded-lg text-[10px] transition-all"
+            type="button"
+            disabled
+            className="px-4 py-2 bg-slate-800 text-slate-550 font-extrabold rounded-lg text-[10px] cursor-not-allowed"
           >
             Broadcast
           </button>
@@ -1073,7 +828,7 @@ export default function FeaturesPage() {
       </form>
 
       <div className="space-y-3 text-left">
-        <p className="text-xs font-bold text-slate-350 uppercase tracking-wider">Pinned Announcements</p>
+        <p className="text-xs font-bold text-slate-355 uppercase tracking-wider">Pinned Announcements</p>
         <div className="space-y-2.5 max-h-40 overflow-y-auto pr-1">
           {announcementsList.map((ann) => (
             <div key={ann.id} className="p-3 bg-white/[0.02] border border-white/[0.04] rounded-xl space-y-2">
@@ -1096,67 +851,44 @@ export default function FeaturesPage() {
     </div>
   );
 
-  const renderAuditLogsSandbox = (isGrid = false) => {
-    const filteredLogs = auditLogsList.filter(l => 
-      l.action.toLowerCase().includes(auditSearch.toLowerCase()) ||
-      l.user.toLowerCase().includes(auditSearch.toLowerCase()) ||
-      l.ip.toLowerCase().includes(auditSearch.toLowerCase())
-    );
-
-    return (
-      <div className="w-full bg-gradient-to-br from-[#4c249f] via-[#1a0b3f] to-[#0a0319] border border-teal-500/20 hover:border-teal-500/40 rounded-3xl p-6 sm:p-8 space-y-6 text-white transition-all duration-300">
-        <div className="flex justify-between items-center pb-3 border-b border-white/10">
-          <div className="flex items-center gap-2">
-            <Activity className="w-4 h-4 text-teal-400" />
-            <span className="text-xs font-bold tracking-wider text-slate-355 uppercase">Compliance IP Audit Tracker</span>
-          </div>
-          <button
-            type="button"
-            onClick={handleSimulateLogAction}
-            className="px-2.5 py-1.5 bg-gradient-to-r from-teal-500 to-blue-500 hover:from-teal-600 hover:to-blue-600 text-white font-extrabold rounded-lg text-[9px] shadow-md transition-all active:scale-95"
-          >
-            ⚡ Simulate Event
-          </button>
+  const renderAuditLogsSandbox = (isGrid = false) => (
+    <div className="w-full bg-gradient-to-br from-[#4c249f] via-[#1a0b3f] to-[#0a0319] border border-teal-500/20 hover:border-teal-500/40 rounded-3xl p-6 sm:p-8 space-y-6 text-white transition-all duration-300">
+      <div className="flex justify-between items-center pb-3 border-b border-white/10">
+        <div className="flex items-center gap-2">
+          <Activity className="w-4 h-4 text-teal-400" />
+          <span className="text-xs font-bold tracking-wider text-slate-355 uppercase">Compliance IP Audit Tracker</span>
         </div>
+        <span className="text-[10px] bg-teal-500/10 text-teal-400 border border-teal-500/20 px-2 py-0.5 rounded-md font-bold">Immutable Ledger</span>
+      </div>
 
-        {auditAlert && (
-          <div className="p-2.5 bg-teal-500/10 border border-teal-500/20 rounded-xl text-[10px] text-teal-300 font-semibold animate-fade-in-up text-left">
-            {auditAlert}
-          </div>
-        )}
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-550" size={12} />
+        <input
+          type="text"
+          disabled
+          value=""
+          placeholder="Search audit trail logs..."
+          className="w-full bg-white/5 border border-white/10 rounded-xl pl-9 pr-4 py-2 text-xs text-slate-500 placeholder-slate-550 outline-none cursor-not-allowed"
+        />
+      </div>
 
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-505" size={12} />
-          <input
-            type="text"
-            value={auditSearch}
-            onChange={(e) => setAuditSearch(e.target.value)}
-            placeholder="Search audit trail logs..."
-            className="w-full bg-white/5 border border-white/10 rounded-xl pl-9 pr-4 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-teal-500"
-          />
-        </div>
-
-        <div className="space-y-3.5 text-left">
-          <p className="text-xs font-bold text-slate-350 uppercase tracking-wider">Unalterable Operations Log</p>
-          <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
-            {filteredLogs.map((log) => (
-              <div key={log.id} className="p-3 bg-white/[0.02] border border-white/[0.04] rounded-xl text-[10px] space-y-1">
-                <div className="flex justify-between items-center text-[8px] text-slate-500">
-                  <span>⏱️ {log.time}</span>
-                  <span className="font-mono text-teal-400 bg-teal-500/10 px-1.5 py-0.5 rounded">{log.ip}</span>
-                </div>
-                <p className="font-extrabold text-slate-200">{log.action}</p>
-                <p className="text-[9px] text-slate-450">Actor: {log.user} • Location: {log.location}</p>
+      <div className="space-y-3.5 text-left">
+        <p className="text-xs font-bold text-slate-355 uppercase tracking-wider">Unalterable Operations Log</p>
+        <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
+          {auditLogsList.map((log) => (
+            <div key={log.id} className="p-3 bg-white/[0.02] border border-white/[0.04] rounded-xl text-[10px] space-y-1">
+              <div className="flex justify-between items-center text-[8px] text-slate-500">
+                <span>⏱️ {log.time}</span>
+                <span className="font-mono text-teal-400 bg-teal-500/10 px-1.5 py-0.5 rounded">{log.ip}</span>
               </div>
-            ))}
-            {filteredLogs.length === 0 && (
-              <div className="text-center text-slate-500 text-[10px] py-4">No matching logs found.</div>
-            )}
-          </div>
+              <p className="font-extrabold text-slate-200">{log.action}</p>
+              <p className="text-[9px] text-slate-450">Actor: {log.user} • Location: {log.location}</p>
+            </div>
+          ))}
         </div>
       </div>
-    );
-  };
+    </div>
+  );
 
   const renderRosterSandbox = (isGrid = false) => {
     const filteredRoster = rosterList.filter(r =>
@@ -1175,13 +907,13 @@ export default function FeaturesPage() {
         </div>
 
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-505" size={12} />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-550" size={12} />
           <input
             type="text"
-            value={rosterSearch}
-            onChange={(e) => setRosterSearch(e.target.value)}
+            disabled
+            value=""
             placeholder="Search roster by name or unit..."
-            className="w-full bg-white/5 border border-white/10 rounded-xl pl-9 pr-4 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-violet-500"
+            className="w-full bg-white/5 border border-white/10 rounded-xl pl-9 pr-4 py-2 text-xs text-slate-500 placeholder-slate-550 outline-none cursor-not-allowed"
           />
         </div>
 
@@ -1192,7 +924,7 @@ export default function FeaturesPage() {
               <div key={idx} className="p-3 bg-white/[0.02] border border-white/[0.04] rounded-xl text-[10px] flex justify-between items-center">
                 <div className="space-y-0.5">
                   <p className="font-extrabold text-slate-200">{res.name}</p>
-                  <p className="text-slate-450 text-[8px] font-mono">{res.email} • {res.phone}</p>
+                  <p className="text-slate-455 text-[8px] font-mono">{res.email} • {res.phone}</p>
                 </div>
                 <div className="text-right space-y-1">
                   <span className="block text-[8px] font-mono font-extrabold text-slate-300">{res.unit}</span>
@@ -1203,7 +935,7 @@ export default function FeaturesPage() {
               </div>
             ))}
             {filteredRoster.length === 0 && (
-              <div className="text-center text-slate-500 text-[10px] py-4">No directory records found.</div>
+              <div className="text-center text-slate-505 text-[10px] py-4">No directory records found.</div>
             )}
           </div>
         </div>
