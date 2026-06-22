@@ -27,8 +27,10 @@ export default function AboutPage() {
   ];
 
   return (
-    <div className="min-h-screen flex flex-col bg-white dark:bg-[#120824] transition-colors duration-200 overflow-x-hidden font-sans">
+    <div className="min-h-screen flex flex-col bg-white dark:bg-[#120824] transition-colors duration-200 font-sans">
       <Navbar />
+
+      <div className="flex-1 overflow-x-hidden">
 
       {/* --- Page Header --- */}
       <header className="relative py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full text-center space-y-4">
@@ -144,6 +146,7 @@ export default function AboutPage() {
       </section>
 
       <Footer />
+      </div>
     </div>
   );
 }

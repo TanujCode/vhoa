@@ -636,8 +636,10 @@ export default function FeaturesPage() {
   );
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-[#120824] transition-colors duration-250 overflow-x-hidden font-sans text-slate-900 dark:text-slate-100">
+    <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-[#120824] transition-colors duration-250 font-sans text-slate-900 dark:text-slate-100">
       <Navbar />
+
+      <div className="flex-1 overflow-x-hidden">
 
       {activeTab && featureDetailsData[activeTab] ? (
         /* ─── DEDICATED SPECIFIC FEATURE VIEW ─── */
@@ -687,7 +689,7 @@ export default function FeaturesPage() {
                   Start Free Trial
                 </Link>
                 <Link 
-                  to="#" 
+                  to="/contact" 
                   className="px-5 py-3.5 border border-slate-200 dark:border-white/[0.08] hover:border-violet-500/25 text-slate-700 dark:text-slate-300 font-bold text-xs uppercase tracking-wider rounded-xl text-center hover:bg-slate-50 dark:hover:bg-white/5 active:scale-95 transition-all"
                 >
                   Ask Sales
@@ -761,13 +763,13 @@ export default function FeaturesPage() {
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center pt-2">
                 <Link
-                  to="#"
+                  to="/contact"
                   className="px-8 py-3.5 bg-gradient-to-r from-violet-500 to-indigo-600 hover:from-violet-600 hover:to-indigo-700 text-white font-bold text-xs rounded-xl shadow-md transition-all hover:-translate-y-0.5"
                 >
                   Request Custom Demo
                 </Link>
                 <Link
-                  to="#"
+                  to="/pricing"
                   className="px-8 py-3.5 bg-white dark:bg-[#1a102b] text-slate-800 dark:text-white border border-slate-200 dark:border-white/[0.08] hover:border-violet-500 dark:hover:border-violet-500 font-bold text-xs rounded-xl hover:bg-slate-50 dark:hover:bg-white/[0.03] transition-all flex items-center justify-center gap-1.5 hover:-translate-y-0.5"
                 >
                   View Pricing Tiers <ArrowRight className="w-3.5 h-3.5" />
@@ -779,6 +781,7 @@ export default function FeaturesPage() {
       )}
 
       <Footer />
+      </div>
     </div>
   );
 }

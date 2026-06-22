@@ -25,20 +25,19 @@ export default function Footer() {
   const links = {
     Product: [
       { name: 'Features', path: '/features' },
-      { name: 'How It Works', path: '/#how-it-works' },
-      { name: 'Pricing', path: '#' },
+      { name: 'Pricing', path: '/pricing' },
       { name: 'Security', path: '#' },
       { name: 'Integrations', path: '#' },
     ],
     Solutions: [
-      { name: 'Rental Property Management', path: '/#solutions?type=rental' },
-      { name: 'Condo Management', path: '/#solutions?type=condo' },
-      { name: 'Apartment Portal', path: '/#solutions?type=apartment' },
-      { name: 'HOA Governance', path: '/#solutions?type=hoa' },
+      { name: 'Rental Property Management', path: '/solutions/rental' },
+      { name: 'Condo Management', path: '/solutions/condo' },
+      { name: 'Apartment Portal', path: '/solutions/apartment' },
+      { name: 'HOA Governance', path: '/solutions/hoa' },
     ],
     Company: [
-      { name: 'About Us', path: '#' },
-      { name: 'Contact Sales', path: '#' },
+      { name: 'About Us', path: '/about' },
+      { name: 'Contact Sales', path: '/contact' },
       { name: 'Careers', path: '#' },
       { name: 'Press', path: '#' },
     ]

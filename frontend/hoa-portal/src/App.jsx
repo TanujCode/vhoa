@@ -15,7 +15,7 @@ import FeaturesPage from './pages/marketing/FeaturesPage';
 import PricingPage from './pages/marketing/PricingPage';
 import AboutPage from './pages/marketing/AboutPage';
 import ContactPage from './pages/marketing/ContactPage';
-import HowItWorksPage from './pages/marketing/HowItWorksPage';
+
 
 // Solution subpages
 import RentalSolutionPage from './pages/marketing/solutions/RentalSolutionPage';
@@ -55,7 +55,7 @@ export default function App() {
         {/* --- Marketing Routes --- */}
         <Route path="/" element={<LandingPage />} />
         <Route path="/features" element={<FeaturesPage />} />
-        <Route path="/how-it-works" element={<HowItWorksPage />} />
+
         <Route path="/pricing" element={<PricingPage />} />
         <Route path="/about" element={<AboutPage />} />
         <Route path="/contact" element={<ContactPage />} />

@@ -19,19 +19,22 @@ export default function ApartmentSolutionPage() {
       title: "Kanban Service Desk",
       desc: "Track resident maintenance requests, attach photos, and assign urgency ratings within an easy-to-use Kanban interface.",
       icon: Wrench,
-      color: "text-blue-500 bg-blue-500/10 border border-blue-500/20"
+      color: "text-blue-650 bg-blue-500/10 border border-blue-500/20",
+      bg: "bg-blue-100/85 dark:bg-blue-950/30 border-blue-200/80 dark:border-blue-800/50 hover:shadow-lg hover:shadow-blue-500/[0.05] hover:border-blue-500/50 dark:hover:border-blue-500/40"
     },
     {
       title: "Contractor Network Dispatch",
       desc: "Connect tickets directly with local verified vendors, track arrival times, and automatically issue entry codes.",
       icon: Sliders,
-      color: "text-violet-500 bg-violet-500/10 border border-violet-500/20"
+      color: "text-violet-650 bg-violet-500/10 border border-violet-500/20",
+      bg: "bg-violet-100/85 dark:bg-violet-950/30 border-violet-200/80 dark:border-violet-800/50 hover:shadow-lg hover:shadow-violet-500/[0.05] hover:border-violet-500/50 dark:hover:border-violet-500/40"
     },
     {
       title: "Temporary Visitor Passes",
       desc: "Assign time-limited OTP entry codes for incoming delivery workers, vendors, or housekeeping teams.",
       icon: Shield,
-      color: "text-emerald-500 bg-emerald-500/10 border border-emerald-500/20"
+      color: "text-emerald-650 bg-emerald-500/10 border border-emerald-500/20",
+      bg: "bg-emerald-100/85 dark:bg-emerald-950/30 border-emerald-200/80 dark:border-emerald-800/50 hover:shadow-lg hover:shadow-emerald-500/[0.05] hover:border-emerald-500/50 dark:hover:border-emerald-500/40"
     }
   ];
 
@@ -143,12 +146,12 @@ export default function ApartmentSolutionPage() {
             {features.map((item, idx) => {
               const Icon = item.icon;
               return (
-                <div key={idx} className="p-6 rounded-2xl border border-slate-200/80 dark:border-white/[0.07] bg-white/40 dark:bg-white/[0.02] backdrop-blur-md hover:bg-white/70 dark:hover:bg-white/[0.04] hover:border-blue-500/30 dark:hover:border-blue-500/20 shadow-sm hover:shadow-xl transition-all duration-300 space-y-4 text-left">
+                <div key={idx} className={`p-6 rounded-2xl border backdrop-blur-md transition-all duration-300 space-y-4 text-left ${item.bg}`}>
                   <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${item.color}`}>
                     <Icon className="w-5 h-5" />
                   </div>
                   <h3 className="text-lg font-black text-slate-900 dark:text-white">{item.title}</h3>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed font-display">{item.desc}</p>
+                  <p className="text-xs text-slate-650 dark:text-slate-400 leading-relaxed font-display">{item.desc}</p>
                 </div>
               );
             })}
@@ -232,28 +235,28 @@ export default function ApartmentSolutionPage() {
           </div>
           <div className="max-w-5xl mx-auto grid grid-cols-1 sm:grid-cols-4 gap-6 px-5">
             {/* OpenAI */}
-            <div className="p-6 rounded-2xl border border-slate-200/80 dark:border-white/[0.07] bg-white/40 dark:bg-white/[0.02] backdrop-blur-md text-left space-y-2 hover:shadow-lg hover:border-blue-500/20 transition-all duration-300">
-              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">01 / INTELLIGENCE</span>
+            <div className="p-6 rounded-2xl border border-cyan-200/80 dark:border-cyan-800/50 bg-cyan-100/85 dark:bg-cyan-950/30 backdrop-blur-md text-left space-y-2 hover:shadow-lg hover:shadow-cyan-500/[0.05] hover:border-cyan-500/50 dark:hover:border-cyan-500/40 transition-all duration-300">
+              <span className="text-[10px] font-black text-cyan-650 dark:text-cyan-400 uppercase tracking-widest">01 / INTELLIGENCE</span>
               <h4 className="text-sm font-black text-slate-900 dark:text-white">OpenAI Assistant</h4>
-              <p className="text-[11px] text-slate-455 dark:text-slate-400 leading-normal font-display">Auto-triage maintenance tickets and answer resident rule queries.</p>
+              <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-normal font-display">Auto-triage maintenance tickets and answer resident rule queries.</p>
             </div>
             {/* Contractor API */}
-            <div className="p-6 rounded-2xl border border-slate-200/80 dark:border-white/[0.07] bg-white/40 dark:bg-white/[0.02] backdrop-blur-md text-left space-y-2 hover:shadow-lg hover:border-blue-500/20 transition-all duration-300">
-              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">02 / DISPATCH</span>
+            <div className="p-6 rounded-2xl border border-amber-200/80 dark:border-amber-800/50 bg-amber-100/85 dark:bg-amber-950/30 backdrop-blur-md text-left space-y-2 hover:shadow-lg hover:shadow-amber-500/[0.05] hover:border-amber-500/50 dark:hover:border-amber-500/40 transition-all duration-300">
+              <span className="text-[10px] font-black text-amber-650 dark:text-amber-400 uppercase tracking-widest">02 / DISPATCH</span>
               <h4 className="text-sm font-black text-slate-900 dark:text-white">Contractor API</h4>
-              <p className="text-[11px] text-slate-455 dark:text-slate-400 leading-normal font-display">Direct integration with verified local vendor lists for easy dispatches.</p>
+              <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-normal font-display">Direct integration with verified local vendor lists for easy dispatches.</p>
             </div>
             {/* Twilio */}
-            <div className="p-6 rounded-2xl border border-slate-200/80 dark:border-white/[0.07] bg-white/40 dark:bg-white/[0.02] backdrop-blur-md text-left space-y-2 hover:shadow-lg hover:border-blue-500/20 transition-all duration-300">
-              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">03 / SECURITY CODES</span>
+            <div className="p-6 rounded-2xl border border-rose-200/80 dark:border-rose-800/50 bg-rose-100/85 dark:bg-rose-950/30 backdrop-blur-md text-left space-y-2 hover:shadow-lg hover:shadow-rose-500/[0.05] hover:border-rose-500/50 dark:hover:border-rose-500/40 transition-all duration-300">
+              <span className="text-[10px] font-black text-rose-650 dark:text-rose-400 uppercase tracking-widest">03 / SECURITY CODES</span>
               <h4 className="text-sm font-black text-slate-900 dark:text-white">Twilio OTP</h4>
-              <p className="text-[11px] text-slate-455 dark:text-slate-400 leading-normal font-display">Issue time-limited guest entrance code SMS messages instantly.</p>
+              <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-normal font-display">Issue time-limited guest entrance code SMS messages instantly.</p>
             </div>
             {/* Stripe */}
-            <div className="p-6 rounded-2xl border border-slate-200/80 dark:border-white/[0.07] bg-white/40 dark:bg-white/[0.02] backdrop-blur-md text-left space-y-2 hover:shadow-lg hover:border-blue-500/20 transition-all duration-300">
-              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">04 / PARTS BILLING</span>
+            <div className="p-6 rounded-2xl border border-indigo-200/80 dark:border-indigo-800/50 bg-indigo-100/85 dark:bg-indigo-950/30 backdrop-blur-md text-left space-y-2 hover:shadow-lg hover:shadow-indigo-500/[0.05] hover:border-indigo-500/50 dark:hover:border-indigo-500/40 transition-all duration-300">
+              <span className="text-[10px] font-black text-indigo-650 dark:text-indigo-400 uppercase tracking-widest">04 / PARTS BILLING</span>
               <h4 className="text-sm font-black text-slate-900 dark:text-white">Stripe Checkout</h4>
-              <p className="text-[11px] text-slate-455 dark:text-slate-400 leading-normal font-display">Enable residents to pay for custom contractor service charges online.</p>
+              <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-normal font-display">Enable residents to pay for custom contractor service charges online.</p>
             </div>
           </div>
         </section>

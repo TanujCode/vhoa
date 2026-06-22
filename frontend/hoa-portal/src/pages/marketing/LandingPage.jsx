@@ -7,9 +7,10 @@ import {
   Shield, Activity, Sparkles, TrendingUp, Globe, Clock,
   Phone, Map, Building, FileText, UserCheck,
   ClipboardSignature, Scale, CalendarRange, Users, ShieldCheck,
-  CreditCard, Megaphone, History, Sliders, RotateCcw
+  CreditCard, Megaphone, History, Sliders, RotateCcw, Sun, Moon, Bell, LayoutDashboard, Truck
 } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
+import Logo from '../../components/marketing/Logo';
 import Navbar from '../../components/marketing/Navbar';
 import Footer from '../../components/marketing/Footer';
 import InteractiveAssistant from '../../components/marketing/InteractiveAssistant';
@@ -459,7 +460,7 @@ function InteractiveFeatureCard({ feature }) {
         }}
         className={`w-full h-full preserve-3d relative rounded-2xl border ${feature.borderClass} shadow-md hover:shadow-2xl transition-all duration-300 ${
           isFlipped ? '' : `${feature.shadowColor} ${feature.cardBg}`
-        } bg-white dark:bg-[#0c0b16]`}
+        } bg-white dark:bg-[#0D1B2A]`}
       >
         {/* --- FRONT FACE --- */}
         <div className="absolute inset-0 backface-hidden rounded-2xl p-6 flex flex-col justify-between overflow-hidden">
@@ -553,7 +554,7 @@ function TestimonialCard({ testimonial }) {
 
       {/* Floating profile avatar badge (overlapping top border) - Placed outside the overflow-hidden wrapper */}
       <div className="absolute top-0 left-8 -translate-y-1/2 z-20">
-        <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${testimonial.gradient} flex items-center justify-center text-white font-black text-base shadow-lg border-4 border-slate-50 dark:border-[#07060f] transition-transform duration-300 group-hover:scale-105 group-hover:rotate-3`}>
+        <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${testimonial.gradient} flex items-center justify-center text-white font-black text-base shadow-lg border-4 border-slate-50 dark:border-[#090F16] transition-transform duration-300 group-hover:scale-105 group-hover:rotate-3`}>
           {testimonial.avatar}
         </div>
       </div>
@@ -591,10 +592,10 @@ function TestimonialCard({ testimonial }) {
 /* ─── AI Operations Console (Dashboard Visual for Landing Page) ─── */
 function AiOperationsConsole() {
   return (
-    <div className="w-full bg-[#0c0b16] rounded-3xl border border-violet-500/10 dark:border-white/[0.08] shadow-2xl overflow-hidden flex flex-col h-[520px] relative">
+    <div className="w-full bg-[#090F16] rounded-3xl border border-violet-500/10 dark:border-white/[0.08] shadow-2xl overflow-hidden flex flex-col h-[520px] relative">
       
       {/* Header */}
-      <div className="bg-[#11101f] p-5 border-b border-white/[0.04] flex items-center justify-between">
+      <div className="bg-[#0B1929] p-5 border-b border-white/[0.06] flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
           <div>
@@ -608,7 +609,7 @@ function AiOperationsConsole() {
       </div>
 
       {/* Metrics Row */}
-      <div className="grid grid-cols-3 border-b border-white/[0.04] bg-[#0e0d1a]">
+      <div className="grid grid-cols-3 border-b border-white/[0.06] bg-[#0D1B2A]">
         {[
           { label: 'Auto-Resolved', val: '85.4%', desc: 'No admin intervention', color: 'text-violet-400' },
           { label: 'Avg Latency', val: '0.85s', desc: 'Real-time pipeline', color: 'text-emerald-400' },
@@ -623,10 +624,10 @@ function AiOperationsConsole() {
       </div>
 
       {/* Live Activity Feed Log */}
-      <div className="flex-1 p-5 space-y-4 overflow-y-auto custom-scrollbar bg-[#090812]">
+      <div className="flex-1 p-5 space-y-4 overflow-y-auto custom-scrollbar bg-[#070D14]">
         
         {/* Item 1 */}
-        <div className="bg-[#11101f] border border-white/[0.04] rounded-2xl p-4 space-y-3 shadow-md">
+        <div className="bg-[#0D1B2A] border border-white/[0.08] rounded-2xl p-4 space-y-3 shadow-md">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Inquiry #2409</span>
@@ -642,7 +643,7 @@ function AiOperationsConsole() {
         </div>
 
         {/* Item 2 */}
-        <div className="bg-[#11101f] border border-white/[0.04] rounded-2xl p-4 space-y-3 shadow-md">
+        <div className="bg-[#0D1B2A] border border-white/[0.08] rounded-2xl p-4 space-y-3 shadow-md">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Facility Reservation</span>
@@ -658,7 +659,7 @@ function AiOperationsConsole() {
         </div>
 
         {/* Item 3 */}
-        <div className="bg-[#11101f] border border-white/[0.04] rounded-2xl p-4 space-y-3 shadow-md">
+        <div className="bg-[#0D1B2A] border border-white/[0.08] rounded-2xl p-4 space-y-3 shadow-md">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Maintenance Desk</span>
@@ -684,6 +685,48 @@ export default function LandingPage() {
   const isDark = theme === 'dark';
   const [openFaq, setOpenFaq] = useState(null);
   const [activeFeature, setActiveFeature] = useState(0);
+
+  const rotatingWords = [
+    "Rental Property Management",
+    "Condo Management",
+    "Apartment Management",
+    "HOA Management"
+  ];
+  const [wordIndex, setWordIndex] = useState(0);
+  const [typedText, setTypedText] = useState("");
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [typingSpeed, setTypingSpeed] = useState(120);
+
+  useEffect(() => {
+    let timer;
+    const handleTyping = () => {
+      const fullWord = rotatingWords[wordIndex];
+      
+      if (!isDeleting) {
+        // Typing state
+        setTypedText(fullWord.substring(0, typedText.length + 1));
+        setTypingSpeed(100);
+        if (typedText === fullWord) {
+          // Finished typing: pause
+          timer = setTimeout(() => setIsDeleting(true), 2000);
+          return;
+        }
+      } else {
+        // Deleting state
+        setTypedText(fullWord.substring(0, typedText.length - 1));
+        setTypingSpeed(45);
+        if (typedText === "") {
+          setIsDeleting(false);
+          setWordIndex((prevIndex) => (prevIndex + 1) % rotatingWords.length);
+        }
+      }
+
+      timer = setTimeout(handleTyping, typingSpeed);
+    };
+
+    timer = setTimeout(handleTyping, typingSpeed);
+    return () => clearTimeout(timer);
+  }, [typedText, isDeleting, wordIndex]);
 
   const location = useLocation();
   const solutionsSectionRef = useRef(null);
@@ -863,7 +906,7 @@ export default function LandingPage() {
       glowColor: 'group-hover:shadow-[0_20px_40px_rgba(124,58,237,0.15)]',
       glowRgb: 'rgba(124,58,237,0.15)',
       textColor: 'text-violet-500',
-      cardBg: 'bg-gradient-to-br from-violet-500/[0.07] via-white to-indigo-500/[0.03] dark:from-violet-950/20 dark:via-[#11101d] dark:to-indigo-950/10',
+      cardBg: 'bg-gradient-to-br from-violet-500/[0.07] via-white to-indigo-500/[0.03] dark:from-violet-950/20 dark:via-[#0D1B2A] dark:to-indigo-950/10',
       borderColor: 'border-violet-500/20 dark:border-violet-500/10 hover:border-violet-500/40 dark:hover:border-violet-500/30'
     },
     {
@@ -878,7 +921,7 @@ export default function LandingPage() {
       glowColor: 'group-hover:shadow-[0_20px_40px_rgba(16,185,129,0.15)]',
       glowRgb: 'rgba(16,185,129,0.15)',
       textColor: 'text-emerald-500',
-      cardBg: 'bg-gradient-to-br from-emerald-500/[0.07] via-white to-teal-500/[0.03] dark:from-emerald-950/20 dark:via-[#11101d] dark:to-teal-950/10',
+      cardBg: 'bg-gradient-to-br from-emerald-500/[0.07] via-white to-teal-500/[0.03] dark:from-emerald-950/20 dark:via-[#0D1B2A] dark:to-teal-950/10',
       borderColor: 'border-emerald-500/20 dark:border-emerald-500/10 hover:border-emerald-500/40 dark:hover:border-emerald-500/30'
     },
     {
@@ -893,7 +936,7 @@ export default function LandingPage() {
       glowColor: 'group-hover:shadow-[0_20px_40px_rgba(245,158,11,0.15)]',
       glowRgb: 'rgba(245,158,11,0.15)',
       textColor: 'text-amber-500',
-      cardBg: 'bg-gradient-to-br from-amber-500/[0.07] via-white to-orange-500/[0.03] dark:from-amber-950/20 dark:via-[#11101d] dark:to-orange-950/10',
+      cardBg: 'bg-gradient-to-br from-amber-500/[0.07] via-white to-orange-500/[0.03] dark:from-amber-950/20 dark:via-[#0D1B2A] dark:to-orange-950/10',
       borderColor: 'border-amber-500/20 dark:border-amber-500/10 hover:border-amber-500/40 dark:hover:border-amber-500/30'
     }
   ];
@@ -973,127 +1016,547 @@ export default function LandingPage() {
 
   const colorMap = {
     violet: { 
-      activeBg: 'bg-gradient-to-br from-violet-500/[0.06] via-white to-violet-500/[0.01] dark:from-violet-950/20 dark:via-white/[0.01] dark:to-transparent border-violet-500/20 dark:border-violet-500/10 shadow-sm shadow-violet-500/5',
+      activeBg: 'bg-gradient-to-br from-violet-500/[0.06] via-white to-violet-500/[0.01] dark:from-violet-900/20 dark:via-[#0D1B2A] dark:to-transparent border-violet-500/20 dark:border-violet-500/20 shadow-sm shadow-violet-500/5',
       icon: 'text-violet-500 bg-violet-500/10 border-violet-500/20',
       badge: 'text-violet-600 dark:text-violet-400 bg-violet-500/10 border border-violet-500/20 dark:border-violet-500/10'
     },
     blue: { 
-      activeBg: 'bg-gradient-to-br from-blue-500/[0.06] via-white to-blue-500/[0.01] dark:from-blue-950/20 dark:via-white/[0.01] dark:to-transparent border-blue-500/20 dark:border-blue-500/10 shadow-sm shadow-blue-500/5',
+      activeBg: 'bg-gradient-to-br from-blue-500/[0.06] via-white to-blue-500/[0.01] dark:from-blue-900/20 dark:via-[#0D1B2A] dark:to-transparent border-blue-500/20 dark:border-blue-500/20 shadow-sm shadow-blue-500/5',
       icon: 'text-blue-500 bg-blue-500/10 border-blue-500/20',
       badge: 'text-blue-600 dark:text-blue-400 bg-blue-500/10 border border-blue-500/20 dark:border-blue-500/10'
     },
     indigo: { 
-      activeBg: 'bg-gradient-to-br from-indigo-500/[0.06] via-white to-indigo-500/[0.01] dark:from-indigo-950/20 dark:via-white/[0.01] dark:to-transparent border-indigo-500/20 dark:border-indigo-500/10 shadow-sm shadow-indigo-500/5',
+      activeBg: 'bg-gradient-to-br from-indigo-500/[0.06] via-white to-indigo-500/[0.01] dark:from-indigo-900/20 dark:via-[#0D1B2A] dark:to-transparent border-indigo-500/20 dark:border-indigo-500/20 shadow-sm shadow-indigo-500/5',
       icon: 'text-indigo-500 bg-indigo-500/10 border-indigo-500/20',
       badge: 'text-indigo-600 dark:text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 dark:border-indigo-500/10'
     },
     rose: { 
-      activeBg: 'bg-gradient-to-br from-rose-500/[0.06] via-white to-rose-500/[0.01] dark:from-rose-950/20 dark:via-white/[0.01] dark:to-transparent border-rose-500/20 dark:border-rose-500/10 shadow-sm shadow-rose-500/5',
+      activeBg: 'bg-gradient-to-br from-rose-500/[0.06] via-white to-rose-500/[0.01] dark:from-rose-900/20 dark:via-[#0D1B2A] dark:to-transparent border-rose-500/20 dark:border-rose-500/20 shadow-sm shadow-rose-500/5',
       icon: 'text-rose-500 bg-rose-500/10 border-rose-500/20',
       badge: 'text-rose-600 dark:text-rose-400 bg-rose-500/10 border border-rose-500/20 dark:border-rose-500/10'
     }
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-white dark:bg-[#07060f] overflow-x-hidden font-sans transition-colors duration-300">
+    <div className="min-h-screen flex flex-col bg-white dark:bg-[#090F16] font-sans transition-colors duration-300">
       <Navbar />
 
+      <div className="flex-1 overflow-x-hidden">
+
       {/* ═══════════════════════════════════════════════════════
-          HERO SECTION
+          HERO SECTION — centered layout matching client PNG
       ═══════════════════════════════════════════════════════ */}
-      <section className="relative min-h-screen flex items-center pt-8 pb-16 px-5 sm:px-8">
+      <section className="relative pt-24 pb-0 px-5 sm:px-8 overflow-hidden">
         {/* Background grid */}
         <div className="absolute inset-0 grid-bg opacity-100 pointer-events-none" />
-        {/* Radial spotlight */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-gradient-radial from-violet-500/15 via-indigo-500/8 to-transparent rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute top-1/3 -left-32 w-80 h-80 bg-violet-500/8 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-1/4 -right-32 w-80 h-80 bg-indigo-500/8 rounded-full blur-3xl pointer-events-none" />
+        {/* Radial spotlight — top center */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[900px] h-[600px] bg-gradient-radial from-violet-500/20 via-indigo-500/10 to-transparent rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute top-1/3 -left-40 w-80 h-80 bg-violet-500/8 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute top-1/3 -right-40 w-80 h-80 bg-indigo-500/8 rounded-full blur-3xl pointer-events-none" />
 
-        <div className="max-w-7xl mx-auto w-full">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 xl:gap-20 items-center">
+        <div className="max-w-5xl mx-auto w-full text-center space-y-8 animate-fade-in-up">
 
-            {/* Left: Copy */}
-            <div className="space-y-8 animate-fade-in-up">
-              <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-violet-500/10 border border-violet-500/20 text-violet-600 dark:text-violet-400">
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-violet-500 opacity-75" />
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-violet-500" />
-                </span>
-                <span className="text-xs font-semibold tracking-wide">All-in-One Community Platform</span>
-              </div>
-
-              <div className="space-y-4">
-                <h1 className="font-display text-5xl sm:text-6xl lg:text-[60px] font-black text-slate-900 dark:text-white leading-[1.06] tracking-tight">
-                  Smarter Living.<br />
-                  <span className="gradient-text">Better Communities.</span>
-                </h1>
-                <p className="text-base sm:text-lg text-slate-500 dark:text-slate-400 leading-relaxed max-w-xl font-normal">
-                  NestBloq unifies dues collection, maintenance, governance, and AI-powered resident support into one beautiful, secure platform.
-                </p>
-              </div>
-
-              <div className="flex flex-wrap gap-4">
-                <Link to="/register" className="btn-glow px-8 py-3.5 text-sm font-semibold text-white rounded-xl flex items-center gap-2 group">
-                  Start for Free
-                  <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
-                </Link>
-                <Link to="#how-it-works" className="px-7 py-3.5 text-sm font-semibold text-slate-700 dark:text-slate-300 rounded-xl border border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/5 hover:border-violet-300 dark:hover:border-violet-500/30 transition-all duration-200 flex items-center gap-2 group">
-                  <span className="w-6 h-6 rounded-full bg-violet-500/10 flex items-center justify-center">
-                    <Play className="w-3 h-3 fill-violet-500 text-violet-500 ml-0.5" />
-                  </span>
-                  Watch Demo
-                </Link>
-              </div>
-
-              {/* Social proof */}
-              <div className="flex items-center gap-5 pt-1">
-                <div className="flex -space-x-2.5">
-                  {['SL', 'RK', 'PP', 'AM', 'TG'].map((initials, i) => (
-                    <div key={i} className="w-9 h-9 rounded-full border-2 border-white dark:border-[#07060f] bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-white text-[9px] font-black shadow-md" style={{ zIndex: 5 - i }}>
-                      {initials}
-                    </div>
-                  ))}
-                </div>
-                <div>
-                  <div className="flex gap-0.5">
-                    {[...Array(5)].map((_, i) => <Star key={i} className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />)}
-                  </div>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                    Loved by <span className="font-bold text-slate-800 dark:text-white">500+</span> communities
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Right: Hero Illustration */}
-            <div className="animate-fade-in-up-delay-2">
-              <HeroImage isDark={isDark} />
-            </div>
+          {/* Badge pill */}
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-violet-500/10 border border-violet-500/20 text-violet-600 dark:text-violet-400">
+            <span className="text-[10px] font-bold tracking-widest uppercase">All-in-One Property Management</span>
           </div>
 
-          {/* Stats row */}
-          <div className="mt-20 pt-10 border-t border-slate-100 dark:border-white/[0.06] grid grid-cols-2 md:grid-cols-4 gap-6 lg:gap-10">
-            {[
-              { label: 'Active Communities', end: 500, suffix: '+', icon: Globe, color: 'text-violet-500 bg-violet-500/10' },
-              { label: 'Client Satisfaction', end: 98, suffix: '%', icon: Star, color: 'text-amber-500 bg-amber-500/10' },
-              { label: 'Dues Collected', end: 15, suffix: 'M+', prefix: '$', icon: TrendingUp, color: 'text-emerald-500 bg-emerald-500/10' },
-              { label: 'Avg Onboarding', end: 48, suffix: 'h', icon: Clock, color: 'text-blue-500 bg-blue-500/10' }
-            ].map((stat, i) => (
-              <div key={i} className="flex items-center gap-4">
-                <div className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 ${stat.color}`}>
-                  <stat.icon className="w-5 h-5" />
-                </div>
-                <div>
-                  <div className="text-2xl font-black text-slate-900 dark:text-white">
-                    <StatCounter end={stat.end} suffix={stat.suffix} prefix={stat.prefix || ''} />
-                  </div>
-                  <div className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">{stat.label}</div>
-                </div>
-              </div>
+          {/* Hero headline — matching client PNG */}
+          <div className="space-y-4">
+            <h1 className="font-display text-5xl sm:text-6xl lg:text-[68px] font-black leading-[1.04] tracking-tight text-slate-900 dark:text-white">
+              The operating system<br />
+              <span className="gradient-text">for every property</span>{' '}
+              <span className="text-slate-900 dark:text-white">you own.</span>
+            </h1>
+            <div className="text-xl sm:text-2xl md:text-3xl font-extrabold text-slate-600 dark:text-slate-400 select-none">
+              Built for <span className="gradient-text">{typedText}</span>
+              <span className="text-violet-500 dark:text-violet-400 font-light animate-pulse ml-1">|</span>
+            </div>
+            <p className="text-base sm:text-lg text-slate-500 dark:text-slate-400 leading-relaxed max-w-2xl mx-auto font-normal">
+              Manage homes, rentals, communities, and investments with AI-powered tools
+              that save time, reduce costs, and keep everything under control.
+            </p>
+          </div>
+
+          {/* CTA Buttons */}
+          <div className="flex flex-wrap gap-4 justify-center">
+            <Link to="/register" className="btn-glow px-8 py-3.5 text-sm font-semibold text-white rounded-xl flex items-center gap-2 group">
+              Start Free Trial
+              <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+            <Link to="/contact" className="px-7 py-3.5 text-sm font-semibold text-slate-700 dark:text-slate-300 rounded-xl border border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/5 hover:border-violet-300 dark:hover:border-violet-500/30 transition-all duration-200 flex items-center gap-2">
+              <span className="w-6 h-6 rounded-full bg-violet-500/10 flex items-center justify-center">
+                <Play className="w-3 h-3 fill-violet-500 text-violet-500 ml-0.5" />
+              </span>
+              Book a Demo
+            </Link>
+          </div>
+
+          {/* Trust strip */}
+          <div className="flex flex-wrap items-center justify-center gap-6 text-xs text-slate-500 dark:text-slate-400 pt-2">
+            {['No credit card required', '14-day free trial', 'Cancel anytime'].map((item, i) => (
+              <span key={i} className="flex items-center gap-1.5">
+                <CheckCircle className="w-3.5 h-3.5 text-violet-500 shrink-0" />
+                {item}
+              </span>
             ))}
           </div>
+
+          {/* ── DASHBOARD BROWSER MOCKUP ── */}
+          <div className="relative mt-14 animate-fade-in-up-delay-2">
+            {/* Glow beneath the browser */}
+            <div className="absolute -inset-x-20 -bottom-10 h-40 bg-gradient-to-t from-violet-600/20 via-indigo-500/10 to-transparent blur-2xl pointer-events-none rounded-full" />
+
+            {/* Browser chrome wrapper */}
+            <div className="relative rounded-t-2xl overflow-hidden border border-slate-200/60 dark:border-white/[0.08] shadow-[0_32px_80px_rgba(0,0,0,0.12)] dark:shadow-[0_32px_80px_rgba(0,0,0,0.5)] bg-white dark:bg-[#0B1929]">
+
+              {/* Browser top bar */}
+              <div className="flex items-center gap-2 px-4 py-3 bg-slate-100 dark:bg-[#0D1B2A] border-b border-slate-200/60 dark:border-white/[0.06]">
+                <div className="flex gap-1.5">
+                  <div className="w-3 h-3 rounded-full bg-red-400" />
+                  <div className="w-3 h-3 rounded-full bg-amber-400" />
+                  <div className="w-3 h-3 rounded-full bg-emerald-400" />
+                </div>
+                <div className="flex-1 mx-4">
+                  <div className="bg-white dark:bg-[#090F16] rounded-md px-3 py-1 text-[10px] text-slate-400 dark:text-slate-500 flex items-center gap-2 max-w-xs mx-auto border border-slate-200 dark:border-white/[0.06]">
+                    <div className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
+                    app.nestbloq.com/dashboard
+                  </div>
+                </div>
+              </div>
+
+              {/* Dashboard Layout */}
+              <div className="flex h-[480px] overflow-hidden bg-slate-50 dark:bg-[#090F16]">
+
+                {/* ── Sidebar ── */}
+                <aside className={`w-44 shrink-0 border-r flex flex-col transition-colors duration-300 ${
+                  isDark ? 'bg-[#0B132B] border-white/[0.06]' : 'bg-[#E8F1FC] border-slate-200/80'
+                }`}>
+                  {/* Logo */}
+                  <div className={`p-4 border-b flex items-center shrink-0 ${isDark ? 'border-white/[0.06]' : 'border-slate-200/80'}`}>
+                    <Logo className="h-5 w-auto" variant={isDark ? "white" : "default"} />
+                  </div>
+                  {/* Nav items */}
+                  <div className="p-2.5 shrink-0">
+                    <span className={`text-[7px] font-extrabold uppercase tracking-widest ${isDark ? 'text-slate-500' : 'text-slate-600'}`}>MAIN MENU</span>
+                  </div>
+                  <nav className="flex-1 px-2 pb-2 space-y-0.5 text-[9px] font-medium overflow-y-auto custom-scrollbar">
+                    {[
+                      { label: 'All Communities', icon: Globe, active: false },
+                      { label: 'Dashboard', icon: LayoutDashboard, active: true },
+                      { label: 'Manage Contracts', icon: FileText, active: false },
+                      { label: 'Members', icon: Users, active: false },
+                      { label: 'Violations', icon: Scale, active: false },
+                      { label: 'Service Requests', icon: Wrench, active: false },
+                      { label: 'Vendors', icon: Truck, active: false },
+                    ].map((item) => {
+                      const Icon = item.icon;
+                      return (
+                        <div
+                          key={item.label}
+                          className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg transition-colors ${
+                            item.active
+                              ? isDark
+                                ? 'bg-teal-500/10 text-teal-400 font-semibold border-l-2 border-teal-500'
+                                : 'bg-white text-teal-600 font-semibold border-l-2 border-teal-600 shadow-sm'
+                              : isDark
+                                ? 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/20'
+                                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50'
+                          }`}
+                        >
+                          <Icon size={11} className="shrink-0" />
+                          <span className="truncate">{item.label}</span>
+                        </div>
+                      );
+                    })}
+                  </nav>
+                  {/* User Profile Card at Bottom of Sidebar */}
+                  <div className={`p-2.5 border-t shrink-0 ${
+                    isDark ? 'border-white/[0.06] bg-[#0A1128]/40' : 'border-slate-200/80 bg-slate-200/25'
+                  }`}>
+                    <div className={`flex items-center gap-2 p-1.5 rounded-xl border ${
+                      isDark 
+                        ? 'bg-slate-900/35 border-white/[0.04]' 
+                        : 'bg-white border-slate-200/60 shadow-sm'
+                    }`}>
+                      <img 
+                        src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?q=80&w=150&auto=format&fit=crop" 
+                        alt="James Mitchell" 
+                        className={`w-6 h-6 rounded-lg object-cover shrink-0 border ${
+                          isDark ? 'border-white/10' : 'border-slate-200'
+                        }`}
+                      />
+                      <div className="min-w-0">
+                        <div className={`text-[8px] font-bold truncate ${isDark ? 'text-white' : 'text-slate-800'}`}>James Mitchell</div>
+                        <div className={`text-[6px] font-extrabold uppercase tracking-widest truncate ${isDark ? 'text-teal-400' : 'text-teal-600'}`}>SUPER ADMIN</div>
+                      </div>
+                    </div>
+                  </div>
+                </aside>
+
+                {/* ── Main Content ── */}
+                <div className="flex-1 flex flex-col overflow-hidden">
+
+                  {/* Topbar */}
+                  <div className={`px-4 py-2.5 flex items-center justify-between shrink-0 transition-colors duration-300 border-b ${
+                    isDark 
+                      ? 'bg-[#0B132B] border-white/[0.06]' 
+                      : 'bg-white border-slate-200/80 shadow-sm'
+                  }`}>
+                    {/* Left: MANAGING Vikash Property Management */}
+                    <div className="flex items-center gap-3">
+                      <div className="text-left">
+                        <span className="text-[7px] font-bold text-slate-400 uppercase tracking-widest block">MANAGING</span>
+                        <div className="flex items-center gap-1.5 mt-0.5">
+                          <span className={`text-xs font-black ${isDark ? 'text-white' : 'text-slate-800'}`}>Vikash Property Management</span>
+                          <span className={`text-[7px] font-extrabold px-1.5 py-0.5 rounded font-mono border ${
+                            isDark 
+                              ? 'bg-teal-500/10 text-teal-400 border-teal-500/20' 
+                              : 'bg-teal-50 text-teal-600 border-teal-500/20'
+                          }`}>VIK071 ▾</span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Right: Theme Toggle, Bell, Profile Widget */}
+                    <div className="flex items-center gap-3">
+                      {/* Icons */}
+                      <div className={`flex items-center gap-2 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                        <Sun size={12} className={`cursor-pointer ${isDark ? 'hover:text-white' : 'hover:text-slate-800'}`} />
+                        <div className={`relative cursor-pointer ${isDark ? 'hover:text-white' : 'hover:text-slate-800'}`}>
+                          <Bell size={12} />
+                          <span className={`absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-red-500 rounded-full border ${
+                            isDark ? 'border-[#0B132B]' : 'border-white'
+                          }`} />
+                        </div>
+                      </div>
+                      
+                      {/* Profile Widget */}
+                      <div className={`flex items-center gap-2 pl-3 border-l ${isDark ? 'border-white/[0.06]' : 'border-slate-200'}`}>
+                        <div className="text-right">
+                          <p className={`text-[8px] font-bold leading-none ${isDark ? 'text-white' : 'text-slate-800'}`}>James Mitchell</p>
+                          <span className={`text-[6px] font-extrabold uppercase tracking-wider ${isDark ? 'text-teal-400' : 'text-teal-600'}`}>SUPER ADMIN</span>
+                        </div>
+                        <img 
+                          src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?q=80&w=150&auto=format&fit=crop" 
+                          alt="James Mitchell" 
+                          className={`w-6 h-6 rounded-lg object-cover shrink-0 border ${
+                            isDark ? 'border-white/10' : 'border-slate-200'
+                          }`}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Dashboard body */}
+                  <div className={`flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar transition-colors duration-300 ${
+                    isDark ? 'bg-[#090F16]' : 'bg-slate-50'
+                  }`}>
+
+                    {/* Page Title & Action Buttons */}
+                    <div className="flex items-center justify-between shrink-0">
+                      <div>
+                        <h2 className={`text-base font-black tracking-tight leading-none ${isDark ? 'text-white' : 'text-slate-800'}`}>Dashboard</h2>
+                        <p className={`text-[8px] font-medium mt-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Vikash Property Management • America/New_York</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button className={`px-2.5 py-1.5 border rounded-lg text-[8px] font-bold transition flex items-center gap-1.5 ${
+                          isDark 
+                            ? 'bg-slate-900 border-white/[0.06] text-white hover:bg-slate-800' 
+                            : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50 shadow-sm'
+                        }`}>
+                          <RotateCcw size={10} />
+                          Refresh
+                        </button>
+                        <button className={`px-3 py-1.5 rounded-lg text-[8px] font-black transition flex items-center gap-1.5 shadow-md ${
+                          isDark 
+                            ? 'bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white shadow-violet-600/10' 
+                            : 'bg-teal-600 hover:bg-teal-700 text-white shadow-teal-600/10'
+                        }`}>
+                          <FileText size={10} />
+                          Export Report
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Main Banner Card */}
+                    <div className={`relative overflow-hidden rounded-2xl p-4 border shadow-md flex items-center justify-between transition-all ${
+                      isDark 
+                        ? 'bg-gradient-to-r from-[#1E2E42] via-[#162535] to-[#121B2A] text-white border-white/[0.06]' 
+                        : 'bg-white text-slate-850 border-slate-200/85 shadow-sm'
+                    }`}>
+                      <div className="flex items-center gap-3">
+                        <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border ${
+                          isDark 
+                            ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' 
+                            : 'bg-teal-600 text-white border-transparent shadow-sm shadow-teal-600/10'
+                        }`}>
+                          <Building size={16} />
+                        </div>
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2">
+                            <h3 className={`text-xs font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>Vikash Property Management</h3>
+                            <span className={`text-[6px] font-black px-1.5 py-0.5 rounded border ${
+                              isDark 
+                                ? 'bg-teal-500/10 text-teal-400 border-teal-500/20' 
+                                : 'bg-emerald-50 text-emerald-700 border-emerald-200/60'
+                            }`}>ACTIVE</span>
+                          </div>
+                          <p className={`text-[8px] ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                            Bazar Chowk, Chicholi • HOA Code: <span className={`font-mono font-bold ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>VIK071</span>
+                          </p>
+                        </div>
+                      </div>
+                      
+                      {/* Right side stats banner columns */}
+                      <div className="flex items-center gap-6 pr-2">
+                        {[
+                          { label: 'MEMBERS', value: '7', darkColor: 'text-sky-400', lightColor: 'text-teal-600' },
+                          { label: 'VIOLATIONS', value: '2', darkColor: 'text-red-400', lightColor: 'text-red-600' },
+                          { label: 'SERVICE REQ', value: '4', darkColor: 'text-blue-400', lightColor: 'text-blue-600' },
+                          { label: 'TOTAL UNITS', value: '120', darkColor: 'text-purple-400', lightColor: 'text-purple-600' }
+                        ].map((col, idx) => (
+                          <div key={idx} className="text-center">
+                            <div className={`text-xs font-black font-mono ${isDark ? 'text-white' : col.lightColor}`}>{col.value}</div>
+                            <div className={`text-[6px] font-extrabold tracking-wider mt-0.5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{col.label}</div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Stat Card Grid (4 Columns) */}
+                    <div className="grid grid-cols-4 gap-3">
+                      {[
+                        { 
+                          label: 'Total Members', 
+                          value: '7', 
+                          sub: 'Registered homeowners', 
+                          icon: Users,
+                          darkColor: 'text-sky-400 bg-sky-500/10 border-sky-500/20',
+                          lightColor: 'text-sky-600 bg-sky-50 border-sky-100',
+                          lightValColor: 'text-sky-600',
+                          lightSubColor: 'text-sky-600 font-medium'
+                        },
+                        { 
+                          label: 'Open Violations', 
+                          value: '2', 
+                          sub: 'Needs attention', 
+                          icon: Scale,
+                          darkColor: 'text-red-500 bg-red-500/10 border-red-500/20',
+                          lightColor: 'text-red-600 bg-red-50 border-red-100',
+                          lightValColor: 'text-red-600',
+                          lightSubColor: 'text-red-500 font-medium'
+                        },
+                        { 
+                          label: 'Service Requests', 
+                          value: '4', 
+                          sub: 'Open requests', 
+                          icon: Wrench,
+                          darkColor: 'text-blue-500 bg-blue-500/10 border-blue-500/20',
+                          lightColor: 'text-blue-600 bg-blue-50 border-blue-100',
+                          lightValColor: 'text-blue-600',
+                          lightSubColor: 'text-blue-600 font-medium'
+                        },
+                        { 
+                          label: 'Pending Payments', 
+                          value: '0', 
+                          sub: 'Due this month', 
+                          icon: CreditCard,
+                          darkColor: 'text-purple-500 bg-purple-500/10 border-purple-500/20',
+                          lightColor: 'text-purple-600 bg-purple-50 border-purple-100',
+                          lightValColor: 'text-purple-600',
+                          lightSubColor: 'text-purple-500 font-medium'
+                        },
+                      ].map((stat, i) => {
+                        const CardIcon = stat.icon;
+                        return (
+                          <div 
+                            key={i} 
+                            className={`rounded-xl p-3 border shadow-sm flex flex-col justify-between h-[100px] transition-all ${
+                              isDark 
+                                ? 'bg-[#1E2E42] border-white/[0.06] hover:border-white/10' 
+                                : 'bg-white border-slate-200/80 hover:border-slate-350 shadow-sm hover:shadow'
+                            }`}
+                          >
+                            <div className="flex items-start justify-between">
+                              <div>
+                                <span className={`text-[7px] font-bold block ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{stat.label}</span>
+                                <div className={`text-lg font-black mt-1.5 font-mono ${
+                                  isDark ? 'text-white' : stat.lightValColor
+                                }`}>{stat.value}</div>
+                              </div>
+                              <div className={`w-6 h-6 rounded-lg flex items-center justify-center border ${
+                                isDark ? stat.darkColor : stat.lightColor
+                              }`}>
+                                <CardIcon size={12} />
+                              </div>
+                            </div>
+                            <span className={`text-[7px] block truncate mt-1 ${
+                              isDark ? 'text-slate-400' : stat.lightSubColor
+                            }`}>{stat.sub}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    {/* Bottom layout: Recent Service Requests & Dues Progress */}
+                    <div className="grid grid-cols-12 gap-3.5 pt-1 text-left">
+                      
+                      {/* Recent Service Requests */}
+                      <div className={`col-span-7 rounded-xl border p-3 shadow-sm flex flex-col justify-between transition-all ${
+                        isDark 
+                          ? 'bg-[#1E2E42] border-white/[0.06]' 
+                          : 'bg-white border-slate-200/80'
+                      }`}>
+                        <div className={`flex items-center justify-between mb-2 pb-1 border-b ${
+                          isDark ? 'border-white/[0.04]' : 'border-slate-100'
+                        }`}>
+                          <span className={`text-[7.5px] font-black uppercase tracking-wider ${
+                            isDark ? 'text-slate-300' : 'text-slate-700'
+                          }`}>Recent Service Requests</span>
+                          <span className={`text-[6.5px] font-bold cursor-pointer hover:underline ${
+                            isDark ? 'text-teal-400' : 'text-teal-600'
+                          }`}>View all →</span>
+                        </div>
+                        <div className="space-y-1.5">
+                          {[
+                            { 
+                              id: 'SR-4820', 
+                              title: 'Elevator C Braking Noise', 
+                              priority: 'HIGH', 
+                              status: 'Dispatched', 
+                              vendor: 'Schindler Group', 
+                              darkStatus: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
+                              lightStatus: 'bg-amber-50 text-amber-700 border-amber-200'
+                            },
+                            { 
+                              id: 'SR-4819', 
+                              title: 'Basement Parking Pipe Leak', 
+                              priority: 'HIGH', 
+                              status: 'Unassigned', 
+                              vendor: 'Awaiting Vendor', 
+                              darkStatus: 'bg-red-500/10 text-red-400 border-red-500/20',
+                              lightStatus: 'bg-red-50 text-red-700 border-red-200'
+                            },
+                            { 
+                              id: 'SR-4817', 
+                              title: 'Clubhouse AC Replacement', 
+                              priority: 'MEDIUM', 
+                              status: 'Completed', 
+                              vendor: 'Elite HVAC Services', 
+                              darkStatus: 'bg-green-500/10 text-green-400 border-green-500/20',
+                              lightStatus: 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                            }
+                          ].map((req) => (
+                            <div key={req.id} className={`flex items-center justify-between py-1 last:border-0 text-[7px] border-b ${
+                              isDark ? 'border-white/[0.02]' : 'border-slate-100'
+                            }`}>
+                              <div className="min-w-0 pr-2">
+                                <p className={`font-bold truncate ${isDark ? 'text-white' : 'text-slate-800'}`}>{req.title}</p>
+                                <p className={`text-[6px] mt-0.5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{req.id} • {req.vendor}</p>
+                              </div>
+                              <span className={`px-1.5 py-0.5 rounded border font-mono font-extrabold text-[5.5px] shrink-0 ${
+                                isDark ? req.darkStatus : req.lightStatus
+                              }`}>
+                                {req.status}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Dues Progress & Integrations */}
+                      <div className={`col-span-5 rounded-xl border p-3 shadow-sm flex flex-col justify-between transition-all ${
+                        isDark 
+                          ? 'bg-[#1E2E42] border-white/[0.06]' 
+                          : 'bg-white border-slate-200/80 shadow-sm'
+                      }`}>
+                        <div className={`flex items-center justify-between mb-2 pb-1 border-b ${
+                          isDark ? 'border-white/[0.04]' : 'border-slate-100'
+                        }`}>
+                          <span className={`text-[7.5px] font-black uppercase tracking-wider ${
+                            isDark ? 'text-slate-300' : 'text-slate-700'
+                          }`}>Dues Collection</span>
+                          <span className={`text-[6.5px] font-bold ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Q3 Cycle</span>
+                        </div>
+                        <div className="flex items-center gap-3 py-1">
+                          {/* Mini Progress Bar or Indicator */}
+                          <div className="relative w-8 h-8 shrink-0">
+                            <svg viewBox="0 0 36 36" className="w-8 h-8 -rotate-90">
+                              <circle cx="18" cy="18" r="14.5" fill="none" stroke={isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.04)"} strokeWidth="3.5" />
+                              <circle cx="18" cy="18" r="14.5" fill="none" stroke="#0D9488" strokeWidth="3.5" strokeDasharray="78 100" strokeLinecap="round" />
+                            </svg>
+                            <div className={`absolute inset-0 flex items-center justify-center text-[7.5px] font-black ${isDark ? 'text-white' : 'text-slate-800'}`}>78%</div>
+                          </div>
+                          <div className="min-w-0 space-y-0.5 text-[6.5px]">
+                            <p className={`font-bold text-[7.5px] ${isDark ? 'text-white' : 'text-slate-800'}`}>$19,227.00 <span className={`font-normal ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Collected</span></p>
+                            <p className={isDark ? 'text-slate-400' : 'text-slate-500'}>$3,800 Pending</p>
+                            <p className={isDark ? 'text-red-400 font-medium' : 'text-red-600 font-bold'}>$1,623 Overdue</p>
+                          </div>
+                        </div>
+                        <div className={`pt-2 mt-2 flex items-center justify-between text-[6px] border-t ${
+                          isDark ? 'border-white/[0.04]' : 'border-slate-100'
+                        }`}>
+                          <span className={isDark ? 'text-slate-400' : 'text-slate-500'}>QuickBooks Sync</span>
+                          <span className={`px-1.5 py-0.5 rounded border font-bold uppercase tracking-wider ${
+                            isDark 
+                              ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' 
+                              : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                          }`}>SYNCED</span>
+                        </div>
+                      </div>
+
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            {/* Bottom glow reflection */}
+            <div className="h-12 bg-gradient-to-b from-slate-200/40 dark:from-[#0D1B2A]/80 to-transparent" />
+          </div>
+
         </div>
+
+        {/* Stats row — below mockup */}
+        <div className="max-w-5xl mx-auto mt-16 pb-16 grid grid-cols-2 md:grid-cols-4 gap-6 lg:gap-10 border-t border-slate-100 dark:border-white/[0.06] pt-10">
+          {[
+            { label: 'Active Communities', end: 500, suffix: '+', icon: Globe, color: 'text-violet-500 bg-violet-500/10' },
+            { label: 'Client Satisfaction', end: 98, suffix: '%', icon: Star, color: 'text-amber-500 bg-amber-500/10' },
+            { label: 'Dues Collected', end: 15, suffix: 'M+', prefix: '$', icon: TrendingUp, color: 'text-emerald-500 bg-emerald-500/10' },
+            { label: 'Avg Onboarding', end: 48, suffix: 'h', icon: Clock, color: 'text-blue-500 bg-blue-500/10' }
+          ].map((stat, i) => (
+            <div key={i} className="flex items-center gap-4">
+              <div className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 ${stat.color}`}>
+                <stat.icon className="w-5 h-5" />
+              </div>
+              <div>
+                <div className="text-2xl font-black text-slate-900 dark:text-white">
+                  <StatCounter end={stat.end} suffix={stat.suffix} prefix={stat.prefix || ''} />
+                </div>
+                <div className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">{stat.label}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Image Slideshow Slider Section */}
+        <div className="max-w-5xl mx-auto mt-8 pb-16 border-t border-slate-100 dark:border-white/[0.06] pt-12">
+          <div className="text-center max-w-2xl mx-auto mb-10 space-y-3">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-violet-500/10 border border-violet-500/20 text-xs font-semibold text-violet-600 dark:text-violet-400">
+              🌳 Society Spaces
+            </div>
+            <h2 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight leading-tight">
+              A Glimpse into Our Premium Communities
+            </h2>
+            <p className="text-sm text-slate-500 dark:text-slate-400 max-w-xl mx-auto">
+              From lush parks to clubhouse amenities, NestBloq maintains facility bookings, visual excellence, and comfort across every square foot.
+            </p>
+          </div>
+          <HeroImage isDark={isDark} />
+        </div>
+
       </section>
+
 
       {/* ═══════════════════════════════════════════════════════
           SOLUTIONS SECTION (Interactive Use Cases & Simulators)
@@ -1101,7 +1564,7 @@ export default function LandingPage() {
       <section 
         id="solutions" 
         ref={solutionsSectionRef}
-        className="relative py-28 px-5 sm:px-8 border-t border-slate-200/40 dark:border-white/[0.04] overflow-hidden bg-white dark:bg-[#07060f]"
+        className="relative py-28 px-5 sm:px-8 border-t border-slate-200/40 dark:border-white/[0.06] overflow-hidden bg-white dark:bg-[#090F16]"
       >
         {/* Background glow effects */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[600px] bg-gradient-radial from-violet-500/[0.03] dark:from-violet-500/[0.06] to-transparent rounded-full blur-3xl pointer-events-none" />
@@ -1199,7 +1662,7 @@ export default function LandingPage() {
 
             {/* Right Column: High-Fidelity Use Case Wallpapers */}
             <div className="lg:col-span-7 h-full">
-              <div className="relative overflow-hidden rounded-3xl border border-slate-200/60 dark:border-white/[0.08] shadow-2xl aspect-[4/3] w-full bg-slate-100 dark:bg-[#120f26]">
+              <div className="relative overflow-hidden rounded-3xl border border-slate-200/60 dark:border-white/[0.08] shadow-2xl aspect-[4/3] w-full bg-slate-100 dark:bg-[#0D1B2A]">
                 <img
                   src={solutionRental}
                   alt="Rental Property Management"
@@ -1243,10 +1706,10 @@ export default function LandingPage() {
       {/* ═══════════════════════════════════════════════════════
           SCROLLING MARQUEE
           ═══════════════════════════════════════════════════════ */}
-      <div className="relative py-7 border-y border-slate-200/40 dark:border-white/[0.04] bg-slate-50/40 dark:bg-white/[0.01] backdrop-blur-sm overflow-hidden before:absolute before:left-0 before:top-0 before:h-full before:w-32 before:bg-gradient-to-r before:from-white dark:before:from-[#07060f] before:to-transparent before:z-10 after:absolute after:right-0 after:top-0 after:h-full after:w-32 after:bg-gradient-to-l after:from-white dark:after:from-[#07060f] after:to-transparent after:z-10">
+      <div className="relative py-7 border-y border-slate-200/40 dark:border-white/[0.06] bg-slate-50/40 dark:bg-[#0B1420]/60 backdrop-blur-sm overflow-hidden before:absolute before:left-0 before:top-0 before:h-full before:w-32 before:bg-gradient-to-r before:from-white dark:before:from-[#090F16] before:to-transparent before:z-10 after:absolute after:right-0 after:top-0 after:h-full after:w-32 after:bg-gradient-to-l after:from-white dark:after:from-[#090F16] after:to-transparent after:z-10">
         <div className="flex gap-8 animate-marquee whitespace-nowrap">
           {['Sunrise Heights', 'Green Park Society', 'Maple Heights Enclave', 'Prestige Lakeside', 'Royal Palms HOA', 'Emerald Springs Apts', 'Blue Ridge Condos', 'Silver Oak Society', 'Sunrise Heights', 'Green Park Society', 'Maple Heights Enclave', 'Prestige Lakeside', 'Royal Palms HOA', 'Emerald Springs Apts', 'Blue Ridge Condos', 'Silver Oak Society'].map((name, i) => (
-            <span key={i} className="inline-flex items-center gap-2.5 px-4.5 py-2.5 rounded-xl bg-white dark:bg-white/[0.02] border border-slate-200/60 dark:border-white/[0.06] text-slate-600 dark:text-slate-400 text-xs font-semibold shrink-0 shadow-[0_2px_8px_rgba(0,0,0,0.015)]">
+            <span key={i} className="inline-flex items-center gap-2.5 px-4.5 py-2.5 rounded-xl bg-white dark:bg-[#0D1B2A] border border-slate-200/60 dark:border-white/[0.08] text-slate-600 dark:text-slate-400 text-xs font-semibold shrink-0 shadow-[0_2px_8px_rgba(0,0,0,0.015)]">
               <span className="w-2.5 h-2.5 rounded-full bg-gradient-to-br from-violet-400 to-indigo-500 shrink-0" />
               {name}
             </span>
@@ -1322,7 +1785,7 @@ export default function LandingPage() {
                   'from-rose-500/10 to-pink-500/10 shadow-rose-500/5 dark:shadow-rose-500/10 border border-rose-500/10'
                 }`}
               >
-                <div className="rounded-2xl overflow-hidden bg-white dark:bg-[#0c0b16]">
+                <div className="rounded-2xl overflow-hidden bg-white dark:bg-[#0D1B2A]">
                   {features[activeFeature].preview}
                 </div>
               </div>
@@ -1334,7 +1797,7 @@ export default function LandingPage() {
       {/* ═══════════════════════════════════════════════════════
           CORE CAPABILITIES (3D Tilt & Flip Showcase)
       ═══════════════════════════════════════════════════════ */}
-      <section id="features-grid" className="py-28 px-5 sm:px-8 bg-slate-50/60 dark:bg-white/[0.012] border-y border-slate-100 dark:border-white/[0.05]">
+      <section id="features-grid" className="py-28 px-5 sm:px-8 bg-slate-50/60 dark:bg-[#0B1420]/70 border-y border-slate-100 dark:border-white/[0.06]">
         <div className="max-w-7xl mx-auto">
           <div className="text-center max-w-2xl mx-auto mb-16 space-y-4">
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-500 text-xs font-semibold">
@@ -1360,7 +1823,7 @@ export default function LandingPage() {
       {/* ═══════════════════════════════════════════════════════
           HOW IT WORKS (Premium Connection Timeline Pathway)
       ═══════════════════════════════════════════════════════ */}
-      <section id="how-it-works" className="py-28 px-5 sm:px-8 border-t border-slate-100 dark:border-white/[0.05]">
+      <section id="how-it-works" className="py-28 px-5 sm:px-8 border-t border-slate-100 dark:border-white/[0.06] dark:bg-[#090F16]">
         <div className="max-w-5xl mx-auto relative">
           <div className="text-center max-w-2xl mx-auto mb-20 space-y-4">
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-violet-500/10 border border-violet-500/20 text-violet-500 text-xs font-semibold">
@@ -1454,7 +1917,7 @@ export default function LandingPage() {
                   {/* Connector Dot */}
                   <div className="absolute left-4 md:left-1/2 top-[48px] md:top-[56px] -translate-x-1/2 -translate-y-1/2 z-20 flex items-center justify-center">
                     <span className={`absolute inline-flex h-12 w-12 rounded-full ${item.pulseBg} animate-ping opacity-75 group-hover:scale-125 transition-all duration-300`} />
-                    <div className={`relative w-10 h-10 rounded-full bg-gradient-to-br ${item.color} border-4 border-white dark:border-[#07060f] flex items-center justify-center text-[10px] font-black text-white shadow-md group-hover:scale-110 transition-transform duration-300`}>
+                    <div className={`relative w-10 h-10 rounded-full bg-gradient-to-br ${item.color} border-4 border-white dark:border-[#090F16] flex items-center justify-center text-[10px] font-black text-white shadow-md group-hover:scale-110 transition-transform duration-300`}>
                       {item.step}
                     </div>
                   </div>
@@ -1464,7 +1927,7 @@ export default function LandingPage() {
 
                   {/* Onboarding Timeline Content Card */}
                   <div className="w-full md:w-[45%] pl-12 md:pl-0">
-                    <div className={`premium-card rounded-2xl p-6 md:p-8 flex flex-col gap-4 relative overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-1 ${item.glowColor} border border-slate-200/50 dark:border-white/[0.06] bg-white dark:bg-white/[0.02]`}>
+                    <div className={`premium-card rounded-2xl p-6 md:p-8 flex flex-col gap-4 relative overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-1 ${item.glowColor} border border-slate-200/50 dark:border-white/[0.08] bg-white dark:bg-[#0D1B2A]`}>
                       
                       {/* Ambient background corner light overlay showing on hover */}
                       <div className={`absolute -right-16 -top-16 w-32 h-32 bg-gradient-to-br ${item.ambientColor} opacity-0 group-hover:opacity-100 transition-opacity duration-700 blur-2xl pointer-events-none`} />
@@ -1476,7 +1939,7 @@ export default function LandingPage() {
                         <div>
                           <div className="flex flex-wrap items-center gap-2">
                             <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Step {item.step}</span>
-                            <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-white/[0.04] text-slate-500 dark:text-slate-400 border border-slate-200/50 dark:border-white/[0.06]">{item.badge}</span>
+                            <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-[#1E2E42] text-slate-500 dark:text-slate-400 border border-slate-200/50 dark:border-white/[0.10]">{item.badge}</span>
                           </div>
                           <h3 className="font-bold text-slate-900 dark:text-white text-lg mt-1">{item.title}</h3>
                         </div>
@@ -1496,7 +1959,7 @@ export default function LandingPage() {
       {/* ═══════════════════════════════════════════════════════
           AI COPILOT
       ═══════════════════════════════════════════════════════ */}
-      <section id="ai" className="py-28 px-5 sm:px-8 bg-slate-50/60 dark:bg-white/[0.012] border-y border-slate-100 dark:border-white/[0.05]">
+      <section id="ai" className="py-28 px-5 sm:px-8 bg-slate-50/60 dark:bg-[#0B1420]/70 border-y border-slate-100 dark:border-white/[0.06]">
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 items-center">
             <div className="lg:col-span-5 space-y-7">
@@ -1536,7 +1999,7 @@ export default function LandingPage() {
       {/* ═══════════════════════════════════════════════════════
           TESTIMONIALS (Apple-Style Staggered Grid Layout)
       ═══════════════════════════════════════════════════════ */}
-      <section id="testimonials" className="py-28 pb-36 px-5 sm:px-8 bg-slate-50/60 dark:bg-white/[0.012] border-y border-slate-100 dark:border-white/[0.05]">
+      <section id="testimonials" className="py-28 pb-36 px-5 sm:px-8 bg-slate-50/60 dark:bg-[#0B1420]/70 border-y border-slate-100 dark:border-white/[0.06]">
         <div className="max-w-7xl mx-auto space-y-20">
           <div className="text-center space-y-4">
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-500 text-xs font-semibold">
@@ -1575,11 +2038,11 @@ export default function LandingPage() {
               FAQs
             </div>
             <h2 className="font-display text-4xl font-black text-slate-900 dark:text-white tracking-tight">Everything you need to know</h2>
-            <p className="text-slate-500 dark:text-slate-400">Can't find an answer? <Link to="#" className="text-violet-500 hover:text-violet-600 font-medium">Contact our team →</Link></p>
+            <p className="text-slate-500 dark:text-slate-400">Can't find an answer? <Link to="/contact" className="text-violet-500 hover:text-violet-600 font-medium">Contact our team →</Link></p>
           </div>
           <div className="space-y-3">
             {faqs.map((faq, i) => (
-              <div key={i} className={`rounded-2xl border overflow-hidden transition-all duration-200 ${openFaq === i ? 'border-violet-500/30 bg-violet-500/[0.03]' : 'border-slate-200 dark:border-white/[0.07] bg-white dark:bg-white/[0.02] hover:border-violet-200 dark:hover:border-white/15'}`}>
+              <div key={i} className={`rounded-2xl border overflow-hidden transition-all duration-200 ${openFaq === i ? 'border-violet-500/30 bg-violet-500/[0.03] dark:bg-[#0D1B2A]' : 'border-slate-200 dark:border-white/[0.08] bg-white dark:bg-[#0D1B2A] hover:border-violet-200 dark:hover:border-violet-500/30'}`}>
                 <button onClick={() => toggleFaq(i)} className="w-full flex items-center justify-between px-6 py-5 text-left gap-4">
                   <span className={`font-semibold text-sm ${openFaq === i ? 'text-slate-900 dark:text-white' : 'text-slate-700 dark:text-slate-300'}`}>{faq.q}</span>
                   <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 transition-all ${openFaq === i ? 'bg-violet-500 text-white' : 'bg-slate-100 dark:bg-white/5 text-slate-400'}`}>
@@ -1624,7 +2087,7 @@ export default function LandingPage() {
                   Get Started Free
                   <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
                 </Link>
-                <Link to="#" className="px-8 py-4 bg-white/10 hover:bg-white/20 border border-white/25 text-white font-semibold text-sm rounded-2xl transition-all flex items-center justify-center gap-2">
+                <Link to="/contact" className="px-8 py-4 bg-white/10 hover:bg-white/20 border border-white/25 text-white font-semibold text-sm rounded-2xl transition-all flex items-center justify-center gap-2">
                   <Phone className="w-4 h-4" />
                   Talk to Sales
                 </Link>
@@ -1635,6 +2098,7 @@ export default function LandingPage() {
       </section>
 
       <Footer />
+      </div>
       <InteractiveAssistant />
     </div>
   );

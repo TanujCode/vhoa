@@ -19,19 +19,22 @@ export default function RentalSolutionPage() {
       title: "Automated Billing & Ledger",
       desc: "Automatically generate monthly rent rolls, issue secure digital invoices, and track payments inside an immutable ledger.",
       icon: Wallet,
-      color: "text-emerald-500 bg-emerald-500/10 border border-emerald-500/20"
+      color: "text-emerald-600 bg-emerald-500/10 border border-emerald-500/20",
+      bg: "bg-emerald-100/85 dark:bg-emerald-950/30 border-emerald-200/80 dark:border-emerald-800/50 hover:shadow-lg hover:shadow-emerald-500/[0.05] hover:border-emerald-500/50 dark:hover:border-emerald-500/40"
     },
     {
       title: "SMTP Notice Dispatcher",
       desc: "Identify overdue payments instantly and send legal reminder notifications via email or SMS with full compliance IP logging.",
       icon: Mail,
-      color: "text-blue-500 bg-blue-500/10 border border-blue-500/20"
+      color: "text-blue-600 bg-blue-500/10 border border-blue-500/20",
+      bg: "bg-blue-100/85 dark:bg-blue-950/30 border-blue-200/80 dark:border-blue-800/50 hover:shadow-lg hover:shadow-blue-500/[0.05] hover:border-blue-500/50 dark:hover:border-blue-500/40"
     },
     {
       title: "Digital Lease Directory",
       desc: "Store executed contracts, occupant security deposits, and maintenance logs in isolated tenant directories.",
       icon: FileText,
-      color: "text-violet-500 bg-violet-500/10 border border-violet-500/20"
+      color: "text-violet-600 bg-violet-500/10 border border-violet-500/20",
+      bg: "bg-violet-100/85 dark:bg-violet-950/30 border-violet-200/80 dark:border-violet-800/50 hover:shadow-lg hover:shadow-violet-500/[0.05] hover:border-violet-500/50 dark:hover:border-violet-500/40"
     }
   ];
 
@@ -143,12 +146,12 @@ export default function RentalSolutionPage() {
             {features.map((item, idx) => {
               const Icon = item.icon;
               return (
-                <div key={idx} className="p-6 rounded-2xl border border-slate-200/80 dark:border-white/[0.07] bg-white/40 dark:bg-white/[0.02] backdrop-blur-md hover:bg-white/70 dark:hover:bg-white/[0.04] hover:border-emerald-500/30 dark:hover:border-emerald-500/20 shadow-sm hover:shadow-xl transition-all duration-300 space-y-4 text-left">
+                <div key={idx} className={`p-6 rounded-2xl border backdrop-blur-md transition-all duration-300 space-y-4 text-left ${item.bg}`}>
                   <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${item.color}`}>
                     <Icon className="w-5 h-5" />
                   </div>
                   <h3 className="text-lg font-black text-slate-900 dark:text-white">{item.title}</h3>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed font-display">{item.desc}</p>
+                  <p className="text-xs text-slate-650 dark:text-slate-400 leading-relaxed font-display">{item.desc}</p>
                 </div>
               );
             })}
@@ -232,28 +235,28 @@ export default function RentalSolutionPage() {
           </div>
           <div className="max-w-5xl mx-auto grid grid-cols-1 sm:grid-cols-4 gap-6 px-5">
             {/* Stripe */}
-            <div className="p-6 rounded-2xl border border-slate-200/80 dark:border-white/[0.07] bg-white/40 dark:bg-white/[0.02] backdrop-blur-md text-left space-y-2 hover:shadow-lg hover:border-emerald-500/20 transition-all duration-300">
-              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">01 / PAYMENTS</span>
+            <div className="p-6 rounded-2xl border border-indigo-200/80 dark:border-indigo-800/50 bg-indigo-100/85 dark:bg-indigo-950/30 backdrop-blur-md text-left space-y-2 hover:shadow-lg hover:shadow-indigo-500/[0.05] hover:border-indigo-500/50 dark:hover:border-indigo-500/40 transition-all duration-300">
+              <span className="text-[10px] font-black text-indigo-650 dark:text-indigo-400 uppercase tracking-widest">01 / PAYMENTS</span>
               <h4 className="text-sm font-black text-slate-900 dark:text-white">Stripe Core</h4>
-              <p className="text-[11px] text-slate-450 dark:text-slate-400 leading-normal font-display">Secure PCI-DSS compliant credit card and ACH transactions.</p>
+              <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-normal font-display">Secure PCI-DSS compliant credit card and ACH transactions.</p>
             </div>
             {/* Plaid */}
-            <div className="p-6 rounded-2xl border border-slate-200/80 dark:border-white/[0.07] bg-white/40 dark:bg-white/[0.02] backdrop-blur-md text-left space-y-2 hover:shadow-lg hover:border-emerald-500/20 transition-all duration-300">
-              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">02 / VERIFY</span>
+            <div className="p-6 rounded-2xl border border-emerald-200/80 dark:border-emerald-800/50 bg-emerald-100/85 dark:bg-emerald-950/30 backdrop-blur-md text-left space-y-2 hover:shadow-lg hover:shadow-emerald-500/[0.05] hover:border-emerald-500/50 dark:hover:border-emerald-500/40 transition-all duration-300">
+              <span className="text-[10px] font-black text-emerald-650 dark:text-emerald-400 uppercase tracking-widest">02 / VERIFY</span>
               <h4 className="text-sm font-black text-slate-900 dark:text-white">Plaid Links</h4>
-              <p className="text-[11px] text-slate-450 dark:text-slate-400 leading-normal font-display">Instant tenant account link and balance checking.</p>
+              <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-normal font-display">Instant tenant account link and balance checking.</p>
             </div>
             {/* SMTP */}
-            <div className="p-6 rounded-2xl border border-slate-200/80 dark:border-white/[0.07] bg-white/40 dark:bg-white/[0.02] backdrop-blur-md text-left space-y-2 hover:shadow-lg hover:border-emerald-500/20 transition-all duration-300">
-              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">03 / NOTICES</span>
+            <div className="p-6 rounded-2xl border border-sky-200/80 dark:border-sky-800/50 bg-sky-100/85 dark:bg-sky-950/30 backdrop-blur-md text-left space-y-2 hover:shadow-lg hover:shadow-sky-500/[0.05] hover:border-sky-500/50 dark:hover:border-sky-500/40 transition-all duration-300">
+              <span className="text-[10px] font-black text-sky-650 dark:text-sky-400 uppercase tracking-widest">03 / NOTICES</span>
               <h4 className="text-sm font-black text-slate-900 dark:text-white">SMTP Relay</h4>
-              <p className="text-[11px] text-slate-450 dark:text-slate-400 leading-normal font-display">Auto-dispatch rent notices with legal delivery IP logs.</p>
+              <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-normal font-display">Auto-dispatch rent notices with legal delivery IP logs.</p>
             </div>
             {/* Twilio */}
-            <div className="p-6 rounded-2xl border border-slate-200/80 dark:border-white/[0.07] bg-white/40 dark:bg-white/[0.02] backdrop-blur-md text-left space-y-2 hover:shadow-lg hover:border-emerald-500/20 transition-all duration-300">
-              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">04 / ALERTS</span>
+            <div className="p-6 rounded-2xl border border-rose-200/80 dark:border-rose-800/50 bg-rose-100/85 dark:bg-rose-950/30 backdrop-blur-md text-left space-y-2 hover:shadow-lg hover:shadow-rose-500/[0.05] hover:border-rose-500/50 dark:hover:border-rose-500/40 transition-all duration-300">
+              <span className="text-[10px] font-black text-rose-650 dark:text-rose-400 uppercase tracking-widest">04 / ALERTS</span>
               <h4 className="text-sm font-black text-slate-900 dark:text-white">Twilio SMS</h4>
-              <p className="text-[11px] text-slate-450 dark:text-slate-400 leading-normal font-display">Text updates, payment confirmation tokens, and warnings.</p>
+              <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-normal font-display">Text updates, payment confirmation tokens, and warnings.</p>
             </div>
           </div>
         </section>

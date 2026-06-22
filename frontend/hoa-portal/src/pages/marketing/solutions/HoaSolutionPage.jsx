@@ -19,19 +19,22 @@ export default function HoaSolutionPage() {
       title: "Digital General Assemblies",
       desc: "Conduct legally compliant board meetings virtually. Host community resolutions, document comments, and achieve quorum digitally.",
       icon: Users,
-      color: "text-indigo-500 bg-indigo-500/10 border border-indigo-500/20"
+      color: "text-indigo-650 bg-indigo-500/10 border border-indigo-500/20",
+      bg: "bg-indigo-100/85 dark:bg-indigo-950/30 border-indigo-200/80 dark:border-indigo-800/50 hover:shadow-lg hover:shadow-indigo-500/[0.05] hover:border-indigo-500/50 dark:hover:border-indigo-500/40"
     },
     {
       title: "Cryptographic IP Auditing",
       desc: "Protect democratic integrity. Every single vote cast generates an immutable SHA-256 security audit trail hash.",
       icon: ShieldCheck,
-      color: "text-violet-500 bg-violet-500/10 border border-violet-500/20"
+      color: "text-violet-650 bg-violet-500/10 border border-violet-500/20",
+      bg: "bg-violet-100/85 dark:bg-violet-950/30 border-violet-200/80 dark:border-violet-800/50 hover:shadow-lg hover:shadow-violet-500/[0.05] hover:border-violet-500/50 dark:hover:border-violet-500/40"
     },
     {
       title: "Bylaws Bylaw AI Assistant",
       desc: "Train our NestBloq AI directly on your society bylaws documents to answer resident regulation queries 24/7.",
       icon: Scale,
-      color: "text-emerald-500 bg-emerald-500/10 border border-emerald-500/20"
+      color: "text-emerald-650 bg-emerald-500/10 border border-emerald-500/20",
+      bg: "bg-emerald-100/85 dark:bg-emerald-950/30 border-emerald-200/80 dark:border-emerald-800/50 hover:shadow-lg hover:shadow-emerald-500/[0.05] hover:border-emerald-500/50 dark:hover:border-emerald-500/40"
     }
   ];
 
@@ -142,12 +145,12 @@ export default function HoaSolutionPage() {
             {features.map((item, idx) => {
               const Icon = item.icon;
               return (
-                <div key={idx} className="p-6 rounded-2xl border border-slate-200/80 dark:border-white/[0.07] bg-white/40 dark:bg-white/[0.02] backdrop-blur-md hover:bg-white/70 dark:hover:bg-white/[0.04] hover:border-indigo-500/30 dark:hover:border-indigo-500/20 shadow-sm hover:shadow-xl transition-all duration-300 space-y-4 text-left">
+                <div key={idx} className={`p-6 rounded-2xl border backdrop-blur-md transition-all duration-300 space-y-4 text-left ${item.bg}`}>
                   <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${item.color}`}>
                     <Icon className="w-5 h-5" />
                   </div>
                   <h3 className="text-lg font-black text-slate-900 dark:text-white">{item.title}</h3>
-                  <p className="text-xs text-slate-550 dark:text-slate-400 leading-relaxed font-display">{item.desc}</p>
+                  <p className="text-xs text-slate-650 dark:text-slate-400 leading-relaxed font-display">{item.desc}</p>
                 </div>
               );
             })}
@@ -231,28 +234,28 @@ export default function HoaSolutionPage() {
           </div>
           <div className="max-w-5xl mx-auto grid grid-cols-1 sm:grid-cols-4 gap-6 px-5">
             {/* OpenAI */}
-            <div className="p-6 rounded-2xl border border-slate-200/80 dark:border-white/[0.07] bg-white/40 dark:bg-white/[0.02] backdrop-blur-md text-left space-y-2 hover:shadow-lg hover:border-indigo-500/20 transition-all duration-300">
-              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">01 / COGNITIVE AI</span>
+            <div className="p-6 rounded-2xl border border-cyan-200/80 dark:border-cyan-800/50 bg-cyan-100/85 dark:bg-cyan-950/30 backdrop-blur-md text-left space-y-2 hover:shadow-lg hover:shadow-cyan-500/[0.05] hover:border-cyan-500/50 dark:hover:border-cyan-500/40 transition-all duration-300">
+              <span className="text-[10px] font-black text-cyan-650 dark:text-cyan-400 uppercase tracking-widest">01 / COGNITIVE AI</span>
               <h4 className="text-sm font-black text-slate-900 dark:text-white">OpenAI Bylaws AI</h4>
-              <p className="text-[11px] text-slate-550 dark:text-slate-400 leading-normal font-display">Train models on physical rulebooks to answer resident queries and draft compliant agendas.</p>
+              <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-normal font-display">Train models on physical rulebooks to answer resident queries and draft compliant agendas.</p>
             </div>
             {/* Cryptographic Audits */}
-            <div className="p-6 rounded-2xl border border-slate-200/80 dark:border-white/[0.07] bg-white/40 dark:bg-white/[0.02] backdrop-blur-md text-left space-y-2 hover:shadow-lg hover:border-indigo-500/20 transition-all duration-300">
-              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">02 / TAMPER-PROOF</span>
+            <div className="p-6 rounded-2xl border border-purple-200/80 dark:border-purple-800/50 bg-purple-100/85 dark:bg-purple-950/30 backdrop-blur-md text-left space-y-2 hover:shadow-lg hover:shadow-purple-500/[0.05] hover:border-purple-500/50 dark:hover:border-purple-500/40 transition-all duration-300">
+              <span className="text-[10px] font-black text-purple-650 dark:text-purple-400 uppercase tracking-widest">02 / TAMPER-PROOF</span>
               <h4 className="text-sm font-black text-slate-900 dark:text-white">SHA-256 Audit Trail</h4>
-              <p className="text-[11px] text-slate-550 dark:text-slate-400 leading-normal font-display">Cryptographic vote auditing ensures individual ballots are verified and immutably stored.</p>
+              <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-normal font-display">Cryptographic vote auditing ensures individual ballots are verified and immutably stored.</p>
             </div>
             {/* Twilio */}
-            <div className="p-6 rounded-2xl border border-slate-200/80 dark:border-white/[0.07] bg-white/40 dark:bg-white/[0.02] backdrop-blur-md text-left space-y-2 hover:shadow-lg hover:border-indigo-500/20 transition-all duration-300">
-              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">03 / EMERGENCY ALERTS</span>
+            <div className="p-6 rounded-2xl border border-rose-200/80 dark:border-rose-800/50 bg-rose-100/85 dark:bg-rose-950/30 backdrop-blur-md text-left space-y-2 hover:shadow-lg hover:shadow-rose-500/[0.05] hover:border-rose-500/50 dark:hover:border-rose-500/40 transition-all duration-300">
+              <span className="text-[10px] font-black text-rose-650 dark:text-rose-400 uppercase tracking-widest">03 / EMERGENCY ALERTS</span>
               <h4 className="text-sm font-black text-slate-900 dark:text-white">Twilio Alerts</h4>
-              <p className="text-[11px] text-slate-550 dark:text-slate-400 leading-normal font-display">Broadcast urgent announcements, upcoming assemblies, and quorum alerts via SMS.</p>
+              <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-normal font-display">Broadcast urgent announcements, upcoming assemblies, and quorum alerts via SMS.</p>
             </div>
             {/* SMTP Relay */}
-            <div className="p-6 rounded-2xl border border-slate-200/80 dark:border-white/[0.07] bg-white/40 dark:bg-white/[0.02] backdrop-blur-md text-left space-y-2 hover:shadow-lg hover:border-indigo-500/20 transition-all duration-300">
-              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">04 / LEGAL NOTICE</span>
+            <div className="p-6 rounded-2xl border border-blue-200/80 dark:border-blue-800/50 bg-blue-100/85 dark:bg-blue-950/30 backdrop-blur-md text-left space-y-2 hover:shadow-lg hover:shadow-blue-500/[0.05] hover:border-blue-500/50 dark:hover:border-blue-500/40 transition-all duration-300">
+              <span className="text-[10px] font-black text-blue-650 dark:text-blue-400 uppercase tracking-widest">04 / LEGAL NOTICE</span>
               <h4 className="text-sm font-black text-slate-900 dark:text-white">SMTP Email Relay</h4>
-              <p className="text-[11px] text-slate-550 dark:text-slate-400 leading-normal font-display">Deliver official convocations and resolution logs with delivery verification tracking.</p>
+              <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-normal font-display">Deliver official convocations and resolution logs with delivery verification tracking.</p>
             </div>
           </div>
         </section>

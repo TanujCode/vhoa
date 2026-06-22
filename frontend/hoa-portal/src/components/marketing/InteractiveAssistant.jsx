@@ -1,13 +1,83 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Send, User, Bot, Sparkles, MessageSquare, X, RotateCcw } from 'lucide-react';
 
+// Helper for fetching with a timeout
+const fetchWithTimeout = async (url, options = {}, timeout = 2500) => {
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeout);
+  try {
+    const response = await fetch(url, { ...options, signal: controller.signal });
+    clearTimeout(id);
+    return response;
+  } catch (error) {
+    clearTimeout(id);
+    throw error;
+  }
+};
+
+// Extractor to find core subject/topic from a question
+const extractTopic = (q) => {
+  let clean = q.replace(/[?.,\/#!$%\^&\*;:{}=\-_`~()]/g, "").trim().toLowerCase();
+  
+  const stripPrefixes = [
+    'who is the founder of', 'who is the creator of', 'who is the developer of', 'who is your creator', 'who is your developer',
+    'who developed', 'who created', 'who founded', 'who built', 'who made', 'who is', 'who was', 'who are',
+    'what is the meaning of', 'what is the capital of', 'what is the definition of', 'what is', 'what was', 'what are', 'what does', 'what do',
+    'where is', 'where was', 'where are',
+    'when was', 'when is', 'when did',
+    'why is', 'why does', 'why did',
+    'how to', 'how do i', 'how does', 'how to use', 'how can i',
+    'tell me about', 'explain to me', 'explain', 'tell me', 'about', 'information on', 'info on'
+  ];
+  
+  for (const prefix of stripPrefixes) {
+    if (clean.startsWith(prefix + ' ')) {
+      clean = clean.substring(prefix.length).trim();
+      break;
+    }
+  }
+  
+  const stopWords = ['the', 'a', 'an', 'of', 'to', 'in', 'on', 'at', 'with', 'for', 'about', 'by', 'from'];
+  let words = clean.split(/\s+/).filter(w => w.length > 0);
+  if (words.length > 0 && stopWords.includes(words[0])) {
+    words.shift();
+  }
+  
+  return words.join(' ');
+};
+
+// Hardcoded answers for quick, common general knowledge queries
+const localGeneralAnswers = {
+  'chatgpt': 'ChatGPT is a state-of-the-art artificial intelligence chatbot developed by **OpenAI** in 2022. It uses large language models to generate human-like text responses.',
+  'who developed chatgpt': 'ChatGPT was developed by **OpenAI**. NestBloq, on the other hand, was developed by **Crestcode Technology**.',
+  'who created chatgpt': 'ChatGPT was created by **OpenAI**. NestBloq, on the other hand, was developed by **Crestcode Technology**.',
+  'who made chatgpt': 'ChatGPT was made by **OpenAI**. NestBloq, on the other hand, was developed by **Crestcode Technology**.',
+  
+  'gemini': 'Gemini is a family of multimodal artificial intelligence models developed by **Google**, serving as the successor to LaMDA and PaLM 2.',
+  'who developed gemini': 'Gemini was developed by **Google**. NestBloq, on the other hand, was developed by **Crestcode Technology**.',
+  'who created gemini': 'Gemini was created by **Google**. NestBloq, on the other hand, was developed by **Crestcode Technology**.',
+  'who made gemini': 'Gemini was made by **Google**. NestBloq, on the other hand, was developed by **Crestcode Technology**.',
+  
+  'openai': 'OpenAI is an artificial intelligence research laboratory consisting of the non-profit OpenAI, Inc. and its for-profit subsidiary OpenAI, LLC. It is famous for creating ChatGPT and DALL-E.',
+  'who founded openai': 'OpenAI was founded by Sam Altman, Elon Musk, Ilya Sutskever, Greg Brockman, Wojciech Zaremba, and John Schulman in December 2015.',
+  
+  'google': 'Google is a multinational technology company focusing on artificial intelligence, search engine technology, online advertising, cloud computing, and computer software.',
+  'who founded google': 'Google was founded by Larry Page and Sergey Brin on September 4, 1998, while they were PhD students at Stanford University.',
+  'who created google': 'Google was founded by Larry Page and Sergey Brin in 1998.',
+  
+  'nestbloq': 'NestBloq is an all-in-one community management platform designed for HOAs, condos, apartments, and rental properties.',
+  'who developed nestbloq': 'NestBloq was developed by **Crestcode Technology** to serve as a comprehensive operating system for community and property management.',
+  'who founded nestbloq': 'NestBloq was founded and developed by **Crestcode Technology**.',
+  'who created nestbloq': 'NestBloq was created by **Crestcode Technology**.'
+};
+
 export default function InteractiveAssistant() {
   const [isOpen, setIsOpen] = useState(false);
   const [showWelcome, setShowWelcome] = useState(true);
   const [messages, setMessages] = useState([
     {
       sender: 'ai',
-      text: "Hello! 👋 I'm your NestBloq AI Assistant.\n\nAsk me anything — NestBloq plans, security, features, billing, or just have a conversation in Hindi or English!",
+      text: "Hello! 👋 I'm your NestBloq AI Assistant.\n\nAsk me anything about our plans, security, features, billing, or community management workflows!",
       time: 'Just now'
     }
   ]);
@@ -42,73 +112,80 @@ export default function InteractiveAssistant() {
   ];
 
   // ─── AI BRAIN: Intent-based response engine ──────────────────────────────
-  const generateResponse = (text) => {
+  const generateResponse = async (text) => {
     const q = text.toLowerCase().trim();
 
     // Word-boundary safe match: won't match 'hi' inside 'this' or 'hoa' inside 'shoal'
     const w = (...terms) => terms.some(term => {
       if (term.includes(' ')) return q.includes(term);
-      // Use lookbehind/lookahead to ensure whole-word match
       try {
         return new RegExp(`(?<![a-zA-Z0-9])${term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?![a-zA-Z0-9])`, 'i').test(q);
       } catch { return q.includes(term); }
     });
 
-    // Hinglish detection — only strong Hindi-exclusive tokens
-    const H = ['kya', 'hai', 'hain', 'kaise', 'kese', 'batao', 'bata', 'bhai',
-      'aap', 'tum', 'mujhe', 'kaun', 'kyun', 'kab', 'kahan', 'kitna', 'kitne',
-      'chahiye', 'nahi', 'nhi', 'yaar', 'yrr', 'matlab', 'toh', 'woh', 'mera',
-      'meri', 'apna', 'humara', 'kuch', 'bahut', 'bilkul', 'zaroor', 'hoga',
-      'milega', 'karega', 'paisa', 'paise', 'rupay', 'hoon', 'poochh', 'are',
-      'arre', 'sunao', 'bolo', 'chalo', 'shukriya', 'dhanyawad', 'theek', 'acha',
-      'accha', 'badhiya', 'samjha', 'jaanna'];
-    const hi = H.some(t => {
-      try {
-        return new RegExp(`(?<![a-zA-Z0-9])${t}(?![a-zA-Z0-9])`, 'i').test(q);
-      } catch { return q.includes(t); }
-    });
+    // ── 0. HOW TO / OPERATIONAL PROCEDURES ──────────────────
+    if (q.includes('community') && w('create', 'add', 'make', 'new', 'register', 'setup', 'set up')) {
+      return `Here are the steps to **Create a Community** in NestBloq:\n\n1️⃣ **Register/Sign Up** — Click **'Start Free Trial'** on the homepage to create your admin account.\n2️⃣ **Add Community** — In your Admin Dashboard, click the **'Add Community'** or **'Create Community'** button.\n3️⃣ **Enter Details** — Fill in the community details (Name, Address, Zip, and Type: HOA, Condo, Apartment, or Rental).\n4️⃣ **Get Community Code** — A unique code (e.g., \`VIK071\`) will be generated. You can share this code with residents to invite them to join!`;
+    }
 
-    // ── 1. WHAT IS NESTBLOQ (most common question, check FIRST) ────────────
+    if (w('add member', 'invite member', 'add resident', 'invite resident', 'add homeowner', 'invite homeowner', 'add user', 'invite user') || 
+        ((q.includes('member') || q.includes('resident') || q.includes('homeowner') || q.includes('user')) && w('add', 'invite', 'register'))) {
+      return `Here is how to **Add/Invite Members** to your community:\n\n1️⃣ **Generate Invite Link** — Go to the **Members** page in your dashboard and click **'Invite Member'**.\n2️⃣ **Role Selection** — Select the role (Homeowner, Board Member, Auditor, or Manager).\n3️⃣ **Share Code/Link** — Copy the unique invitation link or your **Community Code** (e.g., \`VIK071\`) and send it to them via email, text, or WhatsApp.\n4️⃣ **Resident Join** — Residents register using your link, and they will automatically join your specific community workspace.`;
+    }
+
+    if (w('create service request', 'log service request', 'new service request', 'report issue', 'create work order', 'log complaint') ||
+        ((q.includes('service') || q.includes('request') || q.includes('maintenance')) && w('create', 'add', 'log', 'report'))) {
+      return `Here is how to **Create a Service Request** (Maintenance Ticket):\n\n• **For Residents**: Log in to your Resident Portal, go to **Service Requests**, click **'New Request'**, describe the issue, upload photos, and click submit.\n• **For Admins**: Go to the **Kanban Maintenance Board**, click **'Create Work Order'**, fill in the details, and assign a Vendor/Contractor directly.`;
+    }
+
+    if (w('book amenity', 'book facility', 'reserve amenity', 'reserve facility', 'book pool', 'book clubhouse', 'book gym') ||
+        ((q.includes('amenity') || q.includes('facility') || q.includes('pool') || q.includes('gym') || q.includes('clubhouse')) && w('book', 'reserve'))) {
+      return `Here is how to **Book an Amenity** (e.g. pool, clubhouse, gym):\n\n1️⃣ **Select Amenity** — Go to the **Amenity Booking** tab in the sidebar.\n2️⃣ **Choose Slot** — Open the live calendar, select your desired date and time slot.\n3️⃣ **Submit Request** — Click **'Book Slot'**. Depending on community rules, it will either be instantly confirmed or sent to the board/admin for approval.`;
+    }
+
+    if (w('log violation', 'report violation', 'create violation', 'add violation', 'file violation') ||
+        ((q.includes('violation') || q.includes('infraction')) && w('log', 'report', 'add', 'create', 'file'))) {
+      return `Here is how to **Log a Community Violation**:\n\n1️⃣ **Create Ticket** — Go to the **Violations** tab in the admin sidebar and click **'Log Violation'**.\n2️⃣ **Specify Rules** — Select the resident/unit, choose the violated rule category (parking, trash, lawn, etc.), write notes, and upload photos.\n3️⃣ **Send Warning** — Click **'Submit'**. The system automatically generates a warning notification letter/email with a **30-day dispute window** and late fee details.`;
+    }
+
+    if (w('pay dues', 'collect dues', 'collect fees', 'how to pay', 'payment method', 'pay invoice') ||
+        ((q.includes('dues') || q.includes('invoice') || q.includes('fee')) && w('pay', 'collect'))) {
+      return `Here is how to **Pay or Collect Dues**:\n\n• **For Residents**: Log in to the Resident Portal, link your bank securely via Plaid (or enter a credit card), and pay outstanding invoices under the **Payments** section.\n• **For Admins**: Set up automated billing schedules in **Finances & Dues** to automatically send monthly/annual invoices, track payments on your ledger, and send automated late reminders.`;
+    }
+
+    if (w('cast vote', 'how to vote', 'submit vote', 'cast ballot', 'start vote', 'create vote', 'create election') ||
+        (q.includes('vote') && w('cast', 'how to', 'submit', 'start', 'create', 'how do i'))) {
+      return `Here is how to use the **E-Voting System**:\n\n• **For Admins**: Go to the **E-Voting** section, click **'New Resolution/Election'**, specify options/candidates, upload docs, set quorum criteria, and launch.\n• **For Residents**: You will receive a secure email notification. Log in, click **'Cast Vote'**, select your choice. Your vote gets securely sealed with a cryptographic SHA-256 hash audit trail.`;
+    }
+
+    // ── 1. WHAT IS NESTBLOQ ────────────
     if (
-      (q.includes('nestbloq') && (w('kya', 'what', 'batao', 'bata', 'explain', 'kaun', 'about', 'hai', 'he'))) ||
-      w('what is nestbloq', 'nestbloq kya hai', 'nestbloq kya he', 'nestbloq kya h',
-        'nestbloq ke baare', 'about nestbloq', 'nestbloq kya karta', 'nestbloq platform',
-        'nestbloq kya hota', 'nestbloq software', 'nestbloq product', 'tell me about nestbloq',
-        'nestbloq kaise kaam', 'nestbloq app kya', 'nestbloq ka kaam')
+      (q.includes('nestbloq') && (w('what', 'explain', 'about', 'is', 'platform', 'software', 'app', 'product'))) ||
+      w('what is nestbloq', 'about nestbloq', 'nestbloq platform', 'nestbloq software', 'tell me about nestbloq', 'explain nestbloq')
     ) {
-      return hi
-        ? `**NestBloq** ek all-in-one **community management SaaS platform** hai! 🏘️\n\nIsme ye powerful features hain:\n\n🏠 **Dues Collection** — Automated billing, ACH & card payments\n🔧 **Maintenance Kanban** — Work orders & contractor dispatch\n🗳️ **E-Voting** — SHA-256 secure online resolutions & elections\n🤖 **Bylaws AI Copilot** — 24/7 resident query auto-answers\n📅 **Amenity Booking** — Pool, gym, clubhouse real-time booking\n📊 **Financial Ledger** — Auto accounting & reports\n\n✅ **HOAs, Apartments, Condos, Rentals** — sab ke liye built!\n\nKisi specific feature ke baare me jaanna hai?`
-        : `**NestBloq** is a modern all-in-one **community management platform**! 🏘️\n\nIt brings together everything a property community needs:\n\n🏠 **Dues Collection** — Automated billing via ACH & card\n🔧 **Maintenance Kanban** — Work orders & contractor dispatch\n🗳️ **E-Voting** — SHA-256 secure online voting & resolutions\n🤖 **Bylaws AI Copilot** — 24/7 automated resident Q&A\n📅 **Amenity Booking** — Real-time pool, gym & clubhouse booking\n📊 **Financial Ledger** — Auto accounting & reporting\n\n✅ Built for **HOAs, Apartments, Condos & Rental** communities.\n\nWant to know more about any feature?`;
+      return `**NestBloq** is a modern all-in-one **community management platform**! 🏘️\n\nIt brings together everything a property community needs:\n\n🏠 **Dues Collection** — Automated billing via ACH & card\n🔧 **Maintenance Kanban** — Work orders & contractor dispatch\n🗳️ **E-Voting** — SHA-256 secure online voting & resolutions\n🤖 **Bylaws AI Copilot** — 24/7 automated resident Q&A\n📅 **Amenity Booking** — Real-time pool, gym & clubhouse booking\n📊 **Financial Ledger** — Auto accounting & reporting\n\n✅ Built for **HOAs, Apartments, Condos & Rental** communities.\n\nWant to know more about any feature?`;
     }
 
     // ── 2. SUBSCRIPTION RENEWAL + CREDITS ──────────────────────────────────
     if (
-      w('subscription renew', 'renew honga', 'renew honge', 'renew hogi', 'credit renew',
-        'credits renew', 'credit bhi renew', 'credit milenge', 'subscription renewal',
-        'plan renew', 'auto renew', 'automatic renewal', 'renew karenge', 'renew ho jayega')
+      w('subscription renew', 'credit renew', 'credits renew', 'credit also renew', 'subscription renewal',
+        'plan renew', 'auto renew', 'automatic renewal')
     ) {
-      return hi
-        ? `Haan bilkul! 🎉\n\nJab aapka **subscription renew** hota hai:\n\n✅ Saare **credits automatically reset** ho jaate hain\n✅ Naya billing cycle start ho jaata hai\n✅ Invoice aapki email par aa jaati hai\n✅ Stripe se secure payment process hoti hai\n\n💡 Status check karo: **Dashboard → Settings → Billing**\n\nKoi aur sawaal?`
-        : `Yes, absolutely! 🎉\n\nWhen your **subscription renews**:\n\n✅ All **credits reset automatically** with the new cycle\n✅ Secure payment processed via Stripe\n✅ Invoice emailed to your registered address\n\nTrack everything at **Dashboard → Settings → Billing**.`;
+      return `Yes, absolutely! 🎉\n\nWhen your **subscription renews**:\n\n✅ All **credits reset automatically** with the new cycle\n✅ Secure payment processed via Stripe\n✅ Invoice emailed to your registered address\n\nTrack everything at **Dashboard → Settings → Billing**.`;
     }
 
     // ── 3. SUBSCRIPTION / BILLING (general) ────────────────────────────────
     if (w('subscription', 'billing', 'invoice', 'billing cycle') && !w('credit')) {
-      return hi
-        ? `NestBloq subscriptions **monthly ya yearly** renew hoti hain. 💳\n\nPlans:\n• **Basic**: $1.50/unit/month\n• **Pro**: $3.00/unit/month\n• **Enterprise**: Custom pricing\n\n✅ Har renewal par credits auto-reset hote hain\n✅ Stripe se 100% secure payment\n\nDetails: **Dashboard → Settings → Billing**`
-        : `NestBloq subscriptions renew **monthly or annually**. 💳\n\nPlans:\n• **Basic**: $1.50/unit/month\n• **Pro**: $3.00/unit/month\n• **Enterprise**: Custom pricing\n\n✅ Credits auto-refresh every renewal\n✅ Secure via Stripe\n\nManage at **Dashboard → Settings → Billing**.`;
+      return `NestBloq subscriptions renew **monthly or annually**. 💳\n\nPlans:\n• **Basic**: $1.50/unit/month\n• **Pro**: $3.00/unit/month\n• **Enterprise**: Custom pricing\n\nCredits auto-refresh with every billing cycle renewal.\n\nManage at **Dashboard → Settings → Billing**.`;
     }
 
     // ── 4. CREDITS ──────────────────────────────────────────────────────────
     if (w('credit', 'credits') && !w('credit card')) {
-      return hi
-        ? `NestBloq **credits** aapke plan ke usage ke liye hote hain — AI queries, SMS notifications, etc. 🔄\n\nSubscription renew hone par credits **automatically reset** ho jaate hain.\n\nAgar credits jaldi khatam ho rahe hain, toh **Dashboard se top-up** bhi kar sakte hain!`
-        : `NestBloq **credits** power your platform usage — AI queries, SMS alerts, etc. 🔄\n\nThey **automatically reset** with every subscription renewal.\n\nRunning low? Top up anytime from your **Dashboard**.`;
+      return `NestBloq **credits** power your platform usage — AI queries, SMS alerts, etc. 🔄\n\nThey **automatically reset** with every subscription renewal.\n\nRunning low? Top up anytime from your **Dashboard**.`;
     }
 
     // ── 5. PRICING / PLANS ──────────────────────────────────────────────────
-    if (w('plan', 'price', 'pricing', 'cost', 'package', 'how much', 'charges',
-        'kitna', 'per unit', 'annual plan', 'free trial', 'rupay', 'dollar', 'inr')) {
+    if (w('plan', 'price', 'pricing', 'cost', 'package', 'how much', 'charges', 'annual plan', 'free trial', 'rate', 'rates')) {
       return presetQuestions[0].a;
     }
 
@@ -125,41 +202,32 @@ export default function InteractiveAssistant() {
     }
 
     // ── 8. GET STARTED / DEMO ───────────────────────────────────────────────
-    if (w('get started', 'how to start', 'kaise shuru', 'book demo', 'sign up', 'signup',
-        'onboard', 'create account', 'free account', 'register', 'start free',
-        'shuru kaise', 'kaise use kare', 'trial shuru')) {
+    if (w('get started', 'how to start', 'book demo', 'sign up', 'signup',
+        'onboard', 'create account', 'free account', 'register', 'start free', 'trial start')) {
       return presetQuestions[3].a;
     }
 
     // ── 9. MAINTENANCE ──────────────────────────────────────────────────────
     if (w('maintenance', 'repair', 'leak', 'plumbing', 'work order', 'kanban',
         'contractor', 'dispatch', 'complain', 'complaint', 'breakdown')) {
-      return hi
-        ? `NestBloq me powerful **Kanban Maintenance Board** hai! 🔧\n\n• Residents complaints photo ke saath log karte hain\n• Managers directly contractors dispatch karte hain\n• Automatic SMS updates milti hain\n• Real-time status tracking hoti hai\n\nSab kuch ek hi dashboard me — zero manual coordination!`
-        : `NestBloq has a smart **Kanban Maintenance Board**! 🔧\n\n• Residents submit issues with photos & notes\n• Managers dispatch contractors in one click\n• Residents get automatic SMS status updates\n• Real-time progress tracking\n\nAll from one dashboard — zero manual coordination!`;
+      return `NestBloq has a smart **Kanban Maintenance Board**! 🔧\n\n• Residents submit issues with photos & notes\n• Managers dispatch contractors in one click\n• Residents get automatic SMS status updates\n• Real-time progress tracking\n\nAll from one dashboard — zero manual coordination!`;
     }
 
     // ── 10. AMENITIES ───────────────────────────────────────────────────────
     if (w('amenity', 'amenities', 'pool', 'gym', 'clubhouse', 'book amenity',
         'facility booking', 'reserve facility', 'court booking', 'hall booking')) {
-      return hi
-        ? `NestBloq me residents **real-time amenities book** kar sakte hain! 🏊\n\n• Pool, gym, clubhouse, banquet hall — sab online\n• Double-booking automatically blocked hoti hai\n• Instant confirmation notification milti hai\n• Live availability calendar dikhta hai`
-        : `NestBloq lets residents **book amenities in real-time**! 🏊\n\n• Pool, gym, clubhouse, banquet halls — all online\n• Automatic double-booking prevention\n• Instant booking confirmation\n• Live availability calendar`;
+      return `NestBloq lets residents **book amenities in real-time**! 🏊\n\n• Pool, gym, clubhouse, banquet halls — all online\n• Automatic double-booking prevention\n• Instant booking confirmation\n• Live availability calendar`;
     }
 
     // ── 11. VOTING / MEETINGS ───────────────────────────────────────────────
     if (w('vote', 'voting', 'election', 'meeting', 'assembly', 'quorum', 'resolution', 'ballot')) {
-      return hi
-        ? `NestBloq ka **E-Voting system** poori tarah secure hai! 🗳️\n\n• Har vote **SHA-256 cryptographic audit trail** se protected\n• Online general assemblies easily organize hoti hain\n• Automatic quorum tracking\n• Meeting minutes auto-generate hote hain\n• Legal-grade tamper-proof records`
-        : `NestBloq's **E-Voting system** is secure & fully auditable! 🗳️\n\n• Every vote has a **SHA-256 cryptographic audit trail**\n• Run online general assemblies easily\n• Automatic quorum tracking\n• Auto-generated meeting minutes\n• Legal-grade tamper-proof records`;
+      return `NestBloq's **E-Voting system** is secure & fully auditable! 🗳️\n\n• Every vote has a **SHA-256 cryptographic audit trail**\n• Run online general assemblies easily\n• Automatic quorum tracking\n• Auto-generated meeting minutes\n• Legal-grade tamper-proof records`;
     }
 
     // ── 12. DUES / PAYMENTS ─────────────────────────────────────────────────
     if (w('dues', 'payment', 'collect payment', 'ach payment', 'plaid', 'outstanding balance',
         'ledger', 'pending payment', 'rent collection', 'hoa fee', 'maintenance fee')) {
-      return hi
-        ? `NestBloq dues collection **poori tarah automatic** hai! 💳\n\n• Residents bank account Plaid se securely connect karte hain\n• Credit card ya ACH — dono options available hain\n• Outstanding balances auto-track hoti hain\n• Late payment reminders automatically jaate hain\n• Digital ledger entries auto-generate hoti hain`
-        : `NestBloq makes dues collection **100% automated**! 💳\n\n• Residents securely connect bank via **Plaid**\n• Pay by credit card or ACH bank transfer\n• Outstanding balances auto-tracked\n• Automatic late payment reminders\n• Digital ledger entries generated instantly`;
+      return `NestBloq makes dues collection **100% automated**! 💳\n\n• Residents securely connect bank via **Plaid**\n• Pay by credit card or ACH bank transfer\n• Outstanding balances auto-tracked\n• Automatic late payment reminders\n• Digital ledger entries generated instantly`;
     }
 
     // ── 13. INTEGRATIONS ────────────────────────────────────────────────────
@@ -170,8 +238,7 @@ export default function InteractiveAssistant() {
 
     // ── 14. PROPERTY TYPES ──────────────────────────────────────────────────
     if (
-      (w('hoa') && !q.includes('nestbloq kya')) ||
-      w('homeowner association', 'apartment complex', 'condominium', 'condo association',
+      w('hoa', 'homeowner association', 'apartment complex', 'condominium', 'condo association',
         'rental property', 'community type', 'property type', 'residential community')
     ) {
       return `NestBloq is purpose-built for **all community types**! 🏘️\n\n• **HOA** — Homeowner Association management\n• **Apartments** — Multi-unit residential buildings\n• **Condos** — Condominium association tools\n• **Rentals** — Rental portfolio management\n\nEach module is tailored to the workflows of that community type!`;
@@ -179,23 +246,18 @@ export default function InteractiveAssistant() {
 
     // ── 15. IDENTITY ────────────────────────────────────────────────────────
     if (
-      w('who are you', 'what are you', 'your name', 'tum kaun', 'kaun ho', 'kon ho', 'naam kya') ||
-      (w('naam') && q.split(' ').length <= 5)
+      w('who are you', 'what are you', 'your name', 'yourself') ||
+      (w('name') && q.split(' ').length <= 5)
     ) {
-      return hi
-        ? `Main hoon **NestBloq AI Assistant** — aapka smart community guide! 🤖✨\n\nMujhse poochh sakte ho:\n• NestBloq plans & pricing\n• Security & data protection\n• Bylaws AI, e-voting, maintenance\n• Billing, credits & subscriptions\n• Ya koi bhi sawaal!\n\nKya jaanna chahte ho? 😊`
-        : `I'm the **NestBloq AI Assistant** — your intelligent community management guide! 🤖✨\n\nI can help with:\n• NestBloq plans & pricing\n• Security & compliance\n• Bylaws AI, e-voting, maintenance\n• Billing, credits & subscriptions\n• General questions too!\n\nWhat would you like to know? 😊`;
+      return `I'm the **NestBloq AI Assistant** — your intelligent community management guide! 🤖✨\n\nI can help with:\n• NestBloq plans & pricing\n• Security & compliance\n• Bylaws AI, e-voting, maintenance\n• Billing, credits & subscriptions\n• General questions too!\n\nWhat would you like to know? 😊`;
     }
 
     // ── 16. HOW ARE YOU ─────────────────────────────────────────────────────
     if (
-      w('how are you', "how's it going", 'how is it going', 'kya hal', 'kya haal',
-        'kese ho', 'kaise ho', 'kaisa hai', 'sab theek', 'kya chal raha') ||
-      q === 'sup' || q === 'wassup' || q === 'kya hal' || q === 'kese ho'
+      w('how are you', "how's it going", 'how is it going', 'doing') ||
+      q === 'sup' || q === 'wassup'
     ) {
-      return hi
-        ? `Main bilkul badhiya hoon, shukriya bhai! 😊 Aap sunao kaise hain?\n\nNestBloq ke plans, features, ya kuch bhi poochhna ho — main yahan hoon! 🚀`
-        : `I'm doing great, thank you for asking! 😊 How about you?\n\nFeel free to ask me anything — about NestBloq or just for a chat!`;
+      return `I'm doing great, thank you for asking! 😊 How about you?\n\nFeel free to ask me anything — about NestBloq or just for a chat!`;
     }
 
     // ── 17. GREETINGS (ONLY when message IS the greeting — not embedded) ────
@@ -205,51 +267,41 @@ export default function InteractiveAssistant() {
       q === g || q.startsWith(g + ' ') || q.startsWith(g + ',') || q.startsWith(g + '!')
     );
     if (isJustGreeting) {
-      return hi
-        ? `Namaste! 🙏 Main NestBloq AI Assistant hoon.\n\nAap mujhse kuch bhi poochh sakte hain — plans, features, security, billing, ya bas aise baat karo! 😊`
-        : `Hello there! 👋 I'm your NestBloq AI Assistant.\n\nAsk me anything — NestBloq plans, features, security, billing, or just have a chat! What's on your mind?`;
+      return `Hello there! 👋 I'm your NestBloq AI Assistant.\n\nAsk me anything — NestBloq plans, features, security, billing, or just have a chat! What's on your mind?`;
     }
 
     // ── 18. CAPABILITIES ────────────────────────────────────────────────────
-    if (w('what can you do', 'help me', 'kya kar sakte', 'capabilities', 'kaise help', 'madad karo')) {
-      return hi
-        ? `Main aapki in baaton me madad kar sakta hoon! 🚀\n\n🏷️ **NestBloq Plans & Pricing**\n🔐 **Security & Privacy**\n🤖 **Bylaws AI Copilot**\n💳 **Billing & Subscription Renewal**\n🔧 **Maintenance & Work Orders**\n📅 **Amenity Booking**\n🗳️ **E-Voting & Meetings**\n💬 **General baat-cheet bhi!**\n\nKya jaanna chahte ho?`
-        : `Here's what I can help with! 🚀\n\n🏷️ **NestBloq Plans & Pricing**\n🔐 **Security & Privacy**\n🤖 **Bylaws AI Copilot**\n💳 **Billing & Credits**\n🔧 **Maintenance & Work Orders**\n📅 **Amenity Booking**\n🗳️ **E-Voting & Meetings**\n💬 **General chat too!**\n\nWhat would you like to explore?`;
+    if (w('what can you do', 'help me', 'capabilities', 'features', 'help')) {
+      return `Here's what I can help with! 🚀\n\n🏷️ **NestBloq Plans & Pricing**\n🔐 **Security & Privacy**\n🤖 **Bylaws AI Copilot**\n💳 **Billing & Credits**\n🔧 **Maintenance & Work Orders**\n📅 **Amenity Booking**\n🗳️ **E-Voting & Meetings**\n💬 **General chat too!**\n\nWhat would you like to explore?`;
     }
 
     // ── 19. THANKS ──────────────────────────────────────────────────────────
-    if (w('thank', 'thanks', 'shukriya', 'dhanyawad', 'tysm', 'helpful', 'great answer', 'bahut accha')) {
-      return hi
-        ? `Arre koi baat nahi yaar! 😊 Khushi hui madad karke!\n\nNestBloq ke baare me aur kuch jaanna ho toh zaroor batao! 🚀`
-        : `You're very welcome! 😊 Happy to help!\n\nFeel free to ask anything else about NestBloq anytime!`;
+    if (w('thank', 'thanks', 'tysm', 'helpful', 'great answer', 'good job')) {
+      return `You're very welcome! 😊 Happy to help!\n\nFeel free to ask anything else about NestBloq anytime!`;
     }
 
     // ── 20. JOKES ───────────────────────────────────────────────────────────
-    if (w('joke', 'funny', 'laugh', 'hasao', 'comedy', 'mazak')) {
+    if (w('joke', 'funny', 'laugh', 'comedy', 'humor')) {
       const jokes = [
         `Why did the property manager carry a ladder? 🪜\nBecause the **rent was going up!** 😄\n\nWith NestBloq, at least the management part is stress-free!`,
         `Why do HOA managers love NestBloq?\nBecause it finally **fixes the "no response" bug** in community life! 😄`,
-        `Resident: "Maintenance request se 3 din ho gaye, koi response nahi!"\nNestBloq user: "Mera toh 2 ghante me ho gaya!" 😂`
+        `Resident: "It has been 3 days since my maintenance request, no response!"\nNestBloq user: "Ours gets resolved within 2 hours!" 😂`
       ];
       return jokes[Math.floor(Math.random() * jokes.length)];
     }
 
     // ── 21. TIME / DATE ─────────────────────────────────────────────────────
-    if (w('current time', 'what time', 'abhi time', 'what day', 'today date', 'aaj kya') ||
-        q === 'time' || q === 'date' || q === 'aaj' || q === 'what is the time') {
+    if (w('current time', 'what time', 'what day', 'today date') ||
+        q === 'time' || q === 'date') {
       const now = new Date();
-      const timeStr = now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
-      const dateStr = now.toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-      return hi
-        ? `Abhi ka time: **${timeStr}** ⏰\nAaj ki date: **${dateStr}**\n\nAur NestBloq ke baare me kuch poochhna ho toh main hazir hoon! 😊`
-        : `Current time: **${timeStr}** ⏰\nToday: **${dateStr}**\n\nAnything else I can help you with?`;
+      const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+      const dateStr = now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+      return `Current time: **${timeStr}** ⏰\nToday: **${dateStr}**\n\nAnything else I can help you with?`;
     }
 
     // ── 22. WEATHER ─────────────────────────────────────────────────────────
-    if (w('weather', 'mausam', 'temperature', 'barish', 'garmi', 'sardi', 'sunny', 'rain today')) {
-      return hi
-        ? `Yaar, mujhe real-time weather access nahi hai (main internet se connected nahi hoon)! ☀️\n\nGoogle ya weather.com par check karo!\n\nHaan, NestBloq me outdoor amenity booking hai — pool & park real-time book kar sakte ho! 🌤️`
-        : `I don't have real-time weather data (I'm not connected to the internet). Check Google or weather.com! ☀️\n\nFun fact: NestBloq's amenity booking lets residents book outdoor spaces like pools & parks in real-time!`;
+    if (w('weather', 'temperature', 'rain', 'sunny')) {
+      return `I don't have real-time weather data (I'm not connected to the internet). Check Google or weather.com! ☀️\n\nFun fact: NestBloq's amenity booking lets residents book outdoor spaces like pools & parks in real-time!`;
     }
 
     // ── 23. MATH ────────────────────────────────────────────────────────────
@@ -258,9 +310,7 @@ export default function InteractiveAssistant() {
         const sanitized = q.replace(/[^0-9+\-*/().\s]/g, '').trim();
         const result = Function(`"use strict"; return (${sanitized})`)();
         if (!isNaN(result) && isFinite(result)) {
-          return hi
-            ? `**${text.trim()}** = **${result}** 🧮\n\nBy the way — NestBloq ka ROI Calculator bhi hai, dekho kitna time & paisa bachega! 💰`
-            : `**${text.trim()}** = **${result}** 🧮\n\nSpeaking of numbers — NestBloq's ROI Calculator shows how much time & money your community saves!`;
+          return `**${text.trim()}** = **${result}** 🧮\n\nSpeaking of numbers — NestBloq's ROI Calculator shows how much time & money your community saves!`;
         }
       } catch { /* fall through */ }
     }
@@ -273,48 +323,150 @@ export default function InteractiveAssistant() {
 
     // ── 25. SUPPORT / CONTACT ───────────────────────────────────────────────
     if (w('support', 'contact', 'email support', 'phone support', 'help center',
-        'customer service', 'madad chahiye', 'helpdesk', 'customer support')) {
-      return hi
-        ? `NestBloq Support **24/7 available** hai! 📞\n\n• **Email**: support@nestbloq.com\n• **Live Chat**: Dashboard me available\n• **Phone**: Enterprise customers ke liye dedicated\n• **Docs**: docs.nestbloq.com\n\nKoi bhi problem — hum hamesha yahan hain!`
-        : `NestBloq support is **available 24/7**! 📞\n\n• **Email**: support@nestbloq.com\n• **Live Chat**: In-dashboard support\n• **Phone**: Dedicated for Enterprise customers\n• **Docs**: docs.nestbloq.com\n\nWe're always here to help!`;
+        'customer service', 'helpdesk', 'customer support')) {
+      return `NestBloq support is **available 24/7**! 📞\n\n• **Email**: support@nestbloq.com\n• **Live Chat**: In-dashboard support\n• **Phone**: Dedicated for Enterprise customers\n• **Docs**: docs.nestbloq.com\n\nWe're always here to help!`;
     }
 
     // ── 26. ROI / SAVINGS ───────────────────────────────────────────────────
-    if (w('roi', 'savings', 'save money', 'save time', 'worth it', 'kitna bachega', 'fayda', 'benefit')) {
-      return hi
-        ? `NestBloq se communities average me:\n\n💰 **80% less admin time**\n💰 **$500+/month saved** vs manual processes\n💰 **Near-zero late dues** with auto-reminders\n\n**ROI Calculator** check karo — khud calculate karo kitna bachega! 📊`
-        : `Communities on NestBloq typically see:\n\n💰 **80% reduction** in admin time\n💰 **$500+/month saved** vs manual methods\n💰 **Near-zero late dues** with auto-reminders\n\nTry our **ROI Calculator** to see your projected savings! 📊`;
+    if (w('roi', 'savings', 'save money', 'save time', 'worth it', 'benefit')) {
+      return `Communities on NestBloq typically see:\n\n💰 **80% reduction** in admin time\n💰 **$500+/month saved** vs manual methods\n💰 **Near-zero late dues** with auto-reminders\n\nTry our **ROI Calculator** to see your projected savings! 📊`;
     }
 
     // ── 27. TECHNOLOGY ──────────────────────────────────────────────────────
     if (w('cloud', 'saas', 'mobile app', 'android', 'ios app', 'web app', 'browser support',
         'offline mode', 'technology')) {
-      return hi
-        ? `NestBloq ek modern **cloud-based SaaS platform** hai! 📱💻\n\n• Kisi bhi web browser me kaam karta hai\n• **Android & iOS** native apps available\n• Real-time sync across all devices\n• 99.9% uptime guarantee`
-        : `NestBloq is a modern **cloud-based SaaS platform**! 📱💻\n\n• Works in any web browser\n• **Android & iOS** native apps\n• Real-time data sync\n• 99.9% uptime guarantee`;
+      return `NestBloq is a modern **cloud-based SaaS platform**! 📱💻\n\n• Works in any web browser\n• **Android & iOS** native apps\n• Real-time data sync\n• 99.9% uptime guarantee`;
     }
 
     // ── 28. DEMO / TRIAL ────────────────────────────────────────────────────
     if (w('demo', 'free trial', 'try nestbloq', 'test nestbloq', 'trial period', 'evaluation')) {
-      return hi
-        ? `NestBloq ka **14-day free trial** available hai — koi credit card nahi chahiye! 🎉\n\nYa aap ek **live demo** book kar sakte ho jisme hamari team aapko personally walkthrough degi.\n\n👉 Top navbar me **"Get Started"** ya **"Book a Demo"** click karo!`
-        : `NestBloq offers a **14-day free trial** — no credit card required! 🎉\n\nOr book a **live demo** where our team personally walks you through the platform.\n\n👉 Click **"Get Started"** or **"Book a Demo"** in the top navbar!`;
+      return `NestBloq offers a **14-day free trial** — no credit card required! 🎉\n\nOr book a **live demo** where our team personally walks you through the platform.\n\n👉 Click **"Get Started"** or **"Book a Demo"** in the top navbar!`;
     }
 
-    // ── SMART FALLBACK — always helpful, never dismissive ───────────────────
-    const hiFallback = [
-      `"${text}" — interesting sawaal! 😊\n\nMain NestBloq ke baare me expert hoon. Ye topics pe poochho:\n• 💳 Plans & Pricing\n• 🔐 Security\n• 🤖 Bylaws AI features\n• 💰 Billing & Credits renewal\n• 🔧 Maintenance & Amenities\n\nKya specifically jaanna hai?`,
-      `Aapka sawaal samjha! Main NestBloq ka AI Guide hoon. 🏘️\n\nNestBloq platform ke kisi bhi feature ke baare me poochho — pricing, security, demo, ya features — poori detail dunga!\n\nKya jaanna chahte ho?`,
-      `"${text}" ke baare me! 😊 Main NestBloq me specialist hoon — platform features, plans, security, billing — sab poochho, poora jawab dunga! Kya specific chahiye?`
+    // ── LOCAL GENERAL KNOWLEDGE ANSWERS ──────────────────────
+    const cleanQuery = q.replace(/[?.,\/#!$%\^&\*;:{}=\-_`~()]/g, "").trim().toLowerCase();
+    if (localGeneralAnswers[cleanQuery]) {
+      return localGeneralAnswers[cleanQuery];
+    }
+
+    // ── SMART KNOWLEDGE BASE FALLBACK SEARCH ──────────────────
+    const knowledgeBase = [
+      {
+        keywords: ['user roles', 'user permissions', 'role isolation', 'rbac', 'access control', 'board member role', 'property manager role', 'resident role', 'homeowner role', 'board president role'],
+        answer: `NestBloq features comprehensive **Role-Based Access Control (RBAC)** to isolate data and tasks:\n\n• **Super Admin / Property Manager** — Full control over community settings, billing, dues collection, violations, and vendor management.\n• **Board Members (President, Secretary)** — Access to financial ledgers, voting audits, and general community oversight.\n• **Homeowners / Residents** — Access to their personal portal to pay dues, book amenities, log maintenance requests, and cast encrypted votes.\n• **Vendors / Contractors** — Access to specific work orders assigned to them to update status, track time, and submit completion notes.`
+      },
+      {
+        keywords: ['pricing plan', 'pricing plans', 'nestbloq pricing', 'nestbloq cost', 'nestbloq price', 'nestbloq plans', 'subscription cost', 'subscription plan', 'basic plan', 'pro plan', 'enterprise plan'],
+        answer: `NestBloq offers three simple subscription tiers:\n\n• **Basic Plan** ($1.50/unit/month) — Core financial tools, digital ledger, rosters, and basic member invites.\n• **Pro Plan** ($3.00/unit/month) — Includes Bylaws AI Copilot, Kanban maintenance desk, SMS alerts, QuickBooks integration, and SHA-256 secure e-voting.\n• **Enterprise Plan** (Custom Pricing) — Dedicated server, custom REST API, custom integrations, and priority 24/7 phone support.\n\n🎁 **Free Trial**: Every account starts with a 14-day free trial (no credit card required!). Har billing cycle renew hone par credits automatically reset ho jaate hain.`
+      },
+      {
+        keywords: ['pay dues', 'collect dues', 'hoa dues', 'hoa fees', 'nestbloq payment', 'stripe payment', 'plaid integration', 'ach transfer', 'automated dues', 'payment reminders'],
+        answer: `NestBloq automates **Dues & Payments** fully:\n\n• **ACH & Credit Cards** — Residents pay directly online through Stripe and Plaid integrations (no card details are stored on our servers).\n• **Autopay & Reminders** — Residents can enable auto-payments. Admins can schedule automatic email/SMS reminders for past-due balances.\n• **Accounting Ledger** — Payments automatically reconcile and post to the digital ledger, making audit reports instant.`
+      },
+      {
+        keywords: ['maintenance request', 'maintenance ticket', 'work order', 'workorders', 'kanban board', 'kanban maintenance', 'report leak', 'dispatch contractor', 'dispatch vendor', 'property repair'],
+        answer: `Our **Kanban Maintenance Desk** coordinates repairs from start to finish:\n\n1️⃣ **Resident Logs Issue** — Residents submit requests via their portal with photos and descriptions.\n2️⃣ **Admin Dispatches** — Property managers assign work orders to contractors in one click.\n3️⃣ **Vendor Updates** — Contractors receive details and mark items as 'In Progress' or 'Completed' via temporary links.\n4️⃣ **Auto Alerts** — The system automatically alerts the resident upon resolution via SMS/email.`
+      },
+      {
+        keywords: ['e-voting', 'cast vote', 'nestbloq voting', 'tamper-proof voting', 'voting audit', 'quorum tracking', 'community election', 'community voting', 'board resolution', 'board resolutions', 'sha-256 voting', 'online voting'],
+        answer: `NestBloq provides a secure, legal-grade **E-Voting System**:\n\n• **Quorum Tracking** — Automatically computes quorum requirements based on community bylaws.\n• **SHA-256 Encryption** — Every vote is cryptographically sealed and logged to guarantee a tamper-proof, auditable trail.\n• **Online Assemblies** — Launch elections and board resolutions online. Residents receive instant notification to cast their votes safely.`
+      },
+      {
+        keywords: ['amenity booking', 'amenity bookings', 'reserve amenity', 'book pool', 'book gym', 'book clubhouse', 'book tennis court', 'book facility', 'amenity scheduler', 'hoa pool', 'hoa gym'],
+        answer: `The **Amenity Scheduler** makes facility bookings simple:\n\n• **Live Calendar** — Residents view real-time availability for pools, clubhouses, tennis courts, and gym slots.\n• **Double-Booking Protection** — Auto-locks slots to prevent race conditions.\n• **Custom Rules** — Admins set time limits, guest policies, and automated approval requirements per amenity.`
+      },
+      {
+        keywords: ['bylaws', 'bylaw', 'bylaws ai', 'copilot ai', 'ai copilot', 'nestbloq bylaws', 'rulebook ai', 'rules ai', 'bylaws assistant'],
+        answer: `The **Bylaws AI Copilot** is a 24/7 intelligent resident assistant:\n\n• **Automatic Answers** — Reads your community's official rulebooks, bylaws, and covenants to answer resident questions instantly (e.g., 'What are the gym hours?' or 'Are pitbulls allowed?').\n• **Reduced Admin Load** — Deflects up to 80% of repetitive daily email/phone queries, freeing up board members and managers.`
+      },
+      {
+        keywords: ['nestbloq integration', 'nestbloq integrations', 'integrate with', 'quickbooks sync', 'twilio sms', 'zapier integration', 'nestbloq api', 'api integration'],
+        answer: `NestBloq connects with your existing tech stack:\n\n• **Stripe & Plaid** — Automated online payments.\n• **Twilio** — Real-time SMS and WhatsApp alerts.\n• **QuickBooks** — Sync dues ledger with your bookkeeping.\n• **Zapier & Open REST API** — Connects NestBloq to over 5,000+ third-party tools and custom business systems.`
+      },
+      {
+        keywords: ['financial report', 'financial reports', 'generate reports', 'nestbloq ledger', 'download ledger', 'export reports', 'balance sheet report', 'audit report'],
+        answer: `NestBloq makes community audits quick and easy with **One-Click Exports**:\n\n• **Financial Statements** — Export income statements, balance sheets, and transaction history to PDF/Excel.\n• **Outstanding Balances** — Generate reports on unpaid dues, late fees, and active payment schedules.\n• **Activity Logs** — Export historical maintenance dispatches, audit trails, and member records.`
+      },
+      {
+        keywords: ['violation', 'violations', 'bylaw infraction', 'community compliance', 'dispute violation', 'parking violation', 'trash violation', 'hoa violation', 'hoa warning', 'hoa fine', 'hoa compliance'],
+        answer: `NestBloq simplifies **Violation Management & Compliance**:\n\n• **Logging** — Admins log violations (e.g. trash cans left out, parking rules) with photo evidence.\n• **Automatic Warnings** — The system automatically emails warning notices with fine schedules.\n• **Dispute Portal** — Gives residents a fair, structured 30-day window to file disputes or clarify issues directly with the board.`
+      },
+      {
+        keywords: ['contact nestbloq', 'nestbloq support', 'nestbloq email', 'nestbloq phone', 'nestbloq contact', 'contact support', 'customer support', 'customer service', 'helpdesk', 'support team', 'nestbloq help', 'email support', 'phone support'],
+        answer: `Our support team is here for you 24/7:\n\n• **Email** — support@nestbloq.com\n• **In-App Chat** — Available directly inside your dashboard.\n• **Phone Support** — Priority phone lines are dedicated to Enterprise tier subscribers.\n• **Documentation** — Access articles and setup guides at docs.nestbloq.com.`
+      },
+      {
+        keywords: ['free trial', 'book demo', 'nestbloq demo', 'nestbloq trial', 'how to sign up', 'how to register', 'start trial', 'try nestbloq', 'sign up for nestbloq', 'nestbloq signup'],
+        answer: `Getting started is entirely risk-free:\n\n• **14-Day Free Trial** — Full access to all features (no credit card required).\n• **Demo Setup** — Try out the platform instantly with pre-populated dummy communities and properties.\n• **Live Walkthrough** — Book a video demo with one of our onboarding specialists at contact@nestbloq.com.`
+      },
+      {
+        keywords: ['who developed you', 'who built you', 'who created you', 'who is your developer', 'who founded you', 'who made you', 'who developed nestbloq', 'who founded nestbloq', 'who created nestbloq', 'crestcode', 'crestcode technology', 'tanuj', 'tongse'],
+        answer: `NestBloq was founded and developed by **Crestcode Technology** to serve as a comprehensive operating system for community and property management. It was built to eliminate manual administrative friction, automate dues payments, track compliance, and establish direct channels of communication between property managers, board members, residents, and vendors.`
+      },
+      {
+        keywords: ['nestbloq tech', 'nestbloq technology', 'nestbloq stack', 'tech stack', 'technology stack', 'what is nestbloq built with', 'what stack does nestbloq use', 'nestbloq codebase'],
+        answer: `NestBloq leverages a state-of-the-art web and mobile technology stack:\n\n• **Frontend**: React.js structured with responsive Tailwind CSS & Vanilla CSS designs.\n• **Backend**: Python (FastAPI framework) engineered for security, high scalability, and fast execution.\n• **Database**: PostgreSQL with isolated schema containers for individual community security.\n• **Integrations**: Stripe API for online cards, Plaid for ACH linkups, Twilio for SMS alerts, and QuickBooks Sync.`
+      },
+      {
+        keywords: ['where is nestbloq', 'nestbloq location', 'nestbloq office', 'nestbloq hq', 'nestbloq headquarters', 'nestbloq address', 'where are you located', 'where are you based', 'where is your office', 'where is your hq', 'where is your headquarters', 'headquarters', 'office address'],
+        answer: `NestBloq is a cloud-based SaaS platform operated globally, with core product development spearheaded by **Crestcode Technology**. For inquiries or custom deployment options, you can connect with us directly at **contact@nestbloq.com**.`
+      }
     ];
-    const enFallback = [
-      `"${text}" — great question! I'm NestBloq's AI guide. Ask me about:\n\n• 💳 Plans & Pricing\n• 🔐 Security & compliance\n• 🤖 Bylaws AI features\n• 💰 Billing & credits\n• 🔧 Maintenance & amenities\n\nWhat would you like to know? 😊`,
-      `Interesting! I specialize in NestBloq — ask me about pricing, security, AI features, e-voting, amenity booking, or getting started. I'll give you full details! 🏘️`,
-      `I'm NestBloq's expert assistant! Ask about any platform feature and I'll walk you through it in detail. What would you like to explore? 🚀`
-    ];
-    return hi
-      ? hiFallback[Math.floor(Math.random() * hiFallback.length)]
-      : enFallback[Math.floor(Math.random() * enFallback.length)];
+
+    let bestMatch = null;
+    let maxScore = 0;
+    
+    for (const item of knowledgeBase) {
+      let score = 0;
+      for (const kw of item.keywords) {
+        // Word-boundary check for each keyword
+        const matched = kw.includes(' ')
+          ? q.includes(kw)
+          : new RegExp(`(?<![a-zA-Z0-9])${kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?![a-zA-Z0-9])`, 'i').test(q);
+        
+        if (matched) {
+          score += kw.includes(' ') ? 3 : 1;
+        }
+      }
+      if (score > maxScore) {
+        maxScore = score;
+        bestMatch = item;
+      }
+    }
+    
+    if (bestMatch && maxScore > 0) {
+      return bestMatch.answer;
+    }
+
+    // ── ASYNC WIKIPEDIA PAGE SUMMARY LOOKUP ──────────────────
+    const topic = extractTopic(q);
+    if (topic && topic.length > 2) {
+      try {
+        const response = await fetchWithTimeout(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(topic.replace(/\s+/g, '_'))}`);
+        if (response.ok) {
+          const data = await response.json();
+          if (data.extract) {
+            return `**${data.title}**\n\n${data.extract}\n\n*Source: Wikipedia*\n\n---\n\nHope that helps! As your **NestBloq AI Assistant**, I can also help you with NestBloq-specific topics like pricing, security, user roles, bylaws AI, e-voting, or booking facilities. What would you like to explore?`;
+          }
+        }
+      } catch (e) {
+        console.log("Wikipedia fetch error or timeout:", e);
+      }
+    }
+
+    // ── SMART CHATGPT-LIKE FALLBACK ─────────────────────────
+    const stopWords = ['what', 'is', 'the', 'a', 'an', 'of', 'to', 'how', 'do', 'you', 'can', 'tell', 'me', 'about', 'who', 'where', 'why', 'are', 'your', 'my', 'in', 'on', 'at', 'with', 'for', 'this', 'that', 'there', 'here', 'please', 'give', 'show', 'list', 'do', 'does', 'did', 'has', 'have', 'had', 'should', 'would', 'could', 'want', 'like'];
+    const queryWords = q.replace(/[^a-zA-Z0-9\s]/g, '').split(/\s+/).filter(w => !stopWords.includes(w) && w.length > 2);
+    const mainTopic = queryWords.length > 0 ? queryWords.join(' ') : '';
+    
+    let fallbackText = '';
+    if (mainTopic) {
+      fallbackText = `I understand you are asking about **"${mainTopic}"**. While my core focus as NestBloq's AI Assistant is property management workflows and community bylaws, I'm happy to guide you! \n\nFor general topics like this, you can check our documentation or start your 14-day free trial to see how our platform handles these operations.`;
+    } else {
+      fallbackText = `Great question! As the NestBloq AI Assistant, I'm here to help you automate community management.`;
+    }
+
+    return `${fallbackText}\n\nTo keep things focused, let me know if you would like details on:\n• 💳 **Plans & Pricing** ($1.50 - $3.00/unit/month)\n• 👥 **Role Isolation** (Manager, Board, Resident, Vendor)\n• 🔧 **Kanban Repairs & Dues Automation**\n• 🤖 **Bylaws AI Copilots**`;
   };
 
   // ── SEND MESSAGE ────────────────────────────────────────────────────────────
@@ -323,17 +475,29 @@ export default function InteractiveAssistant() {
     setMessages(prev => [...prev, { sender: 'user', text, time: 'Just now' }]);
     setInputValue('');
     setIsTyping(true);
-    setTimeout(() => {
-      const resp = generateResponse(text);
-      setMessages(prev => [...prev, { sender: 'ai', text: resp, time: 'Just now' }]);
-      setIsTyping(false);
-    }, 800 + Math.random() * 600);
+
+    const startTime = Date.now();
+    generateResponse(text).then(resp => {
+      const elapsed = Date.now() - startTime;
+      const minDelay = 800 + Math.random() * 600;
+      const remainingDelay = Math.max(0, minDelay - elapsed);
+      setTimeout(() => {
+        setMessages(prev => [...prev, { sender: 'ai', text: resp, time: 'Just now' }]);
+        setIsTyping(false);
+      }, remainingDelay);
+    }).catch(err => {
+      console.error(err);
+      setTimeout(() => {
+        setMessages(prev => [...prev, { sender: 'ai', text: "I'm sorry, I'm having trouble processing that question right now. Can you try again or ask something about NestBloq?", time: 'Just now' }]);
+        setIsTyping(false);
+      }, 500);
+    });
   };
 
   const handleReset = () => {
     setMessages([{
       sender: 'ai',
-      text: "Hello! 👋 I'm your NestBloq AI Assistant.\n\nAsk me anything — NestBloq plans, security, features, billing, or just have a conversation in Hindi or English!",
+      text: "Hello! 👋 I'm your NestBloq AI Assistant.\n\nAsk me anything about our plans, security, features, billing, or community management workflows!",
       time: 'Just now'
     }]);
     setIsTyping(false);
@@ -421,7 +585,7 @@ export default function InteractiveAssistant() {
                   NestBloq Assistant
                   <Sparkles size={12} className="text-yellow-300" />
                 </h3>
-                <p className="text-[10px] text-white/80 font-medium">Ask me anything • Hindi & English</p>
+                <p className="text-[10px] text-white/80 font-medium">Your smart community guide</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
@@ -512,7 +676,7 @@ export default function InteractiveAssistant() {
               type="text"
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
-              placeholder="Ask anything in Hindi or English..."
+              placeholder="Ask a question..."
               className="flex-1 px-3 py-2 bg-slate-50 dark:bg-white/[0.01] border border-slate-200/80 dark:border-white/[0.06] text-xs rounded-xl text-gray-900 dark:text-gray-100 placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all"
             />
             <button
