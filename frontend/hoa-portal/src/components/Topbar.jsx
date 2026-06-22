@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { 
-  Bell, Sun, Moon, User, LogOut, Search, ChevronDown, Plus, Menu 
+  Bell, Sun, Moon, User, LogOut, Search, ChevronDown, Plus, Menu, Building2 
 } from 'lucide-react';
 import AddCommunityModal from './AddCommunityModal';
 import { useTheme } from '../context/ThemeContext';
@@ -66,7 +66,7 @@ const Topbar = ({
         {(isResident || isBoardMember) && communities.length <= 1 ? (
           // Board Member + Resident ke liye Fixed Community
           <div className="flex items-center gap-1.5 sm:gap-3 max-w-[150px] xs:max-w-[200px] sm:max-w-[420px] lg:max-w-none select-none">
-            <div className="hidden sm:block w-2.5 h-2.5 bg-teal-500 rounded-full animate-pulse flex-shrink-0"></div>
+            <Building2 className="hidden sm:block text-[#6366F1] dark:text-[#818CF8] flex-shrink-0" size={18} />
             <div className="min-w-0">
               <p className="text-[9px] sm:text-[10px] text-slate-400 dark:text-gray-400 font-semibold uppercase tracking-widest leading-normal mb-0.5 truncate">MY COMMUNITY</p>
               <div className="flex items-center gap-2 min-w-0">
@@ -84,7 +84,7 @@ const Topbar = ({
         ) : (
           // Admin / Super Admin OR Multi-Community Resident/Board Member ke liye dropdown
           <div className="flex items-center gap-1.5 sm:gap-3 max-w-[150px] xs:max-w-[200px] sm:max-w-[420px] lg:max-w-none select-none">
-            <div className="hidden sm:block w-2.5 h-2.5 bg-teal-500 rounded-full flex-shrink-0 animate-pulse"></div>
+            <Building2 className="hidden sm:block text-[#6366F1] dark:text-[#818CF8] flex-shrink-0" size={18} />
             <div className="min-w-0">
               <p className="text-[9px] sm:text-[10px] text-slate-400 dark:text-gray-400 font-semibold uppercase tracking-widest leading-normal mb-0.5 truncate">
                 {user?.role === 'super_admin' ? 'MANAGING' : 'MY COMMUNITY'}

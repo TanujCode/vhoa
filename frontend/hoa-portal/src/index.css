@@ -497,3 +497,12 @@ html:not(.dark) .premium-card:hover {
 .dark .hover\:text-teal-500:hover {
   color: #818CF8 !important;
 }
+
+/* Sidebar item hover styling overrides */
+.dark aside nav [class*="hover:text-sky-700"]:hover {
+  background-color: rgba(99, 102, 241, 0.08) !important;
+  color: #818CF8 !important;
+}
+.dark aside nav [class*="hover:text-sky-700"]:hover svg {
+  color: #818CF8 !important;
+}
