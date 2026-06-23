@@ -1046,7 +1046,7 @@ export default function LandingPage() {
       {/* ═══════════════════════════════════════════════════════
           HERO SECTION — centered layout matching client PNG
       ═══════════════════════════════════════════════════════ */}
-      <section className="relative pt-24 pb-0 px-5 sm:px-8 overflow-hidden">
+      <section className="relative pt-14 pb-0 px-5 sm:px-8 overflow-hidden">
         {/* Background grid */}
         <div className="absolute inset-0 grid-bg opacity-100 pointer-events-none" />
         {/* Radial spotlight — top center */}
@@ -1054,7 +1054,7 @@ export default function LandingPage() {
         <div className="absolute top-1/3 -left-40 w-80 h-80 bg-violet-500/8 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute top-1/3 -right-40 w-80 h-80 bg-indigo-500/8 rounded-full blur-3xl pointer-events-none" />
 
-        <div className="max-w-5xl mx-auto w-full text-center space-y-8 animate-fade-in-up">
+        <div className="max-w-5xl mx-auto w-full text-center space-y-6 animate-fade-in-up">
 
           {/* Badge pill */}
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-violet-500/10 border border-violet-500/20 text-violet-600 dark:text-violet-400">
@@ -1062,17 +1062,17 @@ export default function LandingPage() {
           </div>
 
           {/* Hero headline — matching client PNG */}
-          <div className="space-y-4">
-            <h1 className="font-display text-5xl sm:text-6xl lg:text-[68px] font-black leading-[1.04] tracking-tight text-slate-900 dark:text-white">
+          <div className="space-y-3.5">
+            <h1 className="font-display text-4xl sm:text-5xl lg:text-[58px] font-black leading-[1.05] tracking-tight text-slate-900 dark:text-white">
               The operating system<br />
               <span className="gradient-text">for every property</span>{' '}
               <span className="text-slate-900 dark:text-white">you own.</span>
             </h1>
-            <div className="text-xl sm:text-2xl md:text-3xl font-extrabold text-slate-600 dark:text-slate-400 select-none">
+            <div className="text-lg sm:text-xl md:text-2xl font-extrabold text-slate-650 dark:text-slate-400 select-none">
               Built for <span className="gradient-text">{typedText}</span>
               <span className="text-violet-500 dark:text-violet-400 font-light animate-pulse ml-1">|</span>
             </div>
-            <p className="text-base sm:text-lg text-slate-500 dark:text-slate-400 leading-relaxed max-w-2xl mx-auto font-normal">
+            <p className="text-sm sm:text-base text-slate-500 dark:text-slate-450 leading-relaxed max-w-2xl mx-auto font-normal">
               Manage homes, rentals, communities, and investments with AI-powered tools
               that save time, reduce costs, and keep everything under control.
             </p>

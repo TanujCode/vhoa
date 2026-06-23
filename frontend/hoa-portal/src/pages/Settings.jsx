@@ -12,7 +12,7 @@ const Toggle = ({ value, onChange }) => (
   </button>
 );
 
-const Settings = ({ community }) => {
+const Settings = ({ community, onCommunityUpdate }) => {
   const [saving, setSaving]   = useState(false);
   const [saved, setSaved]     = useState(false);
   const [loading, setLoading] = useState(false);
@@ -142,7 +142,7 @@ const Settings = ({ community }) => {
 
     try {
       setSaving(true);
-      await API.put(`/community/${community.community_id}`, {
+      const res = await API.put(`/community/${community.community_id}`, {
         time_zone: form.time_zone,
         amenity_fee_enabled: form.amenity_fee_enabled,
         violation_fee_enabled: form.violation_fee_enabled,
@@ -156,6 +156,9 @@ const Settings = ({ community }) => {
         visible_tabs: tabs,
       });
       setSaved(true);
+      if (onCommunityUpdate) {
+        onCommunityUpdate(res.data);
+      }
       setTimeout(() => setSaved(false), 2500);
     } catch (err) {
       toast.error(err.response?.data?.detail || 'Save failed');
@@ -443,10 +446,6 @@ const Settings = ({ community }) => {
             <p className="font-medium mt-1 text-slate-800 dark:text-slate-200">{community?.plan_expire_date || '—'}</p>
           </div>
         </div>
-      </div>
-
-      <div className="text-center text-slate-400 dark:text-gray-500 mt-8 text-sm">
-        More configuration options coming soon...
       </div>
     </div>
   );

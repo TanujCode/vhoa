@@ -415,7 +415,15 @@ const AdminPortal = () => {
         return <Violations community={activeCommunity} user={effectiveUser} setActivePage={setActivePage} setPaymentState={setPaymentState} />;
       
       case 'settings':   
-        return <Settings community={activeCommunity} />;
+        return (
+          <Settings 
+            community={activeCommunity} 
+            onCommunityUpdate={(updatedComm) => {
+              setActiveCommunity(updatedComm);
+              refreshCommunities();
+            }} 
+          />
+        );
       
       case 'profile':    
         return <Profile user={user} setUser={setUser} viewRole={effectiveRole} />;
@@ -533,7 +541,7 @@ const AdminPortal = () => {
           setReadNotificationIds([]);
         }}
       />
-      {activeCommunity?.visible_tabs?.ai_assistant !== false && (
+      {activeCommunity && user?.role !== 'sales_admin' && activeCommunity?.visible_tabs?.ai_assistant !== false && (
         <AiAssistant user={user} community={activeCommunity} />
       )}
     </div>
