@@ -348,24 +348,26 @@ const AiAssistant = ({ user, community }) => {
   };
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 font-sans">
+    <div className="font-sans">
       {/* Floating launcher button */}
       {!isOpen && (
-        <button
-          onClick={() => setIsOpen(true)}
-          className="w-14 h-14 bg-teal-600 hover:bg-teal-500 dark:bg-teal-600 dark:hover:bg-teal-500 text-white rounded-full flex items-center justify-center shadow-[0_8px_30px_rgb(13,148,136,0.4)] transition-all duration-300 transform hover:scale-105"
-          title="Open AI Copilot"
-        >
-          <Sparkles className="w-6 h-6 animate-pulse" />
-        </button>
+        <div className="fixed bottom-6 right-6 z-50">
+          <button
+            onClick={() => setIsOpen(true)}
+            className="w-14 h-14 bg-teal-600 hover:bg-teal-500 dark:bg-teal-600 dark:hover:bg-teal-500 text-white rounded-full flex items-center justify-center shadow-[0_8px_30px_rgb(13,148,136,0.4)] transition-all duration-300 transform hover:scale-105"
+            title="Open AI Copilot"
+          >
+            <Sparkles className="w-6 h-6 animate-pulse" />
+          </button>
+        </div>
       )}
 
       {/* Chat window panel */}
       {isOpen && (
-        <div className="bg-white dark:bg-[#1E2E42] border border-slate-200 dark:border-white/10 rounded-3xl shadow-[0_16px_50px_rgba(0,0,0,0.15)] dark:shadow-[0_16px_50px_rgba(0,0,0,0.45)] w-[360px] sm:w-[380px] h-[520px] flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-6 duration-300">
+        <div className="fixed inset-0 sm:top-auto sm:left-auto sm:bottom-6 sm:right-6 w-full h-full sm:w-[380px] sm:h-[520px] bg-white dark:bg-[#1E2E42] border-t sm:border border-slate-200 dark:border-white/10 rounded-none sm:rounded-3xl shadow-[0_16px_50px_rgba(0,0,0,0.15)] dark:shadow-[0_16px_50px_rgba(0,0,0,0.45)] flex flex-col overflow-hidden z-50 animate-in fade-in slide-in-from-bottom-6 duration-300">
           
           {/* Header */}
-          <div className="bg-gradient-to-r from-teal-600 to-emerald-600 text-white p-4 flex items-center justify-between border-b border-slate-200/20 dark:border-white/5">
+          <div className="bg-gradient-to-r from-teal-600 to-emerald-600 text-white p-4 flex items-center justify-between border-b border-slate-200/20 dark:border-white/5 shrink-0">
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 bg-white/10 rounded-xl flex items-center justify-center">
                 <Bot className="w-5 h-5 text-white animate-bounce" />
@@ -428,7 +430,7 @@ const AiAssistant = ({ user, community }) => {
           </div>
 
           {/* Click-Only Interactive Options Panel (No custom input) */}
-          <div className="p-3 bg-slate-50 dark:bg-[#152335]/60 border-t border-slate-200/50 dark:border-white/10 flex flex-col gap-2 shrink-0">
+          <div className="p-3 bg-slate-50 dark:bg-[#152335]/60 border-t border-slate-200/50 dark:border-white/10 flex flex-col gap-2 shrink-0 pb-4 sm:pb-3">
             {menuState === 'main' && (
               <div className="grid grid-cols-1 gap-1.5 max-h-[160px] overflow-y-auto custom-scrollbar pr-1">
                 {mainOptions.map((opt) => (

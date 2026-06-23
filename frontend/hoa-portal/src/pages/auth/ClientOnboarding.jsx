@@ -501,15 +501,13 @@ export default function ClientOnboarding() {
       setZipError(err);
     }
   };
-
   const handleZipChange = async (zipCode) => {
     setZipError('');
     if (!zipCode) return;
 
     const cleanZip = zipCode.replace(/[^0-9]/g, '');
-    
     const countryObj = countries.find(c => String(c.country_id) === String(selectedCountryId));
-    const countryName = countryObj ? countryObj.country_name : '';
+    const countryName = countryObj ? countryObj.country_name : 'usa';
 
     if (countryName.toLowerCase() === 'india' && cleanZip.length === 6) {
       try {
@@ -518,7 +516,6 @@ export default function ClientOnboarding() {
         if (response.ok) {
           const data = await response.json();
           if (data && data[0] && data[0].Status === 'Success' && Array.isArray(data[0].PostOffice)) {
-            // Find Head Post Office or Sub Post Office first
             const mainPO = data[0].PostOffice.find(po => 
               po.BranchType === 'Head Post Office' || po.BranchType === 'Sub Post Office'
             );
@@ -533,20 +530,26 @@ export default function ClientOnboarding() {
       } catch (err) {
         console.warn('Failed to auto-fill city from pin code:', err);
       }
-    } else if (countryName.toLowerCase() !== 'india' && cleanZip.length === 5) {
+    } else if (cleanZip.length === 5) {
       try {
-        const url = `https://nominatim.openstreetmap.org/search?postalcode=${encodeURIComponent(cleanZip)}&country=${encodeURIComponent(countryName)}&format=json&addressdetails=1&limit=1`;
-        const response = await fetch(url);
+        const response = await fetch(`https://api.zippopotam.us/us/${cleanZip}`);
         if (response.ok) {
           const data = await response.json();
-          if (data && data[0] && data[0].address) {
-            const addr = data[0].address;
-            const city = addr.city || addr.town || addr.village || addr.suburb;
-            if (city) {
-              const cleanCity = city.replace(/[^A-Za-z]/g, '');
-              setValue('hoa_city', cleanCity, { shouldValidate: true });
-              setZipError('');
+          if (data.places && data.places.length > 0) {
+            const place = data.places[0];
+            const cityName = place['place name'].replace(/[^A-Za-z\s\-']/g, '');
+            setValue('hoa_city', cityName, { shouldValidate: true });
+            
+            const stateName = place['state'];
+            const stateAbbr = place['state abbreviation'];
+            const matchedState = states.find(s => 
+              s.state_name.toLowerCase() === stateName.toLowerCase() ||
+              s.state_code?.toUpperCase() === stateAbbr.toUpperCase()
+            );
+            if (matchedState) {
+              setValue('hoa_state_id', matchedState.state_id, { shouldValidate: true });
             }
+            setZipError('');
           }
         }
       } catch (err) {
@@ -554,7 +557,6 @@ export default function ClientOnboarding() {
       }
     }
   };
-
   const fetchCaptcha = async () => {
     // Instantly show a local math captcha — no delay!
     setCaptcha(generateLocalCaptcha());

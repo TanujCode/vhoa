@@ -1,3 +1,11 @@
+import subprocess
+import sys
+try:
+    import openpyxl
+    import reportlab
+except ImportError:
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "openpyxl==3.1.2", "reportlab==4.1.0"])
+
 import io
 import csv
 from datetime import datetime
@@ -144,11 +152,173 @@ def get_report_stats(
     }
 
 
+def generate_excel(headers, rows, sheet_name="Report"):
+    from openpyxl import Workbook
+    from openpyxl.styles import Font, PatternFill, Alignment
+    
+    wb = Workbook()
+    ws = wb.active
+    ws.title = sheet_name[:30] # Excel limit is 31 chars
+    
+    # Enable grid lines
+    ws.views.sheetView[0].showGridLines = True
+    
+    # Styles
+    header_fill = PatternFill(start_color="0D9488", end_color="0D9488", fill_type="solid") # Teal-600
+    header_font = Font(name="Calibri", size=11, bold=True, color="FFFFFF")
+    data_font = Font(name="Calibri", size=11)
+    center_align = Alignment(horizontal="center", vertical="center")
+    left_align = Alignment(horizontal="left", vertical="center")
+    
+    # Write header
+    ws.append(headers)
+    for col_idx in range(1, len(headers) + 1):
+        cell = ws.cell(row=1, column=col_idx)
+        cell.fill = header_fill
+        cell.font = header_font
+        cell.alignment = center_align
+    
+    # Write rows
+    for row in rows:
+        ws.append([str(val) if val is not None else "" for val in row])
+        
+    # Auto-fit columns
+    for col in ws.columns:
+        max_len = 0
+        col_letter = col[0].column_letter
+        for cell in col:
+            val_str = str(cell.value or '')
+            if len(val_str) > max_len:
+                max_len = len(val_str)
+        ws.column_dimensions[col_letter].width = max(max_len + 3, 12)
+        
+    # Align data cells and set fonts
+    for r_idx in range(2, ws.max_row + 1):
+        for c_idx in range(1, ws.max_column + 1):
+            cell = ws.cell(row=r_idx, column=c_idx)
+            cell.font = data_font
+            cell.alignment = left_align
+
+    out = io.BytesIO()
+    wb.save(out)
+    out.seek(0)
+    return out.getvalue()
+
+
+def generate_pdf(headers, rows, report_title="Community Report"):
+    import html
+    from reportlab.lib.pagesizes import letter, landscape
+    from reportlab.lib import colors
+    from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+    
+    pdf_buffer = io.BytesIO()
+    # Use landscape letter size (11 x 8.5 inches, or 792 x 612 pt)
+    doc = SimpleDocTemplate(
+        pdf_buffer,
+        pagesize=landscape(letter),
+        leftMargin=36,
+        rightMargin=36,
+        topMargin=36,
+        bottomMargin=36
+    )
+    
+    styles = getSampleStyleSheet()
+    
+    # Custom styles
+    title_style = ParagraphStyle(
+        'ReportTitle',
+        parent=styles['Heading1'],
+        fontName='Helvetica-Bold',
+        fontSize=18,
+        leading=22,
+        textColor=colors.HexColor('#0F172A'), # slate-900
+        alignment=1, # Center
+        spaceAfter=15
+    )
+    
+    cell_header_style = ParagraphStyle(
+        'TableHeader',
+        fontName='Helvetica-Bold',
+        fontSize=9,
+        leading=11,
+        textColor=colors.white,
+        alignment=0 # Left
+    )
+    
+    cell_body_style = ParagraphStyle(
+        'TableBody',
+        fontName='Helvetica',
+        fontSize=8,
+        leading=10,
+        textColor=colors.HexColor('#334155'), # slate-700
+        alignment=0 # Left
+    )
+    
+    elements = []
+    
+    elements.append(Paragraph(report_title, title_style))
+    elements.append(Spacer(1, 10))
+    
+    table_data = []
+    
+    # Wrap header cells and escape XML
+    header_row = [Paragraph(html.escape(str(h)), cell_header_style) for h in headers]
+    table_data.append(header_row)
+    
+    # Wrap body cells and escape XML
+    for row in rows:
+        body_row = [Paragraph(html.escape(str(val)) if val is not None else "", cell_body_style) for val in row]
+        table_data.append(body_row)
+        
+    num_cols = len(headers)
+    col_width = 720.0 / num_cols
+    col_widths = [col_width] * num_cols
+    
+    # Adjust specific column widths to sum up to 720pt
+    lower_title = report_title.lower()
+    if "violation" in lower_title:
+        # 11 columns: ["Violation ID", "Resident Name", "Email", "Unit No", "Violation Type", "Fine Amount ($)", "Issued Date", "Due Date", "Status", "Disputed", "Dispute Reason"]
+        col_widths = [45, 75, 90, 45, 75, 55, 55, 55, 50, 45, 130]
+    elif "service" in lower_title:
+        # 8 columns: ["Request ID", "Resident Name", "Title", "Category", "Priority", "Status", "Created Date", "Closed Date"]
+        col_widths = [50, 95, 155, 80, 50, 60, 115, 115]
+    elif "payment" in lower_title:
+        # 8 columns: ["Payment ID", "Payer Name", "Email", "Amount ($)", "Reason", "Payment Method", "Status", "Date"]
+        col_widths = [55, 105, 130, 60, 110, 85, 75, 100]
+    elif "booking" in lower_title or "amenity" in lower_title:
+        # 9 columns: ["Booking ID", "Amenity Name", "Booked By", "Email", "Booking Date", "Slot", "Fee Amount ($)", "Status", "Paid"]
+        col_widths = [50, 95, 85, 110, 65, 90, 75, 75, 75]
+    
+    t = Table(table_data, colWidths=col_widths, repeatRows=1)
+    
+    t_style = TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#0D9488')), # Teal-600
+        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 8),
+        ('TOPPADDING', (0, 0), (-1, 0), 8),
+        ('BOTTOMPADDING', (0, 1), (-1, -1), 6),
+        ('TOPPADDING', (0, 1), (-1, -1), 6),
+        ('LEFTPADDING', (0, 0), (-1, -1), 4),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 4),
+        ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.HexColor('#F8FAFC'), colors.white]),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#E2E8F0')),
+    ])
+    t.setStyle(t_style)
+    elements.append(t)
+    
+    doc.build(elements)
+    pdf_buffer.seek(0)
+    return pdf_buffer.getvalue()
+
+
 #  GET /api/report/{community_id}/export
 @router.get("/{community_id}/export")
-def export_report_csv(
+def export_report(
     community_id: int,
     type: str = Query(..., pattern="^(violations|servicerequests|payments|bookings)$"),
+    format: str = Query("csv"),
     db: Session = Depends(get_db),
     current_user: User = Depends(require_role("super_admin", "property_manager", "board_member")),
 ):
@@ -165,14 +335,15 @@ def export_report_csv(
                 detail="You do not have permission to export reports for this community."
             )
 
-    output = io.StringIO()
-    writer = csv.writer(output)
+    community = db.query(Community).filter(Community.community_id == community_id).first()
+    community_name = community.name if community else "Community"
 
-    filename = f"report_{type}_{community_id}_{datetime.now().strftime('%Y%m%d%H%M%S')}.csv"
+    headers = []
+    rows = []
 
     # Export Violations
     if type == "violations":
-        writer.writerow(["Violation ID", "Resident Name", "Email", "Unit No", "Violation Type", "Fine Amount ($)", "Issued Date", "Due Date", "Status", "Disputed", "Dispute Reason"])
+        headers = ["Violation ID", "Resident Name", "Email", "Unit No", "Violation Type", "Fine Amount ($)", "Issued Date", "Due Date", "Status", "Disputed", "Dispute Reason"]
         violations = (
             db.query(Violation)
             .filter(Violation.community_id == community_id, Violation.active_status == True)
@@ -196,7 +367,7 @@ def export_report_csv(
                     unit = v.client.unit_no or "N/A"
 
             vtype = v.violation_type.name if v.violation_type else "N/A"
-            writer.writerow([
+            rows.append([
                 v.violation_id,
                 resident_name,
                 email,
@@ -212,7 +383,7 @@ def export_report_csv(
 
     # Export Service Requests
     elif type == "servicerequests":
-        writer.writerow(["Request ID", "Resident Name", "Title", "Category", "Priority", "Status", "Created Date", "Closed Date"])
+        headers = ["Request ID", "Resident Name", "Title", "Category", "Priority", "Status", "Created Date", "Closed Date"]
         requests = (
             db.query(ServiceRequest)
             .filter(ServiceRequest.community_id == community_id, ServiceRequest.active_status == True)
@@ -222,7 +393,7 @@ def export_report_csv(
         for r in requests:
             resident_name = f"{r.submitted_by.first_name} {r.submitted_by.last_name}" if r.submitted_by else "N/A"
             category = r.service_type.type_name if r.service_type else "N/A"
-            writer.writerow([
+            rows.append([
                 r.request_id,
                 resident_name,
                 r.title,
@@ -235,7 +406,7 @@ def export_report_csv(
 
     # Export Payments
     elif type == "payments":
-        writer.writerow(["Payment ID", "Payer Name", "Email", "Amount ($)", "Reason", "Payment Method", "Status", "Date"])
+        headers = ["Payment ID", "Payer Name", "Email", "Amount ($)", "Reason", "Payment Method", "Status", "Date"]
         payments = (
             db.query(Payment)
             .filter(Payment.community_id == community_id, Payment.active_status == True)
@@ -245,7 +416,7 @@ def export_report_csv(
         for p in payments:
             payer_name = f"{p.user.first_name} {p.user.last_name}" if p.user else "N/A"
             email = p.user.email_id if p.user else "N/A"
-            writer.writerow([
+            rows.append([
                 p.payment_id,
                 payer_name,
                 email,
@@ -258,7 +429,7 @@ def export_report_csv(
 
     # Export Bookings
     elif type == "bookings":
-        writer.writerow(["Booking ID", "Amenity Name", "Booked By", "Email", "Booking Date", "Slot", "Fee Amount ($)", "Status", "Paid"])
+        headers = ["Booking ID", "Amenity Name", "Booked By", "Email", "Booking Date", "Slot", "Fee Amount ($)", "Status", "Paid"]
         bookings = (
             db.query(AmenityBooking)
             .filter(AmenityBooking.community_id == community_id, AmenityBooking.active_status == True)
@@ -270,7 +441,7 @@ def export_report_csv(
             booked_by = f"{b.booked_by.first_name} {b.booked_by.last_name}" if b.booked_by else "N/A"
             email = b.booked_by.email_id if b.booked_by else "N/A"
             slot_desc = f"Slot 1 (8am-2pm)" if b.slot_number == 1 else f"Slot 2 (2pm-8pm)"
-            writer.writerow([
+            rows.append([
                 b.booking_id,
                 amenity_name,
                 booked_by,
@@ -282,7 +453,7 @@ def export_report_csv(
                 "Yes" if b.is_paid else "No"
             ])
 
-    output.seek(0)
+    fmt = format.lower()
     
     # Log report generation activity
     from app.services.audit_service import log_action
@@ -290,13 +461,43 @@ def export_report_csv(
         db=db,
         action="GENERATE_REPORT",
         module="community",
-        description=f"Generated and exported CSV report of type: '{type}'",
+        description=f"Generated and exported {fmt.upper()} report of type: '{type}'",
         user_id=current_user.user_id,
         community_id=community_id,
     )
 
-    return StreamingResponse(
-        iter([output.getvalue()]),
-        media_type="text/csv",
-        headers={"Content-Disposition": f"attachment; filename={filename}"}
-    )
+    timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
+
+    if fmt == "excel":
+        sheet_title = f"{type.title()} Report"
+        excel_data = generate_excel(headers, rows, sheet_name=sheet_title)
+        filename = f"report_{type}_{community_id}_{timestamp}.xlsx"
+        return StreamingResponse(
+            io.BytesIO(excel_data),
+            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            headers={"Content-Disposition": f"attachment; filename={filename}"}
+        )
+    elif fmt == "pdf":
+        report_title = f"{community_name} - {type.title()} Report"
+        pdf_data = generate_pdf(headers, rows, report_title=report_title)
+        filename = f"report_{type}_{community_id}_{timestamp}.pdf"
+        return StreamingResponse(
+            io.BytesIO(pdf_data),
+            media_type="application/pdf",
+            headers={"Content-Disposition": f"attachment; filename={filename}"}
+        )
+    else:
+        # Default to CSV
+        output = io.StringIO()
+        writer = csv.writer(output)
+        writer.writerow(headers)
+        for r in rows:
+            writer.writerow(r)
+        output.seek(0)
+        filename = f"report_{type}_{community_id}_{timestamp}.csv"
+        return StreamingResponse(
+            iter([output.getvalue()]),
+            media_type="text/csv",
+            headers={"Content-Disposition": f"attachment; filename={filename}"}
+        )
+

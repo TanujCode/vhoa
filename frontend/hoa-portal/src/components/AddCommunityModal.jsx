@@ -83,6 +83,41 @@ const AddCommunityModal = ({ isOpen, onClose, onSuccess }) => {
     fetchStates(countryId);
   };
 
+  const handleZipLookup = async (zipCode) => {
+    const cleanZip = zipCode.replace(/[^0-9]/g, '');
+    if (cleanZip.length === 5) {
+      try {
+        const response = await fetch(`https://api.zippopotam.us/us/${cleanZip}`);
+        if (response.ok) {
+          const data = await response.json();
+          if (data.places && data.places.length > 0) {
+            const place = data.places[0];
+            const cityName = place['place name'].replace(/[^A-Za-z\s\-']/g, '');
+            const stateName = place['state'];
+            const stateAbbr = place['state abbreviation'];
+            
+            const matchedState = states.find(s => 
+              s.state_name.toLowerCase() === stateName.toLowerCase() ||
+              s.state_code?.toUpperCase() === stateAbbr.toUpperCase()
+            );
+            
+            setFormData(prev => ({
+              ...prev,
+              address: {
+                ...prev.address,
+                city: cityName,
+                state_id: matchedState ? matchedState.state_id : prev.address.state_id,
+                zip_code: cleanZip
+              }
+            }));
+          }
+        }
+      } catch (err) {
+        console.warn("Zip lookup failed:", err);
+      }
+    }
+  };
+
   const handleVerifyContractCode = async () => {
     const code = formData.contract_code;
     if (!code || !code.trim()) {
@@ -115,7 +150,13 @@ const AddCommunityModal = ({ isOpen, onClose, onSuccess }) => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    if (name.includes('.')) {
+    if (name === "address.zip_code") {
+      handleZipLookup(value);
+      setFormData(prev => ({
+        ...prev,
+        address: { ...prev.address, zip_code: value }
+      }));
+    } else if (name.includes('.')) {
       const [parent, child] = name.split('.');
       setFormData(prev => ({
         ...prev,

@@ -157,6 +157,24 @@ export default function Contracts() {
     setValue('client_country', 'USA');
   };
 
+  const handleZipLookup = async (zipCode) => {
+    const cleanZip = zipCode.replace(/[^0-9]/g, '');
+    if (cleanZip.length === 5) {
+      try {
+        const response = await fetch(`https://api.zippopotam.us/us/${cleanZip}`);
+        if (response.ok) {
+          const data = await response.json();
+          if (data.places && data.places.length > 0) {
+            const place = data.places[0];
+            setValue('client_city', place['place name'].replace(/[^A-Za-z\s\-']/g, ''), { shouldValidate: true });
+          }
+        }
+      } catch (err) {
+        console.warn("Zip code lookup failed:", err);
+      }
+    }
+  };
+
   const handleCloseModal = () => {
     setIsModalOpen(false);
     reset();
@@ -658,7 +676,7 @@ export default function Contracts() {
                     {errors.client_city && <span className="text-xs text-red-400 mt-1">{errors.client_city.message}</span>}
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-slate-500 dark:text-gray-400 mb-1">Zip Code</label>
+                    <label className="block text-sm text-slate-500 dark:text-gray-400 mb-1">Zip Code</label>
                     <input
                       type="text"
                       {...register('client_zip_code', {
@@ -667,6 +685,9 @@ export default function Contracts() {
                           if (!/^\d+$/.test(val)) return 'Zip code must contain only numbers';
                           if (val.length < 5 || val.length > 10) return 'Zip code must be between 5 and 10 digits';
                           return true;
+                        },
+                        onChange: (e) => {
+                          handleZipLookup(e.target.value);
                         }
                       })}
                       onKeyPress={onlyDigitsKeyPress}
@@ -685,10 +706,8 @@ export default function Contracts() {
                     <input
                       type="text"
                       {...register('client_country')}
-                      readOnly={addressSelected}
-                      className={`w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl px-4 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-[#1D9E75] placeholder-slate-400 dark:placeholder-gray-500 ${
-                        addressSelected ? 'opacity-65 bg-slate-100/50 dark:bg-[#0D1B2A]/50 cursor-not-allowed' : ''
-                      }`}
+                      readOnly={true}
+                      className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl px-4 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none opacity-65 bg-slate-100/50 dark:bg-[#0D1B2A]/50 cursor-not-allowed"
                     />
                   </div>
                   <div>
