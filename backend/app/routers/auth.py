@@ -449,24 +449,33 @@ def send_otp(request: Request, body: SendOtpRequest, db: Session = Depends(get_d
             user = db.query(User).filter(User.email_id == body.email_id.lower()).first()
             if not user:
                 raise ValueError("This email is not registered with us.")
+            if body.otp_type == "mobile_verify" and not user.mobile_number:
+                raise ValueError("Please add and save a mobile number to your profile first.")
             otp_code = generate_otp(user.user_id, body.otp_type, db)
 
         # Email bhejo
         success = send_otp_email(user.email_id, otp_code, body.otp_type)
 
-        if success:
+        if success or body.otp_type == "mobile_verify":
             log_action(
                 db          = db,
                 action      = "OTP_SENT",
                 module      = "auth",
-                description = f"OTP sent: {body.otp_type} to {user.email_id}",
+                description = f"OTP sent: {body.otp_type} to {user.email_id} (email_status: {'sent' if success else 'failed'})",
                 user_id     = user.user_id,
                 ip_address  = request.client.host,
             )
-            return {
+            
+            response_data = {
                 "message": "OTP sent successfully. Please check your email.",
                 "expires_in": "10 minutes"
             }
+            if body.otp_type == "mobile_verify":
+                print(f"🔥 [SMS OTP] Mobile Verification OTP for {user.email_id} ({user.mobile_number}): {otp_code}")
+                response_data["otp_code"] = otp_code
+                response_data["message"] = f"Verification code sent (Dev Mode - Code is: {otp_code})"
+                
+            return response_data
         else:
             print(f"❌ [SMTP ERROR] Failed to send email to {user.email_id}. Generated OTP is: {otp_code}")
             raise HTTPException(status_code=500, detail="Failed to send email")

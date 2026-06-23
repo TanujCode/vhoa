@@ -122,6 +122,13 @@ const Profile = ({ user, setUser, viewRole }) => {
   const [activeTab, setActiveTab]   = useState('profile');
   const [msg, setMsg]               = useState({ type: '', text: '' });
 
+  // ── Mobile Verification State ──────────────
+  const [showPhoneVerifyModal, setShowPhoneVerifyModal] = useState(false);
+  const [phoneOtpCode, setPhoneOtpCode]                 = useState('');
+  const [autoPhoneOtp, setAutoPhoneOtp]                 = useState('');
+  const [sendingPhoneOtp, setSendingPhoneOtp]           = useState(false);
+  const [verifyingPhone, setVerifyingPhone]             = useState(false);
+
   // ── Notification Prefs — stable defaults ────────────────────────
   const DEFAULT_EMAIL_NOTIFS = {
     newViolation: true,
@@ -384,6 +391,65 @@ const Profile = ({ user, setUser, viewRole }) => {
     }
   };
 
+  // ── Send OTP for phone verification ───────
+  const handleSendPhoneOtp = async () => {
+    try {
+      setSendingPhoneOtp(true);
+      const res = await API.post('/auth/otp/send', {
+        email_id: user?.email_id || user?.email,
+        otp_type: 'mobile_verify',
+      });
+      const receivedOtp = res.data?.otp_code || '';
+      setAutoPhoneOtp(receivedOtp);
+      setPhoneOtpCode('');
+      setShowPhoneVerifyModal(true);
+      showMsg('success', res.data?.message || 'Verification code sent!');
+    } catch (err) {
+      showMsg('error', err.response?.data?.detail || 'Failed to send OTP for mobile verification.');
+    } finally {
+      setSendingPhoneOtp(false);
+    }
+  };
+
+  // ── Verify OTP for phone verification ────
+  const handleVerifyPhoneOtp = async () => {
+    if (!phoneOtpCode.trim()) {
+      showMsg('error', 'Please enter the verification code.');
+      return;
+    }
+    try {
+      setVerifyingPhone(true);
+      const res = await API.post('/auth/otp/verify', {
+        email_id: user?.email_id || user?.email,
+        otp_code: phoneOtpCode,
+        otp_type: 'mobile_verify',
+      });
+      
+      setUser(prev => {
+        const u = {
+          ...prev,
+          mobile_is_verified: true,
+        };
+        try {
+          const stored = localStorage.getItem('user');
+          if (stored) {
+            const parsed = JSON.parse(stored);
+            localStorage.setItem('user', JSON.stringify({ ...parsed, mobile_is_verified: true }));
+          }
+        } catch (_) {}
+        return u;
+      });
+
+      setShowPhoneVerifyModal(false);
+      showMsg('success', 'Mobile number verified successfully!');
+    } catch (err) {
+      showMsg('error', err.response?.data?.detail || 'Invalid or expired OTP.');
+    } finally {
+      setVerifyingPhone(false);
+    }
+  };
+
+
   // ── Password Reset ────────────────────────
   const handlePasswordReset = async () => {
     if (pwdForm.new_password !== pwdForm.confirm) {
@@ -508,9 +574,24 @@ const Profile = ({ user, setUser, viewRole }) => {
                 <span className="text-slate-500 dark:text-gray-400 flex items-center gap-1.5">
                   <Phone size={13} /> Phone
                 </span>
-                <span className={user?.mobile_is_verified ? 'text-teal-600 dark:text-teal-400' : 'text-red-600 dark:text-red-400'}>
-                  {user?.mobile_is_verified ? '✓ Verified' : '✗ Not verified'}
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className={user?.mobile_is_verified ? 'text-teal-600 dark:text-teal-400' : 'text-red-600 dark:text-red-400'}>
+                    {user?.mobile_is_verified ? '✓ Verified' : '✗ Not verified'}
+                  </span>
+                  {!user?.mobile_is_verified && (
+                    user?.mobile_number ? (
+                      <button
+                        onClick={handleSendPhoneOtp}
+                        disabled={sendingPhoneOtp}
+                        className="px-2 py-0.5 text-xs font-semibold bg-teal-600 hover:bg-teal-500 text-white rounded-lg transition disabled:opacity-50 flex items-center gap-1 cursor-pointer"
+                      >
+                        {sendingPhoneOtp ? '...' : 'Verify'}
+                      </button>
+                    ) : (
+                      <span className="text-xs text-slate-400 dark:text-gray-500">(Set number first)</span>
+                    )
+                  )}
+                </div>
               </div>
               <div className="flex items-center justify-between text-sm">
                 <span className="text-slate-500 dark:text-gray-400 flex items-center gap-1.5">
@@ -961,6 +1042,55 @@ const Profile = ({ user, setUser, viewRole }) => {
           )}
         </div>
       </div>
+
+      {/* Phone Verification Modal */}
+      {showPhoneVerifyModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm transition-opacity duration-300">
+          <div className="bg-white dark:bg-[#162535] border border-slate-200 dark:border-white/10 rounded-3xl p-6 max-w-md w-full shadow-2xl relative animate-in fade-in duration-200">
+            <h3 className="text-xl font-semibold text-slate-900 dark:text-white mb-2">Verify Mobile Number</h3>
+            <p className="text-sm text-slate-500 dark:text-gray-400 mb-6">
+              A 6-digit OTP code has been generated. Please enter it below to verify your phone number <span className="font-semibold">{user?.mobile_number}</span>.
+            </p>
+
+            <div className="space-y-4 mb-6">
+              <div>
+                <label className="text-xs text-slate-500 dark:text-gray-400 mb-1.5 block">OTP Code</label>
+                <input
+                  type="text"
+                  maxLength={6}
+                  placeholder="· · · · · ·"
+                  value={phoneOtpCode}
+                  onChange={e => setPhoneOtpCode(e.target.value)}
+                  onKeyPress={(e) => {
+                    if (!/[0-9]/.test(e.key)) {
+                      e.preventDefault();
+                    }
+                  }}
+                  className="w-full bg-slate-50 dark:bg-[#1E3248] border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-center text-2xl font-bold tracking-widest text-slate-900 dark:text-white placeholder-slate-300 dark:placeholder-gray-700 focus:outline-none focus:border-teal-500"
+                />
+              </div>
+            </div>
+
+            <div className="flex flex-col-reverse sm:flex-row gap-3">
+              <button
+                type="button"
+                onClick={() => setShowPhoneVerifyModal(false)}
+                className="w-full sm:flex-1 py-3 bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 text-slate-700 dark:text-white rounded-2xl font-medium transition cursor-pointer text-center text-sm"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleVerifyPhoneOtp}
+                disabled={verifyingPhone}
+                className="w-full sm:flex-1 py-3 bg-teal-600 hover:bg-teal-500 text-white rounded-2xl font-medium transition disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-teal-500/10 text-sm"
+              >
+                <span>{verifyingPhone ? 'Verifying...' : 'Verify Code'}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
