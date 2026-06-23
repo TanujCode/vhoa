@@ -11,11 +11,11 @@ export default function PricingPage() {
 
   const plans = [
     {
-      name: "Starter",
+      name: "Standard",
       desc: "Perfect for self-managed small HOAs, condos, and societies.",
-      units: "Up to 50 units",
-      monthlyPrice: 49,
-      annualPrice: 39,
+      units: "Up to 100 units",
+      monthlyPrice: 99,
+      annualPrice: 83,
       features: [
         "Resident & Owner Roster Directory",
         "Expense Tracking & Statements",
@@ -24,18 +24,18 @@ export default function PricingPage() {
         "Email Notifications & Bulletins",
         "Standard L1 Email Support"
       ],
-      cta: "Select Starter",
+      cta: "Select Standard",
       path: "/register",
       highlight: false
     },
     {
-      name: "Growth",
+      name: "Premium",
       desc: "Best for active communities, board members & managers.",
-      units: "Up to 150 units",
-      monthlyPrice: 99,
-      annualPrice: 79,
+      units: "Up to 350 units",
+      monthlyPrice: 199,
+      annualPrice: 166,
       features: [
-        "All Starter Features Included",
+        "All Standard Features Included",
         "Maintenance Ticket Kanban Board",
         "Automated Late Dues Fee Rules",
         "SMS Alerts & Broadcast System",
@@ -43,18 +43,18 @@ export default function PricingPage() {
         "Customizable Directory Fields",
         "Priority Email & Chat Support"
       ],
-      cta: "Select Growth",
+      cta: "Select Premium",
       path: "/register",
       highlight: true
     },
     {
-      name: "Professional",
+      name: "Enterprise",
       desc: "Custom workflows and scale for large portfolios & builders.",
-      units: "Unlimited units",
-      monthlyPrice: 199,
-      annualPrice: 159,
+      units: "Up to 1000 units",
+      monthlyPrice: 499,
+      annualPrice: 416,
       features: [
-        "All Growth Features Included",
+        "All Premium Features Included",
         "Dedicated Customer Success Manager",
         "Advanced API & Webhook Access",
         "Custom Automated Workflows",
@@ -62,14 +62,14 @@ export default function PricingPage() {
         "Digital Assemblies & SHA-256 E-Voting",
         "24/7 Telephone Priority Dispatch"
       ],
-      cta: "Select Professional",
+      cta: "Select Enterprise",
       path: "/register",
       highlight: false
     }
   ];
 
   const compareFeatures = [
-    { name: "Max Community Units", starter: "50", professional: "150", enterprise: "Unlimited" },
+    { name: "Max Community Units", starter: "100", professional: "350", enterprise: "1000" },
     { name: "Online Dues Payments", starter: true, professional: true, enterprise: true },
     { name: "SMS Notification Broadcasts", starter: false, professional: true, enterprise: true },
     { name: "Amenities Allocation Tracker", starter: "1 Amenity", professional: "Unlimited", enterprise: "Unlimited" },
@@ -109,7 +109,7 @@ export default function PricingPage() {
             Choose the plan that fits your community's needs
           </h1>
           
-          <p className="text-base sm:text-lg text-slate-350 max-w-xl mx-auto leading-relaxed">
+          <p className="text-base sm:text-lg text-slate-300 max-w-xl mx-auto leading-relaxed">
             No hidden setup fees or locked-in contracts. Scale your package as your housing list grows.
           </p>
 
@@ -329,9 +329,9 @@ export default function PricingPage() {
               <thead>
                 <tr className="bg-slate-100/50 dark:bg-[#0a0414] text-slate-800 dark:text-slate-200 border-b border-slate-200/80 dark:border-white/[0.06] font-bold uppercase tracking-wider">
                   <th className="p-5">Feature Module</th>
-                  <th className="p-5 text-center">Starter</th>
-                  <th className="p-5 text-center">Growth</th>
-                  <th className="p-5 text-center">Professional</th>
+                  <th className="p-5 text-center">Standard</th>
+                  <th className="p-5 text-center">Premium</th>
+                  <th className="p-5 text-center">Enterprise</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-white/[0.04] text-slate-700 dark:text-slate-350">

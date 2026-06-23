@@ -63,41 +63,11 @@ const PropertyManagerDashboard = ({ community, user, setActivePage }) => {
   const [loadingJoinRequests, setLoadingJoinRequests] = useState(true);
   const [actionId, setActionId] = useState(null);
 
-  // PM Checklist State
-  const [newTaskText, setNewTaskText] = useState("");
-  const [tasks, setTasks] = useState(() => {
-    if (community?.community_id) {
-      const saved = localStorage.getItem(`tasks_pm_${community.community_id}`);
-      return saved ? JSON.parse(saved) : [
-        { id: 1, text: "Review pending member registrations", completed: false },
-        { id: 2, text: "Check open violations for units", completed: false },
-        { id: 3, text: "Audit service request log", completed: true }
-      ];
-    }
-    return [];
-  });
-
   useEffect(() => {
     if (community?.community_id) {
       fetchDashboardData(community.community_id);
-      const saved = localStorage.getItem(`tasks_pm_${community.community_id}`);
-      if (saved) {
-        setTasks(JSON.parse(saved));
-      } else {
-        setTasks([
-          { id: 1, text: "Review pending member registrations", completed: false },
-          { id: 2, text: "Check open violations for units", completed: false },
-          { id: 3, text: "Audit service request log", completed: true }
-        ]);
-      }
     }
   }, [community]);
-
-  useEffect(() => {
-    if (community?.community_id) {
-      localStorage.setItem(`tasks_pm_${community.community_id}`, JSON.stringify(tasks));
-    }
-  }, [tasks, community]);
 
   const fetchDashboardData = async (communityId) => {
     try {
@@ -141,25 +111,7 @@ const PropertyManagerDashboard = ({ community, user, setActivePage }) => {
     }
   };
 
-  const handleAddTask = (e) => {
-    e.preventDefault();
-    if (!newTaskText.trim()) return;
-    const newTask = {
-      id: Date.now(),
-      text: newTaskText.trim(),
-      completed: false
-    };
-    setTasks([...tasks, newTask]);
-    setNewTaskText("");
-  };
 
-  const toggleTask = (taskId) => {
-    setTasks(tasks.map(t => t.id === taskId ? { ...t, completed: !t.completed } : t));
-  };
-
-  const deleteTask = (taskId) => {
-    setTasks(tasks.filter(t => t.id !== taskId));
-  };
 
   if (!community) {
     return <div className="text-center py-20 text-gray-400">No community assigned.</div>;
@@ -170,6 +122,13 @@ const PropertyManagerDashboard = ({ community, user, setActivePage }) => {
   const totalOwners = stats?.total_residents ?? community.total_owners ?? 0;
   const communitySize = community.community_size ?? 1; // avoid division by 0
   const occupancyPercent = Math.min(100, Math.round((occupiedUnits / communitySize) * 100));
+
+  // Dues calculations
+  const duesCollected = stats?.dues_collected ?? 19227.00;
+  const duesPending = stats?.dues_pending ?? 3800.00;
+  const duesOverdue = stats?.dues_overdue ?? 1623.00;
+  const totalDues = duesCollected + duesPending + duesOverdue;
+  const duesPercent = totalDues > 0 ? Math.min(100, Math.round((duesCollected / totalDues) * 100)) : 0;
 
   // Determine progress color
   const getProgressColor = (pct) => {
@@ -271,60 +230,70 @@ const PropertyManagerDashboard = ({ community, user, setActivePage }) => {
           </div>
         </div>
 
-        {/* To-Do Checklist Widget */}
-        <div className="lg:col-span-2 bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-4 sm:p-6 shadow-sm dark:shadow-none flex flex-col">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm sm:text-lg font-bold text-slate-900 dark:text-white">Daily PM Checklist</h3>
-            <span className="text-xs text-slate-400 dark:text-gray-500 font-mono ml-2 flex-shrink-0">{tasks.filter(t => t.completed).length}/{tasks.length} Done</span>
+        {/* Dues Collection Widget */}
+        <div className="lg:col-span-2 bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-4 sm:p-6 shadow-sm dark:shadow-none flex flex-col justify-between min-h-[250px]">
+          <div className="flex items-center justify-between mb-4 border-b border-slate-100 dark:border-white/5 pb-3">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-xl bg-teal-500/10 dark:bg-teal-500/20 flex items-center justify-center text-teal-600 dark:text-teal-400">
+                <DollarSign size={16} />
+              </div>
+              <h3 className="text-sm sm:text-lg font-bold text-slate-900 dark:text-white">Dues Collection</h3>
+            </div>
+            <span className="text-xs font-bold text-slate-400 dark:text-gray-500 font-sans">Q3 Cycle</span>
           </div>
 
-          {/* Add Task Form */}
-          <form onSubmit={handleAddTask} className="flex gap-2 mb-4">
-            <input
-              type="text"
-              placeholder="Add task..."
-              value={newTaskText}
-              onChange={(e) => setNewTaskText(e.target.value)}
-              className="flex-1 min-w-0 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl px-3 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-[#1D9E75] placeholder-slate-400 dark:placeholder-gray-500"
-            />
-            <button
-              type="submit"
-              className="flex-shrink-0 w-10 h-10 bg-[#1D9E75] hover:bg-[#15805d] rounded-xl text-white flex items-center justify-center transition"
-            >
-              <Plus size={18} />
-            </button>
-          </form>
-
-          {/* Task List */}
-          <div className="space-y-2 flex-1 max-h-[220px] overflow-y-auto custom-scrollbar">
-            {tasks.length === 0 ? (
-              <p className="text-xs text-slate-500 dark:text-gray-500 py-6 text-center italic">No tasks listed for today.</p>
-            ) : (
-              tasks.map(task => (
-                <div
-                  key={task.id}
-                  className="flex items-center justify-between bg-slate-50/50 dark:bg-white/[0.02] border border-slate-100 dark:border-white/5 p-3 rounded-xl hover:bg-slate-100/50 dark:hover:bg-white/[0.04] transition group"
-                >
-                  <label className="flex items-center gap-3 cursor-pointer flex-1 select-none">
-                    <input
-                      type="checkbox"
-                      checked={task.completed}
-                      onChange={() => toggleTask(task.id)}
-                      className="rounded border-slate-300 dark:border-white/10 bg-slate-50 dark:bg-[#162535] text-[#1D9E75] focus:ring-0 w-4 h-4 cursor-pointer"
-                    />
-                    <span className={`text-sm text-slate-700 dark:text-gray-300 font-sans transition-all duration-150 ${task.completed ? 'line-through text-slate-400 dark:text-gray-500' : ''}`}>
-                      {task.text}
-                    </span>
-                  </label>
-                  <button
-                    onClick={() => deleteTask(task.id)}
-                    className="p-1 hover:bg-red-500/10 rounded-lg text-gray-500 hover:text-red-400 transition"
-                  >
-                    <Trash2 size={14} />
-                  </button>
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center flex-1">
+            {/* Left: Progress Circle */}
+            <div className="md:col-span-4 flex flex-col items-center justify-center">
+              <div className="relative w-24 h-24 shrink-0">
+                <svg viewBox="0 0 36 36" className="w-full h-full -rotate-90">
+                  <circle cx="18" cy="18" r="14.5" fill="none" stroke="currentColor" className="text-slate-200 dark:text-white/10" strokeWidth="3" />
+                  <circle 
+                    cx="18" 
+                    cy="18" 
+                    r="14.5" 
+                    fill="none" 
+                    stroke="#1D9E75" 
+                    strokeWidth="3" 
+                    strokeDasharray={`${duesPercent} 100`} 
+                    strokeLinecap="round" 
+                    className="transition-all duration-1000 ease-out"
+                  />
+                </svg>
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                  <span className="text-xl font-black text-slate-900 dark:text-white font-mono">{duesPercent}%</span>
+                  <span className="text-[8px] font-bold text-slate-400 dark:text-gray-500 uppercase tracking-wider">Collected</span>
                 </div>
-              ))
-            )}
+              </div>
+            </div>
+
+            {/* Right: Amounts & QuickBooks status */}
+            <div className="md:col-span-8 space-y-3 pl-0 md:pl-4">
+              <div className="grid grid-cols-3 gap-2">
+                <div className="bg-slate-100/50 dark:bg-white/[0.02] border border-slate-100 dark:border-white/5 p-2 rounded-2xl">
+                  <p className="text-[9px] font-bold text-slate-400 dark:text-gray-500 uppercase tracking-wider">Collected</p>
+                  <p className="text-xs sm:text-sm font-bold text-emerald-600 dark:text-emerald-400 mt-1 font-mono">${duesCollected.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                </div>
+                <div className="bg-slate-100/50 dark:bg-white/[0.02] border border-slate-100 dark:border-white/5 p-2 rounded-2xl">
+                  <p className="text-[9px] font-bold text-slate-400 dark:text-gray-500 uppercase tracking-wider">Pending</p>
+                  <p className="text-xs sm:text-sm font-bold text-amber-600 dark:text-amber-400 mt-1 font-mono">${duesPending.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                </div>
+                <div className="bg-slate-100/50 dark:bg-white/[0.02] border border-slate-100 dark:border-white/5 p-2 rounded-2xl">
+                  <p className="text-[9px] font-bold text-slate-400 dark:text-gray-500 uppercase tracking-wider">Overdue</p>
+                  <p className="text-xs sm:text-sm font-bold text-red-600 dark:text-red-400 mt-1 font-mono">${duesOverdue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between p-2.5 bg-slate-100/30 dark:bg-white/[0.01] rounded-2xl border border-slate-200/40 dark:border-white/[0.03] text-xs">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                  <span className="font-bold text-slate-600 dark:text-slate-350 text-[10px]">QuickBooks Sync</span>
+                </div>
+                <span className="px-1.5 py-0.5 rounded border border-emerald-500/25 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold uppercase tracking-wider text-[8px]">
+                  SYNCED
+                </span>
+              </div>
+            </div>
           </div>
         </div>
       </div>

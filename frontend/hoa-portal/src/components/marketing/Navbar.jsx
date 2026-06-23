@@ -47,7 +47,7 @@ export default function Navbar() {
 
   const navLinks = [
     { name: 'Features', path: '/features' },
-    { name: 'Solutions', path: '#solutions' },
+    { name: 'Products', path: '#products' },
     { name: 'Pricing', path: '/pricing' },
     { name: 'About', path: '/about' },
     { name: 'Contact', path: '/contact' },
@@ -124,7 +124,7 @@ export default function Navbar() {
           {/* Desktop Nav */}
           <div className="hidden md:flex items-center gap-1">
             {navLinks.map((link) => {
-              if (link.name === 'Solutions') {
+              if (link.name === 'Products') {
                 return (
                   <div
                     key={link.name}
@@ -305,14 +305,14 @@ export default function Navbar() {
         <div className="md:hidden border-t border-slate-100 dark:border-white/[0.06] bg-white/95 dark:bg-[#07060f]/95 backdrop-blur-2xl">
           <div className="px-5 py-4 space-y-1">
             {navLinks.map((link) => {
-              if (link.name === 'Solutions') {
+              if (link.name === 'Products') {
                 return (
                   <div key={link.name} className="space-y-1">
                     <button
                       onClick={() => setMobileSolutionsOpen(!mobileSolutionsOpen)}
                       className="w-full text-left px-4 py-2.5 rounded-xl text-sm font-medium transition-all flex items-center justify-between text-slate-600 dark:text-slate-355"
                     >
-                      <span>Solutions</span>
+                      <span>Products</span>
                       <ChevronDown
                         size={16}
                         className={`transition-transform duration-200 ${mobileSolutionsOpen ? 'rotate-180 text-violet-500' : ''}`}

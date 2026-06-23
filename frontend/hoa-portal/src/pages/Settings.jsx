@@ -39,6 +39,7 @@ const Settings = ({ community }) => {
     faqs:            true,
     documents:       true,
     news:            true,
+    ai_assistant:    true,
   });
 
   const [errors, setErrors] = useState({});
@@ -108,7 +109,10 @@ const Settings = ({ community }) => {
         bank_account_name:     data.bank_account_name || '',
       }));
       if (data.visible_tabs) {
-        setTabs(data.visible_tabs);
+        setTabs(prev => ({
+          ...prev,
+          ...data.visible_tabs
+        }));
       }
     } catch (err) {
       console.error('Settings fetch error:', err);
@@ -405,7 +409,9 @@ const Settings = ({ community }) => {
           <div className="space-y-4">
             {Object.entries(tabs).map(([key, value]) => (
               <div key={key} className="flex items-center justify-between">
-                <span className="text-sm capitalize text-slate-700 dark:text-gray-200">{key.replace('_', ' ')} Tab</span>
+                <span className="text-sm capitalize text-slate-700 dark:text-gray-200">
+                  {key === 'ai_assistant' ? 'AI Copilot Assistant (Dashboard)' : key.replace('_', ' ') + ' Tab'}
+                </span>
                 <Toggle
                   value={value}
                   onChange={v => setTabs(prev => ({...prev, [key]: v}))}

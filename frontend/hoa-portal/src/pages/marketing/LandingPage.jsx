@@ -1129,7 +1129,7 @@ export default function LandingPage() {
               <div className="flex h-[480px] overflow-hidden bg-slate-50 dark:bg-[#090F16]">
 
                 {/* ── Sidebar ── */}
-                <aside className={`w-44 shrink-0 border-r flex flex-col transition-colors duration-300 ${
+                <aside className={`hidden sm:flex w-44 shrink-0 border-r flex flex-col transition-colors duration-300 ${
                   isDark ? 'bg-[#0B132B] border-white/[0.06]' : 'bg-[#E8F1FC] border-slate-200/80'
                 }`}>
                   {/* Logo */}
@@ -1233,7 +1233,7 @@ export default function LandingPage() {
                       
                       {/* Profile Widget */}
                       <div className={`flex items-center gap-2 pl-3 border-l ${isDark ? 'border-white/[0.06]' : 'border-slate-200'}`}>
-                        <div className="text-right">
+                        <div className="hidden sm:block text-right">
                           <p className={`text-[8px] font-bold leading-none ${isDark ? 'text-white' : 'text-slate-800'}`}>James Mitchell</p>
                           <span className={`text-[6px] font-extrabold uppercase tracking-wider ${isDark ? 'text-teal-400' : 'text-teal-600'}`}>SUPER ADMIN</span>
                         </div>
@@ -1280,7 +1280,7 @@ export default function LandingPage() {
                     </div>
 
                     {/* Main Banner Card */}
-                    <div className={`relative overflow-hidden rounded-2xl p-4 border shadow-md flex items-center justify-between transition-all ${
+                    <div className={`relative overflow-hidden rounded-2xl p-4 border shadow-md flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 transition-all ${
                       isDark 
                         ? 'bg-gradient-to-r from-[#1E2E42] via-[#162535] to-[#121B2A] text-white border-white/[0.06]' 
                         : 'bg-white text-slate-850 border-slate-200/85 shadow-sm'
@@ -1309,7 +1309,7 @@ export default function LandingPage() {
                       </div>
                       
                       {/* Right side stats banner columns */}
-                      <div className="flex items-center gap-6 pr-2">
+                      <div className="flex flex-wrap items-center gap-4 sm:gap-6 pr-2 w-full sm:w-auto justify-between sm:justify-end border-t sm:border-t-0 pt-3 sm:pt-0 border-slate-200/50 dark:border-white/[0.04]">
                         {[
                           { label: 'MEMBERS', value: '7', darkColor: 'text-sky-400', lightColor: 'text-teal-600' },
                           { label: 'VIOLATIONS', value: '2', darkColor: 'text-red-400', lightColor: 'text-red-600' },
@@ -1325,7 +1325,7 @@ export default function LandingPage() {
                     </div>
 
                     {/* Stat Card Grid (4 Columns) */}
-                    <div className="grid grid-cols-4 gap-3">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                       {[
                         { 
                           label: 'Total Members', 
@@ -1403,7 +1403,7 @@ export default function LandingPage() {
                     <div className="grid grid-cols-12 gap-3.5 pt-1 text-left">
                       
                       {/* Recent Service Requests */}
-                      <div className={`col-span-7 rounded-xl border p-3 shadow-sm flex flex-col justify-between transition-all ${
+                      <div className={`col-span-12 sm:col-span-7 rounded-xl border p-3 shadow-sm flex flex-col justify-between transition-all ${
                         isDark 
                           ? 'bg-[#1E2E42] border-white/[0.06]' 
                           : 'bg-white border-slate-200/80'
@@ -1466,7 +1466,7 @@ export default function LandingPage() {
                       </div>
 
                       {/* Dues Progress & Integrations */}
-                      <div className={`col-span-5 rounded-xl border p-3 shadow-sm flex flex-col justify-between transition-all ${
+                      <div className={`col-span-12 sm:col-span-5 rounded-xl border p-3 shadow-sm flex flex-col justify-between transition-all ${
                         isDark 
                           ? 'bg-[#1E2E42] border-white/[0.06]' 
                           : 'bg-white border-slate-200/80 shadow-sm'
@@ -1820,141 +1820,7 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
-      {/* ═══════════════════════════════════════════════════════
-          HOW IT WORKS (Premium Connection Timeline Pathway)
-      ═══════════════════════════════════════════════════════ */}
-      <section id="how-it-works" className="py-28 px-5 sm:px-8 border-t border-slate-100 dark:border-white/[0.06] dark:bg-[#090F16]">
-        <div className="max-w-5xl mx-auto relative">
-          <div className="text-center max-w-2xl mx-auto mb-20 space-y-4">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-violet-500/10 border border-violet-500/20 text-violet-500 text-xs font-semibold">
-              <Zap className="w-3.5 h-3.5" />
-              Onboarding Process
-            </div>
-            <h2 className="font-display text-4xl font-black text-slate-900 dark:text-white tracking-tight">
-              From demo call to<br />
-              <span className="gradient-text">fully operational</span>
-            </h2>
-            <p className="text-slate-500 dark:text-slate-400">Six simple, streamlined steps to deploy NestBloq in your residential society.</p>
-          </div>
 
-          <div className="relative space-y-12 md:space-y-16 pb-2">
-            {/* Timeline Connector Line (Dual-layer for premium blurred neon glow effect, constrained from Step 1 header to Step 6 header) */}
-            <div className="absolute left-4 md:left-1/2 top-[48px] md:top-[56px] bottom-[48px] md:bottom-[56px] w-[2px] bg-slate-200 dark:bg-white/10 md:-translate-x-1/2 pointer-events-none" />
-            <div className="absolute left-4 md:left-1/2 top-[48px] md:top-[56px] bottom-[48px] md:bottom-[56px] w-[2px] bg-gradient-to-b from-violet-500 via-blue-500 via-teal-500 via-amber-500 via-pink-500 to-purple-600 md:-translate-x-1/2 pointer-events-none blur-[1px] opacity-70" />
-
-            {[
-              { 
-                step: '01', 
-                title: 'Sales Consultation & Demo', 
-                desc: 'Connect with a NestBloq sales consultant to align on community requirements, customize pricing, and secure your setup.', 
-                icon: MessageSquare, 
-                color: 'from-violet-500 to-indigo-600',
-                badge: 'Demo Call',
-                pulseBg: 'bg-violet-500/20',
-                glowColor: 'group-hover:shadow-[0_0_30px_rgba(124,58,237,0.2)]',
-                ambientColor: 'from-violet-500/10 to-transparent'
-              },
-              { 
-                step: '02', 
-                title: 'Sign Contract Form', 
-                desc: 'Finalize plans and securely sign the digital contract agreement form to initialize your dedicated workspace deployment.', 
-                icon: FileText, 
-                color: 'from-blue-500 to-indigo-600',
-                badge: 'License Activation',
-                pulseBg: 'bg-blue-500/20',
-                glowColor: 'group-hover:shadow-[0_0_30px_rgba(59,130,246,0.2)]',
-                ambientColor: 'from-blue-500/10 to-transparent'
-              },
-              { 
-                step: '03', 
-                title: 'BM & PM Initialization Options', 
-                desc: 'Deploy your workspace. Choose your administration mode: set up as a Board Member (BM) or Property Manager (PM) to initialize the community.', 
-                icon: UserCheck, 
-                color: 'from-emerald-500 to-teal-600',
-                badge: 'Admin Roles',
-                pulseBg: 'bg-emerald-500/20',
-                glowColor: 'group-hover:shadow-[0_0_30px_rgba(16,185,129,0.2)]',
-                ambientColor: 'from-emerald-500/10 to-transparent'
-              },
-              { 
-                step: '04', 
-                title: 'Community Created', 
-                desc: 'NestBloq deploys your dedicated secure isolated database instance. Your property configuration, units, and custom settings are live.', 
-                icon: Building, 
-                color: 'from-amber-500 to-orange-600',
-                badge: 'Workspace Live',
-                pulseBg: 'bg-amber-500/20',
-                glowColor: 'group-hover:shadow-[0_0_30px_rgba(245,158,11,0.2)]',
-                ambientColor: 'from-amber-500/10 to-transparent'
-              },
-              { 
-                step: '05', 
-                title: 'Resident Invitation Links', 
-                desc: 'Board members and managers invite residents easily by entering emails or sharing a secure joining invitation link.', 
-                icon: Send, 
-                color: 'from-pink-500 to-rose-600',
-                badge: 'Invites Sent',
-                pulseBg: 'bg-pink-500/20',
-                glowColor: 'group-hover:shadow-[0_0_30px_rgba(236,72,153,0.2)]',
-                ambientColor: 'from-pink-500/10 to-transparent'
-              },
-              { 
-                step: '06', 
-                title: 'Resident Joins NestBloq', 
-                desc: 'Residents register, access their personalized workspaces, pay dues, book amenities, and start interacting with AI Copilot!', 
-                icon: Sparkles, 
-                color: 'from-violet-500 to-purple-600',
-                badge: 'Onboarded',
-                pulseBg: 'bg-purple-500/20',
-                glowColor: 'group-hover:shadow-[0_0_30px_rgba(139,92,246,0.2)]',
-                ambientColor: 'from-purple-500/10 to-transparent'
-              }
-            ].map((item, i) => {
-              const isEven = i % 2 === 0;
-              return (
-                <div key={i} className={`relative flex flex-col md:flex-row items-center justify-between ${isEven ? 'md:flex-row-reverse' : ''} group`}>
-                  
-                  {/* Connector Dot */}
-                  <div className="absolute left-4 md:left-1/2 top-[48px] md:top-[56px] -translate-x-1/2 -translate-y-1/2 z-20 flex items-center justify-center">
-                    <span className={`absolute inline-flex h-12 w-12 rounded-full ${item.pulseBg} animate-ping opacity-75 group-hover:scale-125 transition-all duration-300`} />
-                    <div className={`relative w-10 h-10 rounded-full bg-gradient-to-br ${item.color} border-4 border-white dark:border-[#090F16] flex items-center justify-center text-[10px] font-black text-white shadow-md group-hover:scale-110 transition-transform duration-300`}>
-                      {item.step}
-                    </div>
-                  </div>
-
-                  {/* Empty placeholder space to align timeline card alternately on desktop */}
-                  <div className="hidden md:block w-[45%]" />
-
-                  {/* Onboarding Timeline Content Card */}
-                  <div className="w-full md:w-[45%] pl-12 md:pl-0">
-                    <div className={`premium-card rounded-2xl p-6 md:p-8 flex flex-col gap-4 relative overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-1 ${item.glowColor} border border-slate-200/50 dark:border-white/[0.08] bg-white dark:bg-[#0D1B2A]`}>
-                      
-                      {/* Ambient background corner light overlay showing on hover */}
-                      <div className={`absolute -right-16 -top-16 w-32 h-32 bg-gradient-to-br ${item.ambientColor} opacity-0 group-hover:opacity-100 transition-opacity duration-700 blur-2xl pointer-events-none`} />
-                      
-                      <div className="flex items-center gap-4">
-                        <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${item.color} flex items-center justify-center shadow-lg shrink-0 group-hover:rotate-6 transition-transform duration-300`}>
-                          <item.icon className="w-5.5 h-5.5 text-white" />
-                        </div>
-                        <div>
-                          <div className="flex flex-wrap items-center gap-2">
-                            <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Step {item.step}</span>
-                            <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-[#1E2E42] text-slate-500 dark:text-slate-400 border border-slate-200/50 dark:border-white/[0.10]">{item.badge}</span>
-                          </div>
-                          <h3 className="font-bold text-slate-900 dark:text-white text-lg mt-1">{item.title}</h3>
-                        </div>
-                      </div>
-                      
-                      <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">{item.desc}</p>
-                    </div>
-                  </div>
-
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </section>
 
       {/* ═══════════════════════════════════════════════════════
           AI COPILOT

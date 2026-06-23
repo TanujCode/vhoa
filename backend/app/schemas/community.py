@@ -160,9 +160,14 @@ class CommunityStatsOut(BaseModel):
     active_violations: int = 0
     open_requests:     int = 0
     pending_payments:  int = 0
+    dues_collected:    float = 0.0
+    dues_pending:      float = 0.0
+    dues_overdue:      float = 0.0
 
 
+# ══════════════════════════════════════════════
 #  DOCUMENT SCHEMAS
+# ══════════════════════════════════════════════
 class DocumentOut(BaseModel):
     document_id:   int
     community_id:  int

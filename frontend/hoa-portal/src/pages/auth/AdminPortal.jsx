@@ -6,6 +6,7 @@ import { useTheme } from '../../context/ThemeContext';
 import Sidebar from '../../components/Sidebar';
 import Topbar from '../../components/Topbar';
 import NotifPanel from '../../components/NotifPanel';
+import AiAssistant from '../../components/AiAssistant';
 
 // Page Components
 import Dashboard from '../Dashboard'; 
@@ -532,6 +533,9 @@ const AdminPortal = () => {
           setReadNotificationIds([]);
         }}
       />
+      {activeCommunity?.visible_tabs?.ai_assistant !== false && (
+        <AiAssistant user={user} community={activeCommunity} />
+      )}
     </div>
   );
 };

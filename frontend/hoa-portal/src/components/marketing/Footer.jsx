@@ -23,13 +23,13 @@ export default function Footer() {
   ];
 
   const links = {
-    Product: [
+    Platform: [
       { name: 'Features', path: '/features' },
       { name: 'Pricing', path: '/pricing' },
       { name: 'Security', path: '#' },
       { name: 'Integrations', path: '#' },
     ],
-    Solutions: [
+    Products: [
       { name: 'Rental Property Management', path: '/solutions/rental' },
       { name: 'Condo Management', path: '/solutions/condo' },
       { name: 'Apartment Portal', path: '/solutions/apartment' },
