@@ -67,6 +67,18 @@ def create(
 All verified users can do this. 
 The status will automatically be set to 'Open'.
     """
+    if current_user.role.role_name == "super_admin":
+        from app.models.user import UserCommunity
+        assoc = db.query(UserCommunity).filter(
+            UserCommunity.user_id == current_user.user_id,
+            UserCommunity.community_id == body.community_id
+        ).first()
+        if not assoc:
+            raise HTTPException(
+                status_code=403,
+                detail="Platform administrators cannot create service requests unless they are registered as community members of this community."
+            )
+
     try:
         sr = create_service_request(body, current_user.user_id, db)
     except ValueError as e:
@@ -131,6 +143,13 @@ def change_status(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_verified_user),
 ):
+    if current_user.role.role_name == "super_admin":
+        from app.models.service_request import ServiceRequestStatus
+        status_obj = db.query(ServiceRequestStatus).filter(ServiceRequestStatus.status_id == body.status_id).first()
+        if status_obj and status_obj.status_name == "VENDOR_ASSIGNED":
+            raise HTTPException(status_code=403, detail="Platform administrators cannot assign vendors to service requests.")
+        if body.vendor_id is not None and body.vendor_id != 0:
+            raise HTTPException(status_code=403, detail="Platform administrators cannot assign vendors to service requests.")
     """
     chnage status of a service request.
 
@@ -260,6 +279,8 @@ def update_details(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_verified_user),
 ):
+    if current_user.role.role_name == "super_admin" and body.vendor_id is not None and body.vendor_id != 0:
+        raise HTTPException(status_code=403, detail="Platform administrators cannot assign vendors to service requests.")
     """Edit service request details (title, description, priority, type, etc.)"""
     try:
         sr = update_service_request(

@@ -50,6 +50,18 @@ def create(
 Create a new amenity.
 fee_enabled = True → Members will have to pay.
 """
+    if current_user.role.role_name == "super_admin":
+        from app.models.user import UserCommunity
+        assoc = db.query(UserCommunity).filter(
+            UserCommunity.user_id == current_user.user_id,
+            UserCommunity.community_id == body.community_id
+        ).first()
+        if not assoc:
+            raise HTTPException(
+                status_code=403,
+                detail="Platform administrators cannot create amenities unless they are registered as community members of this community."
+            )
+
     try:
         amenity = create_amenity(body, current_user.user_id, db)
     except ValueError as e:
@@ -143,6 +155,18 @@ Race Condition:
 If two users attempt to book the same slot simultaneously →
 One will receive a success response, while the other will receive an error.
 """
+    if current_user.role.role_name == "super_admin":
+        from app.models.user import UserCommunity
+        assoc = db.query(UserCommunity).filter(
+            UserCommunity.user_id == current_user.user_id,
+            UserCommunity.community_id == body.community_id
+        ).first()
+        if not assoc:
+            raise HTTPException(
+                status_code=403,
+                detail="Platform administrators cannot book amenities unless they are registered as community members of this community."
+            )
+
     try:
         booking = create_booking(body, current_user.user_id, db)
     except ValueError as e:

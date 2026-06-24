@@ -409,7 +409,7 @@ const AdminPortal = () => {
         );
 
       case 'vendors': 
-        return <Vendors communityId={activeCommunity?.community_id} userRole={effectiveRole} />;
+        return <Vendors communityId={activeCommunity?.community_id} userRole={effectiveRole} user={effectiveUser} />;
         
       case 'violations': 
         return <Violations community={activeCommunity} user={effectiveUser} setActivePage={setActivePage} setPaymentState={setPaymentState} />;

@@ -6,16 +6,51 @@ from app.config import settings
 
 
 def _send_email_thread(to_email: str, subject: str, html_body: str):
+    import os
+    from email.mime.image import MIMEImage
+
     username = settings.MAIL_USERNAME.strip('"').strip("'")
     password = settings.MAIL_PASSWORD.strip('"').strip("'")
     mail_from = settings.MAIL_FROM.strip('"').strip("'")
     from_name = settings.MAIL_FROM_NAME.strip('"').strip("'")
 
-    msg = MIMEMultipart("alternative")
+    msg = MIMEMultipart("related")
     msg["Subject"] = subject
     msg["From"]    = f"{from_name} <{mail_from}>"
     msg["To"]      = to_email
-    msg.attach(MIMEText(html_body, "html"))
+
+    msg_alternative = MIMEMultipart("alternative")
+    msg.attach(msg_alternative)
+
+    # Resolve logo_dark.png path from current directory
+    logo_path = os.path.abspath(os.path.join(
+        os.path.dirname(__file__), "..", "..", "..", "frontend", "hoa-portal", "public", "logo_dark.png"
+    ))
+
+    attached_logo = False
+    if os.path.exists(logo_path):
+        try:
+            with open(logo_path, "rb") as f:
+                img_data = f.read()
+            msg_image = MIMEImage(img_data)
+            msg_image.add_header("Content-ID", "<logo_dark>")
+            msg_image.add_header("Content-Disposition", "inline", filename="logo_dark.png")
+            msg.attach(msg_image)
+            attached_logo = True
+            print("Successfully attached inline logo_dark.png using CID")
+        except Exception as img_err:
+            print(f"Failed to attach inline image: {img_err}")
+
+    # Determine html content
+    final_html = html_body
+    if attached_logo:
+        final_html = final_html.replace("https://nestbloq.vercel.app/logo_dark.png", "cid:logo_dark")
+    else:
+        # Fallback to public raw github url
+        fallback_url = "https://raw.githubusercontent.com/TanujCode/vhoa/main/frontend/hoa-portal/public/logo_dark.png"
+        final_html = final_html.replace("https://nestbloq.vercel.app/logo_dark.png", fallback_url)
+
+    msg_alternative.attach(MIMEText(final_html, "html"))
 
     # Try SMTP_SSL on port 465 first
     try:
@@ -59,9 +94,7 @@ def _wrap_in_responsive_layout(inner_html: str, subtitle: str = "HOA Management 
             
             <!-- Header -->
             <div style="background: #162535; padding: 30px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1);">
-              <h1 style="margin: 0; font-size: 24px; color: #ffffff;">
-                <span style="color: #14B8A6;">N</span>estBloq
-              </h1>
+              <img src="https://nestbloq.vercel.app/logo_dark.png" alt="NestBloq" style="height: 38px; width: auto; display: block; margin: 0 auto;" />
               {sub_element}
             </div>
 

@@ -629,6 +629,28 @@ const Amenity = ({ community, user, setActivePage, setPaymentState }) => {
   const role = user?.role_name || user?.role || '';
   const isAdmin = ['super_admin', 'property_manager', 'board_member'].includes(role);
 
+  const handleCreateAmenityClick = () => {
+    if (role === 'super_admin') {
+      const isMember = user?.associated_community_ids?.includes(community?.community_id);
+      if (!isMember) {
+        alert("Platform administrators cannot create amenities unless they are registered as community members of this community.");
+        return;
+      }
+    }
+    setShowCreateModal(true);
+  };
+
+  const handleBookAmenityClick = (a) => {
+    if (role === 'super_admin') {
+      const isMember = user?.associated_community_ids?.includes(community?.community_id);
+      if (!isMember) {
+        alert("Platform administrators cannot book amenities unless they are registered as community members of this community.");
+        return;
+      }
+    }
+    setBookModal(a);
+  };
+
   useEffect(() => {
     if (community?.community_id) {
       activeTab === 'amenities' ? fetchAmenities() : fetchBookings();
@@ -742,7 +764,7 @@ const Amenity = ({ community, user, setActivePage, setPaymentState }) => {
             {loading ? "Refreshing..." : "Refresh"}
           </button>
           {isAdmin && (
-            <button onClick={() => setShowCreateModal(true)}
+            <button onClick={handleCreateAmenityClick}
               className="flex-1 md:flex-none px-5 py-2.5 bg-teal-600 hover:bg-teal-500 text-white rounded-2xl text-sm font-semibold transition flex items-center justify-center gap-2 shadow-lg shadow-teal-500/25">
               <Plus size={15} /> Create Amenity
             </button>
@@ -843,7 +865,7 @@ const Amenity = ({ community, user, setActivePage, setPaymentState }) => {
                       </>
                     )}
                     <button
-                      onClick={() => setBookModal(a)}
+                      onClick={() => handleBookAmenityClick(a)}
                       disabled={!a.active_status || !a.pool_open || (a.is_pool_reserved && !isAdmin)}
                       className="flex-1 py-2.5 bg-teal-600 hover:bg-teal-500 text-white rounded-2xl text-sm font-medium transition disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
                     >

@@ -404,6 +404,9 @@ def get_me(
             unit_no = assoc.unit_no
             unit_no_2 = assoc.unit_no_2
 
+    from app.models.user import UserCommunity
+    assoc_ids = [r.community_id for r in db.query(UserCommunity).filter(UserCommunity.user_id == user.user_id).all()]
+
     return UserOut(
         user_id              = user.user_id,
         user_code            = user.user_code,
@@ -431,6 +434,7 @@ def get_me(
         unit_no_2            = unit_no_2,
         id_proof_url         = id_proof,
         address_proof_url    = address_proof,
+        associated_community_ids = assoc_ids,
     )
 
 
@@ -593,6 +597,11 @@ def _to_out(user: User, db: Session | None = None, community_id: int | None = No
         if pending_req:
             account_status = "PENDING_APPROVAL"
 
+    assoc_ids = []
+    if db:
+        from app.models.user import UserCommunity
+        assoc_ids = [r.community_id for r in db.query(UserCommunity).filter(UserCommunity.user_id == user.user_id).all()]
+
     return UserOut(
         user_id              = user.user_id,
         user_code            = user.user_code,
@@ -619,6 +628,7 @@ def _to_out(user: User, db: Session | None = None, community_id: int | None = No
         unit_no_2            = unit_no_2,
         id_proof_url         = id_proof,
         address_proof_url    = address_proof,
+        associated_community_ids = assoc_ids,
     )
 
 

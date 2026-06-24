@@ -831,6 +831,28 @@ const Violations = ({ community, user, setActivePage, setPaymentState }) => {
   const role = user?.role_name || user?.role?.role_name || user?.role || '';
   const isResident = role.toLowerCase() === 'resident';
 
+  const handleCreateTypeClick = () => {
+    if (role === 'super_admin') {
+      const isMember = user?.associated_community_ids?.includes(community?.community_id);
+      if (!isMember) {
+        alert("Platform administrators cannot create violation types unless they are registered as community members of this community.");
+        return;
+      }
+    }
+    setShowCreateModal(true);
+  };
+
+  const handleSubmitViolationClick = () => {
+    if (role === 'super_admin') {
+      const isMember = user?.associated_community_ids?.includes(community?.community_id);
+      if (!isMember) {
+        alert("Platform administrators cannot create violations unless they are registered as community members of this community.");
+        return;
+      }
+    }
+    setShowModal(true);
+  };
+
   useEffect(() => {
     if (community?.community_id) {
       fetchViolations();
@@ -979,13 +1001,13 @@ const Violations = ({ community, user, setActivePage, setPaymentState }) => {
           {!isResident && (
             <>
               <button 
-                onClick={() => setShowCreateModal(true)}
+                onClick={handleCreateTypeClick}
                 className="w-full sm:w-auto px-5 py-2.5 bg-blue-600 hover:bg-blue-500 rounded-2xl text-sm font-semibold transition flex items-center justify-center gap-2 text-white"
               >
                 <Plus size={15} /> Create Type
               </button>
               <button
-                onClick={() => setShowModal(true)}
+                onClick={handleSubmitViolationClick}
                 className="w-full sm:w-auto px-5 py-2.5 bg-teal-600 hover:bg-teal-500 rounded-2xl text-sm font-semibold transition flex items-center justify-center gap-2 text-white"
               >
                 <Plus size={15} />

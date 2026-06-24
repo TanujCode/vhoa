@@ -29,6 +29,18 @@ def create(
     current_user: User = Depends(require_role("super_admin", "property_manager", "board_member")),
 ):
     """Onboard a new vendor and auto-generate access code"""
+    if current_user.role.role_name == "super_admin":
+        from app.models.user import UserCommunity
+        assoc = db.query(UserCommunity).filter(
+            UserCommunity.user_id == current_user.user_id,
+            UserCommunity.community_id == body.community_id
+        ).first()
+        if not assoc:
+            raise HTTPException(
+                status_code=403,
+                detail="Platform administrators cannot onboard vendors unless they are registered as community members of this community."
+            )
+
     vendor = create_vendor(body, current_user.user_id, db)
     
     # --- AUTO GENERATE CODE START ---

@@ -24,7 +24,9 @@ from app.utils.file_service import save_violation_document
 router = APIRouter(prefix="/violation", tags=["Violation"])
 
 
+# ══════════════════════════════════════════════
 #  VIOLATION TYPE
+# ══════════════════════════════════════════════
 @router.post("/type", response_model=ViolationTypeOut, status_code=201)
 def create_type(
     body: ViolationTypeCreate,
@@ -32,6 +34,18 @@ def create_type(
     current_user: User = Depends(require_role("super_admin", "property_manager", "board_member")),
 ):
     """Create a new violation type — e.g. Lawn Violation $50, 30 days"""
+    if current_user.role.role_name == "super_admin":
+        from app.models.user import UserCommunity
+        assoc = db.query(UserCommunity).filter(
+            UserCommunity.user_id == current_user.user_id,
+            UserCommunity.community_id == body.community_id
+        ).first()
+        if not assoc:
+            raise HTTPException(
+                status_code=403,
+                detail="Platform administrators cannot create violation types unless they are registered as community members of this community."
+            )
+
     check_community_access(current_user, body.community_id, db)
     vtype = create_violation_type(body, current_user.user_id, db)
     log_action(db, "CREATE_VIOLATION_TYPE", "violation",
@@ -70,7 +84,9 @@ def update_type(
         raise HTTPException(status_code=404, detail=str(e))
 
 
+# ══════════════════════════════════════════════
 #  VIOLATION STATUSES
+# ══════════════════════════════════════════════
 @router.get("/status", response_model=list[ViolationStatusOut])
 def get_statuses(
     db: Session = Depends(get_db),
@@ -80,7 +96,9 @@ def get_statuses(
     return db.query(ViolationStatus).all()
 
 
+# ══════════════════════════════════════════════
 #  VIOLATION CRUD
+# ══════════════════════════════════════════════
 @router.post("", response_model=ViolationOut, status_code=201)
 def create(
     request: Request,
@@ -95,6 +113,18 @@ def create(
     Due date will auto calculate: violation_date + due_days (by violation type) 
     Dispute deadline = violation_date + 30 days
     """
+    if current_user.role.role_name == "super_admin":
+        from app.models.user import UserCommunity
+        assoc = db.query(UserCommunity).filter(
+            UserCommunity.user_id == current_user.user_id,
+            UserCommunity.community_id == body.community_id
+        ).first()
+        if not assoc:
+            raise HTTPException(
+                status_code=403,
+                detail="Platform administrators cannot create violations unless they are registered as community members of this community."
+            )
+
     check_community_access(current_user, body.community_id, db)
     try:
         violation = create_violation(body, current_user.user_id, db)
@@ -221,7 +251,9 @@ def delete(
     return {"message": f"Violation {violation_id} has been deleted."}
 
 
+# ══════════════════════════════════════════════
 #  DISPUTE ENDPOINTS
+# ══════════════════════════════════════════════
 @router.post("/{violation_id}/dispute", response_model=ViolationOut)
 def dispute_violation(
     request: Request,
@@ -288,7 +320,9 @@ def resolve_violation_dispute(
     return _to_out(violation)
 
 
+# ══════════════════════════════════════════════
 #  DOCUMENTS
+# ══════════════════════════════════════════════
 @router.post("/{violation_id}/document", response_model=ViolationDocumentOut, status_code=201)
 async def upload_document(
     violation_id: int,
@@ -340,7 +374,9 @@ def get_documents(
     return get_violation_documents(violation_id, db)
 
 
+# ══════════════════════════════════════════════
 #  HELPER
+# ══════════════════════════════════════════════
 def _to_out(v) -> ViolationOut:
     client_name = None
     if v.client:

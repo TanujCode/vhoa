@@ -20,7 +20,7 @@ const getPhoneValidationRule = (code) => {
   }
 };
 
-const Vendors = ({ communityId, userRole }) => {
+const Vendors = ({ communityId, userRole, user }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [vendors, setVendors] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -45,6 +45,17 @@ const Vendors = ({ communityId, userRole }) => {
   });
 
   const [errors, setErrors] = useState({});
+
+  const handleOnboardClick = () => {
+    if (userRole === 'super_admin') {
+      const isMember = user?.associated_community_ids?.includes(Number(communityId));
+      if (!isMember) {
+        alert("Platform administrators cannot onboard vendors unless they are registered as community members of this community.");
+        return;
+      }
+    }
+    setIsModalOpen(true);
+  };
 
   const isAdmin = userRole === 'super_admin' || userRole === 'property_manager';
   const isBoardMember = userRole === 'board_member' || userRole === 'president' || userRole === 'director';
@@ -266,7 +277,7 @@ const Vendors = ({ communityId, userRole }) => {
             <p className="text-slate-500 dark:text-gray-400 mt-1">Onboard vendors, manage licenses, and generate access codes</p>
           </div>
           <button 
-            onClick={() => setIsModalOpen(true)}
+            onClick={handleOnboardClick}
             className="bg-teal-600 hover:bg-teal-500 px-5 py-2.5 rounded-2xl text-white flex items-center gap-2 text-sm font-semibold transition shadow-lg shadow-teal-500/25"
           >
             <Plus size={15} /> Onboard Vendor
@@ -496,7 +507,7 @@ const Vendors = ({ communityId, userRole }) => {
         </div>
         {isAdmin && (
           <button 
-            onClick={() => setIsModalOpen(true)}
+            onClick={handleOnboardClick}
             className="bg-teal-600 hover:bg-teal-500 text-white px-5 py-2.5 rounded-2xl flex items-center gap-2 text-sm font-semibold transition-all shadow-lg shadow-teal-500/25"
           >
             <Plus size={15} /> Onboard Vendor

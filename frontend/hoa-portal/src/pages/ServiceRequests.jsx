@@ -218,7 +218,7 @@ const SubmitModal = ({ communityId, onClose, onSuccess }) => {
 };
 
 // ==================== STATUS UPDATE MODAL ====================
-const StatusModal = ({ request, statuses, onClose, onSuccess }) => {
+const StatusModal = ({ request, statuses, userRole, onClose, onSuccess }) => {
   const [statusId, setStatusId] = useState('');
   const [note, setNote] = useState('');
   const [vendorId, setVendorId] = useState('');
@@ -229,7 +229,7 @@ const StatusModal = ({ request, statuses, onClose, onSuccess }) => {
 
   // Filter statuses based on strict transition rules
   const current = request.status_name;
-  const allowedStatuses = statuses.filter(s => {
+  let allowedStatuses = statuses.filter(s => {
     const target = s.status_name;
     if (target === current) return false;
     if (current === 'OPEN') {
@@ -246,6 +246,10 @@ const StatusModal = ({ request, statuses, onClose, onSuccess }) => {
     }
     return ['IN_PROGRESS', 'CLOSED', 'ON_HOLD', 'CANCELLED'].includes(target);
   });
+
+  if (userRole === 'super_admin') {
+    allowedStatuses = allowedStatuses.filter(s => s.status_name !== 'VENDOR_ASSIGNED');
+  }
 
   const selectedStatusName = statuses.find(s => String(s.status_id) === String(statusId))?.status_name;
   const isVendorAssigned = selectedStatusName === 'VENDOR_ASSIGNED';
@@ -376,7 +380,7 @@ const StatusModal = ({ request, statuses, onClose, onSuccess }) => {
 };
 
 // ==================== EDIT REQUEST DETAILS MODAL ====================
-const EditModal = ({ request, communityId, isAdmin, onClose, onSuccess }) => {
+const EditModal = ({ request, communityId, isAdmin, userRole, onClose, onSuccess }) => {
   const [form, setForm] = useState({
     title: request.title || '',
     description: request.description || '',
@@ -513,7 +517,7 @@ const EditModal = ({ request, communityId, isAdmin, onClose, onSuccess }) => {
             </div>
           </div>
 
-          {isAdmin && (
+          {isAdmin && userRole !== 'super_admin' && (
             <>
               <div>
                 <label className="text-xs text-slate-500 dark:text-gray-400 mb-1.5 block">Assign Vendor</label>
@@ -578,6 +582,7 @@ const DetailDrawer = ({
   historyLoading, 
   user, 
   isAdmin, 
+  userRole,
   onClose, 
   onEdit, 
   onStatusUpdate, 
@@ -788,7 +793,7 @@ const DetailDrawer = ({
   const isOwner = Number(request.submitted_by_id) === Number(user?.user_id);
   const canEdit = isAdmin || (isOwner && request.status_name === 'OPEN');
   const activeAssignment = assignments[0];
-  const showQuoteForm = isAdmin && (((activeAssignment && activeAssignment.status === 'ASSIGNED') || (!activeAssignment && request.vendor_id)));
+  const showQuoteForm = isAdmin && userRole !== 'super_admin' && (((activeAssignment && activeAssignment.status === 'ASSIGNED') || (!activeAssignment && request.vendor_id)));
 
   return (
     <div className="flex flex-col h-full text-slate-900 dark:text-white">
@@ -1167,7 +1172,7 @@ const DetailDrawer = ({
             onClick={onStatusUpdate}
             className="w-full py-3 bg-teal-600 hover:bg-teal-500 rounded-2xl text-sm font-semibold transition flex items-center justify-center gap-2 shadow-lg shadow-teal-900/30 text-white"
           >
-            <UserCheck size={16} /> Update Status / Assignment
+            <UserCheck size={16} /> {userRole === 'super_admin' ? 'Update Status' : 'Update Status / Assignment'}
           </button>
         )}
 
@@ -1293,6 +1298,17 @@ const ServiceRequests = ({ community, user, setActivePage, setPaymentState }) =>
   const role     = user?.role_name || user?.role || '';
   const isAdmin  = ['super_admin', 'property_manager', 'board_member'].includes(role);
   const isResident = role === 'resident';
+
+  const handleNewRequestClick = () => {
+    if (role === 'super_admin') {
+      const isMember = user?.associated_community_ids?.includes(community?.community_id);
+      if (!isMember) {
+        alert("Platform administrators cannot create service requests unless they are registered as community members of this community.");
+        return;
+      }
+    }
+    setShowModal(true);
+  };
 
   useEffect(() => {
     if (community?.community_id) { 
@@ -1491,7 +1507,7 @@ const ServiceRequests = ({ community, user, setActivePage, setPaymentState }) =>
           >
             <RefreshCw size={15} className={loading ? "animate-spin" : ""} /> {loading ? "Refreshing..." : "Refresh"}
           </button>
-          <button onClick={() => setShowModal(true)} className="w-full sm:w-auto flex items-center justify-center gap-2 bg-teal-600 hover:bg-teal-500 text-white px-5 py-2.5 rounded-2xl text-sm font-semibold transition">
+          <button onClick={handleNewRequestClick} className="w-full sm:w-auto flex items-center justify-center gap-2 bg-teal-600 hover:bg-teal-500 text-white px-5 py-2.5 rounded-2xl text-sm font-semibold transition">
             <Plus size={15} /> New Request
           </button>
         </div>
@@ -1720,6 +1736,7 @@ const ServiceRequests = ({ community, user, setActivePage, setPaymentState }) =>
             historyLoading={historyLoading}
             user={user}
             isAdmin={isAdmin}
+            userRole={role}
             onClose={() => setSelectedRequest(null)}
             onEdit={() => setEditingRequest(selectedDetails || selectedRequest)}
             onStatusUpdate={() => setStatusModal(selectedDetails || selectedRequest)}
@@ -1737,6 +1754,7 @@ const ServiceRequests = ({ community, user, setActivePage, setPaymentState }) =>
         <StatusModal
           request={statusModal}
           statuses={allStatuses.filter(s => s.status_name !== 'OPEN')}
+          userRole={role}
           onClose={() => setStatusModal(null)}
           onSuccess={handleRefreshAll}
         />
@@ -1747,6 +1765,7 @@ const ServiceRequests = ({ community, user, setActivePage, setPaymentState }) =>
           request={editingRequest}
           communityId={community?.community_id}
           isAdmin={isAdmin}
+          userRole={role}
           onClose={() => setEditingRequest(null)}
           onSuccess={handleRefreshAll}
         />
