@@ -48,7 +48,8 @@ const Vendors = ({ communityId, userRole, user }) => {
 
   const handleOnboardClick = () => {
     if (userRole === 'super_admin') {
-      const isMember = user?.associated_community_ids?.includes(Number(communityId));
+      const associatedIds = user?.associated_community_ids || [];
+      const isMember = associatedIds.map(Number).includes(Number(communityId));
       if (!isMember) {
         alert("Platform administrators cannot onboard vendors unless they are registered as community members of this community.");
         return;
