@@ -1,7 +1,3 @@
-@echo off
-echo === Copying all files to GitHub repo... ===
-
-REM ─── EXISTING FILES ───────────────────────────────────────────────────────
 copy /Y "d:\Vhoa_Management\frontend\hoa-portal\src\pages\Violations.jsx" "D:\github code cc\vhoa\frontend\hoa-portal\src\pages\Violations.jsx"
 copy /Y "d:\Vhoa_Management\frontend\hoa-portal\src\pages\ServiceRequests.jsx" "D:\github code cc\vhoa\frontend\hoa-portal\src\pages\ServiceRequests.jsx"
 copy /Y "d:\Vhoa_Management\frontend\hoa-portal\src\pages\Amenity.jsx" "D:\github code cc\vhoa\frontend\hoa-portal\src\pages\Amenity.jsx"
@@ -23,6 +19,10 @@ copy /Y "d:\Vhoa_Management\backend\app\main.py" "D:\github code cc\vhoa\backend
 copy /Y "d:\Vhoa_Management\backend\app\routers\amenity.py" "D:\github code cc\vhoa\backend\app\routers\amenity.py"
 copy /Y "d:\Vhoa_Management\backend\app\services\amenity_service.py" "D:\github code cc\vhoa\backend\app\services\amenity_service.py"
 copy /Y "d:\Vhoa_Management\frontend\hoa-portal\src\components\Topbar.jsx" "D:\github code cc\vhoa\frontend\hoa-portal\src\components\Topbar.jsx"
+copy /Y "d:\Vhoa_Management\frontend\hoa-portal\src\components\Sidebar.jsx" "D:\github code cc\vhoa\frontend\hoa-portal\src\components\Sidebar.jsx"
+copy /Y "d:\Vhoa_Management\frontend\hoa-portal\src\components\layout\AuthLayout.jsx" "D:\github code cc\vhoa\frontend\hoa-portal\src\components\layout\AuthLayout.jsx"
+copy /Y "d:\Vhoa_Management\frontend\hoa-portal\src\assets\logo_light.png" "D:\github code cc\vhoa\frontend\hoa-portal\src\assets\logo_light.png"
+copy /Y "d:\Vhoa_Management\frontend\hoa-portal\src\assets\logo_dark.png" "D:\github code cc\vhoa\frontend\hoa-portal\src\assets\logo_dark.png"
 copy /Y "d:\Vhoa_Management\frontend\hoa-portal\src\components\NotifPanel.jsx" "D:\github code cc\vhoa\frontend\hoa-portal\src\components\NotifPanel.jsx"
 copy /Y "d:\Vhoa_Management\frontend\hoa-portal\src\pages\Meetings.jsx" "D:\github code cc\vhoa\frontend\hoa-portal\src\pages\Meetings.jsx"
 copy /Y "d:\Vhoa_Management\frontend\hoa-portal\src\utils\phoneFormatter.js" "D:\github code cc\vhoa\frontend\hoa-portal\src\utils\phoneFormatter.js"
@@ -43,44 +43,21 @@ copy /Y "d:\Vhoa_Management\backend\app\schemas\meeting_survey.py" "D:\github co
 copy /Y "d:\Vhoa_Management\backend\app\routers\meeting_survey.py" "D:\github code cc\vhoa\backend\app\routers\meeting_survey.py"
 copy /Y "d:\Vhoa_Management\frontend\hoa-portal\src\services\meetingSurveyService.js" "D:\github code cc\vhoa\frontend\hoa-portal\src\services\meetingSurveyService.js"
 copy /Y "d:\Vhoa_Management\backend\app\services\meeting_survey_service.py" "D:\github code cc\vhoa\backend\app\services\meeting_survey_service.py"
-
-REM ─── NEW FILES (Marketing Redesign + AI Assistant) ────────────────────────
-echo.
-echo === Copying new marketing + AI Assistant files... ===
-
-REM Navbar
-copy /Y "d:\Vhoa_Management\frontend\hoa-portal\src\components\marketing\Navbar.jsx" "D:\github code cc\vhoa\frontend\hoa-portal\src\components\marketing\Navbar.jsx"
-
-REM AI Assistant
-copy /Y "d:\Vhoa_Management\frontend\hoa-portal\src\components\marketing\InteractiveAssistant.jsx" "D:\github code cc\vhoa\frontend\hoa-portal\src\components\marketing\InteractiveAssistant.jsx"
-
-REM Footer
-copy /Y "d:\Vhoa_Management\frontend\hoa-portal\src\components\marketing\Footer.jsx" "D:\github code cc\vhoa\frontend\hoa-portal\src\components\marketing\Footer.jsx"
-
-REM Logo
-copy /Y "d:\Vhoa_Management\frontend\hoa-portal\src\components\marketing\Logo.jsx" "D:\github code cc\vhoa\frontend\hoa-portal\src\components\marketing\Logo.jsx"
-
-REM ROI Calculator
-copy /Y "d:\Vhoa_Management\frontend\hoa-portal\src\components\marketing\RoiCalculator.jsx" "D:\github code cc\vhoa\frontend\hoa-portal\src\components\marketing\RoiCalculator.jsx"
-
-REM Solution Pages
-copy /Y "d:\Vhoa_Management\frontend\hoa-portal\src\pages\marketing\solutions\HoaSolutionPage.jsx" "D:\github code cc\vhoa\frontend\hoa-portal\src\pages\marketing\solutions\HoaSolutionPage.jsx"
-copy /Y "d:\Vhoa_Management\frontend\hoa-portal\src\pages\marketing\solutions\ApartmentSolutionPage.jsx" "D:\github code cc\vhoa\frontend\hoa-portal\src\pages\marketing\solutions\ApartmentSolutionPage.jsx"
-copy /Y "d:\Vhoa_Management\frontend\hoa-portal\src\pages\marketing\solutions\CondoSolutionPage.jsx" "D:\github code cc\vhoa\frontend\hoa-portal\src\pages\marketing\solutions\CondoSolutionPage.jsx"
-copy /Y "d:\Vhoa_Management\frontend\hoa-portal\src\pages\marketing\solutions\RentalSolutionPage.jsx" "D:\github code cc\vhoa\frontend\hoa-portal\src\pages\marketing\solutions\RentalSolutionPage.jsx"
-
-REM App.jsx and main entry
+copy /Y "d:\Vhoa_Management\backend\app\routers\vendor.py" "D:\github code cc\vhoa\backend\app\routers\vendor.py"
+copy /Y "d:\Vhoa_Management\backend\app\utils\file_service.py" "D:\github code cc\vhoa\backend\app\utils\file_service.py"
+copy /Y "d:\Vhoa_Management\backend\app\schemas\community.py" "D:\github code cc\vhoa\backend\app\schemas\community.py"
+copy /Y "d:\Vhoa_Management\backend\app\services\community_service.py" "D:\github code cc\vhoa\backend\app\services\community_service.py"
+copy /Y "d:\Vhoa_Management\backend\app\routers\community.py" "D:\github code cc\vhoa\backend\app\routers\community.py"
+copy /Y "d:\Vhoa_Management\frontend\hoa-portal\src\components\AiAssistant.jsx" "D:\github code cc\vhoa\frontend\hoa-portal\src\components\AiAssistant.jsx"
 copy /Y "d:\Vhoa_Management\frontend\hoa-portal\src\App.jsx" "D:\github code cc\vhoa\frontend\hoa-portal\src\App.jsx"
+copy /Y "d:\Vhoa_Management\backend\requirements.txt" "D:\github code cc\vhoa\backend\requirements.txt"
+copy /Y "d:\Vhoa_Management\backend\app\routers\report.py" "D:\github code cc\vhoa\backend\app\routers\report.py"
+copy /Y "d:\Vhoa_Management\frontend\hoa-portal\src\pages\Dashboard.jsx" "D:\github code cc\vhoa\frontend\hoa-portal\src\pages\Dashboard.jsx"
+copy /Y "d:\Vhoa_Management\backend\app\routers\location.py" "D:\github code cc\vhoa\backend\app\routers\location.py"
+copy /Y "d:\Vhoa_Management\frontend\hoa-portal\src\components\AddCommunityModal.jsx" "D:\github code cc\vhoa\frontend\hoa-portal\src\components\AddCommunityModal.jsx"
+xcopy /Y /E /I "d:\Vhoa_Management\frontend\hoa-portal\src\pages\marketing" "D:\github code cc\vhoa\frontend\hoa-portal\src\pages\marketing"
+xcopy /Y /E /I "d:\Vhoa_Management\frontend\hoa-portal\src\components\marketing" "D:\github code cc\vhoa\frontend\hoa-portal\src\components\marketing"
+xcopy /Y /E /I "d:\Vhoa_Management\frontend\hoa-portal\src\assets" "D:\github code cc\vhoa\frontend\hoa-portal\src\assets"
+echo Done!
 
-echo.
-echo === All files copied! Now pushing to GitHub... ===
 
-REM ─── GIT PUSH ────────────────────────────────────────────────────────────
-cd /d "D:\github code cc\vhoa"
-git add .
-git commit -m "feat: Marketing redesign - Premium Navbar, AI Assistant (GPT-like bilingual), Solution Pages overhaul"
-git push
-
-echo.
-echo === Done! Check GitHub to confirm. ===
-pause

@@ -29,6 +29,7 @@ import Payments from '../Payments';
 import AuditHistory from '../AuditHistory';
 import Documents from '../Documents';
 import Reports from '../Reports';
+import ChangeRequests from '../ChangeRequests';
 
 // Services
 import { getMe } from '../../services/authService';
@@ -458,6 +459,9 @@ const AdminPortal = () => {
 
       case 'audit': 
           return <AuditHistory community={activeCommunity} user={effectiveUser} />;
+
+      case 'change_requests':
+        return <ChangeRequests />;
       
       default:           
         if (activeIsResident) return <ResidentDashboard community={activeCommunity} user={effectiveUser} setActivePage={setActivePage} />;

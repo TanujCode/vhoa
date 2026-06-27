@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Clock, Save, DollarSign, Eye, RefreshCw, ChevronDown } from 'lucide-react';
 import API from '../services/api';
 import { toast } from 'react-hot-toast';
+import RequestChangeModal from '../components/RequestChangeModal';
+
 
 const Toggle = ({ value, onChange }) => (
   <button
@@ -16,8 +18,10 @@ const Settings = ({ community, onCommunityUpdate }) => {
   const [saving, setSaving]   = useState(false);
   const [saved, setSaved]     = useState(false);
   const [loading, setLoading] = useState(false);
+  const [isChangeModalOpen, setIsChangeModalOpen] = useState(false);
 
   const [form, setForm] = useState({
+
     time_zone:              community?.time_zone || 'America/New_York',
     amenity_fee_enabled:    false,
     violation_fee_enabled:  false,
@@ -427,7 +431,15 @@ const Settings = ({ community, onCommunityUpdate }) => {
 
       {/* Community Info */}
       <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200 dark:border-white/10 rounded-3xl p-6 mt-6 shadow-sm">
-        <h3 className="font-semibold text-lg mb-4 text-slate-900 dark:text-white">📋 Community Info</h3>
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="font-semibold text-lg text-slate-900 dark:text-white">📋 Community Info</h3>
+          <button
+            onClick={() => setIsChangeModalOpen(true)}
+            className="text-xs bg-teal-650/10 hover:bg-teal-650 hover:text-white text-teal-600 dark:text-teal-400 border border-teal-500/20 dark:border-teal-400/20 px-3.5 py-2 rounded-xl font-bold transition active:scale-95 flex items-center gap-1.5"
+          >
+            Request Changes
+          </button>
+        </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
           <div>
             <p className="text-slate-500 dark:text-gray-400">Community Code</p>
@@ -447,6 +459,13 @@ const Settings = ({ community, onCommunityUpdate }) => {
           </div>
         </div>
       </div>
+
+      <RequestChangeModal
+        isOpen={isChangeModalOpen}
+        onClose={() => setIsChangeModalOpen(false)}
+        community={community}
+        onSuccess={fetchSettings}
+      />
     </div>
   );
 };

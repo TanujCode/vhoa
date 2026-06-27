@@ -3,7 +3,7 @@ import {
   Globe, Layout, Users, AlertTriangle, Wrench, 
   CreditCard, Home, FileText, HelpCircle, 
   Settings, Megaphone, User, ShieldAlert, Truck,
-  ClipboardList, Info, Building2
+  ClipboardList, Info, Building2, GitMerge
 } from 'lucide-react';
 import { getBaseUrl } from '../services/api';
 import { useTheme } from '../context/ThemeContext';
@@ -171,6 +171,17 @@ const Sidebar = ({ activePage, setActivePage, isOpen, setIsOpen, user, userRole:
                   className={getNavItemClass('settings')}
                 >
                   <Settings size={18} /> HOA Settings
+                </div>
+              )}
+
+              {/* Change Requests — Super Admin only */}
+              {userRole === 'super_admin' && (
+                <div
+                  onClick={() => { setActivePage('change_requests'); setIsOpen(false); }}
+                  className={getNavItemClass('change_requests')}
+                >
+                  <GitMerge size={18} />
+                  <span>Change Requests</span>
                 </div>
               )}
             </div>

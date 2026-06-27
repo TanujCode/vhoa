@@ -47,7 +47,7 @@ export default function Footer() {
     <footer className="relative overflow-hidden bg-gradient-to-br from-[#120824] via-[#1a0c33] to-[#0a0414] text-slate-100 border-t border-white/[0.06] transition-colors duration-300">
       
       {/* Multicolored premium border top line */}
-      <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-violet-500/30 via-indigo-500/50 to-teal-500/30 z-10" />
+      <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-violet-500/30 via-indigo-500/50 to-blue-500/30 z-10" />
 
       {/* Blurred background radial glow lights */}
       <div className="absolute -top-12 left-1/4 w-[400px] h-[300px] bg-gradient-radial from-violet-500/[0.08] to-transparent rounded-full blur-3xl pointer-events-none z-0" />

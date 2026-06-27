@@ -791,7 +791,7 @@ const DetailDrawer = ({
 
   const isResident = ['resident'].includes(String(user?.role_name || user?.role || '').toLowerCase());
   const isOwner = Number(request.submitted_by_id) === Number(user?.user_id);
-  const canEdit = isAdmin || (isOwner && request.status_name === 'OPEN');
+  const canEdit = (isAdmin || (isOwner && request.status_name === 'OPEN')) && !['CLOSED', 'CANCELLED'].includes(request.status_name);
   const activeAssignment = assignments[0];
   const showQuoteForm = isAdmin && userRole !== 'super_admin' && (((activeAssignment && activeAssignment.status === 'ASSIGNED') || (!activeAssignment && request.vendor_id)));
 
@@ -1667,7 +1667,7 @@ const ServiceRequests = ({ community, user, setActivePage, setPaymentState }) =>
                           <UserCheck size={12} /> Update Status
                         </button>
                       )}
-                      {(isAdmin || (isResident && req.submitted_by_id === user?.user_id && req.status_name === 'OPEN')) && (
+                      {(!['CLOSED', 'CANCELLED'].includes(req.status_name) && (isAdmin || (isResident && req.submitted_by_id === user?.user_id && req.status_name === 'OPEN'))) && (
                         <button 
                           onClick={(e) => {
                             e.stopPropagation();

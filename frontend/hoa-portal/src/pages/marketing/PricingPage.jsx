@@ -150,13 +150,13 @@ export default function PricingPage() {
       path: "/register",
       highlight: false,
       icon: Building2,
-      accent: "teal",
+      accent: "blue",
       badge: "Enterprise Elite",
       themeStyles: {
-        card: "border-slate-200/80 dark:border-white/[0.05] bg-white dark:bg-gradient-to-br dark:from-[#111124] dark:to-[#080814] hover:border-teal-400 dark:hover:border-teal-500/50 hover:shadow-teal-500/5",
-        badgeBg: "bg-teal-500/10 text-teal-700 dark:text-teal-405 border border-teal-500/20",
-        iconBg: "bg-teal-50 dark:bg-teal-950/40 text-teal-600 dark:text-teal-400 border border-teal-100/70 dark:border-teal-900/30",
-        button: "bg-slate-50 dark:bg-white/[0.02] text-slate-800 dark:text-white border border-slate-200 dark:border-white/[0.08] hover:bg-teal-600 hover:text-white hover:border-transparent hover:shadow-lg hover:shadow-teal-500/20"
+        card: "border-slate-200/80 dark:border-white/[0.05] bg-white dark:bg-gradient-to-br dark:from-[#111124] dark:to-[#080814] hover:border-blue-400 dark:hover:border-blue-500/50 hover:shadow-blue-500/5",
+        badgeBg: "bg-blue-500/10 text-blue-700 dark:text-blue-400 border border-blue-500/20",
+        iconBg: "bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 border border-blue-100/70 dark:border-blue-900/30",
+        button: "bg-slate-50 dark:bg-white/[0.02] text-slate-800 dark:text-white border border-slate-200 dark:border-white/[0.08] hover:bg-blue-600 hover:text-white hover:border-transparent hover:shadow-lg hover:shadow-blue-500/20"
       }
     }
   ];
@@ -181,39 +181,39 @@ export default function PricingPage() {
       <div className="flex-1 overflow-x-hidden">
 
       {/* --- Page Header Banner with Background Image --- */}
-      <header className="relative w-full overflow-hidden py-24 sm:py-32 border-b border-slate-200/50 dark:border-white/[0.04] bg-slate-900">
+      <header className="relative w-full overflow-hidden py-12 sm:py-16 border-b border-slate-200/50 dark:border-white/[0.04] bg-slate-50 dark:bg-slate-950">
         {/* Background Image of Modern Apartments */}
         <div className="absolute inset-0 z-0">
           <img
             src={heroCondoLight}
             alt="Modern Residential Complexes"
-            className="w-full h-full object-cover object-center opacity-40 select-none pointer-events-none"
+            className="w-full h-full object-cover object-center opacity-15 dark:opacity-20 blur-[2px] select-none pointer-events-none"
           />
-          {/* Dark Glassmorphic/Gradient Overlay */}
-          <div className="absolute inset-0 bg-gradient-to-b from-slate-900/90 via-slate-950/75 to-[#120824] dark:to-[#120824]" />
+          {/* Glowing navy/sky-blue overlay */}
+          <div className="absolute inset-0 bg-gradient-to-r from-slate-50/90 via-sky-50/30 to-slate-50/90 dark:from-slate-950/90 dark:via-sky-900/40 dark:to-slate-950/90" />
         </div>
 
         <div className="relative z-10 max-w-5xl mx-auto px-5 sm:px-8 text-center space-y-6">
-          <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-violet-500/20 border border-violet-400/40 text-violet-300 text-[10px] font-extrabold tracking-widest uppercase">
+          <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-sky-500/10 dark:bg-sky-500/20 border border-sky-300/30 dark:border-sky-400/30 text-sky-600 dark:text-sky-200 text-[10px] font-extrabold tracking-widest uppercase">
             Transparent pricing for every community
           </div>
           
-          <h1 className="text-4xl sm:text-5xl font-black text-white tracking-tight leading-tight max-w-3xl mx-auto">
+          <h1 className="text-4xl sm:text-5xl font-black text-slate-900 dark:text-white tracking-tight leading-tight max-w-3xl mx-auto">
             Choose the plan that fits your community's needs
           </h1>
           
-          <p className="text-base sm:text-lg text-slate-300 max-w-xl mx-auto leading-relaxed">
+          <p className="text-base sm:text-lg text-slate-600 dark:text-slate-300 max-w-xl mx-auto leading-relaxed">
             No hidden setup fees or locked-in contracts. Scale your package as your housing list grows.
           </p>
 
           {/* --- Billing Selector Switch --- */}
           <div className="flex items-center justify-center gap-3 pt-6">
-            <span className={`text-xs font-bold uppercase tracking-wider transition-colors ${billingCycle === 'monthly' ? 'text-white' : 'text-slate-400'}`}>
+            <span className={`text-xs font-bold uppercase tracking-wider transition-colors ${billingCycle === 'monthly' ? 'text-slate-900 dark:text-white' : 'text-slate-500 dark:text-slate-400'}`}>
               Monthly Billing
             </span>
             <button
               onClick={() => setBillingCycle(billingCycle === 'monthly' ? 'annual' : 'monthly')}
-              className="w-14 h-8 bg-white/10 dark:bg-white/5 border border-white/20 dark:border-white/10 rounded-full p-1 transition-colors duration-200 focus:outline-none flex items-center relative"
+              className="w-14 h-8 bg-slate-200/60 dark:bg-white/5 border border-slate-350 dark:border-white/10 rounded-full p-1 transition-colors duration-200 focus:outline-none flex items-center relative"
               aria-label="Toggle Billing Cycle"
             >
               <div
@@ -222,9 +222,9 @@ export default function PricingPage() {
                 }`}
               />
             </button>
-            <span className={`text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-colors ${billingCycle === 'annual' ? 'text-white' : 'text-slate-400'}`}>
+            <span className={`text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-colors ${billingCycle === 'annual' ? 'text-slate-900 dark:text-white' : 'text-slate-500 dark:text-slate-400'}`}>
               Annual Billing
-              <span className="bg-emerald-500/20 text-emerald-400 text-[10px] px-2.5 py-0.5 rounded-full font-extrabold uppercase border border-emerald-500/35">Save 20%</span>
+              <span className="bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-[10px] px-2.5 py-0.5 rounded-full font-extrabold uppercase border border-emerald-500/20 dark:border-emerald-500/35">Save 20%</span>
             </span>
           </div>
         </div>
@@ -233,7 +233,7 @@ export default function PricingPage() {
       {/* --- Pricing Tiers Grid --- */}
       <section className="py-20 max-w-7xl mx-auto px-5 sm:px-8 w-full relative z-10">
         <div className="absolute top-1/3 left-1/4 w-96 h-96 bg-violet-600/[0.04] dark:bg-violet-600/10 rounded-full blur-[120px] pointer-events-none" />
-        <div className="absolute bottom-1/3 right-1/4 w-96 h-96 bg-teal-500/[0.03] dark:bg-teal-500/8 rounded-full blur-[120px] pointer-events-none" />
+        <div className="absolute bottom-1/3 right-1/4 w-96 h-96 bg-blue-500/[0.03] dark:bg-blue-500/8 rounded-full blur-[120px] pointer-events-none" />
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch relative z-10">
           {plans.map((plan, idx) => {
@@ -246,7 +246,7 @@ export default function PricingPage() {
                 className={`relative flex flex-col justify-between p-6 rounded-3xl border transition-all duration-300 group hover:-translate-y-1.5 ${plan.themeStyles.card}`}
               >
                 {/* Accent glow on hover */}
-                <div className={`absolute -inset-px rounded-3xl bg-gradient-to-r ${plan.highlight ? 'from-violet-500/30 to-indigo-500/30' : plan.accent === 'teal' ? 'from-teal-500/20 to-cyan-500/20' : 'from-indigo-500/20 to-purple-500/20'} opacity-0 group-hover:opacity-100 blur-[8px] transition-all duration-300 pointer-events-none -z-10`} />
+                <div className={`absolute -inset-px rounded-3xl bg-gradient-to-r ${plan.highlight ? 'from-violet-500/30 to-indigo-500/30' : plan.accent === 'blue' ? 'from-blue-500/20 to-indigo-500/20' : 'from-indigo-500/20 to-purple-500/20'} opacity-0 group-hover:opacity-100 blur-[8px] transition-all duration-300 pointer-events-none -z-10`} />
 
                 <div className="relative z-10 flex flex-col h-full justify-between space-y-4">
                   
@@ -279,18 +279,18 @@ export default function PricingPage() {
                     <p className="text-[9px] font-extrabold uppercase tracking-widest text-slate-400 dark:text-slate-500">starting at</p>
                     <div className="flex items-baseline gap-1 mt-0.5 text-slate-900 dark:text-white">
                       <span className="text-4xl font-black tracking-tight">${price}</span>
-                      <span className="text-[10px] text-slate-450 dark:text-slate-500 font-bold uppercase">/ month</span>
+                      <span className="text-[10px] text-slate-455 dark:text-slate-500 font-bold uppercase">/ month</span>
                     </div>
                     {billingCycle === 'annual' && (
-                      <p className="text-[9px] text-emerald-650 dark:text-emerald-450 font-bold mt-1 flex items-center gap-1">
-                        <span className="w-1 h-1 rounded-full bg-emerald-500 inline-block" />
+                      <p className="text-[9px] text-indigo-650 dark:text-indigo-450 font-bold mt-1 flex items-center gap-1">
+                        <span className="w-1 h-1 rounded-full bg-indigo-500 inline-block" />
                         Billed annually (${price * 12}/yr)
                       </p>
                     )}
                   </div>
 
                   {/* Description */}
-                  <p className="text-xs text-slate-650 dark:text-slate-350 leading-relaxed text-left min-h-[35px]">
+                  <p className="text-xs text-slate-655 dark:text-slate-350 leading-relaxed text-left min-h-[35px]">
                     {plan.desc}
                   </p>
 
@@ -305,7 +305,7 @@ export default function PricingPage() {
                     <div className="space-y-2">
                       {plan.features.map((feature, fIdx) => (
                         <div key={fIdx} className="flex items-start gap-2.5 text-xs text-slate-655 dark:text-slate-300 leading-normal text-left">
-                          <div className={`w-3.5 h-3.5 rounded-full flex items-center justify-center shrink-0 mt-0.5 ${plan.highlight ? 'bg-violet-500/10 text-violet-500 dark:bg-violet-500/20 dark:text-violet-400' : 'bg-emerald-500/10 text-emerald-500 dark:bg-emerald-500/20 dark:text-emerald-400'}`}>
+                          <div className={`w-3.5 h-3.5 rounded-full flex items-center justify-center shrink-0 mt-0.5 ${plan.highlight ? 'bg-violet-500/10 text-violet-500 dark:bg-violet-500/20 dark:text-violet-400' : 'bg-blue-500/10 text-blue-500 dark:bg-blue-500/20 dark:text-blue-400'}`}>
                             <Check className="w-2 h-2 stroke-[3]" />
                           </div>
                           <span className="font-medium text-[11px]">{feature}</span>
@@ -336,7 +336,7 @@ export default function PricingPage() {
       {/* --- Interactive Pricing Calculator --- */}
       <section className="py-20 max-w-5xl mx-auto px-5 sm:px-8 w-full relative z-10 border-t border-slate-200/50 dark:border-white/[0.04]">
         <div className="text-center space-y-3 mb-12">
-          <span className="text-teal-600 dark:text-[#25C490] text-xs font-extrabold tracking-widest uppercase">
+          <span className="text-violet-600 dark:text-[#a78bfa] text-xs font-extrabold tracking-widest uppercase">
             Interactive Calculator
           </span>
           <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
@@ -478,7 +478,7 @@ export default function PricingPage() {
                     {!details.isCustom && (
                       <div className="text-xs text-slate-300 leading-relaxed font-normal pt-2">
                         {billingCycle === 'annual' ? (
-                          <span className="text-emerald-400 font-bold">
+                          <span className="text-blue-400 font-bold">
                             Billed annually (${details.totalAnnual}/yr)
                           </span>
                         ) : (
@@ -543,7 +543,7 @@ export default function PricingPage() {
             </div>
 
             <div className="p-6 bg-slate-50/50 dark:bg-white/[0.02] border border-slate-200/50 dark:border-white/[0.04] rounded-2xl space-y-4 shadow-sm hover:shadow-md transition-shadow">
-              <div className="w-10 h-10 rounded-xl bg-teal-500/10 text-teal-500 dark:text-teal-400 flex items-center justify-center border border-teal-500/20">
+              <div className="w-10 h-10 rounded-xl bg-indigo-500/10 text-indigo-500 dark:text-indigo-400 flex items-center justify-center border border-indigo-500/20">
                 <ArrowLeftRight className="w-5 h-5" />
               </div>
               <h4 className="font-bold text-slate-900 dark:text-white text-base">Seamless Migration</h4>
@@ -576,7 +576,7 @@ export default function PricingPage() {
                 "Direct Message Board"
               ].map((item, i) => (
                 <div key={i} className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-500 dark:text-emerald-400 shrink-0" />
+                  <CheckCircle2 className="w-4 h-4 text-indigo-500 dark:text-indigo-400 shrink-0" />
                   <span className="font-medium">{item}</span>
                 </div>
               ))}
@@ -646,25 +646,25 @@ export default function PricingPage() {
                     <td className="p-5 font-semibold text-slate-900 dark:text-white">{row.name}</td>
                     <td className="p-5 text-center font-semibold">
                       {row.starter === true ? (
-                        <Check className="w-4 h-4 text-emerald-500 dark:text-emerald-400 mx-auto" />
+                        <Check className="w-4 h-4 text-indigo-500 dark:text-indigo-400 mx-auto" />
                       ) : row.starter === false ? (
                         <X className="w-4 h-4 text-gray-300 mx-auto" />
                       ) : (
                         row.starter
                       )}
                     </td>
-                    <td className="p-5 text-center font-semibold text-emerald-500 dark:text-emerald-400">
+                    <td className="p-5 text-center font-semibold text-indigo-500 dark:text-indigo-400">
                       {row.professional === true ? (
-                        <Check className="w-4 h-4 text-emerald-500 dark:text-emerald-400 mx-auto" />
+                        <Check className="w-4 h-4 text-indigo-500 dark:text-indigo-400 mx-auto" />
                       ) : row.professional === false ? (
                         <X className="w-4 h-4 text-gray-300 mx-auto" />
                       ) : (
                         row.professional
                       )}
                     </td>
-                    <td className="p-5 text-center font-semibold text-emerald-500 dark:text-emerald-400">
+                    <td className="p-5 text-center font-semibold text-indigo-500 dark:text-indigo-400">
                       {row.enterprise === true ? (
-                        <Check className="w-4 h-4 text-emerald-500 dark:text-emerald-400 mx-auto" />
+                        <Check className="w-4 h-4 text-indigo-500 dark:text-indigo-400 mx-auto" />
                       ) : row.enterprise === false ? (
                         <X className="w-4 h-4 text-gray-300 mx-auto" />
                       ) : (

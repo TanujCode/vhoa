@@ -8,12 +8,14 @@ from sqlalchemy import pool
 from alembic import context
 
 # --- IMPORT SECTION ---
+# Bhai, ye sys.path zaroori hai taaki Alembic ko 'app' folder mil sake
 sys.path.insert(0, os.path.realpath(os.path.join(os.path.dirname(__file__), '..')))
 
 from app.database import Base  
 from app.models.user import User 
 from app.models.community import Community, CommunityJoinRequest
 
+# Metadata link (Sirf ek baar yahan set kiya hai)
 target_metadata = Base.metadata
 
 # --- CONFIG SECTION ---
@@ -54,7 +56,7 @@ def run_migrations_online() -> None:
         context.configure(
             connection=connection, 
             target_metadata=target_metadata,
-            compare_type=True
+            compare_type=True # Taaki column types ke changes bhi pakad sake
         )
 
         with context.begin_transaction():

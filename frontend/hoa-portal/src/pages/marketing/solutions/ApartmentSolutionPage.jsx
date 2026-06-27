@@ -33,8 +33,8 @@ export default function ApartmentSolutionPage() {
       title: "Temporary Visitor Passes",
       desc: "Assign time-limited OTP entry codes for incoming delivery workers, vendors, or housekeeping teams.",
       icon: Shield,
-      color: "text-emerald-650 bg-emerald-500/10 border border-emerald-500/20",
-      bg: "bg-emerald-100/85 dark:bg-emerald-950/30 border-emerald-200/80 dark:border-emerald-800/50 hover:shadow-lg hover:shadow-emerald-500/[0.05] hover:border-emerald-500/50 dark:hover:border-emerald-500/40"
+      color: "text-blue-600 bg-blue-500/10 border border-blue-500/20",
+      bg: "bg-blue-100/85 dark:bg-blue-950/30 border-blue-200/80 dark:border-blue-805/50 hover:shadow-lg hover:shadow-blue-500/[0.05] hover:border-blue-500/50 dark:hover:border-blue-500/40"
     }
   ];
 
@@ -52,14 +52,14 @@ export default function ApartmentSolutionPage() {
         {/* Dynamic Visual Accents / Auroras */}
         <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-blue-300/10 dark:bg-blue-950/15 rounded-full blur-[120px] pointer-events-none -z-10 animate-pulse-glow" />
         <div className="absolute top-1/3 right-1/4 w-[600px] h-[600px] bg-indigo-200/10 dark:bg-indigo-950/10 rounded-full blur-[140px] pointer-events-none -z-10 animate-float-bob" />
-        <div className="absolute bottom-1/4 left-10 w-[450px] h-[450px] bg-sky-400/5 dark:bg-sky-950/10 rounded-full blur-[100px] pointer-events-none -z-10" />
+        <div className="absolute bottom-1/4 left-10 w-[450px] h-[450px] bg-indigo-400/5 dark:bg-indigo-950/10 rounded-full blur-[100px] pointer-events-none -z-10" />
 
         {/* Hero Section */}
-        <section className="relative py-28 px-5 sm:px-8 border-b border-slate-200/40 dark:border-white/[0.04] overflow-hidden">
+        <section className="relative py-14 sm:py-20 px-5 sm:px-8 border-b border-slate-200/40 dark:border-white/[0.04] overflow-hidden">
           {/* Background glow auroras */}
           <div className="absolute inset-0 grid-bg opacity-[0.35] [mask-image:radial-gradient(ellipse_at_center,white_30%,transparent_70%)] pointer-events-none" />
-          <div className="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] bg-gradient-radial from-blue-500/10 via-sky-500/5 to-transparent rounded-full blur-3xl pointer-events-none" />
-          <div className="absolute top-[20%] right-[-10%] w-[45vw] h-[45vw] bg-gradient-radial from-sky-500/10 via-blue-500/5 to-transparent rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] bg-gradient-radial from-blue-500/10 via-indigo-500/5 to-transparent rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute top-[20%] right-[-10%] w-[45vw] h-[45vw] bg-gradient-radial from-indigo-500/10 via-blue-500/5 to-transparent rounded-full blur-3xl pointer-events-none" />
 
           <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 items-center relative z-10">
             <div className="lg:col-span-5 space-y-6 text-left">
@@ -69,7 +69,7 @@ export default function ApartmentSolutionPage() {
               </div>
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-slate-900 dark:text-white leading-[1.05] tracking-tight">
                 Unified Operations for <br />
-                <span className="bg-gradient-to-r from-blue-600 via-indigo-500 to-sky-400 bg-clip-text text-transparent">Multi-Family Communities.</span>
+                <span className="bg-gradient-to-r from-blue-600 via-indigo-500 to-violet-500 bg-clip-text text-transparent">Multi-Family Communities.</span>
               </h1>
               <p className="text-base sm:text-lg text-slate-500 dark:text-slate-400 font-normal leading-relaxed max-w-xl font-display">
                 NestBloq unifies work orders, local vendor dispatch lists, and guest entry management under a single administrative board.
@@ -213,7 +213,7 @@ export default function ApartmentSolutionPage() {
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/30 to-transparent" />
                 <div className="relative text-left text-white space-y-1 z-10">
-                  <span className="text-[9px] uppercase tracking-wider font-extrabold text-emerald-400">Eco Spaces</span>
+                  <span className="text-[9px] uppercase tracking-wider font-extrabold text-indigo-400">Green Spaces</span>
                   <h4 className="text-base font-black">Terrace Garden Paths</h4>
                   <p className="text-xs text-slate-350">Exquisite rooftop shrubberies, flowers, and seating areas.</p>
                 </div>
@@ -235,20 +235,20 @@ export default function ApartmentSolutionPage() {
           </div>
           <div className="max-w-5xl mx-auto grid grid-cols-1 sm:grid-cols-4 gap-6 px-5">
             {/* OpenAI */}
-            <div className="p-6 rounded-2xl border border-cyan-200/80 dark:border-cyan-800/50 bg-cyan-100/85 dark:bg-cyan-950/30 backdrop-blur-md text-left space-y-2 hover:shadow-lg hover:shadow-cyan-500/[0.05] hover:border-cyan-500/50 dark:hover:border-cyan-500/40 transition-all duration-300">
-              <span className="text-[10px] font-black text-cyan-650 dark:text-cyan-400 uppercase tracking-widest">01 / INTELLIGENCE</span>
-              <h4 className="text-sm font-black text-slate-900 dark:text-white">OpenAI Assistant</h4>
-              <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-normal font-display">Auto-triage maintenance tickets and answer resident rule queries.</p>
-            </div>
-            {/* Contractor API */}
-            <div className="p-6 rounded-2xl border border-amber-200/80 dark:border-amber-800/50 bg-amber-100/85 dark:bg-amber-950/30 backdrop-blur-md text-left space-y-2 hover:shadow-lg hover:shadow-amber-500/[0.05] hover:border-amber-500/50 dark:hover:border-amber-500/40 transition-all duration-300">
-              <span className="text-[10px] font-black text-amber-650 dark:text-amber-400 uppercase tracking-widest">02 / DISPATCH</span>
-              <h4 className="text-sm font-black text-slate-900 dark:text-white">Contractor API</h4>
-              <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-normal font-display">Direct integration with verified local vendor lists for easy dispatches.</p>
+            <div className="p-6 rounded-2xl border border-blue-200/80 dark:border-blue-800/50 bg-blue-100/85 dark:bg-blue-950/30 backdrop-blur-md text-left space-y-2 hover:shadow-lg hover:shadow-blue-500/[0.05] hover:border-blue-500/50 dark:hover:border-blue-500/40 transition-all duration-300">
+              <span className="text-[10px] font-black text-blue-655 dark:text-blue-400 uppercase tracking-widest">01 / INTELLIGENCE</span>
+              <h4 className="text-sm font-black text-slate-900 dark:text-white">AI Assistant</h4>
+              <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-normal font-display">Log work orders and check maintenance history logs automatically.</p>
             </div>
             {/* Twilio */}
-            <div className="p-6 rounded-2xl border border-rose-200/80 dark:border-rose-800/50 bg-rose-100/85 dark:bg-rose-950/30 backdrop-blur-md text-left space-y-2 hover:shadow-lg hover:shadow-rose-500/[0.05] hover:border-rose-500/50 dark:hover:border-rose-500/40 transition-all duration-300">
-              <span className="text-[10px] font-black text-rose-650 dark:text-rose-400 uppercase tracking-widest">03 / SECURITY CODES</span>
+            <div className="p-6 rounded-2xl border border-indigo-200/80 dark:border-indigo-800/50 bg-indigo-100/85 dark:bg-indigo-950/30 backdrop-blur-md text-left space-y-2 hover:shadow-lg hover:shadow-indigo-500/[0.05] hover:border-indigo-500/50 dark:hover:border-indigo-500/40 transition-all duration-300">
+              <span className="text-[10px] font-black text-indigo-650 dark:text-indigo-400 uppercase tracking-widest">02 / DISPATCH</span>
+              <h4 className="text-sm font-black text-slate-900 dark:text-white">Twilio SMS</h4>
+              <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-normal font-display">Auto-dispatch repair warnings and technician assignments via text message.</p>
+            </div>
+            {/* Security Codes */}
+            <div className="p-6 rounded-2xl border border-violet-200/80 dark:border-violet-800/50 bg-violet-100/85 dark:bg-violet-950/30 backdrop-blur-md text-left space-y-2 hover:shadow-lg hover:shadow-violet-500/[0.05] hover:border-violet-500/50 dark:hover:border-violet-500/40 transition-all duration-300">
+              <span className="text-[10px] font-black text-violet-650 dark:text-violet-400 uppercase tracking-widest">03 / SECURITY CODES</span>
               <h4 className="text-sm font-black text-slate-900 dark:text-white">Twilio OTP</h4>
               <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-normal font-display">Issue time-limited guest entrance code SMS messages instantly.</p>
             </div>
@@ -274,36 +274,36 @@ export default function ApartmentSolutionPage() {
           </div>
           <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 px-5">
             {/* Before */}
-            <div className="p-8 rounded-3xl border border-rose-500/20 bg-rose-500/[0.02] backdrop-blur-md text-left space-y-4">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-rose-500/30 text-[10px] font-semibold text-rose-500 bg-rose-500/10 uppercase tracking-wider">
+            <div className="p-8 rounded-3xl border border-violet-500/20 bg-violet-500/[0.02] backdrop-blur-md text-left space-y-4">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-violet-500/30 text-[10px] font-semibold text-violet-500 bg-violet-500/10 uppercase tracking-wider">
                 Traditional Complex Management
               </span>
               <ul className="space-y-4 text-xs text-slate-600 dark:text-slate-400 font-display">
                 <li className="flex items-start gap-2.5">
-                  <span className="text-rose-550 font-black">✕</span> <span>Days wasted calling contractors to resolve simple plumbing issues.</span>
+                  <span className="text-violet-500 font-black">✕</span> <span>Days wasted calling contractors to resolve simple plumbing issues.</span>
                 </li>
                 <li className="flex items-start gap-2.5">
-                  <span className="text-rose-550 font-black">✕</span> <span>Vague maintenance tracking with zero photo verification logs.</span>
+                  <span className="text-violet-500 font-black">✕</span> <span>Vague maintenance tracking with zero photo verification logs.</span>
                 </li>
                 <li className="flex items-start gap-2.5">
-                  <span className="text-rose-550 font-black">✕</span> <span>Manually writing visitor logs on paper clipboard files.</span>
+                  <span className="text-violet-500 font-black">✕</span> <span>Manually writing visitor logs on paper clipboard files.</span>
                 </li>
               </ul>
             </div>
             {/* After */}
-            <div className="p-8 rounded-3xl border border-emerald-500/30 bg-emerald-500/[0.03] backdrop-blur-md text-left space-y-4 shadow-xl shadow-emerald-500/5">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-emerald-500/30 text-[10px] font-semibold text-emerald-555 bg-emerald-500/10 uppercase tracking-wider">
+            <div className="p-8 rounded-3xl border border-indigo-500/30 bg-indigo-500/[0.03] backdrop-blur-md text-left space-y-4 shadow-xl shadow-indigo-500/5">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-indigo-500/30 text-[10px] font-semibold text-indigo-400 bg-indigo-500/10 uppercase tracking-wider">
                 NestBloq Automated Portal
               </span>
               <ul className="space-y-4 text-xs text-slate-600 dark:text-slate-400 font-display">
                 <li className="flex items-start gap-2.5">
-                  <span className="text-emerald-555 font-black">✓</span> <span>Kanban tickets assigned automatically to nearby contractors.</span>
+                  <span className="text-indigo-400 font-black">✓</span> <span>Kanban tickets assigned automatically to nearby contractors.</span>
                 </li>
                 <li className="flex items-start gap-2.5">
-                  <span className="text-emerald-555 font-black">✓</span> <span>Clean digital audits showing exact vendor entry & completion times.</span>
+                  <span className="text-indigo-400 font-black">✓</span> <span>Clean digital audits showing exact vendor entry & completion times.</span>
                 </li>
                 <li className="flex items-start gap-2.5">
-                  <span className="text-emerald-555 font-black">✓</span> <span>Time-limited OTP visitor codes dispatched automatically.</span>
+                  <span className="text-indigo-400 font-black">✓</span> <span>Time-limited OTP visitor codes dispatched automatically.</span>
                 </li>
               </ul>
             </div>
@@ -343,7 +343,7 @@ export default function ApartmentSolutionPage() {
         </section>
 
         {/* Bottom CTA */}
-        <section className="py-20 bg-gradient-to-br from-blue-500/5 via-[#ebf2fa] to-sky-500/10 dark:from-[#040913] dark:to-[#07060f] border-t border-slate-200/40 dark:border-white/[0.04] text-center relative overflow-hidden">
+        <section className="py-20 bg-gradient-to-br from-blue-500/5 via-[#ebf2fa] to-indigo-500/10 dark:from-[#040913] dark:to-[#07060f] border-t border-slate-200/40 dark:border-white/[0.04] text-center relative overflow-hidden">
           <div className="max-w-2xl mx-auto space-y-6 px-5 relative z-10">
             <h2 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">
               Streamline Apartment Service Tickets

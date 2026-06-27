@@ -1,75 +1,73 @@
 import smtplib
 import threading
+import os
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+from email.mime.image import MIMEImage
 from app.config import settings
+
+# Resolve logo path once at module load
+_BASE_DIR = os.path.dirname(__file__)
+_LOGO_PATH = None
+for _candidate in [
+    os.path.abspath(os.path.join(_BASE_DIR, "..", "..", "..", "frontend", "hoa-portal", "public", "logo_dark.png")),
+    os.path.abspath(os.path.join(_BASE_DIR, "..", "..", "frontend", "hoa-portal", "public", "logo_dark.png")),
+    os.path.abspath(os.path.join(_BASE_DIR, "..", "..", "..", "..", "frontend", "hoa-portal", "public", "logo_dark.png")),
+]:
+    if os.path.exists(_candidate):
+        _LOGO_PATH = _candidate
+        break
+print(f"[email_service] Logo path: {_LOGO_PATH}")
 
 
 def _send_email_thread(to_email: str, subject: str, html_body: str):
-    import os
-    from email.mime.image import MIMEImage
-
     username = settings.MAIL_USERNAME.strip('"').strip("'")
     password = settings.MAIL_PASSWORD.strip('"').strip("'")
     mail_from = settings.MAIL_FROM.strip('"').strip("'")
     from_name = settings.MAIL_FROM_NAME.strip('"').strip("'")
 
+    # Build multipart/related so inline CID image works in Gmail
     msg = MIMEMultipart("related")
     msg["Subject"] = subject
     msg["From"]    = f"{from_name} <{mail_from}>"
     msg["To"]      = to_email
 
-    msg_alternative = MIMEMultipart("alternative")
-    msg.attach(msg_alternative)
+    # Wrap HTML in alternative part (text/html)
+    msg_alt = MIMEMultipart("alternative")
+    msg.attach(msg_alt)
+    msg_alt.attach(MIMEText(html_body, "html"))
 
-    # Resolve logo_dark.png path from current directory
-    logo_path = os.path.abspath(os.path.join(
-        os.path.dirname(__file__), "..", "..", "..", "frontend", "hoa-portal", "public", "logo_dark.png"
-    ))
-
-    attached_logo = False
-    if os.path.exists(logo_path):
+    # Attach logo as inline CID image (no attachment shown in Gmail)
+    if _LOGO_PATH:
         try:
-            with open(logo_path, "rb") as f:
+            with open(_LOGO_PATH, "rb") as f:
                 img_data = f.read()
-            msg_image = MIMEImage(img_data)
-            msg_image.add_header("Content-ID", "<logo_dark>")
-            msg_image.add_header("Content-Disposition", "inline", filename="logo_dark.png")
-            msg.attach(msg_image)
-            attached_logo = True
-            print("Successfully attached inline logo_dark.png using CID")
-        except Exception as img_err:
-            print(f"Failed to attach inline image: {img_err}")
+            img = MIMEImage(img_data, "png")
+            img.add_header("Content-ID", "<vhoa_logo>")
+            img.add_header("Content-Disposition", "inline")
+            msg.attach(img)
+        except Exception as e:
+            print(f"[email_service] Failed to attach logo: {e}")
 
-    # Determine html content
-    final_html = html_body
-    if attached_logo:
-        final_html = final_html.replace("https://nestbloq.vercel.app/logo_dark.png", "cid:logo_dark")
-    else:
-        # Fallback to public raw github url
-        fallback_url = "https://raw.githubusercontent.com/TanujCode/vhoa/main/frontend/hoa-portal/public/logo_dark.png"
-        final_html = final_html.replace("https://nestbloq.vercel.app/logo_dark.png", fallback_url)
+    def _send(server):
+        server.sendmail(mail_from, to_email, msg.as_string())
 
-    msg_alternative.attach(MIMEText(final_html, "html"))
-
-    # Try SMTP_SSL on port 465 first
     try:
         print(f"Attempting SMTP_SSL on port 465 to {to_email}...")
         with smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=10) as server:
             server.login(username, password)
-            server.sendmail(mail_from, to_email, msg.as_string())
+            _send(server)
         print(f"Email sent successfully to {to_email} via port 465")
         return
     except Exception as e:
         print(f"SMTP_SSL port 465 failed: {e}")
 
-    # Fallback to STARTTLS on port 587
     try:
         print(f"Attempting SMTP+STARTTLS on port 587 to {to_email}...")
         with smtplib.SMTP("smtp.gmail.com", 587, timeout=10) as server:
             server.starttls()
             server.login(username, password)
-            server.sendmail(mail_from, to_email, msg.as_string())
+            _send(server)
         print(f"Email sent successfully to {to_email} via port 587 (fallback)")
         return
     except Exception as e:
@@ -94,7 +92,7 @@ def _wrap_in_responsive_layout(inner_html: str, subtitle: str = "HOA Management 
             
             <!-- Header -->
             <div style="background: #162535; padding: 30px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1);">
-              <img src="https://nestbloq.vercel.app/logo_dark.png" alt="NestBloq" style="height: 38px; width: auto; display: block; margin: 0 auto;" />
+              <img src="cid:vhoa_logo" alt="VHOA Portal" style="height: 50px; width: auto; display: block; margin: 0 auto;" />
               {sub_element}
             </div>
 
@@ -104,7 +102,7 @@ def _wrap_in_responsive_layout(inner_html: str, subtitle: str = "HOA Management 
             <!-- Footer -->
             <div style="background: #162535; padding: 20px; text-align: center; border-top: 1px solid rgba(255,255,255,0.1);">
               <p style="margin: 0; color: #6B7280; font-size: 12px;">
-                © 2026 NestBloq — HOA Management System
+                © 2026 VHOA — HOA Management System
               </p>
             </div>
 
@@ -127,7 +125,7 @@ def send_otp_email(to_email: str, otp_code: str, otp_type: str) -> bool:
         "password_reset": "Password Reset",
     }
     label = type_labels.get(otp_type, "Verification")
-    subject = f"NestBloq — {label} OTP"
+    subject = f"VHOA Portal — {label} OTP"
 
     inner_html = f"""
       <div style="padding: 40px 30px; text-align: center;">
@@ -162,12 +160,12 @@ def send_otp_email(to_email: str, otp_code: str, otp_type: str) -> bool:
 
 def send_welcome_email(to_email: str, full_name: str) -> bool:
     """Registration welcome email"""
-    subject = "Welcome to NestBloq — HOA Management"
+    subject = "Welcome to VHOA Portal — HOA Management"
     inner_html = f"""
       <div style="padding: 40px 30px;">
         <h2 style="margin: 0 0 16px; color: #ffffff;">Welcome, {full_name}! 👋</h2>
         <p style="color: #9CA3AF; line-height: 1.6;">
-          Your account has been created successfully on NestBloq HOA Management System.
+          Your account has been created successfully on VHOA HOA Management System.
         </p>
         <p style="color: #9CA3AF; line-height: 1.6;">
           Please verify your email address to get full access to your account.
@@ -197,7 +195,7 @@ def send_violation_email(
     remarks: str,
 ) -> bool:
     """Send email to resident when a violation is issued"""
-    subject = f"NestBloq — Violation Notice: {violation_type}"
+    subject = f"VHOA Portal — Violation Notice: {violation_type}"
     inner_html = f"""
       <div style="padding: 40px 30px;">
         <div style="background: #7F1D1D; border-radius: 12px; padding: 16px; margin-bottom: 24px; text-align: center; color: #ffffff; font-weight: bold;">
@@ -216,7 +214,7 @@ def send_violation_email(
         </div>
 
         <p style="color: #9CA3AF; font-size: 13px;">
-          You have 30 days to dispute this violation through the NestBloq portal.
+          You have 30 days to dispute this violation through the VHOA portal.
         </p>
 
         <div style="margin: 30px 0; text-align: center;">
@@ -243,7 +241,7 @@ def send_booking_created_email(
     to_email: str
 ) -> bool:
     """Send amenity booking confirmation or payment due email to user/board"""
-    subject = f"NestBloq — Amenity Booking Request: {amenity_name}"
+    subject = f"VHOA Portal — Amenity Booking Request: {amenity_name}"
     
     if status_type == "CONFIRMED":
         status_label = "Confirmed"
@@ -303,7 +301,7 @@ def send_payment_received_email(
     to_email: str
 ) -> bool:
     """Send payment receipt confirmation email to user/board"""
-    subject = f"NestBloq — Payment Confirmed for {amenity_name}"
+    subject = f"VHOA Portal — Payment Confirmed for {amenity_name}"
     inner_html = f"""
       <div style="padding: 40px 30px;">
         <div style="background: #14B8A6; border-radius: 12px; padding: 16px; margin-bottom: 24px; text-align: center; color: #000000; font-weight: bold; font-size: 18px;">
@@ -349,7 +347,7 @@ def send_general_payment_receipt_email(
     escrow_bank: str = None
 ) -> bool:
     """Send general payment receipt"""
-    subject = f"NestBloq — Payment Receipt: {reason.replace('_', ' ').title()}"
+    subject = f"VHOA Portal — Payment Receipt: {reason.replace('_', ' ').title()}"
     escrow_info = f"<p style='color: #9CA3AF;'>Paid to Escrow Bank: <strong>{escrow_bank}</strong></p>" if escrow_bank else ""
     inner_html = f"""
       <div style="padding: 40px 30px;">
@@ -391,7 +389,7 @@ def send_due_payment_reminder_email(
     days_left: int
 ) -> bool:
     """Send due payment reminder email"""
-    subject = f"NestBloq — Reminder: Payment Due in {days_left} Days"
+    subject = f"VHOA Portal — Reminder: Payment Due in {days_left} Days"
     inner_html = f"""
       <div style="padding: 40px 30px;">
         <div style="background: #F59E0B; border-radius: 12px; padding: 16px; margin-bottom: 24px; text-align: center; color: #000000; font-weight: bold; font-size: 18px;">
@@ -410,7 +408,7 @@ def send_due_payment_reminder_email(
           </table>
         </div>
         <p style="color: #9CA3AF; line-height: 1.6; font-size: 14px;">
-          Please log in to the NestBloq portal to complete this payment.
+          Please log in to the VHOA portal to complete this payment.
         </p>
         <div style="margin: 30px 0; text-align: center;">
           <a href="https://nestbloq.vercel.app/login" style="background-color: #14B8A6; color: #000000; padding: 12px 24px; font-weight: bold; font-size: 15px; text-decoration: none; border-radius: 8px; display: inline-block; box-shadow: 0 4px 6px rgba(20, 184, 166, 0.25);">
@@ -425,13 +423,13 @@ def send_due_payment_reminder_email(
 
 def send_invite_email(to_email: str, full_name: str, temp_password: str, community_name: str, role_name: str) -> bool:
     """Send email invitation to join community"""
-    subject = f"Invitation to join {community_name} on NestBloq"
+    subject = f"Invitation to join {community_name} on VHOA Portal"
     role_label = role_name.replace('_', ' ').title()
     inner_html = f"""
       <div style="padding: 40px 30px;">
         <h2 style="margin: 0 0 16px; color: #ffffff;">Hello, {full_name}! 👋</h2>
         <p style="color: #9CA3AF; line-height: 1.6;">
-          You have been invited to join the community <strong>{community_name}</strong> as a <strong>{role_label}</strong> on the NestBloq Portal.
+          You have been invited to join the community <strong>{community_name}</strong> as a <strong>{role_label}</strong> on the VHOA Portal.
         </p>
         <p style="color: #9CA3AF; line-height: 1.6;">
           Below are your temporary login credentials:
@@ -461,16 +459,16 @@ def send_invite_email(to_email: str, full_name: str, temp_password: str, communi
 
 def send_association_email(to_email: str, full_name: str, community_name: str, role_name: str) -> bool:
     """Send email when added to an association"""
-    subject = f"You have been added to {community_name} on NestBloq"
+    subject = f"You have been added to {community_name} on VHOA Portal"
     role_label = role_name.replace('_', ' ').title()
     inner_html = f"""
       <div style="padding: 40px 30px;">
         <h2 style="margin: 0 0 16px; color: #ffffff;">Hello, {full_name}! 👋</h2>
         <p style="color: #9CA3AF; line-height: 1.6;">
-          You have been added to the community <strong>{community_name}</strong> as a <strong>{role_label}</strong> on the NestBloq Portal.
+          You have been added to the community <strong>{community_name}</strong> as a <strong>{role_label}</strong> on the VHOA Portal.
         </p>
         <p style="color: #9CA3AF; line-height: 1.6;">
-          Since you already have a registered account on NestBloq, you can log in using your existing credentials.
+          Since you already have a registered account on VHOA Portal, you can log in using your existing credentials.
         </p>
         <div style="margin: 30px 0; text-align: center;">
           <a href="https://nestbloq.vercel.app/login" style="background-color: #14B8A6; color: #000000; padding: 12px 24px; font-weight: bold; font-size: 15px; text-decoration: none; border-radius: 8px; display: inline-block; box-shadow: 0 4px 6px rgba(20, 184, 166, 0.25);">
@@ -494,7 +492,7 @@ def send_pool_status_email(
     tentative_date: str = None
 ) -> bool:
     """Send pool open/closed status change notification email"""
-    subject = f"NestBloq — {amenity_name} Status Update in {community_name}"
+    subject = f"VHOA Portal — {amenity_name} Status Update in {community_name}"
     
     if pool_open:
         status_banner = "🏊 Pool is NOW OPEN!"
@@ -544,7 +542,7 @@ def send_service_request_created_email(
     is_admin: bool = False
 ) -> bool:
     """Send email confirmation/notification when a service request is created"""
-    subject = f"NestBloq — New Service Request #{request_id}: {title}"
+    subject = f"VHOA Portal — New Service Request #{request_id}: {title}"
     if is_admin:
         banner = "🛠️ New Service Request Submitted"
         banner_color = "#3B82F6"  # Blue
@@ -596,7 +594,7 @@ def send_service_request_status_update_email(
     note: str = None
 ) -> bool:
     """Send email update to resident when their service request status changes"""
-    subject = f"NestBloq — Service Request #{request_id} Updated: {new_status}"
+    subject = f"VHOA Portal — Service Request #{request_id} Updated: {new_status}"
     
     # Custom color/banner based on status
     status_colors = {

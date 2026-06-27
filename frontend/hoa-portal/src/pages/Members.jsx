@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, ChevronDown, UserPlus, Mail, Phone, X } from 'lucide-react';
+import { Search, ChevronDown, UserPlus, Mail, Phone, X, Edit2, Trash2 } from 'lucide-react';
 import API, { getBaseUrl } from '../services/api';
 import { checkEmail } from '../utils/emailValidation';
 import { validateName, validateUnitNo, onlyLettersKeyPress } from '../utils/fieldValidators';
@@ -441,15 +441,17 @@ const Members = ({ community }) => {
         {toggleBtn}
         <button
           onClick={() => handleOpenEditModal(member)}
-          className="text-teal-600 hover:text-teal-500 dark:text-teal-400 dark:hover:text-teal-300 font-medium text-xs transition-colors hover:underline"
+          className="p-1 hover:bg-slate-200 dark:hover:bg-white/10 text-teal-650 dark:text-teal-400 rounded-lg transition-all"
+          title="Edit"
         >
-          Edit
+          <Edit2 size={15} />
         </button>
         <button
           onClick={() => handleDeleteMember(member.user_id, member.full_name)}
-          className="text-red-600 hover:text-red-500 dark:text-red-400 dark:hover:text-red-300 font-medium text-xs transition-colors hover:underline"
+          className="p-1 hover:bg-red-500/15 text-red-650 dark:text-red-400 rounded-lg transition-all"
+          title="Delete"
         >
-          Delete
+          <Trash2 size={15} />
         </button>
       </div>
     );

@@ -736,9 +736,9 @@ def onboard_client(request: Request, body: ClientOnboardRequest, db: Session = D
             role_id=role.role_id,
             is_client=True,
             active_status=True,
-            account_status="ACTIVE",  # Approved by default since they have a valid contract code
-            email_id_is_verified=True,
-            mobile_is_verified=True,
+            account_status="PENDING_VERIFICATION",  # Must verify email first
+            email_id_is_verified=False,  # Email must be verified before login
+            mobile_is_verified=False,  # Mobile can be verified later
         )
         db.add(user)
         db.commit()
@@ -779,7 +779,10 @@ def onboard_client(request: Request, body: ClientOnboardRequest, db: Session = D
         # Seed service types for the new community
         seed_default_service_types_for_all_communities(db)
 
-        # Log action
+        # Send email verification OTP to user
+        otp_code = generate_otp(user.user_id, "email_verify", db)
+        send_otp_email(user.email_id, otp_code, "email_verify")
+
         log_action(
             db=db,
             action="ONBOARD_CLIENT",
@@ -790,11 +793,12 @@ def onboard_client(request: Request, body: ClientOnboardRequest, db: Session = D
         )
 
         return {
-            "message": "Onboarding completed successfully!",
+            "message": "Onboarding completed! Please check your email for verification OTP before logging in.",
             "user_id": user.user_id,
             "email": user.email_id,
             "community_id": community.community_id,
-            "community_code": community.community_code
+            "community_code": community.community_code,
+            "next_step": "Verify email using OTP sent to your email address"
         }
 
     except Exception as e:

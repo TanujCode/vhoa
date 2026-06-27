@@ -63,7 +63,7 @@ export default function Navbar() {
   const megaMenuData = [
     {
       category: "Finances & Billing",
-      icon: <CreditCard className="w-4 h-4 text-emerald-500" />,
+      icon: <CreditCard className="w-4 h-4 text-blue-500" />,
       items: [
         { name: "Online Dues Payments", desc: "Secure automated credit card/ACH billing", tab: "ledger" },
         { name: "Violation Fines Citation", desc: "Issue compliance charges & late penalties", tab: "violations" },
@@ -73,7 +73,7 @@ export default function Navbar() {
     },
     {
       category: "Community Operations",
-      icon: <Wrench className="w-4 h-4 text-amber-500" />,
+      icon: <Wrench className="w-4 h-4 text-violet-500" />,
       items: [
         { name: "Maintenance Ticket Desk", desc: "Log requests, attach photos, track vendor ETAs", tab: "kanban" },
         { name: "Amenity Facility Scheduler", desc: "Smart double-booking pool & clubhouse blocks", tab: "amenities" },
@@ -93,7 +93,7 @@ export default function Navbar() {
     },
     {
       category: "Intelligent AI & Portal",
-      icon: <Bot className="w-4 h-4 text-rose-500" />,
+      icon: <Bot className="w-4 h-4 text-indigo-500" />,
       items: [
         { name: "NestBloq AI Assistant", desc: "24/7 conversational bylaws & query answers", tab: "assistant" },
         { name: "Auto-Resolved Queries", desc: "Instant response system with zero admin overhead", tab: "assistant" },

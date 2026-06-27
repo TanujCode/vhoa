@@ -55,7 +55,7 @@ export default function CondoSolutionPage() {
         <div className="absolute bottom-1/4 left-10 w-[450px] h-[450px] bg-purple-400/5 dark:bg-purple-950/10 rounded-full blur-[100px] pointer-events-none -z-10" />
 
         {/* Hero Section */}
-        <section className="relative py-28 px-5 sm:px-8 border-b border-slate-200/40 dark:border-white/[0.04] overflow-hidden">
+        <section className="relative py-14 sm:py-20 px-5 sm:px-8 border-b border-slate-200/40 dark:border-white/[0.04] overflow-hidden">
           {/* Background glow auroras */}
           <div className="absolute inset-0 grid-bg opacity-[0.35] [mask-image:radial-gradient(ellipse_at_center,white_30%,transparent_70%)] pointer-events-none" />
           <div className="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] bg-gradient-radial from-violet-500/10 via-indigo-500/5 to-transparent rounded-full blur-3xl pointer-events-none" />
@@ -213,7 +213,7 @@ export default function CondoSolutionPage() {
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/30 to-transparent" />
                 <div className="relative text-left text-white space-y-1 z-10">
-                  <span className="text-[9px] uppercase tracking-wider font-extrabold text-emerald-400">Nature Trails</span>
+                  <span className="text-[9px] uppercase tracking-wider font-extrabold text-indigo-400">Green Spaces</span>
                   <h4 className="text-base font-black">Botanical Shrubberies</h4>
                   <p className="text-xs text-slate-300">Exquisite flowers, private seating corners, and pathways.</p>
                 </div>
@@ -241,20 +241,20 @@ export default function CondoSolutionPage() {
               <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-normal font-display">Handle amenity reservation deposits and hourly block tariffs.</p>
             </div>
             {/* Plaid */}
-            <div className="p-6 rounded-2xl border border-emerald-200/80 dark:border-emerald-800/50 bg-emerald-100/85 dark:bg-emerald-950/30 backdrop-blur-md text-left space-y-2 hover:shadow-lg hover:shadow-emerald-500/[0.05] hover:border-emerald-500/50 dark:hover:border-emerald-500/40 transition-all duration-300">
-              <span className="text-[10px] font-black text-emerald-650 dark:text-emerald-400 uppercase tracking-widest">02 / VERIFY</span>
+            <div className="p-6 rounded-2xl border border-indigo-200/80 dark:border-indigo-800/50 bg-indigo-100/85 dark:bg-indigo-950/30 backdrop-blur-md text-left space-y-2 hover:shadow-lg hover:shadow-indigo-500/[0.05] hover:border-indigo-500/50 dark:hover:border-indigo-500/40 transition-all duration-300">
+              <span className="text-[10px] font-black text-indigo-650 dark:text-indigo-400 uppercase tracking-widest">02 / VERIFY</span>
               <h4 className="text-sm font-black text-slate-900 dark:text-white">Plaid Security</h4>
               <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-normal font-display">Verify resident accounts to confirm payment profiles instantly.</p>
             </div>
             {/* Twilio */}
-            <div className="p-6 rounded-2xl border border-rose-200/80 dark:border-rose-800/50 bg-rose-100/85 dark:bg-rose-950/30 backdrop-blur-md text-left space-y-2 hover:shadow-lg hover:shadow-rose-500/[0.05] hover:border-rose-500/50 dark:hover:border-rose-500/40 transition-all duration-300">
-              <span className="text-[10px] font-black text-rose-650 dark:text-rose-400 uppercase tracking-widest">03 / GATE CODES</span>
+            <div className="p-6 rounded-2xl border border-violet-200/80 dark:border-violet-800/50 bg-violet-100/85 dark:bg-violet-950/30 backdrop-blur-md text-left space-y-2 hover:shadow-lg hover:shadow-violet-500/[0.05] hover:border-violet-500/50 dark:hover:border-violet-500/40 transition-all duration-300">
+              <span className="text-[10px] font-black text-violet-650 dark:text-violet-400 uppercase tracking-widest">03 / GATE CODES</span>
               <h4 className="text-sm font-black text-slate-900 dark:text-white">Twilio API</h4>
               <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-normal font-display">Auto-dispatch temporary entry gate OTP passcodes to guest cellphones.</p>
             </div>
             {/* SMTP */}
-            <div className="p-6 rounded-2xl border border-sky-200/80 dark:border-sky-800/50 bg-sky-100/85 dark:bg-sky-950/30 backdrop-blur-md text-left space-y-2 hover:shadow-lg hover:shadow-sky-500/[0.05] hover:border-sky-500/50 dark:hover:border-sky-500/40 transition-all duration-300">
-              <span className="text-[10px] font-black text-sky-650 dark:text-sky-400 uppercase tracking-widest">04 / ALERTS</span>
+            <div className="p-6 rounded-2xl border border-blue-200/80 dark:border-blue-800/50 bg-blue-100/85 dark:bg-blue-950/30 backdrop-blur-md text-left space-y-2 hover:shadow-lg hover:shadow-blue-500/[0.05] hover:border-blue-500/50 dark:hover:border-blue-500/40 transition-all duration-300">
+              <span className="text-[10px] font-black text-blue-650 dark:text-blue-400 uppercase tracking-widest">04 / ALERTS</span>
               <h4 className="text-sm font-black text-slate-900 dark:text-white">SMTP Relay</h4>
               <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-normal font-display">Send hourly slot reservations and cleanup reminders instantly.</p>
             </div>
@@ -274,36 +274,36 @@ export default function CondoSolutionPage() {
           </div>
           <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 px-5">
             {/* Before */}
-            <div className="p-8 rounded-3xl border border-rose-500/20 bg-rose-500/[0.02] backdrop-blur-md text-left space-y-4">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-rose-500/30 text-[10px] font-semibold text-rose-500 bg-rose-500/10 uppercase tracking-wider">
+            <div className="p-8 rounded-3xl border border-violet-500/20 bg-violet-500/[0.02] backdrop-blur-md text-left space-y-4">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-violet-500/30 text-[10px] font-semibold text-violet-500 bg-violet-500/10 uppercase tracking-wider">
                 Traditional Schedules
               </span>
               <ul className="space-y-4 text-xs text-slate-600 dark:text-slate-400 font-display">
                 <li className="flex items-start gap-2.5">
-                  <span className="text-rose-550 font-black">✕</span> <span>Constant double bookings on pools and community clubhouse spaces.</span>
+                  <span className="text-violet-500 font-black">✕</span> <span>Constant double bookings on pools and community clubhouse spaces.</span>
                 </li>
                 <li className="flex items-start gap-2.5">
-                  <span className="text-rose-550 font-black">✕</span> <span>Unverified guests accessing shared areas without tracking logs.</span>
+                  <span className="text-violet-500 font-black">✕</span> <span>Unverified guests accessing shared areas without tracking logs.</span>
                 </li>
                 <li className="flex items-start gap-2.5">
-                  <span className="text-rose-550 font-black">✕</span> <span>Chasing cash deposits for reservation cleanups.</span>
+                  <span className="text-violet-500 font-black">✕</span> <span>Chasing cash deposits for reservation cleanups.</span>
                 </li>
               </ul>
             </div>
             {/* After */}
-            <div className="p-8 rounded-3xl border border-emerald-500/30 bg-emerald-500/[0.03] backdrop-blur-md text-left space-y-4 shadow-xl shadow-emerald-500/5">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-emerald-500/30 text-[10px] font-semibold text-emerald-555 bg-emerald-500/10 uppercase tracking-wider">
+            <div className="p-8 rounded-3xl border border-indigo-500/30 bg-indigo-500/[0.03] backdrop-blur-md text-left space-y-4 shadow-xl shadow-indigo-500/5">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-indigo-500/30 text-[10px] font-semibold text-indigo-400 bg-indigo-500/10 uppercase tracking-wider">
                 NestBloq Automated Portal
               </span>
               <ul className="space-y-4 text-xs text-slate-600 dark:text-slate-400 font-display">
                 <li className="flex items-start gap-2.5">
-                  <span className="text-emerald-555 font-black">✓</span> <span>Smart calendars with real-time double-booking blocks.</span>
+                  <span className="text-indigo-400 font-black">✓</span> <span>Smart calendars with real-time double-booking blocks.</span>
                 </li>
                 <li className="flex items-start gap-2.5">
-                  <span className="text-emerald-555 font-black">✓</span> <span>Automated temporary gate pass OTP dispatches.</span>
+                  <span className="text-indigo-400 font-black">✓</span> <span>Automated temporary gate pass OTP dispatches.</span>
                 </li>
                 <li className="flex items-start gap-2.5">
-                  <span className="text-emerald-555 font-black">✓</span> <span>Online deposit authorization holds via Stripe checkout.</span>
+                  <span className="text-indigo-400 font-black">✓</span> <span>Online deposit authorization holds via Stripe checkout.</span>
                 </li>
               </ul>
             </div>

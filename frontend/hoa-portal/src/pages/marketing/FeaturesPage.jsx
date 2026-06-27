@@ -1,17 +1,21 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { 
-  ArrowRight, CheckCircle, DollarSign, ShieldAlert, Calendar, Bot, 
-  Send, Check, Activity, Shield, Sliders, Wrench, Users, User, Play, Clock, Sparkles, X, Search
+import {
+  ArrowRight, CheckCircle, DollarSign, Calendar, Bot,
+  Send, Check, Activity, Shield, Sliders, Wrench, Users, Clock, Search,
+  Zap, Lock, Bell, BarChart3, ChevronRight, Star, Sparkles
 } from 'lucide-react';
+import { useTheme } from '../../context/ThemeContext';
 import Navbar from '../../components/marketing/Navbar';
 import Footer from '../../components/marketing/Footer';
+import featuresHero from '../../assets/features_hero_dashboard.png';
 
 export default function FeaturesPage() {
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
   const location = useLocation();
   const [flashingCard, setFlashingCard] = useState(null);
 
-  // Card Refs (used in full bento grid playground mode)
   const ledgerRef = useRef(null);
   const assistantRef = useRef(null);
   const kanbanRef = useRef(null);
@@ -19,27 +23,18 @@ export default function FeaturesPage() {
   const rbacRef = useRef(null);
 
   const refMap = {
-    ledger: ledgerRef,
-    assistant: assistantRef,
-    kanban: kanbanRef,
-    amenities: amenitiesRef,
-    rbac: rbacRef,
-    violations: ledgerRef,
-    otp_gate: kanbanRef,
-    voting: rbacRef,
-    announcements: rbacRef,
-    audit_logs: rbacRef,
-    roster: rbacRef
+    ledger: ledgerRef, assistant: assistantRef, kanban: kanbanRef,
+    amenities: amenitiesRef, rbac: rbacRef, violations: ledgerRef,
+    otp_gate: kanbanRef, voting: rbacRef, announcements: rbacRef,
+    audit_logs: rbacRef, roster: rbacRef
   };
 
-  // State parsing
   const params = new URLSearchParams(location.search);
   const activeTab = params.get('tab');
 
-  // 1. Finances Simulator State
+  // 1. Finance state
   const [collectedDues, setCollectedDues] = useState(82400);
   const [pendingDues, setPendingDues] = useState(7600);
-  const [financeAlert, setFinanceAlert] = useState('');
   const [transactions, setTransactions] = useState([
     { id: 1, name: "Aarav Sharma", unit: "Unit 302", amount: 500, status: "pending", loading: false },
     { id: 2, name: "Sneha Reddy", unit: "Unit 104", amount: 750, status: "pending", loading: false },
@@ -47,7 +42,6 @@ export default function FeaturesPage() {
     { id: 4, name: "Rohan Das", unit: "Unit 211", amount: 500, status: "paid", loading: false }
   ]);
 
-  // Deep linking scroll trigger (only when landing on features grid)
   useEffect(() => {
     if (activeTab && refMap[activeTab]) {
       setTimeout(() => {
@@ -60,14 +54,11 @@ export default function FeaturesPage() {
 
   const handleSimulatePayment = (id) => {
     setTransactions(prev => prev.map(tx => tx.id === id ? { ...tx, loading: true } : tx));
-    
     setTimeout(() => {
       setTransactions(prev => prev.map(tx => {
         if (tx.id === id) {
           setCollectedDues(c => c + tx.amount);
           setPendingDues(p => p - tx.amount);
-          setFinanceAlert(`Payment of $${tx.amount.toLocaleString()} received from ${tx.name} (${tx.unit})!`);
-          setTimeout(() => setFinanceAlert(''), 4000);
           return { ...tx, status: 'paid', loading: false };
         }
         return tx;
@@ -75,317 +66,206 @@ export default function FeaturesPage() {
     }, 900);
   };
 
-  // 2. Maintenance Board State
+  // 2. Maintenance state
   const [tickets, setTickets] = useState([
     { id: 1, title: "Water leak in Clubhouse restroom", status: "todo", priority: "High", category: "Plumbing", loading: false },
     { id: 2, title: "Elevator B safety inspection", status: "progress", priority: "Medium", category: "Safety", loading: false },
     { id: 3, title: "Lobby lighting replacement", status: "done", priority: "Low", category: "Electrical", loading: false }
   ]);
-  const [ticketAlert, setTicketAlert] = useState('');
 
   const handleDispatchVendor = (id) => {
     setTickets(prev => prev.map(t => t.id === id ? { ...t, loading: true } : t));
-    
     setTimeout(() => {
       setTickets(prev => prev.map(t => {
-        if (t.id === id) {
-          setTicketAlert(`Technician dispatched for: "${t.title}". SMS updates triggered for affected units.`);
-          setTimeout(() => setTicketAlert(''), 4000);
-          return { ...t, status: 'progress', loading: false };
-        }
+        if (t.id === id) return { ...t, status: 'progress', loading: false };
         return t;
       }));
     }, 800);
   };
 
-  // 3. Amenities State
-  const [bookingUnit, setBookingUnit] = useState('');
-  const [bookingIndex, setBookingIndex] = useState(null);
-  const [amenityAlert, setAmenityAlert] = useState('');
+  // 3. Amenities state
   const [slots, setSlots] = useState([
-    { time: "9:00 AM - 11:00 AM", status: "Booked by Unit 402", theme: "text-slate-400 dark:text-slate-550 bg-white/5 border-white/[0.04]" },
-    { time: "12:00 PM - 2:00 PM", status: "Available", theme: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20 hover:border-emerald-500/40 hover:bg-emerald-500/15" },
-    { time: "3:00 PM - 5:00 PM", status: "Booked by Unit 209", theme: "text-slate-400 dark:text-slate-550 bg-white/5 border-white/[0.04]" },
-    { time: "6:00 PM - 8:00 PM", status: "Available", theme: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20 hover:border-emerald-500/40 hover:bg-emerald-500/15" }
+    { time: "9:00 AM – 11:00 AM", status: "Booked · Unit 402", booked: true },
+    { time: "12:00 PM – 2:00 PM", status: "Available", booked: false },
+    { time: "3:00 PM – 5:00 PM", status: "Booked · Unit 209", booked: true },
+    { time: "6:00 PM – 8:00 PM", status: "Available", booked: false }
   ]);
 
-  const handleBookSlotClick = (idx) => {
-    setBookingIndex(idx);
-    setBookingUnit('');
-  };
-
-  const confirmBooking = (e) => {
-    e.preventDefault();
-    if (bookingUnit.trim()) {
-      setSlots(prev => prev.map((s, idx) => {
-        if (idx === bookingIndex) {
-          return {
-            ...s,
-            status: `Reserved by Unit ${bookingUnit}`,
-            theme: "text-violet-400 bg-violet-500/10 border-violet-500/30 font-semibold"
-          };
-        }
-        return s;
-      }));
-      setAmenityAlert(`Pool booking confirmed for Unit ${bookingUnit} at ${slots[bookingIndex].time}!`);
-      setTimeout(() => setAmenityAlert(''), 4000);
-      setBookingIndex(null);
-    }
-  };
-
-  // 4. AI Assistant Chat State
+  // 4. AI Chat state
   const chatMessages = [
-    { sender: 'ai', text: "Hello! I am the NestBloq AI Assistant. Ask me anything about community rules, scheduling, or payments." },
+    { sender: 'ai', text: "Hello! I'm the NestBloq AI. Ask me anything about rules, scheduling, or payments." },
     { sender: 'user', text: "🗓️ Trash pickup schedule?" },
-    { sender: 'ai', text: "Trash pickup is scheduled for Tuesdays and Fridays at 7:00 AM. Recyclables are collected on Wednesdays." }
-  ];
-  const prompts = [
-    { q: "🗓️ Trash pickup schedule?", a: "Trash pickup is scheduled for Tuesdays and Fridays at 7:00 AM. Recyclables are collected on Wednesdays." },
-    { q: "💳 How to pay maintenance?", a: "You can pay dues securely online in seconds. Just navigate to the 'Payments' tab in your resident portal, choose your method (ACH/Card), and clear it instantly." },
-    { q: "🏊 Guest rules for the pool?", a: "Residents can host up to 4 guests at the Clubhouse pool. Guests must be accompanied by an adult homeowner at all times. Operating hours are 6:00 AM - 10:00 PM." }
+    { sender: 'ai', text: "Trash pickup is every Tuesday & Friday at 7:00 AM. Recyclables on Wednesdays." }
   ];
 
-  // 5. Role Switcher State
+  // 5. RBAC state
   const [selectedRole, setSelectedRole] = useState('board');
-  const isTyping = false;
 
-  // 6. Violations Sandbox State
+  // Violations data
   const violationsList = [
-    { id: 1, type: "Trash can left out", resident: "Aarav Sharma", fine: 50, date: "2026-06-20", status: "Open" },
-    { id: 2, type: "Unapproved yard structures", resident: "Sneha Reddy", fine: 250, date: "2026-06-18", status: "Appealed" },
-    { id: 3, type: "Overnight guest parking", resident: "Kabir Mehta", fine: 100, date: "2026-06-15", status: "Paid" }
+    { id: 1, type: "Trash can left out", resident: "Aarav Sharma", fine: 50, status: "Open" },
+    { id: 2, type: "Unapproved yard structure", resident: "Sneha Reddy", fine: 250, status: "Appealed" },
+    { id: 3, type: "Overnight guest parking", resident: "Kabir Mehta", fine: 100, status: "Paid" }
   ];
 
-  // 7. OTP Gate Sandbox State
-  const otpCode = '482915';
+  // OTP data
+  const otpCode = '482 915';
   const otpLogs = [
-    { time: "14:20 PM", event: "Vendor Gate Access Granted (FedEx Express)", ip: "Gate 1 A" },
-    { time: "11:05 AM", event: "Vendor Gate Access Granted (Pest Control)", ip: "Gate 2 B" }
+    { time: "14:20", event: "Gate Access – FedEx Express", gate: "Gate 1A" },
+    { time: "11:05", event: "Gate Access – Pest Control", gate: "Gate 2B" }
   ];
 
-  // 8. Pinned Announcements Sandbox State
-  const announcementsList = [
-    { id: 1, text: "Annual elevator safety inspection tomorrow between 9:00 AM and 4:00 PM.", date: "Just now", channels: ["SMS", "Email", "Portal"], views: 42 },
-    { id: 2, text: "Clubhouse pool closed for chemical treatment on Wednesday 9:00 AM - 1:00 PM.", date: "1 day ago", channels: ["SMS", "Portal"], views: 114 },
-    { id: 3, text: "Annual HOA Board Meeting scheduled for July 12th in the Community Hall.", date: "3 days ago", channels: ["Email", "Portal"], views: 142 }
-  ];
-
-  // 9. IP Audit Logs Sandbox State
+  // Audit logs
   const auditLogsList = [
-    { id: 1, action: "User Login Successful", user: "Vikash Sharma (Board)", ip: "192.168.1.42", location: "New York, US", time: "15:24 PM" },
-    { id: 2, action: "Reconciliation Invoice Generated", user: "Auto-Reconcile System", ip: "10.0.4.15", location: "AWS Server (US-East)", time: "15:02 PM" },
-    { id: 3, action: "Bylaw Amendment Approved", user: "Vikash Sharma (Board)", ip: "192.168.1.42", location: "New York, US", time: "14:15 PM" },
-    { id: 4, action: "Security Gate Passcode Verified", user: "Vendor Guest (FedEx)", ip: "172.56.21.9", location: "Gate 1 Controller", time: "14:02 PM" }
+    { id: 1, action: "User Login Successful", user: "Vikash Sharma (Board)", ip: "192.168.1.42", time: "15:24" },
+    { id: 2, action: "Invoice Auto-Generated", user: "Auto-Reconcile System", ip: "10.0.4.15", time: "15:02" },
+    { id: 3, action: "Bylaw Amendment Approved", user: "Vikash Sharma (Board)", ip: "192.168.1.42", time: "14:15" },
+    { id: 4, action: "Gate Passcode Verified", user: "Vendor Guest (FedEx)", ip: "172.56.21.9", time: "14:02" }
   ];
-  const [auditSearch, setAuditSearch] = useState('');
 
-  // 10. E-Voting Sandbox State
+  // Voting data
   const voteCounts = { yes: 29, no: 12 };
+  const totalVotes = voteCounts.yes + voteCounts.no;
+  const yesPercent = Math.round((voteCounts.yes / totalVotes) * 100);
+  const noPercent = Math.round((voteCounts.no / totalVotes) * 100);
 
-  // 11. Roster Sandbox State
+  // Roster data
   const [rosterSearch, setRosterSearch] = useState('');
   const rosterList = [
-    { name: "Aarav Sharma", unit: "Unit 302", email: "aarav@nestbloq.com", phone: "+1 (555) 019-2834", status: "Owner" },
-    { name: "Sneha Reddy", unit: "Unit 104", email: "sneha@nestbloq.com", phone: "+1 (555) 014-9922", status: "Owner" },
-    { name: "Kabir Mehta", unit: "Unit 405", email: "kabir@nestbloq.com", phone: "+1 (555) 018-4720", status: "Resident" },
-    { name: "Neha Patel", unit: "Unit 212", email: "neha.p@nestbloq.com", phone: "+1 (555) 012-3844", status: "Board Member" }
+    { name: "Aarav Sharma", unit: "Unit 302", email: "aarav@nestbloq.com", status: "Owner" },
+    { name: "Sneha Reddy", unit: "Unit 104", email: "sneha@nestbloq.com", status: "Owner" },
+    { name: "Kabir Mehta", unit: "Unit 405", email: "kabir@nestbloq.com", status: "Resident" },
+    { name: "Neha Patel", unit: "Unit 212", email: "neha.p@nestbloq.com", status: "Board Member" }
   ];
+  const filteredRoster = rosterList.filter(r =>
+    r.name.toLowerCase().includes(rosterSearch.toLowerCase()) ||
+    r.unit.toLowerCase().includes(rosterSearch.toLowerCase())
+  );
 
-  // Features Detail Data Dictionary
   const featureDetailsData = {
     ledger: {
       title: "NestPay Automated Billing",
       tagline: "PCI-DSS compliant dues engine & accounts reconciliation",
-      color: "from-emerald-500 to-teal-500",
-      accent: "text-emerald-400 dark:text-emerald-300",
+      color: "from-blue-500 to-indigo-500",
       desc: "Our automated billing engine manages payment processing for modern HOAs. It supports credit cards, bank accounts (ACH), and processes late fee checks completely unattended.",
-      benefits: [
-        "Invoices generated automatically on custom schedule intervals.",
-        "Residents pay online via web/mobile portal instantly.",
-        "System ledger calculates interest or flat penalties on outstanding accounts.",
-        "Direct export formats for accounting integration workflows."
-      ]
+      benefits: ["Invoices generated automatically on custom schedule intervals.", "Residents pay online via web/mobile portal instantly.", "System ledger calculates interest or flat penalties on outstanding accounts.", "Direct export formats for accounting integration workflows."]
     },
     assistant: {
       title: "NestBloq AI Resident Assistant",
       tagline: "24/7 intelligent conversational helpdesk",
-      color: "from-rose-500 to-violet-500",
-      accent: "text-rose-400 dark:text-rose-300",
+      color: "from-violet-500 to-purple-500",
       desc: "NestBloq AI Assistant resolves routine inquiries by parsing the community's governing rules, bylaws, and trash schedules. It keeps boards hands-free.",
-      benefits: [
-        "Resolves up to 85% of standard questions instantly.",
-        "Maintains accurate booking records and availability lookups.",
-        "Drafts work order issues with photo attachment context.",
-        "Ensures rules compliance through direct conversational citations."
-      ]
+      benefits: ["Resolves up to 85% of standard questions instantly.", "Maintains accurate booking records and availability lookups.", "Drafts work order issues with photo attachment context.", "Ensures rules compliance through direct conversational citations."]
     },
     kanban: {
-      title: "Maintenance Desk & Dispatch Kanban",
+      title: "Maintenance Desk & Dispatch",
       tagline: "Collaborative repairs board from report to resolution",
-      color: "from-amber-500 to-orange-500",
-      accent: "text-amber-400 dark:text-amber-300",
+      color: "from-indigo-500 to-blue-500",
       desc: "Log repairs, assign local contractors, configure work order dispatches, and message affected residents automatically through our responsive board.",
-      benefits: [
-        "Keep admins, residents, and vendors fully aligned.",
-        "Include internal admin-only resolution logs and audits.",
-        "Dispatch work tickets with automated SMS notifications.",
-        "Integrate contracts with localized service level agreements."
-      ]
+      benefits: ["Keep admins, residents, and vendors fully aligned.", "Include internal admin-only resolution logs and audits.", "Dispatch work tickets with automated SMS notifications.", "Integrate contracts with localized service level agreements."]
     },
     amenities: {
       title: "Amenities Reservation Grid",
       tagline: "Facility scheduling with race-condition blockages",
       color: "from-indigo-500 to-blue-500",
-      accent: "text-indigo-400 dark:text-indigo-300",
       desc: "Organize bookings for shared community features like swimming pools, lounge spaces, gyms, and sports fields.",
-      benefits: [
-        "Stops double-booking conflicts via instant atomic state updates.",
-        "Implements strict allocation limits (e.g. max slots per household).",
-        "Supports online fee collections for clubhouse usage deposits.",
-        "Enables customizable approval stages for board review."
-      ]
+      benefits: ["Stops double-booking conflicts via instant atomic state updates.", "Implements strict allocation limits (e.g. max slots per household).", "Supports online fee collections for clubhouse usage deposits.", "Enables customizable approval stages for board review."]
     },
     rbac: {
       title: "Access Control & Governance",
       tagline: "Isolated workspaces for compliance and IP audits",
       color: "from-violet-500 to-purple-600",
-      accent: "text-violet-400 dark:text-violet-300",
       desc: "Provide role-based interfaces so Board Members, Property Managers, and Residents see only their respective resources and options.",
-      benefits: [
-        "Roster directory tracks home units and occupancy status.",
-        "Public document library hosts bylaws, manuals, and files.",
-        "Digital Assemblies support virtual voting on community items.",
-        "Audit logs capture logins, status updates, and client IP addresses."
-      ]
+      benefits: ["Roster directory tracks home units and occupancy status.", "Public document library hosts bylaws, manuals, and files.", "Digital Assemblies support virtual voting on community items.", "Audit logs capture logins, status updates, and client IP addresses."]
     },
     violations: {
       title: "Violation Fines & Citation",
       tagline: "Transparent enforcement, dispute handling, and payment cycles",
-      color: "from-amber-500 to-red-500",
-      accent: "text-amber-400 dark:text-amber-300",
+      color: "from-violet-500 to-indigo-500",
       desc: "Maintain community standards and visual curb appeal. Issue compliance notices, calculate late fee accumulation, track dispute history, and collect fines online.",
-      benefits: [
-        "Create standard violation types with pre-set fine schedules.",
-        "Residents can file disputes with document upload proofs directly online.",
-        "Integrates with NestPay to allow quick self-service fine settlements.",
-        "Generates certified mail compliance notification letters."
-      ]
+      benefits: ["Create standard violation types with pre-set fine schedules.", "Residents can file disputes with document upload proofs directly online.", "Integrates with NestPay to allow quick self-service fine settlements.", "Generates certified mail compliance notification letters."]
     },
     otp_gate: {
       title: "Direct OTP Vendor Gate",
       tagline: "Temporary access codes for secure utility arrivals",
-      color: "from-sky-500 to-indigo-500",
-      accent: "text-sky-400 dark:text-sky-300",
+      color: "from-blue-500 to-indigo-500",
       desc: "Provide secure temporary access to community facilities, gates, and services. Generate one-time passcodes (OTP) for utility teams, guests, and delivery companies.",
-      benefits: [
-        "Generate short-lived, self-expiring security gate PIN codes.",
-        "Vendors receive codes instantly via automated SMS notifications.",
-        "Audit trail logs exact entry timestamps for absolute accountability.",
-        "Revoke or edit access permissions in real-time from the Board dashboard."
-      ]
+      benefits: ["Generate short-lived, self-expiring security gate PIN codes.", "Vendors receive codes instantly via automated SMS notifications.", "Audit trail logs exact entry timestamps for absolute accountability.", "Revoke or edit access permissions in real-time from the Board dashboard."]
     },
     voting: {
       title: "Digital Assemblies & E-Voting",
       tagline: "Cryptographically verified voting on HOA matters",
       color: "from-indigo-500 to-violet-600",
-      accent: "text-indigo-400 dark:text-indigo-300",
       desc: "Run virtual elections and pass bylaws securely. Set up interactive community polls, verify owner credentials, and cast anonymous ballots.",
-      benefits: [
-        "Create custom ballots with multiple options and approval thresholds.",
-        "Verify votes using secure SHA-256 cryptographic signatures.",
-        "Interactive community polls to gather resident sentiment quickly.",
-        "Automatic quorum checks to validate board voting outcomes."
-      ]
+      benefits: ["Create custom ballots with multiple options and approval thresholds.", "Verify votes using secure SHA-256 cryptographic signatures.", "Interactive community polls to gather resident sentiment quickly.", "Automatic quorum checks to validate board voting outcomes."]
     },
     announcements: {
       title: "Pinned Announcements & Broadcasts",
       tagline: "Multi-channel community alerts via SMS, email, and portal",
-      color: "from-violet-500 to-fuchsia-500",
-      accent: "text-violet-400 dark:text-violet-300",
+      color: "from-violet-500 to-purple-500",
       desc: "Broadcast important updates to your community instantly. Keep owners notified about water shutdowns, paving, board elections, or holiday closures.",
-      benefits: [
-        "Draft and send alerts across SMS, email, and resident portals simultaneously.",
-        "Pin critical warnings to the top of the resident home feeds.",
-        "Read-receipt indicators track exactly who has viewed the notice.",
-        "Scheduled delivery for planned community maintenance notifications."
-      ]
+      benefits: ["Draft and send alerts across SMS, email, and resident portals simultaneously.", "Pin critical warnings to the top of the resident home feeds.", "Read-receipt indicators track exactly who has viewed the notice.", "Scheduled delivery for planned community maintenance notifications."]
     },
     audit_logs: {
       title: "Compliance & Action IP Audit Logs",
       tagline: "Unalterable activity logs for absolute transparency",
-      color: "from-teal-500 to-blue-600",
-      accent: "text-teal-400 dark:text-teal-300",
+      color: "from-blue-500 to-indigo-650",
       desc: "Track every state change, document upload, status update, and login. Provide complete transparency for board decisions and vendor payouts.",
-      benefits: [
-        "Every log record captures the user, action type, timestamp, and client IP.",
-        "Immutable logs prevent unauthorized deletions or back-dating.",
-        "Searchable audit index simplifies compliance checks.",
-        "Alerts board on unusual login locations or consecutive failed tries."
-      ]
+      benefits: ["Every log record captures the user, action type, timestamp, and client IP.", "Immutable logs prevent unauthorized deletions or back-dating.", "Searchable audit index simplifies compliance checks.", "Alerts board on unusual login locations or consecutive failed tries."]
     },
     roster: {
       title: "Community Roster Directory",
       tagline: "Verified profile database of homeowner accounts",
       color: "from-violet-500 to-indigo-500",
-      accent: "text-violet-400 dark:text-violet-300",
       desc: "Manage owner records in a secure, unified database. Track occupancy statuses, unit numbers, contact numbers, and login logs.",
-      benefits: [
-        "Manage unit numbers, owner contact profiles, and email registries.",
-        "Residents can control their visibility level in the public directory.",
-        "Quick directory search filters by unit number or owner name.",
-        "Seamless billing updates linked directly to account profile logs."
-      ]
+      benefits: ["Manage unit numbers, owner contact profiles, and email registries.", "Residents can control their visibility level in the public directory.", "Quick directory search filters by unit number or owner name.", "Seamless billing updates linked directly to account profile logs."]
     }
   };
+  // ─── SANDBOX RENDERS ─── (each card has a unique color identity)
 
-  // --- RENDERING MODULAR SANDBOXES ---
-  const renderLedgerSandbox = (isGrid = false) => (
-    <div 
-      ref={ledgerRef} 
-      className={`w-full bg-gradient-to-br from-[#4c249f] via-[#1a0b3f] to-[#0a0319] border hover:border-violet-500/40 hover:shadow-violet-500/[0.08] rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.25)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.4)] p-6 sm:p-8 space-y-6 text-white transition-all duration-300 ${
-        isGrid && flashingCard === 'ledger' 
-          ? 'ring-4 ring-violet-400 shadow-[0_0_30px_rgba(139,92,246,0.6)] border-violet-400 scale-[1.01]' 
-          : 'border-violet-500/20'
-      }`}
-    >
-      <div className="flex justify-between items-center pb-3 border-b border-white/10">
+  const renderLedgerSandbox = () => (
+    <div ref={ledgerRef} className="w-full h-full flex flex-col rounded-2xl overflow-hidden border border-slate-200 dark:border-blue-500/20 bg-slate-100/60 dark:bg-[#060b18] shadow-xl shadow-slate-200/50 dark:shadow-blue-900/20">
+      {/* Header stripe */}
+      <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-5 py-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <DollarSign className="w-4 h-4 text-emerald-400" />
-          <span className="text-xs font-bold tracking-wider text-slate-355 uppercase">NestPay Billing Panel</span>
+          <DollarSign className="w-4 h-4 text-white" />
+          <span className="text-xs font-bold text-white tracking-wide uppercase">NestPay Billing</span>
         </div>
-        <div className="flex items-center gap-2">
-          <span className="text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-md font-bold">Auto-Sync On</span>
-        </div>
+        <span className="text-[10px] bg-white/20 text-white font-bold px-2 py-0.5 rounded-full">Auto-Sync On</span>
       </div>
-
-      <div className="grid grid-cols-2 gap-4 text-left">
-        <div className="bg-white/[0.03] border border-white/[0.06] p-4 rounded-2xl shadow-inner">
-          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Collected Dues (Q3)</p>
-          <p className="text-xl sm:text-2xl font-black text-emerald-400 mt-1">${collectedDues.toLocaleString()}</p>
+      <div className="p-5 flex-1 space-y-4 overflow-auto">
+        {/* Stats */}
+        <div className="grid grid-cols-2 gap-3">
+          <div className="bg-blue-500/5 dark:bg-blue-500/10 border border-slate-200 dark:border-blue-500/20 rounded-xl p-3">
+            <p className="text-[9px] text-blue-600 dark:text-blue-400/70 font-bold uppercase tracking-wider">Collected Q3</p>
+            <p className="text-lg font-black text-blue-600 dark:text-blue-400 mt-0.5">${collectedDues.toLocaleString()}</p>
+          </div>
+          <div className="bg-indigo-500/5 dark:bg-indigo-500/10 border border-slate-200 dark:border-indigo-500/20 rounded-xl p-3">
+            <p className="text-[9px] text-indigo-600 dark:text-indigo-400/70 font-bold uppercase tracking-wider">Outstanding</p>
+            <p className="text-lg font-black text-indigo-600 dark:text-indigo-400 mt-0.5">${pendingDues.toLocaleString()}</p>
+          </div>
         </div>
-        <div className="bg-white/[0.03] border border-white/[0.06] p-4 rounded-2xl shadow-inner">
-          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Outstanding Dues</p>
-          <p className="text-xl sm:text-2xl font-black text-amber-400 mt-1">${pendingDues.toLocaleString()}</p>
-        </div>
-      </div>
-
-      <div className="space-y-2 text-left">
-        <p className="text-xs font-bold text-slate-300 uppercase tracking-wider">Dues Ledger Accounts</p>
-        <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
-          {transactions.map((tx) => (
-            <div key={tx.id} className="flex items-center justify-between p-3 bg-white/[0.02] border border-white/[0.04] rounded-xl text-xs">
-              <div className="space-y-0.5">
-                <p className="font-extrabold text-slate-200">{tx.name} <span className="text-[10px] text-slate-500 font-normal">({tx.unit})</span></p>
-                <p className="text-slate-450 font-semibold">${tx.amount.toLocaleString()}</p>
+        {/* Ledger */}
+        <div className="space-y-2">
+          <p className="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Dues Ledger</p>
+          {transactions.map(tx => (
+            <div key={tx.id} className="flex items-center justify-between p-2.5 bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.05] rounded-lg text-[10px] shadow-[0_1px_3px_rgba(0,0,0,0.01)]">
+              <div>
+                <p className="font-bold text-slate-800 dark:text-slate-200">{tx.name} <span className="text-slate-500 font-normal">({tx.unit})</span></p>
+                <p className="text-slate-650 dark:text-slate-400">${tx.amount}</p>
               </div>
               {tx.status === 'paid' ? (
-                <span className="flex items-center gap-1 px-2.5 py-1 bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 font-bold rounded-lg text-[10px]">
-                  <Check className="w-3 h-3" /> Cleared
+                <span className="flex items-center gap-1 px-2 py-0.5 bg-blue-500/10 border border-blue-500/25 text-blue-650 dark:text-blue-400 font-bold rounded-md text-[9px]">
+                  <Check className="w-2.5 h-2.5" /> Paid
                 </span>
               ) : (
-                <span className="flex items-center gap-1 px-2.5 py-1 bg-amber-500/10 border border-amber-500/25 text-amber-400 font-bold rounded-lg text-[10px]">
-                  ⏳ Outstanding
-                </span>
+                <button
+                  onClick={() => handleSimulatePayment(tx.id)}
+                  disabled={tx.loading}
+                  className="px-2 py-0.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-md text-[9px] transition-colors disabled:opacity-50"
+                >
+                  {tx.loading ? '...' : 'Collect'}
+                </button>
               )}
             </div>
           ))}
@@ -394,707 +274,557 @@ export default function FeaturesPage() {
     </div>
   );
 
-  const renderAssistantSandbox = (isGrid = false) => (
-    <div 
-      ref={assistantRef}
-      className={`w-full bg-gradient-to-br from-[#4c249f] via-[#1a0b3f] to-[#0a0319] border hover:border-violet-500/40 hover:shadow-violet-500/[0.08] rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.25)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.4)] p-6 sm:p-8 space-y-4 text-white transition-all duration-300 ${
-        isGrid && flashingCard === 'assistant' 
-          ? 'ring-4 ring-violet-400 shadow-[0_0_30px_rgba(139,92,246,0.6)] border-violet-400 scale-[1.01]' 
-          : 'border-violet-500/20'
-      }`}
-    >
-      <div className="flex justify-between items-center pb-3 border-b border-white/10">
+  const renderAssistantSandbox = () => (
+    <div ref={assistantRef} className="w-full h-full flex flex-col rounded-2xl overflow-hidden border border-slate-200 dark:border-violet-500/20 bg-slate-100/60 dark:bg-[#0f0618] shadow-xl shadow-slate-200/50 dark:shadow-violet-900/20">
+      {/* Header */}
+      <div className="bg-gradient-to-r from-violet-600 to-purple-600 px-5 py-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Bot className="w-4 h-4 text-rose-400" />
-          <span className="text-xs font-bold tracking-wider text-slate-355 uppercase">AI Resident Assistant</span>
+          <Bot className="w-4 h-4 text-white" />
+          <span className="text-xs font-bold text-white tracking-wide uppercase">AI Assistant</span>
         </div>
-        <div className="flex items-center gap-2">
-          <span className="text-[10px] bg-rose-500/10 text-rose-400 border border-rose-500/20 px-2 py-0.5 rounded-md font-bold opacity-60">24/7 Live</span>
+        <span className="text-[10px] bg-white/20 text-white font-bold px-2 py-0.5 rounded-full">24/7 Live</span>
+      </div>
+      <div className="p-5 flex-1 flex flex-col space-y-4 overflow-hidden">
+        <div className="flex-1 space-y-3 overflow-y-auto">
+          {chatMessages.map((msg, i) => (
+            <div key={i} className={`flex gap-2 items-start text-[11px] ${msg.sender === 'user' ? 'justify-end' : ''}`}>
+              {msg.sender === 'ai' && (
+                <div className="w-6 h-6 rounded-lg bg-violet-500/10 dark:bg-violet-500/20 border border-violet-250/20 dark:border-violet-500/30 flex items-center justify-center text-[10px] shrink-0">🤖</div>
+              )}
+              <div className={`px-3 py-2 rounded-xl max-w-[85%] leading-relaxed ${msg.sender === 'user' ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white rounded-tr-none' : 'bg-white dark:bg-white/[0.05] border border-slate-200 dark:border-white/[0.08] text-slate-800 dark:text-slate-200 rounded-tl-none shadow-[0_1px_3px_rgba(0,0,0,0.01)]'}`}>
+                {msg.text}
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="space-y-1.5">
+          <p className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">Try asking:</p>
+          <div className="flex flex-wrap gap-1.5">
+            {["🗓️ Trash schedule?", "💳 Pay dues?", "🏊 Pool rules?"].map((q, i) => (
+              <span key={i} className="px-2.5 py-1 bg-violet-500/10 border border-violet-500/20 rounded-lg text-[9px] font-semibold text-violet-650 dark:text-violet-300 select-none cursor-pointer hover:border-violet-400/40">{q}</span>
+            ))}
+          </div>
         </div>
       </div>
+    </div>
+  );
 
-      {/* Chat Log */}
-      <div className="h-56 overflow-y-auto bg-white/[0.02] border border-white/[0.04] p-4 rounded-2xl space-y-3.5 flex flex-col justify-end pointer-events-none">
-        {chatMessages.map((msg, idx) => (
-          <div key={idx} className={`flex gap-2 items-start text-[11px] ${msg.sender === 'user' ? 'justify-end' : ''}`}>
-            {msg.sender === 'ai' && (
-              <div className="w-6 h-6 rounded-lg bg-rose-500/20 border border-rose-500/30 text-rose-400 flex items-center justify-center font-bold text-[10px] shrink-0">🤖</div>
+  const renderKanbanSandbox = () => (
+    <div ref={kanbanRef} className="w-full h-full flex flex-col rounded-2xl overflow-hidden border border-slate-200 dark:border-indigo-500/20 bg-slate-100/60 dark:bg-[#080f1a] shadow-xl shadow-slate-200/50 dark:shadow-indigo-900/20">
+      <div className="bg-gradient-to-r from-indigo-600 to-blue-600 px-5 py-3 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Wrench className="w-4 h-4 text-white" />
+          <span className="text-xs font-bold text-white tracking-wide uppercase">Maintenance Desk</span>
+        </div>
+        <span className="text-[10px] bg-white/20 text-white font-bold px-2 py-0.5 rounded-full">{tickets.filter(t => t.status === 'todo').length} Open</span>
+      </div>
+      <div className="p-5 flex-1 space-y-2.5 overflow-auto">
+        {tickets.map(t => (
+          <div key={t.id} className="p-3 bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.05] rounded-xl space-y-2 shadow-[0_1px_3px_rgba(0,0,0,0.01)]">
+            <div className="flex items-center justify-between">
+              <span className={`px-1.5 py-0.5 rounded text-[8px] font-bold uppercase ${
+                t.status === 'done' ? 'bg-blue-500/15 text-blue-600 dark:text-blue-405 border border-blue-500/20' :
+                t.status === 'progress' ? 'bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20' :
+                'bg-violet-500/15 text-violet-600 dark:text-violet-405 border border-violet-500/20'
+              }`}>{t.status === 'done' ? '✓ Resolved' : t.status === 'progress' ? '⏳ In Progress' : `${t.priority} Priority`}</span>
+              <span className="text-[8px] text-slate-500">{t.category}</span>
+            </div>
+            <p className="text-[10px] font-semibold text-slate-800 dark:text-slate-200 leading-snug">{t.title}</p>
+            {t.status === 'todo' && (
+              <button onClick={() => handleDispatchVendor(t.id)} disabled={t.loading}
+                className="w-full py-1 text-[9px] font-bold bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg transition-colors disabled:opacity-50">
+                {t.loading ? 'Dispatching...' : 'Dispatch Vendor'}
+              </button>
             )}
-            <div className={`px-3 py-2 rounded-xl max-w-[80%] leading-relaxed text-left ${
-              msg.sender === 'user' 
-                ? 'bg-gradient-to-r from-violet-500 to-indigo-600 text-white font-medium rounded-tr-none' 
-                : 'bg-white/[0.04] border border-white/[0.06] text-slate-200 rounded-tl-none'
-            }`}>
-              {msg.text}
-            </div>
+            {t.status === 'progress' && (
+              <div className="flex items-center gap-1 text-[9px] text-indigo-600 dark:text-indigo-400 font-semibold">
+                <Clock className="w-2.5 h-2.5 animate-pulse" /> Vendor ETA: 20 mins
+              </div>
+            )}
           </div>
         ))}
-        {isTyping && (
-          <div className="flex gap-2 items-center text-[10px] text-slate-400">
-            <div className="w-6 h-6 rounded-lg bg-rose-500/20 border border-rose-500/30 text-rose-400 flex items-center justify-center font-bold shrink-0">🤖</div>
-            <div className="flex gap-1 items-center px-3 py-2 bg-white/[0.02] border border-white/[0.04] rounded-xl rounded-tl-none">
-              <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce [animation-delay:-0.3s]" />
-              <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce [animation-delay:-0.15s]" />
-              <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" />
+      </div>
+    </div>
+  );
+
+  const renderAmenitiesSandbox = () => (
+    <div ref={amenitiesRef} className="w-full h-full flex flex-col rounded-2xl overflow-hidden border border-slate-200 dark:border-indigo-500/20 bg-slate-100/60 dark:bg-[#080f1a] shadow-xl shadow-slate-200/50 dark:shadow-indigo-900/20">
+      <div className="bg-gradient-to-r from-indigo-600 to-blue-600 px-5 py-3 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Calendar className="w-4 h-4 text-white" />
+          <span className="text-xs font-bold text-white tracking-wide uppercase">Pool Reservations</span>
+        </div>
+        <span className="text-[10px] bg-white/20 text-white font-bold px-2 py-0.5 rounded-full">Today</span>
+      </div>
+      <div className="p-5 flex-1 space-y-2.5 overflow-auto">
+        <p className="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Clubhouse Pool · June 26</p>
+        {slots.map((s, i) => (
+          <div key={i} className={`p-3 border rounded-xl flex items-center justify-between transition-all ${s.booked ? 'bg-slate-200/30 dark:bg-white/[0.02] border-slate-200 dark:border-white/[0.05]' : 'bg-indigo-550/5 dark:bg-indigo-500/10 border-indigo-300/30 dark:border-indigo-500/20 hover:border-indigo-550/50 dark:hover:border-indigo-500/40'}`}>
+            <div>
+              <p className="text-[10px] font-bold text-slate-800 dark:text-slate-300">{s.time}</p>
+              <p className={`text-[9px] mt-0.5 ${s.booked ? 'text-slate-500' : 'text-indigo-600 dark:text-indigo-400 font-semibold'}`}>{s.status}</p>
             </div>
+            {!s.booked && (
+              <button
+                onClick={() => setSlots(prev => prev.map((sl, idx) => idx === i ? { ...sl, status: 'Reserved · Your Unit', booked: true } : sl))}
+                className="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-500 text-white text-[9px] font-bold rounded-lg transition-colors"
+              >
+                Book
+              </button>
+            )}
           </div>
-        )}
-      </div>
-
-      {/* Preset Prompt Chips */}
-      <div className="space-y-1.5 text-left">
-        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Example Resident Queries:</p>
-        <div className="flex flex-wrap gap-2">
-          {prompts.map((p, idx) => (
-            <span
-              key={idx}
-              className="px-3 py-1.5 bg-white/[0.03] border border-white/[0.06] rounded-lg text-[10px] font-semibold text-rose-300 select-none"
-            >
-              {p.q}
-            </span>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderKanbanSandbox = (isGrid = false) => (
-    <div 
-      ref={kanbanRef}
-      className={`w-full bg-gradient-to-br from-[#4c249f] via-[#1a0b3f] to-[#0a0319] border hover:border-violet-500/40 hover:shadow-violet-500/[0.08] rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.25)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.4)] p-6 text-white transition-all duration-300 ${
-        isGrid && flashingCard === 'kanban' 
-          ? 'ring-4 ring-violet-400 shadow-[0_0_30px_rgba(139,92,246,0.6)] border-violet-400 scale-[1.01]' 
-          : 'border-violet-500/20'
-      }`}
-    >
-      <div className="flex justify-between items-center pb-3 border-b border-white/10">
-        <div className="flex items-center gap-2">
-          <Wrench className="w-4 h-4 text-amber-400" />
-          <span className="text-xs font-bold tracking-wider text-slate-355 uppercase">Dispatch Kanban</span>
-        </div>
-      </div>
-
-      <div className="space-y-3 mt-4 text-left">
-        <div className="bg-white/[0.02] border border-white/[0.04] p-3 rounded-2xl space-y-3">
-          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider pb-1 border-b border-white/5">Dues & Repairs Dispatch</p>
-          
-          {tickets.map((t) => (
-            <div key={t.id} className="p-2.5 bg-white/[0.03] border border-white/[0.06] rounded-xl space-y-1.5">
-              <div className="flex items-center justify-between">
-                <span className={`px-1.5 py-0.5 rounded text-[8px] font-bold uppercase tracking-wide ${
-                  t.status === 'done' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'
-                }`}>
-                  {t.status === 'done' ? 'Resolved' : `${t.priority} Priority`}
-                </span>
-                <span className="text-[8px] text-slate-550">{t.category}</span>
-              </div>
-              <p className="text-[10px] font-extrabold leading-snug text-slate-200">{t.title}</p>
-              
-              {t.status === 'todo' && (
-                <span className="w-full py-1 text-center bg-slate-800 text-slate-450 font-extrabold rounded text-[8px] flex items-center justify-center gap-1 select-none">
-                  Awaiting Dispatch
-                </span>
-              )}
-              {t.status === 'progress' && (
-                <div className="flex items-center gap-1 text-[8px] text-amber-400 font-bold bg-amber-500/10 border border-amber-500/20 p-1 rounded justify-center">
-                  <Clock className="w-2.5 h-2.5 animate-pulse" />
-                  <span>Vendor ETA: 20 mins</span>
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderAmenitiesSandbox = (isGrid = false) => (
-    <div 
-      ref={amenitiesRef}
-      className={`w-full bg-gradient-to-br from-[#4c249f] via-[#1a0b3f] to-[#0a0319] border hover:border-violet-500/40 hover:shadow-violet-500/[0.08] rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.25)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.4)] p-6 text-white transition-all duration-300 ${
-        isGrid && flashingCard === 'amenities' 
-          ? 'ring-4 ring-violet-400 shadow-[0_0_30px_rgba(139,92,246,0.6)] border-violet-400 scale-[1.01]' 
-          : 'border-indigo-500/20'
-      }`}
-    >
-      <div className="flex justify-between items-center pb-3 border-b border-white/10">
-        <div className="flex items-center gap-2">
-          <Calendar className="w-4 h-4 text-indigo-400" />
-          <span className="text-xs font-bold tracking-wider text-slate-355 uppercase">Amenities Grid</span>
-        </div>
-      </div>
-
-      <div className="space-y-3 mt-4 text-left">
-        <div className="grid grid-cols-2 gap-2">
-          {slots.map((s, idx) => (
-            <div key={idx} className={`p-3 border rounded-xl flex flex-col justify-between h-20 transition-all ${s.theme}`}>
-              <div>
-                <p className="text-[9px] font-bold text-slate-355">{s.time}</p>
-                <p className="text-[8px] font-medium mt-0.5">{s.status}</p>
-              </div>
-              {s.status === 'Available' && (
-                <span className="w-fit px-2 py-0.5 bg-emerald-500/10 text-emerald-450 border border-emerald-500/25 rounded text-[8px] font-bold select-none">
-                  Available
-                </span>
-              )}
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderRbacSandbox = (isGrid = false) => (
-    <div 
-      ref={rbacRef}
-      className={`w-full bg-gradient-to-br from-[#4c249f] via-[#1a0b3f] to-[#0a0319] border hover:border-violet-500/40 hover:shadow-violet-500/[0.08] rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.25)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.4)] p-6 text-white transition-all duration-300 ${
-        isGrid && flashingCard === 'rbac' 
-          ? 'ring-4 ring-violet-400 shadow-[0_0_30px_rgba(139,92,246,0.6)] border-violet-400 scale-[1.01]' 
-          : 'border-violet-500/20'
-      }`}
-    >
-      <div className="flex justify-between items-center pb-3 border-b border-white/10">
-        <div className="flex items-center gap-2">
-          <Shield className="w-4 h-4 text-violet-400" />
-          <span className="text-xs font-bold tracking-wider text-slate-355 uppercase">Access Levels</span>
-        </div>
-      </div>
-
-      <div className="flex justify-center gap-1.5 p-1 bg-white/[0.03] border border-white/[0.06] rounded-xl mt-3">
-        {[
-          { id: 'board', label: '👑 Board' },
-          { id: 'manager', label: '💼 Manager' },
-          { id: 'resident', label: '🏠 Owner' }
-        ].map((role) => (
-          <button
-            key={role.id}
-            onClick={() => setSelectedRole(role.id)}
-            className={`flex-1 py-1 text-[9px] font-extrabold rounded-lg transition-all ${
-              selectedRole === role.id
-                ? 'bg-gradient-to-r from-violet-500 to-indigo-600 text-white shadow-sm'
-                : 'text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            {role.label}
-          </button>
         ))}
       </div>
+    </div>
+  );
 
-      <div className="bg-white/[0.02] border border-white/[0.04] p-4 rounded-xl space-y-3 mt-3 animate-fade-in-up text-left">
+  const renderRbacSandbox = () => (
+    <div ref={rbacRef} className="w-full h-full flex flex-col rounded-2xl overflow-hidden border border-slate-200 dark:border-violet-500/20 bg-slate-100/60 dark:bg-[#10071f] shadow-xl shadow-slate-200/50 dark:shadow-violet-900/20">
+      <div className="bg-gradient-to-r from-violet-600 to-purple-700 px-5 py-3 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Shield className="w-4 h-4 text-white" />
+          <span className="text-xs font-bold text-white tracking-wide uppercase">Role Dashboard</span>
+        </div>
+        <span className="text-[10px] bg-white/20 text-white font-bold px-2 py-0.5 rounded-full">RBAC</span>
+      </div>
+      <div className="p-5 flex-1 space-y-3 overflow-auto">
+        <div className="flex gap-1.5 p-1 bg-white/40 dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.06] rounded-xl shadow-[0_1px_3px_rgba(0,0,0,0.01)]">
+          {[{ id: 'board', label: '👑 Board' }, { id: 'manager', label: '💼 Manager' }, { id: 'resident', label: '🏠 Owner' }].map(role => (
+            <button key={role.id} onClick={() => setSelectedRole(role.id)}
+              className={`flex-1 py-1.5 text-[9px] font-bold rounded-lg transition-all ${selectedRole === role.id ? 'bg-gradient-to-r from-violet-500 to-indigo-600 text-white shadow' : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'}`}>
+              {role.label}
+            </button>
+          ))}
+        </div>
         {selectedRole === 'board' && (
-          <div className="space-y-2.5">
-            <div className="flex justify-between items-center text-[10px]">
-              <span className="font-extrabold text-slate-200">Board Suite</span>
-              <span className="px-1.5 py-0.5 bg-violet-500/15 text-violet-300 border border-violet-500/30 rounded font-bold uppercase tracking-wide text-[7px]">Full Access</span>
-            </div>
+          <div className="space-y-2">
             <div className="grid grid-cols-2 gap-2">
-              <div className="p-2 bg-white/[0.03] border border-white/[0.05] rounded-lg text-center">
-                <p className="text-[8px] text-slate-400 font-bold uppercase">Reserve Funds</p>
-                <p className="text-sm font-black text-violet-400 mt-0.5">$18,500</p>
+              <div className="p-2.5 bg-violet-500/5 dark:bg-violet-500/10 border border-slate-200 dark:border-violet-500/20 rounded-xl text-center">
+                <p className="text-[8px] text-violet-600 dark:text-violet-400/70 font-bold uppercase">Reserve Funds</p>
+                <p className="text-sm font-black text-violet-600 dark:text-violet-400 mt-0.5">$18,500</p>
               </div>
-              <div className="p-2 bg-white/[0.03] border border-white/[0.05] rounded-lg text-center">
-                <p className="text-[8px] text-slate-400 font-bold uppercase">Open Votes</p>
-                <p className="text-sm font-black text-violet-400 mt-0.5">3 Active</p>
-              </div>
-            </div>
-            <p className="text-[9px] text-slate-450 leading-relaxed italic">
-              Inspect audit trail operations, manage bylaws configurations, and launch community budget polls.
-            </p>
-          </div>
-        )}
-
-        {selectedRole === 'manager' && (
-          <div className="space-y-2.5">
-            <div className="flex justify-between items-center text-[10px]">
-              <span className="font-extrabold text-slate-200">Manager Desk</span>
-              <span className="px-1.5 py-0.5 bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 rounded font-bold uppercase tracking-wide text-[7px]">Staff Workspace</span>
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              <div className="p-2 bg-white/[0.03] border border-white/[0.05] rounded-lg text-center">
-                <p className="text-[8px] text-slate-400 font-bold uppercase">Contractors</p>
-                <p className="text-sm font-black text-emerald-400 mt-0.5">14 Dispatched</p>
-              </div>
-              <div className="p-2 bg-white/[0.03] border border-white/[0.05] rounded-lg text-center">
-                <p className="text-[8px] text-slate-400 font-bold uppercase">Violations</p>
-                <p className="text-sm font-black text-emerald-400 mt-0.5">8 Pending</p>
+              <div className="p-2.5 bg-violet-500/5 dark:bg-violet-500/10 border border-slate-200 dark:border-violet-500/20 rounded-xl text-center">
+                <p className="text-[8px] text-violet-600 dark:text-violet-400/70 font-bold uppercase">Open Votes</p>
+                <p className="text-sm font-black text-violet-600 dark:text-violet-400 mt-0.5">3 Active</p>
               </div>
             </div>
-            <p className="text-[9px] text-slate-450 leading-relaxed italic">
-              Manage service ticket lifecycles, log community safety violations, and balance collections.
-            </p>
-          </div>
-        )}
-
-        {selectedRole === 'resident' && (
-          <div className="space-y-2.5">
-            <div className="flex justify-between items-center text-[10px]">
-              <span className="font-extrabold text-slate-200">Owner Portal</span>
-              <span className="px-1.5 py-0.5 bg-amber-500/15 text-amber-300 border border-amber-500/30 rounded font-bold uppercase tracking-wide text-[7px]">Self-Service</span>
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              <div className="p-2 bg-white/[0.03] border border-white/[0.05] rounded-lg text-center">
-                <p className="text-[8px] text-slate-400 font-bold uppercase">Dues Balance</p>
-                <p className="text-sm font-black text-amber-400 mt-0.5">$0.00</p>
-              </div>
-              <div className="p-2 bg-white/[0.03] border border-white/[0.05] rounded-lg text-center">
-                <p className="text-[8px] text-slate-400 font-bold uppercase">Work Orders</p>
-                <p className="text-sm font-black text-amber-400 mt-0.5">0 Active</p>
-              </div>
-            </div>
-            <p className="text-[9px] text-slate-455 leading-relaxed italic">
-              Homeowner portal. Submit dispatch service request, reserve community spaces, and sync billing invoices.
-            </p>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-
-  const renderViolationsSandbox = (isGrid = false) => (
-    <div className="w-full bg-gradient-to-br from-[#4c249f] via-[#1a0b3f] to-[#0a0319] border border-amber-500/20 hover:border-amber-500/40 rounded-3xl p-6 sm:p-8 space-y-6 text-white transition-all duration-300">
-      <div className="flex justify-between items-center pb-3 border-b border-white/10">
-        <div className="flex items-center gap-2">
-          <ShieldAlert className="w-4 h-4 text-amber-450" />
-          <span className="text-xs font-bold tracking-wider text-slate-355 uppercase">Fines & Citations Panel</span>
-        </div>
-        <span className="text-[10px] bg-red-500/10 text-red-400 border border-red-500/20 px-2 py-0.5 rounded-md font-bold">Enforcement Desk</span>
-      </div>
-
-      <div className="space-y-3 text-left">
-        <p className="text-xs font-bold text-slate-350 uppercase tracking-wider">Active Community Citations</p>
-        <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
-          {violationsList.map((v) => (
-            <div key={v.id} className="flex items-center justify-between p-3 bg-white/[0.02] border border-white/[0.04] rounded-xl text-xs">
-              <div className="space-y-0.5">
-                <p className="font-extrabold text-slate-200">{v.type}</p>
-                <p className="text-slate-450 font-medium">Resident: {v.resident} • <span className="font-mono text-amber-400">${v.fine}</span></p>
-              </div>
-              {v.status === 'Paid' ? (
-                <span className="px-2 py-0.5 bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 font-bold rounded-lg text-[9px]">
-                  ✓ Settled
-                </span>
-              ) : v.status === 'Appealed' ? (
-                <span className="px-2 py-0.5 bg-blue-500/10 border border-blue-500/25 text-blue-400 font-bold rounded-lg text-[9px]">
-                  ⏳ Appealed
-                </span>
-              ) : (
-                <span className="px-2 py-0.5 bg-red-500/10 border border-red-500/25 text-red-405 font-bold rounded-lg text-[9px]">
-                  ⚠️ Unpaid
-                </span>
-              )}
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderOtpGateSandbox = (isGrid = false) => (
-    <div className="w-full bg-gradient-to-br from-[#4c249f] via-[#1a0b3f] to-[#0a0319] border border-sky-500/20 hover:border-sky-500/40 rounded-3xl p-6 sm:p-8 space-y-6 text-white transition-all duration-300">
-      <div className="flex justify-between items-center pb-3 border-b border-white/10">
-        <div className="flex items-center gap-2">
-          <Clock className="w-4 h-4 text-sky-400" />
-          <span className="text-xs font-bold tracking-wider text-slate-355 uppercase">OTP Gate Passcode Generator</span>
-        </div>
-        <span className="text-[10px] bg-sky-500/10 text-sky-400 border border-sky-500/20 px-2 py-0.5 rounded-md font-bold">Secure Gate IP</span>
-      </div>
-
-      <div className="bg-white/[0.02] border border-white/[0.06] p-5 rounded-2xl text-center space-y-4">
-        <div className="space-y-1">
-          <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider">Active Temporary Passcode</p>
-          <p className="text-4xl font-mono font-black text-sky-400 tracking-widest">{otpCode}</p>
-          <p className="text-[10px] text-emerald-400 font-bold">Expires in 14m 58s • Authorized</p>
-        </div>
-        <button
-          disabled
-          className="w-full py-2.5 bg-slate-800 text-slate-500 font-extrabold rounded-xl text-xs cursor-not-allowed select-none"
-        >
-          Generate Gate Passcode
-        </button>
-      </div>
-
-      <div className="space-y-3 text-left">
-        <p className="text-xs font-bold text-slate-355 uppercase tracking-wider">Gate Access Logs</p>
-        <div className="space-y-2 max-h-40 overflow-y-auto pr-1">
-          {otpLogs.map((log, idx) => (
-            <div key={idx} className="flex justify-between items-center p-2.5 bg-white/[0.01] border border-white/[0.04] rounded-lg text-[10px]">
-              <div>
-                <p className="font-extrabold text-slate-200">{log.event}</p>
-                <p className="text-slate-555 text-[8px]">{log.time} • Source: {log.ip}</p>
-              </div>
-              <span className="px-1.5 py-0.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/15 rounded text-[8px] font-bold">OK</span>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderVotingSandbox = (isGrid = false) => {
-    const totalVotes = voteCounts.yes + voteCounts.no;
-    const yesPercent = Math.round((voteCounts.yes / totalVotes) * 100) || 0;
-    const noPercent = Math.round((voteCounts.no / totalVotes) * 100) || 0;
-
-    return (
-      <div className="w-full bg-gradient-to-br from-[#4c249f] via-[#1a0b3f] to-[#0a0319] border border-indigo-500/20 hover:border-indigo-500/40 rounded-3xl p-6 sm:p-8 space-y-6 text-white transition-all duration-300">
-        <div className="flex justify-between items-center pb-3 border-b border-white/10">
-          <div className="flex items-center gap-2">
-            <Sliders className="w-4 h-4 text-indigo-400" />
-            <span className="text-xs font-bold tracking-wider text-slate-355 uppercase">Digital Ballot Results</span>
-          </div>
-          <span className="text-[10px] bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 px-2 py-0.5 rounded-md font-bold">SHA-256 Verified</span>
-        </div>
-
-        <div className="bg-white/[0.02] border border-white/[0.06] p-4.5 rounded-2xl text-left space-y-3.5">
-          <div className="space-y-1">
-            <span className="px-1.5 py-0.5 bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 rounded text-[8px] font-bold uppercase tracking-wide">Active Ballot</span>
-            <h4 className="text-xs font-extrabold text-slate-200">Should the HOA approve the $15,000 budget for tennis court resurfacing?</h4>
-          </div>
-
-          <div className="space-y-3 pt-1">
-            <div>
-              <div className="flex justify-between text-[10px] text-slate-350 font-bold mb-1">
-                <span>Approve (Yes)</span>
-                <span>{voteCounts.yes} votes ({yesPercent}%)</span>
-              </div>
-              <div className="w-full bg-white/5 h-2 rounded-full overflow-hidden border border-white/[0.04]">
-                <div className="bg-emerald-500 h-full transition-all duration-500" style={{ width: `${yesPercent}%` }} />
-              </div>
-            </div>
-            <div>
-              <div className="flex justify-between text-[10px] text-slate-355 font-bold mb-1">
-                <span>Reject (No)</span>
-                <span>{voteCounts.no} votes ({noPercent}%)</span>
-              </div>
-              <div className="w-full bg-white/5 h-2 rounded-full overflow-hidden border border-white/[0.04]">
-                <div className="bg-red-500 h-full transition-all duration-500" style={{ width: `${noPercent}%` }} />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="text-[9px] text-slate-500 text-left leading-relaxed">
-          * Voting is fully anonymous and encrypted. Results are updated in real-time as residents submit their choices.
-        </div>
-      </div>
-    );
-  };
-
-  const renderAnnouncementsSandbox = (isGrid = false) => (
-    <div className="w-full bg-gradient-to-br from-[#4c249f] via-[#1a0b3f] to-[#0a0319] border border-violet-500/20 hover:border-violet-500/40 rounded-3xl p-6 sm:p-8 space-y-6 text-white transition-all duration-300">
-      <div className="flex justify-between items-center pb-3 border-b border-white/10">
-        <div className="flex items-center gap-2">
-          <Send className="w-4 h-4 text-violet-400" />
-          <span className="text-xs font-bold tracking-wider text-slate-355 uppercase">Announcement Broadcaster</span>
-        </div>
-        <span className="text-[10px] bg-violet-500/10 text-violet-400 border border-violet-500/20 px-2 py-0.5 rounded-md font-bold">142 Members Linked</span>
-      </div>
-
-      <form className="space-y-3.5 text-left">
-        <textarea
-          disabled
-          value="Urgent: Annual elevator safety inspection tomorrow between 9:00 AM and 4:00 PM."
-          className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-xs text-slate-300 placeholder-slate-500 cursor-not-allowed resize-none"
-        />
-        <div className="flex items-center justify-between">
-          <div className="flex gap-4">
-            <label className="flex items-center gap-1.5 text-[10px] text-slate-500 cursor-not-allowed select-none">
-              <input
-                type="checkbox"
-                checked={true}
-                disabled
-                className="accent-violet-500 cursor-not-allowed"
-              />
-              <span>Send SMS</span>
-            </label>
-            <label className="flex items-center gap-1.5 text-[10px] text-slate-500 cursor-not-allowed select-none">
-              <input
-                type="checkbox"
-                checked={true}
-                disabled
-                className="accent-violet-500 cursor-not-allowed"
-              />
-              <span>Send Email</span>
-            </label>
-          </div>
-          <button
-            type="button"
-            disabled
-            className="px-4 py-2 bg-slate-800 text-slate-550 font-extrabold rounded-lg text-[10px] cursor-not-allowed"
-          >
-            Broadcast
-          </button>
-        </div>
-      </form>
-
-      <div className="space-y-3 text-left">
-        <p className="text-xs font-bold text-slate-355 uppercase tracking-wider">Pinned Announcements</p>
-        <div className="space-y-2.5 max-h-40 overflow-y-auto pr-1">
-          {announcementsList.map((ann) => (
-            <div key={ann.id} className="p-3 bg-white/[0.02] border border-white/[0.04] rounded-xl space-y-2">
-              <div className="flex justify-between items-center text-[8px] text-slate-450">
-                <span>📅 {ann.date}</span>
-                <span className="font-extrabold">Views: {ann.views} residents</span>
-              </div>
-              <p className="text-[10px] font-medium leading-relaxed text-slate-200">{ann.text}</p>
-              <div className="flex gap-1">
-                {ann.channels.map((ch) => (
-                  <span key={ch} className="px-1.5 py-0.5 bg-violet-500/10 border border-violet-500/20 text-violet-400 text-[7px] font-bold uppercase rounded">
-                    {ch}
-                  </span>
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderAuditLogsSandbox = (isGrid = false) => (
-    <div className="w-full bg-gradient-to-br from-[#4c249f] via-[#1a0b3f] to-[#0a0319] border border-teal-500/20 hover:border-teal-500/40 rounded-3xl p-6 sm:p-8 space-y-6 text-white transition-all duration-300">
-      <div className="flex justify-between items-center pb-3 border-b border-white/10">
-        <div className="flex items-center gap-2">
-          <Activity className="w-4 h-4 text-teal-400" />
-          <span className="text-xs font-bold tracking-wider text-slate-355 uppercase">Compliance IP Audit Tracker</span>
-        </div>
-        <span className="text-[10px] bg-teal-500/10 text-teal-400 border border-teal-500/20 px-2 py-0.5 rounded-md font-bold">Immutable Ledger</span>
-      </div>
-
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-550" size={12} />
-        <input
-          type="text"
-          disabled
-          value=""
-          placeholder="Search audit trail logs..."
-          className="w-full bg-white/5 border border-white/10 rounded-xl pl-9 pr-4 py-2 text-xs text-slate-500 placeholder-slate-550 outline-none cursor-not-allowed"
-        />
-      </div>
-
-      <div className="space-y-3.5 text-left">
-        <p className="text-xs font-bold text-slate-355 uppercase tracking-wider">Unalterable Operations Log</p>
-        <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
-          {auditLogsList.map((log) => (
-            <div key={log.id} className="p-3 bg-white/[0.02] border border-white/[0.04] rounded-xl text-[10px] space-y-1">
-              <div className="flex justify-between items-center text-[8px] text-slate-500">
-                <span>⏱️ {log.time}</span>
-                <span className="font-mono text-teal-400 bg-teal-500/10 px-1.5 py-0.5 rounded">{log.ip}</span>
-              </div>
-              <p className="font-extrabold text-slate-200">{log.action}</p>
-              <p className="text-[9px] text-slate-450">Actor: {log.user} • Location: {log.location}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderRosterSandbox = (isGrid = false) => {
-    const filteredRoster = rosterList.filter(r =>
-      r.name.toLowerCase().includes(rosterSearch.toLowerCase()) ||
-      r.unit.toLowerCase().includes(rosterSearch.toLowerCase())
-    );
-
-    return (
-      <div className="w-full bg-gradient-to-br from-[#4c249f] via-[#1a0b3f] to-[#0a0319] border border-violet-500/20 hover:border-violet-500/40 rounded-3xl p-6 sm:p-8 space-y-6 text-white transition-all duration-300">
-        <div className="flex justify-between items-center pb-3 border-b border-white/10">
-          <div className="flex items-center gap-2">
-            <Users className="w-4 h-4 text-violet-400" />
-            <span className="text-xs font-bold tracking-wider text-slate-355 uppercase">Verified Roster Directory</span>
-          </div>
-          <span className="text-[10px] bg-violet-500/10 text-violet-400 border border-violet-500/20 px-2 py-0.5 rounded-md font-bold">Active Roster</span>
-        </div>
-
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-550" size={12} />
-          <input
-            type="text"
-            disabled
-            value=""
-            placeholder="Search roster by name or unit..."
-            className="w-full bg-white/5 border border-white/10 rounded-xl pl-9 pr-4 py-2 text-xs text-slate-500 placeholder-slate-550 outline-none cursor-not-allowed"
-          />
-        </div>
-
-        <div className="space-y-3.5 text-left">
-          <p className="text-xs font-bold text-slate-350 uppercase tracking-wider">Resident Directory Entries</p>
-          <div className="space-y-2.5 max-h-48 overflow-y-auto pr-1">
-            {filteredRoster.map((res, idx) => (
-              <div key={idx} className="p-3 bg-white/[0.02] border border-white/[0.04] rounded-xl text-[10px] flex justify-between items-center">
-                <div className="space-y-0.5">
-                  <p className="font-extrabold text-slate-200">{res.name}</p>
-                  <p className="text-slate-455 text-[8px] font-mono">{res.email} • {res.phone}</p>
-                </div>
-                <div className="text-right space-y-1">
-                  <span className="block text-[8px] font-mono font-extrabold text-slate-300">{res.unit}</span>
-                  <span className="inline-block px-1.5 py-0.5 bg-violet-500/15 border border-violet-500/25 text-violet-300 rounded text-[7px] font-bold uppercase tracking-wide">
-                    {res.status}
-                  </span>
-                </div>
+            {['Audit Logs', 'Bylaw Repository', 'Vendor Contracts', 'Full Financials'].map((item, i) => (
+              <div key={i} className="flex items-center justify-between px-3 py-2 bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.05] rounded-lg shadow-[0_1px_3px_rgba(0,0,0,0.01)]">
+                <span className="text-[10px] font-semibold text-slate-800 dark:text-slate-300">{item}</span>
+                <span className="text-[8px] px-1.5 py-0.5 bg-emerald-500/10 dark:bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 rounded font-bold">✓ Visible</span>
               </div>
             ))}
-            {filteredRoster.length === 0 && (
-              <div className="text-center text-slate-505 text-[10px] py-4">No directory records found.</div>
-            )}
           </div>
+        )}
+        {selectedRole === 'manager' && (
+          <div className="space-y-2">
+            {['Work Orders', 'Resident Roster', 'Vendor Dispatch', 'Amenity Calendar'].map((item, i) => (
+              <div key={i} className="flex items-center justify-between px-3 py-2 bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.05] rounded-lg shadow-[0_1px_3px_rgba(0,0,0,0.01)]">
+                <span className="text-[10px] font-semibold text-slate-800 dark:text-slate-300">{item}</span>
+                <span className="text-[8px] px-1.5 py-0.5 bg-emerald-500/10 dark:bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 rounded font-bold">✓ Visible</span>
+              </div>
+            ))}
+            <div className="flex items-center justify-between px-3 py-2 bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.05] rounded-lg shadow-[0_1px_3px_rgba(0,0,0,0.01)]">
+              <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400">Reserve Funds</span>
+              <span className="text-[8px] px-1.5 py-0.5 bg-red-500/10 dark:bg-red-500/15 text-red-600 dark:text-red-450 border border-red-500/20 rounded font-bold">✗ Hidden</span>
+            </div>
+          </div>
+        )}
+        {selectedRole === 'resident' && (
+          <div className="space-y-2">
+            {['My Payments', 'Amenity Bookings', 'Announcements', 'My Violations'].map((item, i) => (
+              <div key={i} className="flex items-center justify-between px-3 py-2 bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.05] rounded-lg shadow-[0_1px_3px_rgba(0,0,0,0.01)]">
+                <span className="text-[10px] font-semibold text-slate-800 dark:text-slate-300">{item}</span>
+                <span className="text-[8px] px-1.5 py-0.5 bg-emerald-500/10 dark:bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 rounded font-bold">✓ Visible</span>
+              </div>
+            ))}
+            <div className="flex items-center justify-between px-3 py-2 bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.05] rounded-lg shadow-[0_1px_3px_rgba(0,0,0,0.01)]">
+              <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400">Audit Logs</span>
+              <span className="text-[8px] px-1.5 py-0.5 bg-red-500/10 dark:bg-red-500/15 text-red-600 dark:text-red-450 border border-red-500/20 rounded font-bold">✗ Restricted</span>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
+  const renderViolationsSandbox = () => (
+    <div className="w-full h-full flex flex-col rounded-2xl overflow-hidden border border-slate-200 dark:border-indigo-500/20 bg-slate-100/60 dark:bg-[#0a081a] shadow-xl shadow-slate-200/50 dark:shadow-indigo-900/20">
+      <div className="bg-gradient-to-r from-indigo-600 to-violet-600 px-5 py-3 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Bell className="w-4 h-4 text-white" />
+          <span className="text-xs font-bold text-white tracking-wide uppercase">Violations Tracker</span>
+        </div>
+        <span className="text-[10px] bg-white/20 text-white font-bold px-2 py-0.5 rounded-full">{violationsList.length} Cases</span>
+      </div>
+      <div className="p-5 flex-1 space-y-2.5 overflow-auto">
+        {violationsList.map(v => (
+          <div key={v.id} className="p-3 bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.05] rounded-xl space-y-1.5 shadow-[0_1px_3px_rgba(0,0,0,0.01)]">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-bold text-slate-800 dark:text-slate-200">{v.type}</span>
+              <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded border ${v.status === 'Open' ? 'bg-violet-500/15 text-violet-600 dark:text-violet-400 border-violet-500/20' : v.status === 'Appealed' ? 'bg-blue-500/15 text-blue-600 dark:text-blue-400 border-blue-500/20' : 'bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 border-indigo-500/20'}`}>{v.status}</span>
+            </div>
+            <p className="text-[9px] text-slate-550 dark:text-slate-400">{v.resident} · <span className="text-violet-600 dark:text-violet-400 font-bold">${v.fine} fine</span></p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  const renderOtpGateSandbox = () => (
+    <div className="w-full h-full flex flex-col rounded-2xl overflow-hidden border border-slate-200 dark:border-blue-500/20 bg-slate-100/60 dark:bg-[#060b18] shadow-xl shadow-slate-200/50 dark:shadow-blue-900/20">
+      <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-5 py-3 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Lock className="w-4 h-4 text-white" />
+          <span className="text-xs font-bold text-white tracking-wide uppercase">OTP Gate Access</span>
+        </div>
+        <span className="text-[10px] bg-white/20 text-white font-bold px-2 py-0.5 rounded-full">Secure</span>
+      </div>
+      <div className="p-5 flex-1 space-y-4 overflow-auto">
+        <div className="bg-blue-500/5 dark:bg-blue-500/10 border border-slate-200 dark:border-blue-500/20 rounded-xl p-4 text-center space-y-1">
+          <p className="text-[9px] text-blue-600 dark:text-blue-400/70 font-bold uppercase tracking-wider">Active Passcode</p>
+          <p className="text-3xl font-mono font-black text-blue-600 dark:text-blue-400 tracking-widest">{otpCode}</p>
+          <p className="text-[9px] text-blue-500 dark:text-blue-400 font-bold">Expires in 14m 58s · Authorized</p>
+        </div>
+        <div className="space-y-2">
+          <p className="text-[9px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">Gate Access Log</p>
+          {otpLogs.map((log, i) => (
+            <div key={i} className="flex items-center justify-between p-2.5 bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.04] rounded-lg text-[9px] shadow-[0_1px_3px_rgba(0,0,0,0.01)]">
+              <div>
+                <p className="font-semibold text-slate-800 dark:text-slate-200">{log.event}</p>
+                <p className="text-slate-500">{log.time} · {log.gate}</p>
+              </div>
+              <span className="px-1.5 py-0.5 bg-blue-500/10 dark:bg-blue-500/15 text-blue-600 dark:text-blue-405 border border-blue-500/20 rounded font-bold text-[8px]">OK</span>
+            </div>
+          ))}
         </div>
       </div>
-    );
-  };
+    </div>
+  );
+
+  const renderVotingSandbox = () => (
+    <div className="w-full h-full flex flex-col rounded-2xl overflow-hidden border border-slate-200 dark:border-indigo-500/20 bg-slate-100/60 dark:bg-[#07091a] shadow-xl shadow-slate-200/50 dark:shadow-indigo-900/20">
+      <div className="bg-gradient-to-r from-indigo-600 to-violet-600 px-5 py-3 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Sliders className="w-4 h-4 text-white" />
+          <span className="text-xs font-bold text-white tracking-wide uppercase">Digital E-Voting</span>
+        </div>
+        <span className="text-[10px] bg-white/20 text-white font-bold px-2 py-0.5 rounded-full">SHA-256</span>
+      </div>
+      <div className="p-5 flex-1 space-y-4 overflow-auto">
+        <div className="bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.06] p-4 rounded-xl space-y-3 shadow-[0_1px_3px_rgba(0,0,0,0.01)]">
+          <span className="text-[8px] px-1.5 py-0.5 bg-indigo-550/10 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-300 border border-indigo-300 dark:border-indigo-500/30 rounded font-bold uppercase">Active Ballot</span>
+          <p className="text-[11px] font-bold text-slate-800 dark:text-slate-200 leading-snug">Should the HOA approve $15,000 for tennis court resurfacing?</p>
+          <div className="space-y-2.5">
+            <div>
+              <div className="flex justify-between text-[9px] text-slate-500 dark:text-slate-400 font-semibold mb-1">
+                <span>✅ Approve (Yes)</span><span>{voteCounts.yes} votes ({yesPercent}%)</span>
+              </div>
+              <div className="h-2 bg-slate-200 dark:bg-white/5 rounded-full overflow-hidden">
+                <div className="bg-indigo-650 h-full rounded-full transition-all duration-700" style={{ width: `${yesPercent}%` }} />
+              </div>
+            </div>
+            <div>
+              <div className="flex justify-between text-[9px] text-slate-500 dark:text-slate-400 font-semibold mb-1">
+                <span>❌ Reject (No)</span><span>{voteCounts.no} votes ({noPercent}%)</span>
+              </div>
+              <div className="h-2 bg-slate-200 dark:bg-white/5 rounded-full overflow-hidden">
+                <div className="bg-violet-650 h-full rounded-full transition-all duration-700" style={{ width: `${noPercent}%` }} />
+              </div>
+            </div>
+          </div>
+          <p className="text-[9px] text-slate-500 italic">{totalVotes} verified owner votes · Quorum met</p>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderAnnouncementsSandbox = () => (
+    <div className="w-full h-full flex flex-col rounded-2xl overflow-hidden border border-slate-200 dark:border-violet-500/20 bg-slate-100/60 dark:bg-[#0e0618] shadow-xl shadow-slate-200/50 dark:shadow-violet-900/20">
+      <div className="bg-gradient-to-r from-violet-600 to-purple-650 px-5 py-3 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Send className="w-4 h-4 text-white" />
+          <span className="text-xs font-bold text-white tracking-wide uppercase">Broadcast Center</span>
+        </div>
+        <span className="text-[10px] bg-white/20 text-white font-bold px-2 py-0.5 rounded-full">142 Members</span>
+      </div>
+      <div className="p-5 flex-1 space-y-3 overflow-auto">
+        {[
+          { text: "Annual elevator safety inspection tomorrow 9 AM – 4 PM.", date: "Just now", channels: ["SMS", "Email", "Portal"], views: 42 },
+          { text: "Clubhouse pool closed for chemical treatment Wednesday 9 AM – 1 PM.", date: "1 day ago", channels: ["SMS", "Portal"], views: 114 },
+          { text: "Annual HOA Board Meeting – July 12th, Community Hall.", date: "3 days ago", channels: ["Email", "Portal"], views: 142 }
+        ].map((a, i) => (
+          <div key={i} className="p-3 bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.05] rounded-xl space-y-2 shadow-[0_1px_3px_rgba(0,0,0,0.01)]">
+            <p className="text-[10px] font-semibold text-slate-800 dark:text-slate-200 leading-snug">{a.text}</p>
+            <div className="flex items-center gap-2">
+              {a.channels.map(c => <span key={c} className="text-[8px] font-bold px-1.5 py-0.5 bg-violet-500/10 dark:bg-violet-500/15 text-violet-600 dark:text-violet-300 border border-violet-500/20 rounded">{c}</span>)}
+              <span className="ml-auto text-[8px] text-slate-500">{a.views} views · {a.date}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  const renderAuditLogsSandbox = () => (
+    <div className="w-full h-full flex flex-col rounded-2xl overflow-hidden border border-slate-200 dark:border-blue-500/20 bg-slate-100/60 dark:bg-[#060b18] shadow-xl shadow-slate-200/50 dark:shadow-blue-900/20">
+      <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-5 py-3 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Activity className="w-4 h-4 text-white" />
+          <span className="text-xs font-bold text-white tracking-wide uppercase">Audit Trail</span>
+        </div>
+        <span className="text-[10px] bg-white/20 text-white font-bold px-2 py-0.5 rounded-full">Immutable</span>
+      </div>
+      <div className="p-5 flex-1 space-y-3 overflow-auto">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={11} />
+          <input type="text" disabled placeholder="Search audit trail..." className="w-full bg-slate-200/50 dark:bg-white/5 border border-slate-300/40 dark:border-white/10 rounded-lg pl-8 pr-3 py-1.5 text-[10px] text-slate-500 placeholder-slate-650 outline-none cursor-not-allowed" />
+        </div>
+        {auditLogsList.map(log => (
+          <div key={log.id} className="p-2.5 bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.04] rounded-lg text-[9px] space-y-0.5 shadow-[0_1px_3px_rgba(0,0,0,0.01)]">
+            <div className="flex justify-between items-center">
+              <span className="font-bold text-slate-800 dark:text-slate-200 text-[10px]">{log.action}</span>
+              <span className="font-mono text-blue-600 dark:text-blue-400 bg-blue-500/10 px-1.5 py-0.5 rounded text-[8px]">{log.ip}</span>
+            </div>
+            <p className="text-slate-550 dark:text-slate-400">{log.user} · {log.time}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  const renderRosterSandbox = () => (
+    <div className="w-full h-full flex flex-col rounded-2xl overflow-hidden border border-slate-200 dark:border-violet-500/20 bg-slate-100/60 dark:bg-[#0a071a] shadow-xl shadow-slate-200/50 dark:shadow-violet-900/20">
+      <div className="bg-gradient-to-r from-violet-600 to-indigo-700 px-5 py-3 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Users className="w-4 h-4 text-white" />
+          <span className="text-xs font-bold text-white tracking-wide uppercase">Roster Directory</span>
+        </div>
+        <span className="text-[10px] bg-white/20 text-white font-bold px-2 py-0.5 rounded-full">{rosterList.length} Members</span>
+      </div>
+      <div className="p-5 flex-1 space-y-3 overflow-auto">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={11} />
+          <input type="text" value={rosterSearch} onChange={e => setRosterSearch(e.target.value)}
+            placeholder="Search by name or unit..." className="w-full bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-lg pl-8 pr-3 py-1.5 text-[10px] text-slate-800 dark:text-slate-200 placeholder-slate-450 outline-none focus:ring-1 focus:ring-violet-500" />
+        </div>
+        {filteredRoster.map((res, i) => (
+          <div key={i} className="flex items-center justify-between p-2.5 bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.04] rounded-xl text-[10px] shadow-[0_1px_3px_rgba(0,0,0,0.01)]">
+            <div>
+              <p className="font-bold text-slate-800 dark:text-slate-200">{res.name}</p>
+              <p className="text-slate-500 text-[8px]">{res.email}</p>
+            </div>
+            <div className="text-right space-y-1">
+              <p className="text-[9px] font-mono text-slate-605 dark:text-slate-300">{res.unit}</p>
+              <span className="inline-block px-1.5 py-0.5 bg-violet-500/10 dark:bg-violet-500/15 border border-violet-500/20 dark:border-violet-500/25 text-violet-650 dark:text-violet-300 rounded text-[7px] font-bold uppercase">{res.status}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  // Features showcase for the main page (non-tab view)
+  const allFeatures = [
+    { key: 'ledger', icon: DollarSign, label: 'Automated Billing', color: 'text-blue-400', bg: 'bg-blue-500/10 border-blue-500/20' },
+    { key: 'assistant', icon: Bot, label: 'AI Assistant', color: 'text-violet-400', bg: 'bg-violet-500/10 border-violet-500/20' },
+    { key: 'kanban', icon: Wrench, label: 'Maintenance Desk', color: 'text-indigo-400', bg: 'bg-indigo-500/10 border-indigo-500/20' },
+    { key: 'amenities', icon: Calendar, label: 'Amenity Booking', color: 'text-blue-400', bg: 'bg-blue-500/10 border-blue-500/20' },
+    { key: 'rbac', icon: Shield, label: 'Access Control', color: 'text-violet-400', bg: 'bg-violet-500/10 border-violet-500/20' },
+    { key: 'violations', icon: Bell, label: 'Violations & Fines', color: 'text-indigo-400', bg: 'bg-indigo-500/10 border-indigo-500/20' },
+    { key: 'otp_gate', icon: Lock, label: 'OTP Gate Access', color: 'text-blue-400', bg: 'bg-blue-500/10 border-blue-500/20' },
+    { key: 'voting', icon: Sliders, label: 'E-Voting', color: 'text-violet-400', bg: 'bg-violet-500/10 border-violet-500/20' },
+    { key: 'announcements', icon: Send, label: 'Announcements', color: 'text-indigo-400', bg: 'bg-indigo-500/10 border-indigo-500/20' },
+    { key: 'audit_logs', icon: Activity, label: 'Audit Logs', color: 'text-blue-400', bg: 'bg-blue-500/10 border-blue-500/20' },
+    { key: 'roster', icon: Users, label: 'Roster Directory', color: 'text-violet-400', bg: 'bg-violet-500/10 border-violet-500/20' },
+    { key: 'analytics', icon: BarChart3, label: 'Analytics Dashboard', color: 'text-indigo-400', bg: 'bg-indigo-500/10 border-indigo-500/20' },
+  ];
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-[#120824] transition-colors duration-250 font-sans text-slate-900 dark:text-slate-100">
+    <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-[#0a0614] transition-colors duration-250 font-sans text-slate-900 dark:text-slate-100">
       <Navbar />
 
       <div className="flex-1 overflow-x-hidden">
-
-      {activeTab && featureDetailsData[activeTab] ? (
-        /* ─── DEDICATED SPECIFIC FEATURE VIEW ─── */
-        <div className="flex-1 py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full animate-fade-in-up">
-          <div className="mb-8 text-left">
-            <Link 
-              to="/features" 
-              className="inline-flex items-center gap-1.5 text-xs font-black text-violet-500 hover:text-violet-400 uppercase tracking-widest transition-all hover:-translate-x-0.5"
-            >
-              ← Back to Bento Playground
-            </Link>
-          </div>
-          
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-            {/* Left panel: Info & details */}
-            <div className="lg:col-span-5 space-y-6 text-left">
-              <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-[10px] font-black tracking-widest uppercase bg-gradient-to-r ${featureDetailsData[activeTab].color} text-white`}>
-                Interactive Feature Tour
-              </span>
-              <h1 className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight">
-                {featureDetailsData[activeTab].title}
-              </h1>
-              <p className="text-xs text-slate-500 dark:text-slate-400 italic leading-relaxed">
-                {featureDetailsData[activeTab].tagline}
-              </p>
-              <p className="text-sm text-slate-600 dark:text-slate-350 leading-relaxed font-normal pt-2">
-                {featureDetailsData[activeTab].desc}
-              </p>
-
-              <div className="space-y-3.5 pt-4 border-t border-slate-200 dark:border-white/[0.05]">
-                <h4 className="text-xs font-black text-slate-900 dark:text-slate-200 uppercase tracking-wider">Functional Capabilities:</h4>
-                <ul className="space-y-3">
-                  {featureDetailsData[activeTab].benefits.map((b, idx) => (
-                    <li key={idx} className="flex items-start gap-3 text-xs leading-relaxed text-slate-600 dark:text-slate-300 font-medium">
-                      <CheckCircle className="w-4 h-4 shrink-0 mt-0.5 text-violet-500" />
-                      <span>{b}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              <div className="pt-6 flex gap-3">
-                <Link 
-                  to="/register" 
-                  className="flex-1 py-3.5 bg-gradient-to-r from-violet-500 to-indigo-600 hover:from-violet-600 hover:to-indigo-700 text-white font-bold text-xs uppercase tracking-wider rounded-xl text-center shadow-md active:scale-95 transition-all"
-                >
-                  Start Free Trial
-                </Link>
-                <Link 
-                  to="/contact" 
-                  className="px-5 py-3.5 border border-slate-200 dark:border-white/[0.08] hover:border-violet-500/25 text-slate-700 dark:text-slate-300 font-bold text-xs uppercase tracking-wider rounded-xl text-center hover:bg-slate-50 dark:hover:bg-white/5 active:scale-95 transition-all"
-                >
-                  Ask Sales
-                </Link>
-              </div>
+        {activeTab && featureDetailsData[activeTab] ? (
+          /* ─── DEDICATED FEATURE VIEW ─── */
+          <div className="flex-1 py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+            <div className="mb-8 text-left">
+              <Link to="/features" className="inline-flex items-center gap-1.5 text-xs font-black text-violet-500 hover:text-violet-400 uppercase tracking-widest transition-all hover:-translate-x-0.5">
+                ← Back to Features
+              </Link>
             </div>
-
-            {/* Right panel: The interactive sandbox widget */}
-            <div className="lg:col-span-7 w-full flex justify-center">
-              {activeTab === 'ledger' && renderLedgerSandbox(false)}
-              {activeTab === 'assistant' && renderAssistantSandbox(false)}
-              {activeTab === 'kanban' && renderKanbanSandbox(false)}
-              {activeTab === 'amenities' && renderAmenitiesSandbox(false)}
-              {activeTab === 'rbac' && renderRbacSandbox(false)}
-              {activeTab === 'violations' && renderViolationsSandbox(false)}
-              {activeTab === 'otp_gate' && renderOtpGateSandbox(false)}
-              {activeTab === 'voting' && renderVotingSandbox(false)}
-              {activeTab === 'announcements' && renderAnnouncementsSandbox(false)}
-              {activeTab === 'audit_logs' && renderAuditLogsSandbox(false)}
-              {activeTab === 'roster' && renderRosterSandbox(false)}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+              <div className="lg:col-span-5 space-y-6 text-left">
+                <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-[10px] font-black tracking-widest uppercase bg-gradient-to-r ${featureDetailsData[activeTab].color} text-white`}>
+                  Interactive Feature Tour
+                </span>
+                <h1 className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight">
+                  {featureDetailsData[activeTab].title}
+                </h1>
+                <p className="text-xs text-slate-500 dark:text-slate-400 italic">{featureDetailsData[activeTab].tagline}</p>
+                <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">{featureDetailsData[activeTab].desc}</p>
+                <div className="space-y-3 pt-4 border-t border-slate-200 dark:border-white/[0.06]">
+                  <h4 className="text-xs font-black text-slate-900 dark:text-slate-200 uppercase tracking-wider">Key Capabilities:</h4>
+                  <ul className="space-y-2.5">
+                    {featureDetailsData[activeTab].benefits.map((b, i) => (
+                      <li key={i} className="flex items-start gap-3 text-xs leading-relaxed text-slate-600 dark:text-slate-300">
+                        <CheckCircle className="w-4 h-4 shrink-0 mt-0.5 text-violet-500" />
+                        <span>{b}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <div className="pt-4 flex gap-3">
+                  <Link to="/register" className="flex-1 py-3 bg-gradient-to-r from-violet-500 to-indigo-600 hover:from-violet-600 hover:to-indigo-700 text-white font-bold text-xs uppercase tracking-wider rounded-xl text-center shadow-md active:scale-95 transition-all">
+                    Start Free Trial
+                  </Link>
+                  <Link to="/contact" className="px-5 py-3 border border-slate-200 dark:border-white/[0.08] hover:border-violet-500/25 text-slate-700 dark:text-slate-300 font-bold text-xs uppercase tracking-wider rounded-xl text-center hover:bg-slate-50 dark:hover:bg-white/5 active:scale-95 transition-all">
+                    Ask Sales
+                  </Link>
+                </div>
+              </div>
+              <div className="lg:col-span-7 w-full" style={{ minHeight: '420px' }}>
+                {activeTab === 'ledger' && renderLedgerSandbox()}
+                {activeTab === 'assistant' && renderAssistantSandbox()}
+                {activeTab === 'kanban' && renderKanbanSandbox()}
+                {activeTab === 'amenities' && renderAmenitiesSandbox()}
+                {activeTab === 'rbac' && renderRbacSandbox()}
+                {activeTab === 'violations' && renderViolationsSandbox()}
+                {activeTab === 'otp_gate' && renderOtpGateSandbox()}
+                {activeTab === 'voting' && renderVotingSandbox()}
+                {activeTab === 'announcements' && renderAnnouncementsSandbox()}
+                {activeTab === 'audit_logs' && renderAuditLogsSandbox()}
+                {activeTab === 'roster' && renderRosterSandbox()}
+              </div>
             </div>
           </div>
-        </div>
-      ) : (
-        /* ─── DEFAULT BENTO GRID PLAYGROUND VIEW ─── */
-        <>
-          {/* ─── Page Header Banner ─── */}
-          <div className="w-full bg-gradient-to-r from-violet-500/[0.05] via-indigo-500/[0.03] to-transparent border-b border-slate-200/60 dark:from-[#180a2f] dark:via-[#221043] dark:to-[#0f071f] dark:border-white/[0.04] py-24 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
-            {/* Background ambient orbs */}
-            <div className="absolute top-1/2 left-1/4 w-96 h-96 bg-violet-600/[0.04] dark:bg-violet-600/10 rounded-full blur-[100px] pointer-events-none" />
-            <div className="absolute bottom-0 right-1/4 w-80 h-80 bg-teal-500/[0.03] dark:bg-teal-500/10 rounded-full blur-[100px] pointer-events-none" />
-            <div className="absolute inset-0 opacity-[0.015] dark:opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,0.2) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.2) 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
-            
-            <div className="max-w-7xl mx-auto w-full text-center space-y-5 relative z-10 animate-fade-in-up">
-              <span className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-violet-500/10 dark:bg-violet-500/15 border border-violet-500/25 dark:border-violet-500/35 text-violet-600 dark:text-violet-300 text-[10px] font-extrabold tracking-widest uppercase">
-                Operations Playground
-              </span>
-              <h1 className="text-4xl sm:text-5xl font-black text-slate-900 dark:text-white tracking-tight">
-                Interactive Bento Playground
-              </h1>
-              <p className="text-sm sm:text-base text-slate-600 dark:text-slate-350 max-w-xl mx-auto leading-relaxed font-normal opacity-90">
-                Interact with the grid modules below to test-drive NestBloq's US-optimized billing, scheduling, and management desks.
-              </p>
-            </div>
-          </div>
+        ) : (
+          <>
+            {/* ─── HERO HEADER ─── */}
+            <header className="relative w-full overflow-hidden bg-slate-50 dark:bg-slate-950 border-b border-slate-200 dark:border-white/[0.06]" style={{ minHeight: '480px' }}>
+              {/* Background image */}
+              <img
+                src={featuresHero}
+                alt="NestBloq Features Dashboard"
+                className="absolute inset-0 w-full h-full object-cover object-center opacity-15 dark:opacity-20 blur-[5px] select-none pointer-events-none"
+              />
+              {/* Gradient overlays */}
+              <div className="absolute inset-0 bg-gradient-to-r from-slate-50/90 via-violet-50/30 to-slate-50/90 dark:from-slate-950/95 dark:via-violet-950/60 dark:to-slate-950/90" />
+              <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-slate-50 dark:to-slate-950/80" />
+              {/* Ambient glow orbs */}
+              <div className="absolute top-1/2 left-1/4 w-72 h-72 bg-violet-600/10 dark:bg-violet-600/20 rounded-full blur-[100px] pointer-events-none" />
+              <div className="absolute bottom-0 right-1/4 w-64 h-64 bg-indigo-500/10 dark:bg-indigo-500/15 rounded-full blur-[100px] pointer-events-none" />
+              {/* Grid pattern */}
+              <div className="absolute inset-0 opacity-[0.04] pointer-events-none" style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.3) 1px, transparent 1px)', backgroundSize: '48px 48px' }} />
 
-          {/* ─── Bento Grid Sandbox ─── */}
-          <section className="py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full relative z-10 animate-fade-in-up">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-              <div className="col-span-12 lg:col-span-7 flex">
-                {renderLedgerSandbox(true)}
+              <div className="relative z-10 max-w-6xl mx-auto px-5 sm:px-8 py-24 text-center space-y-6">
+                <div className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-violet-500/10 dark:bg-violet-500/15 border border-violet-300/30 dark:border-violet-500/30 text-violet-600 dark:text-violet-300 text-[10px] font-extrabold tracking-widest uppercase">
+                  <Zap className="w-3 h-3" /> Platform Capabilities
+                </div>
+                <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-slate-900 dark:text-white tracking-tight leading-tight max-w-4xl mx-auto">
+                  Everything Your HOA Needs,{' '}
+                  <span className="bg-gradient-to-r from-violet-500 to-indigo-600 dark:from-violet-400 dark:to-indigo-400 bg-clip-text text-transparent">In One Platform</span>
+                </h1>
+                <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300/80 max-w-2xl mx-auto leading-relaxed">
+                  From automated billing and AI assistance to gate security and digital voting — NestBloq brings enterprise-grade tools to every homeowners association.
+                </p>
+                <div className="flex flex-col sm:flex-row gap-4 justify-center pt-2">
+                  <Link to="/pricing" className="inline-flex items-center gap-2 px-7 py-3.5 bg-gradient-to-r from-violet-500 to-indigo-600 hover:from-violet-600 hover:to-indigo-700 text-white font-bold text-sm rounded-xl shadow-lg shadow-violet-500/20 transition-all hover:-translate-y-0.5">
+                    See Pricing <ArrowRight className="w-4 h-4" />
+                  </Link>
+                  <Link to="/contact" className="inline-flex items-center gap-2 px-7 py-3.5 bg-slate-200/50 hover:bg-slate-200/80 dark:bg-white/10 dark:hover:bg-white/15 border border-slate-300 dark:border-white/20 text-slate-700 dark:text-white font-bold text-sm rounded-xl transition-all hover:-translate-y-0.5 backdrop-blur-sm">
+                    Book a Demo
+                  </Link>
+                </div>
+                {/* Social proof */}
+                <div className="flex items-center justify-center gap-1.5 pt-4">
+                  {[...Array(5)].map((_, i) => <Star key={i} className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />)}
+                  <span className="text-slate-400 text-xs ml-1.5">Trusted by 500+ HOA boards across the US</span>
+                </div>
               </div>
-              <div className="col-span-12 lg:col-span-5 flex">
-                {renderAssistantSandbox(true)}
-              </div>
-              <div className="col-span-12 md:col-span-6 lg:col-span-4 flex">
-                {renderKanbanSandbox(true)}
-              </div>
-              <div className="col-span-12 md:col-span-6 lg:col-span-4 flex">
-                {renderAmenitiesSandbox(true)}
-              </div>
-              <div className="col-span-12 md:col-span-12 lg:col-span-4 flex">
-                {renderRbacSandbox(true)}
-              </div>
-            </div>
-          </section>
+            </header>
 
-          {/* ─── Bottom CTA banner ─── */}
-          <section className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full text-center relative border-t border-slate-200/80 dark:border-white/[0.06] mt-12">
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-violet-500/5 rounded-full blur-3xl -z-10 pointer-events-none" />
-            <div className="max-w-2xl mx-auto space-y-6">
-              <h2 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">
-                See NestBloq in Action
-              </h2>
-              <p className="text-sm text-slate-500 dark:text-slate-400 max-w-md mx-auto leading-relaxed">
-                Schedule a customized demonstration with one of our community board consultants to see how NestBloq fits your HOA rules.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center pt-2">
-                <Link
-                  to="/contact"
-                  className="px-8 py-3.5 bg-gradient-to-r from-violet-500 to-indigo-600 hover:from-violet-600 hover:to-indigo-700 text-white font-bold text-xs rounded-xl shadow-md transition-all hover:-translate-y-0.5"
-                >
-                  Request Custom Demo
-                </Link>
-                <Link
-                  to="/pricing"
-                  className="px-8 py-3.5 bg-white dark:bg-[#1a102b] text-slate-800 dark:text-white border border-slate-200 dark:border-white/[0.08] hover:border-violet-500 dark:hover:border-violet-500 font-bold text-xs rounded-xl hover:bg-slate-50 dark:hover:bg-white/[0.03] transition-all flex items-center justify-center gap-1.5 hover:-translate-y-0.5"
-                >
-                  View Pricing Tiers <ArrowRight className="w-3.5 h-3.5" />
-                </Link>
+            {/* ─── FEATURE GRID BADGE PILLS ─── */}
+            <section className="py-12 px-5 sm:px-8 max-w-7xl mx-auto w-full">
+              <div className="text-center mb-8 space-y-2">
+                <span className="text-violet-600 dark:text-violet-400 text-[10px] font-extrabold tracking-widest uppercase">11+ Core Modules</span>
+                <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">Click any feature to explore it live</h2>
+                <p className="text-sm text-slate-500 dark:text-slate-400">Each module below is an interactive sandbox — try them before you commit.</p>
               </div>
-            </div>
-          </section>
-        </>
-      )}
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                {allFeatures.map(f => {
+                  const Icon = f.icon;
+                  return (
+                    <Link
+                      key={f.key}
+                      to={`/features?tab=${f.key}`}
+                      className={`flex flex-col items-center gap-2 p-4 rounded-2xl border ${f.bg} hover:scale-[1.04] transition-all duration-200 group cursor-pointer`}
+                    >
+                      <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${f.bg}`}>
+                        <Icon className={`w-4 h-4 ${f.color}`} />
+                      </div>
+                      <span className="text-[10px] font-bold text-slate-700 dark:text-slate-300 text-center leading-tight group-hover:text-slate-900 dark:group-hover:text-white transition-colors">{f.label}</span>
+                      <ChevronRight className={`w-3 h-3 ${f.color} opacity-0 group-hover:opacity-100 transition-opacity`} />
+                    </Link>
+                  );
+                })}
+              </div>
+            </section>
 
-      <Footer />
+            {/* ─── INTERACTIVE BENTO PLAYGROUND ─── */}
+            <section className="py-16 px-5 sm:px-8 max-w-7xl mx-auto w-full border-t border-slate-200/60 dark:border-white/[0.05]">
+              <div className="text-center mb-10 space-y-2">
+                <span className="text-violet-600 dark:text-violet-400 text-[10px] font-extrabold tracking-widest uppercase">Live Playground</span>
+                <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">Try NestBloq's Core Modules Right Now</h2>
+                <p className="text-sm text-slate-500 dark:text-slate-400 max-w-lg mx-auto">These are real interactive widgets — click the buttons, switch roles, and see NestBloq in action.</p>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-5" style={{ minHeight: '480px' }}>
+                <div ref={ledgerRef} className="col-span-12 lg:col-span-7 flex" style={{ minHeight: '420px' }}>
+                  {renderLedgerSandbox()}
+                </div>
+                <div ref={assistantRef} className="col-span-12 lg:col-span-5 flex" style={{ minHeight: '420px' }}>
+                  {renderAssistantSandbox()}
+                </div>
+                <div ref={kanbanRef} className="col-span-12 md:col-span-6 lg:col-span-4 flex" style={{ minHeight: '380px' }}>
+                  {renderKanbanSandbox()}
+                </div>
+                <div ref={amenitiesRef} className="col-span-12 md:col-span-6 lg:col-span-4 flex" style={{ minHeight: '380px' }}>
+                  {renderAmenitiesSandbox()}
+                </div>
+                <div ref={rbacRef} className="col-span-12 md:col-span-12 lg:col-span-4 flex" style={{ minHeight: '380px' }}>
+                  {renderRbacSandbox()}
+                </div>
+              </div>
+            </section>
+
+            {/* ─── BOTTOM CTA ─── */}
+            <section className="py-20 px-5 sm:px-8 max-w-5xl mx-auto w-full text-center border-t border-slate-200/80 dark:border-white/[0.06] relative">
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-64 bg-violet-500/[0.06] dark:bg-violet-500/10 rounded-full blur-3xl pointer-events-none" />
+              <div className="relative max-w-2xl mx-auto space-y-6">
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-violet-500/10 border border-violet-500/25 text-violet-600 dark:text-violet-300 text-[10px] font-extrabold tracking-widest uppercase">
+                  <Sparkles className="w-3 h-3" /> Ready to get started?
+                </div>
+                <h2 className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight">
+                  See NestBloq in Action
+                </h2>
+                <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
+                  Schedule a customized demo with one of our HOA consultants to see how NestBloq fits your community's specific needs and rules.
+                </p>
+                <div className="flex flex-col sm:flex-row gap-4 justify-center pt-2">
+                  <Link to="/contact" className="px-8 py-3.5 bg-gradient-to-r from-violet-500 to-indigo-600 hover:from-violet-600 hover:to-indigo-700 text-white font-bold text-sm rounded-xl shadow-md transition-all hover:-translate-y-0.5">
+                    Request Custom Demo
+                  </Link>
+                  <Link to="/pricing" className="inline-flex items-center justify-center gap-1.5 px-8 py-3.5 bg-white dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.08] hover:border-violet-500 text-slate-800 dark:text-white font-bold text-sm rounded-xl transition-all hover:-translate-y-0.5">
+                    View Pricing <ArrowRight className="w-4 h-4" />
+                  </Link>
+                </div>
+              </div>
+            </section>
+          </>
+        )}
+
+        <Footer />
       </div>
     </div>
   );

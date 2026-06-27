@@ -739,14 +739,14 @@ const ViolationDetailModal = ({ violation, isResident, statuses, onClose, onDisp
         {/* Actions bar */}
         <div className="border-t border-slate-200 dark:border-white/10 pt-4 flex flex-col md:flex-row justify-between items-stretch md:items-center gap-4">
           {/* Admin Actions */}
-          {!isResident && (
+          {!isResident && !['CLOSED', 'RESOLVED', 'CANCELLED'].includes(violation.violation_status) && (
             <div className="flex flex-1 items-center gap-3 justify-between md:justify-start">
               <div className="flex items-center gap-2">
                 <div className="relative">
                   <select
                     value={selectedStatusId}
                     onChange={e => setSelectedStatusId(e.target.value)}
-                    className="bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl pl-4 pr-10 py-2 text-sm text-slate-900 dark:text-white focus:border-teal-500 focus:outline-none appearance-none cursor-pointer"
+                    className="bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200/10 dark:border-white/10 rounded-xl pl-4 pr-10 py-2 text-sm text-slate-900 dark:text-white focus:border-teal-500 focus:outline-none appearance-none cursor-pointer"
                   >
                     {statuses.map(s => (
                       <option key={s.violation_status_id} value={s.violation_status_id} className="text-slate-900 dark:text-white">

@@ -8,10 +8,15 @@ from app.dependencies.auth import get_current_user, require_role
 from app.models.user import User
 # 🔥 Your models imports are linked here
 from app.models.community import Community, CommunityJoinRequest 
+from app.models.community_change_request import CommunityChangeRequest
 from app.schemas.community import (
     CommunityCreate, CommunityOut, CommunityUpdate,
     CommunityStatsOut, DocumentOut
 )
+from app.schemas.community_change_request import (
+    CommunityChangeRequestCreate, CommunityChangeRequestReview, CommunityChangeRequestOut
+)
+
 from app.services.community_service import (
     create_community, create_join_request, get_all_communities, get_community_by_id,
     update_community, delete_community, add_document, get_community_documents
@@ -108,6 +113,11 @@ def update(
 ):
     role_name = current_user.role.role_name if current_user.role else None
     if role_name in {"property_manager", "board_member"}:
+        if body.name is not None or body.community_size is not None:
+            raise HTTPException(
+                status_code=403,
+                detail="Property managers and board members cannot directly modify community name or total units. Please submit a Change Request instead."
+            )
         from app.models.user import UserCommunity
         assoc = db.query(UserCommunity).filter(
             UserCommunity.user_id == current_user.user_id,
@@ -115,6 +125,7 @@ def update(
         ).first()
         if not assoc:
             raise HTTPException(status_code=403, detail="You do not have permission to modify this community.")
+
     try:
         community = update_community(community_id, body, current_user.user_id, db)
     except ValueError as e:
@@ -483,3 +494,231 @@ def _to_out(c) -> CommunityOut:
         created_date             = c.created_date,
         modified_date            = c.modified_date,
     )
+
+
+# ══════════════════════════════════════════════
+#  COMMUNITY CHANGE REQUESTS
+# ══════════════════════════════════════════════
+
+def calculate_plan_details(units: int, renewal_cycle: str = "monthly") -> tuple[str, float]:
+    cycle = renewal_cycle.lower() if renewal_cycle else "monthly"
+    if units <= 100:
+        plan = "Standard"
+        price = 999.0 if "annual" in cycle else 99.0
+    elif units <= 350:
+        plan = "Premium"
+        price = 1999.0 if "annual" in cycle else 199.0
+    elif units <= 1000:
+        plan = "Enterprise"
+        price = 4999.0 if "annual" in cycle else 499.0
+    else:
+        plan = "Custom"
+        price = 0.0
+    return plan, price
+
+
+# Helper to convert request model to output schema
+def _req_to_out(r, db: Session) -> CommunityChangeRequestOut:
+    # Fetch names
+    community_name = r.community.name if r.community else "Unknown"
+    
+    requested_by_name = "Unknown"
+    if r.requested_by:
+        requested_by_name = f"{r.requested_by.first_name or ''} {r.requested_by.last_name or ''}".strip() or r.requested_by.email_id
+        
+    reviewed_by_name = None
+    if r.reviewed_by:
+        reviewed_by_name = f"{r.reviewed_by.first_name or ''} {r.reviewed_by.last_name or ''}".strip() or r.reviewed_by.email_id
+
+    return CommunityChangeRequestOut(
+        id=r.id,
+        community_id=r.community_id,
+        requested_by_id=r.requested_by_id,
+        requested_name=r.requested_name,
+        requested_units=r.requested_units,
+        new_plan=r.new_plan,
+        new_monthly_price=r.new_monthly_price,
+        reason=r.reason,
+        status=r.status,
+        rejection_reason=r.rejection_reason,
+        created_at=r.created_at,
+        reviewed_at=r.reviewed_at,
+        reviewed_by_id=r.reviewed_by_id,
+        community_name=community_name,
+        requested_by_name=requested_by_name,
+        reviewed_by_name=reviewed_by_name
+    )
+
+
+# 1. Create a request (PM / Board Member only)
+@router.post("/{community_id}/change-request", response_model=CommunityChangeRequestOut, status_code=201)
+def create_change_request(
+    community_id: int,
+    body: CommunityChangeRequestCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("super_admin", "property_manager", "board_member")),
+):
+    # Verify access to the community
+    role_name = current_user.role.role_name if current_user.role else None
+    if role_name not in {"super_admin", "sales_admin"}:
+        from app.models.user import UserCommunity
+        assoc = db.query(UserCommunity).filter(
+            UserCommunity.user_id == current_user.user_id,
+            UserCommunity.community_id == community_id
+        ).first()
+        if not assoc:
+            raise HTTPException(status_code=403, detail="You do not have permission to access this community.")
+
+    community = db.query(Community).filter(Community.community_id == community_id).first()
+    if not community:
+        raise HTTPException(status_code=404, detail="Community not found")
+
+    # Get contract renewal cycle to compute price preview
+    from app.models.contract import Contract
+    contract = db.query(Contract).filter(Contract.contract_id == community.contract_id).first()
+    cycle = contract.renewal_cycle if contract else "monthly"
+    
+    units = body.requested_units if body.requested_units is not None else community.community_size
+    new_plan, new_price = calculate_plan_details(units, cycle)
+
+    # Check for existing pending request
+    from app.models.community_change_request import CommunityChangeRequest
+    existing = db.query(CommunityChangeRequest).filter(
+        CommunityChangeRequest.community_id == community_id,
+        CommunityChangeRequest.status == "PENDING"
+    ).first()
+    if existing:
+        raise HTTPException(
+            status_code=400,
+            detail="There is already a pending change request for this community. Please wait for it to be reviewed."
+        )
+
+    req = CommunityChangeRequest(
+        community_id=community_id,
+        requested_by_id=current_user.user_id,
+        requested_name=body.requested_name.strip() if body.requested_name else None,
+        requested_units=body.requested_units,
+        new_plan=new_plan,
+        new_monthly_price=new_price,
+        reason=body.reason.strip() if body.reason else None,
+        status="PENDING"
+    )
+    db.add(req)
+    db.commit()
+    db.refresh(req)
+
+    # 🔔 Log action so Super Admin sees it in notifications
+    requester_name = f"{current_user.first_name or ''} {current_user.last_name or ''}".strip() or current_user.email_id
+    changes_summary = []
+    if body.requested_name and body.requested_name.strip() != community.name:
+        changes_summary.append(f"name → '{body.requested_name.strip()}'")
+    if body.requested_units is not None and body.requested_units != community.community_size:
+        changes_summary.append(f"units → {body.requested_units} ({new_plan} plan, ${new_price:.0f})")
+    change_desc = ", ".join(changes_summary) if changes_summary else "no fields changed"
+
+    from app.services.audit_service import log_action
+    log_action(
+        db=db,
+        action="CHANGE_REQUEST_SUBMITTED",
+        module="community_change_request",
+        description=f"{requester_name} submitted a change request for '{community.name}': {change_desc}. Reason: {body.reason or 'N/A'}",
+        user_id=current_user.user_id,
+        community_id=community_id,
+    )
+
+    return _req_to_out(req, db)
+
+
+# 1b. Pending change request count (Super Admin only, no community required)
+@router.get("/change-requests/pending-count")
+def get_pending_change_request_count(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("super_admin")),
+):
+    from app.models.community_change_request import CommunityChangeRequest
+    count = db.query(CommunityChangeRequest).filter(
+        CommunityChangeRequest.status == "PENDING"
+    ).count()
+    return {"pending_count": count}
+
+
+# 2. Get all requests (Super Admin only)
+@router.get("/change-requests/all", response_model=list[CommunityChangeRequestOut])
+def get_change_requests(
+    status: str | None = Query(None, description="Filter by status (PENDING, APPROVED, REJECTED)"),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("super_admin")),
+):
+    from app.models.community_change_request import CommunityChangeRequest
+    query = db.query(CommunityChangeRequest)
+    if status:
+        query = query.filter(CommunityChangeRequest.status == status.upper())
+    requests = query.order_by(CommunityChangeRequest.created_at.desc()).all()
+    return [_req_to_out(r, db) for r in requests]
+
+
+# 3. Approve or Reject a change request (Super Admin only)
+@router.put("/change-requests/{request_id}/review", response_model=CommunityChangeRequestOut)
+def review_change_request(
+    request_id: int,
+    body: CommunityChangeRequestReview,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("super_admin")),
+):
+    from app.models.community_change_request import CommunityChangeRequest
+    req = db.query(CommunityChangeRequest).filter(CommunityChangeRequest.id == request_id).first()
+    if not req:
+        raise HTTPException(status_code=404, detail="Change request not found")
+
+    if req.status != "PENDING":
+        raise HTTPException(status_code=400, detail="This request has already been reviewed.")
+
+    action = body.action.upper()
+    if action not in {"APPROVE", "REJECT"}:
+        raise HTTPException(status_code=400, detail="Action must be APPROVE or REJECT.")
+
+    req.reviewed_by_id = current_user.user_id
+    req.reviewed_at = datetime.utcnow()
+
+    if action == "REJECT":
+        req.status = "REJECTED"
+        req.rejection_reason = body.rejection_reason
+        db.commit()
+        db.refresh(req)
+        return _req_to_out(req, db)
+
+    # APPROVED flow:
+    req.status = "APPROVED"
+    community = db.query(Community).filter(Community.community_id == req.community_id).first()
+    if not community:
+        raise HTTPException(status_code=404, detail="Community not found for this request")
+
+    # Apply changes
+    if req.requested_name:
+        community.name = req.requested_name
+    if req.requested_units is not None:
+        community.community_size = req.requested_units
+
+    # Recalculate and update contract billing / plan
+    from app.models.contract import Contract
+    contract = db.query(Contract).filter(Contract.contract_id == community.contract_id).first()
+    if contract:
+        cycle = contract.renewal_cycle if contract else "monthly"
+        units = community.community_size
+        new_plan, new_price = calculate_plan_details(units, cycle)
+        
+        contract.plan_selected = new_plan
+        contract.annual_renewal_fee = new_price
+        contract.size_of_the_community = units
+        
+        # update request record with finalized values just in case
+        req.new_plan = new_plan
+        req.new_monthly_price = new_price
+
+    db.commit()
+    db.refresh(req)
+    db.refresh(community)
+    if contract:
+        db.refresh(contract)
+
+    return _req_to_out(req, db)

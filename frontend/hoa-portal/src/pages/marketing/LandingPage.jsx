@@ -589,96 +589,159 @@ function TestimonialCard({ testimonial }) {
   );
 }
 
-/* ─── AI Operations Console (Dashboard Visual for Landing Page) ─── */
+/* ─── AI Operations Console (Premium Redesign) ─── */
+/* ─── AI Operations Console (Premium Redesign) ─── */
 function AiOperationsConsole() {
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
+
   return (
-    <div className="w-full bg-[#090F16] rounded-3xl border border-violet-500/10 dark:border-white/[0.08] shadow-2xl overflow-hidden flex flex-col h-[520px] relative">
-      
-      {/* Header */}
-      <div className="bg-[#0B1929] p-5 border-b border-white/[0.06] flex items-center justify-between">
+    <div className={`w-full rounded-3xl overflow-hidden shadow-2xl border transition-all ${isDark ? 'shadow-violet-900/30 border-white/[0.08]' : 'shadow-slate-200/80 border-slate-200'} relative`} style={{ background: isDark ? 'linear-gradient(145deg, #0a0618 0%, #0d1030 50%, #080e1a 100%)' : 'linear-gradient(145deg, #f8fafc 0%, #f1f5f9 50%, #e2e8f0 100%)' }}>
+
+      {/* Ambient glow orbs inside the card */}
+      {isDark && (
+        <>
+          <div className="absolute top-0 right-1/4 w-64 h-64 bg-violet-600/10 rounded-full blur-[80px] pointer-events-none" />
+          <div className="absolute bottom-0 left-1/4 w-48 h-48 bg-indigo-500/10 rounded-full blur-[60px] pointer-events-none" />
+        </>
+      )}
+
+      {/* Header — glassmorphic / responsive */}
+      <div className={`relative px-5 pt-5 pb-4 flex items-center justify-between border-b ${isDark ? 'bg-white/[0.03] border-white/[0.06]' : 'bg-slate-50/50 border-slate-200'}`}>
         <div className="flex items-center gap-3">
-          <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+          {/* AI Logo Badge */}
+          <div className="relative">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-violet-500/30">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 2L14.5 9H22L16 13.5L18.5 21L12 16.5L5.5 21L8 13.5L2 9H9.5L12 2Z" fill="white" fillOpacity="0.9" />
+              </svg>
+            </div>
+            <div className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-400 rounded-full border-2 ${isDark ? 'border-[#0a0618]' : 'border-white'} animate-pulse`} />
+          </div>
           <div>
-            <h3 className="font-bold text-white text-sm">NestBloq AI Operations Console</h3>
-            <p className="text-[10px] text-slate-400">Live community resolution activity</p>
+            <h3 className={`font-bold text-sm leading-none ${isDark ? 'text-white' : 'text-slate-800'}`}>NestBloq AI Console</h3>
+            <p className="text-[10px] text-slate-400 mt-0.5">Live community resolution · Real-time</p>
           </div>
         </div>
+        {/* Status pills */}
         <div className="flex items-center gap-2">
-          <span className="text-[10px] font-bold text-violet-400 bg-violet-500/10 px-2 py-0.5 rounded-full border border-violet-500/20">Active Node</span>
+          <span className="flex items-center gap-1.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-full">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-550 dark:bg-emerald-400 animate-pulse" />
+            Active
+          </span>
+          <span className="text-[10px] font-bold text-violet-600 dark:text-violet-300 bg-violet-500/10 border border-violet-250/20 dark:border-violet-500/20 px-2.5 py-1 rounded-full">v3.2 AI</span>
         </div>
       </div>
 
       {/* Metrics Row */}
-      <div className="grid grid-cols-3 border-b border-white/[0.06] bg-[#0D1B2A]">
+      <div className={`grid grid-cols-3 border-b ${isDark ? 'divide-white/[0.05] bg-white/[0.02] border-white/[0.05]' : 'divide-slate-200/80 bg-slate-50 border-slate-200'}`}>
         {[
-          { label: 'Auto-Resolved', val: '85.4%', desc: 'No admin intervention', color: 'text-violet-400' },
-          { label: 'Avg Latency', val: '0.85s', desc: 'Real-time pipeline', color: 'text-emerald-400' },
-          { label: 'Saved Hours', val: '42h/mo', desc: 'Per community board', color: 'text-amber-400' }
-        ].map((metric, i) => (
-          <div key={i} className="p-4 border-r border-white/[0.04] last:border-0 text-center">
-            <div className={`text-lg font-black ${metric.color}`}>{metric.val}</div>
-            <div className="text-[10px] text-white/90 font-bold mt-0.5">{metric.label}</div>
-            <div className="text-[9px] text-slate-500 mt-0.5">{metric.desc}</div>
+          { label: 'Auto-Resolved', val: '85.4%', desc: 'No admin needed', color: 'text-violet-650 dark:text-violet-400', glow: isDark ? 'from-violet-500/20 to-transparent' : 'from-violet-500/10 to-transparent' },
+          { label: 'Avg Response', val: '0.85s', desc: 'Real-time pipeline', color: 'text-emerald-600 dark:text-emerald-400', glow: isDark ? 'from-emerald-500/20 to-transparent' : 'from-emerald-500/10 to-transparent' },
+          { label: 'Saved / mo', val: '42 hrs', desc: 'Per board member', color: 'text-amber-600 dark:text-amber-400', glow: isDark ? 'from-amber-500/20 to-transparent' : 'from-amber-500/10 to-transparent' }
+        ].map((m, i) => (
+          <div key={i} className="relative p-4 text-center overflow-hidden">
+            <div className={`absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r ${m.glow}`} />
+            <div className={`text-xl font-black ${m.color} tracking-tight`}>{m.val}</div>
+            <div className={`text-[10px] font-bold mt-0.5 ${isDark ? 'text-white/80' : 'text-slate-700'}`}>{m.label}</div>
+            <div className="text-[9px] text-slate-500 mt-0.5">{m.desc}</div>
           </div>
         ))}
       </div>
 
-      {/* Live Activity Feed Log */}
-      <div className="flex-1 p-5 space-y-4 overflow-y-auto custom-scrollbar bg-[#070D14]">
-        
-        {/* Item 1 */}
-        <div className="bg-[#0D1B2A] border border-white/[0.08] rounded-2xl p-4 space-y-3 shadow-md">
-          <div className="flex items-center justify-between">
+      {/* Conversation Feed */}
+      <div className="p-5 space-y-3 overflow-y-auto" style={{ maxHeight: '360px' }}>
+
+        {/* Log 1 — Inquiry */}
+        <div className={`rounded-2xl overflow-hidden border ${isDark ? 'bg-white/[0.03] border-white/[0.06]' : 'bg-white border-slate-200'}`}>
+          <div className={`flex items-center justify-between px-4 py-2.5 border-b ${isDark ? 'border-white/[0.04]' : 'border-slate-100'}`}>
             <div className="flex items-center gap-2">
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Inquiry #2409</span>
-              <span className="w-1.5 h-1.5 rounded-full bg-slate-600" />
-              <span className="text-[10px] text-slate-500 font-medium">Unit 304</span>
+              <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Bylaws Query</span>
+              <span className="w-1 h-1 rounded-full bg-slate-400 dark:bg-slate-600" />
+              <span className="text-[10px] text-slate-450 dark:text-slate-500">Unit 304</span>
             </div>
-            <span className="text-[9px] font-extrabold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full uppercase tracking-wide">Auto-Resolved</span>
+            <span className="text-[9px] font-extrabold text-emerald-600 dark:text-emerald-300 bg-emerald-500/15 border border-emerald-500/25 px-2.5 py-0.5 rounded-full uppercase tracking-wide">✓ Auto-Resolved</span>
           </div>
-          <div className="space-y-1.5 text-left">
-            <p className="text-xs text-slate-300"><span className="font-bold text-violet-400">Resident:</span> "Are pets allowed in the clubhouse?"</p>
-            <p className="text-xs text-slate-400 pl-4 border-l border-violet-500/30 leading-relaxed"><span className="font-bold text-slate-300">AI:</span> "According to Article 4, Section B: Registered service dogs are allowed. Other pets must be kept on a leash in courtyard areas."</p>
+          <div className="px-4 py-3 space-y-2">
+            <div className="flex items-start gap-2">
+              <div className="w-5 h-5 rounded-full bg-violet-500/10 dark:bg-violet-500/20 border border-violet-500/20 dark:border-violet-500/30 flex items-center justify-center text-[9px] shrink-0 mt-0.5">👤</div>
+              <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">"Are pets allowed in the clubhouse?"</p>
+            </div>
+            <div className="flex items-start gap-2">
+              <div className="w-5 h-5 rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-[9px] shrink-0 mt-0.5">✦</div>
+              <p className="text-xs text-slate-550 dark:text-slate-400 leading-relaxed"><span className="text-violet-650 dark:text-violet-300 font-semibold">AI:</span> Per Article 4 §B — service dogs are permitted. Other pets must remain on-leash in courtyard areas only.</p>
+            </div>
           </div>
         </div>
 
-        {/* Item 2 */}
-        <div className="bg-[#0D1B2A] border border-white/[0.08] rounded-2xl p-4 space-y-3 shadow-md">
-          <div className="flex items-center justify-between">
+        {/* Log 2 — Booking */}
+        <div className={`rounded-2xl overflow-hidden border ${isDark ? 'bg-white/[0.03] border-indigo-500/25' : 'bg-white border-indigo-200'}`}>
+          <div className={`flex items-center justify-between px-4 py-2.5 border-b ${isDark ? 'border-white/[0.04]' : 'border-slate-100'}`}>
             <div className="flex items-center gap-2">
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Facility Reservation</span>
-              <span className="w-1.5 h-1.5 rounded-full bg-slate-600" />
-              <span className="text-[10px] text-slate-500 font-medium">Unit 102</span>
+              <span className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-widest">Facility Booking</span>
+              <span className="w-1 h-1 rounded-full bg-slate-400 dark:bg-slate-600" />
+              <span className="text-[10px] text-slate-450 dark:text-slate-500">Unit 102</span>
             </div>
-            <span className="text-[9px] font-extrabold text-violet-400 bg-violet-500/10 border border-violet-500/20 px-2 py-0.5 rounded-full uppercase tracking-wide">Booked & Confirmed</span>
+            <span className="text-[9px] font-extrabold text-indigo-600 dark:text-indigo-300 bg-indigo-500/15 border border-indigo-500/25 px-2.5 py-0.5 rounded-full uppercase tracking-wide">📅 Confirmed</span>
           </div>
-          <div className="space-y-1.5 text-left">
-            <p className="text-xs text-slate-300"><span className="font-bold text-violet-400">Resident:</span> "Can I book the tennis court for 4pm today?"</p>
-            <p className="text-xs text-slate-400 pl-4 border-l border-violet-500/30 leading-relaxed"><span className="font-bold text-slate-300">AI:</span> "Tennis Court 2 is available from 4:00 PM to 6:00 PM. I've booked this slot under Unit 102. Have a great game!"</p>
+          <div className="px-4 py-3 space-y-2">
+            <div className="flex items-start gap-2">
+              <div className="w-5 h-5 rounded-full bg-violet-500/10 dark:bg-violet-500/20 border border-violet-500/20 dark:border-violet-500/30 flex items-center justify-center text-[9px] shrink-0 mt-0.5">👤</div>
+              <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">"Can I book the tennis court for 4pm today?"</p>
+            </div>
+            <div className="flex items-start gap-2">
+              <div className="w-5 h-5 rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-[9px] shrink-0 mt-0.5">✦</div>
+              <p className="text-xs text-slate-555 dark:text-slate-400 leading-relaxed"><span className="text-violet-650 dark:text-violet-300 font-semibold">AI:</span> Court 2 is available 4–6 PM. Slot reserved under Unit 102. Confirmation sent to your email. 🎾</p>
+            </div>
           </div>
         </div>
 
-        {/* Item 3 */}
-        <div className="bg-[#0D1B2A] border border-white/[0.08] rounded-2xl p-4 space-y-3 shadow-md">
-          <div className="flex items-center justify-between">
+        {/* Log 3 — Maintenance */}
+        <div className={`rounded-2xl overflow-hidden border ${isDark ? 'bg-white/[0.03] border-amber-500/25' : 'bg-white border-amber-200'}`}>
+          <div className={`flex items-center justify-between px-4 py-2.5 border-b ${isDark ? 'border-white/[0.04]' : 'border-slate-100'}`}>
             <div className="flex items-center gap-2">
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Maintenance Desk</span>
-              <span className="w-1.5 h-1.5 rounded-full bg-slate-600" />
-              <span className="text-[10px] text-slate-500 font-medium">Unit 508</span>
+              <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-widest">Maintenance</span>
+              <span className="w-1 h-1 rounded-full bg-slate-400 dark:bg-slate-600" />
+              <span className="text-[10px] text-slate-450 dark:text-slate-500">Unit 508</span>
             </div>
-            <span className="text-[9px] font-extrabold text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full uppercase tracking-wide">Work Order Dispatched</span>
+            <span className="text-[9px] font-extrabold text-amber-600 dark:text-amber-300 bg-amber-500/15 border border-amber-500/25 px-2.5 py-0.5 rounded-full uppercase tracking-wide">🔧 Dispatched</span>
           </div>
-          <div className="space-y-1.5 text-left">
-            <p className="text-xs text-slate-300"><span className="font-bold text-violet-400">Resident:</span> "Elevator B is making squeaking sounds."</p>
-            <p className="text-xs text-slate-400 pl-4 border-l border-violet-500/30 leading-relaxed"><span className="font-bold text-slate-300">AI:</span> "Request logged. Dispatched Work Order #ME-402 to Schindler Elevator Group. You can track progress under your dashboard."</p>
+          <div className="px-4 py-3 space-y-2">
+            <div className="flex items-start gap-2">
+              <div className="w-5 h-5 rounded-full bg-violet-500/10 dark:bg-violet-500/20 border border-violet-500/20 dark:border-violet-500/30 flex items-center justify-center text-[9px] shrink-0 mt-0.5">👤</div>
+              <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">"Elevator B keeps making a squeaking noise."</p>
+            </div>
+            <div className="flex items-start gap-2">
+              <div className="w-5 h-5 rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-[9px] shrink-0 mt-0.5">✦</div>
+              <p className="text-xs text-slate-555 dark:text-slate-400 leading-relaxed"><span className="text-violet-650 dark:text-violet-300 font-semibold">AI:</span> Work Order #ME-402 logged. Schindler Elevator dispatched — ETA 2 hrs. Track progress in your portal.</p>
+            </div>
           </div>
         </div>
 
+        {/* Typing indicator */}
+        <div className="flex items-center gap-3 px-1">
+          <div className="w-6 h-6 rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-[10px] shrink-0 shadow-md shadow-violet-500/30">✦</div>
+          <div className={`flex items-center gap-1 px-3 py-2 rounded-xl border ${isDark ? 'bg-white/[0.04] border-white/[0.05]' : 'bg-slate-100 border-slate-200'}`}>
+            <span className="w-1.5 h-1.5 bg-violet-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+            <span className="w-1.5 h-1.5 bg-violet-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+            <span className="w-1.5 h-1.5 bg-violet-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+            <span className="text-[10px] text-slate-500 ml-2">AI is processing next query...</span>
+          </div>
+        </div>
       </div>
 
+      {/* Footer bar */}
+      <div className={`px-5 py-3 flex items-center justify-between border-t ${isDark ? 'border-white/[0.05] bg-white/[0.02]' : 'border-slate-200 bg-slate-50'}`}>
+        <span className="text-[10px] text-slate-550 dark:text-slate-500">3 resolved · 0 escalated · uptime 99.98%</span>
+        <span className="flex items-center gap-1.5 text-[10px] text-violet-650 dark:text-violet-400 font-semibold">
+          <span className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-pulse" />
+          Powered by NestBloq AI
+        </span>
+      </div>
     </div>
   );
 }
+
 
 export default function LandingPage() {
   const { theme } = useTheme();
@@ -1825,36 +1888,47 @@ export default function LandingPage() {
       {/* ═══════════════════════════════════════════════════════
           AI COPILOT
       ═══════════════════════════════════════════════════════ */}
-      <section id="ai" className="py-28 px-5 sm:px-8 bg-slate-50/60 dark:bg-[#0B1420]/70 border-y border-slate-100 dark:border-white/[0.06]">
-        <div className="max-w-7xl mx-auto">
+      <section id="ai" className="relative py-24 px-5 sm:px-8 overflow-hidden bg-white dark:bg-[#090F16] border-y border-slate-100 dark:border-white/[0.06]">
+        {/* Soft glow orbs — light & subtle */}
+        <div className="absolute -top-20 left-1/3 w-80 h-80 bg-violet-400/[0.06] dark:bg-violet-500/[0.08] rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-0 right-1/4 w-72 h-72 bg-indigo-400/[0.05] dark:bg-indigo-500/[0.07] rounded-full blur-3xl pointer-events-none" />
+
+        <div className="relative z-10 max-w-7xl mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 items-center">
-            <div className="lg:col-span-5 space-y-7">
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-rose-500/10 border border-rose-500/20 text-rose-500 text-xs font-semibold">
-                <Activity className="w-3.5 h-3.5" />
+
+            {/* Left: Text content */}
+            <div className="lg:col-span-5 space-y-6">
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-violet-500/10 border border-violet-500/25 text-violet-600 dark:text-violet-400 text-xs font-bold uppercase tracking-widest">
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
                 Intelligent Automation
               </div>
-              <h2 className="font-display text-4xl font-black text-slate-900 dark:text-white tracking-tight leading-tight">
-                Your NestBloq Assistant that<br />
-                <span className="gradient-text">never sleeps</span>
+              <h2 className="font-display text-4xl sm:text-5xl font-black text-slate-900 dark:text-white tracking-tight leading-[1.08]">
+                Your AI assistant
+                <span className="block bg-gradient-to-r from-violet-600 to-indigo-500 bg-clip-text text-transparent">that never sleeps.</span>
               </h2>
-              <p className="text-slate-500 dark:text-slate-400 leading-relaxed">
-                Tired of answering the same bylaws queries at midnight? Our Assistant automatically handles queries, books amenities, and logs maintenance requests — freeing your team completely.
+              <p className="text-slate-500 dark:text-slate-400 leading-relaxed text-sm">
+                Tired of answering the same bylaws queries at midnight? Our AI automatically handles resident queries, books amenities, and logs maintenance requests — freeing your board completely.
               </p>
-              <div className="space-y-3">
-                {['Reduces resident queries by up to 85%', 'Operates 24/7 in a friendly conversational tone', 'Auto-logs service requests to the manager desk', 'Trained on your specific community bylaws'].map((item, i) => (
+              <div className="space-y-3 pt-2">
+                {[
+                  { icon: '🛡️', text: 'Reduces resident queries by up to 85%' },
+                  { icon: '🕐', text: 'Operates 24/7 in a friendly conversational tone' },
+                  { icon: '🔧', text: 'Auto-logs service requests to the manager desk' },
+                  { icon: '📖', text: 'Trained on your specific community bylaws' },
+                ].map((item, i) => (
                   <div key={i} className="flex items-center gap-3">
-                    <div className="w-5 h-5 rounded-full bg-violet-500/15 flex items-center justify-center shrink-0">
-                      <CheckCircle className="w-3 h-3 text-violet-500" />
-                    </div>
-                    <span className="text-sm text-slate-600 dark:text-slate-400">{item}</span>
+                    <div className="w-7 h-7 rounded-lg bg-violet-500/10 border border-violet-500/20 flex items-center justify-center text-sm shrink-0">{item.icon}</div>
+                    <span className="text-sm text-slate-600 dark:text-slate-300">{item.text}</span>
                   </div>
                 ))}
               </div>
-              <Link to="/features" className="inline-flex items-center gap-2 text-sm font-semibold text-violet-600 dark:text-violet-400 hover:text-violet-700 dark:hover:text-violet-300 transition-colors group">
-                Explore AI features
+              <Link to="/features" className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white font-bold text-sm rounded-xl shadow-lg shadow-violet-500/20 transition-all hover:-translate-y-0.5 group">
+                Explore AI Features
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
               </Link>
             </div>
+
+            {/* Right: Console */}
             <div className="lg:col-span-7">
               <AiOperationsConsole />
             </div>

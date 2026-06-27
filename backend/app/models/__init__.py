@@ -12,3 +12,4 @@ from app.models.vendor import Vendor, VendorAssignment, VendorFeedback          
 from app.models.contract import Contract                                                     # noqa
 from app.models.payment import Payment, RecurringPayment                                     # noqa
 from app.models.meeting_survey import Meeting, MeetingRSVP, Survey, SurveyOption, SurveyVote # noqa
+from app.models.community_change_request import CommunityChangeRequest                        # noqa

@@ -19,15 +19,15 @@ export default function RentalSolutionPage() {
       title: "Automated Billing & Ledger",
       desc: "Automatically generate monthly rent rolls, issue secure digital invoices, and track payments inside an immutable ledger.",
       icon: Wallet,
-      color: "text-emerald-600 bg-emerald-500/10 border border-emerald-500/20",
-      bg: "bg-emerald-100/85 dark:bg-emerald-950/30 border-emerald-200/80 dark:border-emerald-800/50 hover:shadow-lg hover:shadow-emerald-500/[0.05] hover:border-emerald-500/50 dark:hover:border-emerald-500/40"
+      color: "text-blue-600 bg-blue-500/10 border border-blue-500/20",
+      bg: "bg-blue-100/85 dark:bg-blue-950/30 border-blue-200/80 dark:border-blue-805/50 hover:shadow-lg hover:shadow-blue-500/[0.05] hover:border-blue-500/50 dark:hover:border-blue-500/40"
     },
     {
       title: "SMTP Notice Dispatcher",
       desc: "Identify overdue payments instantly and send legal reminder notifications via email or SMS with full compliance IP logging.",
       icon: Mail,
-      color: "text-blue-600 bg-blue-500/10 border border-blue-500/20",
-      bg: "bg-blue-100/85 dark:bg-blue-950/30 border-blue-200/80 dark:border-blue-800/50 hover:shadow-lg hover:shadow-blue-500/[0.05] hover:border-blue-500/50 dark:hover:border-blue-500/40"
+      color: "text-indigo-650 bg-indigo-500/10 border border-indigo-500/20",
+      bg: "bg-indigo-100/85 dark:bg-indigo-950/30 border-indigo-200/80 dark:border-indigo-800/50 hover:shadow-lg hover:shadow-indigo-500/[0.05] hover:border-indigo-500/50 dark:hover:border-indigo-500/40"
     },
     {
       title: "Digital Lease Directory",
@@ -45,31 +45,31 @@ export default function RentalSolutionPage() {
   ];
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-tr from-[#edfcf5] via-[#f7fdfb] to-[#edfcf5] dark:bg-gradient-to-tr dark:from-[#040e09] dark:via-[#070611] dark:to-[#05140e] transition-colors duration-300 font-sans relative">
+    <div className="min-h-screen flex flex-col bg-gradient-to-tr from-[#f0f4fa] via-[#fafbfc] to-[#f0f4fa] dark:bg-gradient-to-tr dark:from-[#040c1a] dark:via-[#070611] dark:to-[#060b1e] transition-colors duration-300 font-sans relative">
       <Navbar />
 
       <div className="flex-1 overflow-x-hidden">
         {/* Dynamic Visual Accents / Auroras */}
-        <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-emerald-300/10 dark:bg-emerald-950/15 rounded-full blur-[120px] pointer-events-none -z-10 animate-pulse-glow" />
-        <div className="absolute top-1/3 right-1/4 w-[600px] h-[600px] bg-teal-200/10 dark:bg-teal-950/10 rounded-full blur-[140px] pointer-events-none -z-10 animate-float-bob" />
-        <div className="absolute bottom-1/4 left-10 w-[450px] h-[450px] bg-emerald-400/5 dark:bg-emerald-950/10 rounded-full blur-[100px] pointer-events-none -z-10" />
+        <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-blue-300/10 dark:bg-blue-950/15 rounded-full blur-[120px] pointer-events-none -z-10 animate-pulse-glow" />
+        <div className="absolute top-1/3 right-1/4 w-[600px] h-[600px] bg-indigo-200/10 dark:bg-indigo-950/10 rounded-full blur-[140px] pointer-events-none -z-10 animate-float-bob" />
+        <div className="absolute bottom-1/4 left-10 w-[450px] h-[450px] bg-violet-400/5 dark:bg-violet-950/10 rounded-full blur-[100px] pointer-events-none -z-10" />
 
         {/* Hero Section */}
-        <section className="relative py-28 px-5 sm:px-8 border-b border-slate-200/40 dark:border-white/[0.04] overflow-hidden">
+        <section className="relative py-14 sm:py-20 px-5 sm:px-8 border-b border-slate-200/40 dark:border-white/[0.04] overflow-hidden">
           {/* Background glow auroras */}
           <div className="absolute inset-0 grid-bg opacity-[0.35] [mask-image:radial-gradient(ellipse_at_center,white_30%,transparent_70%)] pointer-events-none" />
-          <div className="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] bg-gradient-radial from-emerald-500/10 via-teal-500/5 to-transparent rounded-full blur-3xl pointer-events-none" />
-          <div className="absolute top-[20%] right-[-10%] w-[45vw] h-[45vw] bg-gradient-radial from-teal-500/10 via-emerald-500/5 to-transparent rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] bg-gradient-radial from-blue-500/10 via-indigo-500/5 to-transparent rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute top-[20%] right-[-10%] w-[45vw] h-[45vw] bg-gradient-radial from-indigo-500/10 via-blue-500/5 to-transparent rounded-full blur-3xl pointer-events-none" />
 
           <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 items-center relative z-10">
             <div className="lg:col-span-5 space-y-6 text-left">
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider">
                 <Sparkles className="w-3.5 h-3.5" />
                 Rental Portfolio Management
               </div>
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-slate-900 dark:text-white leading-[1.05] tracking-tight">
                 Unified Portals for <br />
-                <span className="bg-gradient-to-r from-emerald-600 to-teal-400 bg-clip-text text-transparent">Landlords & Renters.</span>
+                <span className="bg-gradient-to-r from-blue-600 to-indigo-500 bg-clip-text text-transparent">Landlords & Renters.</span>
               </h1>
               <p className="text-base sm:text-lg text-slate-500 dark:text-slate-400 font-normal leading-relaxed max-w-xl font-display">
                 NestBloq streamlines monthly collections, tracks roster vacancies, and auto-dispatches late notices with secure verification tracking.
@@ -98,19 +98,19 @@ export default function RentalSolutionPage() {
                 {/* Floating stats card overlapping the image */}
                 <div className="absolute bottom-5 left-5 right-5 p-4 sm:p-5 rounded-2xl bg-black/45 backdrop-blur-md border border-white/10 text-white flex justify-between items-center gap-4">
                   <div className="space-y-0.5 text-left">
-                    <p className="text-[10px] text-emerald-400 font-extrabold uppercase tracking-wider">AVERAGE ROI</p>
+                    <p className="text-[10px] text-indigo-400 font-extrabold uppercase tracking-wider">AVERAGE ROI</p>
                     <p className="text-sm sm:text-base font-black">45% Faster Dues</p>
                   </div>
                   <div className="w-px h-8 bg-white/20" />
                   <div className="space-y-0.5 text-left">
-                    <p className="text-[10px] text-emerald-400 font-extrabold uppercase tracking-wider">AUDITS TRACE</p>
+                    <p className="text-[10px] text-indigo-400 font-extrabold uppercase tracking-wider">AUDITS TRACE</p>
                     <p className="text-sm sm:text-base font-black">100% Secure</p>
                   </div>
                 </div>
               </div>
               
               {/* Subtle background glow under the card */}
-              <div className="absolute -inset-4 bg-emerald-500/10 rounded-[40px] blur-2xl pointer-events-none -z-10" />
+              <div className="absolute -inset-4 bg-blue-500/10 rounded-[40px] blur-2xl pointer-events-none -z-10" />
             </div>
           </div>
         </section>
@@ -133,7 +133,7 @@ export default function RentalSolutionPage() {
         {/* Feature Grid Section */}
         <section className="py-24 max-w-7xl mx-auto px-5 sm:px-8 w-full relative">
           <div className="text-center max-w-3xl mx-auto space-y-4 mb-20">
-            <span className="text-emerald-500 text-xs font-black uppercase tracking-wider">Core Capabilities</span>
+            <span className="text-blue-500 text-xs font-black uppercase tracking-wider">Core Capabilities</span>
             <h2 className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight">
               Streamlined Collections, Zero Friction
             </h2>
@@ -151,7 +151,7 @@ export default function RentalSolutionPage() {
                     <Icon className="w-5 h-5" />
                   </div>
                   <h3 className="text-lg font-black text-slate-900 dark:text-white">{item.title}</h3>
-                  <p className="text-xs text-slate-650 dark:text-slate-400 leading-relaxed font-display">{item.desc}</p>
+                  <p className="text-xs text-slate-655 dark:text-slate-400 leading-relaxed font-display">{item.desc}</p>
                 </div>
               );
             })}
@@ -159,12 +159,12 @@ export default function RentalSolutionPage() {
         </section>
 
         {/* Premium Visual Gallery & Showcases */}
-        <section className="py-24 border-t border-slate-200/40 dark:border-white/[0.04] bg-slate-50/30 dark:bg-[#070e0a]/40 backdrop-blur-md relative overflow-hidden">
-          <div className="absolute top-[10%] left-[-10%] w-[30vw] h-[30vw] bg-emerald-500/[0.03] rounded-full blur-3xl pointer-events-none" />
+        <section className="py-24 border-t border-slate-200/40 dark:border-white/[0.04] bg-slate-50/30 dark:bg-[#070c0a]/40 backdrop-blur-md relative overflow-hidden">
+          <div className="absolute top-[10%] left-[-10%] w-[30vw] h-[30vw] bg-blue-500/[0.03] rounded-full blur-3xl pointer-events-none" />
           
           <div className="max-w-7xl mx-auto px-5 sm:px-8 w-full relative z-10">
             <div className="text-center max-w-2xl mx-auto space-y-4 mb-16">
-              <span className="text-emerald-500 text-xs font-black uppercase tracking-wider">Interactive Showcase</span>
+              <span className="text-blue-500 text-xs font-black uppercase tracking-wider">Interactive Showcase</span>
               <h2 className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight">
                 Virtual Communities & Amenities Showcase
               </h2>
@@ -183,7 +183,7 @@ export default function RentalSolutionPage() {
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/30 to-transparent" />
                 <div className="relative text-left text-white space-y-1 z-10">
-                  <span className="text-[9px] uppercase tracking-wider font-extrabold text-sky-400">Amenity Center</span>
+                  <span className="text-[9px] uppercase tracking-wider font-extrabold text-blue-400">Amenity Center</span>
                   <h4 className="text-base font-black">Clubhouse Resort Pool</h4>
                   <p className="text-xs text-slate-300">Luxury pool deck and slots scheduling integration.</p>
                 </div>
@@ -213,7 +213,7 @@ export default function RentalSolutionPage() {
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/30 to-transparent" />
                 <div className="relative text-left text-white space-y-1 z-10">
-                  <span className="text-[9px] uppercase tracking-wider font-extrabold text-emerald-400">Green Spaces</span>
+                  <span className="text-[9px] uppercase tracking-wider font-extrabold text-indigo-400">Green Spaces</span>
                   <h4 className="text-base font-black">Botanical Gardens & Parks</h4>
                   <p className="text-xs text-slate-300">Lush walking tracks, pet zones, and outdoor areas.</p>
                 </div>
@@ -225,7 +225,7 @@ export default function RentalSolutionPage() {
         {/* Integrations Section */}
         <section className="py-24 border-t border-slate-200/40 dark:border-white/[0.04] relative">
           <div className="max-w-7xl mx-auto px-5 sm:px-8 w-full text-center space-y-4 mb-16">
-            <span className="text-emerald-500 text-xs font-black uppercase tracking-wider">Enterprise Integrations</span>
+            <span className="text-blue-500 text-xs font-black uppercase tracking-wider">Enterprise Integrations</span>
             <h2 className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight">
               Integrated with Leading SaaS Providers
             </h2>
@@ -236,25 +236,25 @@ export default function RentalSolutionPage() {
           <div className="max-w-5xl mx-auto grid grid-cols-1 sm:grid-cols-4 gap-6 px-5">
             {/* Stripe */}
             <div className="p-6 rounded-2xl border border-indigo-200/80 dark:border-indigo-800/50 bg-indigo-100/85 dark:bg-indigo-950/30 backdrop-blur-md text-left space-y-2 hover:shadow-lg hover:shadow-indigo-500/[0.05] hover:border-indigo-500/50 dark:hover:border-indigo-500/40 transition-all duration-300">
-              <span className="text-[10px] font-black text-indigo-650 dark:text-indigo-400 uppercase tracking-widest">01 / PAYMENTS</span>
+              <span className="text-[10px] font-black text-indigo-655 dark:text-indigo-400 uppercase tracking-widest">01 / PAYMENTS</span>
               <h4 className="text-sm font-black text-slate-900 dark:text-white">Stripe Core</h4>
               <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-normal font-display">Secure PCI-DSS compliant credit card and ACH transactions.</p>
             </div>
             {/* Plaid */}
-            <div className="p-6 rounded-2xl border border-emerald-200/80 dark:border-emerald-800/50 bg-emerald-100/85 dark:bg-emerald-950/30 backdrop-blur-md text-left space-y-2 hover:shadow-lg hover:shadow-emerald-500/[0.05] hover:border-emerald-500/50 dark:hover:border-emerald-500/40 transition-all duration-300">
-              <span className="text-[10px] font-black text-emerald-650 dark:text-emerald-400 uppercase tracking-widest">02 / VERIFY</span>
+            <div className="p-6 rounded-2xl border border-indigo-200/80 dark:border-indigo-800/50 bg-indigo-100/85 dark:bg-indigo-950/30 backdrop-blur-md text-left space-y-2 hover:shadow-lg hover:shadow-indigo-500/[0.05] hover:border-indigo-500/50 dark:hover:border-indigo-500/40 transition-all duration-300">
+              <span className="text-[10px] font-black text-indigo-655 dark:text-indigo-400 uppercase tracking-widest">02 / VERIFY</span>
               <h4 className="text-sm font-black text-slate-900 dark:text-white">Plaid Links</h4>
               <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-normal font-display">Instant tenant account link and balance checking.</p>
             </div>
             {/* SMTP */}
-            <div className="p-6 rounded-2xl border border-sky-200/80 dark:border-sky-800/50 bg-sky-100/85 dark:bg-sky-950/30 backdrop-blur-md text-left space-y-2 hover:shadow-lg hover:shadow-sky-500/[0.05] hover:border-sky-500/50 dark:hover:border-sky-500/40 transition-all duration-300">
-              <span className="text-[10px] font-black text-sky-650 dark:text-sky-400 uppercase tracking-widest">03 / NOTICES</span>
+            <div className="p-6 rounded-2xl border border-blue-200/80 dark:border-blue-800/50 bg-blue-100/85 dark:bg-blue-950/30 backdrop-blur-md text-left space-y-2 hover:shadow-lg hover:shadow-blue-500/[0.05] hover:border-blue-500/50 dark:hover:border-blue-500/40 transition-all duration-300">
+              <span className="text-[10px] font-black text-blue-650 dark:text-blue-400 uppercase tracking-widest">03 / NOTICES</span>
               <h4 className="text-sm font-black text-slate-900 dark:text-white">SMTP Relay</h4>
               <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-normal font-display">Auto-dispatch rent notices with legal delivery IP logs.</p>
             </div>
             {/* Twilio */}
-            <div className="p-6 rounded-2xl border border-rose-200/80 dark:border-rose-800/50 bg-rose-100/85 dark:bg-rose-950/30 backdrop-blur-md text-left space-y-2 hover:shadow-lg hover:shadow-rose-500/[0.05] hover:border-rose-500/50 dark:hover:border-rose-500/40 transition-all duration-300">
-              <span className="text-[10px] font-black text-rose-650 dark:text-rose-400 uppercase tracking-widest">04 / ALERTS</span>
+            <div className="p-6 rounded-2xl border border-violet-200/80 dark:border-violet-800/50 bg-violet-100/85 dark:bg-violet-950/30 backdrop-blur-md text-left space-y-2 hover:shadow-lg hover:shadow-violet-500/[0.05] hover:border-violet-500/50 dark:hover:border-violet-500/40 transition-all duration-300">
+              <span className="text-[10px] font-black text-violet-655 dark:text-violet-400 uppercase tracking-widest">04 / ALERTS</span>
               <h4 className="text-sm font-black text-slate-900 dark:text-white">Twilio SMS</h4>
               <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-normal font-display">Text updates, payment confirmation tokens, and warnings.</p>
             </div>
@@ -264,7 +264,7 @@ export default function RentalSolutionPage() {
         {/* ROI Statistics Section */}
         <section className="py-24 border-t border-slate-200/40 dark:border-white/[0.04] bg-slate-50/10 dark:bg-[#07060f]/20">
           <div className="max-w-7xl mx-auto px-5 sm:px-8 w-full text-center space-y-4 mb-20">
-            <span className="text-emerald-500 text-xs font-black uppercase tracking-wider">Metrics that Matter</span>
+            <span className="text-blue-500 text-xs font-black uppercase tracking-wider">Metrics that Matter</span>
             <h2 className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight">
               Engineered for Rental Performance
             </h2>
@@ -274,36 +274,36 @@ export default function RentalSolutionPage() {
           </div>
           <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 px-5">
             {/* Before */}
-            <div className="p-8 rounded-3xl border border-rose-500/20 bg-rose-500/[0.02] backdrop-blur-md text-left space-y-4">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-rose-500/30 text-[10px] font-semibold text-rose-500 bg-rose-500/10 uppercase tracking-wider">
+            <div className="p-8 rounded-3xl border border-violet-500/20 bg-violet-500/[0.02] backdrop-blur-md text-left space-y-4">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-violet-500/30 text-[10px] font-semibold text-violet-500 bg-violet-500/10 uppercase tracking-wider">
                 Traditional Landlordship
               </span>
               <ul className="space-y-4 text-xs text-slate-600 dark:text-slate-400 font-display">
                 <li className="flex items-start gap-2.5">
-                  <span className="text-rose-550 font-black">✕</span> <span>Chasing rent checks and cash logs manually every month.</span>
+                  <span className="text-violet-500 font-black">✕</span> <span>Chasing rent checks and cash logs manually every month.</span>
                 </li>
                 <li className="flex items-start gap-2.5">
-                  <span className="text-rose-550 font-black">✕</span> <span>Slow late notices with zero compliance logging.</span>
+                  <span className="text-violet-550 font-black">✕</span> <span>Slow late notices with zero compliance logging.</span>
                 </li>
                 <li className="flex items-start gap-2.5">
-                  <span className="text-rose-550 font-black">✕</span> <span>Disorganized lease agreements and deposit balances.</span>
+                  <span className="text-violet-550 font-black">✕</span> <span>Disorganized lease agreements and deposit balances.</span>
                 </li>
               </ul>
             </div>
             {/* After */}
-            <div className="p-8 rounded-3xl border border-emerald-500/30 bg-emerald-500/[0.03] backdrop-blur-md text-left space-y-4 shadow-xl shadow-emerald-500/5">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-emerald-500/30 text-[10px] font-semibold text-emerald-555 bg-emerald-500/10 uppercase tracking-wider">
+            <div className="p-8 rounded-3xl border border-indigo-500/30 bg-indigo-500/[0.03] backdrop-blur-md text-left space-y-4 shadow-xl shadow-indigo-500/5">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-indigo-500/30 text-[10px] font-semibold text-indigo-400 bg-indigo-500/10 uppercase tracking-wider">
                 NestBloq Automated Portal
               </span>
               <ul className="space-y-4 text-xs text-slate-600 dark:text-slate-400 font-display">
                 <li className="flex items-start gap-2.5">
-                  <span className="text-emerald-555 font-black">✓</span> <span>100% digital ledgers with automatic recurring billing.</span>
+                  <span className="text-indigo-400 font-black">✓</span> <span>100% digital ledgers with automatic recurring billing.</span>
                 </li>
                 <li className="flex items-start gap-2.5">
-                  <span className="text-emerald-555 font-black">✓</span> <span>Instantly dispatch late warnings via verified email and SMS logs.</span>
+                  <span className="text-indigo-455 font-black">✓</span> <span>Instantly dispatch late warnings via verified email and SMS logs.</span>
                 </li>
                 <li className="flex items-start gap-2.5">
-                  <span className="text-emerald-555 font-black">✓</span> <span>Isolated occupant directory for security deposits and lease logs.</span>
+                  <span className="text-indigo-455 font-black">✓</span> <span>Isolated occupant directory for security deposits and lease logs.</span>
                 </li>
               </ul>
             </div>
@@ -312,8 +312,8 @@ export default function RentalSolutionPage() {
 
         {/* Testimonial Section */}
         <section className="py-24 max-w-5xl mx-auto px-5 sm:px-8 w-full text-center relative z-10">
-          <div className="bg-white/50 dark:bg-[#040e09]/45 backdrop-blur-xl border border-slate-200/70 dark:border-emerald-500/20 p-8 sm:p-12 rounded-3xl space-y-6 relative overflow-hidden shadow-xl">
-            <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/10 rounded-full blur-2xl pointer-events-none" />
+          <div className="bg-white/50 dark:bg-slate-900/45 backdrop-blur-xl border border-slate-200/70 dark:border-blue-500/20 p-8 sm:p-12 rounded-3xl space-y-6 relative overflow-hidden shadow-xl">
+            <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/10 rounded-full blur-2xl pointer-events-none" />
             <div className="flex justify-center gap-1">
               {[...Array(5)].map((_, i) => <Star key={i} className="w-5 h-5 fill-amber-400 text-amber-400" />)}
             </div>
@@ -343,7 +343,7 @@ export default function RentalSolutionPage() {
         </section>
 
         {/* Bottom CTA */}
-        <section className="py-20 bg-gradient-to-br from-emerald-500/5 via-[#f7fdfb] to-teal-500/10 dark:from-[#040e09] dark:to-[#070611] border-t border-slate-200/40 dark:border-white/[0.04] text-center relative overflow-hidden">
+        <section className="py-20 bg-gradient-to-br from-blue-500/5 via-[#f8fafc] to-indigo-500/10 dark:from-[#040c1a] dark:to-[#070611] border-t border-slate-200/40 dark:border-white/[0.04] text-center relative overflow-hidden">
           <div className="max-w-2xl mx-auto space-y-6 px-5 relative z-10">
             <h2 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">
               Ready to Streamline Your Rental Dues?
@@ -355,7 +355,7 @@ export default function RentalSolutionPage() {
               <Link to="/register" className="btn-glow px-6 py-3 text-white font-bold text-xs rounded-xl shadow-md">
                 Start Free Trial
               </Link>
-              <Link to="/contact" className="px-6 py-3 bg-white dark:bg-slate-800 text-slate-800 dark:text-white border border-slate-200 dark:border-slate-700 hover:border-emerald-500 dark:hover:border-emerald-500 font-bold text-xs rounded-xl transition-all flex items-center justify-center gap-1.5">
+              <Link to="/contact" className="px-6 py-3 bg-white dark:bg-slate-800 text-slate-800 dark:text-white border border-slate-200 dark:border-slate-700 hover:border-blue-500 dark:hover:border-blue-500 font-bold text-xs rounded-xl transition-all flex items-center justify-center gap-1.5">
                 Contact Sales <ArrowRight className="w-3.5 h-3.5" />
               </Link>
             </div>

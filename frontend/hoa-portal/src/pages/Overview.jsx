@@ -3,13 +3,20 @@ import { Building2, AlertTriangle, Wrench, Users, Plus, RefreshCw, Pencil, Trash
 import API from '../services/api';
 import AddCommunityModal from '../components/AddCommunityModal';
 import EditCommunityModal from '../components/EditCommunityModal';
+import RequestChangeModal from '../components/RequestChangeModal';
+
 
 const Overview = ({ communities = [], setActiveCommunity, setActivePage, user, refreshCommunities }) => {
   const [stats, setStats]           = useState([]);
   const [loading, setLoading]       = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isRequestChangeOpen, setIsRequestChangeOpen] = useState(false);
   const [editingCommunity, setEditingCommunity] = useState(null);
+
+  // Only property_manager can submit change requests (board_member gets no edit option)
+  const canRequestChange = user?.role === 'property_manager';
+  const isBoardMember = user?.role === 'board_member';
 
   useEffect(() => {
     if (communities.length > 0) fetchAllStats();
@@ -19,6 +26,7 @@ const Overview = ({ communities = [], setActiveCommunity, setActivePage, user, r
   const fetchAllStats = async () => {
     try {
       setLoading(true);
+      // Har community ke stats fetch karo
       const results = await Promise.allSettled(
         communities.map(c =>
           API.get(`/community/${c.community_id}/stats`)
@@ -171,16 +179,23 @@ const Overview = ({ communities = [], setActiveCommunity, setActivePage, user, r
                 </div>
 
                 <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
-                  <button
-                    onClick={() => {
-                      setEditingCommunity(comm);
-                      setIsEditModalOpen(true);
-                    }}
-                    className="p-1.5 hover:bg-slate-200 dark:hover:bg-white/10 rounded-lg text-slate-500 hover:text-teal-600 dark:text-gray-400 dark:hover:text-teal-400 transition"
-                    title="Edit Community"
-                  >
-                    <Pencil size={14} />
-                  </button>
+                  {/* Board members get NO edit option at all */}
+                  {!isBoardMember && (
+                    <button
+                      onClick={() => {
+                        setEditingCommunity(comm);
+                        if (canRequestChange) {
+                          setIsRequestChangeOpen(true);
+                        } else {
+                          setIsEditModalOpen(true);
+                        }
+                      }}
+                      className="p-1.5 hover:bg-slate-200 dark:hover:bg-white/10 rounded-lg text-slate-500 hover:text-teal-600 dark:text-gray-400 dark:hover:text-teal-400 transition"
+                      title={canRequestChange ? 'Request Community Change' : 'Edit Community'}
+                    >
+                      <Pencil size={14} />
+                    </button>
+                  )}
                   {user?.role === 'super_admin' && (
                     <button
                       onClick={async () => {
@@ -225,6 +240,19 @@ const Overview = ({ communities = [], setActiveCommunity, setActivePage, user, r
         }}
         community={editingCommunity}
         onSuccess={fetchAllStats}
+      />
+
+      <RequestChangeModal
+        isOpen={isRequestChangeOpen}
+        onClose={() => {
+          setIsRequestChangeOpen(false);
+          setEditingCommunity(null);
+        }}
+        community={editingCommunity}
+        onSuccess={() => {
+          setIsRequestChangeOpen(false);
+          setEditingCommunity(null);
+        }}
       />
     </div>
   );
