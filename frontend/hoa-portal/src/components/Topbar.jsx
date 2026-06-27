@@ -90,10 +90,10 @@ const Topbar = ({
                 {user?.role === 'super_admin' ? 'MANAGING' : 'MY COMMUNITY'}
               </p>
               <div
-                className="flex items-center gap-1.5 cursor-pointer transition-all duration-200 select-none px-2.5 py-1 -mx-2.5 rounded-xl hover:bg-[#6366F1]/10 dark:hover:bg-[#818CF8]/20 text-slate-900 dark:text-white hover:text-[#6366F1] dark:hover:text-[#818CF8]"
+                className="flex items-center gap-1 cursor-pointer transition select-none hover:opacity-80"
                 onClick={() => setIsCommDropdownOpen(!isCommDropdownOpen)}
               >
-                <span className="text-[14px] xs:text-[16px] sm:text-lg font-bold leading-tight truncate">
+                <span className="text-[14px] xs:text-[16px] sm:text-lg font-bold text-slate-900 dark:text-white leading-tight truncate">
                   {activeCommunity?.name || "Select Community"}
                 </span>
                 {activeCommunity?.community_code && (
@@ -157,7 +157,7 @@ const Topbar = ({
         {canSwitchView && (
           <button
             onClick={() => setViewAsResident(!viewAsResident)}
-            className="hidden md:flex px-4 py-2 bg-gradient-to-r from-teal-500/10 to-blue-500/10 hover:from-teal-500/20 hover:to-blue-500/20 text-[#25C490] hover:text-[#2ae2a6] border border-teal-500/25 rounded-2xl text-xs font-bold transition items-center gap-1.5 shadow-md shadow-teal-950/5 active:scale-95"
+            className="hidden md:flex px-4 py-2 bg-teal-500/10 dark:bg-teal-500/25 border-2 border-teal-500/30 hover:border-teal-500 hover:bg-teal-500 hover:text-white text-teal-700 dark:text-teal-400 dark:hover:text-white dark:hover:bg-teal-500 rounded-2xl text-xs font-bold transition-all duration-200 items-center gap-1.5 shadow-sm active:scale-95"
           >
             {viewAsResident 
               ? (isBoardMember ? "Switch to Board View" : "Switch to Admin View") 
