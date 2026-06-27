@@ -90,10 +90,10 @@ const Topbar = ({
                 {user?.role === 'super_admin' ? 'MANAGING' : 'MY COMMUNITY'}
               </p>
               <div
-                className="flex items-center gap-1 cursor-pointer transition select-none hover:opacity-80"
+                className="flex items-center gap-1.5 cursor-pointer transition-all duration-200 select-none px-2.5 py-1 -mx-2.5 rounded-xl hover:bg-[#6366F1]/10 dark:hover:bg-[#818CF8]/20 text-slate-900 dark:text-white hover:text-[#6366F1] dark:hover:text-[#818CF8]"
                 onClick={() => setIsCommDropdownOpen(!isCommDropdownOpen)}
               >
-                <span className="text-[14px] xs:text-[16px] sm:text-lg font-bold text-slate-900 dark:text-white leading-tight truncate">
+                <span className="text-[14px] xs:text-[16px] sm:text-lg font-bold leading-tight truncate">
                   {activeCommunity?.name || "Select Community"}
                 </span>
                 {activeCommunity?.community_code && (
