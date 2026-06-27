@@ -705,12 +705,19 @@ def onboard_client(request: Request, body: ClientOnboardRequest, db: Session = D
             if not db.query(Community).filter(Community.community_code == comm_code).first():
                 break
 
+        # Calculate plan expiration date based on contract renewal cycle
+        from datetime import date, timedelta
+        plan_expire = date.today() + timedelta(days=365) # default Annual
+        if contract.renewal_cycle and contract.renewal_cycle.lower() == "monthly":
+            plan_expire = date.today() + timedelta(days=30)
+
         # Create Community
         community = Community(
             name=body.hoa_name.strip(),
             community_code=comm_code,
             address_id=address.address_id,
             plan_id=1,  # Default
+            plan_expire_date=plan_expire,
             license_status="ACTIVE",
             community_size=contract.size_of_the_community or 0,
             contact_person=f"{body.first_name} {body.last_name}",

@@ -435,7 +435,7 @@ const Settings = ({ community, onCommunityUpdate }) => {
           <h3 className="font-semibold text-lg text-slate-900 dark:text-white">📋 Community Info</h3>
           <button
             onClick={() => setIsChangeModalOpen(true)}
-            className="text-xs bg-teal-650/10 hover:bg-teal-650 hover:text-white text-teal-600 dark:text-teal-400 border border-teal-500/20 dark:border-teal-400/20 px-3.5 py-2 rounded-xl font-bold transition active:scale-95 flex items-center gap-1.5"
+            className="text-xs bg-teal-500/10 dark:bg-teal-500/25 border-2 border-teal-500/30 hover:border-teal-500 hover:bg-teal-500 hover:text-white text-teal-700 dark:text-teal-400 dark:hover:text-white dark:hover:bg-teal-500 px-3.5 py-2 rounded-xl font-bold transition-all duration-200 active:scale-95 flex items-center gap-1.5 shadow-sm"
           >
             Request Changes
           </button>
