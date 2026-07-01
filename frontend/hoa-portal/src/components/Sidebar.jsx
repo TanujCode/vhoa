@@ -27,7 +27,6 @@ const Sidebar = ({ activePage, setActivePage, isOpen, setIsOpen, user, userRole:
 
   // 1. Admin/Manager Menu (Complete List)
   let adminNavItems = [
-    { id: 'overview', label: 'All Communities', icon: Globe },
     { id: 'dashboard', label: 'Dashboard', icon: Layout },
     { id: 'contracts', label: 'Manage Contracts', icon: FileText },
     { id: 'members', label: 'Members', icon: Users },
@@ -96,7 +95,7 @@ const Sidebar = ({ activePage, setActivePage, isOpen, setIsOpen, user, userRole:
   const getNavItemClass = (itemId) => {
     const isActive = activePage === itemId;
     if (isActive) {
-      return "flex items-center gap-3 px-4 py-3 rounded-xl cursor-pointer text-sm font-medium transition-all bg-white dark:bg-[#1D9E75]/10 text-sky-700 dark:text-[#25C490] border-l-4 border-sky-500 dark:border-[#1D9E75] shadow-sm dark:shadow-none";
+      return "flex items-center gap-3 px-4 py-3 rounded-xl cursor-pointer text-sm font-medium transition-all bg-white dark:bg-[#1D68DF]/10 text-sky-700 dark:text-[#5BA4F5] border-l-4 border-sky-500 dark:border-[#1D68DF] shadow-sm dark:shadow-none";
     }
     return "flex items-center gap-3 px-4 py-3 rounded-xl cursor-pointer text-sm font-medium transition-all border-l-4 border-transparent text-slate-600 dark:text-gray-400 hover:bg-white/50 dark:hover:bg-white/5 hover:text-sky-700 dark:hover:text-white";
   };
@@ -191,7 +190,7 @@ const Sidebar = ({ activePage, setActivePage, isOpen, setIsOpen, user, userRole:
         {/* User Footer */}
         <div className="p-4 border-t border-slate-200/60 dark:border-white/10">
           <div className="bg-white/60 dark:bg-[#1E3248] p-3 rounded-2xl flex items-center gap-3 cursor-pointer hover:bg-white/80 dark:hover:bg-white/10 transition-colors" onClick={() => setActivePage('profile')}>
-            <div className="w-9 h-9 rounded-xl flex items-center justify-center font-bold text-white transition-all overflow-hidden border border-white/10 bg-gradient-to-br from-teal-500 to-blue-600 shadow-md flex-shrink-0">
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center font-bold text-white transition-all overflow-hidden border border-white/10 bg-gradient-to-br from-blue-500 to-blue-600 shadow-md flex-shrink-0">
               {user?.user_profile_url ? (
                 <img 
                   src={getProfileImage(user.user_profile_url)} 
@@ -208,7 +207,7 @@ const Sidebar = ({ activePage, setActivePage, isOpen, setIsOpen, user, userRole:
             </div>
             <div className="overflow-hidden text-slate-900 dark:text-white">
               <div className="text-sm font-medium truncate">{user?.full_name || user?.name || "User"}</div>
-              <div className="text-[10px] text-teal-600 dark:text-[#1D9E75] font-mono uppercase tracking-tighter">
+              <div className="text-[10px] text-blue-600 dark:text-[#5BA4F5] font-mono uppercase tracking-tighter">
                 {userRole.replace('_', ' ')}
               </div>
             </div>

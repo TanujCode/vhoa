@@ -85,7 +85,7 @@ export default function BoardDashboard({ community, user }) {
             Welcome Back, {user?.first_name || 'Board Member'}! 👋
           </h1>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 font-mono">
-            Managing: <span className="text-teal-500 font-sans font-semibold">{community?.name || 'Your Community'}</span>
+            Managing: <span className="text-blue-500 font-sans font-semibold">{community?.name || 'Your Community'}</span>
           </p>
         </div>
       </div>
@@ -93,7 +93,7 @@ export default function BoardDashboard({ community, user }) {
       {/* Stats Grid Layout */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
         <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-2xl p-5 flex items-center space-x-4 shadow-sm">
-          <div className="p-3 rounded-xl bg-teal-500/10 text-teal-500"><Users className="w-6 h-6" /></div>
+          <div className="p-3 rounded-xl bg-blue-500/10 text-blue-500"><Users className="w-6 h-6" /></div>
           <div>
             <p className="text-xs text-gray-500 dark:text-gray-400 uppercase font-semibold">Total Residents</p>
             <p className="text-2xl font-bold mt-1 text-gray-900 dark:text-white">{stats.total_residents}</p>
@@ -121,7 +121,7 @@ export default function BoardDashboard({ community, user }) {
       <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-2xl shadow-sm overflow-hidden">
         <div className="p-5 border-b border-gray-200 dark:border-white/10 flex items-center justify-between">
           <div className="flex items-center space-x-2">
-            <ClipboardList className="w-5 h-5 text-teal-500" />
+            <ClipboardList className="w-5 h-5 text-blue-500" />
             <h2 className="text-lg font-bold text-gray-900 dark:text-white">Resident Join Requests</h2>
           </div>
           <span className="px-2.5 py-1 text-xs font-mono font-bold bg-amber-500/10 text-amber-500 rounded-full">

@@ -9,7 +9,7 @@ const StatusBadge = ({ status }) => {
     OPEN:        'bg-red-500/20 text-red-400',
     IN_PROGRESS: 'bg-blue-500/20 text-blue-400',
     APPEALED:    'bg-amber-500/20 text-amber-400',
-    PAID:        'bg-teal-500/20 text-teal-400',
+    PAID:        'bg-blue-500/20 text-blue-400',
     RESOLVED:    'bg-green-500/20 text-green-400',
     CLOSED:      'bg-gray-500/20 text-gray-400',
     CANCELLED:   'bg-gray-500/20 text-gray-400',
@@ -122,7 +122,7 @@ const SubmitModal = ({ communityId, onClose, onSuccess }) => {
               required
               value={form.violation_type_id}
               onChange={e => setForm({...form, violation_type_id: e.target.value})}
-              className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-teal-500"
+              className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-blue-500"
             >
               <option value="" className="text-slate-900 dark:text-white">Select type...</option>
               {types.map(t => (
@@ -181,13 +181,13 @@ const SubmitModal = ({ communityId, onClose, onSuccess }) => {
                         setSearchTerm(`${r.full_name} (#${r.user_id})`);
                         setIsOpen(false);
                       }}
-                      className="px-4 py-2 hover:bg-teal-500/10 cursor-pointer text-sm text-slate-900 dark:text-white flex justify-between items-center transition-colors border-b border-slate-100 dark:border-white/5 last:border-0"
+                      className="px-4 py-2 hover:bg-blue-500/10 cursor-pointer text-sm text-slate-900 dark:text-white flex justify-between items-center transition-colors border-b border-slate-100 dark:border-white/5 last:border-0"
                     >
                       <div className="flex flex-col">
                         <span className="font-semibold text-xs text-slate-900 dark:text-white">{r.full_name}</span>
                         <span className="text-[10px] text-slate-500 dark:text-gray-400 font-mono">{r.email_id} • Unit: {r.unit_no || 'N/A'}</span>
                       </div>
-                      <span className="text-[10px] font-mono text-teal-600 dark:text-teal-400 bg-teal-500/10 px-2 py-0.5 rounded">ID: #{r.user_id}</span>
+                      <span className="text-[10px] font-mono text-blue-600 dark:text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded">ID: #{r.user_id}</span>
                     </div>
                   ))}
                 {residents.filter(r => 
@@ -247,7 +247,7 @@ const SubmitModal = ({ communityId, onClose, onSuccess }) => {
             <input
               type="file"
               onChange={e => setFile(e.target.files[0])}
-              className="w-full text-sm text-slate-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-teal-600/10 file:text-teal-600 dark:file:text-teal-400 hover:file:bg-teal-600/20"
+              className="w-full text-sm text-slate-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-blue-600/10 file:text-blue-600 dark:file:text-blue-400 hover:file:bg-blue-600/20"
             />
           </div>
 
@@ -266,14 +266,14 @@ const SubmitModal = ({ communityId, onClose, onSuccess }) => {
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 py-2.5 border border-teal-600 text-teal-600 bg-transparent hover:bg-red-600 hover:text-white hover:border-red-600 dark:border-teal-500 dark:text-teal-500 dark:hover:bg-red-600 dark:hover:text-white dark:hover:border-red-600 rounded-xl text-sm font-medium transition-colors"
+              className="flex-1 py-2.5 border border-blue-600 text-blue-600 bg-transparent hover:bg-red-600 hover:text-white hover:border-red-600 dark:border-blue-500 dark:text-blue-500 dark:hover:bg-red-600 dark:hover:text-white dark:hover:border-red-600 rounded-xl text-sm font-medium transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="flex-1 py-2.5 bg-teal-600 hover:bg-teal-500 rounded-xl text-sm font-medium transition disabled:opacity-50 text-white"
+              className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-500 rounded-xl text-sm font-medium transition disabled:opacity-50 text-white"
             >
               {loading ? 'Submitting...' : 'Submit'}
             </button>
@@ -495,12 +495,12 @@ const DisputeModal = ({ communityId, violationId, onClose, onSuccess }) => {
             <input
               type="file"
               onChange={e => setFile(e.target.files[0])}
-              className="w-full text-sm text-slate-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-teal-600/10 file:text-teal-600 dark:file:text-teal-400 hover:file:bg-teal-600/20"
+              className="w-full text-sm text-slate-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-blue-600/10 file:text-blue-600 dark:file:text-blue-400 hover:file:bg-blue-600/20"
             />
           </div>
           <div className="flex gap-3 pt-2">
-            <button type="button" onClick={onClose} className="flex-1 py-2.5 border border-teal-600 text-teal-600 bg-transparent hover:bg-red-600 hover:text-white hover:border-red-600 dark:border-teal-500 dark:text-teal-500 dark:hover:bg-red-600 dark:hover:text-white dark:hover:border-red-600 rounded-xl text-sm font-medium transition-colors">Cancel</button>
-            <button type="submit" disabled={loading} className="flex-1 py-2.5 bg-teal-600 hover:bg-teal-500 rounded-xl text-sm font-medium text-white disabled:opacity-50">
+            <button type="button" onClick={onClose} className="flex-1 py-2.5 border border-blue-600 text-blue-600 bg-transparent hover:bg-red-600 hover:text-white hover:border-red-600 dark:border-blue-500 dark:text-blue-500 dark:hover:bg-red-600 dark:hover:text-white dark:hover:border-red-600 rounded-xl text-sm font-medium transition-colors">Cancel</button>
+            <button type="submit" disabled={loading} className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-500 rounded-xl text-sm font-medium text-white disabled:opacity-50">
               {loading ? 'Submitting...' : 'Submit Appeal'}
             </button>
           </div>
@@ -563,7 +563,7 @@ const ResolveDisputeModal = ({ violationId, statuses, onClose, onSuccess }) => {
             <select
               value={statusId}
               onChange={e => setStatusId(e.target.value)}
-              className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-teal-500"
+              className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-blue-500"
             >
               <option value="">Keep appealed status</option>
               {statuses.filter(s => s.violation_status !== 'APPEALED').map(s => (
@@ -574,8 +574,8 @@ const ResolveDisputeModal = ({ violationId, statuses, onClose, onSuccess }) => {
             </select>
           </div>
           <div className="flex gap-3 pt-2">
-            <button type="button" onClick={onClose} className="flex-1 py-2.5 border border-teal-600 text-teal-600 bg-transparent hover:bg-red-600 hover:text-white hover:border-red-600 dark:border-teal-500 dark:text-teal-500 dark:hover:bg-red-600 dark:hover:text-white dark:hover:border-red-600 rounded-xl text-sm font-medium transition-colors">Cancel</button>
-            <button type="submit" disabled={loading} className="flex-1 py-2.5 bg-teal-600 hover:bg-teal-500 rounded-xl text-sm font-medium text-white disabled:opacity-50">
+            <button type="button" onClick={onClose} className="flex-1 py-2.5 border border-blue-600 text-blue-600 bg-transparent hover:bg-red-600 hover:text-white hover:border-red-600 dark:border-blue-500 dark:text-blue-500 dark:hover:bg-red-600 dark:hover:text-white dark:hover:border-red-600 rounded-xl text-sm font-medium transition-colors">Cancel</button>
+            <button type="submit" disabled={loading} className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-500 rounded-xl text-sm font-medium text-white disabled:opacity-50">
               {loading ? 'Resolving...' : 'Resolve Dispute'}
             </button>
           </div>
@@ -677,7 +677,7 @@ const ViolationDetailModal = ({ violation, isResident, statuses, onClose, onDisp
                       href={getFileUrl(doc.doc_url)}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-xs text-teal-600 dark:text-teal-400 hover:underline flex items-center gap-1.5"
+                      className="text-xs text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1.5"
                     >
                       📄 Violation Document #{idx + 1}
                     </a>
@@ -713,7 +713,7 @@ const ViolationDetailModal = ({ violation, isResident, statuses, onClose, onDisp
                       href={getFileUrl(doc.doc_url)}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-xs text-teal-600 dark:text-teal-400 hover:underline flex items-center gap-1.5"
+                      className="text-xs text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1.5"
                     >
                       📄 Appeal Proof #{idx + 1}
                     </a>
@@ -730,7 +730,7 @@ const ViolationDetailModal = ({ violation, isResident, statuses, onClose, onDisp
             {violation.dispute_resolved && (
               <div>
                 <span className="text-xs text-slate-400 dark:text-gray-500">Board Resolution:</span>
-                <p className="text-sm bg-teal-500/10 text-teal-800 dark:text-teal-400 p-3 rounded-xl border border-teal-500/20 leading-relaxed font-sans">{violation.dispute_resolution}</p>
+                <p className="text-sm bg-blue-500/10 text-blue-800 dark:text-blue-400 p-3 rounded-xl border border-blue-500/20 leading-relaxed font-sans">{violation.dispute_resolution}</p>
               </div>
             )}
           </div>
@@ -746,7 +746,7 @@ const ViolationDetailModal = ({ violation, isResident, statuses, onClose, onDisp
                   <select
                     value={selectedStatusId}
                     onChange={e => setSelectedStatusId(e.target.value)}
-                    className="bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200/10 dark:border-white/10 rounded-xl pl-4 pr-10 py-2 text-sm text-slate-900 dark:text-white focus:border-teal-500 focus:outline-none appearance-none cursor-pointer"
+                    className="bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200/10 dark:border-white/10 rounded-xl pl-4 pr-10 py-2 text-sm text-slate-900 dark:text-white focus:border-blue-500 focus:outline-none appearance-none cursor-pointer"
                   >
                     {statuses.map(s => (
                       <option key={s.violation_status_id} value={s.violation_status_id} className="text-slate-900 dark:text-white">
@@ -789,7 +789,7 @@ const ViolationDetailModal = ({ violation, isResident, statuses, onClose, onDisp
               {isUnpaid && (
                 <button
                   onClick={() => onPay(violation)}
-                  className="px-6 py-2.5 bg-teal-600 hover:bg-teal-500 text-white rounded-xl text-sm font-bold transition"
+                  className="px-6 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-sm font-bold transition"
                 >
                   Pay Fine
                 </button>
@@ -968,7 +968,7 @@ const Violations = ({ community, user, setActivePage, setPaymentState }) => {
   return (
     <div className="text-slate-900 dark:text-white">
       {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
         <div className="flex justify-between items-center w-full md:w-auto">
           <div>
             <h1 className="text-2xl sm:text-3xl font-semibold text-slate-900 dark:text-white">Violations</h1>
@@ -976,27 +976,9 @@ const Violations = ({ community, user, setActivePage, setPaymentState }) => {
               {community?.name} • Manage violations, disputes, and fines
             </p>
           </div>
-          {/* Mobile Refresh Button */}
-          <button 
-            onClick={fetchViolations}
-            disabled={loading}
-            className="md:hidden p-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 rounded-2xl text-slate-700 dark:text-white transition disabled:opacity-60"
-            title="Refresh"
-          >
-            <RefreshCw size={18} className={loading ? "animate-spin" : ""} />
-          </button>
         </div>
 
         <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
-          {/* Desktop Refresh Button */}
-          <button
-            onClick={fetchViolations}
-            disabled={loading}
-            className="hidden md:flex px-5 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 rounded-2xl text-sm font-semibold transition items-center gap-2 text-slate-700 dark:text-white disabled:opacity-60"
-          >
-            <RefreshCw size={15} className={loading ? "animate-spin" : ""} />
-            {loading ? "Refreshing..." : "Refresh"}
-          </button>
 
           {!isResident && (
             <>
@@ -1008,7 +990,7 @@ const Violations = ({ community, user, setActivePage, setPaymentState }) => {
               </button>
               <button
                 onClick={handleSubmitViolationClick}
-                className="w-full sm:w-auto px-5 py-2.5 bg-teal-600 hover:bg-teal-500 rounded-2xl text-sm font-semibold transition flex items-center justify-center gap-2 text-white"
+                className="w-full sm:w-auto px-5 py-2.5 bg-blue-600 hover:bg-blue-500 rounded-2xl text-sm font-semibold transition flex items-center justify-center gap-2 text-white"
               >
                 <Plus size={15} />
                 Submit Violation
@@ -1026,7 +1008,7 @@ const Violations = ({ community, user, setActivePage, setPaymentState }) => {
         </div>
         <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-4 sm:p-6 shadow-sm">
           <p className="text-slate-500 dark:text-gray-400 text-sm">Paid</p>
-          <p className="text-3xl sm:text-5xl font-mono font-bold text-teal-600 dark:text-teal-400 mt-2">{stats.paid}</p>
+          <p className="text-3xl sm:text-5xl font-mono font-bold text-blue-600 dark:text-blue-400 mt-2">{stats.paid}</p>
         </div>
         <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-4 sm:p-6 shadow-sm">
           <p className="text-slate-500 dark:text-gray-400 text-sm">Disputed</p>
@@ -1051,7 +1033,7 @@ const Violations = ({ community, user, setActivePage, setPaymentState }) => {
                 placeholder="Search violations..."
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
-                className="w-full bg-slate-50 dark:bg-[#1e3248] border border-slate-200 dark:border-white/10 rounded-2xl pl-10 pr-4 py-2.5 text-sm text-slate-900 dark:text-white focus:border-teal-500 outline-none placeholder-slate-400 dark:placeholder-gray-500"
+                className="w-full bg-slate-50 dark:bg-[#1e3248] border border-slate-200 dark:border-white/10 rounded-2xl pl-10 pr-4 py-2.5 text-sm text-slate-900 dark:text-white focus:border-blue-500 outline-none placeholder-slate-400 dark:placeholder-gray-500"
               />
             </div>
 
@@ -1059,7 +1041,7 @@ const Violations = ({ community, user, setActivePage, setPaymentState }) => {
               <select
                 value={statusFilter}
                 onChange={e => setStatusFilter(e.target.value)}
-                className="w-full bg-slate-50 dark:bg-[#1e3248] border border-slate-200 dark:border-white/10 rounded-2xl pl-4 pr-10 py-2.5 text-sm text-slate-900 dark:text-white focus:border-teal-500 focus:outline-none appearance-none cursor-pointer"
+                className="w-full bg-slate-50 dark:bg-[#1e3248] border border-slate-200 dark:border-white/10 rounded-2xl pl-4 pr-10 py-2.5 text-sm text-slate-900 dark:text-white focus:border-blue-500 focus:outline-none appearance-none cursor-pointer"
               >
                 {statuses.map(s => (
                   <option key={s} value={s} className="text-slate-900 dark:text-white">{s || 'Filter'}</option>
@@ -1073,7 +1055,7 @@ const Violations = ({ community, user, setActivePage, setPaymentState }) => {
         <div className="overflow-x-auto">
           {loading && violations.length === 0 ? (
             <div className="p-10 text-center text-slate-500 dark:text-gray-400">
-              <div className="w-8 h-8 border-2 border-teal-500 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+              <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
               Loading violations...
             </div>
           ) : filteredViolations.length === 0 ? (

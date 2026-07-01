@@ -90,21 +90,14 @@ export default function SalesDashboard({ setActivePage }) {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
-            Sales agent Dashboard <Sparkles className="text-teal-600 dark:text-teal-400" size={24} />
+            Sales agent Dashboard <Sparkles className="text-blue-600 dark:text-blue-400" size={24} />
           </h1>
           <p className="text-slate-500 dark:text-gray-400 mt-1">Aggregated statistics, pipeline forecasting, and onboarding telemetry</p>
         </div>
         <div className="flex items-center gap-3">
           <button
-            onClick={fetchDashboardData}
-            disabled={loading}
-            className="px-5 py-2.5 bg-slate-200/60 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 text-slate-700 dark:text-white rounded-2xl text-sm font-semibold transition-all duration-200 flex items-center gap-2 border border-slate-300/30 dark:border-white/5 active:scale-95 disabled:opacity-60"
-          >
-            <RefreshCw size={15} className={loading ? "animate-spin" : ""} /> Refresh Stats
-          </button>
-          <button
             onClick={() => setActivePage('contracts')}
-            className="px-5 py-2.5 bg-[#1D9E75] hover:bg-[#15805d] text-white rounded-2xl text-sm font-semibold transition flex items-center gap-2 shadow-lg shadow-teal-600/10 dark:shadow-teal-950/20 active:scale-95"
+            className="px-5 py-2.5 bg-[#1D68DF] hover:bg-[#15459E] text-white rounded-2xl text-sm font-semibold transition flex items-center gap-2 shadow-lg shadow-blue-600/10 dark:shadow-blue-950/20 active:scale-95"
           >
             <Plus size={15} /> Create Contract
           </button>
@@ -113,7 +106,7 @@ export default function SalesDashboard({ setActivePage }) {
 
       {loading && contracts.length === 0 ? (
         <div className="text-center py-20 text-gray-400">
-          <div className="w-10 h-10 border-4 border-teal-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <div className="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           Calculating sales aggregates...
         </div>
       ) : (
@@ -147,7 +140,7 @@ export default function SalesDashboard({ setActivePage }) {
               label="Total Contracts"
               value={totalContracts}
               icon={FileText}
-              color="bg-teal-600"
+              color="bg-blue-600"
               sub={`${activeContracts.length} active codes ready`}
             />
           </div>
@@ -161,7 +154,7 @@ export default function SalesDashboard({ setActivePage }) {
                   {Object.entries(planCounts).map(([plan, count]) => {
                     const pct = totalContracts ? Math.round((count / totalContracts) * 100) : 0;
                     const barColor = 
-                      plan === 'Standard' ? 'bg-teal-500' :
+                      plan === 'Standard' ? 'bg-blue-500' :
                       plan === 'Premium' ? 'bg-blue-500' :
                       plan === 'Enterprise' ? 'bg-purple-500' : 'bg-gray-500';
                     return (
@@ -180,7 +173,7 @@ export default function SalesDashboard({ setActivePage }) {
               </div>
               <div className="border-t border-slate-100 dark:border-white/5 pt-4 mt-6 flex justify-between items-center text-xs text-slate-500 dark:text-gray-500">
                 <span>Standard values based on pricing guidelines</span>
-                <span className="text-teal-600 dark:text-[#25C490] hover:underline cursor-pointer" onClick={() => setActivePage('contracts')}>Edit Prices</span>
+                <span className="text-blue-600 dark:text-[#5BA4F5] hover:underline cursor-pointer" onClick={() => setActivePage('contracts')}>Edit Prices</span>
               </div>
             </div>
 
@@ -193,7 +186,7 @@ export default function SalesDashboard({ setActivePage }) {
                   <div className="relative w-36 h-36 flex items-center justify-center">
                     <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
                       <circle cx="50" cy="50" r="40" stroke="currentColor" strokeWidth="8" fill="transparent" className="text-slate-100 dark:text-white/5" />
-                      <circle cx="50" cy="50" r="40" stroke="#1D9E75" strokeWidth="8" fill="transparent"
+                      <circle cx="50" cy="50" r="40" stroke="#1D68DF" strokeWidth="8" fill="transparent"
                         strokeDasharray="251.2"
                         strokeDashoffset={251.2 - (251.2 * onboardingRate) / 100}
                         strokeLinecap="round"
@@ -231,7 +224,7 @@ export default function SalesDashboard({ setActivePage }) {
                 <div className="space-y-2">
                   <button
                     onClick={() => setActivePage('contracts')}
-                    className="w-full flex items-center justify-between px-4 py-3 bg-teal-50 dark:bg-[#1D9E75]/10 hover:bg-teal-100 dark:hover:bg-[#1D9E75]/20 text-teal-700 dark:text-[#25C490] border border-teal-200/50 dark:border-[#1D9E75]/20 rounded-xl transition duration-150 text-sm font-semibold text-left"
+                    className="w-full flex items-center justify-between px-4 py-3 bg-blue-50 dark:bg-[#1D68DF]/10 hover:bg-blue-100 dark:hover:bg-[#1D68DF]/20 text-blue-700 dark:text-[#5BA4F5] border border-blue-200/50 dark:border-[#1D68DF]/20 rounded-xl transition duration-150 text-sm font-semibold text-left"
                   >
                     <span>Create & Copy Active Code</span>
                     <Plus size={16} />
@@ -282,7 +275,7 @@ export default function SalesDashboard({ setActivePage }) {
                         </td>
                         <td className="px-3 py-4 font-mono whitespace-nowrap">
                           <div className="flex items-center gap-1.5">
-                            <span className="text-teal-700 dark:text-[#25C490] font-bold bg-teal-50 dark:bg-[#25C490]/10 px-2 py-0.5 rounded text-xs">{contract.contract_code}</span>
+                            <span className="text-blue-700 dark:text-[#5BA4F5] font-bold bg-blue-50 dark:bg-[#5BA4F5]/10 px-2 py-0.5 rounded text-xs">{contract.contract_code}</span>
                             <button
                               onClick={() => handleCopyCode(contract.contract_code)}
                               className="text-slate-400 hover:text-slate-700 dark:text-gray-500 dark:hover:text-white transition"

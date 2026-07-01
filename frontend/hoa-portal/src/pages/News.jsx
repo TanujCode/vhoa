@@ -60,7 +60,7 @@ const NewsModal = ({ communityId, onClose, onSuccess }) => {
               <select 
                 value={form.category} 
                 onChange={e => setForm({...form, category: e.target.value})}
-                className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500"
+                className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-teal-500"
               >
                 {['GENERAL','MEETING','MAINTENANCE','EMERGENCY','EVENT'].map(c => (
                   <option key={c} value={c} className="bg-white dark:bg-[#0D1B2A] text-slate-900 dark:text-white">
@@ -73,14 +73,14 @@ const NewsModal = ({ communityId, onClose, onSuccess }) => {
               <label className="flex items-center gap-2 cursor-pointer">
                 <input type="checkbox" checked={form.is_pinned}
                   onChange={e => setForm({...form, is_pinned: e.target.checked})}
-                  className="w-4 h-4 rounded border-slate-300 text-teal-600 focus:ring-teal-500" />
+                  className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-teal-500" />
                 <span className="text-sm text-slate-600 dark:text-gray-300">📌 Pin this post</span>
               </label>
             </div>
           </div>
           <div className="flex gap-3 pt-2">
             <button type="button" onClick={onClose} className="flex-1 py-2.5 bg-slate-100 hover:bg-red-600 hover:text-white dark:bg-white/10 dark:hover:bg-red-600 dark:hover:text-white rounded-xl text-sm font-medium text-slate-700 dark:text-white transition-colors">Cancel</button>
-            <button type="submit" disabled={loading} className="flex-1 py-2.5 bg-teal-600 hover:bg-teal-500 rounded-xl text-sm font-medium text-white disabled:opacity-50">
+            <button type="submit" disabled={loading} className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-500 rounded-xl text-sm font-medium text-white disabled:opacity-50">
               {loading ? 'Posting...' : 'Post News'}
             </button>
           </div>
@@ -134,7 +134,7 @@ const FAQModal = ({ communityId, onClose, onSuccess }) => {
           </div>
           <div className="flex gap-3 pt-2">
             <button type="button" onClick={onClose} className="flex-1 py-2.5 bg-slate-100 hover:bg-red-600 hover:text-white dark:bg-white/10 dark:hover:bg-red-600 dark:hover:text-white rounded-xl text-sm font-medium text-slate-700 dark:text-white transition-colors">Cancel</button>
-            <button type="submit" disabled={loading} className="flex-1 py-2.5 bg-teal-600 hover:bg-teal-500 rounded-xl text-sm font-medium text-white disabled:opacity-50">
+            <button type="submit" disabled={loading} className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-500 rounded-xl text-sm font-medium text-white disabled:opacity-50">
               {loading ? 'Adding...' : 'Add FAQ'}
             </button>
           </div>
@@ -205,7 +205,7 @@ const News = ({ community, user }) => {
   return (
     <div className="text-slate-900 dark:text-white">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div>
           <h1 className="text-3xl font-semibold text-slate-900 dark:text-white">News & FAQ</h1>
           <p className="text-slate-500 dark:text-gray-400 mt-1">{community?.name}</p>
@@ -217,7 +217,7 @@ const News = ({ community, user }) => {
               <Plus size={15} /> Add FAQ
             </button>
             <button onClick={() => setShowNewsModal(true)}
-              className="flex items-center gap-2 bg-teal-600 hover:bg-teal-500 text-white px-5 py-2.5 rounded-2xl text-sm font-semibold transition shadow-lg shadow-teal-500/25">
+              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-2xl text-sm font-semibold transition shadow-lg shadow-blue-500/25">
               <Plus size={15} /> Post News
             </button>
           </div>
@@ -229,7 +229,7 @@ const News = ({ community, user }) => {
         {['news', 'faq'].map(tab => (
           <button key={tab} onClick={() => setActiveTab(tab)}
             className={`px-6 py-2.5 rounded-2xl text-sm font-medium transition capitalize ${
-              activeTab === tab ? 'bg-teal-600 hover:bg-teal-700 text-white hover:text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-white/10 dark:text-gray-400 dark:hover:bg-white/20'
+              activeTab === tab ? 'bg-blue-600 hover:bg-blue-700 text-white hover:text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-white/10 dark:text-gray-400 dark:hover:bg-white/20'
             }`}>
             {tab === 'news' ? '📢 News & Updates' : '❓ FAQs'}
           </button>
@@ -244,7 +244,7 @@ const News = ({ community, user }) => {
             {categories.map(c => (
               <button key={c} onClick={() => setCategoryFilter(c)}
                 className={`px-4 py-1.5 rounded-xl text-xs font-medium transition ${
-                  categoryFilter === c ? 'bg-teal-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-white/10 dark:text-gray-400 dark:hover:bg-white/20'
+                  categoryFilter === c ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-white/10 dark:text-gray-400 dark:hover:bg-white/20'
                 }`}>
                 {c || 'All'}
               </button>
@@ -253,7 +253,7 @@ const News = ({ community, user }) => {
 
           {loading && news.length === 0 ? (
             <div className="text-center py-20 text-slate-500 dark:text-gray-400">
-              <div className="w-8 h-8 border-2 border-teal-500 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+              <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
             </div>
           ) : news.length === 0 ? (
             <div className="text-center py-20 text-slate-500 dark:text-gray-400">📢 No news posts yet.</div>
@@ -261,12 +261,12 @@ const News = ({ community, user }) => {
             <div className="space-y-4">
               {news.map(n => (
                 <div key={n.news_id} className={`bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border rounded-3xl p-6 shadow-sm ${
-                  n.is_pinned ? 'border-teal-500/40' : 'border-slate-200/80 dark:border-white/10'
+                  n.is_pinned ? 'border-blue-500/40' : 'border-slate-200/80 dark:border-white/10'
                 }`}>
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-2 flex-wrap">
-                        {n.is_pinned && <span className="text-teal-600 dark:text-teal-400 text-xs flex items-center gap-1 font-semibold"><Pin size={11} /> Pinned</span>}
+                        {n.is_pinned && <span className="text-blue-600 dark:text-blue-400 text-xs flex items-center gap-1 font-semibold"><Pin size={11} /> Pinned</span>}
                         <CategoryBadge category={n.category} />
                         <span className="text-xs text-slate-400 dark:text-gray-500">{formatDate(n.created_date)}</span>
                         {n.created_by_name && <span className="text-xs text-slate-400 dark:text-gray-500">by {n.created_by_name}</span>}
@@ -297,7 +297,7 @@ const News = ({ community, user }) => {
 
           {loading && faqs.length === 0 ? (
             <div className="text-center py-20 text-slate-500 dark:text-gray-400">
-              <div className="w-8 h-8 border-2 border-teal-500 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+              <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
             </div>
           ) : faqs.length === 0 ? (
             <div className="text-center py-20 text-slate-500 dark:text-gray-400">❓ No FAQs yet.</div>
@@ -310,7 +310,7 @@ const News = ({ community, user }) => {
                     className="w-full p-6 text-left flex items-center justify-between gap-4 hover:bg-slate-50 dark:hover:bg-white/5 transition"
                   >
                     <div className="flex items-center gap-3">
-                      <span className="text-teal-600 dark:text-teal-400 font-mono text-sm font-bold w-6">{((faqPage - 1) * 10) + i + 1}.</span>
+                      <span className="text-blue-600 dark:text-blue-400 font-mono text-sm font-bold w-6">{((faqPage - 1) * 10) + i + 1}.</span>
                       <span className="font-medium text-slate-800 dark:text-white">{faq.question}</span>
                     </div>
                     <span className={`text-slate-400 transition-transform ${expandedFaq === faq.faq_id ? 'rotate-180' : ''}`}>▾</span>
@@ -321,7 +321,7 @@ const News = ({ community, user }) => {
                       <p className="text-slate-600 dark:text-gray-300 text-sm leading-relaxed">{faq.answer}</p>
                       {faq.doc_url && (
                         <a href={faq.doc_url} target="_blank" rel="noopener noreferrer"
-                          className="mt-3 inline-flex items-center gap-1 text-teal-600 dark:text-teal-400 text-sm hover:underline">
+                          className="mt-3 inline-flex items-center gap-1 text-blue-600 dark:text-blue-400 text-sm hover:underline">
                           📄 View Document →
                         </a>
                       )}

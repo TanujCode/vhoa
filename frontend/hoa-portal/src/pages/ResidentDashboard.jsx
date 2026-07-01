@@ -6,20 +6,20 @@ import API from '../services/api';
 const ResidentStatCard = ({ label, value, icon: Icon, color, sub, actionLabel, onClick }) => (
   <div 
     onClick={onClick}
-    className={`bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 hover:border-teal-500/30 dark:hover:border-teal-500/30 transition-all shadow-sm dark:shadow-none group ${onClick ? 'cursor-pointer hover:-translate-y-0.5 hover:shadow-md' : ''}`}
+    className={`bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 hover:border-blue-500/30 dark:hover:border-blue-500/30 transition-all shadow-sm dark:shadow-none group ${onClick ? 'cursor-pointer hover:-translate-y-0.5 hover:shadow-md' : ''}`}
   >
     <div className="flex items-center justify-between mb-4">
       <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${color}`}>
         <Icon size={20} className="text-white" />
       </div>
-      <span className="text-[10px] text-slate-400 dark:text-gray-500 font-mono group-hover:text-teal-500 dark:group-hover:text-teal-400 transition-colors">ACTIVE</span>
+      <span className="text-[10px] text-slate-400 dark:text-gray-500 font-mono group-hover:text-blue-500 dark:group-hover:text-blue-400 transition-colors">ACTIVE</span>
     </div>
     <p className="text-slate-500 dark:text-gray-400 text-sm mb-1">{label}</p>
     <p className="text-3xl font-mono font-bold text-slate-900 dark:text-white mb-2">{value}</p>
     <div className="flex justify-between items-center mt-4 pt-4 border-t border-slate-100 dark:border-white/5">
       <span className="text-xs text-slate-400 dark:text-gray-500">{sub}</span>
       {actionLabel && (
-        <span className="text-xs text-teal-600 dark:text-teal-400 hover:underline flex items-center gap-1">
+        <span className="text-xs text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1">
           {actionLabel} <ArrowUpRight size={12} />
         </span>
       )}
@@ -152,13 +152,6 @@ const ResidentDashboard = ({ community, user: initialUser, setActivePage }) => {
             {communityName} • Unit {unitNumber}
           </p>
         </div>
-        <button
-          onClick={handleRefresh}
-          disabled={refreshing}
-          className="flex items-center gap-2 px-5 py-2.5 bg-slate-200/60 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 text-slate-700 dark:text-white rounded-2xl text-sm font-semibold transition disabled:opacity-60"
-        >
-          <RefreshCw size={15} className={refreshing ? "animate-spin" : ""} /> {refreshing ? "Refreshing..." : "Refresh"}
-        </button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

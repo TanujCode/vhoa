@@ -495,7 +495,7 @@ const Profile = ({ user, setUser, viewRole }) => {
       {msg.text && (
         <div className={`mb-6 px-4 py-3 rounded-2xl text-sm font-medium flex items-center gap-2 ${
           msg.type === 'success'
-            ? 'bg-teal-500/10 text-teal-700 border border-teal-500/20 dark:bg-teal-500/20 dark:text-teal-400 dark:border-teal-500/30'
+            ? 'bg-blue-500/10 text-blue-700 border border-blue-500/20 dark:bg-blue-500/20 dark:text-blue-400 dark:border-blue-500/30'
             : 'bg-red-500/10 text-red-700 border border-red-500/20 dark:bg-red-500/20 dark:text-red-400 dark:border-red-500/30'
         }`}>
           {msg.type === 'success' ? <CheckCircle size={16} /> : <XCircle size={16} />}
@@ -531,7 +531,7 @@ const Profile = ({ user, setUser, viewRole }) => {
                     </div>
                   </>
                 ) : (
-                  <div className="w-full h-full bg-gradient-to-br from-teal-500 to-blue-600 flex items-center justify-center text-4xl font-bold text-white">
+                  <div className="w-full h-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-4xl font-bold text-white">
                     {user?.initials || <User size={40} />}
                   </div>
                 )}
@@ -541,7 +541,7 @@ const Profile = ({ user, setUser, viewRole }) => {
               <button
                 onClick={() => fileRef.current.click()}
                 disabled={uploading}
-                className="absolute -bottom-2 -right-2 w-9 h-9 bg-teal-600 hover:bg-teal-500 text-white rounded-xl flex items-center justify-center transition shadow-lg z-10 border-2 border-white dark:border-[#162535]"
+                className="absolute -bottom-2 -right-2 w-9 h-9 bg-blue-600 hover:bg-blue-500 text-white rounded-xl flex items-center justify-center transition shadow-lg z-10 border-2 border-white dark:border-[#162535]"
               >
                 <Camera size={16} />
               </button>
@@ -566,7 +566,7 @@ const Profile = ({ user, setUser, viewRole }) => {
                 <span className="text-slate-500 dark:text-gray-400 flex items-center gap-1.5">
                   <Mail size={13} /> Email
                 </span>
-                <span className={user?.email_id_is_verified ? 'text-teal-600 dark:text-teal-400' : 'text-red-600 dark:text-red-400'}>
+                <span className={user?.email_id_is_verified ? 'text-blue-600 dark:text-blue-400' : 'text-red-600 dark:text-red-400'}>
                   {user?.email_id_is_verified ? '✓ Verified' : '✗ Not verified'}
                 </span>
               </div>
@@ -575,7 +575,7 @@ const Profile = ({ user, setUser, viewRole }) => {
                   <Phone size={13} /> Phone
                 </span>
                 <div className="flex items-center gap-2">
-                  <span className={user?.mobile_is_verified ? 'text-teal-600 dark:text-teal-400' : 'text-red-600 dark:text-red-400'}>
+                  <span className={user?.mobile_is_verified ? 'text-blue-600 dark:text-blue-400' : 'text-red-600 dark:text-red-400'}>
                     {user?.mobile_is_verified ? '✓ Verified' : '✗ Not verified'}
                   </span>
                   {!user?.mobile_is_verified && (
@@ -583,7 +583,7 @@ const Profile = ({ user, setUser, viewRole }) => {
                       <button
                         onClick={handleSendPhoneOtp}
                         disabled={sendingPhoneOtp}
-                        className="px-2 py-0.5 text-xs font-semibold bg-teal-600 hover:bg-teal-500 text-white rounded-lg transition disabled:opacity-50 flex items-center gap-1 cursor-pointer"
+                        className="px-2 py-0.5 text-xs font-semibold bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition disabled:opacity-50 flex items-center gap-1 cursor-pointer"
                       >
                         {sendingPhoneOtp ? '...' : 'Verify'}
                       </button>
@@ -598,7 +598,7 @@ const Profile = ({ user, setUser, viewRole }) => {
                   <Shield size={13} /> Account
                 </span>
                 <span className={
-                  user?.account_status === 'ACTIVE' ? 'text-teal-600 dark:text-teal-400' :
+                  user?.account_status === 'ACTIVE' ? 'text-blue-600 dark:text-blue-400' :
                   user?.account_status === 'LOCKED' ? 'text-red-600 dark:text-red-400' : 'text-amber-600 dark:text-amber-400'
                 }>
                   {user?.account_status || 'PENDING'}
@@ -630,7 +630,7 @@ const Profile = ({ user, setUser, viewRole }) => {
                       <span className="text-slate-500 dark:text-gray-400 text-xs">Other Units (P2)</span>
                       <div className="flex flex-wrap gap-1 mt-0.5">
                         {user.unit_no_2.split(',').map(u => u.trim()).filter(Boolean).map((unit, idx) => (
-                          <span key={idx} className="px-2 py-0.5 rounded bg-teal-500/10 text-teal-700 dark:bg-teal-500/20 dark:text-teal-400 border border-teal-500/10 text-xs font-medium">
+                          <span key={idx} className="px-2 py-0.5 rounded bg-blue-500/10 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400 border border-blue-500/10 text-xs font-medium">
                             {unit}
                           </span>
                         ))}
@@ -666,7 +666,7 @@ const Profile = ({ user, setUser, viewRole }) => {
                 onClick={() => setActiveTab(tab.id)}
                 className={`px-5 py-2.5 rounded-2xl text-sm font-medium transition ${
                   activeTab === tab.id
-                    ? 'bg-teal-600 hover:bg-teal-700 text-white hover:text-white'
+                    ? 'bg-blue-600 hover:bg-blue-700 text-white hover:text-white'
                     : 'bg-slate-100 hover:bg-slate-200 dark:bg-white/10 text-slate-600 dark:text-gray-400 dark:hover:bg-white/20'
                 }`}
               >
@@ -681,15 +681,15 @@ const Profile = ({ user, setUser, viewRole }) => {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <label className="text-xs text-slate-500 dark:text-gray-400 mb-1.5 block">First Name</label>
-                  <input type="text" value={form.first_name} onChange={e => setForm({...form, first_name: e.target.value})} disabled={!isEditing} className={`w-full border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-teal-500 transition-colors ${!isEditing ? 'bg-slate-100/50 dark:bg-white/5 cursor-not-allowed text-slate-500 dark:text-gray-400' : 'bg-slate-50 dark:bg-[#1E3248] text-slate-900 dark:text-white'}`} />
+                  <input type="text" value={form.first_name} onChange={e => setForm({...form, first_name: e.target.value})} disabled={!isEditing} className={`w-full border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500 transition-colors ${!isEditing ? 'bg-slate-100/50 dark:bg-white/5 cursor-not-allowed text-slate-500 dark:text-gray-400' : 'bg-slate-50 dark:bg-[#1E3248] text-slate-900 dark:text-white'}`} />
                 </div>
                 <div>
                   <label className="text-xs text-slate-500 dark:text-gray-400 mb-1.5 block">Middle Name</label>
-                  <input type="text" value={form.middle_name} onChange={e => setForm({...form, middle_name: e.target.value})} disabled={!isEditing} placeholder={isEditing ? "Optional" : ""} className={`w-full border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-teal-500 transition-colors ${!isEditing ? 'bg-slate-100/50 dark:bg-white/5 cursor-not-allowed text-slate-500 dark:text-gray-400' : 'bg-slate-50 dark:bg-[#1E3248] text-slate-900 dark:text-white'}`} />
+                  <input type="text" value={form.middle_name} onChange={e => setForm({...form, middle_name: e.target.value})} disabled={!isEditing} placeholder={isEditing ? "Optional" : ""} className={`w-full border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500 transition-colors ${!isEditing ? 'bg-slate-100/50 dark:bg-white/5 cursor-not-allowed text-slate-500 dark:text-gray-400' : 'bg-slate-50 dark:bg-[#1E3248] text-slate-900 dark:text-white'}`} />
                 </div>
                 <div>
                   <label className="text-xs text-slate-500 dark:text-gray-400 mb-1.5 block">Last Name</label>
-                  <input type="text" value={form.last_name} onChange={e => setForm({...form, last_name: e.target.value})} disabled={!isEditing} className={`w-full border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-teal-500 transition-colors ${!isEditing ? 'bg-slate-100/50 dark:bg-white/5 cursor-not-allowed text-slate-500 dark:text-gray-400' : 'bg-slate-50 dark:bg-[#1E3248] text-slate-900 dark:text-white'}`} />
+                  <input type="text" value={form.last_name} onChange={e => setForm({...form, last_name: e.target.value})} disabled={!isEditing} className={`w-full border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500 transition-colors ${!isEditing ? 'bg-slate-100/50 dark:bg-white/5 cursor-not-allowed text-slate-500 dark:text-gray-400' : 'bg-slate-50 dark:bg-[#1E3248] text-slate-900 dark:text-white'}`} />
                 </div>
               </div>
 
@@ -711,7 +711,7 @@ const Profile = ({ user, setUser, viewRole }) => {
                   }}
                   disabled={!isEditing}
                   placeholder={isEditing ? "(123) 456-7890" : "Not set"}
-                  className={`w-full border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-teal-500 transition-colors ${!isEditing ? 'bg-slate-100/50 dark:bg-white/5 cursor-not-allowed text-slate-500 dark:text-gray-400' : 'bg-slate-50 dark:bg-[#1E3248] text-slate-900 dark:text-white'}`}
+                  className={`w-full border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500 transition-colors ${!isEditing ? 'bg-slate-100/50 dark:bg-white/5 cursor-not-allowed text-slate-500 dark:text-gray-400' : 'bg-slate-50 dark:bg-[#1E3248] text-slate-900 dark:text-white'}`}
                 />
               </div>
 
@@ -722,7 +722,7 @@ const Profile = ({ user, setUser, viewRole }) => {
                     value={form.time_zone}
                     onChange={e => setForm({...form, time_zone: e.target.value})}
                     disabled={!isEditing}
-                    className={`w-full border border-slate-200 dark:border-white/10 rounded-xl pl-4 pr-10 py-3 text-sm focus:outline-none focus:border-teal-500 appearance-none transition-colors ${!isEditing ? 'bg-slate-100/50 dark:bg-white/5 cursor-not-allowed text-slate-500 dark:text-gray-400' : 'bg-slate-50 dark:bg-[#1E3248] text-slate-900 dark:text-white cursor-pointer'}`}
+                    className={`w-full border border-slate-200 dark:border-white/10 rounded-xl pl-4 pr-10 py-3 text-sm focus:outline-none focus:border-blue-500 appearance-none transition-colors ${!isEditing ? 'bg-slate-100/50 dark:bg-white/5 cursor-not-allowed text-slate-500 dark:text-gray-400' : 'bg-slate-50 dark:bg-[#1E3248] text-slate-900 dark:text-white cursor-pointer'}`}
                   >
                     {timezones.map(tz => (
                        <option key={tz.value} value={tz.value} className="text-slate-900 dark:text-white">
@@ -746,7 +746,7 @@ const Profile = ({ user, setUser, viewRole }) => {
                       <label className="text-xs text-slate-500 dark:text-gray-400 mb-1.5 block">Secondary Units / Addresses (P2)</label>
                       <div className={`flex flex-wrap gap-2 p-3 border border-slate-200 dark:border-white/10 rounded-xl min-h-[46px] items-center transition-colors ${!isEditing ? 'bg-slate-100/50 dark:bg-white/5' : 'bg-slate-50 dark:bg-[#1E3248]'}`}>
                         {secondaryUnits.map((unit, idx) => (
-                          <span key={idx} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold bg-teal-500/10 text-teal-700 dark:bg-teal-500/20 dark:text-teal-400 border border-teal-500/20">
+                          <span key={idx} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold bg-blue-500/10 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400 border border-blue-500/20">
                             {unit}
                             {!isResident && isEditing && (
                               <button type="button" onClick={() => setSecondaryUnits(secondaryUnits.filter((_, i) => i !== idx))} className="hover:text-red-500 transition-colors ml-1">
@@ -812,7 +812,7 @@ const Profile = ({ user, setUser, viewRole }) => {
                                 href={getBaseUrl(user.id_proof_url)}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="inline-flex items-center gap-1.5 text-xs text-teal-600 hover:text-teal-500 dark:text-teal-400 dark:hover:text-teal-300 font-medium transition bg-teal-500/5 hover:bg-teal-500/10 px-3 py-1.5 rounded-lg border border-teal-500/10"
+                                className="inline-flex items-center gap-1.5 text-xs text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300 font-medium transition bg-blue-500/5 hover:bg-blue-500/10 px-3 py-1.5 rounded-lg border border-blue-500/10"
                               >
                                 <Eye size={14} /> View Document
                               </a>
@@ -877,7 +877,7 @@ const Profile = ({ user, setUser, viewRole }) => {
               {!isEditing ? (
                 <button 
                   onClick={() => setIsEditing(true)} 
-                  className="w-full py-3 bg-teal-600 hover:bg-teal-500 text-white rounded-2xl font-medium transition flex items-center justify-center gap-2"
+                  className="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl font-medium transition flex items-center justify-center gap-2"
                 >
                   <Edit size={16} /> Edit Profile
                 </button>
@@ -901,7 +901,7 @@ const Profile = ({ user, setUser, viewRole }) => {
                       }
                     }} 
                     disabled={saving} 
-                    className="w-full sm:flex-1 py-3 bg-teal-600 hover:bg-teal-500 text-white rounded-2xl font-medium transition disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-teal-500/10"
+                    className="w-full sm:flex-1 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl font-medium transition disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-blue-500/10"
                   >
                     <Save size={16} className="flex-shrink-0" />
                     <span>{saving ? 'Saving...' : 'Save Changes'}</span>
@@ -934,7 +934,7 @@ const Profile = ({ user, setUser, viewRole }) => {
                       </div>
                       <button
                         onClick={() => handleEmailToggle(item.key)}
-                        className={`w-11 h-6 rounded-full relative transition-all ${emailNotifications[item.key] ? 'bg-teal-600' : 'bg-slate-200 dark:bg-gray-600'}`}
+                        className={`w-11 h-6 rounded-full relative transition-all ${emailNotifications[item.key] ? 'bg-blue-600' : 'bg-slate-200 dark:bg-gray-600'}`}
                       >
                         <div className={`w-5 h-5 bg-white rounded-full absolute top-0.5 transition-all ${emailNotifications[item.key] ? 'right-0.5' : 'left-0.5'}`}></div>
                       </button>
@@ -958,7 +958,7 @@ const Profile = ({ user, setUser, viewRole }) => {
                       </div>
                       <button
                         onClick={() => handlePushToggle(item.key)}
-                        className={`w-11 h-6 rounded-full relative transition-all ${pushNotifications[item.key] ? 'bg-teal-600' : 'bg-slate-200 dark:bg-gray-600'}`}
+                        className={`w-11 h-6 rounded-full relative transition-all ${pushNotifications[item.key] ? 'bg-blue-600' : 'bg-slate-200 dark:bg-gray-600'}`}
                       >
                         <div className={`w-5 h-5 bg-white rounded-full absolute top-0.5 transition-all ${pushNotifications[item.key] ? 'right-0.5' : 'left-0.5'}`}></div>
                       </button>
@@ -966,7 +966,7 @@ const Profile = ({ user, setUser, viewRole }) => {
                   ))}
                 </div>
               </div>
-              <button onClick={handleSaveNotifications} className="w-full py-3 bg-teal-600 hover:bg-teal-500 text-white rounded-2xl font-medium transition flex items-center justify-center gap-2">
+              <button onClick={handleSaveNotifications} className="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl font-medium transition flex items-center justify-center gap-2">
                 <Save size={16} />
                 Save Preferences
               </button>
@@ -1000,14 +1000,14 @@ const Profile = ({ user, setUser, viewRole }) => {
                           e.preventDefault();
                         }
                       }}
-                      className="w-full bg-slate-50 dark:bg-[#1E3248] border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-600 focus:outline-none focus:border-teal-500 tracking-widest"
+                      className="w-full bg-slate-50 dark:bg-[#1E3248] border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-600 focus:outline-none focus:border-blue-500 tracking-widest"
                     />
                   </div>
 
                   <div>
                     <label className="text-xs text-slate-500 dark:text-gray-400 mb-1.5 block">New Password</label>
                     <div className="relative">
-                      <input type={showPwd ? 'text' : 'password'} placeholder="Min 8 chars, 1 uppercase, 1 number" value={pwdForm.new_password} onChange={e => setPwdForm({...pwdForm, new_password: e.target.value})} className="w-full bg-slate-50 dark:bg-[#1E3248] border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 pr-10 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-600 focus:outline-none focus:border-teal-500" />
+                      <input type={showPwd ? 'text' : 'password'} placeholder="Min 8 chars, 1 uppercase, 1 number" value={pwdForm.new_password} onChange={e => setPwdForm({...pwdForm, new_password: e.target.value})} className="w-full bg-slate-50 dark:bg-[#1E3248] border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 pr-10 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-600 focus:outline-none focus:border-blue-500" />
                       <button type="button" onClick={() => setShowPwd(!showPwd)} className="absolute right-3 top-3.5 text-slate-400 dark:text-gray-400">
                         {showPwd ? <EyeOff size={16} /> : <Eye size={16} />}
                       </button>
@@ -1016,7 +1016,7 @@ const Profile = ({ user, setUser, viewRole }) => {
 
                   <div>
                     <label className="text-xs text-slate-500 dark:text-gray-400 mb-1.5 block">Confirm Password</label>
-                    <input type="password" placeholder="Re-enter new password" value={pwdForm.confirm} onChange={e => setPwdForm({...pwdForm, confirm: e.target.value})} className="w-full bg-slate-50 dark:bg-[#1E3248] border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-600 focus:outline-none focus:border-teal-500" />
+                    <input type="password" placeholder="Re-enter new password" value={pwdForm.confirm} onChange={e => setPwdForm({...pwdForm, confirm: e.target.value})} className="w-full bg-slate-50 dark:bg-[#1E3248] border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-600 focus:outline-none focus:border-blue-500" />
                   </div>
 
                   <div className="flex flex-col-reverse sm:flex-row gap-3 pt-2">
@@ -1030,7 +1030,7 @@ const Profile = ({ user, setUser, viewRole }) => {
                     <button 
                       onClick={handlePasswordReset} 
                       disabled={saving} 
-                      className="w-full sm:flex-1 py-3 bg-teal-600 hover:bg-teal-500 text-white rounded-2xl font-medium transition disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-teal-500/10"
+                      className="w-full sm:flex-1 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl font-medium transition disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-blue-500/10"
                     >
                       <Key size={16} className="flex-shrink-0" />
                       <span>{saving ? 'Updating...' : 'Update Password'}</span>
@@ -1066,7 +1066,7 @@ const Profile = ({ user, setUser, viewRole }) => {
                       e.preventDefault();
                     }
                   }}
-                  className="w-full bg-slate-50 dark:bg-[#1E3248] border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-center text-2xl font-bold tracking-widest text-slate-900 dark:text-white placeholder-slate-300 dark:placeholder-gray-700 focus:outline-none focus:border-teal-500"
+                  className="w-full bg-slate-50 dark:bg-[#1E3248] border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-center text-2xl font-bold tracking-widest text-slate-900 dark:text-white placeholder-slate-300 dark:placeholder-gray-700 focus:outline-none focus:border-blue-500"
                 />
               </div>
             </div>
@@ -1083,7 +1083,7 @@ const Profile = ({ user, setUser, viewRole }) => {
                 type="button"
                 onClick={handleVerifyPhoneOtp}
                 disabled={verifyingPhone}
-                className="w-full sm:flex-1 py-3 bg-teal-600 hover:bg-teal-500 text-white rounded-2xl font-medium transition disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-teal-500/10 text-sm"
+                className="w-full sm:flex-1 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl font-medium transition disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-blue-500/10 text-sm"
               >
                 <span>{verifyingPhone ? 'Verifying...' : 'Verify Code'}</span>
               </button>

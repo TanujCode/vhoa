@@ -291,7 +291,7 @@ export default function Contracts() {
         </div>
         <button
           onClick={() => setIsModalOpen(true)}
-          className="px-5 py-2.5 bg-[#1D9E75] hover:bg-[#15805d] rounded-2xl text-sm font-semibold transition flex items-center gap-2 text-white shadow-lg shadow-teal-950/20 w-full md:w-auto justify-center"
+          className="px-5 py-2.5 bg-[#1D68DF] hover:bg-[#15459E] rounded-2xl text-sm font-semibold transition flex items-center gap-2 text-white shadow-lg shadow-blue-950/20 w-full md:w-auto justify-center"
         >
           <Plus size={15} />
           Create Contract
@@ -299,7 +299,7 @@ export default function Contracts() {
       </div>
 
       {successMsg && (
-        <div className="mb-6 p-4 bg-teal-500/10 border border-teal-500/30 text-[#25C490] text-sm rounded-2xl flex items-center gap-2">
+        <div className="mb-6 p-4 bg-blue-500/10 border border-blue-500/30 text-[#5BA4F5] text-sm rounded-2xl flex items-center gap-2">
           <CheckCircle size={16} />
           <span>{successMsg}</span>
         </div>
@@ -315,11 +315,11 @@ export default function Contracts() {
       {/* Aggregate Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-5 mb-10">
         <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 shadow-sm dark:shadow-none">
-          <div className="text-teal-600 dark:text-teal-400 text-5xl font-mono font-bold">{totalCount}</div>
+          <div className="text-blue-600 dark:text-blue-400 text-5xl font-mono font-bold">{totalCount}</div>
           <div className="text-sm text-slate-500 dark:text-gray-400 mt-2">Total Contracts</div>
         </div>
         <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 shadow-sm dark:shadow-none">
-          <div className="text-[#1D9E75] dark:text-[#25C490] text-5xl font-mono font-bold">{activeCount}</div>
+          <div className="text-[#1D68DF] dark:text-[#5BA4F5] text-5xl font-mono font-bold">{activeCount}</div>
           <div className="text-sm text-slate-500 dark:text-gray-400 mt-2">Active (Ready to Use)</div>
         </div>
         <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 shadow-sm dark:shadow-none">
@@ -341,7 +341,7 @@ export default function Contracts() {
               onClick={() => setFilterStatus(status)}
               className={`px-4 py-2 rounded-xl text-xs font-semibold uppercase tracking-wider transition ${
                 filterStatus === status
-                  ? 'bg-[#1D9E75] text-white'
+                  ? 'bg-[#1D68DF] text-white'
                   : 'text-slate-500 hover:text-slate-800 dark:text-gray-400 dark:hover:text-white'
               }`}
             >
@@ -356,7 +356,7 @@ export default function Contracts() {
             placeholder="Search by code, client, or business..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl text-sm focus:outline-none focus:border-[#1D9E75] text-slate-900 dark:text-white"
+            className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl text-sm focus:outline-none focus:border-[#1D68DF] text-slate-900 dark:text-white"
           />
           <Search size={16} className="absolute left-3.5 top-3.5 text-slate-500 dark:text-gray-400" />
         </div>
@@ -365,7 +365,7 @@ export default function Contracts() {
       {/* Cards Section */}
       {loading && contracts.length === 0 ? (
         <div className="text-center py-20 text-gray-400">
-          <div className="w-8 h-8 border-2 border-teal-500 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+          <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
           Loading contracts...
         </div>
       ) : filteredContracts.length === 0 ? (
@@ -383,7 +383,7 @@ export default function Contracts() {
               {/* Top Row: Code + Status */}
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="font-mono font-bold text-[#1D9E75] dark:text-[#25C490] bg-[#1D9E75]/10 dark:bg-[#25C490]/10 px-3 py-1 rounded-xl text-sm">
+                  <span className="font-mono font-bold text-[#1D68DF] dark:text-[#5BA4F5] bg-[#1D68DF]/10 dark:bg-[#5BA4F5]/10 px-3 py-1 rounded-xl text-sm">
                     {contract.contract_code}
                   </span>
                   <button
@@ -454,7 +454,7 @@ export default function Contracts() {
                     Setup: <span className="font-bold text-slate-800 dark:text-white">${contract.one_time_set_up || '0'}</span>
                   </div>
                   <div className="text-xs text-slate-500 dark:text-gray-400 mt-1">
-                    Renewal: <span className="font-bold text-[#1D9E75] dark:text-[#25C490]">${contract.annual_renewal_fee || '0'}</span>
+                    Renewal: <span className="font-bold text-[#1D68DF] dark:text-[#5BA4F5]">${contract.annual_renewal_fee || '0'}</span>
                   </div>
                 </div>
               </div>
@@ -527,7 +527,7 @@ export default function Contracts() {
             <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-6">
               {/* Sales agent preview */}
               <div className="p-4 bg-slate-50 dark:bg-[#1f3246]/45 border border-slate-200 dark:border-white/5 rounded-2xl flex items-center gap-3 text-xs text-slate-600 dark:text-gray-300">
-                <User size={14} className="text-[#25C490]" />
+                <User size={14} className="text-[#5BA4F5]" />
                 <span>
                   Preparing contract as Sales Agent: <strong className="text-slate-800 dark:text-white">{currentUser?.full_name || currentUser?.email_id || 'System Admin'}</strong>
                 </span>
@@ -536,7 +536,7 @@ export default function Contracts() {
               {/* Section 1: Client Information */}
               <div>
                 <h4 className="text-sm font-semibold uppercase tracking-wider text-slate-700 dark:text-gray-300 border-b border-slate-200 dark:border-white/5 pb-2 mb-4 flex items-center gap-2">
-                  <User size={16} className="text-teal-600 dark:text-teal-400" />
+                  <User size={16} className="text-blue-600 dark:text-blue-400" />
                   1. Client Contact Details
                 </h4>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -549,7 +549,7 @@ export default function Contracts() {
                         validate: validateName('First Name')
                       })}
                       onKeyPress={onlyLettersKeyPress}
-                      className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl px-4 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-[#1D9E75] placeholder-slate-400 dark:placeholder-gray-500"
+                      className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl px-4 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-[#1D68DF] placeholder-slate-400 dark:placeholder-gray-500"
                     />
                     {errors.client_first_name && <span className="text-xs text-red-400 mt-1">{errors.client_first_name.message}</span>}
                   </div>
@@ -559,7 +559,7 @@ export default function Contracts() {
                       type="text"
                       {...register('client_middle_name', { validate: validateName('Middle Name', false) })}
                       onKeyPress={onlyLettersKeyPress}
-                      className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl px-4 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-[#1D9E75] placeholder-slate-400 dark:placeholder-gray-500"
+                      className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl px-4 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-[#1D68DF] placeholder-slate-400 dark:placeholder-gray-500"
                     />
                     {errors.client_middle_name && <span className="text-xs text-red-400 mt-1">{errors.client_middle_name.message}</span>}
                   </div>
@@ -572,7 +572,7 @@ export default function Contracts() {
                         validate: validateName('Last Name')
                       })}
                       onKeyPress={onlyLettersKeyPress}
-                      className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl px-4 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-[#1D9E75] placeholder-slate-400 dark:placeholder-gray-500"
+                      className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl px-4 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-[#1D68DF] placeholder-slate-400 dark:placeholder-gray-500"
                     />
                     {errors.client_last_name && <span className="text-xs text-red-400 mt-1">{errors.client_last_name.message}</span>}
                   </div>
@@ -587,7 +587,7 @@ export default function Contracts() {
                         required: 'Email address is required',
                         validate: validateEmail,
                       })}
-                      className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl px-4 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-[#1D9E75] placeholder-slate-400 dark:placeholder-gray-500"
+                      className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl px-4 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-[#1D68DF] placeholder-slate-400 dark:placeholder-gray-500"
                     />
                     {errors.client_email_address && <span className="text-xs text-red-400 mt-1">{errors.client_email_address.message}</span>}
                   </div>
@@ -613,7 +613,7 @@ export default function Contracts() {
                           setValue('client_phone_only', formatted);
                         }}
                         placeholder="(123) 456-7890"
-                        className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl px-4 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-[#1D9E75] placeholder-slate-400 dark:placeholder-gray-500"
+                        className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl px-4 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-[#1D68DF] placeholder-slate-400 dark:placeholder-gray-500"
                       />
                     </div>
                     {errors.client_phone_only && <span className="text-xs text-red-400 mt-1">{errors.client_phone_only.message}</span>}
@@ -634,7 +634,7 @@ export default function Contracts() {
                       }}
                       readOnly={addressSelected}
                       placeholder={mapboxToken ? "Start typing to search..." : "Street Address"}
-                      className={`w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl px-4 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-[#1D9E75] placeholder-slate-400 dark:placeholder-gray-500 ${
+                      className={`w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl px-4 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-[#1D68DF] placeholder-slate-400 dark:placeholder-gray-500 ${
                         addressSelected ? 'opacity-65 bg-slate-100/50 dark:bg-[#0D1B2A]/50 cursor-not-allowed' : ''
                       }`}
                     />
@@ -642,7 +642,7 @@ export default function Contracts() {
                     {/* Autocomplete suggestions dropdown */}
                     {searchingAddress && (
                       <div className="absolute z-50 w-full mt-1 bg-slate-50 dark:bg-[#1e2f41] border border-slate-200 dark:border-white/10 rounded-xl p-3 text-xs text-gray-500 dark:text-gray-400 flex items-center gap-2">
-                        <RefreshCw size={14} className="animate-spin text-teal-400" />
+                        <RefreshCw size={14} className="animate-spin text-blue-400" />
                         Searching address...
                       </div>
                     )}
@@ -654,7 +654,7 @@ export default function Contracts() {
                             key={feature.id}
                             type="button"
                             onClick={() => handleSelectSuggestion(feature)}
-                            className="w-full text-left px-4 py-2.5 hover:bg-teal-500/10 hover:text-teal-600 dark:hover:text-teal-400 text-xs text-slate-800 dark:text-gray-200 border-b border-slate-200 dark:border-white/5 last:border-0 transition-colors"
+                            className="w-full text-left px-4 py-2.5 hover:bg-blue-500/10 hover:text-blue-600 dark:hover:text-blue-400 text-xs text-slate-800 dark:text-gray-200 border-b border-slate-200 dark:border-white/5 last:border-0 transition-colors"
                           >
                             {feature.place_name}
                           </button>
@@ -669,7 +669,7 @@ export default function Contracts() {
                       {...register('client_city', { validate: validateCity })}
                       onKeyPress={onlyLettersKeyPress}
                       readOnly={addressSelected}
-                      className={`w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl px-4 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-[#1D9E75] placeholder-slate-400 dark:placeholder-gray-500 ${
+                      className={`w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl px-4 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-[#1D68DF] placeholder-slate-400 dark:placeholder-gray-500 ${
                         addressSelected ? 'opacity-65 bg-slate-100/50 dark:bg-[#0D1B2A]/50 cursor-not-allowed' : ''
                       }`}
                     />
@@ -692,7 +692,7 @@ export default function Contracts() {
                       })}
                       onKeyPress={onlyDigitsKeyPress}
                       readOnly={addressSelected}
-                      className={`w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl px-4 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-[#1D9E75] placeholder-slate-400 dark:placeholder-gray-500 ${
+                      className={`w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl px-4 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-[#1D68DF] placeholder-slate-400 dark:placeholder-gray-500 ${
                         addressSelected ? 'opacity-65 bg-slate-100/50 dark:bg-[#0D1B2A]/50 cursor-not-allowed' : ''
                       }`}
                     />
@@ -714,7 +714,7 @@ export default function Contracts() {
                     <label className="block text-xs font-medium text-slate-500 dark:text-gray-400 mb-1">Preferred Communication</label>
                     <select
                       {...register('client_preferred_communication_channel')}
-                      className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl px-4 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-[#1D9E75] placeholder-slate-400 dark:placeholder-gray-500"
+                      className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl px-4 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-[#1D68DF] placeholder-slate-400 dark:placeholder-gray-500"
                     >
                       <option value="email" className="bg-white dark:bg-[#0D1B2A] text-slate-900 dark:text-white">Email</option>
                       <option value="phone" className="bg-white dark:bg-[#0D1B2A] text-slate-900 dark:text-white">Phone</option>
@@ -724,7 +724,7 @@ export default function Contracts() {
                 </div>
 
                 {addressSelected && (
-                  <div className="mt-4 p-3 bg-emerald-500/10 border border-emerald-500/25 rounded-xl flex items-center justify-between text-xs text-[#25C490]">
+                  <div className="mt-4 p-3 bg-emerald-500/10 border border-emerald-500/25 rounded-xl flex items-center justify-between text-xs text-[#5BA4F5]">
                     <div className="flex items-center gap-1.5 font-medium">
                       <CheckCircle size={14} />
                       <span>Address verified & auto-filled via Mapbox.</span>
@@ -732,7 +732,7 @@ export default function Contracts() {
                     <button
                       type="button"
                       onClick={handleResetAddress}
-                      className="underline text-teal-600 dark:text-teal-400 hover:text-teal-500 dark:hover:text-teal-350 font-semibold cursor-pointer"
+                      className="underline text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-350 font-semibold cursor-pointer"
                     >
                       Reset / Edit Address
                     </button>
@@ -756,7 +756,7 @@ export default function Contracts() {
                         validate: validateBusinessName
                       })}
                       placeholder="e.g. Acme Property Management"
-                      className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl px-4 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-[#1D9E75] placeholder-slate-400 dark:placeholder-gray-500"
+                      className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl px-4 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-[#1D68DF] placeholder-slate-400 dark:placeholder-gray-500"
                     />
                     {errors.business_name && <span className="text-xs text-red-400 mt-1">{errors.business_name.message}</span>}
                   </div>
@@ -781,7 +781,7 @@ export default function Contracts() {
                           setValue('business_phone_only', formatted);
                         }}
                         placeholder="(123) 456-7890"
-                        className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl px-4 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-[#1D9E75] placeholder-slate-400 dark:placeholder-gray-500"
+                        className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl px-4 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-[#1D68DF] placeholder-slate-400 dark:placeholder-gray-500"
                       />
                     </div>
                     {errors.business_phone_only && <span className="text-xs text-red-400 mt-1">{errors.business_phone_only.message}</span>}
@@ -792,7 +792,7 @@ export default function Contracts() {
                   <input
                     type="text"
                     {...register('business_address')}
-                    className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl px-4 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-[#1D9E75] placeholder-slate-400 dark:placeholder-gray-500"
+                    className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl px-4 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-[#1D68DF] placeholder-slate-400 dark:placeholder-gray-500"
                   />
                 </div>
               </div>
@@ -826,7 +826,7 @@ export default function Contracts() {
                           }
                         }
                       })}
-                      className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl px-4 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-[#1D9E75] placeholder-slate-400 dark:placeholder-gray-500"
+                      className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl px-4 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-[#1D68DF] placeholder-slate-400 dark:placeholder-gray-500"
                     >
                       <option value="Standard" className="bg-white dark:bg-[#0D1B2A] text-slate-900 dark:text-white">Standard ($999/yr, max 100 units)</option>
                       <option value="Premium" className="bg-white dark:bg-[#0D1B2A] text-slate-900 dark:text-white">Premium ($1999/yr, max 350 units)</option>
@@ -866,7 +866,7 @@ export default function Contracts() {
                           }
                         }
                       })}
-                      className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl px-4 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-[#1D9E75] placeholder-slate-400 dark:placeholder-gray-500"
+                      className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl px-4 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-[#1D68DF] placeholder-slate-400 dark:placeholder-gray-500"
                     />
                     {errors.size_of_the_community && <span className="text-xs text-red-400 mt-1">{errors.size_of_the_community.message}</span>}
                   </div>
@@ -874,7 +874,7 @@ export default function Contracts() {
                     <label className="block text-xs font-medium text-slate-500 dark:text-gray-400 mb-1">Renewal Cycle *</label>
                     <select
                       {...register('renewal_cycle', { required: true })}
-                      className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl px-4 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-[#1D9E75] placeholder-slate-400 dark:placeholder-gray-500"
+                      className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl px-4 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-[#1D68DF] placeholder-slate-400 dark:placeholder-gray-500"
                     >
                       <option value="monthly" className="bg-white dark:bg-[#0D1B2A] text-slate-900 dark:text-white">Monthly</option>
                       <option value="Annual" className="bg-white dark:bg-[#0D1B2A] text-slate-900 dark:text-white">Annual</option>
@@ -889,7 +889,7 @@ export default function Contracts() {
                       type="number"
                       step="0.01"
                       {...register('one_time_set_up', { required: 'Setup fee is required', min: 0 })}
-                      className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl px-4 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-[#1D9E75] placeholder-slate-400 dark:placeholder-gray-500"
+                      className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl px-4 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-[#1D68DF] placeholder-slate-400 dark:placeholder-gray-500"
                     />
                     {errors.one_time_set_up && <span className="text-xs text-red-400 mt-1">{errors.one_time_set_up.message}</span>}
                   </div>
@@ -899,7 +899,7 @@ export default function Contracts() {
                       type="number"
                       step="0.01"
                       {...register('annual_renewal_fee', { required: 'Renewal fee is required', min: 0 })}
-                      className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl px-4 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-[#1D9E75] placeholder-slate-400 dark:placeholder-gray-500"
+                      className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl px-4 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-[#1D68DF] placeholder-slate-400 dark:placeholder-gray-500"
                     />
                     {errors.annual_renewal_fee && <span className="text-xs text-red-400 mt-1">{errors.annual_renewal_fee.message}</span>}
                   </div>
@@ -914,7 +914,7 @@ export default function Contracts() {
                     type="radio"
                     value="ACTIVE"
                     {...register('status')}
-                    className="accent-[#1D9E75]"
+                    className="accent-[#1D68DF]"
                   />
                   <span>Active (Ready for Onboarding)</span>
                 </label>
@@ -923,7 +923,7 @@ export default function Contracts() {
                     type="radio"
                     value="DRAFT"
                     {...register('status')}
-                    className="accent-[#1D9E75]"
+                    className="accent-[#1D68DF]"
                   />
                   <span>Draft (Hidden)</span>
                 </label>
@@ -941,7 +941,7 @@ export default function Contracts() {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="px-6 py-2.5 bg-[#1D9E75] hover:bg-[#15805d] rounded-xl text-sm font-medium transition text-white disabled:opacity-50 flex items-center gap-2"
+                  className="px-6 py-2.5 bg-[#1D68DF] hover:bg-[#15459E] rounded-xl text-sm font-medium transition text-white disabled:opacity-50 flex items-center gap-2"
                 >
                   {submitting && (
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>

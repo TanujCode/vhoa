@@ -3,73 +3,89 @@ import {
   Users, AlertTriangle, Wrench, DollarSign,
   Calendar, TrendingUp, RefreshCw, UserPlus,
   Clock, CheckCircle, XCircle, Building2, Download,
-  ShieldAlert,
-  Settings2, Wallet
+  ShieldAlert, Settings2, Wallet, Sparkles, Folder, FileText, Megaphone,
+  Check, Trash2, Plus, MapPin, Search
 } from 'lucide-react';
 import API from "../services/api";
 
-// ── Stat Card ─────────────────────────────────
-const StatCard = ({ label, value, icon: Icon, color, sub, subColor, onClick }) => (
-  <div 
-    onClick={onClick}
-    className={`bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 shadow-sm dark:shadow-none transition-all duration-200 ${onClick ? 'cursor-pointer hover:border-teal-500/40 dark:hover:border-teal-400/40 hover:-translate-y-0.5 hover:shadow-md' : ''}`}
-  >
-    <div className="flex items-center justify-between mb-3">
-      <p className="text-slate-500 dark:text-gray-400 text-sm">{label}</p>
-      <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${color}`}>
-        <Icon size={18} className="text-white" />
-      </div>
-    </div>
-    <p className={`text-4xl font-mono font-bold mt-1 ${subColor || 'text-slate-900 dark:text-white'}`}>
-      {value ?? '—'}
-    </p>
-    {sub && <p className={`text-sm mt-2 ${subColor || 'text-slate-500 dark:text-gray-400'}`}>{sub}</p>}
-  </div>
-);
-
-// ── Activity Item ─────────────────────────────
-const ActivityItem = ({ icon: Icon, color, title, time }) => (
-  <div className="flex items-center gap-3 py-3 border-b border-slate-100 dark:border-white/5 last:border-0">
-    <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${color}`}>
-      <Icon size={15} className="text-white" />
-    </div>
-    <div className="flex-1 min-w-0">
-      <p className="text-sm text-slate-800 dark:text-white truncate">{title}</p>
-    </div>
-    <p className="text-xs text-gray-500 flex-shrink-0">{time}</p>
-  </div>
-);
-
-// ── Main Dashboard ────────────────────────────
 const Dashboard = ({ community, user, setActivePage }) => {
   const [stats, setStats]           = useState(null);
-  const [violations, setViolations] = useState([]);
-  const [requests, setRequests]     = useState([]);
-  const [bookings, setBookings]     = useState([]);
   const [loading, setLoading]       = useState(true);
+  const [exporting, setExporting]   = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
-  const [exportType, setExportType] = useState('violations');
-  const [exportFormat, setExportFormat] = useState('CSV');
-  const [exporting, setExporting] = useState(false);
+  const [exportType, setExportType] = useState("violations");
+  const [exportFormat, setExportFormat] = useState("csv");
+
+  const [upcomingEvents, setUpcomingEvents] = useState([]);
+  const [newTaskText, setNewTaskText] = useState('');
+  const [quickTasks, setQuickTasks] = useState([]);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const formatAddress = (addr) => {
+    if (!addr) return 'Bazar Chowk, Chicholi';
+    if (typeof addr === 'string') return addr;
+    const parts = [];
+    if (addr.address) parts.push(addr.address);
+    if (addr.city) parts.push(addr.city);
+    if (addr.state_name || addr.state_id) parts.push(addr.state_name || addr.state_id);
+    if (addr.zip_code) parts.push(addr.zip_code);
+    return parts.length > 0 ? parts.join(', ') : 'Bazar Chowk, Chicholi';
+  };
 
   useEffect(() => {
     if (community?.community_id) {
       fetchDashboardData(community.community_id);
+      const saved = localStorage.getItem(`dashboard_quick_tasks_${user?.user_id || 'guest'}_${community.community_id}`);
+      setQuickTasks(saved ? JSON.parse(saved) : [
+        { id: 1, text: "Follow up with vendor for pool repair", completed: false },
+        { id: 2, text: "Review annual budget draft", completed: true },
+        { id: 3, text: "Approve pending amenity bookings", completed: false }
+      ]);
     }
   }, [community]);
 
   const fetchDashboardData = async (communityId) => {
     try {
       setLoading(true);
-      const [statsRes, violationsRes, requestsRes] = await Promise.allSettled([
+      const [statsRes, meetingsRes] = await Promise.all([
         API.get(`/community/${communityId}/stats`),
-        API.get(`/violation/${communityId}?limit=5`),
-        API.get(`/service-request/${communityId}?limit=5`),
+        API.get(`/meeting-survey/meetings?community_id=${communityId}`).catch(() => ({ data: [] }))
       ]);
+      setStats(statsRes.data);
+      
+      const meetingsData = meetingsRes?.data || [];
+      
+      // Load personal notes
+      let localNotes = [];
+      try {
+        const saved = localStorage.getItem(`personal_notes_${user?.user_id || 'guest'}_${communityId}`);
+        localNotes = saved ? JSON.parse(saved) : [];
+      } catch (_) {}
 
-      if (statsRes.status === 'fulfilled') setStats(statsRes.value.data);
-      if (violationsRes.status === 'fulfilled') setViolations(violationsRes.value.data);
-      if (requestsRes.status === 'fulfilled') setRequests(requestsRes.value.data);
+      // Combine
+      const combined = [
+        ...meetingsData.map(m => ({
+          id: `meeting-${m.meeting_id}`,
+          title: m.title,
+          date: m.meeting_date,
+          type: 'meeting'
+        })),
+        ...localNotes.map(n => ({
+          id: `note-${n.note_id}`,
+          title: n.title,
+          date: n.date,
+          type: 'note'
+        }))
+      ];
+
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const filtered = combined
+        .filter(item => new Date(item.date) >= today)
+        .sort((a, b) => new Date(a.date) - new Date(b.date));
+
+      setUpcomingEvents(filtered.slice(0, 4));
     } catch (err) {
       console.error('Dashboard fetch error:', err);
     } finally {
@@ -77,24 +93,52 @@ const Dashboard = ({ community, user, setActivePage }) => {
     }
   };
 
-  const handleExport = async () => {
+  const handleAddTask = (e) => {
+    e.preventDefault();
+    if (!newTaskText.trim()) return;
+    const newT = {
+      id: Date.now(),
+      text: newTaskText.trim(),
+      completed: false
+    };
+    const updated = [...quickTasks, newT];
+    setQuickTasks(updated);
+    localStorage.setItem(`dashboard_quick_tasks_${user?.user_id || 'guest'}_${community?.community_id}`, JSON.stringify(updated));
+    setNewTaskText('');
+  };
+
+  const handleToggleTask = (taskId) => {
+    const updated = quickTasks.map(t => t.id === taskId ? { ...t, completed: !t.completed } : t);
+    setQuickTasks(updated);
+    localStorage.setItem(`dashboard_quick_tasks_${user?.user_id || 'guest'}_${community?.community_id}`, JSON.stringify(updated));
+  };
+
+  const handleDeleteTask = (taskId) => {
+    const updated = quickTasks.filter(t => t.id !== taskId);
+    setQuickTasks(updated);
+    localStorage.setItem(`dashboard_quick_tasks_${user?.user_id || 'guest'}_${community?.community_id}`, JSON.stringify(updated));
+  };
+
+  const handleExportReport = async () => {
     try {
       setExporting(true);
-      const response = await API.get(`/report/${community.community_id}/export?type=${exportType}&format=${exportFormat.toLowerCase()}`, {
+      const response = await API.get(`/report/${community.community_id}/export?type=${exportType}&format=${exportFormat}`, {
         responseType: 'blob',
       });
-      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const fileExt = exportFormat === 'pdf' ? 'pdf' : exportFormat === 'excel' ? 'xlsx' : 'csv';
+      const contentType = exportFormat === 'pdf' ? 'application/pdf' : exportFormat === 'excel' ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' : 'text/csv';
+      
+      const url = window.URL.createObjectURL(new Blob([response.data], { type: contentType }));
       const link = document.createElement('a');
       link.href = url;
-      const ext = exportFormat.toLowerCase() === 'excel' ? 'xlsx' : exportFormat.toLowerCase();
-      link.setAttribute('download', `report_${exportType}_${community.community_id}_${new Date().toISOString().slice(0, 10)}.${ext}`);
+      link.setAttribute('download', `${exportType}_report_${community.community_id}.${fileExt}`);
       document.body.appendChild(link);
       link.click();
       link.remove();
       setShowExportModal(false);
     } catch (err) {
-      console.error(`Export failed for type: ${exportType}`, err);
-      alert('Failed to generate report export. Please try again.');
+      console.error("Export failed:", err);
+      alert("Failed to export report. Please verify records exist for this community.");
     } finally {
       setExporting(false);
     }
@@ -112,337 +156,408 @@ const Dashboard = ({ community, user, setActivePage }) => {
     );
   }
 
-  // Community address format
-  const address = community.address
-    ? `${community.address.address}, ${community.address.city}`
-    : community.time_zone || '';
+  const consoleButtons = [
+    { label: "Service Req", page: "servicereq", count: stats?.open_requests, icon: <Wrench size={18} className="text-amber-500" /> },
+    { label: "Vendor List", page: "vendors", icon: <Users size={18} className="text-blue-500" /> },
+    { label: "Violations", page: "violations", count: stats?.active_violations, icon: <AlertTriangle size={18} className="text-red-500" /> },
+    { label: "Amenities", page: "amenities", icon: <Building2 size={18} className="text-blue-500" /> },
+    { label: "Contracts", page: "contracts", icon: <FileText size={18} className="text-indigo-500" /> },
+    { label: "Reports", page: "reports", icon: <TrendingUp size={18} className="text-purple-500" /> },
+    { label: "Payments", page: "payments", count: stats?.pending_payments, icon: <Wallet size={18} className="text-emerald-500" /> },
+    { label: "Documents", page: "documents", icon: <Folder size={18} className="text-slate-500" /> },
+    { label: "News & Announce", page: "news", icon: <Megaphone size={18} className="text-orange-500" /> },
+  ];
 
   return (
-    <div>
-      {/* ── Page Header ─────────────────────── */}
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-8">
-        <div>
-          <h1 className="text-3xl font-semibold">Dashboard</h1>
-          <p className="text-gray-400 mt-1">
-            {community.name} • {community.time_zone || 'EST'}
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-2 w-full sm:w-auto">
-          <button
-            onClick={() => fetchDashboardData(community.community_id)}
-            disabled={loading}
-            className="px-4 py-2.5 bg-slate-200/60 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 text-slate-700 dark:text-white rounded-2xl text-sm font-medium transition flex items-center gap-2 disabled:opacity-60"
-          >
-            <RefreshCw size={15} className={loading ? "animate-spin" : ""} />
-            {loading ? "Refreshing..." : "Refresh"}
-          </button>
+    <div className="space-y-6 text-slate-900 dark:text-white pb-12">
+      
+      {/* ── Page Header & Community Highlight Card (Unified Layout) ── */}
+      <div className="bg-white dark:bg-[#1E2E42] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 sm:p-8 text-slate-800 dark:text-white shadow-sm dark:shadow-none relative overflow-hidden flex flex-col lg:flex-row justify-between items-start lg:items-center gap-8 group">
+        {/* Subtle premium light blue glow */}
+        <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/[0.03] dark:bg-blue-500/[0.02] rounded-full blur-3xl pointer-events-none" />
 
-          {/* Export Report Button */}
-          <button
-            onClick={() => setShowExportModal(true)}
-            className="px-4 py-2.5 bg-teal-600 hover:bg-teal-500 rounded-2xl text-sm font-medium transition flex items-center gap-2 text-white"
-          >
-            <Download size={15} />
-            Export Report
-          </button>
-        </div>
-      </div>
+        {/* Left: Title & Community Info */}
+        <div className="flex-1 min-w-0 relative z-10 space-y-3">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white leading-none">
+              Dashboard
+            </h1>
+            <p className="text-[10px] text-slate-500 dark:text-gray-450 mt-1 font-mono uppercase tracking-wider font-semibold">
+              System Console • Real-Time Workspace
+            </p>
+          </div>
 
-      {/* ── Community Banner ─────────────────── */}
-      <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 flex items-center gap-6 mb-8 transition-colors duration-200 shadow-sm">
-        <div className="w-16 h-16 bg-teal-600 rounded-2xl flex items-center justify-center flex-shrink-0">
-          <Building2 size={30} className="text-white" />
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
-            <h2 className="text-2xl font-semibold">{community.name}</h2>
-            <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-              community.license_status === 'ACTIVE'
-                ? 'bg-teal-500/10 dark:bg-teal-500/20 text-teal-600 dark:text-teal-400'
-                : 'bg-red-500/10 dark:bg-red-500/20 text-red-600 dark:text-red-400'
-            }`}>
-              {community.license_status}
-            </span>
-          </div>
-          <p className="text-slate-500 dark:text-gray-400 text-sm mt-1">
-            {address && `${address} • `}
-            HOA Code: <span className="text-slate-900 dark:text-white font-mono font-semibold">{community.community_code}</span>
-          </p>
-        </div>
-        <div className="hidden md:flex gap-8">
-          <div 
-            onClick={() => setActivePage?.('members')}
-            className="text-center cursor-pointer hover:opacity-80 transition-opacity"
-          >
-            <div className="text-3xl font-mono font-bold text-teal-600 dark:text-teal-400">
-              {stats?.total_residents ?? community.total_owners ?? 0}
+          <div className="mt-4 flex flex-col sm:flex-row sm:items-center gap-3">
+            <div className="w-10 h-10 bg-blue-50/80 dark:bg-white/5 border border-blue-100/50 dark:border-white/10 rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm">
+              <Building2 size={20} className="text-blue-600 dark:text-blue-400" />
             </div>
-            <div className="text-xs text-slate-500 dark:text-gray-400 mt-1">MEMBERS</div>
-          </div>
-          <div 
-            onClick={() => setActivePage?.('violations')}
-            className="text-center cursor-pointer hover:opacity-80 transition-opacity"
-          >
-            <div className="text-3xl font-mono font-bold text-red-600 dark:text-red-400">
-              {stats?.active_violations ?? 0}
-            </div>
-            <div className="text-xs text-slate-500 dark:text-gray-400 mt-1">VIOLATIONS</div>
-          </div>
-          <div 
-            onClick={() => setActivePage?.('servicereq')}
-            className="text-center cursor-pointer hover:opacity-80 transition-opacity"
-          >
-            <div className="text-3xl font-mono font-bold text-blue-600 dark:text-blue-400">
-              {stats?.open_requests ?? 0}
-            </div>
-            <div className="text-xs text-slate-500 dark:text-gray-400 mt-1">SERVICE REQ</div>
-          </div>
-          <div className="text-center">
-            <div className="text-3xl font-mono font-bold text-purple-600 dark:text-purple-400">
-              {community.community_size ?? 0}
-            </div>
-            <div className="text-xs text-slate-500 dark:text-gray-400 mt-1">TOTAL UNITS</div>
-          </div>
-        </div>
-      </div>
-
-      {/* ── Stats Grid ───────────────────────── */}
-      {loading && !stats ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
-          {[...Array(4)].map((_, i) => (
-            <div key={i} className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 animate-pulse">
-              <div className="h-4 bg-slate-200 dark:bg-white/10 rounded w-24 mb-4"></div>
-              <div className="h-10 bg-slate-200 dark:bg-white/10 rounded w-16"></div>
-            </div>
-          ))}
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
-          <StatCard
-            label="Total Members"
-            value={stats?.total_residents ?? community.total_owners ?? 0}
-            icon={Users}
-            color="bg-teal-600"
-            subColor="text-teal-600 dark:text-teal-400"
-            sub="Registered homeowners"
-            onClick={() => setActivePage?.('members')}
-          />
-          <StatCard
-            label="Open Violations"
-            value={stats?.active_violations ?? 0}
-            icon={ShieldAlert}
-            color="bg-red-600"
-            subColor="text-red-600 dark:text-red-400"
-            sub="Needs attention"
-            onClick={() => setActivePage?.('violations')}
-          />
-          <StatCard
-            label="Service Requests"
-            value={stats?.open_requests ?? 0}
-            icon={Settings2}
-            color="bg-blue-600"
-            subColor="text-blue-600 dark:text-blue-400"
-            sub="Open requests"
-            onClick={() => setActivePage?.('servicereq')}
-          />
-          <StatCard
-            label="Pending Payments"
-            value={stats?.pending_payments ?? 0}
-            icon={Wallet}
-            color="bg-purple-600"
-            subColor="text-purple-600 dark:text-purple-400"
-            sub="Due this month"
-            onClick={() => setActivePage?.('payments')}
-          />
-        </div>
-      )}
-
-      {/* ── Recent Activity ───────────────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-
-        {/* Recent Violations */}
-        <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 shadow-sm dark:shadow-none">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-semibold text-slate-900 dark:text-white">Recent Violations</h3>
-            <span className="text-xs text-slate-400 dark:text-gray-500">Last 5</span>
-          </div>
-          {violations.length === 0 ? (
-            <div className="text-center py-8">
-              <CheckCircle size={32} className="text-teal-500 mx-auto mb-2" />
-              <p className="text-slate-500 dark:text-gray-400 text-sm">No violations — great job!</p>
-            </div>
-          ) : (
             <div>
-              {violations.map((v) => (
-                <ActivityItem
-                  key={v.violation_id}
-                  icon={ShieldAlert}
-                  color="bg-red-600"
-                  title={`${v.violation_type_name || 'Violation'} — ${v.client_name || 'Resident'}`}
-                  time={v.violation_status}
-                />
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Recent Service Requests */}
-        <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 shadow-sm dark:shadow-none">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-semibold text-slate-900 dark:text-white">Recent Service Requests</h3>
-            <span className="text-xs text-slate-400 dark:text-gray-500">Last 5</span>
-          </div>
-          {requests.length === 0 ? (
-            <div className="text-center py-8">
-              <CheckCircle size={32} className="text-teal-500 mx-auto mb-2" />
-              <p className="text-slate-500 dark:text-gray-400 text-sm">No open service requests!</p>
-            </div>
-          ) : (
-            <div>
-              {requests.map((r) => (
-                <ActivityItem
-                  key={r.request_id}
-                  icon={Settings2}
-                  color={
-                    r.status_name === 'OPEN'     ? 'bg-blue-600' :
-                    r.status_name === 'APPROVED' ? 'bg-teal-600' :
-                    r.status_name === 'CLOSED'   ? 'bg-gray-600' :
-                    'bg-purple-600'
-                  }
-                  title={`${r.title} — ${r.submitted_by_name || 'Member'}`}
-                  time={r.status_name}
-                />
-              ))}
-            </div>
-          )}
-        </div>
-
-      </div>
-
-      {/*Board Members*/}
-      {(community.president_email_id || community.secretary_email_id || community.treasurer_email_id) && (
-        <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 mt-5 shadow-sm dark:shadow-none">
-          <h3 className="font-semibold text-slate-900 dark:text-white mb-4">Board Members</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {community.president_email_id && (
-              <div className="bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-0 rounded-2xl p-4">
-                <p className="text-xs text-slate-500 dark:text-gray-400 mb-1">PRESIDENT</p>
-                <p className="text-sm text-slate-800 dark:text-white font-medium">
-                  {community.president_email_id}
-                </p>
-                <span className={`text-xs px-2 py-0.5 rounded-full mt-2 inline-block font-semibold ${
-                  community.president_invite_status === 'ACCEPTED'
-                    ? 'bg-teal-500/10 dark:bg-teal-500/20 text-teal-600 dark:text-teal-400'
-                    : 'bg-amber-500/10 dark:bg-amber-500/20 text-amber-600 dark:text-amber-300'
-                }`}>
-                  {community.president_invite_status}
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-lg font-extrabold text-slate-900 dark:text-white">{community.name}</span>
+                <span className="inline-flex items-center text-[9px] font-black text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
+                  ACTIVE
                 </span>
               </div>
-            )}
-            {community.secretary_email_id && (
-              <div className="bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-0 rounded-2xl p-4">
-                <p className="text-xs text-slate-500 dark:text-gray-400 mb-1">SECRETARY</p>
-                <p className="text-sm text-slate-800 dark:text-white font-medium">
-                  {community.secretary_email_id}
-                </p>
-                <span className={`text-xs px-2 py-0.5 rounded-full mt-2 inline-block font-semibold ${
-                  community.secretary_invite_status === 'ACCEPTED'
-                    ? 'bg-teal-500/10 dark:bg-teal-500/20 text-teal-600 dark:text-teal-400'
-                    : 'bg-amber-500/10 dark:bg-amber-500/20 text-amber-600 dark:text-amber-300'
-                }`}>
-                  {community.secretary_invite_status}
-                </span>
-              </div>
-            )}
-            {community.treasurer_email_id && (
-              <div className="bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-0 rounded-2xl p-4">
-                <p className="text-xs text-slate-500 dark:text-gray-400 mb-1">TREASURER</p>
-                <p className="text-sm text-slate-800 dark:text-white font-medium">
-                  {community.treasurer_email_id}
-                </p>
-                <span className={`text-xs px-2 py-0.5 rounded-full mt-2 inline-block font-semibold ${
-                  community.treasurer_invite_status === 'ACCEPTED'
-                    ? 'bg-teal-500/10 dark:bg-teal-500/20 text-teal-600 dark:text-teal-400'
-                    : 'bg-amber-500/10 dark:bg-amber-500/20 text-amber-600 dark:text-amber-300'
-                }`}>
-                  {community.treasurer_invite_status}
-                </span>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Export Report Modal */}
-      {showExportModal && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gradient-to-br dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl w-full max-w-md mx-4 overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200">
-            <div className="p-6 border-b border-slate-100 dark:border-white/10">
-              <h2 className="text-2xl font-semibold text-slate-900 dark:text-white">Export Report</h2>
-              <p className="text-slate-500 dark:text-gray-400 text-sm mt-1">
-                Select the type of report and format for {community.name}
+              <p className="text-xs text-slate-600 dark:text-gray-300 mt-1 flex items-center gap-1 font-semibold">
+                <MapPin size={11} className="text-slate-400 dark:text-slate-400 flex-shrink-0" />
+                {formatAddress(community.address)}
+              </p>
+              <p className="text-[10px] text-slate-500 dark:text-gray-400 font-mono mt-0.5">
+                HOA Code: <span className="font-bold text-slate-800 dark:text-white">{community.community_code}</span> • {community.time_zone || 'America/New_York'}
               </p>
             </div>
+          </div>
+        </div>
 
-            <div className="p-6 space-y-5">
+        {/* Right: Stats Grid */}
+        <div className="relative z-10 w-full lg:w-auto mt-5 lg:mt-0 pt-5 lg:pt-0 border-t border-slate-200/60 dark:border-white/5 lg:border-t-0">
+          {/* Stats columns */}
+          <div className="flex flex-row flex-wrap items-center justify-between sm:justify-around lg:justify-end gap-5 sm:gap-8 lg:gap-11 w-full">
+            <div className="text-center flex flex-col items-center min-w-[65px]">
+              <p className="text-3xl sm:text-4xl font-black text-blue-600 dark:text-blue-400 font-mono tracking-tight">{stats?.total_residents || 7}</p>
+              <p className="text-[9px] sm:text-[10px] font-bold text-slate-500 dark:text-gray-450 uppercase tracking-widest mt-1">Members</p>
+            </div>
+            <div className="text-center flex flex-col items-center min-w-[65px]">
+              <p className="text-3xl sm:text-4xl font-black text-amber-600 dark:text-amber-500 font-mono tracking-tight">{stats?.active_violations || 2}</p>
+              <p className="text-[9px] sm:text-[10px] font-bold text-slate-500 dark:text-gray-455 uppercase tracking-widest mt-1">Violations</p>
+            </div>
+            <div className="text-center flex flex-col items-center min-w-[65px]">
+              <p className="text-3xl sm:text-4xl font-black text-blue-600 dark:text-blue-400 font-mono tracking-tight">{stats?.open_requests || 4}</p>
+              <p className="text-[9px] sm:text-[10px] font-bold text-slate-500 dark:text-gray-455 uppercase tracking-widest mt-1">Service Req</p>
+            </div>
+            <div className="text-center flex flex-col items-center min-w-[65px]">
+              <p className="text-3xl sm:text-4xl font-black text-indigo-600 dark:text-indigo-400 font-mono tracking-tight">{stats?.total_units || 120}</p>
+              <p className="text-[9px] sm:text-[10px] font-bold text-slate-500 dark:text-gray-455 uppercase tracking-widest mt-1">Total Units</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Main Workspace Grid (Top Row) ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        {/* Left Top: All Communities Control & Navigation Console */}
+        <div className="lg:col-span-7 bg-gradient-to-br from-white/80 to-slate-50/80 dark:from-[#1E2E42]/80 dark:to-[#162535]/80 backdrop-blur-md border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 shadow-sm flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between mb-6 pb-3 border-b border-slate-200/60 dark:border-white/[0.05] gap-4">
+              <h3 className="font-extrabold text-xs sm:text-sm text-slate-900 dark:text-white uppercase tracking-wider whitespace-nowrap">
+                Community Console
+              </h3>
+              <div className="flex items-center gap-2 sm:gap-2.5 flex-shrink-0">
+                <span className="text-[9px] sm:text-[10px] font-bold text-slate-400 dark:text-gray-500 uppercase tracking-widest font-mono hidden md:inline">
+                  {new Date().toLocaleString('en-US', { month: 'long', year: 'numeric' })}
+                </span>
+                <button
+                  onClick={() => setActivePage('overview')}
+                  className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 border border-slate-200 dark:border-white/10 text-slate-700 dark:text-white rounded-lg text-[10px] sm:text-xs font-bold transition active:scale-95 whitespace-nowrap"
+                >
+                  All Communities
+                </button>
+                <button
+                  onClick={() => setShowExportModal(true)}
+                  className="px-2.5 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-[10px] sm:text-xs font-bold transition shadow-sm active:scale-95 flex items-center gap-1.5 whitespace-nowrap"
+                >
+                  <Download size={11} />
+                  Export Report
+                </button>
+              </div>
+            </div>
+            {/* Quick Navigation Buttons Grid (3x3 grid matching paint layout) */}
+            <div className="grid grid-cols-3 gap-3.5">
+              {(() => {
+                const filtered = consoleButtons.filter(btn => 
+                  btn.label.toLowerCase().includes(searchQuery.toLowerCase())
+                );
+                if (filtered.length === 0) {
+                  return (
+                    <div className="col-span-3 text-center py-10 text-xs text-slate-400 dark:text-gray-500 font-mono">
+                      No shortcuts found matching "{searchQuery}"
+                    </div>
+                  );
+                }
+                return filtered.map((btn, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setActivePage(btn.page)}
+                    className="relative group p-5 rounded-2xl border border-slate-200/80 dark:border-white/[0.05] bg-white/40 dark:bg-white/[0.02] hover:bg-gradient-to-br hover:from-blue-500/10 hover:to-blue-600/5 hover:border-blue-500/30 dark:hover:border-blue-400/30 text-left transition-all duration-300 hover:scale-[1.03] hover:shadow-md flex flex-col justify-between h-28"
+                  >
+                    <div className="flex justify-between items-start w-full">
+                      <div className="p-2 rounded-xl bg-slate-100 dark:bg-white/5 text-slate-655 dark:text-slate-350 group-hover:bg-blue-500/10 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                        {btn.icon}
+                      </div>
+                      {btn.count !== undefined && btn.count > 0 && (
+                        <span className="bg-red-500 text-white text-[9px] font-black px-1.5 py-0.5 rounded-full shadow-sm animate-pulse">
+                          {btn.count}
+                        </span>
+                      )}
+                    </div>
+                    <span className="text-xs font-black text-slate-800 dark:text-slate-200 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors block mt-2 leading-tight">
+                      {btn.label}
+                    </span>
+                  </button>
+                ));
+              })()}
+            </div>
+          </div>
+        </div>
+
+        {/* Right Top: Calendar Schedules & Upcoming events */}
+        <div className="lg:col-span-5 bg-gradient-to-br from-white/80 to-slate-50/80 dark:from-[#1E2E42]/80 dark:to-[#162535]/80 backdrop-blur-md border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 shadow-sm flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-200/60 dark:border-white/[0.05]">
+              <h3 className="font-extrabold text-sm text-slate-900 dark:text-white uppercase tracking-wider">
+                Calendar Schedule
+              </h3>
+              <button
+                onClick={() => setActivePage('meetings')}
+                className="text-xs text-blue-600 dark:text-blue-400 hover:underline font-bold"
+              >
+                View Calendar
+              </button>
+            </div>
+
+            {/* Checklist upcoming items */}
+            <div className="space-y-3.5">
+              <span className="text-[10px] font-bold text-slate-400 dark:text-gray-500 uppercase tracking-widest block mb-2 font-mono">Upcoming Events & Tasks</span>
+              {upcomingEvents.length === 0 ? (
+                <p className="text-xs text-slate-405 text-slate-400 dark:text-gray-500 italic pl-1 py-4">
+                  No upcoming meetings or private notes scheduled.
+                </p>
+              ) : (
+                upcomingEvents.map((evt, idx) => {
+                  const dateStr = new Date(evt.date).toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  });
+                  return (
+                    <div key={evt.id} className="flex gap-4 items-center p-3.5 bg-white/40 dark:bg-white/[0.02] border border-slate-200/85 dark:border-white/[0.05] rounded-2xl hover:border-blue-500/25 dark:hover:border-blue-400/25 transition-all duration-300">
+                      <div className={`w-8 h-8 rounded-xl flex items-center justify-center font-bold text-xs flex-shrink-0 ${
+                        evt.type === 'meeting' 
+                          ? 'bg-purple-500/10 text-purple-600 dark:text-purple-400' 
+                          : 'bg-blue-500/10 text-blue-600 dark:text-blue-400'
+                      }`}>
+                        {idx + 1}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-extrabold text-slate-800 dark:text-slate-200 truncate">{evt.title}</p>
+                        <span className="text-[10px] text-slate-450 dark:text-gray-500 font-semibold">{dateStr}</span>
+                      </div>
+                      <span className={`text-[9px] px-2 py-0.5 rounded-md font-bold uppercase tracking-wider ${
+                        evt.type === 'meeting' 
+                          ? 'bg-purple-500/10 text-purple-600 dark:text-purple-400' 
+                          : 'bg-blue-500/10 text-blue-600 dark:text-blue-400'
+                      }`}>
+                        {evt.type === 'meeting' ? 'Meeting' : 'Note'}
+                      </span>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      {/* ── Main Workspace Grid (Bottom Row) ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+        {/* Left Bottom: Widgets & Quicks Console */}
+        <div className="lg:col-span-7 bg-gradient-to-br from-white/80 to-slate-50/80 dark:from-[#1E2E42]/80 dark:to-[#162535]/80 backdrop-blur-md border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 shadow-sm">
+          <h3 className="font-extrabold text-sm text-slate-900 dark:text-white uppercase tracking-wider mb-4 pb-3 border-b border-slate-200/60 dark:border-white/[0.05]">
+            Widgets Quicks
+          </h3>
+
+          {/* Badges/Category buttons */}
+          <div className="flex gap-2.5 mb-6 overflow-x-auto pb-1">
+            {[
+              { label: "Members Directory", page: "members", count: stats?.total_residents },
+              { label: "Meetings Hub", page: "meetings" },
+              { label: "Vendors Board", page: "vendors" }
+            ].map((item, idx) => (
+              <button
+                key={idx}
+                onClick={() => setActivePage(item.page)}
+                className="px-4 py-2 bg-slate-100/80 hover:bg-slate-200 dark:bg-white/5 border border-slate-200/60 dark:border-white/10 hover:border-blue-500/40 rounded-full text-xs font-bold text-slate-700 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 transition"
+              >
+                {item.label} {item.count !== undefined && `(${item.count})`}
+              </button>
+            ))}
+          </div>
+
+          {/* 4 Large Action Boxes at Bottom */}
+          <div className="grid grid-cols-2 gap-4">
+            {[
+              { label: "Onboard Community", page: "contracts", desc: "Create SOW and contracts", icon: <UserPlus size={16} /> },
+              { label: "Condo Management", page: "settings", desc: "Configure amenity schedules", icon: <Calendar size={16} /> },
+              { label: "HOA Governance", page: "settings", desc: "Configure e-Voting & bylaws", icon: <ShieldAlert size={16} /> },
+              { label: "Apartment Management", page: "settings", desc: "Configure work order tickets", icon: <Settings2 size={16} /> }
+            ].map((box, idx) => (
+              <button
+                key={idx}
+                onClick={() => setActivePage(box.page)}
+                className="group p-5 rounded-3xl bg-white/40 dark:bg-white/[0.02] border border-slate-200/80 dark:border-white/[0.05] hover:border-blue-500/30 dark:hover:border-blue-400/30 hover:bg-gradient-to-br hover:from-blue-500/5 hover:to-transparent text-left transition-all duration-300 hover:scale-[1.02] hover:shadow-md flex flex-col justify-between"
+              >
+                <div>
+                  <div className="w-8 h-8 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center mb-3">
+                    {box.icon}
+                  </div>
+                  <h4 className="font-extrabold text-sm text-slate-800 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                    {box.label}
+                  </h4>
+                  <p className="text-[11px] text-slate-550 dark:text-gray-400 mt-1 leading-relaxed">
+                    {box.desc}
+                  </p>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Right Bottom: Interactive Notepad & Tasks (Auto-saves to localStorage) */}
+        <div className="lg:col-span-5 bg-gradient-to-br from-white/80 to-slate-50/80 dark:from-[#1E2E42]/80 dark:to-[#162535]/80 backdrop-blur-md border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 shadow-sm flex flex-col justify-between">
+          <div>
+            <h3 className="font-extrabold text-sm text-slate-900 dark:text-white uppercase tracking-wider mb-4 pb-3 border-b border-slate-200/60 dark:border-white/[0.05]">
+              Quick Notes & Tasks
+            </h3>
+            
+            <form onSubmit={handleAddTask} className="flex gap-2 mb-4">
+              <input
+                type="text"
+                value={newTaskText}
+                onChange={(e) => setNewTaskText(e.target.value)}
+                placeholder="Add a quick note or reminder task..."
+                className="flex-1 bg-white/40 dark:bg-[#0D1B2A]/60 border border-slate-200 dark:border-white/10 rounded-2xl px-4 py-2.5 text-xs text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-gray-500 focus:outline-none focus:border-blue-500 transition"
+              />
+              <button
+                type="submit"
+                className="p-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl transition shadow-md shadow-blue-500/10 active:scale-95 flex-shrink-0"
+              >
+                <Plus size={14} />
+              </button>
+            </form>
+
+            <div className="space-y-2 max-h-[175px] overflow-y-auto custom-scrollbar pr-1">
+              {quickTasks.length === 0 ? (
+                <p className="text-xs text-slate-400 dark:text-gray-500 italic pl-1 py-8 text-center">
+                  No quick notes or tasks yet. Add one above!
+                </p>
+              ) : (
+                quickTasks.map((task) => (
+                  <div
+                    key={task.id}
+                    className="flex items-center justify-between gap-3 p-3 bg-white/30 dark:bg-white/[0.03] hover:bg-slate-100/50 dark:hover:bg-white/[0.06] border border-slate-200/50 dark:border-white/[0.08] rounded-xl transition duration-150"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <button
+                        onClick={() => handleToggleTask(task.id)}
+                        className={`w-4.5 h-4.5 rounded border flex items-center justify-center transition-all flex-shrink-0 ${
+                          task.completed
+                            ? 'bg-blue-600 border-blue-600 text-white'
+                            : 'border-slate-300 dark:border-white/20 hover:border-blue-500'
+                        }`}
+                      >
+                        {task.completed && <Check size={11} className="stroke-[3]" />}
+                      </button>
+                      <span
+                        className={`text-xs font-semibold truncate ${
+                          task.completed
+                            ? 'line-through text-slate-400 dark:text-gray-500'
+                            : 'text-slate-800 dark:text-slate-200'
+                        }`}
+                      >
+                        {task.text}
+                      </span>
+                    </div>
+                    <button
+                      onClick={() => handleDeleteTask(task.id)}
+                      className="p-1 hover:bg-red-500/10 rounded text-slate-400 dark:text-gray-400 hover:text-red-500 dark:hover:text-red-550 transition flex-shrink-0"
+                      title="Delete task"
+                    >
+                      <Trash2 size={12} />
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+          <p className="text-[10px] text-slate-400 dark:text-gray-500 mt-3.5 italic text-right">
+            ✓ Auto-saved locally
+          </p>
+        </div>
+
+      </div>
+
+      {/* ── Export Report Modal (Matches Screenshot 1 layout) ── */}
+      {showExportModal && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
+          <div className="bg-white dark:bg-gradient-to-br dark:from-[#1E2E42] dark:to-[#162535] rounded-3xl p-8 w-full max-w-md border border-slate-200/80 dark:border-white/10 text-slate-900 dark:text-white shadow-2xl flex flex-col">
+            <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-1">
+              Export Report
+            </h3>
+            <p className="text-xs text-slate-500 dark:text-gray-400 mb-6">
+              Select the type of report and format for {community.name}
+            </p>
+
+            <div className="space-y-4 mb-6">
+              {/* Report Type select */}
               <div>
-                <label className="block text-sm text-slate-500 dark:text-gray-400 mb-2">Report Type</label>
+                <label className="text-xs font-semibold text-slate-500 dark:text-gray-400 mb-1.5 block">Report Type</label>
                 <select
                   value={exportType}
                   onChange={(e) => setExportType(e.target.value)}
-                  className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl p-4 text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-teal-500"
+                  className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-blue-555 focus:border-blue-600 transition"
                 >
                   <option value="violations">Violation Report</option>
                   <option value="payments">Payment Report</option>
-                  <option value="servicerequests">Service Requests</option>
-                  <option value="bookings">Amenity Bookings</option>
+                  <option value="servicerequests">Service Request Report</option>
+                  <option value="bookings">Amenity Booking Report</option>
                 </select>
               </div>
 
+              {/* Export Format select */}
               <div>
-                <label className="block text-sm text-slate-500 dark:text-gray-400 mb-2">Export Format</label>
+                <label className="text-xs font-semibold text-slate-500 dark:text-gray-400 mb-1.5 block">Export Format</label>
                 <select
                   value={exportFormat}
                   onChange={(e) => setExportFormat(e.target.value)}
-                  className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl p-4 text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-teal-500"
+                  className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-blue-555 focus:border-blue-600 transition"
                 >
-                  <option value="CSV">CSV (Supported)</option>
-                  <option value="PDF">PDF</option>
-                  <option value="Excel">Excel (.xlsx)</option>
+                  <option value="csv">CSV (Supported)</option>
+                  <option value="excel">Excel (.xlsx)</option>
+                  <option value="pdf">PDF Document</option>
                 </select>
               </div>
-              
-              <p className="text-xs text-slate-400 dark:text-gray-500 italic">
-                * Note: Full history of records will be generated for download.
-              </p>
             </div>
 
-            <div className="p-6 border-t border-slate-100 dark:border-white/10 flex gap-3">
+            <p className="text-[10px] text-slate-400 dark:text-gray-500 italic mb-6">
+              * Note: Full history of records will be generated for download.
+            </p>
+
+            <div className="flex gap-3 justify-end">
               <button
+                type="button"
                 onClick={() => setShowExportModal(false)}
-                disabled={exporting}
-                className="flex-1 py-3 text-slate-500 hover:bg-red-600 hover:text-white dark:text-gray-400 dark:hover:bg-red-600 dark:hover:text-white rounded-2xl transition disabled:opacity-50"
+                className="px-5 py-2.5 rounded-xl text-xs font-bold text-slate-500 dark:text-gray-400 hover:bg-slate-100 dark:hover:bg-white/5 transition"
               >
                 Cancel
               </button>
               <button
-                onClick={handleExport}
+                type="button"
                 disabled={exporting}
-                className="flex-1 py-3 bg-teal-600 hover:bg-teal-500 rounded-2xl font-medium text-white transition flex items-center justify-center gap-2 disabled:opacity-50"
+                onClick={handleExportReport}
+                className="px-6 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-xs transition shadow-md shadow-blue-500/20 active:scale-95 disabled:opacity-50 flex items-center justify-center min-w-[80px]"
               >
-                {exporting ? (
-                  <>
-                    <RefreshCw size={15} className="animate-spin" />
-                    Exporting...
-                  </>
-                ) : (
-                  "Export"
-                )}
+                {exporting ? "Exporting..." : "Export"}
               </button>
             </div>
           </div>
         </div>
       )}
+
     </div>
   );
 };

@@ -254,12 +254,12 @@ const Vendors = ({ communityId, userRole, user }) => {
             placeholder="Enter vendor access code"
             value={accessCode}
             onChange={(e) => setAccessCode(e.target.value)}
-            className="flex-1 bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 rounded-lg px-4 py-2 text-sm text-slate-900 dark:text-white focus:border-teal-500 outline-none transition-all"
+            className="flex-1 bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 rounded-lg px-4 py-2 text-sm text-slate-900 dark:text-white focus:border-blue-500 outline-none transition-all"
           />
           <button 
             onClick={handleUnlock}
             disabled={loading}
-            className="bg-teal-600 hover:bg-teal-500 text-white px-6 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 transition-all disabled:opacity-50 shadow-md shadow-teal-500/25"
+            className="bg-blue-600 hover:bg-blue-500 text-white px-6 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 transition-all disabled:opacity-50 shadow-md shadow-blue-500/25"
           >
             {loading ? "Verifying..." : "Unlock"}
           </button>
@@ -279,7 +279,7 @@ const Vendors = ({ communityId, userRole, user }) => {
           </div>
           <button 
             onClick={handleOnboardClick}
-            className="bg-teal-600 hover:bg-teal-500 px-5 py-2.5 rounded-2xl text-white flex items-center gap-2 text-sm font-semibold transition shadow-lg shadow-teal-500/25"
+            className="bg-blue-600 hover:bg-blue-500 px-5 py-2.5 rounded-2xl text-white flex items-center gap-2 text-sm font-semibold transition shadow-lg shadow-blue-500/25"
           >
             <Plus size={15} /> Onboard Vendor
           </button>
@@ -296,7 +296,7 @@ const Vendors = ({ communityId, userRole, user }) => {
                 placeholder="Search vendors..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-2xl pl-10 pr-10 py-2.5 text-sm text-slate-900 dark:text-white focus:border-teal-500 outline-none"
+                className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-2xl pl-10 pr-10 py-2.5 text-sm text-slate-900 dark:text-white focus:border-blue-500 outline-none"
               />
               {searchTerm && (
                 <button
@@ -328,7 +328,7 @@ const Vendors = ({ communityId, userRole, user }) => {
                   filteredVendors.map((v) => (
                     <tr key={v.vendor_id || v.id} className="hover:bg-slate-50 dark:hover:bg-white/5 transition-colors group">
                       <td className="px-3 py-4">
-                        <div className="text-slate-900 dark:text-white font-medium group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">
+                        <div className="text-slate-900 dark:text-white font-medium group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
                           {v.company_name}
                         </div>
                         <div className="text-[10px] text-slate-500 dark:text-gray-400 whitespace-nowrap">
@@ -336,14 +336,14 @@ const Vendors = ({ communityId, userRole, user }) => {
                         </div>
                       </td>
                       <td className="px-3 py-4 whitespace-nowrap">
-                        <span className="bg-teal-500/10 text-teal-600 dark:bg-teal-500/20 dark:text-teal-400 px-2 py-0.5 rounded text-[10px] font-bold border border-teal-500/20">
+                        <span className="bg-blue-500/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400 px-2 py-0.5 rounded text-[10px] font-bold border border-blue-500/20">
                           {v.category}
                         </span>
                       </td>
                       <td className="px-3 py-4 font-mono text-xs text-slate-500 dark:text-gray-400 whitespace-nowrap">{v.license_number || 'N/A'}</td>
                       <td className="px-3 py-4 text-xs text-slate-600 dark:text-gray-300">{v.insurance_number || "N/A"}</td>
                       <td className="px-3 py-4 text-right whitespace-nowrap">
-                        <span className={`px-2 py-1 rounded text-[10px] font-bold border ${v.active_status ? 'text-teal-600 dark:text-teal-400 bg-teal-500/10 dark:bg-teal-500/20 border-teal-500/20' : 'text-slate-500 dark:text-gray-400 bg-slate-100 dark:bg-white/5 border-slate-200 dark:border-white/10'}`}>
+                        <span className={`px-2 py-1 rounded text-[10px] font-bold border ${v.active_status ? 'text-blue-600 dark:text-blue-400 bg-blue-500/10 dark:bg-blue-500/20 border-blue-500/20' : 'text-slate-500 dark:text-gray-400 bg-slate-100 dark:bg-white/5 border-slate-200 dark:border-white/10'}`}>
                           {v.active_status ? 'ACTIVE' : 'INACTIVE'}
                         </span>
                       </td>
@@ -382,7 +382,7 @@ const Vendors = ({ communityId, userRole, user }) => {
                     <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Company Name *</label>
                     <input 
                       required 
-                      className={`w-full bg-slate-50 dark:bg-[#111c2a] border ${errors.company_name ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/10 focus:border-teal-500'} rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none`} 
+                      className={`w-full bg-slate-50 dark:bg-[#111c2a] border ${errors.company_name ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/10 focus:border-blue-500'} rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none`} 
                       value={formData.company_name} 
                       onChange={(e) => {
                         setFormData({...formData, company_name: e.target.value});
@@ -398,7 +398,7 @@ const Vendors = ({ communityId, userRole, user }) => {
                     <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Contact Person *</label>
                     <input 
                       required 
-                      className={`w-full bg-slate-50 dark:bg-[#111c2a] border ${errors.contact_person ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/10 focus:border-teal-500'} rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none`} 
+                      className={`w-full bg-slate-50 dark:bg-[#111c2a] border ${errors.contact_person ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/10 focus:border-blue-500'} rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none`} 
                       value={formData.contact_person} 
                       onChange={(e) => {
                         setFormData({...formData, contact_person: e.target.value});
@@ -417,7 +417,7 @@ const Vendors = ({ communityId, userRole, user }) => {
                       type="text"
                       maxLength={14}
                       placeholder="(123) 456-7890"
-                      className={`w-full bg-slate-50 dark:bg-[#111c2a] border ${errors.phoneOnly ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/10 focus:border-teal-500'} rounded-lg px-3 py-2 text-sm font-sans text-slate-900 dark:text-white outline-none`}
+                      className={`w-full bg-slate-50 dark:bg-[#111c2a] border ${errors.phoneOnly ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/10 focus:border-blue-500'} rounded-lg px-3 py-2 text-sm font-sans text-slate-900 dark:text-white outline-none`}
                       value={phoneOnly}
                       onChange={(e) => {
                         const formatted = formatPhoneAsYouType(e.target.value);
@@ -433,7 +433,7 @@ const Vendors = ({ communityId, userRole, user }) => {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Service Type *</label>
-                      <select className="w-full bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:border-teal-500 outline-none" value={formData.service_type} onChange={(e) => setFormData({...formData, service_type: e.target.value})}>
+                      <select className="w-full bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:border-blue-500 outline-none" value={formData.service_type} onChange={(e) => setFormData({...formData, service_type: e.target.value})}>
                         <option value="PLUMBING" className="bg-white dark:bg-[#111c2a] text-slate-900 dark:text-white">Plumbing</option>
                         <option value="ELECTRICAL" className="bg-white dark:bg-[#111c2a] text-slate-900 dark:text-white">Electrical</option>
                         <option value="LANDSCAPING" className="bg-white dark:bg-[#111c2a] text-slate-900 dark:text-white">Landscaping</option>
@@ -448,7 +448,7 @@ const Vendors = ({ communityId, userRole, user }) => {
                         type="email" 
                         required 
                         placeholder="abc@gmail.com"
-                        className={`w-full bg-slate-50 dark:bg-[#111c2a] border ${errors.email ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/10 focus:border-teal-500'} rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none`} 
+                        className={`w-full bg-slate-50 dark:bg-[#111c2a] border ${errors.email ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/10 focus:border-blue-500'} rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none`} 
                         value={formData.email} 
                         onChange={(e) => {
                           setFormData({...formData, email: e.target.value});
@@ -464,11 +464,11 @@ const Vendors = ({ communityId, userRole, user }) => {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">License Number *</label>
-                      <input required className="w-full bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:border-teal-500 outline-none" value={formData.license_number} onChange={(e) => setFormData({...formData, license_number: e.target.value})} />
+                      <input required className="w-full bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:border-blue-500 outline-none" value={formData.license_number} onChange={(e) => setFormData({...formData, license_number: e.target.value})} />
                     </div>
                     <div>
                       <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Expiry</label>
-                      <input type="date" className="w-full bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:border-teal-500 outline-none" value={formData.expiry} onChange={(e) => setFormData({...formData, expiry: e.target.value})} />
+                      <input type="date" className="w-full bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:border-blue-500 outline-none" value={formData.expiry} onChange={(e) => setFormData({...formData, expiry: e.target.value})} />
                     </div>
                   </div>
 
@@ -476,7 +476,7 @@ const Vendors = ({ communityId, userRole, user }) => {
                     <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Insurance Number *</label>
                     <input 
                       required
-                      className="w-full bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:border-teal-500 outline-none" 
+                      className="w-full bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:border-blue-500 outline-none" 
                       value={formData.insurance} 
                       onChange={(e) => setFormData({...formData, insurance: e.target.value})} 
                       placeholder="Enter insurance number or N/A"
@@ -485,7 +485,7 @@ const Vendors = ({ communityId, userRole, user }) => {
 
                   <div className="pt-4 flex gap-3">
                     <button type="button" onClick={closeModal} className="flex-1 py-2.5 rounded-xl text-sm font-semibold cancel-button-red-hover transition-colors">Cancel</button>
-                    <button type="submit" disabled={loading} className="flex-1 py-2.5 bg-teal-600 text-white rounded-xl text-sm font-semibold hover:bg-teal-500 transition-all disabled:opacity-50 shadow-md shadow-teal-500/25">
+                    <button type="submit" disabled={loading} className="flex-1 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-semibold hover:bg-blue-500 transition-all disabled:opacity-50 shadow-md shadow-blue-500/25">
                       {loading ? "Processing..." : "Onboard"}
                     </button>
                   </div>
@@ -509,7 +509,7 @@ const Vendors = ({ communityId, userRole, user }) => {
         {isAdmin && (
           <button 
             onClick={handleOnboardClick}
-            className="bg-teal-600 hover:bg-teal-500 text-white px-5 py-2.5 rounded-2xl flex items-center gap-2 text-sm font-semibold transition-all shadow-lg shadow-teal-500/25"
+            className="bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-2xl flex items-center gap-2 text-sm font-semibold transition-all shadow-lg shadow-blue-500/25"
           >
             <Plus size={15} /> Onboard Vendor
           </button>
@@ -528,7 +528,7 @@ const Vendors = ({ communityId, userRole, user }) => {
               placeholder="Search vendors..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-2xl pl-10 pr-10 py-2.5 text-sm text-slate-900 dark:text-white focus:border-teal-500 outline-none"
+              className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-2xl pl-10 pr-10 py-2.5 text-sm text-slate-900 dark:text-white focus:border-blue-500 outline-none"
             />
             {searchTerm && (
               <button
@@ -556,14 +556,14 @@ const Vendors = ({ communityId, userRole, user }) => {
               {loading ? (
                 <tr>
                   <td colSpan="6" className="px-3 py-12 text-center">
-                    <div className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-teal-600 dark:border-teal-400 border-t-transparent"></div>
+                    <div className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-blue-600 dark:border-blue-400 border-t-transparent"></div>
                   </td>
                 </tr>
               ) : filteredVendors.length > 0 ? (
                 filteredVendors.map((v) => (
                   <tr key={v.vendor_id || v.id} className="hover:bg-slate-50 dark:hover:bg-white/5 transition-colors group">
                     <td className="px-3 py-4">
-                      <div className="text-slate-900 dark:text-white font-medium group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">
+                      <div className="text-slate-900 dark:text-white font-medium group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
                         {v.company_name}
                       </div>
                       <div className="text-[10px] text-slate-500 dark:text-gray-400 whitespace-nowrap">
@@ -571,14 +571,14 @@ const Vendors = ({ communityId, userRole, user }) => {
                       </div>
                     </td>
                     <td className="px-3 py-4 whitespace-nowrap">
-                      <span className="bg-teal-500/10 text-teal-600 dark:bg-teal-500/20 dark:text-teal-400 px-2 py-0.5 rounded text-[10px] font-bold border border-teal-500/20">
+                      <span className="bg-blue-500/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400 px-2 py-0.5 rounded text-[10px] font-bold border border-blue-500/20">
                         {v.category}
                       </span>
                     </td>
                     <td className="px-3 py-4 font-mono text-xs text-slate-500 dark:text-gray-400 whitespace-nowrap">{v.license_number || 'N/A'}</td>
                     <td className="px-3 py-4 text-xs text-slate-600 dark:text-gray-300">{v.insurance_number || "N/A"}</td>
                     <td className="px-3 py-4 text-right whitespace-nowrap">
-                      <span className={`px-2 py-1 rounded text-[10px] font-bold border ${v.active_status ? 'text-teal-600 dark:text-teal-400 bg-teal-500/10 dark:bg-teal-500/20 border-teal-500/20' : 'text-slate-500 dark:text-gray-400 bg-slate-100 dark:bg-white/5 border-slate-200 dark:border-white/10'}`}>
+                      <span className={`px-2 py-1 rounded text-[10px] font-bold border ${v.active_status ? 'text-blue-600 dark:text-blue-400 bg-blue-500/10 dark:bg-blue-500/20 border-blue-500/20' : 'text-slate-500 dark:text-gray-400 bg-slate-100 dark:bg-white/5 border-slate-200 dark:border-white/10'}`}>
                         {v.active_status ? 'ACTIVE' : 'INACTIVE'}
                       </span>
                     </td>
@@ -617,7 +617,7 @@ const Vendors = ({ communityId, userRole, user }) => {
                   <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Company Name *</label>
                   <input 
                     required 
-                    className={`w-full bg-slate-50 dark:bg-[#111c2a] border ${errors.company_name ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/10 focus:border-teal-500'} rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none`} 
+                    className={`w-full bg-slate-50 dark:bg-[#111c2a] border ${errors.company_name ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/10 focus:border-blue-500'} rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none`} 
                     value={formData.company_name} 
                     onChange={(e) => {
                       setFormData({...formData, company_name: e.target.value});
@@ -633,7 +633,7 @@ const Vendors = ({ communityId, userRole, user }) => {
                   <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Contact Person *</label>
                   <input 
                     required 
-                    className={`w-full bg-slate-50 dark:bg-[#111c2a] border ${errors.contact_person ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/10 focus:border-teal-500'} rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none`} 
+                    className={`w-full bg-slate-50 dark:bg-[#111c2a] border ${errors.contact_person ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/10 focus:border-blue-500'} rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none`} 
                     value={formData.contact_person} 
                     onChange={(e) => {
                       setFormData({...formData, contact_person: e.target.value});
@@ -652,7 +652,7 @@ const Vendors = ({ communityId, userRole, user }) => {
                     type="text"
                     maxLength={14}
                     placeholder="(123) 456-7890"
-                    className={`w-full bg-slate-50 dark:bg-[#111c2a] border ${errors.phoneOnly ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/10 focus:border-teal-500'} rounded-lg px-3 py-2 text-sm font-sans text-slate-900 dark:text-white outline-none`}
+                    className={`w-full bg-slate-50 dark:bg-[#111c2a] border ${errors.phoneOnly ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/10 focus:border-blue-500'} rounded-lg px-3 py-2 text-sm font-sans text-slate-900 dark:text-white outline-none`}
                     value={phoneOnly}
                     onChange={(e) => {
                       const formatted = formatPhoneAsYouType(e.target.value);
@@ -668,7 +668,7 @@ const Vendors = ({ communityId, userRole, user }) => {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Service Type *</label>
-                    <select className="w-full bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:border-teal-500 outline-none" value={formData.service_type} onChange={(e) => setFormData({...formData, service_type: e.target.value})}>
+                    <select className="w-full bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:border-blue-500 outline-none" value={formData.service_type} onChange={(e) => setFormData({...formData, service_type: e.target.value})}>
                       <option value="PLUMBING" className="bg-white dark:bg-[#111c2a] text-slate-900 dark:text-white">Plumbing</option>
                       <option value="ELECTRICAL" className="bg-white dark:bg-[#111c2a] text-slate-900 dark:text-white">Electrical</option>
                       <option value="LANDSCAPING" className="bg-white dark:bg-[#111c2a] text-slate-900 dark:text-white">Landscaping</option>
@@ -683,7 +683,7 @@ const Vendors = ({ communityId, userRole, user }) => {
                       type="email" 
                       required 
                       placeholder="abc@gmail.com"
-                      className={`w-full bg-slate-50 dark:bg-[#111c2a] border ${errors.email ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/10 focus:border-teal-500'} rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none`} 
+                      className={`w-full bg-slate-50 dark:bg-[#111c2a] border ${errors.email ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/10 focus:border-blue-500'} rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none`} 
                       value={formData.email} 
                       onChange={(e) => {
                         setFormData({...formData, email: e.target.value});
@@ -699,11 +699,11 @@ const Vendors = ({ communityId, userRole, user }) => {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">License Number *</label>
-                    <input required className="w-full bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:border-teal-500 outline-none" value={formData.license_number} onChange={(e) => setFormData({...formData, license_number: e.target.value})} />
+                    <input required className="w-full bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:border-blue-500 outline-none" value={formData.license_number} onChange={(e) => setFormData({...formData, license_number: e.target.value})} />
                   </div>
                   <div>
                     <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Expiry</label>
-                    <input type="date" className="w-full bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:border-teal-500 outline-none" value={formData.expiry} onChange={(e) => setFormData({...formData, expiry: e.target.value})} />
+                    <input type="date" className="w-full bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:border-blue-500 outline-none" value={formData.expiry} onChange={(e) => setFormData({...formData, expiry: e.target.value})} />
                   </div>
                 </div>
 
@@ -711,7 +711,7 @@ const Vendors = ({ communityId, userRole, user }) => {
                   <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Insurance Number *</label>
                   <input 
                     required
-                    className="w-full bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:border-teal-500 outline-none" 
+                    className="w-full bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:border-blue-500 outline-none" 
                     value={formData.insurance} 
                     onChange={(e) => setFormData({...formData, insurance: e.target.value})} 
                     placeholder="Enter insurance number or N/A"
@@ -720,7 +720,7 @@ const Vendors = ({ communityId, userRole, user }) => {
 
                 <div className="pt-4 flex gap-3">
                   <button type="button" onClick={closeModal} className="flex-1 py-2.5 rounded-xl text-sm font-semibold cancel-button-red-hover transition-colors">Cancel</button>
-                  <button type="submit" disabled={loading} className="flex-1 py-2.5 bg-teal-600 text-white rounded-xl text-sm font-semibold hover:bg-teal-500 transition-all disabled:opacity-50 shadow-md shadow-teal-500/25">
+                  <button type="submit" disabled={loading} className="flex-1 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-semibold hover:bg-blue-500 transition-all disabled:opacity-50 shadow-md shadow-blue-500/25">
                     {loading ? "Processing..." : "Onboard"}
                   </button>
                 </div>

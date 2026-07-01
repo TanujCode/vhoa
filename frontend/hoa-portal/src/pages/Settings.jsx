@@ -8,7 +8,7 @@ import RequestChangeModal from '../components/RequestChangeModal';
 const Toggle = ({ value, onChange }) => (
   <button
     onClick={() => onChange(!value)}
-    className={`w-11 h-6 rounded-full relative transition-all duration-200 ${value ? 'bg-teal-600' : 'bg-gray-600'}`}
+    className={`w-11 h-6 rounded-full relative transition-all duration-200 ${value ? 'bg-blue-600' : 'bg-gray-600'}`}
   >
     <div className={`w-5 h-5 bg-white rounded-full absolute top-0.5 transition-all duration-200 ${value ? 'right-0.5' : 'left-0.5'}`} />
   </button>
@@ -182,7 +182,7 @@ const Settings = ({ community, onCommunityUpdate }) => {
 
   return (
     <div className="text-slate-900 dark:text-white">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div>
           <h1 className="text-3xl font-semibold text-slate-900 dark:text-white">Community Settings</h1>
           <p className="text-slate-500 dark:text-gray-400 mt-1">{community?.name}</p>
@@ -191,13 +191,13 @@ const Settings = ({ community, onCommunityUpdate }) => {
           <button
             onClick={handleSave}
             disabled={saving}
-            className="flex items-center gap-2 bg-teal-600 hover:bg-teal-500 text-white px-5 py-2.5 rounded-2xl text-sm font-semibold disabled:opacity-70 transition shadow-lg shadow-teal-500/25"
+            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-2xl text-sm font-semibold disabled:opacity-70 transition shadow-lg shadow-blue-500/25"
           >
             <Save size={15} />
             {saving ? 'Saving...' : 'Save Settings'}
           </button>
           {saved && (
-            <span className="text-teal-600 dark:text-teal-400 text-sm font-medium animate-pulse">
+            <span className="text-blue-600 dark:text-blue-400 text-sm font-medium animate-pulse">
               ✓ Settings saved successfully!
             </span>
           )}
@@ -212,7 +212,7 @@ const Settings = ({ community, onCommunityUpdate }) => {
 
         <div className="bg-slate-50 dark:bg-[#1E3248] border border-slate-200 dark:border-0 rounded-2xl p-6">
           <div className="flex items-center gap-4 mb-6">
-            <div className="w-14 h-14 bg-teal-500/10 rounded-2xl flex items-center justify-center text-3xl">🕒</div>
+            <div className="w-14 h-14 bg-blue-500/10 rounded-2xl flex items-center justify-center text-3xl">🕒</div>
             <div>
               <div className="text-xl font-mono font-bold text-slate-900 dark:text-white">
                 {timezones.find(t => t.value === form.time_zone)?.label || form.time_zone}
@@ -227,7 +227,7 @@ const Settings = ({ community, onCommunityUpdate }) => {
               <select
                 value={form.time_zone}
                 onChange={e => setForm({...form, time_zone: e.target.value})}
-                className="w-full bg-white dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl pl-4 pr-10 py-3.5 text-slate-900 dark:text-white focus:outline-none focus:border-teal-500 appearance-none cursor-pointer text-sm"
+                className="w-full bg-white dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl pl-4 pr-10 py-3.5 text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 appearance-none cursor-pointer text-sm"
               >
                 {timezones.map(tz => (
                   <option key={tz.value} value={tz.value} className="text-slate-900 dark:text-white">{tz.label}</option>
@@ -237,7 +237,7 @@ const Settings = ({ community, onCommunityUpdate }) => {
             </div>
           </div>
 
-          <div className="mt-4 bg-teal-50 dark:bg-teal-900/30 border border-teal-200 dark:border-teal-500/30 rounded-2xl p-4 text-sm text-teal-600 dark:text-teal-400">
+          <div className="mt-4 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-500/30 rounded-2xl p-4 text-sm text-blue-600 dark:text-blue-400">
             ✓ Applies to: Dashboard, Audit History, Payment dates, Violation dates, Email notifications
           </div>
         </div>
@@ -251,7 +251,7 @@ const Settings = ({ community, onCommunityUpdate }) => {
         {/* Payment Config */}
         <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200 dark:border-white/10 rounded-3xl p-6 shadow-sm">
           <div className="flex items-center gap-3 mb-5">
-            <DollarSign className="text-teal-600 dark:text-teal-400" size={24} />
+            <DollarSign className="text-blue-600 dark:text-blue-400" size={24} />
             <h3 className="font-semibold text-lg text-slate-900 dark:text-white">Payment Configuration</h3>
           </div>
 
@@ -292,7 +292,7 @@ const Settings = ({ community, onCommunityUpdate }) => {
                         setForm({...form, late_fee_days: val});
                         validateField('late_fee_days', val);
                       }}
-                      className={`w-20 bg-white dark:bg-[#0D1B2A] border ${errors.late_fee_days ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/20 focus:border-teal-500'} rounded-xl px-3 py-1.5 text-sm text-slate-900 dark:text-white text-center focus:outline-none`}
+                      className={`w-20 bg-white dark:bg-[#0D1B2A] border ${errors.late_fee_days ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/20 focus:border-blue-500'} rounded-xl px-3 py-1.5 text-sm text-slate-900 dark:text-white text-center focus:outline-none`}
                     />
                   </div>
                   {errors.late_fee_days && (
@@ -311,7 +311,7 @@ const Settings = ({ community, onCommunityUpdate }) => {
                         setForm({...form, late_fee_amount: val});
                         validateField('late_fee_amount', val);
                       }}
-                      className={`w-20 bg-white dark:bg-[#0D1B2A] border ${errors.late_fee_amount ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/20 focus:border-teal-500'} rounded-xl px-3 py-1.5 text-sm text-slate-900 dark:text-white text-center focus:outline-none`}
+                      className={`w-20 bg-white dark:bg-[#0D1B2A] border ${errors.late_fee_amount ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/20 focus:border-blue-500'} rounded-xl px-3 py-1.5 text-sm text-slate-900 dark:text-white text-center focus:outline-none`}
                     />
                   </div>
                   {errors.late_fee_amount && (
@@ -323,7 +323,7 @@ const Settings = ({ community, onCommunityUpdate }) => {
 
             {/* HOA Escrow Bank Details */}
             <div className="bg-slate-50 dark:bg-[#1E3248] border border-slate-200 dark:border-0 rounded-2xl p-4 mt-4 space-y-3">
-              <h4 className="font-medium text-sm text-teal-600 dark:text-teal-400 border-b border-slate-200 dark:border-white/10 pb-2">🏦 HOA Escrow Bank Details</h4>
+              <h4 className="font-medium text-sm text-blue-600 dark:text-blue-400 border-b border-slate-200 dark:border-white/10 pb-2">🏦 HOA Escrow Bank Details</h4>
               <div className="space-y-3">
                 <div>
                   <label className="block text-xs text-slate-500 dark:text-gray-400 mb-1">Bank Name</label>
@@ -335,7 +335,7 @@ const Settings = ({ community, onCommunityUpdate }) => {
                       setForm({...form, bank_name: e.target.value});
                       validateField('bank_name', e.target.value);
                     }}
-                    className={`w-full bg-white dark:bg-[#0D1B2A] border ${errors.bank_name ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/20 focus:border-teal-500'} rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none`}
+                    className={`w-full bg-white dark:bg-[#0D1B2A] border ${errors.bank_name ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/20 focus:border-blue-500'} rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none`}
                   />
                   {errors.bank_name && (
                     <p className="text-red-500 text-xs mt-1">{errors.bank_name}</p>
@@ -351,7 +351,7 @@ const Settings = ({ community, onCommunityUpdate }) => {
                       setForm({...form, bank_account_name: e.target.value});
                       validateField('bank_account_name', e.target.value);
                     }}
-                    className={`w-full bg-white dark:bg-[#0D1B2A] border ${errors.bank_account_name ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/20 focus:border-teal-500'} rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none`}
+                    className={`w-full bg-white dark:bg-[#0D1B2A] border ${errors.bank_account_name ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/20 focus:border-blue-500'} rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none`}
                   />
                   {errors.bank_account_name && (
                     <p className="text-red-500 text-xs mt-1">{errors.bank_account_name}</p>
@@ -373,7 +373,7 @@ const Settings = ({ community, onCommunityUpdate }) => {
                           e.preventDefault();
                         }
                       }}
-                      className={`w-full bg-white dark:bg-[#0D1B2A] border ${errors.bank_account_no ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/20 focus:border-teal-500'} rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none`}
+                      className={`w-full bg-white dark:bg-[#0D1B2A] border ${errors.bank_account_no ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/20 focus:border-blue-500'} rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none`}
                     />
                     {errors.bank_account_no && (
                       <p className="text-red-500 text-xs mt-1">{errors.bank_account_no}</p>
@@ -394,7 +394,7 @@ const Settings = ({ community, onCommunityUpdate }) => {
                           e.preventDefault();
                         }
                       }}
-                      className={`w-full bg-white dark:bg-[#0D1B2A] border ${errors.bank_routing_no ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/20 focus:border-teal-500'} rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none`}
+                      className={`w-full bg-white dark:bg-[#0D1B2A] border ${errors.bank_routing_no ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/20 focus:border-blue-500'} rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none`}
                     />
                     {errors.bank_routing_no && (
                       <p className="text-red-500 text-xs mt-1">{errors.bank_routing_no}</p>
@@ -409,7 +409,7 @@ const Settings = ({ community, onCommunityUpdate }) => {
         {/* Visible Tabs */}
         <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200 dark:border-white/10 rounded-3xl p-6 shadow-sm">
           <div className="flex items-center gap-3 mb-5">
-            <Eye className="text-teal-600 dark:text-teal-400" size={24} />
+            <Eye className="text-blue-600 dark:text-blue-400" size={24} />
             <h3 className="font-semibold text-lg text-slate-900 dark:text-white">Visible Tabs for Members</h3>
           </div>
 
@@ -435,7 +435,7 @@ const Settings = ({ community, onCommunityUpdate }) => {
           <h3 className="font-semibold text-lg text-slate-900 dark:text-white">📋 Community Info</h3>
           <button
             onClick={() => setIsChangeModalOpen(true)}
-            className="text-xs bg-teal-500/10 dark:bg-teal-500/25 border-2 border-teal-500/30 hover:border-teal-500 hover:bg-teal-500 hover:text-white text-teal-700 dark:text-teal-400 dark:hover:text-white dark:hover:bg-teal-500 px-3.5 py-2 rounded-xl font-bold transition-all duration-200 active:scale-95 flex items-center gap-1.5 shadow-sm"
+            className="text-xs bg-blue-500/10 dark:bg-blue-500/25 border-2 border-blue-500/30 hover:border-blue-500 hover:bg-blue-500 hover:text-white text-blue-700 dark:text-blue-400 dark:hover:text-white dark:hover:bg-blue-500 px-3.5 py-2 rounded-xl font-bold transition-all duration-200 active:scale-95 flex items-center gap-1.5 shadow-sm"
           >
             Request Changes
           </button>
@@ -443,7 +443,7 @@ const Settings = ({ community, onCommunityUpdate }) => {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
           <div>
             <p className="text-slate-500 dark:text-gray-400">Community Code</p>
-            <p className="font-mono font-bold text-teal-600 dark:text-teal-400 mt-1">{community?.community_code || '—'}</p>
+            <p className="font-mono font-bold text-blue-600 dark:text-blue-400 mt-1">{community?.community_code || '—'}</p>
           </div>
           <div>
             <p className="text-slate-500 dark:text-gray-400">License Status</p>

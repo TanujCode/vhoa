@@ -971,7 +971,7 @@ export default function ClientOnboarding() {
                   <div key={stepItem.s} className="flex gap-4 items-start">
                     <div className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all ${
                       isCurrent 
-                        ? 'bg-[#1D9E75] text-white shadow-lg shadow-teal-500/20' 
+                        ? 'bg-[#1D68DF] text-white shadow-lg shadow-blue-500/20' 
                         : isCompleted 
                         ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' 
                         : 'bg-white/5 text-gray-500 border border-white/5'
@@ -995,7 +995,7 @@ export default function ClientOnboarding() {
               <div className="font-bold text-gray-300 uppercase tracking-wider text-[10px] mb-1">Contract Parameters</div>
               <div>Plan: <span className="text-blue-400 font-semibold">{verifiedContract.plan_selected}</span></div>
               <div>Units Limit: <span className="text-white font-semibold font-mono">{verifiedContract.size_of_the_community}</span></div>
-              <div>Annual Fee: <span className="text-[#25C490] font-semibold">${verifiedContract.annual_renewal_fee}</span></div>
+              <div>Annual Fee: <span className="text-[#5BA4F5] font-semibold">${verifiedContract.annual_renewal_fee}</span></div>
               <div>Setup Fee: <span className="text-white font-semibold">${verifiedContract.one_time_set_up}</span></div>
             </div>
           )}
@@ -1012,7 +1012,7 @@ export default function ClientOnboarding() {
             )}
 
             {successMsg && (
-              <div className="mb-6 p-4 bg-teal-500/10 border border-teal-500/30 text-[#25C490] text-sm rounded-2xl flex items-center gap-2">
+              <div className="mb-6 p-4 bg-blue-500/10 border border-blue-500/30 text-[#5BA4F5] text-sm rounded-2xl flex items-center gap-2">
                 <CheckCircle size={16} />
                 <span>{successMsg}</span>
               </div>
@@ -1035,14 +1035,14 @@ export default function ClientOnboarding() {
                         type="text"
                         {...register('contract_code', { required: true })}
                         placeholder="CON-XXXXXX"
-                        className="flex-1 bg-[#1e2f41] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#1D9E75] font-mono text-lg uppercase tracking-widest placeholder:normal-case placeholder:font-sans"
+                        className="flex-1 bg-[#1e2f41] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#1D68DF] font-mono text-lg uppercase tracking-widest placeholder:normal-case placeholder:font-sans"
                         disabled={loadingCode}
                       />
                       <button
                         type="button"
                         onClick={() => handleVerifyCode()}
                         disabled={loadingCode}
-                        className="px-6 bg-[#1D9E75] hover:bg-[#15805d] disabled:bg-teal-800 text-white font-medium rounded-xl transition flex items-center gap-2 text-sm shadow-md"
+                        className="px-6 bg-[#1D68DF] hover:bg-[#15459E] disabled:bg-blue-800 text-white font-medium rounded-xl transition flex items-center gap-2 text-sm shadow-md"
                       >
                         {loadingCode ? <RefreshCw size={16} className="animate-spin" /> : 'Verify Code'}
                       </button>
@@ -1053,7 +1053,7 @@ export default function ClientOnboarding() {
                   <div className="bg-[#1c2e42] p-4 rounded-2xl border border-white/5 text-xs text-gray-400 leading-relaxed flex gap-3">
                     <Info size={24} className="text-blue-400 flex-shrink-0" />
                     <div>
-                      <strong>Don't have a contract code?</strong> Let us help you set up! Please contact sales at <a href="mailto:sales@nestbloq.com" className="text-teal-400 underline font-semibold">sales@nestbloq.com</a> to draft your community services contract.
+                      <strong>Don't have a contract code?</strong> Let us help you set up! Please contact sales at <a href="mailto:sales@nestbloq.com" className="text-blue-400 underline font-semibold">sales@nestbloq.com</a> to draft your community services contract.
                     </div>
                   </div>
                 </div>
@@ -1076,7 +1076,7 @@ export default function ClientOnboarding() {
                           validate: validateName('First Name')
                         })}
                         onKeyPress={onlyLettersKeyPress}
-                        className="w-full bg-[#1e2f41] border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]"
+                        className="w-full bg-[#1e2f41] border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-[#1D68DF]"
                       />
                       {errors.first_name && <span className="text-xs text-red-400">{errors.first_name.message}</span>}
                     </div>
@@ -1088,7 +1088,7 @@ export default function ClientOnboarding() {
                           validate: validateName('Middle Name')
                         })}
                         onKeyPress={onlyLettersKeyPress}
-                        className="w-full bg-[#1e2f41] border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]"
+                        className="w-full bg-[#1e2f41] border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-[#1D68DF]"
                       />
                       {errors.middle_name && <span className="text-xs text-red-400">{errors.middle_name.message}</span>}
                     </div>
@@ -1101,7 +1101,7 @@ export default function ClientOnboarding() {
                           validate: validateName('Last Name')
                         })}
                         onKeyPress={onlyLettersKeyPress}
-                        className="w-full bg-[#1e2f41] border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]"
+                        className="w-full bg-[#1e2f41] border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-[#1D68DF]"
                       />
                       {errors.last_name && <span className="text-xs text-red-400">{errors.last_name.message}</span>}
                     </div>
@@ -1116,7 +1116,7 @@ export default function ClientOnboarding() {
                           required: 'Required',
                           validate: validateEmail,
                         })}
-                        className="w-full bg-[#1e2f41] border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]"
+                        className="w-full bg-[#1e2f41] border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-[#1D68DF]"
                       />
                       {errors.email_id && <span className="text-xs text-red-400">{errors.email_id.message}</span>}
                     </div>
@@ -1142,7 +1142,7 @@ export default function ClientOnboarding() {
                             setValue('mobile_number_only', formatted);
                           }}
                           placeholder="(123) 456-7890"
-                          className="w-full bg-[#1e2f41] border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]"
+                          className="w-full bg-[#1e2f41] border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-[#1D68DF]"
                         />
                       </div>
                       {errors.mobile_number_only && <span className="text-xs text-red-400">{errors.mobile_number_only.message}</span>}
@@ -1164,7 +1164,7 @@ export default function ClientOnboarding() {
                               hasSpecialChar: (value) => /[^A-Za-z0-9]/.test(value) || 'Password must contain at least one special character'
                             }
                           })}
-                          className="w-full bg-[#1e2f41] border border-white/10 rounded-xl pl-3 pr-10 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]"
+                          className="w-full bg-[#1e2f41] border border-white/10 rounded-xl pl-3 pr-10 py-2 text-sm text-white focus:outline-none focus:border-[#1D68DF]"
                         />
                         <button
                           type="button"
@@ -1185,7 +1185,7 @@ export default function ClientOnboarding() {
                             required: 'Confirm password is required',
                             validate: (val) => val === passwordValue || 'Passwords do not match'
                           })}
-                          className="w-full bg-[#1e2f41] border border-white/10 rounded-xl pl-3 pr-10 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]"
+                          className="w-full bg-[#1e2f41] border border-white/10 rounded-xl pl-3 pr-10 py-2 text-sm text-white focus:outline-none focus:border-[#1D68DF]"
                         />
                         <button
                           type="button"
@@ -1208,7 +1208,7 @@ export default function ClientOnboarding() {
                           type="radio"
                           value="Admin"
                           {...register('role_selected')}
-                          className="accent-[#1D9E75]"
+                          className="accent-[#1D68DF]"
                         />
                         <div>
                           <span className="font-bold block">Admin (Property Manager)</span>
@@ -1220,7 +1220,7 @@ export default function ClientOnboarding() {
                           type="radio"
                           value="Board Member"
                           {...register('role_selected')}
-                          className="accent-[#1D9E75]"
+                          className="accent-[#1D68DF]"
                         />
                         <div>
                           <span className="font-bold block">Board Member</span>
@@ -1249,7 +1249,7 @@ export default function ClientOnboarding() {
                         validate: validateBusinessName
                       })}
                       placeholder="e.g. Whispering Pines HOA"
-                      className="w-full bg-[#1e2f41] border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]"
+                      className="w-full bg-[#1e2f41] border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-[#1D68DF]"
                     />
                     {errors.hoa_name && <span className="text-xs text-red-400">{errors.hoa_name.message}</span>}
                   </div>
@@ -1262,7 +1262,7 @@ export default function ClientOnboarding() {
                           required: true,
                           onChange: handleCountryChange
                         })}
-                        className={`w-full bg-[#1e2f41] border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75] ${
+                        className={`w-full bg-[#1e2f41] border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-[#1D68DF] ${
                           addressSelected ? 'pointer-events-none opacity-60 bg-[#162535]' : ''
                         }`}
                       >
@@ -1278,7 +1278,7 @@ export default function ClientOnboarding() {
                           required: true,
                           onChange: (e) => fetchCitiesForState(e.target.value)
                         })}
-                        className={`w-full bg-[#1e2f41] border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75] ${
+                        className={`w-full bg-[#1e2f41] border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-[#1D68DF] ${
                           addressSelected ? 'pointer-events-none opacity-60 bg-[#162535]' : ''
                         }`}
                       >
@@ -1299,7 +1299,7 @@ export default function ClientOnboarding() {
                         />
                       ) : loadingCities ? (
                         <div className="w-full bg-[#1e2f41] border border-white/10 rounded-xl px-3 py-2 text-sm text-gray-400 flex items-center gap-2">
-                          <RefreshCw size={14} className="animate-spin text-teal-400" />
+                          <RefreshCw size={14} className="animate-spin text-blue-400" />
                           <span>Loading districts/cities...</span>
                         </div>
                       ) : (
@@ -1320,7 +1320,7 @@ export default function ClientOnboarding() {
                                 e.preventDefault();
                               }
                             }}
-                            className="w-full bg-[#1e2f41] border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]"
+                            className="w-full bg-[#1e2f41] border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-[#1D68DF]"
                           />
                           {stateCities.length > 0 && (
                             <datalist id="city-options">
@@ -1336,7 +1336,7 @@ export default function ClientOnboarding() {
                         <>
                           {searchingCity && (
                             <div className="absolute z-50 w-full mt-1 bg-[#1e2f41] border border-white/10 rounded-xl p-3 text-xs text-gray-400 flex items-center gap-2">
-                              <RefreshCw size={14} className="animate-spin text-teal-400" />
+                              <RefreshCw size={14} className="animate-spin text-blue-400" />
                               Searching city...
                             </div>
                           )}
@@ -1348,7 +1348,7 @@ export default function ClientOnboarding() {
                                   key={feature.id}
                                   type="button"
                                   onClick={() => handleSelectCitySuggestion(feature)}
-                                  className="w-full text-left px-4 py-2.5 hover:bg-teal-500/10 hover:text-teal-400 text-xs text-gray-200 border-b border-white/5 last:border-0 transition-colors"
+                                  className="w-full text-left px-4 py-2.5 hover:bg-blue-500/10 hover:text-blue-400 text-xs text-gray-200 border-b border-white/5 last:border-0 transition-colors"
                                 >
                                   {feature.place_name}
                                 </button>
@@ -1376,7 +1376,7 @@ export default function ClientOnboarding() {
                         }}
                         readOnly={addressSelected}
                         placeholder={mapboxToken ? "Start typing to search..." : "Street Name & No"}
-                        className={`w-full bg-[#1e2f41] border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75] ${
+                        className={`w-full bg-[#1e2f41] border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-[#1D68DF] ${
                           addressSelected ? 'opacity-65 bg-[#162535] cursor-not-allowed' : ''
                         }`}
                       />
@@ -1385,7 +1385,7 @@ export default function ClientOnboarding() {
                       {/* Autocomplete suggestions dropdown */}
                       {searchingAddress && (
                         <div className="absolute z-50 w-full mt-1 bg-[#1e2f41] border border-white/10 rounded-xl p-3 text-xs text-gray-400 flex items-center gap-2">
-                          <RefreshCw size={14} className="animate-spin text-teal-400" />
+                          <RefreshCw size={14} className="animate-spin text-blue-400" />
                           Searching address...
                         </div>
                       )}
@@ -1397,7 +1397,7 @@ export default function ClientOnboarding() {
                               key={feature.id}
                               type="button"
                               onClick={() => handleSelectSuggestion(feature)}
-                              className="w-full text-left px-4 py-2.5 hover:bg-teal-500/10 hover:text-teal-400 text-xs text-gray-200 border-b border-white/5 last:border-0 transition-colors"
+                              className="w-full text-left px-4 py-2.5 hover:bg-blue-500/10 hover:text-blue-400 text-xs text-gray-200 border-b border-white/5 last:border-0 transition-colors"
                             >
                               {feature.place_name}
                             </button>
@@ -1432,7 +1432,7 @@ export default function ClientOnboarding() {
                           }
                         }}
                         readOnly={addressSelected}
-                        className={`w-full bg-[#1e2f41] border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75] ${
+                        className={`w-full bg-[#1e2f41] border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-[#1D68DF] ${
                           addressSelected ? 'opacity-65 bg-[#162535] cursor-not-allowed' : ''
                         }`}
                       />
@@ -1442,7 +1442,7 @@ export default function ClientOnboarding() {
                   </div>
 
                   {addressSelected && (
-                    <div className="p-3 bg-emerald-500/10 border border-emerald-500/25 rounded-xl flex items-center justify-between text-xs text-[#25C490]">
+                    <div className="p-3 bg-emerald-500/10 border border-emerald-500/25 rounded-xl flex items-center justify-between text-xs text-[#5BA4F5]">
                       <div className="flex items-center gap-1.5 font-medium">
                         <CheckCircle size={14} />
                         <span>Address auto-filled & verified via Mapbox.</span>
@@ -1450,7 +1450,7 @@ export default function ClientOnboarding() {
                       <button
                         type="button"
                         onClick={handleResetAddress}
-                        className="underline text-teal-400 hover:text-teal-300 font-semibold cursor-pointer"
+                        className="underline text-blue-400 hover:text-blue-300 font-semibold cursor-pointer"
                       >
                         Reset / Edit Address
                       </button>
@@ -1478,7 +1478,7 @@ export default function ClientOnboarding() {
                           setValue('hoa_contact_number_only', formatted);
                         }}
                         placeholder="(123) 456-7890"
-                        className="w-full bg-[#1e2f41] border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75]"
+                        className="w-full bg-[#1e2f41] border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-[#1D68DF]"
                       />
                     </div>
                     {errors.hoa_contact_number_only && <span className="text-xs text-red-400">{errors.hoa_contact_number_only.message}</span>}
@@ -1503,7 +1503,7 @@ export default function ClientOnboarding() {
                           type="radio"
                           value="bank_account"
                           {...register('payment_method')}
-                          className="accent-[#1D9E75]"
+                          className="accent-[#1D68DF]"
                         />
                         <span className="flex items-center gap-1.5"><Landmark size={14} /> Bank Account (ACH)</span>
                       </label>
@@ -1512,7 +1512,7 @@ export default function ClientOnboarding() {
                           type="radio"
                           value="credit_card"
                           {...register('payment_method')}
-                          className="accent-[#1D9E75]"
+                          className="accent-[#1D68DF]"
                         />
                         <span className="flex items-center gap-1.5"><CreditCard size={14} /> Credit/Debit Card</span>
                       </label>
@@ -1539,7 +1539,7 @@ export default function ClientOnboarding() {
                                 e.preventDefault();
                               }
                             }}
-                            className="w-full bg-[#162535] border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-[#1D9E75]"
+                            className="w-full bg-[#162535] border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-[#1D68DF]"
                           />
                           {errors.bank_name && <span className="text-xs text-red-400 mt-1 block">{errors.bank_name.message}</span>}
                         </div>
@@ -1562,7 +1562,7 @@ export default function ClientOnboarding() {
                                 e.preventDefault();
                               }
                             }}
-                            className="w-full bg-[#162535] border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-[#1D9E75] font-mono"
+                            className="w-full bg-[#162535] border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-[#1D68DF] font-mono"
                           />
                           {errors.routing_number && <span className="text-xs text-red-400 mt-1 block">{errors.routing_number.message}</span>}
                         </div>
@@ -1586,7 +1586,7 @@ export default function ClientOnboarding() {
                                   e.preventDefault();
                                 }
                               }}
-                              className="w-full bg-[#162535] border border-white/10 rounded-xl pl-3 pr-10 py-1.5 text-xs text-white focus:outline-none focus:border-[#1D9E75] font-mono"
+                              className="w-full bg-[#162535] border border-white/10 rounded-xl pl-3 pr-10 py-1.5 text-xs text-white focus:outline-none focus:border-[#1D68DF] font-mono"
                             />
                             <button
                               type="button"
@@ -1619,7 +1619,7 @@ export default function ClientOnboarding() {
                                 e.preventDefault();
                               }
                             }}
-                            className="w-full bg-[#162535] border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-[#1D9E75]"
+                            className="w-full bg-[#162535] border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-[#1D68DF]"
                           />
                           {errors.cardholder_name && <span className="text-xs text-red-400 mt-1 block">{errors.cardholder_name.message}</span>}
                         </div>
@@ -1643,7 +1643,7 @@ export default function ClientOnboarding() {
                                 e.preventDefault();
                               }
                             }}
-                            className="w-full bg-[#162535] border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-[#1D9E75] font-mono"
+                            className="w-full bg-[#162535] border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-[#1D68DF] font-mono"
                           />
                           {errors.card_number && <span className="text-xs text-red-400 mt-1 block">{errors.card_number.message}</span>}
                         </div>
@@ -1667,7 +1667,7 @@ export default function ClientOnboarding() {
                                   e.preventDefault();
                               }
                             }}
-                            className="w-full bg-[#162535] border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-[#1D9E75] font-mono"
+                            className="w-full bg-[#162535] border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-[#1D68DF] font-mono"
                           />
                           {errors.card_expiry && <span className="text-xs text-red-400 mt-1 block">{errors.card_expiry.message}</span>}
                         </div>
@@ -1691,7 +1691,7 @@ export default function ClientOnboarding() {
                                   e.preventDefault();
                                 }
                               }}
-                              className="w-full bg-[#162535] border border-white/10 rounded-xl pl-3 pr-10 py-1.5 text-xs text-white focus:outline-none focus:border-[#1D9E75] font-mono"
+                              className="w-full bg-[#162535] border border-white/10 rounded-xl pl-3 pr-10 py-1.5 text-xs text-white focus:outline-none focus:border-[#1D68DF] font-mono"
                             />
                             <button
                               type="button"
@@ -1719,12 +1719,12 @@ export default function ClientOnboarding() {
                           type="button"
                           onClick={fetchCaptcha}
                           disabled={refreshing}
-                          className="p-2 hover:bg-white/10 active:scale-95 bg-white/5 rounded-xl transition-all duration-150 text-gray-400 hover:text-teal-400 border border-transparent hover:border-teal-500/30 disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="p-2 hover:bg-white/10 active:scale-95 bg-white/5 rounded-xl transition-all duration-150 text-gray-400 hover:text-blue-400 border border-transparent hover:border-blue-500/30 disabled:opacity-50 disabled:cursor-not-allowed"
                           title="Refresh Captcha"
                         >
                           <RefreshCw
                             size={16}
-                            className={`transition-transform duration-500 ${refreshing ? 'animate-spin text-teal-400' : 'hover:rotate-180'}`}
+                            className={`transition-transform duration-500 ${refreshing ? 'animate-spin text-blue-400' : 'hover:rotate-180'}`}
                           />
                         </button>
                       </div>
@@ -1746,7 +1746,7 @@ export default function ClientOnboarding() {
                           }
                         }}
                         placeholder="Result"
-                        className="w-full bg-[#162535] border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-[#1D9E75] font-mono text-center font-bold text-lg"
+                        className="w-full bg-[#162535] border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-[#1D68DF] font-mono text-center font-bold text-lg"
                       />
                     </div>
                   </div>
@@ -1772,7 +1772,7 @@ export default function ClientOnboarding() {
                     type="button"
                     onClick={handleNext}
                     disabled={step === 1 && !verifiedContract}
-                    className="px-6 py-2.5 bg-[#1D9E75] hover:bg-[#15805d] disabled:bg-teal-800 disabled:opacity-50 text-white font-medium rounded-xl transition text-xs flex items-center gap-2"
+                    className="px-6 py-2.5 bg-[#1D68DF] hover:bg-[#15459E] disabled:bg-blue-800 disabled:opacity-50 text-white font-medium rounded-xl transition text-xs flex items-center gap-2"
                   >
                     Continue <ChevronRight size={16} />
                   </button>
@@ -1780,7 +1780,7 @@ export default function ClientOnboarding() {
                   <button
                     type="submit"
                     disabled={submitting}
-                    className="px-8 py-3 bg-[#1D9E75] hover:bg-[#15805d] disabled:bg-teal-800 text-white font-semibold rounded-xl transition text-sm flex items-center gap-2 shadow-lg shadow-teal-500/25"
+                    className="px-8 py-3 bg-[#1D68DF] hover:bg-[#15459E] disabled:bg-blue-800 text-white font-semibold rounded-xl transition text-sm flex items-center gap-2 shadow-lg shadow-blue-500/25"
                   >
                     {submitting ? <RefreshCw size={16} className="animate-spin" /> : 'Complete Registration'}
                   </button>

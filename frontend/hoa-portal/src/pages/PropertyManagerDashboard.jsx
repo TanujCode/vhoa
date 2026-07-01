@@ -3,69 +3,49 @@ import {
   Users, AlertTriangle, Wrench, DollarSign,
   Calendar, TrendingUp, RefreshCw, UserPlus,
   Clock, CheckCircle, XCircle, Building2, Download,
-  ShieldAlert, Settings2, Wallet, Truck, Megaphone, Plus, Trash2,
-  Check, X
+  ShieldAlert, Settings2, Wallet, Sparkles, Folder, FileText, Megaphone,
+  Check, Trash2, Plus, MapPin, X, Search
 } from 'lucide-react';
 import API, { getBaseUrl } from "../services/api";
 
-// ── Stat Card (Premium) ─────────────────────────────
-const StatCard = ({ label, value, icon: Icon, color, sub, subColor, onClick }) => (
-  <div 
-    onClick={onClick}
-    className={`bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-3 sm:p-6 transition-all duration-300 hover:border-slate-200 dark:hover:border-white/20 hover:-translate-y-1 shadow-sm dark:shadow-none ${onClick ? 'cursor-pointer hover:border-teal-500/40 dark:hover:border-teal-400/40' : ''}`}
-  >
-    <div className="flex items-center justify-between mb-2 sm:mb-3">
-      <p className="text-slate-500 dark:text-gray-400 text-xs sm:text-sm font-medium leading-tight pr-1">{label}</p>
-      <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-2xl flex items-center justify-center ${color} shadow-inner flex-shrink-0`}>
-        <Icon size={15} className="text-white" />
-      </div>
-    </div>
-    <p className={`text-2xl sm:text-4xl font-mono font-bold mt-1 ${subColor || 'text-slate-900 dark:text-white'}`}>
-      {value ?? '—'}
-    </p>
-    {sub && <p className="text-[10px] sm:text-xs text-slate-400 dark:text-gray-500 mt-1 sm:mt-2 font-sans leading-tight">{sub}</p>}
-  </div>
-);
-
-
-// ── Activity Item ─────────────────────────────
-const ActivityItem = ({ icon: Icon, color, title, time, status }) => (
-  <div className="flex items-center gap-3 py-3.5 border-b border-slate-100 dark:border-white/5 last:border-0 hover:bg-slate-50/50 dark:hover:bg-white/[0.01] px-2 rounded-xl transition duration-150">
-    <div className={`w-8.5 h-8.5 rounded-xl flex items-center justify-center flex-shrink-0 ${color}`}>
-      <Icon size={16} className="text-white" />
-    </div>
-    <div className="flex-1 min-w-0">
-      <p className="text-sm font-medium text-slate-800 dark:text-white truncate">{title}</p>
-      <span className="text-[10px] text-slate-400 dark:text-gray-500 uppercase tracking-wider">{time}</span>
-    </div>
-    {status && (
-      <span className={`text-[10px] px-2.5 py-1 rounded-full font-bold uppercase tracking-wider ${
-        status === 'OPEN' || status === 'PENDING' ? 'bg-amber-500/10 text-amber-600 dark:bg-amber-500/20 dark:text-amber-300' :
-        status === 'RESOLVED' || status === 'APPROVED' || status === 'CLOSED' ? 'bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-300' :
-        'bg-blue-500/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-300'
-      }`}>
-        {status}
-      </span>
-    )}
-  </div>
-);
-
-// ── Property Manager Dashboard ────────────────────────────
 const PropertyManagerDashboard = ({ community, user, setActivePage }) => {
   const [stats, setStats]           = useState(null);
-  const [violations, setViolations] = useState([]);
-  const [requests, setRequests]     = useState([]);
-  const [vendors, setVendors]       = useState([]);
   const [loading, setLoading]       = useState(true);
+  const [exporting, setExporting]   = useState(false);
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [exportType, setExportType] = useState("violations");
+  const [exportFormat, setExportFormat] = useState("csv");
 
-  // Resident Join Requests State
+  const [upcomingEvents, setUpcomingEvents] = useState([]);
+  const [newTaskText, setNewTaskText] = useState('');
+  const [quickTasks, setQuickTasks] = useState([]);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // PM specific Join Requests
   const [joinRequests, setJoinRequests] = useState([]);
   const [loadingJoinRequests, setLoadingJoinRequests] = useState(true);
   const [actionId, setActionId] = useState(null);
 
+  const formatAddress = (addr) => {
+    if (!addr) return 'Bazar Chowk, Chicholi';
+    if (typeof addr === 'string') return addr;
+    const parts = [];
+    if (addr.address) parts.push(addr.address);
+    if (addr.city) parts.push(addr.city);
+    if (addr.state_name || addr.state_id) parts.push(addr.state_name || addr.state_id);
+    if (addr.zip_code) parts.push(addr.zip_code);
+    return parts.length > 0 ? parts.join(', ') : 'Bazar Chowk, Chicholi';
+  };
+
   useEffect(() => {
     if (community?.community_id) {
       fetchDashboardData(community.community_id);
+      const saved = localStorage.getItem(`dashboard_quick_tasks_${user?.user_id || 'guest'}_${community.community_id}`);
+      setQuickTasks(saved ? JSON.parse(saved) : [
+        { id: 1, text: "Follow up with vendor for pool repair", completed: false },
+        { id: 2, text: "Review annual budget draft", completed: true },
+        { id: 3, text: "Approve pending amenity bookings", completed: false }
+      ]);
     }
   }, [community]);
 
@@ -73,19 +53,49 @@ const PropertyManagerDashboard = ({ community, user, setActivePage }) => {
     try {
       setLoading(true);
       setLoadingJoinRequests(true);
-      const [statsRes, violationsRes, requestsRes, vendorsRes, joinReqsRes] = await Promise.allSettled([
+
+      const [statsRes, meetingsRes, joinReqsRes] = await Promise.all([
         API.get(`/community/${communityId}/stats`),
-        API.get(`/violation/${communityId}?limit=5`),
-        API.get(`/service-request/${communityId}?limit=5`),
-        API.get(`/vendor/${communityId}?limit=5`),
-        API.get(`/community/${communityId}/join-requests/pending`),
+        API.get(`/meeting-survey/meetings?community_id=${communityId}`).catch(() => ({ data: [] })),
+        API.get(`/community/${communityId}/join-requests/pending`).catch(() => ({ data: [] }))
       ]);
 
-      if (statsRes.status === 'fulfilled') setStats(statsRes.value.data);
-      if (violationsRes.status === 'fulfilled') setViolations(violationsRes.value.data);
-      if (requestsRes.status === 'fulfilled') setRequests(requestsRes.value.data);
-      if (vendorsRes.status === 'fulfilled') setVendors(vendorsRes.value.data);
-      if (joinReqsRes.status === 'fulfilled') setJoinRequests(joinReqsRes.value.data || []);
+      setStats(statsRes.data);
+      setJoinRequests(joinReqsRes.data || []);
+      
+      const meetingsData = meetingsRes?.data || [];
+      
+      // Load personal notes
+      let localNotes = [];
+      try {
+        const saved = localStorage.getItem(`personal_notes_${user?.user_id || 'guest'}_${communityId}`);
+        localNotes = saved ? JSON.parse(saved) : [];
+      } catch (_) {}
+
+      // Combine
+      const combined = [
+        ...meetingsData.map(m => ({
+          id: `meeting-${m.meeting_id}`,
+          title: m.title,
+          date: m.meeting_date,
+          type: 'meeting'
+        })),
+        ...localNotes.map(n => ({
+          id: `note-${n.note_id}`,
+          title: n.title,
+          date: n.date,
+          type: 'note'
+        }))
+      ];
+
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const filtered = combined
+        .filter(item => new Date(item.date) >= today)
+        .sort((a, b) => new Date(a.date) - new Date(b.date));
+
+      setUpcomingEvents(filtered.slice(0, 4));
     } catch (err) {
       console.error('Dashboard fetch error:', err);
     } finally {
@@ -111,343 +121,504 @@ const PropertyManagerDashboard = ({ community, user, setActivePage }) => {
     }
   };
 
-
-
-  if (!community) {
-    return <div className="text-center py-20 text-gray-400">No community assigned.</div>;
-  }
-
-  // Occupancy metrics calculations
-  const occupiedUnits = stats?.occupied_units ?? stats?.total_residents ?? community.total_owners ?? 0;
-  const totalOwners = stats?.total_residents ?? community.total_owners ?? 0;
-  const communitySize = community.community_size ?? 1; // avoid division by 0
-  const occupancyPercent = Math.min(100, Math.round((occupiedUnits / communitySize) * 100));
-
-  // Dues calculations
-  const duesCollected = stats?.dues_collected ?? 19227.00;
-  const duesPending = stats?.dues_pending ?? 3800.00;
-  const duesOverdue = stats?.dues_overdue ?? 1623.00;
-  const totalDues = duesCollected + duesPending + duesOverdue;
-  const duesPercent = totalDues > 0 ? Math.min(100, Math.round((duesCollected / totalDues) * 100)) : 0;
-
-  // Determine progress color
-  const getProgressColor = (pct) => {
-    if (pct < 70) return "bg-emerald-500";
-    if (pct < 90) return "bg-amber-500";
-    return "bg-red-500";
+  const handleAddTask = (e) => {
+    e.preventDefault();
+    if (!newTaskText.trim()) return;
+    const newT = {
+      id: Date.now(),
+      text: newTaskText.trim(),
+      completed: false
+    };
+    const updated = [...quickTasks, newT];
+    setQuickTasks(updated);
+    localStorage.setItem(`dashboard_quick_tasks_${user?.user_id || 'guest'}_${community?.community_id}`, JSON.stringify(updated));
+    setNewTaskText('');
   };
 
-  const quickActions = [
-    { label: "Log Violation", icon: ShieldAlert, page: "violations", color: "bg-red-500/5 dark:bg-red-500/10 hover:bg-red-500/10 dark:hover:bg-red-500/20 text-red-600 dark:text-red-400 border border-red-500/10 dark:border-red-500/20" },
-    { label: "Post Announcement", icon: Megaphone, page: "news", color: "bg-teal-500/5 dark:bg-teal-500/10 hover:bg-teal-500/10 dark:hover:bg-teal-500/20 text-teal-600 dark:text-teal-400 border border-teal-500/10 dark:border-teal-500/20" },
-    { label: "New Request", icon: Wrench, page: "servicereq", color: "bg-blue-500/5 dark:bg-blue-500/10 hover:bg-blue-500/10 dark:hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 border border-blue-500/10 dark:border-blue-500/20" },
-    { label: "Manage Members", icon: Users, page: "members", color: "bg-purple-500/5 dark:bg-purple-500/10 hover:bg-purple-500/10 dark:hover:bg-purple-500/20 text-purple-600 dark:text-purple-400 border border-purple-500/10 dark:border-purple-500/20" },
+  const handleToggleTask = (taskId) => {
+    const updated = quickTasks.map(t => t.id === taskId ? { ...t, completed: !t.completed } : t);
+    setQuickTasks(updated);
+    localStorage.setItem(`dashboard_quick_tasks_${user?.user_id || 'guest'}_${community?.community_id}`, JSON.stringify(updated));
+  };
+
+  const handleDeleteTask = (taskId) => {
+    const updated = quickTasks.filter(t => t.id !== taskId);
+    setQuickTasks(updated);
+    localStorage.setItem(`dashboard_quick_tasks_${user?.user_id || 'guest'}_${community?.community_id}`, JSON.stringify(updated));
+  };
+
+  const handleExportReport = async () => {
+    try {
+      setExporting(true);
+      const response = await API.get(`/report/${community.community_id}/export?type=${exportType}&format=${exportFormat}`, {
+        responseType: 'blob',
+      });
+      const fileExt = exportFormat === 'pdf' ? 'pdf' : exportFormat === 'excel' ? 'xlsx' : 'csv';
+      const contentType = exportFormat === 'pdf' ? 'application/pdf' : exportFormat === 'excel' ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' : 'text/csv';
+      
+      const url = window.URL.createObjectURL(new Blob([response.data], { type: contentType }));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `${exportType}_report_${community.community_id}.${fileExt}`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      setShowExportModal(false);
+    } catch (err) {
+      console.error("Export failed:", err);
+      alert("Failed to export report. Please verify records exist for this community.");
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const consoleButtons = [
+    { label: "Service Req", page: "servicereq", count: stats?.open_requests, icon: <Wrench size={18} className="text-amber-500" /> },
+    { label: "Vendor List", page: "vendors", icon: <Users size={18} className="text-blue-500" /> },
+    { label: "Violations", page: "violations", count: stats?.active_violations, icon: <AlertTriangle size={18} className="text-red-500" /> },
+    { label: "Amenities", page: "amenities", icon: <Building2 size={18} className="text-blue-500" /> },
+    { label: "Payments", page: "payments", count: stats?.pending_payments, icon: <Wallet size={18} className="text-emerald-500" /> },
+    { label: "Documents", page: "documents", icon: <Folder size={18} className="text-slate-500" /> },
+    { label: "News & Announce", page: "news", icon: <Megaphone size={18} className="text-orange-500" /> },
+    { label: "Members", page: "members", count: stats?.total_residents, icon: <UserPlus size={18} className="text-purple-500" /> },
+    { label: "Reports", page: "reports", icon: <TrendingUp size={18} className="text-purple-500" /> }
   ];
 
   return (
-    <div className="space-y-8">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-white">Property Manager Portal</h1>
-          <p className="text-slate-500 dark:text-gray-400 mt-1 text-sm">{community.name} • Overview of your managed community</p>
-        </div>
-        <button
-          onClick={() => fetchDashboardData(community.community_id)}
-          disabled={loading}
-          className="px-5 py-2.5 bg-slate-200/60 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 text-slate-700 dark:text-white rounded-2xl text-sm font-semibold transition-all duration-200 flex items-center gap-2 border border-slate-300 dark:border-white/5 active:scale-95 disabled:opacity-60"
-        >
-          <RefreshCw size={15} className={loading ? "animate-spin" : ""} /> Refresh Data
-        </button>
-      </div>
+    <div className="space-y-6 text-slate-900 dark:text-white pb-12 animate-fade-in">
+      
+      {/* ── Page Header & Community Highlight Card (Unified Layout) ── */}
+      <div className="bg-white dark:bg-[#1E2E42] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 sm:p-8 text-slate-800 dark:text-white shadow-sm dark:shadow-none relative overflow-hidden flex flex-col lg:flex-row justify-between items-start lg:items-center gap-8 group">
+        {/* Subtle premium light blue glow */}
+        <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/[0.03] dark:bg-blue-500/[0.02] rounded-full blur-3xl pointer-events-none" />
 
-      {/* Community Banner & Occupancy Cap Card */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 flex flex-col sm:flex-row items-center gap-6 shadow-sm dark:shadow-none">
-          <div className="w-16 h-16 bg-[#1D9E75]/20 text-[#25C490] rounded-2xl flex items-center justify-center flex-shrink-0 border border-[#1D9E75]/30">
-            <Building2 size={32} />
-          </div>
-          <div className="flex-1 text-center sm:text-left">
-            <span className="text-[10px] font-bold text-emerald-700 dark:text-[#25C490] uppercase tracking-widest bg-emerald-500/10 dark:bg-[#25C490]/10 px-3 py-1 rounded-full border border-emerald-500/20 dark:border-[#25C490]/20">Active HOA License</span>
-            <h2 className="text-2xl font-bold text-slate-900 dark:text-white mt-3">{community.name}</h2>
-            <p className="text-slate-500 dark:text-gray-400 text-sm mt-1">
-              {community.address?.address}, {community.address?.city}
-            </p>
-            <div className="mt-3 text-xs text-slate-500 dark:text-gray-500 font-mono">
-              HOA CODE: <span className="text-slate-900 dark:text-white bg-slate-200 dark:bg-white/5 px-2 py-0.5 rounded font-bold">{community.community_code}</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Occupancy Card */}
-        <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 flex flex-col justify-between shadow-sm dark:shadow-none">
+        {/* Left: Title & Community Info */}
+        <div className="flex-1 min-w-0 relative z-10 space-y-3">
           <div>
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-sm font-semibold text-slate-500 dark:text-gray-400">Community Occupancy</span>
-              <span className="text-xs text-slate-400 dark:text-gray-500 font-mono">{occupiedUnits} / {communitySize} Units</span>
-            </div>
-            <div className="w-full bg-slate-100 dark:bg-white/5 rounded-full h-3 overflow-hidden">
-              <div className={`h-full rounded-full transition-all duration-500 ${getProgressColor(occupancyPercent)}`} style={{ width: `${occupancyPercent}%` }}></div>
-            </div>
-          </div>
-          <div className="mt-4 flex items-center justify-between">
-            <span className="text-2xl font-bold font-mono text-slate-900 dark:text-white">{occupancyPercent}%</span>
-            <span className="text-xs text-slate-500 dark:text-gray-400 font-sans">
-              {communitySize - occupiedUnits} Free slots remaining
-            </span>
-          </div>
-        </div>
-      </div>
-
-      {/* Stats Grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
-        <StatCard label="Registered Members" value={totalOwners} icon={Users} color="bg-teal-600" subColor="text-teal-600 dark:text-teal-400" sub="Active Homeowners" onClick={() => setActivePage?.('members')} />
-        <StatCard label="Open Violations" value={stats?.active_violations ?? 0} icon={ShieldAlert} color="bg-red-600" subColor="text-red-600 dark:text-red-400" sub="Require compliance tracking" onClick={() => setActivePage?.('violations')} />
-        <StatCard label="Service Requests" value={stats?.open_requests ?? 0} icon={Wrench} color="bg-blue-600" subColor="text-blue-600 dark:text-blue-400" sub="Awaiting technician routing" onClick={() => setActivePage?.('servicereq')} />
-        <StatCard label="Active Vendors" value={vendors.length} icon={Truck} color="bg-purple-600" subColor="text-purple-600 dark:text-purple-400" sub="Contractors on file" onClick={() => setActivePage?.('vendors')} />
-      </div>
-
-      {/* Quick Action & PM Checklist */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
-        {/* Quick Actions Panel */}
-        <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 flex flex-col shadow-sm dark:shadow-none">
-          <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">Quick Shortcuts</h3>
-          <div className="grid grid-cols-1 gap-3 flex-1">
-            {quickActions.map((action, idx) => {
-              const Icon = action.icon;
-              return (
-                <button
-                  key={idx}
-                  onClick={() => setActivePage(action.page)}
-                  className={`flex items-center gap-3.5 px-4 py-3 rounded-2xl transition duration-200 ${action.color} font-medium text-sm text-left active:scale-98`}
-                >
-                  <Icon size={18} />
-                  <span>{action.label}</span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Dues Collection Widget */}
-        <div className="lg:col-span-2 bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-4 sm:p-6 shadow-sm dark:shadow-none flex flex-col justify-between min-h-[250px]">
-          <div className="flex items-center justify-between mb-4 border-b border-slate-100 dark:border-white/5 pb-3">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-xl bg-teal-500/10 dark:bg-teal-500/20 flex items-center justify-center text-teal-600 dark:text-teal-400">
-                <DollarSign size={16} />
-              </div>
-              <h3 className="text-sm sm:text-lg font-bold text-slate-900 dark:text-white">Dues Collection</h3>
-            </div>
-            <span className="text-xs font-bold text-slate-400 dark:text-gray-500 font-sans">Q3 Cycle</span>
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white leading-none">
+              Property Manager Portal
+            </h1>
+            <p className="text-[10px] text-slate-500 dark:text-gray-450 mt-1 font-mono uppercase tracking-wider font-semibold">
+              Management Console • Active Session
+            </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center flex-1">
-            {/* Left: Progress Circle */}
-            <div className="md:col-span-4 flex flex-col items-center justify-center">
-              <div className="relative w-24 h-24 shrink-0">
-                <svg viewBox="0 0 36 36" className="w-full h-full -rotate-90">
-                  <circle cx="18" cy="18" r="14.5" fill="none" stroke="currentColor" className="text-slate-200 dark:text-white/10" strokeWidth="3" />
-                  <circle 
-                    cx="18" 
-                    cy="18" 
-                    r="14.5" 
-                    fill="none" 
-                    stroke="#1D9E75" 
-                    strokeWidth="3" 
-                    strokeDasharray={`${duesPercent} 100`} 
-                    strokeLinecap="round" 
-                    className="transition-all duration-1000 ease-out"
-                  />
-                </svg>
-                <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <span className="text-xl font-black text-slate-900 dark:text-white font-mono">{duesPercent}%</span>
-                  <span className="text-[8px] font-bold text-slate-400 dark:text-gray-500 uppercase tracking-wider">Collected</span>
-                </div>
-              </div>
+          <div className="mt-4 flex flex-col sm:flex-row sm:items-center gap-3">
+            <div className="w-10 h-10 bg-blue-50/80 dark:bg-white/5 border border-blue-100/50 dark:border-white/10 rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm">
+              <Building2 size={20} className="text-blue-600 dark:text-blue-400" />
             </div>
-
-            {/* Right: Amounts & QuickBooks status */}
-            <div className="md:col-span-8 space-y-3 pl-0 md:pl-4">
-              <div className="grid grid-cols-3 gap-2">
-                <div className="bg-slate-100/50 dark:bg-white/[0.02] border border-slate-100 dark:border-white/5 p-2 rounded-2xl">
-                  <p className="text-[9px] font-bold text-slate-400 dark:text-gray-500 uppercase tracking-wider">Collected</p>
-                  <p className="text-xs sm:text-sm font-bold text-emerald-600 dark:text-emerald-400 mt-1 font-mono">${duesCollected.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
-                </div>
-                <div className="bg-slate-100/50 dark:bg-white/[0.02] border border-slate-100 dark:border-white/5 p-2 rounded-2xl">
-                  <p className="text-[9px] font-bold text-slate-400 dark:text-gray-500 uppercase tracking-wider">Pending</p>
-                  <p className="text-xs sm:text-sm font-bold text-amber-600 dark:text-amber-400 mt-1 font-mono">${duesPending.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
-                </div>
-                <div className="bg-slate-100/50 dark:bg-white/[0.02] border border-slate-100 dark:border-white/5 p-2 rounded-2xl">
-                  <p className="text-[9px] font-bold text-slate-400 dark:text-gray-500 uppercase tracking-wider">Overdue</p>
-                  <p className="text-xs sm:text-sm font-bold text-red-600 dark:text-red-400 mt-1 font-mono">${duesOverdue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between p-2.5 bg-slate-100/30 dark:bg-white/[0.01] rounded-2xl border border-slate-200/40 dark:border-white/[0.03] text-xs">
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                  <span className="font-bold text-slate-600 dark:text-slate-350 text-[10px]">QuickBooks Sync</span>
-                </div>
-                <span className="px-1.5 py-0.5 rounded border border-emerald-500/25 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold uppercase tracking-wider text-[8px]">
-                  SYNCED
+            <div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-lg font-extrabold text-slate-900 dark:text-white">{community.name}</span>
+                <span className="inline-flex items-center text-[9px] font-black text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
+                  ACTIVE PM LICENSE
                 </span>
               </div>
+              <p className="text-xs text-slate-600 dark:text-gray-300 mt-1 flex items-center gap-1 font-semibold">
+                <MapPin size={11} className="text-slate-400 dark:text-slate-400 flex-shrink-0" />
+                {formatAddress(community.address)}
+              </p>
+              <p className="text-[10px] text-slate-500 dark:text-gray-400 font-mono mt-0.5">
+                HOA Code: <span className="font-bold text-slate-800 dark:text-white">{community.community_code}</span>
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Right: Stats Grid */}
+        <div className="relative z-10 w-full lg:w-auto mt-5 lg:mt-0 pt-5 lg:pt-0 border-t border-slate-200/60 dark:border-white/5 lg:border-t-0">
+          {/* Stats columns */}
+          <div className="flex flex-row flex-wrap items-center justify-between sm:justify-around lg:justify-end gap-5 sm:gap-8 lg:gap-11 w-full">
+            <div className="text-center flex flex-col items-center min-w-[65px]">
+              <p className="text-3xl sm:text-4xl font-black text-blue-600 dark:text-blue-400 font-mono tracking-tight">{stats?.total_residents || 7}</p>
+              <p className="text-[9px] sm:text-[10px] font-bold text-slate-500 dark:text-gray-450 uppercase tracking-widest mt-1">Members</p>
+            </div>
+            <div className="text-center flex flex-col items-center min-w-[65px]">
+              <p className="text-3xl sm:text-4xl font-black text-amber-600 dark:text-amber-500 font-mono tracking-tight">{stats?.active_violations || 2}</p>
+              <p className="text-[9px] sm:text-[10px] font-bold text-slate-500 dark:text-gray-455 uppercase tracking-widest mt-1">Violations</p>
+            </div>
+            <div className="text-center flex flex-col items-center min-w-[65px]">
+              <p className="text-3xl sm:text-4xl font-black text-blue-600 dark:text-blue-400 font-mono tracking-tight">{stats?.open_requests || 4}</p>
+              <p className="text-[9px] sm:text-[10px] font-bold text-slate-500 dark:text-gray-455 uppercase tracking-widest mt-1">Service Req</p>
+            </div>
+            <div className="text-center flex flex-col items-center min-w-[65px]">
+              <p className="text-3xl sm:text-4xl font-black text-indigo-600 dark:text-indigo-400 font-mono tracking-tight">{stats?.total_units || 120}</p>
+              <p className="text-[9px] sm:text-[10px] font-bold text-slate-500 dark:text-gray-455 uppercase tracking-widest mt-1">Total Units</p>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Recent Activity - 2 Columns */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Recent Violations */}
-        <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-4 sm:p-6 shadow-sm dark:shadow-none">
-          <div className="flex items-center justify-between mb-4 border-b border-slate-100 dark:border-white/5 pb-2">
-            <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">Recent Compliance</h3>
-            <button onClick={() => setActivePage('violations')} className="text-xs text-teal-600 dark:text-[#25C490] hover:underline flex-shrink-0 ml-2">View All</button>
-          </div>
-          {violations.length === 0 ? (
-            <p className="text-slate-500 dark:text-gray-400 py-10 text-center text-sm">No recent violations recorded</p>
-          ) : (
-            <div className="space-y-1">
-              {violations.slice(0, 4).map(v => (
-                <ActivityItem
-                  key={v.violation_id}
-                  icon={ShieldAlert}
-                  color="bg-red-500"
-                  title={`${v.violation_type_name} - Unit ${v.unit_no || 'N/A'}`}
-                  time={new Date(v.created_date || Date.now()).toLocaleDateString()}
-                  status={v.violation_status}
-                />
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Recent Service Requests */}
-        <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-4 sm:p-6 shadow-sm dark:shadow-none">
-          <div className="flex items-center justify-between mb-4 border-b border-slate-100 dark:border-white/5 pb-2">
-            <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">Recent Service Reqs</h3>
-            <button onClick={() => setActivePage('servicereq')} className="text-xs text-teal-600 dark:text-[#25C490] hover:underline flex-shrink-0 ml-2">View All</button>
-          </div>
-          {requests.length === 0 ? (
-            <p className="text-slate-500 dark:text-gray-400 py-10 text-center text-sm">No pending requests logged</p>
-          ) : (
-            <div className="space-y-1">
-              {requests.slice(0, 4).map(r => (
-                <ActivityItem
-                  key={r.request_id}
-                  icon={Wrench}
-                  color="bg-blue-500"
-                  title={r.title}
-                  time={new Date(r.created_date || Date.now()).toLocaleDateString()}
-                  status={r.status_name}
-                />
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Resident Join Requests */}
-      <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl shadow-sm overflow-hidden">
-        <div className="p-6 border-b border-gray-200 dark:border-white/10 flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <UserPlus className="w-5 h-5 text-teal-500" />
-            <h2 className="text-lg font-bold text-gray-900 dark:text-white">Resident Join Requests</h2>
-          </div>
-          <span className="px-2.5 py-1 text-xs font-mono font-bold bg-amber-500/10 text-amber-500 rounded-full">
-            {joinRequests.length} Pending
-          </span>
-        </div>
-
-        {loadingJoinRequests ? (
-          <div className="p-10 text-center text-gray-500 dark:text-gray-400 font-mono text-xs">
-            Fetching active approval pool records...
-          </div>
-        ) : joinRequests.length === 0 ? (
-          <div className="p-10 text-center text-gray-500 dark:text-gray-400">
-            <p className="text-sm">No pending resident requests found for this community.</p>
-            <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">Everything is cleared up! 👍</p>
-          </div>
-        ) : (
-          <div className="p-4 sm:p-6 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-            {joinRequests.map((req) => (
-              <div
-                key={req.request_id}
-                className="bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl p-4 flex flex-col gap-3"
-              >
-                {/* Name + Email */}
-                <div className="flex items-start gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-teal-500 to-blue-600 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
-                    {(req.full_name?.[0] || '?').toUpperCase()}
-                  </div>
-                  <div className="min-w-0">
-                    <div className="font-semibold text-slate-900 dark:text-white text-sm truncate">{req.full_name}</div>
-                    <div className="text-xs text-slate-500 dark:text-gray-400 truncate">{req.email_id || req.email}</div>
-                  </div>
-                </div>
-
-                {/* Unit + Date */}
-                <div className="flex items-center justify-between text-xs">
-                  <span className="px-2 py-1 font-mono bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded">
-                    Unit {req.unit_no || 'N/A'}
-                  </span>
-                  <span className="text-slate-400 dark:text-gray-500 font-mono">
-                    {req.created_at ? new Date(req.created_at).toLocaleDateString() : 'Recent'}
-                  </span>
-                </div>
-
-                {/* Docs */}
-                <div className="flex gap-2 flex-wrap">
-                  {req.id_proof_url ? (
-                    <a
-                      href={getBaseUrl(req.id_proof_url)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="px-2.5 py-1 text-xs font-semibold bg-blue-500/10 hover:bg-blue-500 text-blue-600 hover:text-white rounded-xl border border-blue-500/20 transition-all"
-                    >
-                      ID Proof
-                    </a>
-                  ) : (
-                    <span className="text-xs text-gray-400 font-mono">No ID</span>
-                  )}
-                  {req.address_proof_url ? (
-                    <a
-                      href={getBaseUrl(req.address_proof_url)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="px-2.5 py-1 text-xs font-semibold bg-purple-500/10 hover:bg-purple-500 text-purple-600 hover:text-white rounded-xl border border-purple-500/20 transition-all"
-                    >
-                      Address Proof
-                    </a>
-                  ) : (
-                    <span className="text-xs text-gray-400 font-mono">No Address</span>
-                  )}
-                </div>
-
-                {/* Actions */}
-                <div className="flex gap-2 pt-1 border-t border-slate-100 dark:border-white/5">
-                  <button
-                    disabled={actionId !== null}
-                    onClick={() => handleRequestAction(req.request_id, 'APPROVE')}
-                    className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-emerald-500/10 hover:bg-emerald-500 text-emerald-600 hover:text-white rounded-xl text-xs font-semibold transition-all disabled:opacity-50"
-                  >
-                    <Check className="w-3.5 h-3.5" /> Approve
-                  </button>
-                  <button
-                    disabled={actionId !== null}
-                    onClick={() => handleRequestAction(req.request_id, 'REJECT')}
-                    className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white rounded-xl text-xs font-semibold transition-all disabled:opacity-50"
-                  >
-                    <X className="w-3.5 h-3.5" /> Reject
-                  </button>
-                </div>
+      {/* ── Main Workspace Grid (Top Row) ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        {/* Left Top: Community Console navigation */}
+        <div className="lg:col-span-7 bg-gradient-to-br from-white/80 to-slate-50/80 dark:from-[#1E2E42]/80 dark:to-[#162535]/80 backdrop-blur-md border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 shadow-sm flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between mb-6 pb-3 border-b border-slate-200/60 dark:border-white/[0.05] gap-4">
+              <h3 className="font-extrabold text-xs sm:text-sm text-slate-900 dark:text-white uppercase tracking-wider whitespace-nowrap">
+                Community Console
+              </h3>
+              <div className="flex items-center gap-2.5 sm:gap-3 flex-shrink-0">
+                <span className="text-[9px] sm:text-[10px] font-bold text-slate-400 dark:text-gray-500 uppercase tracking-widest font-mono hidden sm:inline">
+                  {new Date().toLocaleString('en-US', { month: 'long', year: 'numeric' })}
+                </span>
+                <button
+                  onClick={() => setShowExportModal(true)}
+                  className="px-2.5 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-[10px] sm:text-xs font-bold transition shadow-sm active:scale-95 flex items-center gap-1.5 whitespace-nowrap"
+                >
+                  <Download size={11} />
+                  Export Report
+                </button>
               </div>
-            ))}
+            </div>
+
+            {/* Quick Navigation Buttons Grid */}
+            <div className="grid grid-cols-3 gap-3.5">
+              {(() => {
+                const filtered = consoleButtons.filter(btn => 
+                  btn.label.toLowerCase().includes(searchQuery.toLowerCase())
+                );
+                if (filtered.length === 0) {
+                  return (
+                    <div className="col-span-3 text-center py-10 text-xs text-slate-400 dark:text-gray-500 font-mono">
+                      No shortcuts found matching "{searchQuery}"
+                    </div>
+                  );
+                }
+                return filtered.map((btn, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setActivePage(btn.page)}
+                    className="relative group p-5 rounded-2xl border border-slate-200/80 dark:border-white/[0.05] bg-white/40 dark:bg-white/[0.02] hover:bg-gradient-to-br hover:from-blue-500/10 hover:to-blue-650/5 hover:border-blue-500/30 dark:hover:border-blue-400/30 text-left transition-all duration-300 hover:scale-[1.03] hover:shadow-md flex flex-col justify-between h-28"
+                  >
+                    <div className="flex justify-between items-start w-full">
+                      <div className="p-2 rounded-xl bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-350 group-hover:bg-blue-500/10 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                        {btn.icon}
+                      </div>
+                      {btn.count !== undefined && btn.count > 0 && (
+                        <span className="bg-red-500 text-white text-[9px] font-black px-1.5 py-0.5 rounded-full shadow-sm animate-pulse">
+                          {btn.count}
+                        </span>
+                      )}
+                    </div>
+                    <span className="text-xs font-black text-slate-800 dark:text-slate-200 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors block mt-2 leading-tight">
+                      {btn.label}
+                    </span>
+                  </button>
+                ));
+              })()}
+            </div>
           </div>
-        )}
+        </div>
+
+        {/* Right Top: Calendar Schedules & Upcoming events */}
+        <div className="lg:col-span-5 bg-gradient-to-br from-white/80 to-slate-50/80 dark:from-[#1E2E42]/80 dark:to-[#162535]/80 backdrop-blur-md border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 shadow-sm flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-200/60 dark:border-white/[0.05]">
+              <h3 className="font-extrabold text-sm text-slate-900 dark:text-white uppercase tracking-wider">
+                Calendar Schedule
+              </h3>
+              <button
+                onClick={() => setActivePage('meetings')}
+                className="text-xs text-blue-600 dark:text-blue-400 hover:underline font-bold"
+              >
+                View Calendar
+              </button>
+            </div>
+
+            {/* Checklist upcoming items */}
+            <div className="space-y-3.5">
+              <span className="text-[10px] font-bold text-slate-400 dark:text-gray-500 uppercase tracking-widest block mb-2 font-mono">Upcoming Events & Tasks</span>
+              {upcomingEvents.length === 0 ? (
+                <p className="text-xs text-slate-400 dark:text-gray-500 italic pl-1 py-4">
+                  No upcoming meetings or private notes scheduled.
+                </p>
+              ) : (
+                upcomingEvents.map((evt, idx) => {
+                  const dateStr = new Date(evt.date).toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  });
+                  return (
+                    <div key={evt.id} className="flex gap-4 items-center p-3.5 bg-white/40 dark:bg-white/[0.02] border border-slate-200/85 dark:border-white/[0.05] rounded-2xl hover:border-blue-500/25 dark:hover:border-blue-400/25 transition-all duration-300">
+                      <div className={`w-8 h-8 rounded-xl flex items-center justify-center font-bold text-xs flex-shrink-0 ${
+                        evt.type === 'meeting' 
+                          ? 'bg-purple-500/10 text-purple-600 dark:text-purple-400' 
+                          : 'bg-blue-500/10 text-blue-600 dark:text-blue-400'
+                      }`}>
+                        {idx + 1}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-extrabold text-slate-800 dark:text-slate-200 truncate">{evt.title}</p>
+                        <span className="text-[10px] text-slate-450 dark:text-gray-500 font-semibold">{dateStr}</span>
+                      </div>
+                      <span className={`text-[9px] px-2 py-0.5 rounded-md font-bold uppercase tracking-wider ${
+                        evt.type === 'meeting' 
+                          ? 'bg-purple-500/10 text-purple-600 dark:text-purple-400' 
+                          : 'bg-blue-500/10 text-blue-600 dark:text-blue-400'
+                      }`}>
+                        {evt.type === 'meeting' ? 'Meeting' : 'Note'}
+                      </span>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </div>
+        </div>
+
       </div>
+
+      {/* ── Main Workspace Grid (Bottom Row) ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+        {/* Left Bottom: Resident Join Requests (Preserved critical functional flow) */}
+        <div className="lg:col-span-7 bg-gradient-to-br from-white/80 to-slate-50/80 dark:from-[#1E2E42]/80 dark:to-[#162535]/80 backdrop-blur-md border border-slate-200/80 dark:border-white/10 rounded-3xl shadow-sm overflow-hidden flex flex-col">
+          <div className="p-6 border-b border-slate-200/60 dark:border-white/10 flex items-center justify-between bg-white/30 dark:bg-white/[0.01]">
+            <div className="flex items-center space-x-2">
+              <UserPlus className="w-5 h-5 text-blue-500" />
+              <h2 className="text-sm font-extrabold uppercase tracking-wider text-slate-900 dark:text-white">Resident Join Requests</h2>
+            </div>
+            <span className="px-2.5 py-1 text-xs font-mono font-bold bg-amber-500/10 text-amber-600 rounded-full">
+              {joinRequests.length} Pending
+            </span>
+          </div>
+
+          <div className="flex-1">
+            {loadingJoinRequests ? (
+              <div className="p-10 text-center text-slate-500 dark:text-gray-400 font-mono text-xs">
+                Fetching active approval pool records...
+              </div>
+            ) : joinRequests.length === 0 ? (
+              <div className="p-10 text-center text-slate-550 dark:text-gray-400 flex flex-col justify-center items-center py-16">
+                <p className="text-sm font-bold text-slate-800 dark:text-white">No pending resident requests found for this community.</p>
+                <p className="text-xs text-slate-400 dark:text-gray-500 mt-1.5 font-mono">Everything is cleared up! 👍</p>
+              </div>
+            ) : (
+              <div className="p-5 grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[360px] overflow-y-auto custom-scrollbar">
+                {joinRequests.map((req) => (
+                  <div
+                    key={req.request_id}
+                    className="bg-white/40 dark:bg-white/[0.01] border border-slate-200/60 dark:border-white/[0.03] rounded-2xl p-4 flex flex-col gap-3.5 hover:border-blue-500/20 dark:hover:border-blue-400/20 transition duration-150 shadow-sm"
+                  >
+                    {/* Name + Email */}
+                    <div className="flex items-start gap-3">
+                      <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+                        {(req.full_name?.[0] || '?').toUpperCase()}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="font-extrabold text-slate-850 dark:text-white text-sm truncate">{req.full_name}</div>
+                        <div className="text-xs text-slate-400 dark:text-gray-500 truncate">{req.email_id || req.email}</div>
+                      </div>
+                    </div>
+
+                    {/* Unit + Date */}
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="px-2 py-0.5 font-mono font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded">
+                        Unit {req.unit_no || 'N/A'}
+                      </span>
+                      <span className="text-slate-400 dark:text-gray-500 font-mono">
+                        {req.created_at ? new Date(req.created_at).toLocaleDateString() : 'Recent'}
+                      </span>
+                    </div>
+
+                    {/* Documents */}
+                    <div className="flex gap-2 flex-wrap">
+                      {req.id_proof_url ? (
+                        <a
+                          href={getBaseUrl(req.id_proof_url)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="px-2.5 py-1 text-[10px] font-black uppercase tracking-wider bg-blue-500/10 hover:bg-blue-500 text-blue-600 hover:text-white rounded-xl border border-blue-500/20 transition-all"
+                        >
+                          ID Proof
+                        </a>
+                      ) : (
+                        <span className="text-[10px] text-gray-400 font-mono">No ID</span>
+                      )}
+                      {req.address_proof_url ? (
+                        <a
+                          href={getBaseUrl(req.address_proof_url)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="px-2.5 py-1 text-[10px] font-black uppercase tracking-wider bg-purple-500/10 hover:bg-purple-500 text-purple-600 hover:text-white rounded-xl border border-purple-500/20 transition-all"
+                        >
+                          Address Proof
+                        </a>
+                      ) : (
+                        <span className="text-[10px] text-gray-400 font-mono">No Address</span>
+                      )}
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex gap-2 pt-2 border-t border-slate-100 dark:border-white/5">
+                      <button
+                        disabled={actionId !== null}
+                        onClick={() => handleRequestAction(req.request_id, 'APPROVE')}
+                        className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-emerald-500/10 hover:bg-emerald-500 text-emerald-600 hover:text-white rounded-xl text-xs font-bold transition-all disabled:opacity-50"
+                      >
+                        <Check className="w-3.5 h-3.5" /> Approve
+                      </button>
+                      <button
+                        disabled={actionId !== null}
+                        onClick={() => handleRequestAction(req.request_id, 'REJECT')}
+                        className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white rounded-xl text-xs font-bold transition-all disabled:opacity-50"
+                      >
+                        <X className="w-3.5 h-3.5" /> Reject
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Right Bottom: Interactive Tasks (Auto-saves to localStorage) */}
+        <div className="lg:col-span-5 bg-gradient-to-br from-white/80 to-slate-50/80 dark:from-[#1E2E42]/80 dark:to-[#162535]/80 backdrop-blur-md border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 shadow-sm flex flex-col justify-between">
+          <div>
+            <h3 className="font-extrabold text-sm text-slate-900 dark:text-white uppercase tracking-wider mb-4 pb-3 border-b border-slate-200/60 dark:border-white/[0.05]">
+              Quick Notes & Tasks
+            </h3>
+            
+            <form onSubmit={handleAddTask} className="flex gap-2 mb-4">
+              <input
+                type="text"
+                value={newTaskText}
+                onChange={(e) => setNewTaskText(e.target.value)}
+                placeholder="Add a quick note or reminder task..."
+                className="flex-1 bg-white/40 dark:bg-[#0D1B2A]/60 border border-slate-200 dark:border-white/10 rounded-2xl px-4 py-2.5 text-xs text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-gray-500 focus:outline-none focus:border-blue-500 transition"
+              />
+              <button
+                type="submit"
+                className="p-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl transition shadow-md shadow-blue-500/10 active:scale-95 flex-shrink-0"
+              >
+                <Plus size={14} />
+              </button>
+            </form>
+
+            <div className="space-y-2 max-h-[175px] overflow-y-auto custom-scrollbar pr-1">
+              {quickTasks.length === 0 ? (
+                <p className="text-xs text-slate-400 dark:text-gray-500 italic pl-1 py-8 text-center">
+                  No quick notes or tasks yet. Add one above!
+                </p>
+              ) : (
+                quickTasks.map((task) => (
+                  <div
+                    key={task.id}
+                    className="flex items-center justify-between gap-3 p-3 bg-white/30 dark:bg-white/[0.03] hover:bg-slate-100/50 dark:hover:bg-white/[0.06] border border-slate-200/50 dark:border-white/[0.08] rounded-xl transition duration-150"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <button
+                        onClick={() => handleToggleTask(task.id)}
+                        className={`w-4.5 h-4.5 rounded border flex items-center justify-center transition-all flex-shrink-0 ${
+                          task.completed
+                            ? 'bg-blue-600 border-blue-600 text-white'
+                            : 'border-slate-300 dark:border-white/20 hover:border-blue-500'
+                        }`}
+                      >
+                        {task.completed && <Check size={11} className="stroke-[3]" />}
+                      </button>
+                      <span
+                        className={`text-xs font-semibold truncate ${
+                          task.completed
+                            ? 'line-through text-slate-400 dark:text-gray-500'
+                            : 'text-slate-800 dark:text-slate-250'
+                        }`}
+                      >
+                        {task.text}
+                      </span>
+                    </div>
+                    <button
+                      onClick={() => handleDeleteTask(task.id)}
+                      className="p-1 hover:bg-red-500/10 rounded text-slate-400 dark:text-gray-400 hover:text-red-500 dark:hover:text-red-550 transition flex-shrink-0"
+                      title="Delete task"
+                    >
+                      <Trash2 size={12} />
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+          <p className="text-[10px] text-slate-400 dark:text-gray-500 mt-3.5 italic text-right">
+            ✓ Auto-saved locally
+          </p>
+        </div>
+
+      </div>
+
+      {/* ── Export Report Modal ── */}
+      {showExportModal && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
+          <div className="bg-white dark:bg-gradient-to-br dark:from-[#1E2E42] dark:to-[#162535] rounded-3xl p-8 w-full max-w-md border border-slate-200/80 dark:border-white/10 text-slate-900 dark:text-white shadow-2xl flex flex-col">
+            <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-1">
+              Export Report
+            </h3>
+            <p className="text-xs text-slate-500 dark:text-gray-400 mb-6">
+              Select the type of report and format for {community.name}
+            </p>
+
+            <div className="space-y-4 mb-6">
+              {/* Report Type select */}
+              <div>
+                <label className="text-xs font-semibold text-slate-500 dark:text-gray-400 mb-1.5 block">Report Type</label>
+                <select
+                  value={exportType}
+                  onChange={(e) => setExportType(e.target.value)}
+                  className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-blue-600 transition"
+                >
+                  <option value="violations">Violation Report</option>
+                  <option value="payments">Payment Report</option>
+                  <option value="servicerequests">Service Request Report</option>
+                  <option value="bookings">Amenity Booking Report</option>
+                </select>
+              </div>
+
+              {/* Export Format select */}
+              <div>
+                <label className="text-xs font-semibold text-slate-500 dark:text-gray-400 mb-1.5 block">Export Format</label>
+                <select
+                  value={exportFormat}
+                  onChange={(e) => setExportFormat(e.target.value)}
+                  className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-blue-600 transition"
+                >
+                  <option value="csv">CSV (Supported)</option>
+                  <option value="excel">Excel (.xlsx)</option>
+                  <option value="pdf">PDF Document</option>
+                </select>
+              </div>
+            </div>
+
+            <p className="text-[10px] text-slate-400 dark:text-gray-500 italic mb-6">
+              * Note: Full history of records will be generated for download.
+            </p>
+
+            <div className="flex gap-3 justify-end">
+              <button
+                type="button"
+                onClick={() => setShowExportModal(false)}
+                className="px-5 py-2.5 rounded-xl text-xs font-bold text-slate-500 dark:text-gray-400 hover:bg-slate-100 dark:hover:bg-white/5 transition"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={exporting}
+                onClick={handleExportReport}
+                className="px-6 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-xs transition shadow-md shadow-blue-500/20 active:scale-95 disabled:opacity-50 flex items-center justify-center min-w-[80px]"
+              >
+                {exporting ? "Exporting..." : "Export"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };

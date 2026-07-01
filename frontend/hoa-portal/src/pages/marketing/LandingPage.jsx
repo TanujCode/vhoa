@@ -273,12 +273,12 @@ const featureList = [
     tagline: 'Track repairs end-to-end',
     desc: 'Coordinate community repairs, dispatch tasks to vendors, monitor real-time statuses, and log private internal admin notes.',
     icon: Wrench,
-    gradient: 'from-emerald-500 to-teal-600',
+    gradient: 'from-emerald-500 to-blue-600',
     textColor: 'text-emerald-500',
     glowRgb: 'rgba(16, 185, 129, 0.2)',
     borderClass: 'border-emerald-500/20 dark:border-emerald-500/10 hover:border-emerald-500/50',
     shadowColor: 'hover:shadow-emerald-500/10',
-    cardBg: 'bg-gradient-to-br from-emerald-500/[0.04] via-transparent to-teal-950/[0.04] dark:from-emerald-950/20 dark:via-transparent dark:to-teal-950/15',
+    cardBg: 'bg-gradient-to-br from-emerald-500/[0.04] via-transparent to-blue-950/[0.04] dark:from-emerald-950/20 dark:via-transparent dark:to-blue-950/15',
     details: [
       'RBAC-based repair workflow',
       'Direct Vendor ticket assignment',
@@ -349,12 +349,12 @@ const featureList = [
     tagline: 'Automated society billing',
     desc: 'Send automatic invoices for monthly dues, collect facility fees, process violation fines, and integrate with secure payment gateways.',
     icon: CreditCard,
-    gradient: 'from-teal-500 to-emerald-600',
-    textColor: 'text-teal-500',
+    gradient: 'from-blue-500 to-blue-700',
+    textColor: 'text-blue-500',
     glowRgb: 'rgba(20, 184, 166, 0.2)',
-    borderClass: 'border-teal-500/20 dark:border-teal-500/10 hover:border-teal-500/50',
-    shadowColor: 'hover:shadow-teal-500/10',
-    cardBg: 'bg-gradient-to-br from-teal-500/[0.04] via-transparent to-emerald-950/[0.04] dark:from-teal-950/20 dark:via-transparent dark:to-emerald-950/15',
+    borderClass: 'border-blue-500/20 dark:border-blue-500/10 hover:border-blue-500/50',
+    shadowColor: 'hover:shadow-blue-500/10',
+    cardBg: 'bg-gradient-to-br from-blue-500/[0.04] via-transparent to-emerald-950/[0.04] dark:from-blue-950/20 dark:via-transparent dark:to-emerald-950/15',
     details: [
       'Automatic Annual HOA fees',
       'Violation Fine processing logs',
@@ -980,11 +980,11 @@ export default function LandingPage() {
       comment: 'Onboarding was incredibly seamless — units, resident directories, and maintenance tracking were all live in under 48 hours. The setup support was exceptionally cooperative and professional.',
       avatar: 'RK',
       units: '500+ Units',
-      gradient: 'from-emerald-500 to-teal-600',
+      gradient: 'from-emerald-500 to-blue-600',
       glowColor: 'group-hover:shadow-[0_20px_40px_rgba(16,185,129,0.15)]',
       glowRgb: 'rgba(16,185,129,0.15)',
       textColor: 'text-emerald-500',
-      cardBg: 'bg-gradient-to-br from-emerald-500/[0.07] via-white to-teal-500/[0.03] dark:from-emerald-950/20 dark:via-[#0D1B2A] dark:to-teal-950/10',
+      cardBg: 'bg-gradient-to-br from-emerald-500/[0.07] via-white to-blue-500/[0.03] dark:from-emerald-950/20 dark:via-[#0D1B2A] dark:to-blue-950/10',
       borderColor: 'border-emerald-500/20 dark:border-emerald-500/10 hover:border-emerald-500/40 dark:hover:border-emerald-500/30'
     },
     {
@@ -1004,67 +1004,41 @@ export default function LandingPage() {
     }
   ];
 
-  // Always start at top on mount/refresh
+  // Start at top or scroll to target hash on mount
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'instant' });
+    if (window.location.hash) {
+      const id = window.location.hash.substring(1);
+      setTimeout(() => {
+        const element = document.getElementById(id);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth' });
+        }
+      }, 200);
+    } else {
+      window.scrollTo({ top: 0, behavior: 'instant' });
+    }
   }, []);
 
   const features = [
     {
       icon: Wallet, title: 'Finances & Dues', tagline: 'Automated billing engine', color: 'violet',
       desc: 'Send invoices, track collections, manage payment ledgers, and auto-reconcile with PCI-DSS compliant gateways.',
-      stats: '45% faster collection',
-      preview: (
-        <div className="relative w-full aspect-[4/3] flex items-center justify-center p-8 sm:p-12 bg-gradient-to-br from-[#0c1630] via-[#091022] to-[#040814]">
-          <img
-            src={featureFinance}
-            alt="Finances & Dues Illustration"
-            className="w-full h-auto rounded-xl border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.4)] transform hover:scale-[1.03] transition-transform duration-500"
-          />
-        </div>
-      )
+      stats: '45% faster collection'
     },
     {
       icon: Wrench, title: 'Maintenance Desk', tagline: 'Smart ticket management', color: 'blue',
       desc: 'Log service requests, dispatch vendors, track statuses end-to-end, and notify residents in real-time.',
-      stats: '3× faster resolution',
-      preview: (
-        <div className="relative w-full aspect-[4/3] flex items-center justify-center p-8 sm:p-12 bg-gradient-to-br from-[#051128] via-[#081634] to-[#0a234f]">
-          <img
-            src={featureMaintenance}
-            alt="Maintenance Desk Illustration"
-            className="w-full h-auto rounded-xl border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.4)] transform hover:scale-[1.03] transition-transform duration-500"
-          />
-        </div>
-      )
+      stats: '3× faster resolution'
     },
     {
       icon: Shield, title: 'RBAC Security', tagline: 'Role-based workspaces', color: 'indigo',
       desc: 'Granular permissions for Board Presidents, Property Managers, Auditors, and Homeowners with fully isolated data.',
-      stats: '100% data isolation',
-      preview: (
-        <div className="relative w-full aspect-[4/3] flex items-center justify-center p-8 sm:p-12 bg-gradient-to-br from-[#080c20] via-[#0c122e] to-[#151c4a]">
-          <img
-            src={featureSecurity}
-            alt="RBAC Security Illustration"
-            className="w-full h-auto rounded-xl border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.4)] transform hover:scale-[1.03] transition-transform duration-500"
-          />
-        </div>
-      )
+      stats: '100% data isolation'
     },
     {
       icon: Activity, title: 'NestBloq Assistant', tagline: '24/7 intelligent assistant', color: 'rose',
       desc: 'Conversational AI that answers bylaws queries, books amenities, and logs maintenance requests automatically.',
-      stats: '85% query automation',
-      preview: (
-        <div className="relative w-full aspect-[4/3] flex items-center justify-center p-8 sm:p-12 bg-gradient-to-br from-[#120610] via-[#1f0a18] to-[#360e24]">
-          <img
-            src={featureCopilot}
-            alt="NestBloq Assistant Illustration"
-            className="w-full h-auto rounded-xl border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.4)] transform hover:scale-[1.03] transition-transform duration-500"
-          />
-        </div>
-      )
+      stats: '85% query automation'
     }
   ];
 
@@ -1220,8 +1194,8 @@ export default function LandingPage() {
                           className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg transition-colors ${
                             item.active
                               ? isDark
-                                ? 'bg-teal-500/10 text-teal-400 font-semibold border-l-2 border-teal-500'
-                                : 'bg-white text-teal-600 font-semibold border-l-2 border-teal-600 shadow-sm'
+                                ? 'bg-blue-500/10 text-blue-400 font-semibold border-l-2 border-blue-500'
+                                : 'bg-white text-blue-600 font-semibold border-l-2 border-blue-600 shadow-sm'
                               : isDark
                                 ? 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/20'
                                 : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50'
@@ -1251,7 +1225,7 @@ export default function LandingPage() {
                       />
                       <div className="min-w-0">
                         <div className={`text-[8px] font-bold truncate ${isDark ? 'text-white' : 'text-slate-800'}`}>James Mitchell</div>
-                        <div className={`text-[6px] font-extrabold uppercase tracking-widest truncate ${isDark ? 'text-teal-400' : 'text-teal-600'}`}>SUPER ADMIN</div>
+                        <div className={`text-[6px] font-extrabold uppercase tracking-widest truncate ${isDark ? 'text-blue-400' : 'text-blue-600'}`}>SUPER ADMIN</div>
                       </div>
                     </div>
                   </div>
@@ -1274,8 +1248,8 @@ export default function LandingPage() {
                           <span className={`text-xs font-black ${isDark ? 'text-white' : 'text-slate-800'}`}>Vikash Property Management</span>
                           <span className={`text-[7px] font-extrabold px-1.5 py-0.5 rounded font-mono border ${
                             isDark 
-                              ? 'bg-teal-500/10 text-teal-400 border-teal-500/20' 
-                              : 'bg-teal-50 text-teal-600 border-teal-500/20'
+                              ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' 
+                              : 'bg-blue-50 text-blue-600 border-blue-500/20'
                           }`}>VIK071 ▾</span>
                         </div>
                       </div>
@@ -1298,7 +1272,7 @@ export default function LandingPage() {
                       <div className={`flex items-center gap-2 pl-3 border-l ${isDark ? 'border-white/[0.06]' : 'border-slate-200'}`}>
                         <div className="hidden sm:block text-right">
                           <p className={`text-[8px] font-bold leading-none ${isDark ? 'text-white' : 'text-slate-800'}`}>James Mitchell</p>
-                          <span className={`text-[6px] font-extrabold uppercase tracking-wider ${isDark ? 'text-teal-400' : 'text-teal-600'}`}>SUPER ADMIN</span>
+                          <span className={`text-[6px] font-extrabold uppercase tracking-wider ${isDark ? 'text-blue-400' : 'text-blue-600'}`}>SUPER ADMIN</span>
                         </div>
                         <img 
                           src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?q=80&w=150&auto=format&fit=crop" 
@@ -1334,7 +1308,7 @@ export default function LandingPage() {
                         <button className={`px-3 py-1.5 rounded-lg text-[8px] font-black transition flex items-center gap-1.5 shadow-md ${
                           isDark 
                             ? 'bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white shadow-violet-600/10' 
-                            : 'bg-teal-600 hover:bg-teal-700 text-white shadow-teal-600/10'
+                            : 'bg-blue-600 hover:bg-blue-700 text-white shadow-blue-600/10'
                         }`}>
                           <FileText size={10} />
                           Export Report
@@ -1352,7 +1326,7 @@ export default function LandingPage() {
                         <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border ${
                           isDark 
                             ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' 
-                            : 'bg-teal-600 text-white border-transparent shadow-sm shadow-teal-600/10'
+                            : 'bg-blue-600 text-white border-transparent shadow-sm shadow-blue-600/10'
                         }`}>
                           <Building size={16} />
                         </div>
@@ -1361,7 +1335,7 @@ export default function LandingPage() {
                             <h3 className={`text-xs font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>Vikash Property Management</h3>
                             <span className={`text-[6px] font-black px-1.5 py-0.5 rounded border ${
                               isDark 
-                                ? 'bg-teal-500/10 text-teal-400 border-teal-500/20' 
+                                ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' 
                                 : 'bg-emerald-50 text-emerald-700 border-emerald-200/60'
                             }`}>ACTIVE</span>
                           </div>
@@ -1374,7 +1348,7 @@ export default function LandingPage() {
                       {/* Right side stats banner columns */}
                       <div className="flex flex-wrap items-center gap-4 sm:gap-6 pr-2 w-full sm:w-auto justify-between sm:justify-end border-t sm:border-t-0 pt-3 sm:pt-0 border-slate-200/50 dark:border-white/[0.04]">
                         {[
-                          { label: 'MEMBERS', value: '7', darkColor: 'text-sky-400', lightColor: 'text-teal-600' },
+                          { label: 'MEMBERS', value: '7', darkColor: 'text-sky-400', lightColor: 'text-blue-600' },
                           { label: 'VIOLATIONS', value: '2', darkColor: 'text-red-400', lightColor: 'text-red-600' },
                           { label: 'SERVICE REQ', value: '4', darkColor: 'text-blue-400', lightColor: 'text-blue-600' },
                           { label: 'TOTAL UNITS', value: '120', darkColor: 'text-purple-400', lightColor: 'text-purple-600' }
@@ -1478,7 +1452,7 @@ export default function LandingPage() {
                             isDark ? 'text-slate-300' : 'text-slate-700'
                           }`}>Recent Service Requests</span>
                           <span className={`text-[6.5px] font-bold cursor-pointer hover:underline ${
-                            isDark ? 'text-teal-400' : 'text-teal-600'
+                            isDark ? 'text-blue-400' : 'text-blue-600'
                           }`}>View all →</span>
                         </div>
                         <div className="space-y-1.5">
@@ -1580,7 +1554,7 @@ export default function LandingPage() {
 
         </div>
 
-        {/* Stats row — below mockup */}
+        {/* Stats row — below mockup (Commented out for now)
         <div className="max-w-5xl mx-auto mt-16 pb-16 grid grid-cols-2 md:grid-cols-4 gap-6 lg:gap-10 border-t border-slate-100 dark:border-white/[0.06] pt-10">
           {[
             { label: 'Active Communities', end: 500, suffix: '+', icon: Globe, color: 'text-violet-500 bg-violet-500/10' },
@@ -1601,8 +1575,9 @@ export default function LandingPage() {
             </div>
           ))}
         </div>
+        */}
 
-        {/* Image Slideshow Slider Section */}
+        {/* Image Slideshow Slider Section (Commented out for now)
         <div className="max-w-5xl mx-auto mt-8 pb-16 border-t border-slate-100 dark:border-white/[0.06] pt-12">
           <div className="text-center max-w-2xl mx-auto mb-10 space-y-3">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-violet-500/10 border border-violet-500/20 text-xs font-semibold text-violet-600 dark:text-violet-400">
@@ -1617,6 +1592,7 @@ export default function LandingPage() {
           </div>
           <HeroImage isDark={isDark} />
         </div>
+        */}
 
       </section>
 
@@ -1767,8 +1743,8 @@ export default function LandingPage() {
       </section>
 
       {/* ═══════════════════════════════════════════════════════
-          SCROLLING MARQUEE
-          ═══════════════════════════════════════════════════════ */}
+          SCROLLING MARQUEE (Commented out for now)
+          ═══════════════════════════════════════════════════════
       <div className="relative py-7 border-y border-slate-200/40 dark:border-white/[0.06] bg-slate-50/40 dark:bg-[#0B1420]/60 backdrop-blur-sm overflow-hidden before:absolute before:left-0 before:top-0 before:h-full before:w-32 before:bg-gradient-to-r before:from-white dark:before:from-[#090F16] before:to-transparent before:z-10 after:absolute after:right-0 after:top-0 after:h-full after:w-32 after:bg-gradient-to-l after:from-white dark:after:from-[#090F16] after:to-transparent after:z-10">
         <div className="flex gap-8 animate-marquee whitespace-nowrap">
           {['Sunrise Heights', 'Green Park Society', 'Maple Heights Enclave', 'Prestige Lakeside', 'Royal Palms HOA', 'Emerald Springs Apts', 'Blue Ridge Condos', 'Silver Oak Society', 'Sunrise Heights', 'Green Park Society', 'Maple Heights Enclave', 'Prestige Lakeside', 'Royal Palms HOA', 'Emerald Springs Apts', 'Blue Ridge Condos', 'Silver Oak Society'].map((name, i) => (
@@ -1779,6 +1755,7 @@ export default function LandingPage() {
           ))}
         </div>
       </div>
+      */}
 
       {/* ═══════════════════════════════════════════════════════
           FEATURES (Interactive Tabs)
@@ -1804,55 +1781,54 @@ export default function LandingPage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-            {/* Tab list */}
-            <div className="lg:col-span-5 space-y-3.5">
-              {features.map((feature, i) => (
-                <button
-                  key={i}
-                  onClick={() => setActiveFeature(i)}
-                  className={`w-full text-left p-5 rounded-2xl border transition-all duration-300 ${
-                    activeFeature === i
-                      ? `${colorMap[feature.color]?.activeBg || colorMap.violet.activeBg}`
-                      : 'border-slate-200/80 dark:border-white/[0.07] bg-white/60 dark:bg-white/[0.01] hover:border-slate-300 dark:hover:border-white/15 hover:shadow-md hover:-translate-y-0.5'
-                  }`}
-                >
-                  <div className="flex items-start gap-4">
-                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center border shrink-0 transition-all ${
-                      activeFeature === i ? colorMap[feature.color]?.icon || colorMap.violet.icon : 'bg-slate-100 dark:bg-white/5 text-slate-400 border-slate-200 dark:border-white/10'
-                    }`}>
-                      <feature.icon className="w-5 h-5" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between gap-2 mb-1">
-                        <h3 className={`font-bold text-sm ${activeFeature === i ? 'text-slate-900 dark:text-white' : 'text-slate-600 dark:text-slate-400'}`}>{feature.title}</h3>
-                        {activeFeature === i && (
-                          <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full shrink-0 ${colorMap[feature.color]?.badge || colorMap.violet.badge}`}>{feature.stats}</span>
-                        )}
-                      </div>
-                      <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">{feature.desc}</p>
-                    </div>
-                  </div>
-                </button>
-              ))}
-            </div>
-
-            {/* Preview panel with Glowing gradient frame */}
-            <div className="lg:col-span-7 sticky top-24">
-              <div 
-                key={activeFeature} 
-                className={`animate-fade-in-scale shadow-2xl transition-all duration-500 rounded-3xl p-2 bg-gradient-to-br ${
-                  activeFeature === 0 ? 'from-violet-500/10 to-indigo-500/10 shadow-violet-500/5 dark:shadow-violet-500/10 border border-violet-500/10' :
-                  activeFeature === 1 ? 'from-blue-500/10 to-teal-500/10 shadow-blue-500/5 dark:shadow-blue-500/10 border border-blue-500/10' :
-                  activeFeature === 2 ? 'from-indigo-500/10 to-blue-500/10 shadow-indigo-500/5 dark:shadow-indigo-500/10 border border-indigo-500/10' :
-                  'from-rose-500/10 to-pink-500/10 shadow-rose-500/5 dark:shadow-rose-500/10 border border-rose-500/10'
-                }`}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+            {features.map((feature, i) => (
+              <div
+                key={i}
+                className="relative overflow-hidden group rounded-3xl border border-slate-200/80 dark:border-white/[0.07] bg-white/60 dark:bg-white/[0.01] hover:border-violet-500/40 dark:hover:border-violet-500/40 p-8 shadow-sm hover:shadow-xl transition-all duration-305 hover:-translate-y-1 backdrop-blur-sm"
               >
-                <div className="rounded-2xl overflow-hidden bg-white dark:bg-[#0D1B2A]">
-                  {features[activeFeature].preview}
+                {/* Ambient hover glow */}
+                <div className={`absolute top-0 right-0 w-28 h-28 bg-gradient-to-br ${
+                  feature.color === 'violet' ? 'from-violet-500/10 to-indigo-500/5' :
+                  feature.color === 'blue' ? 'from-blue-500/10 to-blue-500/5' :
+                  feature.color === 'indigo' ? 'from-indigo-500/10 to-blue-500/5' :
+                  'from-rose-500/10 to-pink-500/5'
+                } rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-305`} />
+
+                <div className="flex justify-between items-start gap-4 mb-6">
+                  {/* Icon */}
+                  <div className={`w-12 h-12 rounded-2xl flex items-center justify-center border transition-all duration-300 ${
+                    feature.color === 'violet' ? 'bg-violet-500/10 dark:bg-violet-500/20 text-violet-600 dark:text-violet-400 border-violet-500/20' :
+                    feature.color === 'blue' ? 'bg-blue-500/10 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 border-blue-500/20' :
+                    feature.color === 'indigo' ? 'bg-indigo-500/10 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 border-indigo-500/20' :
+                    'bg-rose-500/10 dark:bg-rose-500/20 text-rose-600 dark:text-rose-400 border-rose-500/20'
+                  } group-hover:scale-110`}>
+                    <feature.icon className="w-6 h-6" />
+                  </div>
+                  {/* Stats Badge */}
+                  <span className={`text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-wider ${
+                    feature.color === 'violet' ? 'text-violet-600 dark:text-violet-400 bg-violet-500/10' :
+                    feature.color === 'blue' ? 'text-blue-600 dark:text-blue-400 bg-blue-500/10' :
+                    feature.color === 'indigo' ? 'text-indigo-600 dark:text-indigo-400 bg-indigo-500/10' :
+                    'text-rose-600 dark:text-rose-400 bg-rose-500/10'
+                  }`}>
+                    {feature.stats}
+                  </span>
+                </div>
+
+                <div className="space-y-2">
+                  <h3 className="font-display font-extrabold text-lg text-slate-800 dark:text-white group-hover:text-violet-500 transition-colors duration-200">
+                    {feature.title}
+                  </h3>
+                  <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest font-display">
+                    {feature.tagline}
+                  </p>
+                  <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed pt-2">
+                    {feature.desc}
+                  </p>
                 </div>
               </div>
-            </div>
+            ))}
           </div>
         </div>
       </section>

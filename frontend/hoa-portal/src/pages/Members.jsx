@@ -420,7 +420,7 @@ const Members = ({ community }) => {
       toggleBtn = (
         <button
           onClick={() => handleStatusUpdate(member.user_id, 'ACTIVE')}
-          className="text-teal-600 hover:text-teal-500 dark:text-teal-400 dark:hover:text-teal-300 font-medium text-xs transition-colors hover:underline mr-4"
+          className="text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300 font-medium text-xs transition-colors hover:underline mr-4"
         >
           Approve
         </button>
@@ -429,7 +429,7 @@ const Members = ({ community }) => {
       toggleBtn = (
         <button
           onClick={() => handleStatusUpdate(member.user_id, 'ACTIVE')}
-          className="text-teal-600 hover:text-teal-500 dark:text-teal-400 dark:hover:text-teal-300 font-medium text-xs transition-colors hover:underline mr-4"
+          className="text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300 font-medium text-xs transition-colors hover:underline mr-4"
         >
           Reactivate
         </button>
@@ -441,7 +441,7 @@ const Members = ({ community }) => {
         {toggleBtn}
         <button
           onClick={() => handleOpenEditModal(member)}
-          className="p-1 hover:bg-slate-200 dark:hover:bg-white/10 text-teal-650 dark:text-teal-400 rounded-lg transition-all"
+          className="p-1 hover:bg-slate-200 dark:hover:bg-white/10 text-blue-650 dark:text-blue-400 rounded-lg transition-all"
           title="Edit"
         >
           <Edit2 size={15} />
@@ -470,7 +470,7 @@ const Members = ({ community }) => {
         <div>
           <button 
             onClick={() => setShowInviteModal(true)}
-            className="px-5 py-2.5 bg-teal-600 hover:bg-teal-500 rounded-2xl text-sm font-semibold transition flex items-center gap-2 text-white shadow-lg shadow-teal-500/25"
+            className="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 rounded-2xl text-sm font-semibold transition flex items-center gap-2 text-white shadow-lg shadow-blue-500/25"
           >
             + Invite Member
           </button>
@@ -493,7 +493,7 @@ const Members = ({ community }) => {
                 placeholder="Search members..."
                 value={search}
                 onChange={e => setSearch(e.target.value)}
-                className="w-full bg-slate-50 dark:bg-[#1E3248] border border-slate-200 dark:border-transparent rounded-xl pl-9 pr-4 py-2 text-xs focus:outline-none focus:border-teal-500 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 transition-colors"
+                className="w-full bg-slate-50 dark:bg-[#1E3248] border border-slate-200 dark:border-transparent rounded-xl pl-9 pr-4 py-2 text-xs focus:outline-none focus:border-blue-500 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 transition-colors"
               />
             </div>
             
@@ -502,7 +502,7 @@ const Members = ({ community }) => {
               <select
                 value={searchStatus}
                 onChange={e => setSearchStatus(e.target.value)}
-                className="appearance-none w-full bg-slate-50 dark:bg-[#1E3248] border border-slate-200 dark:border-transparent rounded-xl pl-4 pr-10 py-2 text-xs focus:outline-none focus:border-teal-500 text-slate-900 dark:text-white cursor-pointer transition-colors"
+                className="appearance-none w-full bg-slate-50 dark:bg-[#1E3248] border border-slate-200 dark:border-transparent rounded-xl pl-4 pr-10 py-2 text-xs focus:outline-none focus:border-blue-500 text-slate-900 dark:text-white cursor-pointer transition-colors"
               >
                 <option value="All Statuses" className="bg-white dark:bg-[#1E3248] text-slate-900 dark:text-white">All Statuses</option>
                 <option value="Active" className="bg-white dark:bg-[#1E3248] text-slate-900 dark:text-white">Active</option>
@@ -517,7 +517,7 @@ const Members = ({ community }) => {
         <div className="overflow-x-auto custom-scrollbar">
           {loading && members.length === 0 ? (
             <div className="p-10 text-center text-slate-500 dark:text-gray-400">
-              <div className="w-8 h-8 border-2 border-teal-600 dark:border-teal-400 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+              <div className="w-8 h-8 border-2 border-blue-600 dark:border-blue-400 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
               Loading members...
             </div>
           ) : searched.length === 0 ? (
@@ -553,7 +553,7 @@ const Members = ({ community }) => {
                         {m.role_name && (
                           <span className={`inline-block px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider w-max ${
                             m.role_name === 'super_admin' ? 'bg-red-500/10 text-red-600 dark:bg-red-500/20 dark:text-red-400 border border-red-500/20' :
-                            m.role_name === 'property_manager' ? 'bg-teal-500/10 text-teal-600 dark:bg-teal-500/20 dark:text-teal-400 border border-teal-500/20' :
+                            m.role_name === 'property_manager' ? 'bg-blue-500/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400 border border-blue-500/20' :
                             m.role_name === 'board_member' ? 'bg-blue-500/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400 border border-blue-500/20' :
                             'bg-slate-100 text-slate-600 dark:bg-white/5 dark:text-slate-400 border border-slate-200/10'
                           }`}>
@@ -648,7 +648,7 @@ const Members = ({ community }) => {
                     }}
                     onBlur={e => validateInviteField('firstName', e.target.value)}
                     onKeyPress={onlyLettersKeyPress}
-                    className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl p-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-teal-500 placeholder-slate-400 dark:placeholder-gray-500"
+                    className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl p-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-blue-500 placeholder-slate-400 dark:placeholder-gray-500"
                     placeholder="James"
                   />
                   {inviteErrors.firstName && <p className="text-red-500 text-xs mt-1">{inviteErrors.firstName}</p>}
@@ -664,7 +664,7 @@ const Members = ({ community }) => {
                     }}
                     onBlur={e => validateInviteField('lastName', e.target.value)}
                     onKeyPress={onlyLettersKeyPress}
-                    className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl p-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-teal-500 placeholder-slate-400 dark:placeholder-gray-500"
+                    className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl p-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-blue-500 placeholder-slate-400 dark:placeholder-gray-500"
                     placeholder="Holloway"
                   />
                   {inviteErrors.lastName && <p className="text-red-500 text-xs mt-1">{inviteErrors.lastName}</p>}
@@ -681,7 +681,7 @@ const Members = ({ community }) => {
                     validateInviteField('email', e.target.value);
                   }}
                   onBlur={e => validateInviteField('email', e.target.value)}
-                  className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl p-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-teal-500 placeholder-slate-400 dark:placeholder-gray-500"
+                  className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl p-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-blue-500 placeholder-slate-400 dark:placeholder-gray-500"
                   placeholder="member@email.com"
                 />
                 {inviteErrors.email && <p className="text-red-500 text-xs mt-1">{inviteErrors.email}</p>}
@@ -698,7 +698,7 @@ const Members = ({ community }) => {
                     const formatted = formatPhoneAsYouType(e.target.value);
                     setInvitePhoneOnly(formatted);
                   }}
-                  className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl p-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-teal-500 placeholder-slate-400 dark:placeholder-gray-500"
+                  className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl p-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-blue-500 placeholder-slate-400 dark:placeholder-gray-500"
                 />
               </div>
 
@@ -712,11 +712,12 @@ const Members = ({ community }) => {
                     validateInviteField('unit', e.target.value);
                   }}
                   onBlur={e => validateInviteField('unit', e.target.value)}
-                  className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl p-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-teal-500 placeholder-slate-400 dark:placeholder-gray-500"
+                  className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200/10 dark:border-white/10 rounded-xl p-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-blue-500 placeholder-slate-400 dark:placeholder-gray-500"
                   placeholder="Unit 14A"
                 />
                 {inviteErrors.unit && <p className="text-red-500 text-xs mt-1">{inviteErrors.unit}</p>}
               </div>
+
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
@@ -725,7 +726,7 @@ const Members = ({ community }) => {
                     <select
                       value={inviteForm.role}
                       onChange={e => setInviteForm({...inviteForm, role: e.target.value})}
-                      className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl p-2.5 pr-10 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-teal-500 cursor-pointer appearance-none"
+                      className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl p-2.5 pr-10 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-blue-500 cursor-pointer appearance-none"
                     >
                       <option className="bg-white dark:bg-[#0D1B2A] text-slate-900 dark:text-white">Resident</option>
                       <option className="bg-white dark:bg-[#0D1B2A] text-slate-900 dark:text-white">Board Member</option>
@@ -737,7 +738,7 @@ const Members = ({ community }) => {
                 <div>
                   <label className="block text-xs text-slate-500 dark:text-gray-400 mb-1">Community</label>
                   <div className="relative">
-                    <select className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl p-2.5 pr-10 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-teal-500 cursor-default appearance-none" defaultValue={community?.name}>
+                    <select className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl p-2.5 pr-10 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-blue-500 cursor-default appearance-none" defaultValue={community?.name}>
                       <option className="bg-white dark:bg-[#0D1B2A] text-slate-900 dark:text-white">{community?.name}</option>
                     </select>
                     <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
@@ -766,7 +767,7 @@ const Members = ({ community }) => {
               <button
                 onClick={handleInviteSubmit}
                 disabled={inviting}
-                className="flex-1 py-2.5 bg-teal-600 hover:bg-teal-500 disabled:opacity-50 rounded-xl font-medium text-white transition text-sm shadow-md shadow-teal-500/25"
+                className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 rounded-xl font-medium text-white transition text-sm shadow-md shadow-blue-500/25"
               >
                 {inviting ? "Sending..." : "Send Invite"}
               </button>
@@ -799,7 +800,7 @@ const Members = ({ community }) => {
                     }}
                     onBlur={e => validateEditField('firstName', e.target.value)}
                     onKeyPress={onlyLettersKeyPress}
-                    className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl p-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-teal-500 placeholder-slate-400 dark:placeholder-gray-500"
+                    className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl p-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-blue-500 placeholder-slate-400 dark:placeholder-gray-500"
                     placeholder="James"
                   />
                   {editErrors.firstName && <p className="text-red-500 text-xs mt-1">{editErrors.firstName}</p>}
@@ -815,7 +816,7 @@ const Members = ({ community }) => {
                     }}
                     onBlur={e => validateEditField('lastName', e.target.value)}
                     onKeyPress={onlyLettersKeyPress}
-                    className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl p-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-teal-500 placeholder-slate-400 dark:placeholder-gray-500"
+                    className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl p-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-blue-500 placeholder-slate-400 dark:placeholder-gray-500"
                     placeholder="Holloway"
                   />
                   {editErrors.lastName && <p className="text-red-500 text-xs mt-1">{editErrors.lastName}</p>}
@@ -832,7 +833,7 @@ const Members = ({ community }) => {
                     validateEditField('email', e.target.value);
                   }}
                   onBlur={e => validateEditField('email', e.target.value)}
-                  className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl p-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-teal-500 placeholder-slate-400 dark:placeholder-gray-500"
+                  className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl p-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-blue-500 placeholder-slate-400 dark:placeholder-gray-500"
                   placeholder="member@email.com"
                 />
                 {editErrors.email && <p className="text-red-500 text-xs mt-1">{editErrors.email}</p>}
@@ -849,7 +850,7 @@ const Members = ({ community }) => {
                     const formatted = formatPhoneAsYouType(e.target.value);
                     setEditPhoneOnly(formatted);
                   }}
-                  className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl p-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-teal-500 placeholder-slate-400 dark:placeholder-gray-500"
+                  className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl p-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-blue-500 placeholder-slate-400 dark:placeholder-gray-500"
                 />
               </div>
 
@@ -863,11 +864,12 @@ const Members = ({ community }) => {
                     validateEditField('unit', e.target.value);
                   }}
                   onBlur={e => validateEditField('unit', e.target.value)}
-                  className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl p-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-teal-500 placeholder-slate-400 dark:placeholder-gray-500"
+                  className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl p-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-blue-500 placeholder-slate-400 dark:placeholder-gray-500"
                   placeholder="Unit 14A"
                 />
                 {editErrors.unit && <p className="text-red-500 text-xs mt-1">{editErrors.unit}</p>}
               </div>
+
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
@@ -876,7 +878,7 @@ const Members = ({ community }) => {
                     <select
                       value={editForm.role}
                       onChange={e => setEditForm({...editForm, role: e.target.value})}
-                      className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl p-2.5 pr-10 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-teal-500 cursor-pointer appearance-none"
+                      className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl p-2.5 pr-10 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-blue-500 cursor-pointer appearance-none"
                     >
                       <option className="bg-white dark:bg-[#0D1B2A] text-slate-900 dark:text-white">Resident</option>
                       <option className="bg-white dark:bg-[#0D1B2A] text-slate-900 dark:text-white">Board Member</option>
@@ -888,7 +890,7 @@ const Members = ({ community }) => {
                 <div>
                   <label className="block text-xs text-slate-500 dark:text-gray-400 mb-1">Community</label>
                   <div className="relative">
-                    <select className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl p-2.5 pr-10 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-teal-500 cursor-default appearance-none" defaultValue={community?.name} disabled>
+                    <select className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl p-2.5 pr-10 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-blue-500 cursor-default appearance-none" defaultValue={community?.name} disabled>
                       <option className="bg-white dark:bg-[#0D1B2A] text-slate-900 dark:text-white">{community?.name}</option>
                     </select>
                     <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
@@ -907,7 +909,7 @@ const Members = ({ community }) => {
                         href={getBaseUrl(editingMember.id_proof_url)}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-xs text-teal-600 hover:underline font-semibold block truncate"
+                        className="text-xs text-blue-600 hover:underline font-semibold block truncate"
                       >
                         View ID Proof
                       </a>
@@ -920,7 +922,7 @@ const Members = ({ community }) => {
                       onChange={e => setIdFile(e.target.files[0])}
                       className="text-[10px] text-slate-500 dark:text-gray-400 w-full"
                     />
-                    {idFile && <span className="text-[10px] text-teal-600 font-semibold truncate">Ready: {idFile.name}</span>}
+                    {idFile && <span className="text-[10px] text-blue-600 font-semibold truncate">Ready: {idFile.name}</span>}
                   </div>
 
                   {/* Address Proof */}
@@ -963,7 +965,7 @@ const Members = ({ community }) => {
               <button
                 onClick={handleEditSubmit}
                 disabled={updating}
-                className="flex-1 py-2.5 bg-teal-600 hover:bg-teal-500 disabled:opacity-50 rounded-xl font-medium text-white transition text-sm shadow-md shadow-teal-500/25"
+                className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 rounded-xl font-medium text-white transition text-sm shadow-md shadow-blue-500/25"
               >
                 {updating ? "Updating..." : "Save Changes"}
               </button>

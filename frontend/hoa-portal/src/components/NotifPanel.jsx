@@ -68,7 +68,7 @@ const NotifPanel = ({ isOpen, onClose, notifications = [], onMarkAllRead, lastRe
       else if (action.includes("STATUS") || action.includes("DETAILS")) details.title = "Service Request Updated";
     } else if (module === 'payment' || action.includes("PAYMENT")) {
       details.icon = CheckCircle;
-      details.color = "text-teal-400";
+      details.color = "text-blue-400";
       if (action.includes("RECEIVE") || action.includes("CREATE") || action.includes("MAKE")) details.title = "Payment Processed";
       else details.title = "Payment Updated";
     } else if (module === 'auth') {
@@ -94,7 +94,7 @@ const NotifPanel = ({ isOpen, onClose, notifications = [], onMarkAllRead, lastRe
       {/* Header */}
       <div className="p-5 border-b border-slate-200 dark:border-white/10 flex items-center justify-between bg-white dark:bg-[#1E3248] sticky top-0">
         <div className="flex items-center gap-3">
-          <Bell className="text-teal-500" size={22} />
+          <Bell className="text-blue-500" size={22} />
           <h3 className="font-semibold text-lg text-gray-900 dark:text-white">Notifications</h3>
           {unreadCount > 0 && (
             <span className="bg-red-500 text-white text-xs px-2 py-0.5 rounded-full font-medium">
@@ -126,7 +126,7 @@ const NotifPanel = ({ isOpen, onClose, notifications = [], onMarkAllRead, lastRe
               <div 
                 key={log.audit_id}
                 onClick={() => onNotifClick && onNotifClick(log)}
-                className={`p-5 border-b border-slate-100 dark:border-white/5 hover:bg-slate-50 dark:hover:bg-white/5 cursor-pointer transition-colors duration-200 ${isUnread ? 'bg-teal-50/50 dark:bg-teal-900/10' : ''}`}
+                className={`p-5 border-b border-slate-100 dark:border-white/5 hover:bg-slate-50 dark:hover:bg-white/5 cursor-pointer transition-colors duration-200 ${isUnread ? 'bg-blue-50/50 dark:bg-blue-900/10' : ''}`}
               >
                 <div className="flex gap-4">
                   <div className={`w-9 h-9 rounded-2xl flex-shrink-0 flex items-center justify-center transition-colors duration-200 ${isUnread ? 'bg-red-500/10' : 'bg-slate-100 dark:bg-white/5'}`}>
@@ -154,7 +154,7 @@ const NotifPanel = ({ isOpen, onClose, notifications = [], onMarkAllRead, lastRe
       <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-slate-200 dark:border-white/10 bg-white dark:bg-[#162535]">
         <button 
           onClick={onMarkAllRead}
-          className="w-full py-3 text-teal-600 dark:text-teal-400 hover:bg-teal-50 dark:hover:bg-white/5 rounded-2xl text-sm font-medium transition"
+          className="w-full py-3 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-white/5 rounded-2xl text-sm font-medium transition"
         >
           Mark all as read
         </button>

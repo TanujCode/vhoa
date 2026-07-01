@@ -40,7 +40,35 @@ const AdminPortal = () => {
   const { theme } = useTheme();
   const navigate = useNavigate(); 
 
-  const [activePage, setActivePage] = useState('dashboard');
+  const [activePage, _setActivePage] = useState('dashboard');
+  const [pageHistory, setPageHistory] = useState(['dashboard']);
+
+  const setActivePage = (newPage) => {
+    if (newPage === activePage) return;
+    if (newPage === 'dashboard') {
+      setPageHistory(['dashboard']);
+    } else {
+      setPageHistory(prev => {
+        if (prev[prev.length - 1] === newPage) return prev;
+        return [...prev, newPage];
+      });
+    }
+    _setActivePage(newPage);
+  };
+
+  const handleBack = () => {
+    if (pageHistory.length > 1) {
+      const newHistory = [...pageHistory];
+      newHistory.pop(); // Pop current page
+      const prevPage = newHistory[newHistory.length - 1];
+      setPageHistory(newHistory);
+      _setActivePage(prevPage);
+    } else {
+      _setActivePage('dashboard');
+      setPageHistory(['dashboard']);
+    }
+  };
+
   const [activeCommunity, setActiveCommunity] = useState(null);
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -476,7 +504,7 @@ const AdminPortal = () => {
     return (
       <div className="flex items-center justify-center h-screen bg-slate-50 dark:bg-[#0D1B2A]">
         <div className="text-center">
-          <div className="w-12 h-12 border-4 border-teal-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="dark:text-gray-400 text-gray-500 font-mono">LOADING PORTAL...</p>
         </div>
       </div>
@@ -512,6 +540,8 @@ const AdminPortal = () => {
             localStorage.removeItem(`vendors_unlocked_${activeCommunity?.community_id}`);
           }}
           canSwitchView={canSwitchView}
+          canGoBack={pageHistory.length > 1}
+          onBack={handleBack}
         />
 
         <main className="flex-1 overflow-auto p-5 lg:p-7 bg-white dark:bg-[#0D1B2A] custom-scrollbar">

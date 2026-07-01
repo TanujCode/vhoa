@@ -29,11 +29,11 @@ html:not(.dark) body {
 /* ─── Scrollbar ─────────────────────────────────────── */
 ::-webkit-scrollbar { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background-color: rgba(0,168,120,0.3); border-radius: 99px; }
-::-webkit-scrollbar-thumb:hover { background-color: rgba(0,168,120,0.6); }
+::-webkit-scrollbar-thumb { background-color: rgba(29,104,223,0.3); border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background-color: rgba(29,104,223,0.6); }
 
 /* ─── Selection ─────────────────────────────────────── */
-::selection { background: rgba(0,168,120,0.2); color: #00A878; }
+::selection { background: rgba(29,104,223,0.2); color: #1D68DF; }
 
 /* ─── Cancel Button ─────────────────────────────────── */
 .cancel-button-red-hover { background-color: #f1f5f9 !important; color: #334155 !important; transition: all 0.2s ease-in-out !important; }
@@ -426,83 +426,83 @@ html:not(.dark) .premium-card:hover {
 }
 
 /* Sidebar active element overrides */
-.dark [class~="bg-[#1D9E75]/10"], .dark [class~="bg-[#1d9e75]/10"] {
+.dark [class~="bg-[#1D68DF]/10"], .dark [class~="bg-[#1D68DF]/10"] {
   background-color: rgba(99, 102, 241, 0.12) !important;
 }
-.dark [class~="border-[#1D9E75]"], .dark [class~="border-[#1d9e75]"] {
+.dark [class~="border-[#1D68DF]"], .dark [class~="border-[#1D68DF]"] {
   border-color: #6366F1 !important;
 }
-.dark [class~="text-[#25C490]"], .dark [class~="text-[#25c490]"] {
+.dark [class~="text-[#5BA4F5]"], .dark [class~="text-[#5BA4F5]"] {
   color: #818CF8 !important;
 }
-.dark [class~="text-[#1D9E75]"], .dark [class~="text-[#1d9e75]"] {
+.dark [class~="text-[#1D68DF]"], .dark [class~="text-[#1D68DF]"] {
   color: #6366F1 !important;
 }
-.dark [class~="bg-[#1D9E75]"], .dark [class~="bg-[#1d9e75]"] {
+.dark [class~="bg-[#1D68DF]"], .dark [class~="bg-[#1D68DF]"] {
   background-color: #6366F1 !important;
 }
 
 /* Specific badge/initials/layout icon background highlights */
-.dark [class~="bg-[#1D9E75]/20"], .dark [class~="bg-[#1d9e75]/20"] {
+.dark [class~="bg-[#1D68DF]/20"], .dark [class~="bg-[#1D68DF]/20"] {
   background-color: rgba(99, 102, 241, 0.18) !important;
 }
-.dark [class~="border-[#1D9E75]/30"], .dark [class~="border-[#1d9e75]/30"] {
+.dark [class~="border-[#1D68DF]/30"], .dark [class~="border-[#1D68DF]/30"] {
   border-color: rgba(99, 102, 241, 0.3) !important;
 }
-.dark [class~="bg-[#25C490]/10"], .dark [class~="bg-[#25c490]/10"] {
+.dark [class~="bg-[#5BA4F5]/10"], .dark [class~="bg-[#5BA4F5]/10"] {
   background-color: rgba(99, 102, 241, 0.12) !important;
 }
-.dark [class~="border-[#25C490]/20"], .dark [class~="border-[#25c490]/20"] {
+.dark [class~="border-[#5BA4F5]/20"], .dark [class~="border-[#5BA4F5]/20"] {
   border-color: rgba(99, 102, 241, 0.2) !important;
 }
 
 /* General teal to purple/indigo transitions in dark mode */
-.dark .bg-teal-600 {
+.dark .bg-blue-600 {
   background-color: #6366F1 !important;
 }
-.dark .hover\:bg-teal-500:hover {
+.dark .hover\:bg-blue-500:hover {
   background-color: #4F46E5 !important;
 }
-.dark .text-teal-600 {
+.dark .text-blue-600 {
   color: #818CF8 !important;
 }
-.dark .text-teal-500 {
+.dark .text-blue-500 {
   color: #6366F1 !important;
 }
-.dark .text-teal-400 {
+.dark .text-blue-400 {
   color: #A5B4FC !important;
 }
-.dark .bg-teal-500 {
+.dark .bg-blue-500 {
   background-color: #6366F1 !important;
 }
-.dark .bg-teal-500\/10 {
+.dark .bg-blue-500\/10 {
   background-color: rgba(99, 102, 241, 0.1) !important;
 }
-.dark .bg-teal-500\/20 {
+.dark .bg-blue-500\/20 {
   background-color: rgba(99, 102, 241, 0.2) !important;
 }
-.dark .border-teal-500 {
+.dark .border-blue-500 {
   border-color: #6366F1 !important;
 }
-.dark .border-teal-500\/20 {
+.dark .border-blue-500\/20 {
   border-color: rgba(99, 102, 241, 0.2) !important;
 }
-.dark .border-teal-500\/40 {
+.dark .border-blue-500\/40 {
   border-color: rgba(99, 102, 241, 0.4) !important;
 }
-.dark .shadow-teal-500\/25 {
+.dark .shadow-blue-500\/25 {
   box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.3) !important;
 }
 .dark .focus\:ring-teal-500:focus {
   --tw-ring-color: rgba(99, 102, 241, 0.5) !important;
 }
-.dark .focus\:border-teal-500:focus {
+.dark .focus\:border-blue-500:focus {
   border-color: #6366F1 !important;
 }
-.dark .hover\:text-teal-600:hover {
+.dark .hover\:text-blue-600:hover {
   color: #818CF8 !important;
 }
-.dark .hover\:text-teal-500:hover {
+.dark .hover\:text-blue-500:hover {
   color: #818CF8 !important;
 }
 

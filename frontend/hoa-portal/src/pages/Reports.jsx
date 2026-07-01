@@ -51,7 +51,7 @@ const Reports = ({ community, user, setActivePage }) => {
   if (loading && !stats) {
     return (
       <div className="p-20 text-center text-slate-500 dark:text-gray-400">
-        <div className="w-10 h-10 border-4 border-teal-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+        <div className="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
         Loading community reports & analytics...
       </div>
     );
@@ -61,7 +61,7 @@ const Reports = ({ community, user, setActivePage }) => {
     return (
       <div className="p-20 text-center text-slate-500 dark:text-gray-400">
         <p className="text-lg font-medium">Failed to load reports summary.</p>
-        <button onClick={fetchStats} className="mt-4 px-6 py-2.5 bg-teal-600 text-white rounded-xl font-medium hover:bg-teal-500 transition">
+        <button onClick={fetchStats} className="mt-4 px-6 py-2.5 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-500 transition">
           Retry Loading
         </button>
       </div>
@@ -71,20 +71,12 @@ const Reports = ({ community, user, setActivePage }) => {
   return (
     <div className="text-slate-900 dark:text-white">
       {/* Header */}
-      <div className="flex justify-between items-start mb-8 gap-4">
+      <div className="flex justify-between items-start mb-6 gap-4">
         <div>
           <div className="flex flex-wrap items-center gap-3">
             <h1 className="text-2xl sm:text-3xl font-semibold text-slate-900 dark:text-white flex items-center gap-2">
-              <BarChart2 className="text-teal-500" size={28} /> Reports & Analytics
+              <BarChart2 className="text-blue-500" size={28} /> Reports & Analytics
             </h1>
-            <button
-              onClick={fetchStats}
-              disabled={loading}
-              className="p-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 text-slate-700 dark:text-white rounded-2xl transition flex items-center justify-center disabled:opacity-60 flex-shrink-0"
-              title="Refresh Stats"
-            >
-              <RefreshCw size={15} className={loading ? "animate-spin" : ""} />
-            </button>
           </div>
           <p className="text-slate-500 dark:text-gray-400 mt-1">{community?.name || 'Community Portal'}</p>
         </div>
@@ -110,10 +102,10 @@ const Reports = ({ community, user, setActivePage }) => {
         >
           <div className="flex justify-between items-start mb-4">
             <div className="text-sm font-semibold text-slate-500 dark:text-gray-400">Revenue Collected</div>
-            <div className="w-10 h-10 rounded-xl bg-teal-500/10 dark:bg-teal-500/20 text-teal-500 flex items-center justify-center text-lg">💰</div>
+            <div className="w-10 h-10 rounded-xl bg-blue-500/10 dark:bg-blue-500/20 text-blue-500 flex items-center justify-center text-lg">💰</div>
           </div>
           <div className="text-3xl font-bold text-slate-900 dark:text-white">${stats.payments.total_collected.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
-          <div className="text-xs text-teal-500 mt-2 font-medium">✓ {stats.payments.total_count} transactions completed</div>
+          <div className="text-xs text-blue-500 mt-2 font-medium">✓ {stats.payments.total_count} transactions completed</div>
         </div>
 
         <div 
@@ -172,7 +164,7 @@ const Reports = ({ community, user, setActivePage }) => {
                 </div>
                 <div className="w-full bg-slate-200 dark:bg-white/10 h-2 rounded-full overflow-hidden">
                   <div 
-                    className="bg-teal-500 h-full transition-all duration-500" 
+                    className="bg-blue-500 h-full transition-all duration-500" 
                     style={{ width: `${stats.violations.total ? ((stats.violations.by_status?.PAID || 0) / stats.violations.total) * 100 : 0}%` }}
                   />
                 </div>
@@ -234,7 +226,7 @@ const Reports = ({ community, user, setActivePage }) => {
                 </div>
                 <div className="w-full bg-slate-200 dark:bg-white/10 h-2 rounded-full overflow-hidden">
                   <div 
-                    className="bg-teal-500 h-full transition-all duration-500" 
+                    className="bg-blue-500 h-full transition-all duration-500" 
                     style={{ width: `${stats.service_requests.total ? ((stats.service_requests.by_status?.CLOSED || 0) / stats.service_requests.total) * 100 : 0}%` }}
                   />
                 </div>
@@ -279,12 +271,12 @@ const Reports = ({ community, user, setActivePage }) => {
           <div>
             <div className="flex justify-between items-center mb-6">
               <h3 className="font-semibold text-lg flex items-center gap-2">
-                <CreditCard className="text-teal-500" size={20} /> Payments & Financials
+                <CreditCard className="text-blue-500" size={20} /> Payments & Financials
               </h3>
               <button
                 onClick={() => handleExport('payments')}
                 disabled={exporting === 'payments'}
-                className="flex items-center gap-2 bg-teal-500/10 hover:bg-teal-500/20 dark:bg-teal-500/20 dark:hover:bg-teal-500/30 text-teal-600 dark:text-teal-400 px-4 py-2 rounded-xl text-xs font-semibold transition"
+                className="flex items-center gap-2 bg-blue-500/10 hover:bg-blue-500/20 dark:bg-blue-500/20 dark:hover:bg-blue-500/30 text-blue-600 dark:text-blue-400 px-4 py-2 rounded-xl text-xs font-semibold transition"
               >
                 <Download size={14} /> {exporting === 'payments' ? 'Exporting...' : 'Export CSV'}
               </button>
@@ -305,7 +297,7 @@ const Reports = ({ community, user, setActivePage }) => {
               </div>
               <div className="flex justify-between items-center text-sm pb-1">
                 <span className="text-slate-500 dark:text-gray-400">Total HOA Revenue</span>
-                <span className="font-bold text-teal-500">${stats.payments.total_collected.toLocaleString()}</span>
+                <span className="font-bold text-blue-500">${stats.payments.total_collected.toLocaleString()}</span>
               </div>
             </div>
           </div>

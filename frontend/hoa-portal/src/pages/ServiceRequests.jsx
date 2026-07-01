@@ -6,7 +6,7 @@ import { onlyDigitsKeyPress, onlyDecimalKeyPress } from '../utils/fieldValidator
 const StatusBadge = ({ status }) => {
   const map = {
     OPEN:            'bg-blue-500/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400',
-    APPROVED:        'bg-teal-500/10 text-teal-600 dark:bg-teal-500/20 dark:text-teal-400',
+    APPROVED:        'bg-blue-500/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400',
     IN_PROGRESS:     'bg-amber-500/10 text-amber-600 dark:bg-amber-500/20 dark:text-amber-300',
     VENDOR_ASSIGNED: 'bg-purple-500/10 text-purple-600 dark:bg-purple-500/20 dark:text-purple-400',
     ON_HOLD:         'bg-orange-500/10 text-orange-600 dark:bg-orange-500/20 dark:text-orange-400',
@@ -56,7 +56,7 @@ const getRequestIconDetails = (typeName) => {
     return { Icon: Shield, bg: 'bg-indigo-500/10 dark:bg-indigo-500/20', text: 'text-indigo-600 dark:text-indigo-400' };
   }
   if (name.includes('clean') || name.includes('swee') || name.includes('housekeep') || name.includes('trash') || name.includes('wash') || name.includes('garbage')) {
-    return { Icon: Sparkles, bg: 'bg-teal-500/10 dark:bg-teal-500/20', text: 'text-teal-600 dark:text-teal-400' };
+    return { Icon: Sparkles, bg: 'bg-blue-500/10 dark:bg-blue-500/20', text: 'text-blue-600 dark:text-blue-400' };
   }
   if (name.includes('pest') || name.includes('bug') || name.includes('insect') || name.includes('termite')) {
     return { Icon: Bug, bg: 'bg-orange-500/10 dark:bg-orange-500/20', text: 'text-orange-600 dark:text-orange-400' };
@@ -130,7 +130,7 @@ const SubmitModal = ({ communityId, onClose, onSuccess }) => {
                 required 
                 value={form.type_id} 
                 onChange={e => setForm({...form, type_id: e.target.value})}
-                className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl pl-4 pr-10 py-3 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-teal-500 appearance-none cursor-pointer"
+                className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl pl-4 pr-10 py-3 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-blue-500 appearance-none cursor-pointer"
               >
                 <option value="" className="text-slate-900 dark:text-white">Select type...</option>
                 {types.map(t => (
@@ -151,7 +151,7 @@ const SubmitModal = ({ communityId, onClose, onSuccess }) => {
               placeholder="Brief title of the issue..." 
               value={form.title}
               onChange={e => setForm({...form, title: e.target.value})}
-              className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl px-4 py-3 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 focus:outline-none focus:border-teal-500"
+              className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl px-4 py-3 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 focus:outline-none focus:border-blue-500"
             />
           </div>
 
@@ -163,7 +163,7 @@ const SubmitModal = ({ communityId, onClose, onSuccess }) => {
               placeholder="Describe the problem in detail..." 
               value={form.description}
               onChange={e => setForm({...form, description: e.target.value})}
-              className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl px-4 py-3 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 focus:outline-none focus:border-teal-500 resize-y"
+              className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl px-4 py-3 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 focus:outline-none focus:border-blue-500 resize-y"
             />
           </div>
 
@@ -206,7 +206,7 @@ const SubmitModal = ({ communityId, onClose, onSuccess }) => {
             <button
               type="submit"
               disabled={loading}
-              className="flex-1 py-3 bg-teal-600 hover:bg-teal-500 text-white rounded-2xl text-sm font-medium transition disabled:opacity-50"
+              className="flex-1 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl text-sm font-medium transition disabled:opacity-50"
             >
               {loading ? 'Submitting...' : 'Submit Request'}
             </button>
@@ -304,7 +304,7 @@ const StatusModal = ({ request, statuses, userRole, onClose, onSuccess }) => {
                 required 
                 value={statusId} 
                 onChange={e => setStatusId(e.target.value)}
-                className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl pl-4 pr-10 py-3 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-teal-500 appearance-none cursor-pointer"
+                className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl pl-4 pr-10 py-3 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 appearance-none cursor-pointer"
               >
                 <option value="" className="text-slate-900 dark:text-white">Select status...</option>
                 {allowedStatuses.map(s => (
@@ -324,7 +324,7 @@ const StatusModal = ({ request, statuses, userRole, onClose, onSuccess }) => {
                     required
                     value={vendorId}
                     onChange={e => setVendorId(e.target.value)}
-                    className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl pl-4 pr-10 py-3 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-teal-500 appearance-none cursor-pointer"
+                    className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl pl-4 pr-10 py-3 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 appearance-none cursor-pointer"
                   >
                     <option value="" className="text-slate-900 dark:text-white">
                       {vendorsLoading ? 'Loading vendors...' : 'Select vendor...'}
@@ -345,7 +345,7 @@ const StatusModal = ({ request, statuses, userRole, onClose, onSuccess }) => {
                   value={paymentId}
                   onKeyPress={onlyDigitsKeyPress}
                   onChange={e => setPaymentId(e.target.value)}
-                  className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl px-4 py-3 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 focus:outline-none focus:border-teal-500"
+                  className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl px-4 py-3 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 focus:outline-none focus:border-blue-500"
                 />
               </div>
             </>
@@ -358,7 +358,7 @@ const StatusModal = ({ request, statuses, userRole, onClose, onSuccess }) => {
               placeholder="Add a note..." 
               value={note} 
               onChange={e => setNote(e.target.value)}
-              className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl px-4 py-3 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 focus:outline-none focus:border-teal-500 resize-none"
+              className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl px-4 py-3 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 focus:outline-none focus:border-blue-500 resize-none"
             />
           </div>
           <div className="flex gap-3">
@@ -369,7 +369,7 @@ const StatusModal = ({ request, statuses, userRole, onClose, onSuccess }) => {
             >
               Cancel
             </button>
-            <button type="submit" disabled={loading} className="flex-1 py-2.5 bg-teal-600 hover:bg-teal-500 text-white rounded-2xl text-sm font-medium disabled:opacity-50 transition">
+            <button type="submit" disabled={loading} className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl text-sm font-medium disabled:opacity-50 transition">
               {loading ? 'Updating...' : 'Update'}
             </button>
           </div>
@@ -452,7 +452,7 @@ const EditModal = ({ request, communityId, isAdmin, userRole, onClose, onSuccess
                 required 
                 value={form.type_id} 
                 onChange={e => setForm({...form, type_id: e.target.value})}
-                className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl pl-4 pr-10 py-3 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-teal-500 appearance-none cursor-pointer"
+                className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl pl-4 pr-10 py-3 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-blue-500 appearance-none cursor-pointer"
               >
                 <option value="" className="text-slate-900 dark:text-white">Select type...</option>
                 {types.map(t => (
@@ -473,7 +473,7 @@ const EditModal = ({ request, communityId, isAdmin, userRole, onClose, onSuccess
               placeholder="Brief title of the issue..." 
               value={form.title}
               onChange={e => setForm({...form, title: e.target.value})}
-              className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl px-4 py-3 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 focus:outline-none focus:border-teal-500"
+              className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl px-4 py-3 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 focus:outline-none focus:border-blue-500"
             />
           </div>
 
@@ -485,7 +485,7 @@ const EditModal = ({ request, communityId, isAdmin, userRole, onClose, onSuccess
               placeholder="Describe the problem in detail..." 
               value={form.description}
               onChange={e => setForm({...form, description: e.target.value})}
-              className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl px-4 py-3 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 focus:outline-none focus:border-teal-500 resize-y"
+              className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl px-4 py-3 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 focus:outline-none focus:border-blue-500 resize-y"
             />
           </div>
 
@@ -525,7 +525,7 @@ const EditModal = ({ request, communityId, isAdmin, userRole, onClose, onSuccess
                   <select 
                     value={form.vendor_id} 
                     onChange={e => setForm({...form, vendor_id: e.target.value})}
-                    className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl pl-4 pr-10 py-3 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-teal-500 appearance-none cursor-pointer"
+                    className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl pl-4 pr-10 py-3 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 appearance-none cursor-pointer"
                   >
                     <option value="" className="text-slate-900 dark:text-white">None / Unassign</option>
                     {vendors.map(v => (
@@ -546,7 +546,7 @@ const EditModal = ({ request, communityId, isAdmin, userRole, onClose, onSuccess
                   value={form.payment_id}
                   onKeyPress={onlyDigitsKeyPress}
                   onChange={e => setForm({...form, payment_id: e.target.value})}
-                  className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl px-4 py-3 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 focus:outline-none focus:border-teal-500"
+                  className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl px-4 py-3 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 focus:outline-none focus:border-blue-500"
                 />
               </div>
             </>
@@ -563,7 +563,7 @@ const EditModal = ({ request, communityId, isAdmin, userRole, onClose, onSuccess
             <button
               type="submit"
               disabled={loading}
-              className="flex-1 py-3 bg-teal-600 hover:bg-teal-500 text-white rounded-2xl text-sm font-medium transition disabled:opacity-50"
+              className="flex-1 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl text-sm font-medium transition disabled:opacity-50"
             >
               {loading ? 'Saving...' : 'Save Changes'}
             </button>
@@ -803,7 +803,7 @@ const DetailDrawer = ({
           {(() => {
             const details = getRequestIconDetails(request.type_name);
             const RequestIcon = details.Icon;
-            return <RequestIcon className="text-teal-600 dark:text-teal-400" size={20} />;
+            return <RequestIcon className="text-blue-600 dark:text-blue-400" size={20} />;
           })()}
           <h3 className="text-lg font-semibold truncate max-w-[280px] text-slate-900 dark:text-white">Request #{request.request_id}</h3>
         </div>
@@ -914,7 +914,7 @@ const DetailDrawer = ({
                   <button
                     onClick={handleGenerateAccessCode}
                     disabled={generatingVAC}
-                    className="self-end mt-1 px-3 py-1 bg-teal-600 hover:bg-teal-500 text-[11px] font-semibold text-white rounded-lg transition disabled:opacity-50"
+                    className="self-end mt-1 px-3 py-1 bg-blue-600 hover:bg-blue-500 text-[11px] font-semibold text-white rounded-lg transition disabled:opacity-50"
                   >
                     {generatingVAC ? "Generating..." : "Generate VAC"}
                   </button>
@@ -937,7 +937,7 @@ const DetailDrawer = ({
                   <button
                     onClick={handleGenerateContractCode}
                     disabled={generatingVCC}
-                    className="self-end mt-1 px-3 py-1 bg-teal-600 hover:bg-teal-500 text-[11px] font-semibold text-white rounded-lg transition disabled:opacity-50"
+                    className="self-end mt-1 px-3 py-1 bg-blue-600 hover:bg-blue-500 text-[11px] font-semibold text-white rounded-lg transition disabled:opacity-50"
                   >
                     {generatingVCC ? "Generating..." : "Generate VCC"}
                   </button>
@@ -950,7 +950,7 @@ const DetailDrawer = ({
         {/* Dynamic Action / Quote details Section */}
         {assignmentsLoading ? (
           <div className="flex justify-center py-4 bg-slate-50 dark:bg-white/5 rounded-2xl border border-slate-200 dark:border-white/5">
-            <div className="w-5 h-5 border-2 border-teal-500 border-t-transparent rounded-full animate-spin"></div>
+            <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
           </div>
         ) : (
           <>
@@ -959,7 +959,7 @@ const DetailDrawer = ({
               <>
                 {isAdmin ? (
                   <form onSubmit={handleQuoteSubmit} className="bg-slate-50 dark:bg-white/5 rounded-2xl p-5 border border-slate-200 dark:border-white/5 space-y-4 animate-fadeIn">
-                    <h4 className="text-xs text-teal-600 dark:text-teal-400 font-bold uppercase tracking-wider">Submit Vendor Quote</h4>
+                    <h4 className="text-xs text-blue-600 dark:text-blue-400 font-bold uppercase tracking-wider">Submit Vendor Quote</h4>
                     
                     <div className="space-y-3">
                       <div>
@@ -972,7 +972,7 @@ const DetailDrawer = ({
                           value={quoteAmount}
                           onKeyPress={onlyDecimalKeyPress}
                           onChange={(e) => setQuoteAmount(e.target.value)}
-                          className="w-full bg-slate-100 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-white outline-none focus:border-teal-500"
+                          className="w-full bg-slate-100 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-white outline-none focus:border-blue-500"
                         />
                       </div>
 
@@ -983,7 +983,7 @@ const DetailDrawer = ({
                           required
                           value={quoteDate}
                           onChange={(e) => setQuoteDate(e.target.value)}
-                          className="w-full bg-slate-100 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-white outline-none focus:border-teal-500"
+                          className="w-full bg-slate-100 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-white outline-none focus:border-blue-500"
                         />
                       </div>
 
@@ -994,7 +994,7 @@ const DetailDrawer = ({
                           placeholder="Receipt / Invoice Number..."
                           value={receiptNo}
                           onChange={(e) => setReceiptNo(e.target.value)}
-                          className="w-full bg-slate-100 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-white outline-none focus:border-teal-500"
+                          className="w-full bg-slate-100 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-white outline-none focus:border-blue-500"
                         />
                       </div>
 
@@ -1005,7 +1005,7 @@ const DetailDrawer = ({
                           placeholder="e.g. Building A, Unit 102..."
                           value={serviceLocation}
                           onChange={(e) => setServiceLocation(e.target.value)}
-                          className="w-full bg-slate-100 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-white outline-none focus:border-teal-500"
+                          className="w-full bg-slate-100 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-white outline-none focus:border-blue-500"
                         />
                       </div>
                     </div>
@@ -1014,14 +1014,14 @@ const DetailDrawer = ({
                       <button
                         type="submit"
                         disabled={quoteSubmitting}
-                        className="flex-1 py-2.5 bg-teal-600 hover:bg-teal-500 text-white rounded-xl text-sm font-semibold transition disabled:opacity-50"
+                        className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-sm font-semibold transition disabled:opacity-50"
                       >
                         {quoteSubmitting ? "Submitting..." : "Submit Quote Details"}
                       </button>
                       <button
                         type="button"
                         onClick={onStatusUpdate}
-                        className="flex-1 py-2.5 border border-teal-600 text-teal-600 bg-transparent hover:bg-teal-50 dark:border-teal-500 dark:text-teal-500 dark:hover:bg-teal-950/20 rounded-xl text-sm font-semibold transition flex items-center justify-center gap-1.5"
+                        className="flex-1 py-2.5 border border-blue-600 text-blue-600 bg-transparent hover:bg-blue-50 dark:border-blue-500 dark:text-blue-500 dark:hover:bg-blue-950/20 rounded-xl text-sm font-semibold transition flex items-center justify-center gap-1.5"
                       >
                         <UserCheck size={14} /> Update Status
                       </button>
@@ -1039,10 +1039,10 @@ const DetailDrawer = ({
             {/* Status QUOTE_GIVEN: Render quote details, accept/pay option */}
             {activeAssignment && activeAssignment.status === 'QUOTE_GIVEN' && (
               <>
-                <div className="bg-teal-500/5 rounded-2xl p-5 border border-teal-500/20 dark:border-teal-500/30 space-y-4 animate-fadeIn">
+                <div className="bg-blue-500/5 rounded-2xl p-5 border border-blue-500/20 dark:border-blue-500/30 space-y-4 animate-fadeIn">
                   <div className="flex justify-between items-center">
-                    <h4 className="text-xs text-teal-600 dark:text-teal-400 font-bold uppercase tracking-wider">Vendor Quote Offered</h4>
-                    <span className="text-[10px] bg-teal-500/20 text-teal-600 dark:text-teal-400 px-2 py-0.5 rounded-full font-semibold">QUOTE GIVEN</span>
+                    <h4 className="text-xs text-blue-600 dark:text-blue-400 font-bold uppercase tracking-wider">Vendor Quote Offered</h4>
+                    <span className="text-[10px] bg-blue-500/20 text-blue-600 dark:text-blue-400 px-2 py-0.5 rounded-full font-semibold">QUOTE GIVEN</span>
                   </div>
                   
                   <div className="space-y-2.5 text-sm">
@@ -1052,7 +1052,7 @@ const DetailDrawer = ({
                     </div>
                     <div className="flex justify-between">
                       <span className="text-slate-500 dark:text-gray-400">Quote Amount:</span>
-                      <span className="font-mono font-bold text-teal-600 dark:text-teal-400">${(activeAssignment.quote_amount || 0).toFixed(2)}</span>
+                      <span className="font-mono font-bold text-blue-600 dark:text-blue-400">${(activeAssignment.quote_amount || 0).toFixed(2)}</span>
                     </div>
                     {activeAssignment.vendor_receipt_no && (
                       <div className="flex justify-between">
@@ -1078,7 +1078,7 @@ const DetailDrawer = ({
                 {isOwner && (
                   <button
                     onClick={() => onAcceptAndPayQuote && onAcceptAndPayQuote(activeAssignment)}
-                    className="w-full py-3 bg-teal-600 hover:bg-teal-500 text-white rounded-2xl text-sm font-semibold transition flex items-center justify-center gap-2 shadow-lg shadow-teal-900/30"
+                    className="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl text-sm font-semibold transition flex items-center justify-center gap-2 shadow-lg shadow-blue-900/30"
                   >
                     <DollarSign size={16} /> Accept & Pay Quote
                   </button>
@@ -1092,7 +1092,7 @@ const DetailDrawer = ({
                 {isAdmin ? (
                   <div className="bg-slate-50 dark:bg-white/5 rounded-2xl p-5 border border-slate-200 dark:border-white/5 space-y-4 animate-fadeIn">
                     <div className="flex justify-between items-center">
-                      <h4 className="text-xs text-teal-600 dark:text-teal-400 font-bold uppercase tracking-wider">Disburse Escrow Payout</h4>
+                      <h4 className="text-xs text-blue-600 dark:text-blue-400 font-bold uppercase tracking-wider">Disburse Escrow Payout</h4>
                       <span className="text-[10px] bg-amber-500/10 text-amber-600 dark:bg-amber-500/20 dark:text-amber-300 px-2 py-0.5 rounded-full font-semibold">ESCROW DEPOSITED</span>
                     </div>
                     
@@ -1111,25 +1111,25 @@ const DetailDrawer = ({
                             placeholder="Enter VCC..."
                             value={vccInput}
                             onChange={(e) => setVccInput(e.target.value)}
-                            className="w-full bg-slate-100 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-white outline-none focus:border-teal-500 uppercase font-mono"
+                            className="w-full bg-slate-100 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-white outline-none focus:border-blue-500 uppercase font-mono"
                           />
                         </div>
                         <button
                           type="submit"
-                          className="w-full py-2.5 bg-teal-600 hover:bg-teal-500 text-white rounded-xl text-xs font-semibold transition"
+                          className="w-full py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-semibold transition"
                         >
                           Verify Contract Code
                         </button>
                       </form>
                     ) : (
                       <div className="space-y-3">
-                        <div className="bg-teal-500/10 border border-teal-500/20 rounded-xl p-3 text-center text-teal-600 dark:text-teal-400 text-xs font-semibold">
+                        <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-3 text-center text-blue-600 dark:text-blue-400 text-xs font-semibold">
                           Contract Code Verified Successfully!
                         </div>
                         <button
                           onClick={handleDisbursePayout}
                           disabled={payoutSubmitting}
-                          className="w-full py-2.5 bg-teal-600 hover:bg-teal-500 text-white rounded-xl text-xs font-semibold transition disabled:opacity-50"
+                          className="w-full py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-semibold transition disabled:opacity-50"
                         >
                           {payoutSubmitting ? "Disbursing..." : "Confirm & Disburse Payout"}
                         </button>
@@ -1143,7 +1143,7 @@ const DetailDrawer = ({
                     )}
                   </div>
                 ) : (
-                  <div className="bg-teal-500/5 border border-teal-500/20 dark:border-teal-500/30 rounded-2xl p-4 text-sm text-teal-700 dark:text-teal-300">
+                  <div className="bg-blue-500/5 border border-blue-500/20 dark:border-blue-500/30 rounded-2xl p-4 text-sm text-blue-700 dark:text-blue-300">
                     <p className="font-medium">Status: Quote Approved & Funded</p>
                     <p className="text-xs mt-1 opacity-90 font-light">
                       You have deposited the quote of **${activeAssignment.quote_amount?.toFixed(2)}** to the HOA Escrow Account.
@@ -1170,7 +1170,7 @@ const DetailDrawer = ({
         {isAdmin && !['CLOSED','CANCELLED'].includes(request.status_name) && !showQuoteForm && (
           <button 
             onClick={onStatusUpdate}
-            className="w-full py-3 bg-teal-600 hover:bg-teal-500 rounded-2xl text-sm font-semibold transition flex items-center justify-center gap-2 shadow-lg shadow-teal-900/30 text-white"
+            className="w-full py-3 bg-blue-600 hover:bg-blue-500 rounded-2xl text-sm font-semibold transition flex items-center justify-center gap-2 shadow-lg shadow-blue-900/30 text-white"
           >
             <UserCheck size={16} /> {userRole === 'super_admin' ? 'Update Status' : 'Update Status / Assignment'}
           </button>
@@ -1190,7 +1190,7 @@ const DetailDrawer = ({
         <div className="space-y-4">
           <div className="flex items-center justify-between border-b border-slate-200 dark:border-white/10 pb-2">
             <h4 className="text-sm font-semibold flex items-center gap-2 text-slate-900 dark:text-white">
-              <MessageSquare size={16} className="text-teal-600 dark:text-teal-400" /> Note History ({request.notes?.length || 0})
+              <MessageSquare size={16} className="text-blue-600 dark:text-blue-400" /> Note History ({request.notes?.length || 0})
             </h4>
           </div>
 
@@ -1200,7 +1200,7 @@ const DetailDrawer = ({
               request.notes.map((note) => (
                 <div key={note.note_id} className="bg-slate-50 dark:bg-white/5 rounded-xl p-3 border border-slate-200 dark:border-white/5 text-sm">
                   <div className="flex justify-between items-start text-xs text-slate-500 dark:text-gray-400 mb-1.5">
-                    <span className="font-semibold text-teal-600 dark:text-teal-400">{note.added_by_name || 'System'}</span>
+                    <span className="font-semibold text-blue-600 dark:text-blue-400">{note.added_by_name || 'System'}</span>
                     <span className="font-mono">{formatDate(note.created_date)}</span>
                   </div>
                   <p className="text-slate-800 dark:text-gray-200 leading-relaxed">{note.note}</p>
@@ -1219,12 +1219,12 @@ const DetailDrawer = ({
                 onChange={(e) => setNewNote(e.target.value)}
                 placeholder={isAdmin ? "Add notes for this service request..." : "Submit a note or change request to management..."}
                 rows={2}
-                className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-2xl p-3 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 focus:outline-none focus:border-teal-500 resize-none"
+                className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-2xl p-3 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 focus:outline-none focus:border-blue-500 resize-none"
               />
               <button
                 type="submit"
                 disabled={noteSubmitting}
-                className="px-4 py-2 bg-teal-600 hover:bg-teal-500 text-xs font-semibold rounded-xl text-white transition disabled:opacity-50 float-right"
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-xs font-semibold rounded-xl text-white transition disabled:opacity-50 float-right"
               >
                 {noteSubmitting ? 'Adding...' : 'Add Note'}
               </button>
@@ -1236,19 +1236,19 @@ const DetailDrawer = ({
         {/* Audit History Timeline */}
         <div className="space-y-4">
           <h4 className="text-sm font-semibold flex items-center gap-2 border-b border-slate-200 dark:border-white/10 pb-2 text-slate-900 dark:text-white">
-            <Clock size={16} className="text-teal-600 dark:text-teal-400" /> Audit Trail History
+            <Clock size={16} className="text-blue-600 dark:text-blue-400" /> Audit Trail History
           </h4>
 
           {historyLoading ? (
             <div className="flex justify-center py-4">
-              <div className="w-5 h-5 border-2 border-teal-500 border-t-transparent rounded-full animate-spin"></div>
+              <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
             </div>
           ) : history && history.length > 0 ? (
             <div className="relative pl-4 border-l-2 border-slate-200 dark:border-white/10 ml-2 space-y-4">
               {history.map((log) => (
                 <div key={log.audit_id} className="relative text-xs">
                   {/* Timeline dot */}
-                  <div className="absolute -left-[21px] top-1.5 w-2 h-2 rounded-full bg-teal-500 border border-white dark:border-[#162535]" />
+                  <div className="absolute -left-[21px] top-1.5 w-2 h-2 rounded-full bg-blue-500 border border-white dark:border-[#162535]" />
                   <div className="flex justify-between items-center text-[10px] text-slate-500 dark:text-gray-400 font-mono mb-1">
                     <span className="font-semibold text-slate-700 dark:text-gray-300">{log.user_name || 'System'}</span>
                     <span>{formatDate(log.created_at)}</span>
@@ -1477,37 +1477,20 @@ const ServiceRequests = ({ community, user, setActivePage, setPaymentState }) =>
 
   return (
     <div className="text-slate-900 dark:text-white">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
         <div className="flex justify-between items-start w-full md:w-auto gap-4">
           <div>
             <h1 className="text-2xl sm:text-3xl font-semibold text-slate-900 dark:text-white">Service Requests</h1>
             <p className="text-slate-500 dark:text-gray-400 mt-1 flex flex-wrap items-center gap-2">
               {community?.name}
               {isResident && <span className="text-xs bg-blue-500/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400 px-2 py-0.5 rounded-full font-medium">My Requests</span>}
-              {isAdmin && <span className="text-xs bg-teal-500/10 text-teal-600 dark:bg-teal-500/20 dark:text-teal-400 px-2 py-0.5 rounded-full font-medium">All Requests</span>}
+              {isAdmin && <span className="text-xs bg-blue-500/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400 px-2 py-0.5 rounded-full font-medium">All Requests</span>}
             </p>
           </div>
-          {/* Mobile Refresh Button */}
-          <button 
-            onClick={handleRefreshAll} 
-            disabled={loading}
-            className="md:hidden p-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 rounded-2xl text-slate-700 dark:text-white transition disabled:opacity-60 flex-shrink-0"
-            title="Refresh"
-          >
-            <RefreshCw size={18} className={loading ? "animate-spin" : ""} />
-          </button>
         </div>
 
         <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
-          {/* Desktop Refresh Button */}
-          <button 
-            onClick={handleRefreshAll} 
-            disabled={loading}
-            className="hidden md:flex px-5 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 text-slate-700 dark:text-white rounded-2xl text-sm font-semibold transition items-center gap-2 disabled:opacity-60"
-          >
-            <RefreshCw size={15} className={loading ? "animate-spin" : ""} /> {loading ? "Refreshing..." : "Refresh"}
-          </button>
-          <button onClick={handleNewRequestClick} className="w-full sm:w-auto flex items-center justify-center gap-2 bg-teal-600 hover:bg-teal-500 text-white px-5 py-2.5 rounded-2xl text-sm font-semibold transition">
+          <button onClick={handleNewRequestClick} className="w-full sm:w-auto flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-2xl text-sm font-semibold transition">
             <Plus size={15} /> New Request
           </button>
         </div>
@@ -1517,7 +1500,7 @@ const ServiceRequests = ({ community, user, setActivePage, setPaymentState }) =>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-5 mb-8">
         {[
           { label: 'Open',        value: stats.open,       color: 'text-blue-600 dark:text-blue-400' },
-          { label: 'Approved',    value: stats.approved,   color: 'text-teal-600 dark:text-teal-400' },
+          { label: 'Approved',    value: stats.approved,   color: 'text-blue-600 dark:text-blue-400' },
           { label: 'In Progress', value: stats.inProgress, color: 'text-amber-600 dark:text-amber-400' },
           { label: 'Closed',      value: stats.closed,     color: 'text-slate-500 dark:text-gray-400' },
         ].map(s => (
@@ -1542,7 +1525,7 @@ const ServiceRequests = ({ community, user, setActivePage, setPaymentState }) =>
                 placeholder="Search requests..."
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
-                className="w-full bg-slate-100/60 dark:bg-[#1E3248] border border-slate-200/80 dark:border-white/10 rounded-2xl pl-10 pr-4 py-2.5 text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 focus:border-teal-500 focus:outline-none transition-all shadow-inner"
+                className="w-full bg-slate-100/60 dark:bg-[#1E3248] border border-slate-200/80 dark:border-white/10 rounded-2xl pl-10 pr-4 py-2.5 text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 focus:border-blue-500 focus:outline-none transition-all shadow-inner"
               />
             </div>
 
@@ -1551,7 +1534,7 @@ const ServiceRequests = ({ community, user, setActivePage, setPaymentState }) =>
               <select 
                 value={statusFilter} 
                 onChange={e => setStatusFilter(e.target.value)}
-                className="w-full sm:w-auto bg-slate-100/60 dark:bg-[#1E3248] border border-slate-200/80 dark:border-white/10 rounded-2xl pl-4 pr-10 py-2.5 text-xs text-slate-900 dark:text-white focus:border-teal-500 focus:outline-none appearance-none cursor-pointer transition-colors"
+                className="w-full sm:w-auto bg-slate-100/60 dark:bg-[#1E3248] border border-slate-200/80 dark:border-white/10 rounded-2xl pl-4 pr-10 py-2.5 text-xs text-slate-900 dark:text-white focus:border-blue-500 focus:outline-none appearance-none cursor-pointer transition-colors"
               >
                 <option value="" className="text-slate-900 dark:text-white">Status (All)</option>
                 <option value="OPEN" className="text-slate-900 dark:text-white">Open</option>
@@ -1570,7 +1553,7 @@ const ServiceRequests = ({ community, user, setActivePage, setPaymentState }) =>
               <select 
                 value={priorityFilter} 
                 onChange={e => setPriorityFilter(e.target.value)}
-                className="w-full sm:w-auto bg-slate-100/60 dark:bg-[#1E3248] border border-slate-200/80 dark:border-white/10 rounded-2xl pl-4 pr-10 py-2.5 text-xs text-slate-900 dark:text-white focus:border-teal-500 focus:outline-none appearance-none cursor-pointer transition-colors"
+                className="w-full sm:w-auto bg-slate-100/60 dark:bg-[#1E3248] border border-slate-200/80 dark:border-white/10 rounded-2xl pl-4 pr-10 py-2.5 text-xs text-slate-900 dark:text-white focus:border-blue-500 focus:outline-none appearance-none cursor-pointer transition-colors"
               >
                 <option value="" className="text-slate-900 dark:text-white">Priority (All)</option>
                 <option value="LOW" className="text-slate-900 dark:text-white">Low</option>
@@ -1586,7 +1569,7 @@ const ServiceRequests = ({ community, user, setActivePage, setPaymentState }) =>
               <select 
                 value={sortBy} 
                 onChange={e => setSortBy(e.target.value)}
-                className="w-full sm:w-auto bg-slate-100/60 dark:bg-[#1E3248] border border-slate-200/80 dark:border-white/10 rounded-2xl pl-4 pr-10 py-2.5 text-xs text-slate-900 dark:text-white focus:border-teal-500 focus:outline-none appearance-none cursor-pointer transition-colors"
+                className="w-full sm:w-auto bg-slate-100/60 dark:bg-[#1E3248] border border-slate-200/80 dark:border-white/10 rounded-2xl pl-4 pr-10 py-2.5 text-xs text-slate-900 dark:text-white focus:border-blue-500 focus:outline-none appearance-none cursor-pointer transition-colors"
               >
                 <option value="newest" className="text-slate-900 dark:text-white">Newest First</option>
                 <option value="oldest" className="text-slate-900 dark:text-white">Oldest First</option>
@@ -1599,7 +1582,7 @@ const ServiceRequests = ({ community, user, setActivePage, setPaymentState }) =>
 
         {loading && requests.length === 0 ? (
           <div className="p-16 text-center text-slate-500 dark:text-gray-400 bg-white/40 dark:bg-transparent">
-            <div className="w-8 h-8 border-2 border-teal-500 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+            <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
             Loading...
           </div>
         ) : paginatedRequests.length === 0 ? (
@@ -1615,7 +1598,7 @@ const ServiceRequests = ({ community, user, setActivePage, setPaymentState }) =>
                   key={req.request_id} 
                   onClick={() => setSelectedRequest(req)}
                   className={`p-4 sm:p-6 hover:bg-slate-50 dark:hover:bg-white/5 transition flex gap-3 cursor-pointer ${
-                    selectedRequest?.request_id === req.request_id ? 'bg-slate-50 dark:bg-white/5 border-l-4 border-teal-500' : ''
+                    selectedRequest?.request_id === req.request_id ? 'bg-slate-50 dark:bg-white/5 border-l-4 border-blue-500' : ''
                   }`}
                 >
                   {/* Icon */}
@@ -1633,7 +1616,7 @@ const ServiceRequests = ({ community, user, setActivePage, setPaymentState }) =>
                     {/* Title + Status — stacked on mobile, side-by-side on sm+ */}
                     <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-1 sm:gap-3">
                       <div className="min-w-0">
-                        <h3 className="font-semibold text-slate-900 dark:text-white text-sm sm:text-base leading-tight hover:text-teal-600 dark:hover:text-teal-400 transition-colors break-words">{req.title}</h3>
+                        <h3 className="font-semibold text-slate-900 dark:text-white text-sm sm:text-base leading-tight hover:text-blue-600 dark:hover:text-blue-400 transition-colors break-words">{req.title}</h3>
                         <p className="text-slate-500 dark:text-gray-400 text-xs sm:text-sm mt-0.5 line-clamp-2 leading-relaxed">{req.description}</p>
                       </div>
                       <div className="flex-shrink-0">
@@ -1662,7 +1645,7 @@ const ServiceRequests = ({ community, user, setActivePage, setPaymentState }) =>
                       {isAdmin && !['CLOSED','CANCELLED'].includes(req.status_name) && (
                         <button 
                           onClick={() => setStatusModal(req)}
-                          className="px-3 py-1.5 bg-teal-500/10 hover:bg-teal-500/20 text-teal-600 dark:text-teal-400 rounded-xl text-xs font-medium transition flex items-center gap-1 shadow-sm active:scale-95"
+                          className="px-3 py-1.5 bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 rounded-xl text-xs font-medium transition flex items-center gap-1 shadow-sm active:scale-95"
                         >
                           <UserCheck size={12} /> Update Status
                         </button>

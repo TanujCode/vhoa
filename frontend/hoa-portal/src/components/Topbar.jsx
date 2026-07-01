@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { 
-  Bell, Sun, Moon, User, LogOut, Search, ChevronDown, Plus, Menu, Building2 
+  Bell, Sun, Moon, User, LogOut, Search, ChevronDown, Plus, Menu, Building2, ArrowLeft, RefreshCw
 } from 'lucide-react';
 import AddCommunityModal from './AddCommunityModal';
 import { useTheme } from '../context/ThemeContext';
@@ -17,7 +17,9 @@ const Topbar = ({
   unreadCount = 0,
   viewAsResident,
   setViewAsResident,
-  canSwitchView
+  canSwitchView,
+  canGoBack,
+  onBack
 }) => {
   const [isCommDropdownOpen, setIsCommDropdownOpen] = useState(false);
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
@@ -60,6 +62,17 @@ const Topbar = ({
       <button onClick={toggleSidebar} className="lg:hidden p-2 mr-1 sm:mr-2 text-gray-500 dark:text-gray-400">
         <Menu size={20} />
       </button>
+
+      {/* Back Button */}
+      {canGoBack && (
+        <button 
+          onClick={onBack}
+          className="p-2 mr-2 text-slate-600 dark:text-gray-400 hover:bg-slate-100 dark:hover:bg-white/5 rounded-xl transition duration-150 flex items-center justify-center group shrink-0"
+          title="Go Back"
+        >
+          <ArrowLeft size={20} className="transition-transform group-hover:-translate-x-0.5" />
+        </button>
+      )}
 
       {/* Community Section */}
       <div className="relative flex-1 lg:flex-none">
@@ -117,7 +130,7 @@ const Topbar = ({
                 placeholder="Search..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full bg-slate-100 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:border-teal-500 dark:text-white"
+                className="w-full bg-slate-100 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:border-blue-500 dark:text-white"
               />
             </div>
 
@@ -130,10 +143,10 @@ const Topbar = ({
                     setIsCommDropdownOpen(false); 
                   }}
                   className={`flex items-center gap-3 px-4 py-3 rounded-2xl mx-1 cursor-pointer transition hover:bg-slate-100 dark:hover:bg-white/10 ${
-                    activeCommunity?.community_id === comm.community_id ? 'bg-teal-50 dark:bg-teal-500/10 border border-teal-500/20' : ''
+                    activeCommunity?.community_id === comm.community_id ? 'bg-blue-50 dark:bg-blue-500/10 border border-blue-500/20' : ''
                   }`}
                 >
-                  <div className="w-2 h-2 rounded-full bg-teal-500"></div>
+                  <div className="w-2 h-2 rounded-full bg-blue-500"></div>
                   <p className="font-medium text-gray-900 dark:text-white truncate">{comm.name}</p>
                 </div>
               ))}
@@ -141,7 +154,7 @@ const Topbar = ({
 
             {user?.role === 'super_admin' && (
               <div
-                className="mx-3 mt-3 border-t border-slate-200 dark:border-white/10 pt-3 px-4 py-3 text-teal-500 hover:bg-teal-500/5 rounded-2xl cursor-pointer flex items-center gap-2 text-sm font-bold transition"
+                className="mx-3 mt-3 border-t border-slate-200 dark:border-white/10 pt-3 px-4 py-3 text-blue-500 hover:bg-blue-500/5 rounded-2xl cursor-pointer flex items-center gap-2 text-sm font-bold transition"
                 onClick={() => { setIsCommDropdownOpen(false); setShowAddModal(true); }}
               >
                 <Plus size={18} /> Add New Community
@@ -157,7 +170,7 @@ const Topbar = ({
         {canSwitchView && (
           <button
             onClick={() => setViewAsResident(!viewAsResident)}
-            className="hidden md:flex px-4 py-2 bg-teal-500/10 dark:bg-teal-500/25 border-2 border-teal-500/30 hover:border-teal-500 hover:bg-teal-500 hover:text-white text-teal-700 dark:text-teal-400 dark:hover:text-white dark:hover:bg-teal-500 rounded-2xl text-xs font-bold transition-all duration-200 items-center gap-1.5 shadow-sm active:scale-95"
+            className="hidden md:flex px-4 py-2 bg-blue-500/10 dark:bg-blue-500/25 border-2 border-blue-500/30 hover:border-blue-500 hover:bg-blue-500 hover:text-white text-blue-700 dark:text-blue-400 dark:hover:text-white dark:hover:bg-blue-500 rounded-2xl text-xs font-bold transition-all duration-200 items-center gap-1.5 shadow-sm active:scale-95"
           >
             {viewAsResident 
               ? (isBoardMember ? "Switch to Board View" : "Switch to Admin View") 
@@ -165,6 +178,14 @@ const Topbar = ({
           </button>
         )}
         
+        <button
+          onClick={() => window.location.reload()}
+          className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center rounded-xl hover:bg-slate-100 dark:hover:bg-white/10 text-gray-500 dark:text-gray-400 transition-colors"
+          title="Refresh Data"
+        >
+          <RefreshCw size={18} className="sm:w-5 sm:h-5" />
+        </button>
+
         <button
           onClick={toggleTheme}
           className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center rounded-xl hover:bg-slate-100 dark:hover:bg-white/10 text-gray-500 dark:text-gray-400 transition-colors"
@@ -190,14 +211,14 @@ const Topbar = ({
             <span className="text-xs sm:text-sm font-bold text-slate-800 dark:text-white leading-tight tracking-tight">
               {user?.name || "User"}
             </span>
-            <span className="text-[9px] sm:text-[10px] text-teal-600 dark:text-[#25C490] font-bold uppercase tracking-wider leading-none mt-0.5">
+            <span className="text-[9px] sm:text-[10px] text-blue-600 dark:text-[#5BA4F5] font-bold uppercase tracking-wider leading-none mt-0.5">
               {(viewAsResident && canSwitchView) 
                 ? "Resident" 
                 : (user?.role || "resident").split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}
             </span>
           </div>
           <div
-            className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center font-bold text-white cursor-pointer hover:ring-2 ring-teal-500/5 transition-all overflow-hidden border border-white/10 bg-gradient-to-br from-teal-500 to-blue-600 shadow-lg flex-shrink-0"
+            className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center font-bold text-white cursor-pointer hover:ring-2 ring-teal-500/5 transition-all overflow-hidden border border-white/10 bg-gradient-to-br from-blue-500 to-blue-600 shadow-lg flex-shrink-0"
             onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
           >
             {user?.user_profile_url ? (
@@ -219,7 +240,7 @@ const Topbar = ({
             <div className="absolute right-0 top-[calc(100%+12px)] w-60 bg-white dark:bg-[#1E3248] border border-slate-200 dark:border-white/20 rounded-3xl shadow-2xl z-50 py-2 overflow-hidden animate-in fade-in slide-in-from-top-2">
               <div className="px-4 py-4 border-b border-slate-100 dark:border-white/5 bg-slate-50/50 dark:bg-white/5">
                 <p className="font-bold text-gray-900 dark:text-white truncate">{user?.name || "User"}</p>
-                <p className="text-[10px] text-teal-500 font-mono uppercase font-black tracking-widest mt-0.5">
+                <p className="text-[10px] text-blue-500 font-mono uppercase font-black tracking-widest mt-0.5">
                   {(viewAsResident && canSwitchView) ? "resident" : (user?.role || "resident").replace('_', ' ')}
                 </p>
               </div>
@@ -232,7 +253,7 @@ const Topbar = ({
                       setIsUserDropdownOpen(false); 
                       setViewAsResident(!viewAsResident); 
                     }}
-                    className="md:hidden w-full px-4 py-2.5 hover:bg-slate-100 dark:hover:bg-white/10 rounded-2xl flex items-center gap-3 text-sm text-teal-600 dark:text-teal-400 font-bold transition-colors mb-1"
+                    className="md:hidden w-full px-4 py-2.5 hover:bg-slate-100 dark:hover:bg-white/10 rounded-2xl flex items-center gap-3 text-sm text-blue-600 dark:text-blue-400 font-bold transition-colors mb-1"
                   >
                     <Plus size={16} /> 
                     {viewAsResident 
@@ -245,7 +266,7 @@ const Topbar = ({
                   onClick={() => { setIsUserDropdownOpen(false); setActivePage('profile'); }}
                   className="w-full px-4 py-2.5 hover:bg-slate-100 dark:hover:bg-white/10 rounded-2xl flex items-center gap-3 text-sm text-gray-600 dark:text-gray-300 transition-colors"
                 >
-                  <User size={16} className="text-teal-500" /> Profile Settings
+                  <User size={16} className="text-blue-500" /> Profile Settings
                 </button>
 
                 <button 

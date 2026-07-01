@@ -48,7 +48,7 @@ const DocumentModal = ({ communityId, onClose, onSuccess }) => {
       <div className="bg-white dark:bg-[#1E2E42] rounded-3xl border border-slate-200 dark:border-white/10 w-full max-w-md overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200">
         <div className="p-6 border-b border-slate-200 dark:border-white/10 flex justify-between items-center bg-slate-50 dark:bg-[#162535]">
           <h3 className="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2">
-            <Plus size={18} className="text-teal-500" /> Upload HOA Document
+            <Plus size={18} className="text-blue-500" /> Upload HOA Document
           </h3>
           <button onClick={onClose} className="text-slate-400 hover:text-slate-600 dark:hover:text-white font-semibold text-sm">✕</button>
         </div>
@@ -68,7 +68,7 @@ const DocumentModal = ({ communityId, onClose, onSuccess }) => {
               placeholder="e.g. Community Rules 2026"
               value={form.document_name}
               onChange={e => setForm({ ...form, document_name: e.target.value })}
-              className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-teal-500"
+              className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-blue-500"
             />
           </div>
 
@@ -78,7 +78,7 @@ const DocumentModal = ({ communityId, onClose, onSuccess }) => {
               <select
                 value={form.document_type}
                 onChange={e => setForm({ ...form, document_type: e.target.value })}
-                className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl pl-4 pr-10 py-3 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-teal-500 cursor-pointer appearance-none"
+                className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl pl-4 pr-10 py-3 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 cursor-pointer appearance-none"
               >
                 {docTypes.map(type => (
                   <option key={type} value={type} className="text-slate-900 dark:text-white">{type.replace('_', ' ')}</option>
@@ -97,7 +97,7 @@ const DocumentModal = ({ communityId, onClose, onSuccess }) => {
                 onChange={e => setFile(e.target.files[0])}
                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
               />
-              <FileText className="mx-auto text-slate-400 group-hover:text-teal-500 transition mb-2" size={32} />
+              <FileText className="mx-auto text-slate-400 group-hover:text-blue-500 transition mb-2" size={32} />
               <p className="text-sm text-slate-600 dark:text-gray-300 font-medium">
                 {file ? file.name : "Drag & drop or click to choose"}
               </p>
@@ -116,7 +116,7 @@ const DocumentModal = ({ communityId, onClose, onSuccess }) => {
             <button
               type="submit"
               disabled={loading}
-              className="flex-1 py-2.5 bg-teal-600 hover:bg-teal-500 text-white rounded-xl text-sm font-medium transition disabled:opacity-50"
+              className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-sm font-medium transition disabled:opacity-50"
             >
               {loading ? 'Uploading...' : 'Upload'}
             </button>
@@ -228,7 +228,7 @@ const Documents = ({ community, user }) => {
           {isManagement && (
             <button
               onClick={() => setShowUploadModal(true)}
-              className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-teal-600 hover:bg-teal-500 text-white px-5 py-2.5 rounded-2xl text-sm font-semibold transition shadow-lg shadow-teal-500/25"
+              className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-2xl text-sm font-semibold transition shadow-lg shadow-blue-500/25"
             >
               <Plus size={15} /> Upload Document
             </button>
@@ -244,7 +244,7 @@ const Documents = ({ community, user }) => {
             onClick={() => setTypeFilter(type)}
             className={`px-5 py-2.5 rounded-2xl text-sm font-medium transition whitespace-nowrap ${
               typeFilter === type
-                ? 'bg-teal-600 hover:bg-teal-700 text-white hover:text-white shadow-md shadow-teal-500/10'
+                ? 'bg-blue-600 hover:bg-blue-700 text-white hover:text-white shadow-md shadow-blue-500/10'
                 : 'bg-slate-100 hover:bg-slate-200 dark:bg-white/10 text-slate-600 dark:text-gray-400 dark:hover:bg-white/20'
             }`}
           >
@@ -261,7 +261,7 @@ const Documents = ({ community, user }) => {
           placeholder="Search documents by name..."
           value={search}
           onChange={e => setSearch(e.target.value)}
-          className="w-full bg-white dark:bg-[#162535] border border-slate-200 dark:border-white/10 rounded-2xl pl-11 pr-4 py-3 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 focus:outline-none focus:border-teal-500"
+          className="w-full bg-white dark:bg-[#162535] border border-slate-200 dark:border-white/10 rounded-2xl pl-11 pr-4 py-3 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 focus:outline-none focus:border-blue-500"
         />
       </div>
 
@@ -269,7 +269,7 @@ const Documents = ({ community, user }) => {
       <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl overflow-hidden shadow-sm">
         <div className="p-6 border-b border-slate-200 dark:border-white/10 flex justify-between items-center">
           <h2 className="font-semibold text-slate-900 dark:text-white flex items-center gap-2">
-            <Folder size={18} className="text-teal-500" /> Document Repository
+            <Folder size={18} className="text-blue-500" /> Document Repository
           </h2>
           <span className="text-xs font-mono bg-slate-100 dark:bg-white/10 px-3 py-1.5 rounded-xl font-bold">
             {filteredDocs.length} Documents
@@ -278,7 +278,7 @@ const Documents = ({ community, user }) => {
 
         {loading && documents.length === 0 ? (
           <div className="p-20 text-center text-slate-500 dark:text-gray-400">
-            <div className="w-10 h-10 border-4 border-teal-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <div className="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
             Loading repository files...
           </div>
         ) : filteredDocs.length === 0 ? (
@@ -303,7 +303,7 @@ const Documents = ({ community, user }) => {
                   <tr key={doc.document_id} className="border-b border-slate-100 dark:border-white/5 hover:bg-slate-100/50 dark:hover:bg-white/5 transition-all">
                     <td className="px-3 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-teal-500/10 dark:bg-teal-500/20 text-teal-600 dark:text-teal-400 rounded-xl flex items-center justify-center text-lg font-bold flex-shrink-0">
+                        <div className="w-10 h-10 bg-blue-500/10 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 rounded-xl flex items-center justify-center text-lg font-bold flex-shrink-0">
                           📄
                         </div>
                         <div className="min-w-0">
@@ -311,7 +311,7 @@ const Documents = ({ community, user }) => {
                             href={getBaseUrl(doc.document_url)}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="font-medium text-slate-800 dark:text-white hover:text-teal-600 dark:hover:text-teal-400 hover:underline transition-all block truncate max-w-xs sm:max-w-md"
+                            className="font-medium text-slate-800 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 hover:underline transition-all block truncate max-w-xs sm:max-w-md"
                           >
                             {doc.document_name}
                           </a>
@@ -333,7 +333,7 @@ const Documents = ({ community, user }) => {
                           href={getBaseUrl(doc.document_url)}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="p-2 bg-teal-500/10 hover:bg-teal-500/20 dark:bg-teal-500/20 dark:hover:bg-teal-500/30 text-teal-600 dark:text-teal-400 rounded-xl transition-all"
+                          className="p-2 bg-blue-500/10 hover:bg-blue-500/20 dark:bg-blue-500/20 dark:hover:bg-blue-500/30 text-blue-600 dark:text-blue-400 rounded-xl transition-all"
                           title="View Document"
                         >
                           <Eye size={16} />

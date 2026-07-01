@@ -254,7 +254,7 @@ const AddCommunityModal = ({ isOpen, onClose, onSuccess }) => {
                 value={formData.contract_code} 
                 onChange={handleChange} 
                 required 
-                className="flex-1 bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl p-3.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-[#1D9E75] placeholder-slate-400 dark:placeholder-gray-500 font-mono uppercase tracking-wider" 
+                className="flex-1 bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl p-3.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-[#1D68DF] placeholder-slate-400 dark:placeholder-gray-500 font-mono uppercase tracking-wider" 
                 placeholder="CON-XXXXXX" 
                 disabled={loadingCode || contractVerified}
               />
@@ -262,7 +262,7 @@ const AddCommunityModal = ({ isOpen, onClose, onSuccess }) => {
                 type="button"
                 onClick={handleVerifyContractCode}
                 disabled={loadingCode || contractVerified}
-                className="px-4 py-2 bg-teal-600 hover:bg-teal-500 disabled:bg-teal-800 text-white rounded-2xl text-xs font-semibold transition shadow-md shadow-teal-500/25"
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-500 disabled:bg-blue-800 text-white rounded-2xl text-xs font-semibold transition shadow-md shadow-blue-500/25"
               >
                 {loadingCode ? "Checking..." : contractVerified ? "Verified ✅" : "Verify Code"}
               </button>
@@ -286,7 +286,7 @@ const AddCommunityModal = ({ isOpen, onClose, onSuccess }) => {
                   value={formData.name} 
                   onChange={handleChange} 
                   required 
-                  className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl p-3.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-teal-500 placeholder-slate-400 dark:placeholder-gray-500" 
+                  className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl p-3.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-blue-500 placeholder-slate-400 dark:placeholder-gray-500" 
                   placeholder="Green Valley Society" 
                 />
               </div>
@@ -299,7 +299,7 @@ const AddCommunityModal = ({ isOpen, onClose, onSuccess }) => {
                     value={formData.community_code} 
                     onChange={handleChange} 
                     required 
-                    className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl p-3.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-teal-500 placeholder-slate-400 dark:placeholder-gray-500" 
+                    className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl p-3.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-blue-500 placeholder-slate-400 dark:placeholder-gray-500" 
                     placeholder="GVS2026" 
                   />
                 </div>
@@ -310,7 +310,7 @@ const AddCommunityModal = ({ isOpen, onClose, onSuccess }) => {
                     name="community_size" 
                     value={formData.community_size} 
                     onChange={handleChange} 
-                    className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl p-3.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-teal-500" 
+                    className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl p-3.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-blue-500" 
                   />
                 </div>
               </div>
@@ -324,7 +324,7 @@ const AddCommunityModal = ({ isOpen, onClose, onSuccess }) => {
                     value={formData.address.country_id}
                     onChange={handleCountryChange}
                     required
-                    className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl p-3.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-teal-500"
+                    className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl p-3.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-blue-500"
                   >
                     <option value="">Select Country</option>
                     {countries.map((c) => (
@@ -339,7 +339,7 @@ const AddCommunityModal = ({ isOpen, onClose, onSuccess }) => {
                     value={formData.address.state_id}
                     onChange={handleChange}
                     required
-                    className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl p-3.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-teal-500"
+                    className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl p-3.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-blue-500"
                   >
                     <option value="">Select State</option>
                     {states.map((s) => (
@@ -356,7 +356,7 @@ const AddCommunityModal = ({ isOpen, onClose, onSuccess }) => {
                   value={formData.address.address} 
                   onChange={handleChange} 
                   required 
-                  className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl p-3.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-teal-500 placeholder-slate-400 dark:placeholder-gray-500" 
+                  className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl p-3.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-blue-500 placeholder-slate-400 dark:placeholder-gray-500" 
                   placeholder="123 MG Road" 
                 />
               </div>
@@ -369,7 +369,7 @@ const AddCommunityModal = ({ isOpen, onClose, onSuccess }) => {
                     value={formData.address.city} 
                     onChange={handleChange} 
                     required 
-                    className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl p-3.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-teal-500 placeholder-slate-400 dark:placeholder-gray-500" 
+                    className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl p-3.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-blue-500 placeholder-slate-400 dark:placeholder-gray-500" 
                     placeholder="Raipur" 
                   />
                 </div>
@@ -380,7 +380,7 @@ const AddCommunityModal = ({ isOpen, onClose, onSuccess }) => {
                     value={formData.address.zip_code} 
                     onChange={handleChange} 
                     required 
-                    className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl p-3.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-teal-500 placeholder-slate-400 dark:placeholder-gray-500" 
+                    className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl p-3.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-blue-500 placeholder-slate-400 dark:placeholder-gray-500" 
                     placeholder="492001" 
                   />
                 </div>
@@ -389,7 +389,7 @@ const AddCommunityModal = ({ isOpen, onClose, onSuccess }) => {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-teal-600 hover:bg-teal-500 py-3.5 rounded-2xl font-medium text-white disabled:opacity-50 transition mt-2 shadow-lg shadow-teal-500/25"
+                className="w-full bg-blue-600 hover:bg-blue-500 py-3.5 rounded-2xl font-medium text-white disabled:opacity-50 transition mt-2 shadow-lg shadow-blue-500/25"
               >
                 {loading ? "Creating Community..." : "Create Community"}
               </button>

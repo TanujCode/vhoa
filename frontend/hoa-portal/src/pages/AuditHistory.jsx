@@ -49,7 +49,7 @@ const AuditHistory = ({ community, user }) => {
 
   const getActionColor = (action) => {
     if (action?.includes('LOGIN'))     return 'bg-blue-500/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400 border border-blue-500/20';
-    if (action?.includes('CREATE'))    return 'bg-teal-500/10 text-teal-600 dark:bg-teal-500/20 dark:text-teal-400 border border-teal-500/20';
+    if (action?.includes('CREATE'))    return 'bg-blue-500/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400 border border-blue-500/20';
     if (action?.includes('UPDATE') || action?.includes('STATUS')) return 'bg-amber-500/10 text-amber-600 dark:bg-amber-500/20 dark:text-amber-300 border border-amber-500/20';
     if (action?.includes('DELETE'))    return 'bg-red-500/10 text-red-600 dark:bg-red-500/20 dark:text-red-400 border border-red-500/20';
     if (action?.includes('FAILED') || action?.includes('LOCKED')) return 'bg-red-500/10 text-red-600 dark:bg-red-500/20 dark:text-red-400 border border-red-500/20';
@@ -77,7 +77,7 @@ const AuditHistory = ({ community, user }) => {
       vendor: 'bg-violet-500/10 text-violet-600 dark:text-violet-400 border-violet-500/20',
       news: 'bg-fuchsia-500/10 text-fuchsia-600 dark:text-fuchsia-400 border-fuchsia-500/20',
       user: 'bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/20',
-      community: 'bg-teal-500/10 text-teal-600 dark:text-teal-400 border-teal-500/20',
+      community: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20',
     };
     return map[module] || 'bg-slate-100 text-slate-500 dark:bg-white/5 dark:text-gray-400 border-slate-200/30 dark:border-white/10';
   };
@@ -152,7 +152,7 @@ const AuditHistory = ({ community, user }) => {
           <button key={v.id} onClick={() => setViewMode(v.id)}
             className={`px-5 py-2.5 rounded-2xl text-sm font-medium transition ${
               viewMode === v.id
-                ? 'bg-teal-600 text-white shadow-sm shadow-teal-500/20'
+                ? 'bg-blue-600 text-white shadow-sm shadow-blue-500/20'
                 : 'bg-slate-100 hover:bg-slate-200 dark:bg-white/10 text-slate-600 dark:text-gray-400 dark:hover:bg-white/20'
             }`}>
             {v.label}
@@ -169,14 +169,14 @@ const AuditHistory = ({ community, user }) => {
             placeholder="Search action, user, description..."
             value={search}
             onChange={e => setSearch(e.target.value)}
-            className="w-full bg-white dark:bg-[#162535] border border-slate-200 dark:border-white/10 rounded-xl pl-9 pr-4 py-2.5 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 focus:outline-none focus:border-teal-500"
+            className="w-full bg-white dark:bg-[#162535] border border-slate-200 dark:border-white/10 rounded-xl pl-9 pr-4 py-2.5 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 focus:outline-none focus:border-blue-500"
           />
         </div>
         <div className="relative">
           <select
             value={moduleFilter}
             onChange={e => setModuleFilter(e.target.value)}
-            className="bg-white dark:bg-[#162535] border border-slate-200 dark:border-white/10 rounded-xl pl-4 pr-10 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-teal-500 appearance-none cursor-pointer"
+            className="bg-white dark:bg-[#162535] border border-slate-200 dark:border-white/10 rounded-xl pl-4 pr-10 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 appearance-none cursor-pointer"
           >
             {modules.map(m => (
               <option key={m} value={m} className="text-slate-900 dark:text-white">
@@ -200,7 +200,7 @@ const AuditCards = ({ logs, loading, filteredLogs, getActionColor, getModuleIcon
   if (loading && logs.length === 0) {
     return (
       <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-16 text-center">
-        <div className="w-8 h-8 border-2 border-teal-500 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+        <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
         <p className="text-slate-500 dark:text-gray-400 text-sm">Loading audit logs...</p>
       </div>
     );

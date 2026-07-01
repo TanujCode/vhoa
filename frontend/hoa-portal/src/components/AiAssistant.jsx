@@ -336,7 +336,7 @@ const AiAssistant = ({ user, community }) => {
     const parts = text.split(/(\*\*[^*]+\*\*)/g);
     return parts.map((part, i) => {
       if (part.startsWith('**') && part.endsWith('**')) {
-        return <strong key={i} className="font-bold text-teal-600 dark:text-teal-400">{part.slice(2, -2)}</strong>;
+        return <strong key={i} className="font-bold text-blue-600 dark:text-blue-400">{part.slice(2, -2)}</strong>;
       }
       return part.split('\n').map((line, j) => (
         <React.Fragment key={`${i}-${j}`}>
@@ -354,7 +354,7 @@ const AiAssistant = ({ user, community }) => {
         <div className="fixed bottom-6 right-6 z-50">
           <button
             onClick={() => setIsOpen(true)}
-            className="w-14 h-14 bg-teal-600 hover:bg-teal-500 dark:bg-teal-600 dark:hover:bg-teal-500 text-white rounded-full flex items-center justify-center shadow-[0_8px_30px_rgb(13,148,136,0.4)] transition-all duration-300 transform hover:scale-105"
+            className="w-14 h-14 bg-blue-600 hover:bg-blue-500 dark:bg-blue-600 dark:hover:bg-blue-500 text-white rounded-full flex items-center justify-center shadow-[0_8px_30px_rgb(29,104,223,0.4)] transition-all duration-300 transform hover:scale-105"
             title="Open AI Copilot"
           >
             <Sparkles className="w-6 h-6 animate-pulse" />
@@ -367,14 +367,14 @@ const AiAssistant = ({ user, community }) => {
         <div className="fixed inset-0 sm:top-auto sm:left-auto sm:bottom-6 sm:right-6 w-full h-full sm:w-[380px] sm:h-[520px] bg-white dark:bg-[#1E2E42] border-t sm:border border-slate-200 dark:border-white/10 rounded-none sm:rounded-3xl shadow-[0_16px_50px_rgba(0,0,0,0.15)] dark:shadow-[0_16px_50px_rgba(0,0,0,0.45)] flex flex-col overflow-hidden z-50 animate-in fade-in slide-in-from-bottom-6 duration-300">
           
           {/* Header */}
-          <div className="bg-gradient-to-r from-teal-600 to-emerald-600 text-white p-4 flex items-center justify-between border-b border-slate-200/20 dark:border-white/5 shrink-0">
+          <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-4 flex items-center justify-between border-b border-slate-200/20 dark:border-white/5 shrink-0">
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 bg-white/10 rounded-xl flex items-center justify-center">
                 <Bot className="w-5 h-5 text-white animate-bounce" />
               </div>
               <div>
                 <h3 className="font-bold text-sm tracking-wide">NestBloq Copilot</h3>
-                <span className="text-[10px] text-teal-200 dark:text-teal-400 font-semibold flex items-center gap-1">
+                <span className="text-[10px] text-blue-200 dark:text-blue-400 font-semibold flex items-center gap-1">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse inline-block" /> Active: {commName}
                 </span>
               </div>
@@ -394,17 +394,17 @@ const AiAssistant = ({ user, community }) => {
               return (
                 <div key={msg.id} className={`flex items-start gap-2.5 ${isBot ? 'justify-start' : 'justify-end'}`}>
                   {isBot && (
-                    <div className="w-7 h-7 bg-teal-600/10 dark:bg-white/5 text-teal-600 dark:text-teal-400 rounded-lg flex items-center justify-center shrink-0 border border-teal-600/10 dark:border-white/5 font-mono text-[10px] font-bold">
+                    <div className="w-7 h-7 bg-blue-600/10 dark:bg-white/5 text-blue-600 dark:text-blue-400 rounded-lg flex items-center justify-center shrink-0 border border-blue-600/10 dark:border-white/5 font-mono text-[10px] font-bold">
                       {botInitials}
                     </div>
                   )}
                   <div className={`p-3 rounded-2xl max-w-[80%] text-xs shadow-sm ${
                     isBot 
                       ? 'bg-white dark:bg-[#253952] text-slate-800 dark:text-slate-200 border border-slate-100 dark:border-white/5 rounded-tl-none font-sans' 
-                      : 'bg-teal-600 text-white rounded-tr-none font-medium'
+                      : 'bg-blue-600 text-white rounded-tr-none font-medium'
                   }`}>
                     <p className="whitespace-pre-line leading-relaxed">{renderText(msg.text)}</p>
-                    <span className={`text-[8px] mt-1.5 block text-right ${isBot ? 'text-slate-450 dark:text-gray-400' : 'text-teal-200'}`}>
+                    <span className={`text-[8px] mt-1.5 block text-right ${isBot ? 'text-slate-450 dark:text-gray-400' : 'text-blue-200'}`}>
                       {msg.timestamp ? msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Now'}
                     </span>
                   </div>
@@ -414,14 +414,14 @@ const AiAssistant = ({ user, community }) => {
             
             {loading && (
               <div className="flex items-start gap-2.5 justify-start animate-pulse">
-                <div className="w-7 h-7 bg-teal-600/10 dark:bg-white/5 text-teal-600 dark:text-teal-400 rounded-lg flex items-center justify-center shrink-0 font-bold text-[10px]">
+                <div className="w-7 h-7 bg-blue-600/10 dark:bg-white/5 text-blue-600 dark:text-blue-400 rounded-lg flex items-center justify-center shrink-0 font-bold text-[10px]">
                   {botInitials}
                 </div>
                 <div className="bg-white dark:bg-[#253952] border border-slate-100 dark:border-white/5 p-3 rounded-2xl rounded-tl-none">
                   <div className="flex gap-1">
-                    <span className="w-1.5 h-1.5 bg-teal-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                    <span className="w-1.5 h-1.5 bg-teal-500 rounded-full animate-bounce" style={{ animationDelay: '150ms', margin: '0 2px' }} />
-                    <span className="w-1.5 h-1.5 bg-teal-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                    <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                    <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '150ms', margin: '0 2px' }} />
+                    <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
                   </div>
                 </div>
               </div>
@@ -438,7 +438,7 @@ const AiAssistant = ({ user, community }) => {
                     key={opt.id}
                     disabled={loading}
                     onClick={() => handleSelectOption(opt)}
-                    className="w-full text-left px-3.5 py-2 text-xs font-semibold bg-white dark:bg-[#203248] text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-white/5 hover:border-teal-500 dark:hover:border-teal-400 rounded-xl shadow-sm hover:shadow transition duration-150 active:scale-[0.98] disabled:opacity-50"
+                    className="w-full text-left px-3.5 py-2 text-xs font-semibold bg-white dark:bg-[#203248] text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-white/5 hover:border-blue-500 dark:hover:border-blue-400 rounded-xl shadow-sm hover:shadow transition duration-150 active:scale-[0.98] disabled:opacity-50"
                   >
                     {opt.text}
                   </button>
@@ -453,7 +453,7 @@ const AiAssistant = ({ user, community }) => {
                     key={opt.id}
                     disabled={loading}
                     onClick={() => handleSelectOption(opt)}
-                    className="w-full text-left px-3.5 py-2 text-xs font-semibold bg-white dark:bg-[#203248] text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-white/5 hover:border-teal-500 dark:hover:border-teal-400 rounded-xl shadow-sm hover:shadow transition duration-150 active:scale-[0.98] disabled:opacity-50"
+                    className="w-full text-left px-3.5 py-2 text-xs font-semibold bg-white dark:bg-[#203248] text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-white/5 hover:border-blue-500 dark:hover:border-blue-400 rounded-xl shadow-sm hover:shadow transition duration-150 active:scale-[0.98] disabled:opacity-50"
                   >
                     {opt.text}
                   </button>
@@ -466,7 +466,7 @@ const AiAssistant = ({ user, community }) => {
                 <button
                   disabled={loading}
                   onClick={handleBackToCategoryMenu}
-                  className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-teal-600 hover:bg-teal-500 text-white rounded-xl text-xs font-semibold transition active:scale-[0.98] shadow-md shadow-teal-600/10 disabled:opacity-50"
+                  className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-semibold transition active:scale-[0.98] shadow-md shadow-blue-600/10 disabled:opacity-50"
                 >
                   {lastCategory === 'guides' ? '📚 View Other Guides' : '⬅️ Back to Queries'}
                 </button>
