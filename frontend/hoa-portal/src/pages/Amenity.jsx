@@ -736,24 +736,20 @@ const Amenity = ({ community, user, setActivePage, setPaymentState }) => {
 
   return (
     <div className="text-slate-900 dark:text-white">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-        <div className="flex justify-between items-center w-full md:w-auto">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-semibold text-slate-900 dark:text-white">Amenity Booking</h1>
-            <p className="text-slate-500 dark:text-gray-400 mt-1">{community?.name}</p>
-          </div>
-        </div>
-
-        <div className="flex gap-2 w-full md:w-auto">
-          {isAdmin && (
-            <button onClick={handleCreateAmenityClick}
-              className="flex-1 md:flex-none px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl text-sm font-semibold transition flex items-center justify-center gap-2 shadow-lg shadow-blue-500/25">
-              <Plus size={15} /> Create Amenity
-            </button>
-          )}
-        </div>
+      {/* Compact Page Header Row */}
+      <div className="flex flex-row justify-between items-center mb-5 pb-3 border-b border-slate-200/60 dark:border-white/5">
+        <h1 className="text-xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+          Amenity Booking
+        </h1>
+        {isAdmin && (
+          <button onClick={handleCreateAmenityClick}
+            className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-semibold transition flex items-center justify-center gap-1.5 shadow-md shadow-blue-500/25 whitespace-nowrap">
+            <Plus size={13} /> Create Amenity
+          </button>
+        )}
       </div>
 
+      {/* Tabs */}
       <div className="flex gap-2 mb-6">
         {['amenities', 'bookings'].map(tab => (
           <button key={tab} onClick={() => setActiveTab(tab)}

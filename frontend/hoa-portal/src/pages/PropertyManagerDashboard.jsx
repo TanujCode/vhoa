@@ -192,43 +192,37 @@ const PropertyManagerDashboard = ({ community, user, setActivePage }) => {
         {/* Subtle premium light blue glow */}
         <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/[0.03] dark:bg-blue-500/[0.02] rounded-full blur-3xl pointer-events-none" />
 
-        {/* Left: Title & Community Info */}
-        <div className="flex-1 min-w-0 relative z-10 space-y-3">
+        {/* Left: Premium Welcome & Metadata */}
+        <div className="flex-1 min-w-0 relative z-10 space-y-4">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white leading-none">
-              Property Manager Portal
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white leading-tight">
+              Welcome back, {user?.first_name || 'Manager'}! 👋
             </h1>
-            <p className="text-[10px] text-slate-500 dark:text-gray-450 mt-1 font-mono uppercase tracking-wider font-semibold">
-              Management Console • Active Session
+            <p className="text-slate-500 dark:text-gray-400 text-xs mt-1 font-medium">
+              Here is a summary of your community's active operations today.
             </p>
           </div>
 
-          <div className="mt-4 flex flex-col sm:flex-row sm:items-center gap-3">
-            <div className="w-10 h-10 bg-blue-50/80 dark:bg-white/5 border border-blue-100/50 dark:border-white/10 rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm">
-              <Building2 size={20} className="text-blue-600 dark:text-blue-400" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-lg font-extrabold text-slate-900 dark:text-white">{community.name}</span>
-                <span className="inline-flex items-center text-[9px] font-black text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
-                  ACTIVE PM LICENSE
-                </span>
-              </div>
-              <p className="text-xs text-slate-600 dark:text-gray-300 mt-1 flex items-center gap-1 font-semibold">
+          <div className="flex flex-wrap items-center gap-2 mt-2">
+            <span className="inline-flex items-center text-[10px] font-bold text-slate-600 dark:text-slate-350 bg-slate-100 dark:bg-white/5 px-2.5 py-1 rounded-xl border border-slate-200/50 dark:border-white/10 font-mono">
+              Code: {community.community_code}
+            </span>
+            <span className="inline-flex items-center text-[10px] font-black text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-xl border border-emerald-500/20">
+              ACTIVE PM LICENSE
+            </span>
+            {community.address && (
+              <span className="inline-flex items-center gap-1.5 text-[10px] font-semibold text-slate-600 dark:text-gray-300 bg-slate-50 dark:bg-white/[0.02] px-2.5 py-1 rounded-xl border border-slate-200/40 dark:border-white/5">
                 <MapPin size={11} className="text-slate-400 dark:text-slate-400 flex-shrink-0" />
                 {formatAddress(community.address)}
-              </p>
-              <p className="text-[10px] text-slate-500 dark:text-gray-400 font-mono mt-0.5">
-                HOA Code: <span className="font-bold text-slate-800 dark:text-white">{community.community_code}</span>
-              </p>
-            </div>
+              </span>
+            )}
           </div>
         </div>
 
         {/* Right: Stats Grid */}
         <div className="relative z-10 w-full lg:w-auto mt-5 lg:mt-0 pt-5 lg:pt-0 border-t border-slate-200/60 dark:border-white/5 lg:border-t-0">
           {/* Stats columns */}
-          <div className="flex flex-row flex-wrap items-center justify-between sm:justify-around lg:justify-end gap-5 sm:gap-8 lg:gap-11 w-full">
+          <div className="grid grid-cols-2 sm:flex sm:flex-row sm:items-center sm:justify-around lg:justify-end gap-5 sm:gap-8 lg:gap-11 w-full">
             <div className="text-center flex flex-col items-center min-w-[65px]">
               <p className="text-3xl sm:text-4xl font-black text-blue-600 dark:text-blue-400 font-mono tracking-tight">{stats?.total_residents || 7}</p>
               <p className="text-[9px] sm:text-[10px] font-bold text-slate-500 dark:text-gray-450 uppercase tracking-widest mt-1">Members</p>
@@ -255,14 +249,20 @@ const PropertyManagerDashboard = ({ community, user, setActivePage }) => {
         {/* Left Top: Community Console navigation */}
         <div className="lg:col-span-7 bg-gradient-to-br from-white/80 to-slate-50/80 dark:from-[#1E2E42]/80 dark:to-[#162535]/80 backdrop-blur-md border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 shadow-sm flex flex-col justify-between">
           <div>
-            <div className="flex items-center justify-between mb-6 pb-3 border-b border-slate-200/60 dark:border-white/[0.05] gap-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 pb-3 border-b border-slate-200/60 dark:border-white/[0.05] gap-3">
               <h3 className="font-extrabold text-xs sm:text-sm text-slate-900 dark:text-white uppercase tracking-wider whitespace-nowrap">
-                Community Console
+                Quick Links
               </h3>
-              <div className="flex items-center gap-2.5 sm:gap-3 flex-shrink-0">
+              <div className="flex flex-row items-center gap-2 sm:gap-3 flex-shrink-0">
                 <span className="text-[9px] sm:text-[10px] font-bold text-slate-400 dark:text-gray-500 uppercase tracking-widest font-mono hidden sm:inline">
                   {new Date().toLocaleString('en-US', { month: 'long', year: 'numeric' })}
                 </span>
+                <button
+                  onClick={() => setActivePage('overview')}
+                  className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 border border-slate-200 dark:border-white/10 text-slate-700 dark:text-white rounded-lg text-[10px] sm:text-xs font-bold transition active:scale-95 whitespace-nowrap"
+                >
+                  All Communities
+                </button>
                 <button
                   onClick={() => setShowExportModal(true)}
                   className="px-2.5 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-[10px] sm:text-xs font-bold transition shadow-sm active:scale-95 flex items-center gap-1.5 whitespace-nowrap"
@@ -274,7 +274,7 @@ const PropertyManagerDashboard = ({ community, user, setActivePage }) => {
             </div>
 
             {/* Quick Navigation Buttons Grid */}
-            <div className="grid grid-cols-3 gap-3.5">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3.5">
               {(() => {
                 const filtered = consoleButtons.filter(btn => 
                   btn.label.toLowerCase().includes(searchQuery.toLowerCase())

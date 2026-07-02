@@ -196,48 +196,35 @@ const Documents = ({ community, user }) => {
 
   return (
     <div className="text-slate-900 dark:text-white">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
-        <div className="flex justify-between items-center w-full sm:w-auto">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-semibold text-slate-900 dark:text-white">HOA Documents</h1>
-            <p className="text-slate-500 dark:text-gray-400 mt-1">{community?.name || 'Community Portal'}</p>
-          </div>
-          {/* Mobile Refresh Button */}
-          <button 
-            onClick={fetchDocuments}
-            disabled={loading}
-            className="sm:hidden p-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 rounded-2xl text-slate-700 dark:text-white transition disabled:opacity-60 animate-in fade-in"
-            title="Refresh"
-          >
-            <RefreshCw size={18} className={loading ? "animate-spin" : ""} />
-          </button>
-        </div>
-
+      {/* Compact Page Header Row */}
+      <div className="flex flex-row justify-between items-center mb-5 pb-3 border-b border-slate-200/60 dark:border-white/5">
+        <h1 className="text-xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+          HOA Documents
+        </h1>
         <div className="flex gap-2 w-full sm:w-auto">
-          {/* Desktop Refresh Button */}
+          {/* Refresh Button */}
           <button
             onClick={fetchDocuments}
             disabled={loading}
-            className="hidden sm:flex px-5 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 text-slate-700 dark:text-white rounded-2xl transition items-center gap-2 disabled:opacity-60"
+            className="px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 text-slate-700 dark:text-white rounded-xl transition flex items-center justify-center gap-2 disabled:opacity-60 text-xs font-semibold whitespace-nowrap"
             title="Refresh"
           >
-            <RefreshCw size={15} className={loading ? "animate-spin" : ""} />
-            {loading ? "Refreshing..." : "Refresh"}
+            <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
+            Refresh
           </button>
           {isManagement && (
             <button
               onClick={() => setShowUploadModal(true)}
-              className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-2xl text-sm font-semibold transition shadow-lg shadow-blue-500/25"
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-semibold transition flex items-center justify-center gap-2 shadow-md shadow-blue-500/25 whitespace-nowrap"
             >
-              <Plus size={15} /> Upload Document
+              <Plus size={14} /> Upload Document
             </button>
           )}
         </div>
       </div>
 
       {/* Tabs / Filters */}
-      <div className="flex gap-2 overflow-x-auto pb-3 mb-6 custom-scrollbar scrollbar-thin">
+      <div className="flex gap-2 overflow-x-auto pb-1 max-w-full custom-scrollbar scrollbar-thin mb-6">
         {docTypes.map(type => (
           <button
             key={type}

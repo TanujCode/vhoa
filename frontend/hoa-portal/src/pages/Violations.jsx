@@ -967,37 +967,27 @@ const Violations = ({ community, user, setActivePage, setPaymentState }) => {
 
   return (
     <div className="text-slate-900 dark:text-white">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-        <div className="flex justify-between items-center w-full md:w-auto">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-semibold text-slate-900 dark:text-white">Violations</h1>
-            <p className="text-slate-500 dark:text-gray-400 mt-1">
-              {community?.name} • Manage violations, disputes, and fines
-            </p>
+      {/* Compact Page Header Row */}
+      <div className="flex flex-row justify-between items-center mb-5 pb-3 border-b border-slate-200/60 dark:border-white/5">
+        <h1 className="text-xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+          Violations
+        </h1>
+        {!isResident && (
+          <div className="flex gap-2 w-full sm:w-auto">
+            <button 
+              onClick={handleCreateTypeClick}
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-xl text-xs font-semibold transition flex items-center justify-center gap-1.5 text-white whitespace-nowrap"
+            >
+              <Plus size={13} /> Create Type
+            </button>
+            <button
+              onClick={handleSubmitViolationClick}
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-xl text-xs font-semibold transition flex items-center justify-center gap-1.5 text-white whitespace-nowrap"
+            >
+              <Plus size={13} /> Submit Violation
+            </button>
           </div>
-        </div>
-
-        <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
-
-          {!isResident && (
-            <>
-              <button 
-                onClick={handleCreateTypeClick}
-                className="w-full sm:w-auto px-5 py-2.5 bg-blue-600 hover:bg-blue-500 rounded-2xl text-sm font-semibold transition flex items-center justify-center gap-2 text-white"
-              >
-                <Plus size={15} /> Create Type
-              </button>
-              <button
-                onClick={handleSubmitViolationClick}
-                className="w-full sm:w-auto px-5 py-2.5 bg-blue-600 hover:bg-blue-500 rounded-2xl text-sm font-semibold transition flex items-center justify-center gap-2 text-white"
-              >
-                <Plus size={15} />
-                Submit Violation
-              </button>
-            </>
-          )}
-        </div>
+        )}
       </div>
 
       {/* Stats Cards */}
@@ -1008,26 +998,27 @@ const Violations = ({ community, user, setActivePage, setPaymentState }) => {
         </div>
         <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-4 sm:p-6 shadow-sm">
           <p className="text-slate-500 dark:text-gray-400 text-sm">Paid</p>
-          <p className="text-3xl sm:text-5xl font-mono font-bold text-blue-600 dark:text-blue-400 mt-2">{stats.paid}</p>
+          <p className="text-3xl sm:text-5xl font-mono font-bold text-emerald-600 dark:text-emerald-400 mt-2">{stats.paid}</p>
         </div>
         <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-4 sm:p-6 shadow-sm">
           <p className="text-slate-500 dark:text-gray-400 text-sm">Disputed</p>
-          <p className="text-3xl sm:text-5xl font-mono font-bold text-amber-600 dark:text-amber-400 mt-2">{stats.disputed}</p>
+          <p className="text-3xl sm:text-5xl font-mono font-bold text-amber-600 dark:text-amber-500 mt-2">{stats.disputed}</p>
         </div>
         <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-4 sm:p-6 shadow-sm">
-          <p className="text-slate-500 dark:text-gray-400 text-sm">Closed</p>
-          <p className="text-3xl sm:text-5xl font-mono font-bold text-slate-500 dark:text-gray-400 mt-2">{stats.closed}</p>
+          <p className="text-slate-500 dark:text-gray-400 text-sm">Pending Board Review</p>
+          <p className="text-3xl sm:text-5xl font-mono font-bold text-indigo-600 dark:text-indigo-400 mt-2">{stats.pending}</p>
         </div>
       </div>
 
-      {/* Table Section */}
       <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl overflow-hidden shadow-sm">
+        
+        {/* Table Top Bar */}
         <div className="p-6 border-b border-slate-200 dark:border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <h2 className="font-semibold text-slate-900 dark:text-white">All Violations</h2>
 
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
             <div className="relative w-full sm:w-64">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-gray-500" size={18} />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-gray-550" size={18} />
               <input
                 type="text"
                 placeholder="Search violations..."

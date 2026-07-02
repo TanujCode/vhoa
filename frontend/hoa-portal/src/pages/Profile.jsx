@@ -485,12 +485,6 @@ const Profile = ({ user, setUser, viewRole }) => {
 
   return (
     <div className="text-slate-900 dark:text-white">
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-semibold text-slate-900 dark:text-white">Profile Settings</h1>
-        <p className="text-slate-500 dark:text-gray-400 mt-1">Manage your account and preferences</p>
-      </div>
-
       {/* Message */}
       {msg.text && (
         <div className={`mb-6 px-4 py-3 rounded-2xl text-sm font-medium flex items-center gap-2 ${

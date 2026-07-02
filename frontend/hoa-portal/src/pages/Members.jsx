@@ -459,22 +459,17 @@ const Members = ({ community }) => {
 
   return (
     <div className="text-slate-900 dark:text-white">
-      {/* Header aligned with mockup */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-1">Members</h1>
-          <p className="text-slate-500 dark:text-gray-400 text-sm">
-            {community?.name || "Community"} · View and manage community members
-          </p>
-        </div>
-        <div>
-          <button 
-            onClick={() => setShowInviteModal(true)}
-            className="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 rounded-2xl text-sm font-semibold transition flex items-center gap-2 text-white shadow-lg shadow-blue-500/25"
-          >
-            + Invite Member
-          </button>
-        </div>
+      {/* Compact Page Header Row */}
+      <div className="flex flex-row justify-between items-center mb-5 pb-3 border-b border-slate-200/60 dark:border-white/5">
+        <h1 className="text-xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+          Members
+        </h1>
+        <button 
+          onClick={() => setShowInviteModal(true)}
+          className="px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-xl text-xs font-semibold transition flex items-center gap-2 text-white shadow-md shadow-blue-500/20 whitespace-nowrap"
+        >
+          + Invite Member
+        </button>
       </div>
 
       {/* Table Container */}

@@ -419,7 +419,7 @@ const AdminPortal = () => {
 
       case 'dashboard':  
         if (activeIsResident) return <ResidentDashboard community={activeCommunity} user={effectiveUser} setActivePage={setActivePage} />; 
-        if (activeIsBoardMember) return <BoardDashboard community={activeCommunity} user={effectiveUser} />;
+        if (activeIsBoardMember) return <BoardDashboard community={activeCommunity} user={effectiveUser} setActivePage={setActivePage} />;
         if (activeIsPropertyManager) return <PropertyManagerDashboard community={activeCommunity} user={effectiveUser} setActivePage={setActivePage} />;
         if (activeIsSalesAdmin) return <SalesDashboard setActivePage={setActivePage} />;
         return <Dashboard community={activeCommunity} user={effectiveUser} setActivePage={setActivePage} />;
@@ -493,7 +493,7 @@ const AdminPortal = () => {
       
       default:           
         if (activeIsResident) return <ResidentDashboard community={activeCommunity} user={effectiveUser} setActivePage={setActivePage} />;
-        if (activeIsBoardMember) return <BoardDashboard community={activeCommunity} user={effectiveUser} />;
+        if (activeIsBoardMember) return <BoardDashboard community={activeCommunity} user={effectiveUser} setActivePage={setActivePage} />;
         if (activeIsPropertyManager) return <PropertyManagerDashboard community={activeCommunity} user={effectiveUser} setActivePage={setActivePage} />;
         if (activeIsSalesAdmin) return <SalesDashboard setActivePage={setActivePage} />;
         return <Dashboard community={activeCommunity} user={effectiveUser} />;

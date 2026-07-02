@@ -104,18 +104,14 @@ const AuditHistory = ({ community, user }) => {
   if (!isAdmin) {
     return (
       <div className="text-slate-900 dark:text-white">
-        <div className="flex justify-between items-center mb-6">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-semibold text-slate-900 dark:text-white">My Activity</h1>
-            <p className="text-slate-500 dark:text-gray-400 mt-1 text-sm">Your recent actions</p>
-          </div>
+        <div className="flex justify-end mb-4">
           <button
             onClick={fetchLogs}
             disabled={loading}
-            className="flex items-center gap-2 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 text-slate-700 dark:text-white rounded-2xl text-sm font-semibold transition disabled:opacity-60"
+            className="flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 text-slate-700 dark:text-white rounded-xl text-xs font-semibold transition disabled:opacity-60"
           >
-            <RefreshCw size={15} className={loading ? "animate-spin" : ""} />
-            <span className="hidden sm:inline">{loading ? "Refreshing..." : "Refresh"}</span>
+            <RefreshCw size={13} className={loading ? "animate-spin" : ""} />
+            Refresh
           </button>
         </div>
         <AuditCards logs={logs} loading={loading} filteredLogs={filteredLogs}
@@ -127,37 +123,32 @@ const AuditHistory = ({ community, user }) => {
 
   return (
     <div className="text-slate-900 dark:text-white">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-semibold text-slate-900 dark:text-white">Audit History</h1>
-          <p className="text-slate-500 dark:text-gray-400 mt-1 text-sm">{community?.name}</p>
+      {/* View Toggle & Actions */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-5">
+        <div className="flex gap-2">
+          {[
+            { id: 'all', label: '📋 All Logs' },
+            { id: 'my',  label: '👤 My Activity' },
+          ].map(v => (
+            <button key={v.id} onClick={() => setViewMode(v.id)}
+              className={`px-5 py-2.5 rounded-2xl text-sm font-medium transition ${
+                viewMode === v.id
+                  ? 'bg-blue-600 text-white shadow-sm shadow-blue-500/20'
+                  : 'bg-slate-100 hover:bg-slate-200 dark:bg-white/10 text-slate-600 dark:text-gray-400 dark:hover:bg-white/20'
+              }`}>
+              {v.label}
+            </button>
+          ))}
         </div>
+
         <button
           onClick={fetchLogs}
           disabled={loading}
-          className="flex items-center gap-2 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 text-slate-700 dark:text-white rounded-2xl text-sm font-semibold transition disabled:opacity-60"
+          className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 text-slate-700 dark:text-white rounded-2xl text-xs font-semibold transition flex items-center justify-center gap-2 disabled:opacity-60 whitespace-nowrap"
         >
-          <RefreshCw size={15} className={loading ? "animate-spin" : ""} />
-          {loading ? "Refreshing..." : "Refresh"}
+          <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
+          Refresh
         </button>
-      </div>
-
-      {/* View Toggle */}
-      <div className="flex gap-2 mb-5">
-        {[
-          { id: 'all', label: '📋 All Logs' },
-          { id: 'my',  label: '👤 My Activity' },
-        ].map(v => (
-          <button key={v.id} onClick={() => setViewMode(v.id)}
-            className={`px-5 py-2.5 rounded-2xl text-sm font-medium transition ${
-              viewMode === v.id
-                ? 'bg-blue-600 text-white shadow-sm shadow-blue-500/20'
-                : 'bg-slate-100 hover:bg-slate-200 dark:bg-white/10 text-slate-600 dark:text-gray-400 dark:hover:bg-white/20'
-            }`}>
-            {v.label}
-          </button>
-        ))}
       </div>
 
       {/* Filters */}

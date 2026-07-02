@@ -272,23 +272,18 @@ const Vendors = ({ communityId, userRole, user }) => {
   if (isBoardMember) {
     return (
       <div className="space-y-6 p-2 text-slate-900 dark:text-white">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div>
-            <h1 className="text-3xl font-semibold text-slate-900 dark:text-white">Vendor Management</h1>
-            <p className="text-slate-500 dark:text-gray-400 mt-1">Onboard vendors, manage licenses, and generate access codes</p>
-          </div>
-          <button 
-            onClick={handleOnboardClick}
-            className="bg-blue-600 hover:bg-blue-500 px-5 py-2.5 rounded-2xl text-white flex items-center gap-2 text-sm font-semibold transition shadow-lg shadow-blue-500/25"
-          >
-            <Plus size={15} /> Onboard Vendor
-          </button>
-        </div>
-
         {/* Registered Vendors */}
         <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl overflow-hidden shadow-sm">
           <div className="p-5 border-b border-slate-200 dark:border-white/10 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <h3 className="font-semibold text-slate-900 dark:text-white">Registered Vendors</h3>
+            <div className="flex items-center gap-3">
+              <h3 className="font-semibold text-slate-900 dark:text-white">Registered Vendors</h3>
+              <button 
+                onClick={handleOnboardClick}
+                className="bg-blue-600 hover:bg-blue-500 px-3.5 py-1.5 rounded-xl text-white flex items-center gap-1.5 text-xs font-semibold transition shadow-md shadow-blue-500/20 whitespace-nowrap"
+              >
+                <Plus size={13} /> Onboard Vendor
+              </button>
+            </div>
             <div className="relative w-full sm:w-72">
               <Search className="absolute left-3 top-3 text-slate-400" size={18} />
               <input
@@ -501,25 +496,20 @@ const Vendors = ({ communityId, userRole, user }) => {
   // --- VIEW 2: SUPER ADMIN / PROPERTY MANAGER (Tera Original Code) ---
   return (
     <div className="p-2 relative text-slate-900 dark:text-white">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Vendor Management</h1>
-          <p className="text-slate-500 dark:text-gray-400 text-sm">Oakwood Estates</p>
-        </div>
-        {isAdmin && (
-          <button 
-            onClick={handleOnboardClick}
-            className="bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-2xl flex items-center gap-2 text-sm font-semibold transition-all shadow-lg shadow-blue-500/25"
-          >
-            <Plus size={15} /> Onboard Vendor
-          </button>
-        )}
-      </div>
-
       <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-xl overflow-hidden shadow-sm">
         <div className="p-5 border-b border-slate-200 dark:border-white/10 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div className="text-slate-800 dark:text-white font-medium text-sm flex items-center gap-2">
-            <Truck size={16} /> Registered Vendors
+          <div className="flex items-center gap-3">
+            <div className="text-slate-800 dark:text-white font-medium text-sm flex items-center gap-2">
+              <Truck size={16} /> Registered Vendors
+            </div>
+            {isAdmin && (
+              <button 
+                onClick={handleOnboardClick}
+                className="bg-blue-600 hover:bg-blue-500 text-white px-3.5 py-1.5 rounded-xl flex items-center gap-1.5 text-xs font-semibold transition-all shadow-md shadow-blue-500/20 whitespace-nowrap"
+              >
+                <Plus size={13} /> Onboard Vendor
+              </button>
+            )}
           </div>
           <div className="relative w-full sm:w-72">
             <Search className="absolute left-3 top-3 text-slate-400" size={18} />

@@ -111,19 +111,19 @@ const Overview = ({ communities = [], setActiveCommunity, setActivePage, user, r
         </div>
       </div>
 
-      {/* Search and Slider Control */}
+      {/* Search and Header Control */}
       <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-6">
         <h2 className="text-lg font-extrabold text-slate-700 dark:text-gray-300 uppercase tracking-wider">
-          Communities Slider
+          HOA Communities
         </h2>
-        {/* Simple search bar to filter slider */}
+        {/* Simple search bar to filter communities */}
         <div className="relative w-full md:w-72">
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => {
               setSearchQuery(e.target.value);
-              setCurrentIndex(0); // reset page to first item
+              setCurrentIndex(0);
             }}
             placeholder="Search by name or code..."
             className="w-full pl-9 pr-4 py-2 bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 focus:outline-none focus:border-blue-500"
@@ -147,103 +147,90 @@ const Overview = ({ communities = [], setActiveCommunity, setActivePage, user, r
           <p>No matching communities found.</p>
         </div>
       ) : (
-        <div className="max-w-2xl mx-auto">
-          {/* Main Slider Display Area */}
-          <div className="relative flex items-center justify-between gap-4">
-            
-            {/* Left Control Arrow */}
-            {filteredStats.length > 1 && (
-              <button
-                onClick={handlePrev}
-                className="w-10 h-10 rounded-full flex items-center justify-center bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-600 dark:text-gray-300 border border-slate-250/50 dark:border-white/10 transition shrink-0 shadow-sm active:scale-95"
-              >
-                <ChevronLeft size={18} />
-              </button>
-            )}
-
-            {/* Carousel Active Community Card */}
-            {(() => {
-              const comm = filteredStats[currentIndex];
-              return (
-                <div
-                  key={comm.community_id}
-                  className="flex-1 bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl overflow-hidden shadow-lg animate-in fade-in slide-in-from-bottom-2 duration-300"
-                >
-                  {/* Card Header */}
-                  <div className="p-6 sm:p-8 border-b border-slate-200/80 dark:border-white/10 flex items-center gap-4">
-                    <div className="w-14 h-14 bg-blue-50 dark:bg-blue-500/10 rounded-2xl flex items-center justify-center flex-shrink-0">
-                      <Building2 size={28} className="text-blue-600 dark:text-blue-400" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-slate-900 dark:text-white text-xl truncate" title={comm.name}>
-                        {comm.name}
-                      </h3>
-                      <p className="text-xs text-slate-500 dark:text-gray-400 truncate">
-                        {comm.address?.city ? `${comm.address.city} • ` : ''}
-                        Code: <span className="font-mono">{comm.community_code}</span>
-                      </p>
-                    </div>
-                    <span className={`text-xs px-3 py-1 rounded-full font-medium flex-shrink-0 ${
-                      comm.license_status === 'ACTIVE'
-                        ? 'bg-blue-50 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400'
-                        : 'bg-red-50 dark:bg-red-50/20 text-red-600 dark:text-red-400'
-                    }`}>
-                      {comm.license_status}
-                    </span>
-                  </div>
-
-                  {/* Stats Row */}
-                  <div className="grid grid-cols-3 border-b border-slate-200/80 dark:border-white/10">
-                    <div className="text-center py-6 border-r border-slate-200/80 dark:border-white/10">
-                      <div className="text-3xl font-bold text-blue-600 dark:text-blue-400">{comm.total_residents || 0}</div>
-                      <div className="text-[10px] uppercase tracking-widest text-slate-500 dark:text-gray-400 mt-1">Members</div>
-                    </div>
-                    <div className="text-center py-6 border-r border-slate-200/80 dark:border-white/10">
-                      <div className="text-3xl font-bold text-red-600 dark:text-red-400">{comm.active_violations || 0}</div>
-                      <div className="text-[10px] uppercase tracking-widest text-slate-500 dark:text-gray-400 mt-1">Violations</div>
-                    </div>
-                    <div className="text-center py-6">
-                      <div className="text-3xl font-bold text-blue-600 dark:text-blue-400">{comm.open_requests || 0}</div>
-                      <div className="text-[10px] uppercase tracking-widest text-slate-500 dark:text-gray-400 mt-1">Requests</div>
-                    </div>
-                  </div>
-
-                  {/* Info and Actions */}
-                  <div className="p-6 sm:p-8 flex flex-col sm:flex-row gap-6 justify-between items-center bg-slate-100/30 dark:bg-white/[0.01]">
-                    <div className="flex gap-8">
-                      <div>
-                        <div className="text-[10px] uppercase tracking-wider text-slate-500 dark:text-gray-400">Total Units</div>
-                        <div className="text-slate-900 dark:text-white font-mono font-bold text-base mt-0.5">{comm.community_size || 0}</div>
-                      </div>
-                      <div>
-                        <div className="text-[10px] uppercase tracking-wider text-slate-500 dark:text-gray-400">Contact</div>
-                        <div className="text-slate-900 dark:text-white text-sm font-semibold truncate max-w-[150px] mt-0.5" title={comm.contact_person || '—'}>
-                          {comm.contact_person || '—'}
+        <div className="bg-white dark:bg-[#1E2E42] border border-slate-200/80 dark:border-white/10 rounded-3xl overflow-hidden shadow-sm dark:shadow-none">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="border-b border-slate-100 dark:border-white/5 bg-slate-50/50 dark:bg-white/[0.02]">
+                  <th className="px-4 py-3.5 text-xs font-bold text-slate-500 dark:text-gray-400 uppercase tracking-wider">Community</th>
+                  <th className="px-4 py-3.5 text-xs font-bold text-slate-500 dark:text-gray-400 uppercase tracking-wider">License</th>
+                  <th className="px-4 py-3.5 text-xs font-bold text-slate-500 dark:text-gray-400 text-center uppercase tracking-wider">Members</th>
+                  <th className="px-4 py-3.5 text-xs font-bold text-slate-500 dark:text-gray-400 text-center uppercase tracking-wider">Violations</th>
+                  <th className="px-4 py-3.5 text-xs font-bold text-slate-500 dark:text-gray-400 text-center uppercase tracking-wider">Requests</th>
+                  <th className="px-4 py-3.5 text-xs font-bold text-slate-500 dark:text-gray-400 text-center uppercase tracking-wider">Units</th>
+                  <th className="px-4 py-3.5 text-xs font-bold text-slate-500 dark:text-gray-400 uppercase tracking-wider text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 dark:divide-white/5">
+                {filteredStats.map((comm) => (
+                  <tr 
+                    key={comm.community_id}
+                    onClick={() => {
+                      if (setActiveCommunity && setActivePage) {
+                        const baseComm = communities.find(c => c.community_id === comm.community_id);
+                        if (baseComm) {
+                          setActiveCommunity(baseComm);
+                          setActivePage('dashboard');
+                        }
+                      }
+                    }}
+                    className="hover:bg-slate-50/50 dark:hover:bg-white/[0.01] transition-colors group animate-in fade-in duration-200 cursor-pointer"
+                  >
+                    {/* Community Info */}
+                    <td className="px-4 py-3.5 whitespace-nowrap">
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 bg-blue-50 dark:bg-blue-500/10 rounded-xl flex items-center justify-center text-blue-600 dark:text-blue-400 group-hover:scale-105 transition-transform">
+                          <Building2 size={18} />
+                        </div>
+                        <div>
+                          <div className="font-bold text-slate-900 dark:text-white text-sm">
+                            {comm.name}
+                          </div>
+                          <div className="text-[10px] text-slate-500 dark:text-gray-400 font-mono mt-0.5">
+                            {comm.address?.city ? `${comm.address.city} • ` : ''}Code: {comm.community_code}
+                          </div>
                         </div>
                       </div>
-                    </div>
+                    </td>
 
-                    <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
-                      {/* Navigation to Dashboard Button */}
-                      <button
-                        onClick={() => {
-                          if (setActiveCommunity && setActivePage) {
-                            const baseComm = communities.find(c => c.community_id === comm.community_id);
-                            if (baseComm) {
-                              setActiveCommunity(baseComm);
-                              setActivePage('dashboard');
-                            }
-                          }
-                        }}
-                        className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold transition shadow-sm active:scale-95 flex-1 sm:flex-initial text-center animate-pulse"
-                      >
-                        Enter Dashboard
-                      </button>
+                    {/* License Status */}
+                    <td className="px-4 py-3.5 whitespace-nowrap">
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${
+                        comm.license_status === 'ACTIVE'
+                          ? 'bg-blue-50 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 border border-blue-500/10'
+                          : 'bg-red-50 dark:bg-red-50/20 text-red-600 dark:text-red-400 border border-red-500/10'
+                      }`}>
+                        {comm.license_status}
+                      </span>
+                    </td>
 
-                      <div className="flex items-center gap-1.5 shrink-0">
+                    {/* Members Count */}
+                    <td className="px-4 py-3.5 whitespace-nowrap text-center font-mono font-bold text-slate-700 dark:text-slate-200">
+                      {comm.total_residents || 0}
+                    </td>
+
+                    {/* Violations Count */}
+                    <td className="px-4 py-3.5 whitespace-nowrap text-center font-mono font-bold text-red-600 dark:text-red-400">
+                      {comm.active_violations || 0}
+                    </td>
+
+                    {/* Requests Count */}
+                    <td className="px-4 py-3.5 whitespace-nowrap text-center font-mono font-bold text-slate-700 dark:text-slate-200">
+                      {comm.open_requests || 0}
+                    </td>
+
+                    {/* Total Units */}
+                    <td className="px-4 py-3.5 whitespace-nowrap text-center font-mono text-xs text-slate-500 dark:text-gray-400">
+                      {comm.community_size || 0}
+                    </td>
+
+                    {/* Actions */}
+                    <td className="px-4 py-3.5 whitespace-nowrap text-right">
+                      <div className="flex items-center justify-end gap-1.5">
                         {!isBoardMember && (
                           <button
-                            onClick={() => {
+                            onClick={(e) => {
+                              e.stopPropagation();
                               setEditingCommunity(comm);
                               if (canRequestChange) {
                                 setIsRequestChangeOpen(true);
@@ -251,15 +238,16 @@ const Overview = ({ communities = [], setActiveCommunity, setActivePage, user, r
                                 setIsEditModalOpen(true);
                               }
                             }}
-                            className="p-2 hover:bg-slate-200 dark:hover:bg-white/10 rounded-lg text-slate-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 transition"
+                            className="p-1.5 hover:bg-slate-100 dark:hover:bg-white/5 rounded-lg text-slate-400 hover:text-blue-600 dark:text-gray-500 dark:hover:text-blue-400 border border-slate-200/50 dark:border-white/5 transition"
                             title={canRequestChange ? 'Request Community Change' : 'Edit Community'}
                           >
-                            <Pencil size={15} />
+                            <Pencil size={13} />
                           </button>
                         )}
                         {user?.role === 'super_admin' && (
                           <button
-                            onClick={async () => {
+                            onClick={async (e) => {
+                              e.stopPropagation();
                               if (window.confirm(`Are you sure you want to deactivate ${comm.name}?`)) {
                                 try {
                                   await API.delete(`/community/${comm.community_id}`);
@@ -274,47 +262,34 @@ const Overview = ({ communities = [], setActiveCommunity, setActivePage, user, r
                                 }
                               }
                             }}
-                            className="p-2 hover:bg-red-500/10 rounded-lg text-slate-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 transition"
+                            className="p-1.5 hover:bg-red-500/10 rounded-lg text-slate-400 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 border border-slate-200/50 dark:border-white/5 transition"
                             title="Deactivate Community"
                           >
-                            <Trash2 size={15} />
+                            <Trash2 size={13} />
                           </button>
                         )}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (setActiveCommunity && setActivePage) {
+                              const baseComm = communities.find(c => c.community_id === comm.community_id);
+                              if (baseComm) {
+                                setActiveCommunity(baseComm);
+                                setActivePage('dashboard');
+                              }
+                            }
+                          }}
+                          className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-bold transition shadow-sm active:scale-95 text-center whitespace-nowrap"
+                        >
+                          Enter
+                        </button>
                       </div>
-                    </div>
-                  </div>
-                </div>
-              );
-            })()}
-
-            {/* Right Control Arrow */}
-            {filteredStats.length > 1 && (
-              <button
-                onClick={handleNext}
-                className="w-10 h-10 rounded-full flex items-center justify-center bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-600 dark:text-gray-300 border border-slate-250/50 dark:border-white/10 transition shrink-0 shadow-sm active:scale-95"
-              >
-                <ChevronRight size={18} />
-              </button>
-            )}
-
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
-
-          {/* Dots Indicator under the slider */}
-          {filteredStats.length > 1 && (
-            <div className="flex justify-center items-center gap-1.5 mt-6 flex-wrap">
-              {filteredStats.map((_, i) => (
-                <button
-                  key={i}
-                  onClick={() => setCurrentIndex(i)}
-                  className={`w-2.5 h-2.5 rounded-full transition-all ${
-                    currentIndex === i
-                      ? 'bg-blue-500 w-5'
-                      : 'bg-slate-300 dark:bg-white/10 hover:bg-slate-400 dark:hover:bg-white/20'
-                  }`}
-                />
-              ))}
-            </div>
-          )}
         </div>
       )}
 

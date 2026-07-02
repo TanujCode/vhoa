@@ -182,25 +182,24 @@ const Settings = ({ community, onCommunityUpdate }) => {
 
   return (
     <div className="text-slate-900 dark:text-white">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-        <div>
-          <h1 className="text-3xl font-semibold text-slate-900 dark:text-white">Community Settings</h1>
-          <p className="text-slate-500 dark:text-gray-400 mt-1">{community?.name}</p>
+      <div className="flex justify-between items-center mb-6">
+        <div className="text-slate-500 dark:text-gray-400 text-sm font-semibold">
+          {community?.name} Settings
         </div>
-        <div className="flex flex-col items-end gap-2">
+        <div className="flex items-center gap-3">
+          {saved && (
+            <span className="text-emerald-600 dark:text-emerald-400 text-xs font-semibold animate-pulse">
+              ✓ Settings saved!
+            </span>
+          )}
           <button
             onClick={handleSave}
             disabled={saving}
-            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-2xl text-sm font-semibold disabled:opacity-70 transition shadow-lg shadow-blue-500/25"
+            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-xl text-xs font-semibold disabled:opacity-70 transition shadow-md shadow-blue-500/25"
           >
-            <Save size={15} />
+            <Save size={13} />
             {saving ? 'Saving...' : 'Save Settings'}
           </button>
-          {saved && (
-            <span className="text-blue-600 dark:text-blue-400 text-sm font-medium animate-pulse">
-              ✓ Settings saved successfully!
-            </span>
-          )}
         </div>
       </div>
 

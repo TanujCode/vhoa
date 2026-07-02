@@ -70,17 +70,6 @@ const Reports = ({ community, user, setActivePage }) => {
 
   return (
     <div className="text-slate-900 dark:text-white">
-      {/* Header */}
-      <div className="flex justify-between items-start mb-6 gap-4">
-        <div>
-          <div className="flex flex-wrap items-center gap-3">
-            <h1 className="text-2xl sm:text-3xl font-semibold text-slate-900 dark:text-white flex items-center gap-2">
-              <BarChart2 className="text-blue-500" size={28} /> Reports & Analytics
-            </h1>
-          </div>
-          <p className="text-slate-500 dark:text-gray-400 mt-1">{community?.name || 'Community Portal'}</p>
-        </div>
-      </div>
 
       {/* Overview Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">

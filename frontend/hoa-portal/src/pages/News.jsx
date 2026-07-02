@@ -204,21 +204,20 @@ const News = ({ community, user }) => {
 
   return (
     <div className="text-slate-900 dark:text-white">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-        <div>
-          <h1 className="text-3xl font-semibold text-slate-900 dark:text-white">News & FAQ</h1>
-          <p className="text-slate-500 dark:text-gray-400 mt-1">{community?.name}</p>
-        </div>
+      {/* Compact Page Header Row */}
+      <div className="flex flex-row justify-between items-center mb-5 pb-3 border-b border-slate-200/60 dark:border-white/5">
+        <h1 className="text-xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+          News & FAQ
+        </h1>
         {isAdmin && (
           <div className="flex flex-wrap gap-2 w-full sm:w-auto">
             <button onClick={() => setShowFaqModal(true)}
-              className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 rounded-2xl text-sm font-semibold text-slate-700 dark:text-white transition flex items-center gap-2">
-              <Plus size={15} /> Add FAQ
+              className="px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 rounded-xl text-xs font-semibold text-slate-700 dark:text-white transition flex items-center gap-2">
+              <Plus size={14} /> Add FAQ
             </button>
             <button onClick={() => setShowNewsModal(true)}
-              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-2xl text-sm font-semibold transition shadow-lg shadow-blue-500/25">
-              <Plus size={15} /> Post News
+              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-xl text-xs font-semibold transition shadow-md shadow-blue-500/25">
+              <Plus size={14} /> Post News
             </button>
           </div>
         )}
@@ -229,7 +228,7 @@ const News = ({ community, user }) => {
         {['news', 'faq'].map(tab => (
           <button key={tab} onClick={() => setActiveTab(tab)}
             className={`px-6 py-2.5 rounded-2xl text-sm font-medium transition capitalize ${
-              activeTab === tab ? 'bg-blue-600 hover:bg-blue-700 text-white hover:text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-white/10 dark:text-gray-400 dark:hover:bg-white/20'
+              activeTab === tab ? 'bg-blue-600 hover:bg-blue-700 text-white hover:text-white shadow-md shadow-blue-500/20' : 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-white/10 dark:text-gray-400 dark:hover:bg-white/20'
             }`}>
             {tab === 'news' ? '📢 News & Updates' : '❓ FAQs'}
           </button>

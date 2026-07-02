@@ -283,21 +283,6 @@ export default function Contracts() {
 
   return (
     <div className="relative text-slate-900 dark:text-white">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
-        <div>
-          <h1 className="text-3xl font-semibold text-slate-900 dark:text-white">Manage Contracts</h1>
-          <p className="text-slate-500 dark:text-gray-400 mt-1">Generate and distribute unique contract codes for client onboarding</p>
-        </div>
-        <button
-          onClick={() => setIsModalOpen(true)}
-          className="px-5 py-2.5 bg-[#1D68DF] hover:bg-[#15459E] rounded-2xl text-sm font-semibold transition flex items-center gap-2 text-white shadow-lg shadow-blue-950/20 w-full md:w-auto justify-center"
-        >
-          <Plus size={15} />
-          Create Contract
-        </button>
-      </div>
-
       {successMsg && (
         <div className="mb-6 p-4 bg-blue-500/10 border border-blue-500/30 text-[#5BA4F5] text-sm rounded-2xl flex items-center gap-2">
           <CheckCircle size={16} />
@@ -332,14 +317,14 @@ export default function Contracts() {
         </div>
       </div>
 
-      {/* Filters and Search */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-        <div className="flex bg-slate-50 dark:bg-[#1E2E42] border border-slate-200/80 dark:border-white/10 rounded-2xl p-1 overflow-x-auto">
+      {/* Filters and Search & Actions */}
+      <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 mb-6">
+        <div className="flex bg-slate-50 dark:bg-[#1E2E42] border border-slate-200/80 dark:border-white/10 rounded-2xl p-1 overflow-x-auto w-fit">
           {['ALL', 'ACTIVE', 'DRAFT', 'ONBOARDED'].map((status) => (
             <button
               key={status}
               onClick={() => setFilterStatus(status)}
-              className={`px-4 py-2 rounded-xl text-xs font-semibold uppercase tracking-wider transition ${
+              className={`px-4 py-2 rounded-xl text-xs font-semibold uppercase tracking-wider transition whitespace-nowrap ${
                 filterStatus === status
                   ? 'bg-[#1D68DF] text-white'
                   : 'text-slate-500 hover:text-slate-800 dark:text-gray-400 dark:hover:text-white'
@@ -350,15 +335,23 @@ export default function Contracts() {
           ))}
         </div>
 
-        <div className="relative w-full md:w-80">
-          <input
-            type="text"
-            placeholder="Search by code, client, or business..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl text-sm focus:outline-none focus:border-[#1D68DF] text-slate-900 dark:text-white"
-          />
-          <Search size={16} className="absolute left-3.5 top-3.5 text-slate-500 dark:text-gray-400" />
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full xl:w-auto xl:justify-end">
+          <div className="relative w-full sm:w-80">
+            <input
+              type="text"
+              placeholder="Search by code, client, or business..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl text-sm focus:outline-none focus:border-[#1D68DF] text-slate-900 dark:text-white"
+            />
+            <Search size={16} className="absolute left-3.5 top-3.5 text-slate-505 dark:text-gray-400" />
+          </div>
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="px-4 py-2.5 bg-[#1D68DF] hover:bg-[#15459E] rounded-2xl text-xs font-semibold transition flex items-center gap-2 text-white shadow-lg shadow-blue-950/20 justify-center whitespace-nowrap"
+          >
+            <Plus size={14} /> Create Contract
+          </button>
         </div>
       </div>
 

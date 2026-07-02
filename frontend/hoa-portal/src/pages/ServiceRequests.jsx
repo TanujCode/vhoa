@@ -1477,23 +1477,17 @@ const ServiceRequests = ({ community, user, setActivePage, setPaymentState }) =>
 
   return (
     <div className="text-slate-900 dark:text-white">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-        <div className="flex justify-between items-start w-full md:w-auto gap-4">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-semibold text-slate-900 dark:text-white">Service Requests</h1>
-            <p className="text-slate-500 dark:text-gray-400 mt-1 flex flex-wrap items-center gap-2">
-              {community?.name}
-              {isResident && <span className="text-xs bg-blue-500/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400 px-2 py-0.5 rounded-full font-medium">My Requests</span>}
-              {isAdmin && <span className="text-xs bg-blue-500/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400 px-2 py-0.5 rounded-full font-medium">All Requests</span>}
-            </p>
-          </div>
-        </div>
-
-        <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
-          <button onClick={handleNewRequestClick} className="w-full sm:w-auto flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-2xl text-sm font-semibold transition">
-            <Plus size={15} /> New Request
-          </button>
-        </div>
+      {/* Compact Page Header Row */}
+      <div className="flex flex-row justify-between items-center mb-5 pb-3 border-b border-slate-200/60 dark:border-white/5">
+        <h1 className="text-xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+          Service Requests
+        </h1>
+        <button 
+          onClick={handleNewRequestClick} 
+          className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-semibold transition flex items-center justify-center gap-1.5 whitespace-nowrap"
+        >
+          <Plus size={13} /> New Request
+        </button>
       </div>
 
       {/* Stats */}
