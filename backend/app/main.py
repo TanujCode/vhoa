@@ -168,13 +168,29 @@ def run_db_upgrades():
                 WHERE role_id = 3
                 ON CONFLICT DO NOTHING;
             """))
-
         # Restore tanujtongse132@gmail.com to super_admin and clean up community mappings
         db.execute(text("UPDATE users SET role_id = 1, community_id = NULL WHERE email_id = 'tanujtongse132@gmail.com';"))
         db.execute(text("DELETE FROM user_communities WHERE user_id = (SELECT user_id FROM users WHERE email_id = 'tanujtongse132@gmail.com');"))
 
+        # Update user Vikash's name and email to English equivalent (John Smith)
+        db.execute(text("UPDATE users SET first_name = 'John', last_name = 'Smith', email_id = 'john.smith@nestbloq.com' WHERE first_name = 'Vikash';"))
+        # Update Willow Creek Community address to a USA address
+        db.execute(text("UPDATE communities SET address = '123 Willow Creek Way, Sunnyvale, CA 94086' WHERE name LIKE '%Willow Creek%' OR address LIKE '%Bazar Chowk%' OR address LIKE '%Chicholi%';"))
+
         db.commit()
-        print("✅ Database DDL upgrades completed.")
+
+        # Debug database records
+        users_list = db.execute(text("SELECT user_id, first_name, last_name, email_id, role_id FROM users;")).fetchall()
+        comms_list = db.execute(text("SELECT community_id, name, address FROM communities;")).fetchall()
+        with open("db_debug.txt", "w", encoding="utf-8") as f:
+            f.write("=== USERS ===\n")
+            for u in users_list:
+                f.write(f"ID: {u[0]} | Name: {u[1]} {u[2]} | Email: {u[3]} | Role ID: {u[4]}\n")
+            f.write("\n=== COMMUNITIES ===\n")
+            for c in comms_list:
+                f.write(f"ID: {c[0]} | Name: {c[1]} | Address: {c[2]}\n")
+
+        print("✅ Database DDL upgrades and debugging completed.")
     except Exception as e:
         db.rollback()
         print(f"❌ Database data migrations failed: {e}")

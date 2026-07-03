@@ -7,7 +7,8 @@ import {
   Shield, Activity, Sparkles, TrendingUp, Globe, Clock,
   Phone, Map, Building, FileText, UserCheck,
   ClipboardSignature, Scale, CalendarRange, Users, ShieldCheck,
-  CreditCard, Megaphone, History, Sliders, RotateCcw, Sun, Moon, Bell, LayoutDashboard, Truck
+  CreditCard, Megaphone, History, Sliders, RotateCcw, Sun, Moon, Bell, LayoutDashboard, Truck,
+  MapPin, AlertTriangle, Building2, Folder, Download
 } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 import Logo from '../../components/marketing/Logo';
@@ -589,14 +590,13 @@ function TestimonialCard({ testimonial }) {
   );
 }
 
-/* ─── AI Operations Console (Premium Redesign) ─── */
-/* ─── AI Operations Console (Premium Redesign) ─── */
+/* ─── AI Operations Console ─── */
 function AiOperationsConsole() {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
 
   return (
-    <div className={`w-full rounded-3xl overflow-hidden shadow-2xl border transition-all ${isDark ? 'shadow-violet-900/30 border-white/[0.08]' : 'shadow-slate-200/80 border-slate-200'} relative`} style={{ background: isDark ? 'linear-gradient(145deg, #0a0618 0%, #0d1030 50%, #080e1a 100%)' : 'linear-gradient(145deg, #f8fafc 0%, #f1f5f9 50%, #e2e8f0 100%)' }}>
+    <div className={`w-full rounded-3xl overflow-hidden shadow-2xl border transition-all ${isDark ? 'shadow-violet-900/30 border-white/[0.08]' : 'shadow-slate-200/80 border-slate-200'} relative h-[482px] flex flex-col justify-between`} style={{ background: isDark ? 'linear-gradient(145deg, #0a0618 0%, #0d1030 50%, #080e1a 100%)' : 'linear-gradient(145deg, #f8fafc 0%, #f1f5f9 50%, #e2e8f0 100%)' }}>
 
       {/* Ambient glow orbs inside the card */}
       {isDark && (
@@ -607,7 +607,7 @@ function AiOperationsConsole() {
       )}
 
       {/* Header — glassmorphic / responsive */}
-      <div className={`relative px-5 pt-5 pb-4 flex items-center justify-between border-b ${isDark ? 'bg-white/[0.03] border-white/[0.06]' : 'bg-slate-50/50 border-slate-200'}`}>
+      <div className={`relative px-5 pt-5 pb-4 flex items-center justify-between border-b shrink-0 ${isDark ? 'bg-white/[0.03] border-white/[0.06]' : 'bg-slate-50/50 border-slate-200'}`}>
         <div className="flex items-center gap-3">
           {/* AI Logo Badge */}
           <div className="relative">
@@ -618,7 +618,7 @@ function AiOperationsConsole() {
             </div>
             <div className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-400 rounded-full border-2 ${isDark ? 'border-[#0a0618]' : 'border-white'} animate-pulse`} />
           </div>
-          <div>
+          <div className="text-left">
             <h3 className={`font-bold text-sm leading-none ${isDark ? 'text-white' : 'text-slate-800'}`}>NestBloq AI Console</h3>
             <p className="text-[10px] text-slate-400 mt-0.5">Live community resolution · Real-time</p>
           </div>
@@ -626,7 +626,7 @@ function AiOperationsConsole() {
         {/* Status pills */}
         <div className="flex items-center gap-2">
           <span className="flex items-center gap-1.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-full">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-550 dark:bg-emerald-400 animate-pulse" />
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-pulse" />
             Active
           </span>
           <span className="text-[10px] font-bold text-violet-600 dark:text-violet-300 bg-violet-500/10 border border-violet-250/20 dark:border-violet-500/20 px-2.5 py-1 rounded-full">v3.2 AI</span>
@@ -634,108 +634,309 @@ function AiOperationsConsole() {
       </div>
 
       {/* Metrics Row */}
-      <div className={`grid grid-cols-3 border-b ${isDark ? 'divide-white/[0.05] bg-white/[0.02] border-white/[0.05]' : 'divide-slate-200/80 bg-slate-50 border-slate-200'}`}>
+      <div className={`grid grid-cols-3 border-b shrink-0 ${isDark ? 'divide-white/[0.05] bg-white/[0.02] border-white/[0.05]' : 'divide-slate-200/80 bg-slate-50 border-slate-200'}`}>
         {[
           { label: 'Auto-Resolved', val: '85.4%', desc: 'No admin needed', color: 'text-violet-650 dark:text-violet-400', glow: isDark ? 'from-violet-500/20 to-transparent' : 'from-violet-500/10 to-transparent' },
           { label: 'Avg Response', val: '0.85s', desc: 'Real-time pipeline', color: 'text-emerald-600 dark:text-emerald-400', glow: isDark ? 'from-emerald-500/20 to-transparent' : 'from-emerald-500/10 to-transparent' },
           { label: 'Saved / mo', val: '42 hrs', desc: 'Per board member', color: 'text-amber-600 dark:text-amber-400', glow: isDark ? 'from-amber-500/20 to-transparent' : 'from-amber-500/10 to-transparent' }
         ].map((m, i) => (
-          <div key={i} className="relative p-4 text-center overflow-hidden">
+          <div key={i} className="relative p-3 text-center overflow-hidden">
             <div className={`absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r ${m.glow}`} />
-            <div className={`text-xl font-black ${m.color} tracking-tight`}>{m.val}</div>
-            <div className={`text-[10px] font-bold mt-0.5 ${isDark ? 'text-white/80' : 'text-slate-700'}`}>{m.label}</div>
-            <div className="text-[9px] text-slate-500 mt-0.5">{m.desc}</div>
+            <div className={`text-base font-black ${m.color} tracking-tight`}>{m.val}</div>
+            <div className={`text-[9px] font-bold mt-0.5 ${isDark ? 'text-white/80' : 'text-slate-700'}`}>{m.label}</div>
+            <div className="text-[8px] text-slate-500 mt-0.5">{m.desc}</div>
           </div>
         ))}
       </div>
 
       {/* Conversation Feed */}
-      <div className="p-5 space-y-3 overflow-y-auto" style={{ maxHeight: '360px' }}>
+      <div className="p-4 space-y-2.5 overflow-y-auto flex-1 custom-scrollbar">
 
         {/* Log 1 — Inquiry */}
         <div className={`rounded-2xl overflow-hidden border ${isDark ? 'bg-white/[0.03] border-white/[0.06]' : 'bg-white border-slate-200'}`}>
-          <div className={`flex items-center justify-between px-4 py-2.5 border-b ${isDark ? 'border-white/[0.04]' : 'border-slate-100'}`}>
+          <div className={`flex items-center justify-between px-3.5 py-2 border-b ${isDark ? 'border-white/[0.04]' : 'border-slate-100'}`}>
             <div className="flex items-center gap-2">
-              <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Bylaws Query</span>
-              <span className="w-1 h-1 rounded-full bg-slate-400 dark:bg-slate-600" />
-              <span className="text-[10px] text-slate-450 dark:text-slate-500">Unit 304</span>
+              <span className="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Bylaws Query</span>
+              <span className="w-1.5 h-1.5 rounded-full bg-slate-400 dark:bg-slate-600" />
+              <span className="text-[9px] text-slate-400 dark:text-slate-500 font-mono font-bold">Unit 304</span>
             </div>
-            <span className="text-[9px] font-extrabold text-emerald-600 dark:text-emerald-300 bg-emerald-500/15 border border-emerald-500/25 px-2.5 py-0.5 rounded-full uppercase tracking-wide">✓ Auto-Resolved</span>
+            <span className="text-[8px] font-extrabold text-emerald-600 dark:text-emerald-300 bg-emerald-500/15 border border-emerald-500/25 px-2 py-0.5 rounded-full uppercase tracking-wide">✓ Auto-Resolved</span>
           </div>
-          <div className="px-4 py-3 space-y-2">
+          <div className="px-3.5 py-2 space-y-1.5 text-left">
             <div className="flex items-start gap-2">
-              <div className="w-5 h-5 rounded-full bg-violet-500/10 dark:bg-violet-500/20 border border-violet-500/20 dark:border-violet-500/30 flex items-center justify-center text-[9px] shrink-0 mt-0.5">👤</div>
-              <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">"Are pets allowed in the clubhouse?"</p>
+              <div className="w-4 h-4 rounded-full bg-violet-500/10 dark:bg-violet-500/20 border border-violet-500/20 dark:border-violet-500/30 flex items-center justify-center text-[9px] shrink-0 mt-0.5">👤</div>
+              <p className="text-[11px] text-slate-700 dark:text-slate-300 leading-normal">"Are pets allowed in the clubhouse?"</p>
             </div>
             <div className="flex items-start gap-2">
-              <div className="w-5 h-5 rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-[9px] shrink-0 mt-0.5">✦</div>
-              <p className="text-xs text-slate-550 dark:text-slate-400 leading-relaxed"><span className="text-violet-650 dark:text-violet-300 font-semibold">AI:</span> Per Article 4 §B — service dogs are permitted. Other pets must remain on-leash in courtyard areas only.</p>
+              <div className="w-4 h-4 rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-[9px] text-white shrink-0 mt-0.5">✦</div>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-normal"><span className="text-violet-605 dark:text-violet-305 font-bold">AI:</span> Per Article 4 §B — service dogs are permitted. Other pets must remain on-leash in courtyard areas only.</p>
             </div>
           </div>
         </div>
 
         {/* Log 2 — Booking */}
         <div className={`rounded-2xl overflow-hidden border ${isDark ? 'bg-white/[0.03] border-indigo-500/25' : 'bg-white border-indigo-200'}`}>
-          <div className={`flex items-center justify-between px-4 py-2.5 border-b ${isDark ? 'border-white/[0.04]' : 'border-slate-100'}`}>
+          <div className={`flex items-center justify-between px-3.5 py-2 border-b ${isDark ? 'border-white/[0.04]' : 'border-slate-100'}`}>
             <div className="flex items-center gap-2">
-              <span className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-widest">Facility Booking</span>
-              <span className="w-1 h-1 rounded-full bg-slate-400 dark:bg-slate-600" />
-              <span className="text-[10px] text-slate-450 dark:text-slate-500">Unit 102</span>
+              <span className="text-[9px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-widest">Facility Booking</span>
+              <span className="w-1.5 h-1.5 rounded-full bg-slate-400 dark:bg-slate-600" />
+              <span className="text-[9px] text-slate-400 dark:text-slate-500 font-mono font-bold">Unit 102</span>
             </div>
-            <span className="text-[9px] font-extrabold text-indigo-600 dark:text-indigo-300 bg-indigo-500/15 border border-indigo-500/25 px-2.5 py-0.5 rounded-full uppercase tracking-wide">📅 Confirmed</span>
+            <span className="text-[8px] font-extrabold text-indigo-600 dark:text-indigo-300 bg-indigo-500/15 border border-indigo-500/25 px-2 py-0.5 rounded-full uppercase tracking-wide">📅 Confirmed</span>
           </div>
-          <div className="px-4 py-3 space-y-2">
+          <div className="px-3.5 py-2 space-y-1.5 text-left">
             <div className="flex items-start gap-2">
-              <div className="w-5 h-5 rounded-full bg-violet-500/10 dark:bg-violet-500/20 border border-violet-500/20 dark:border-violet-500/30 flex items-center justify-center text-[9px] shrink-0 mt-0.5">👤</div>
-              <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">"Can I book the tennis court for 4pm today?"</p>
+              <div className="w-4 h-4 rounded-full bg-violet-500/10 dark:bg-violet-500/20 border border-violet-500/20 dark:border-violet-500/30 flex items-center justify-center text-[9px] shrink-0 mt-0.5">👤</div>
+              <p className="text-[11px] text-slate-700 dark:text-slate-300 leading-normal">"Can I book the tennis court for 4pm today?"</p>
             </div>
             <div className="flex items-start gap-2">
-              <div className="w-5 h-5 rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-[9px] shrink-0 mt-0.5">✦</div>
-              <p className="text-xs text-slate-555 dark:text-slate-400 leading-relaxed"><span className="text-violet-650 dark:text-violet-300 font-semibold">AI:</span> Court 2 is available 4–6 PM. Slot reserved under Unit 102. Confirmation sent to your email. 🎾</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Log 3 — Maintenance */}
-        <div className={`rounded-2xl overflow-hidden border ${isDark ? 'bg-white/[0.03] border-amber-500/25' : 'bg-white border-amber-200'}`}>
-          <div className={`flex items-center justify-between px-4 py-2.5 border-b ${isDark ? 'border-white/[0.04]' : 'border-slate-100'}`}>
-            <div className="flex items-center gap-2">
-              <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-widest">Maintenance</span>
-              <span className="w-1 h-1 rounded-full bg-slate-400 dark:bg-slate-600" />
-              <span className="text-[10px] text-slate-450 dark:text-slate-500">Unit 508</span>
-            </div>
-            <span className="text-[9px] font-extrabold text-amber-600 dark:text-amber-300 bg-amber-500/15 border border-amber-500/25 px-2.5 py-0.5 rounded-full uppercase tracking-wide">🔧 Dispatched</span>
-          </div>
-          <div className="px-4 py-3 space-y-2">
-            <div className="flex items-start gap-2">
-              <div className="w-5 h-5 rounded-full bg-violet-500/10 dark:bg-violet-500/20 border border-violet-500/20 dark:border-violet-500/30 flex items-center justify-center text-[9px] shrink-0 mt-0.5">👤</div>
-              <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">"Elevator B keeps making a squeaking noise."</p>
-            </div>
-            <div className="flex items-start gap-2">
-              <div className="w-5 h-5 rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-[9px] shrink-0 mt-0.5">✦</div>
-              <p className="text-xs text-slate-555 dark:text-slate-400 leading-relaxed"><span className="text-violet-650 dark:text-violet-300 font-semibold">AI:</span> Work Order #ME-402 logged. Schindler Elevator dispatched — ETA 2 hrs. Track progress in your portal.</p>
+              <div className="w-4 h-4 rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-[9px] text-white shrink-0 mt-0.5">✦</div>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-normal"><span className="text-violet-605 dark:text-violet-350 font-bold">AI:</span> Court 2 is available 4–6 PM. Slot reserved under Unit 102. Confirmation sent. 🎾</p>
             </div>
           </div>
         </div>
 
         {/* Typing indicator */}
         <div className="flex items-center gap-3 px-1">
-          <div className="w-6 h-6 rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-[10px] shrink-0 shadow-md shadow-violet-500/30">✦</div>
-          <div className={`flex items-center gap-1 px-3 py-2 rounded-xl border ${isDark ? 'bg-white/[0.04] border-white/[0.05]' : 'bg-slate-100 border-slate-200'}`}>
-            <span className="w-1.5 h-1.5 bg-violet-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-            <span className="w-1.5 h-1.5 bg-violet-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-            <span className="w-1.5 h-1.5 bg-violet-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-            <span className="text-[10px] text-slate-500 ml-2">AI is processing next query...</span>
+          <div className="w-5 h-5 rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-[9px] text-white shrink-0 shadow-md shadow-violet-500/30">✦</div>
+          <div className={`flex items-center gap-1 px-3 py-1.5 rounded-xl border ${isDark ? 'bg-white/[0.04] border-white/[0.05]' : 'bg-slate-100 border-slate-200'}`}>
+            <span className="w-1 h-1 bg-violet-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+            <span className="w-1 h-1 bg-violet-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+            <span className="w-1 h-1 bg-violet-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+            <span className="text-[9px] text-slate-400 ml-2">AI is processing query...</span>
           </div>
         </div>
       </div>
 
       {/* Footer bar */}
-      <div className={`px-5 py-3 flex items-center justify-between border-t ${isDark ? 'border-white/[0.05] bg-white/[0.02]' : 'border-slate-200 bg-slate-50'}`}>
-        <span className="text-[10px] text-slate-550 dark:text-slate-500">3 resolved · 0 escalated · uptime 99.98%</span>
+      <div className={`px-5 py-2.5 flex items-center justify-between border-t shrink-0 ${isDark ? 'border-white/[0.05] bg-white/[0.02]' : 'border-slate-200 bg-slate-50'}`}>
+        <span className="text-[10px] text-slate-500 dark:text-slate-400">3 resolved · uptime 99.98%</span>
         <span className="flex items-center gap-1.5 text-[10px] text-violet-650 dark:text-violet-400 font-semibold">
           <span className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-pulse" />
           Powered by NestBloq AI
+        </span>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Calendar Operations Console ─── */
+function CalendarOperationsConsole() {
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
+
+  return (
+    <div className={`w-full rounded-3xl overflow-hidden shadow-2xl border transition-all ${isDark ? 'shadow-blue-900/30 border-white/[0.08]' : 'shadow-slate-200/80 border-slate-200'} relative h-[482px] flex flex-col justify-between`} style={{ background: isDark ? 'linear-gradient(145deg, #07162c 0%, #0b1a36 50%, #050d18 100%)' : 'linear-gradient(145deg, #f8fafc 0%, #f0f7ff 50%, #e2e8f0 100%)' }}>
+      {isDark && (
+        <div className="absolute top-0 right-1/4 w-64 h-64 bg-blue-600/10 rounded-full blur-[80px] pointer-events-none" />
+      )}
+
+      {/* Header */}
+      <div className={`relative px-5 pt-5 pb-4 flex items-center justify-between border-b shrink-0 ${isDark ? 'bg-white/[0.03] border-white/[0.06]' : 'bg-slate-50/50 border-slate-200'}`}>
+        <div className="flex items-center gap-3 text-left">
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-500/30">
+            <CalendarRange size={18} className="text-white" />
+          </div>
+          <div>
+            <h3 className={`font-bold text-sm leading-none ${isDark ? 'text-white' : 'text-slate-800'}`}>Community Calendar</h3>
+            <p className="text-[10px] text-slate-400 mt-0.5">Automated schedules & bookings</p>
+          </div>
+        </div>
+        <span className="flex items-center gap-1.5 text-[10px] font-bold text-blue-650 dark:text-blue-400 bg-blue-500/10 border border-blue-500/20 px-2.5 py-1 rounded-full">
+          July 2026
+        </span>
+      </div>
+
+      {/* Calendar Grid Preview */}
+      <div className="p-4 flex-1 flex flex-col justify-center">
+        <div className="grid grid-cols-7 gap-1 text-center text-[9px] font-black text-slate-400 dark:text-gray-500 mb-1.5 uppercase tracking-wider">
+          {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d, i) => <div key={i}>{d}</div>)}
+        </div>
+        <div className="grid grid-cols-7 gap-1.5">
+          {Array.from({ length: 35 }).map((_, idx) => {
+            const dayNum = idx - 2; // Offset to start 1st of July on Wednesday
+            const isDay = dayNum > 0 && dayNum <= 31;
+            const isToday = dayNum === 3;
+            const isSelected = dayNum === 10;
+            const hasMeeting = dayNum === 3 || dayNum === 10;
+            return (
+              <div
+                key={idx}
+                className={`h-10 rounded-xl flex flex-col items-center justify-between p-1.5 border transition-all ${
+                  !isDay ? 'opacity-0 border-transparent' :
+                  isSelected ? 'bg-blue-600 border-blue-600 text-white font-bold shadow-md shadow-blue-500/20' :
+                  isToday ? 'bg-blue-500/10 border-blue-500/35 text-blue-600 dark:text-blue-400 font-bold' :
+                  'bg-white/40 dark:bg-white/[0.01] border-slate-200/50 dark:border-white/[0.03] text-slate-850 dark:text-slate-200'
+                }`}
+              >
+                <span className="text-[10px] font-mono leading-none">{isDay ? dayNum : ''}</span>
+                {isDay && hasMeeting && (
+                  <span className={`w-1 h-1 rounded-full ${isSelected ? 'bg-white' : 'bg-purple-500 dark:bg-purple-400'}`} />
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Footer list */}
+      <div className={`px-5 py-3.5 space-y-2 border-t shrink-0 ${isDark ? 'border-white/[0.05] bg-white/[0.02]' : 'border-slate-200 bg-slate-50'}`}>
+        <div className="flex items-center justify-between text-[9px] font-black text-slate-450 uppercase tracking-widest text-left">
+          <span>Today's Events</span>
+          <span className="text-blue-600 hover:underline cursor-pointer">Open Calendar →</span>
+        </div>
+        <div className="flex items-center justify-between gap-3 text-left">
+          <div className="min-w-0 flex-1">
+            <h4 className={`text-[11px] font-black truncate ${isDark ? 'text-white' : 'text-slate-800'}`}>Budget Meeting</h4>
+            <p className="text-[9px] text-slate-400 mt-0.5">July 3, 2026, 04:31 PM • Clubhouse</p>
+          </div>
+          <span className="bg-purple-100 dark:bg-purple-500/10 text-purple-650 dark:text-purple-450 text-[8px] font-black px-2 py-0.5 rounded border border-purple-200/30 uppercase shrink-0">Meeting</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Notes Operations Console ─── */
+function NotesOperationsConsole() {
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
+
+  return (
+    <div className={`w-full rounded-3xl overflow-hidden shadow-2xl border transition-all ${isDark ? 'shadow-emerald-900/30 border-white/[0.08]' : 'shadow-slate-200/80 border-slate-200'} relative h-[482px] flex flex-col justify-between`} style={{ background: isDark ? 'linear-gradient(145deg, #051a10 0%, #0a2418 50%, #030f0a 100%)' : 'linear-gradient(145deg, #f8fafc 0%, #f0fdf4 50%, #e2e8f0 100%)' }}>
+      {isDark && (
+        <div className="absolute top-0 right-1/4 w-64 h-64 bg-emerald-600/10 rounded-full blur-[80px] pointer-events-none" />
+      )}
+
+      {/* Header */}
+      <div className={`relative px-5 pt-5 pb-4 flex items-center justify-between border-b shrink-0 ${isDark ? 'bg-white/[0.03] border-white/[0.06]' : 'bg-slate-50/50 border-slate-200'}`}>
+        <div className="flex items-center gap-3 text-left">
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-650 flex items-center justify-center shadow-lg shadow-emerald-500/30">
+            <ClipboardSignature size={18} className="text-white" />
+          </div>
+          <div>
+            <h3 className={`font-bold text-sm leading-none ${isDark ? 'text-white' : 'text-slate-800'}`}>Notes & Reminders</h3>
+            <p className="text-[10px] text-slate-400 mt-0.5">Private notes and action checklists</p>
+          </div>
+        </div>
+        <span className="flex items-center gap-1.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-full">
+          Active Reminders
+        </span>
+      </div>
+
+      {/* Notes Checklist */}
+      <div className="p-4 flex-1 space-y-2.5 flex flex-col justify-center text-left">
+        {[
+          { text: "Draft Q3 budget proposals for Board review", done: false, badge: "Pending" },
+          { text: "Call Schindler Elevator B inspector to confirm ETA", done: true, badge: "Completed" },
+          { text: "Inspect clubhouse pool fence for safety compliance", done: false, badge: "Due Tomorrow" },
+          { text: "Verify QuickBooks invoice syncing config", done: true, badge: "Completed" }
+        ].map((item, i) => (
+          <div key={i} className={`p-3 rounded-2xl border flex items-center justify-between gap-4 transition-all ${
+            item.done 
+              ? 'bg-slate-500/5 dark:bg-white/[0.02] border-slate-200/40 dark:border-white/5 opacity-75' 
+              : isDark ? 'bg-white/[0.02] border-emerald-500/20 shadow-sm' : 'bg-white border-slate-200 shadow-sm'
+          }`}>
+            <div className="flex items-center gap-3 min-w-0">
+              <span className={`w-4 h-4 rounded-full flex items-center justify-center border text-[8px] shrink-0 font-bold ${
+                item.done 
+                  ? 'bg-emerald-500 border-emerald-500 text-white' 
+                  : isDark ? 'border-white/30 text-transparent' : 'border-slate-350 text-transparent'
+              }`}>✓</span>
+              <span className={`text-[11px] font-semibold truncate ${item.done ? 'line-through text-slate-450 dark:text-slate-400' : 'text-slate-800 dark:text-slate-100'}`}>{item.text}</span>
+            </div>
+            <span className={`text-[8px] font-extrabold px-2 py-0.5 rounded border uppercase shrink-0 ${
+              item.done 
+                ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20' 
+                : item.badge.includes('Tomorrow')
+                  ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20'
+                  : 'bg-blue-500/10 text-blue-600 dark:text-blue-450 border-blue-500/20'
+            }`}>{item.badge}</span>
+          </div>
+        ))}
+      </div>
+
+      {/* Footer bar */}
+      <div className={`px-5 py-2.5 flex items-center justify-between border-t shrink-0 ${isDark ? 'border-white/[0.05] bg-white/[0.02]' : 'border-slate-200 bg-slate-50'}`}>
+        <span className="text-[10px] text-slate-500 dark:text-slate-400">2 pending tasks · 2 done</span>
+        <span className="flex items-center gap-1 text-[10px] text-emerald-600 dark:text-emerald-400 font-bold cursor-pointer hover:underline text-left">
+          Manage Reminders →
+        </span>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Payments Operations Console ─── */
+function PaymentsOperationsConsole() {
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
+
+  return (
+    <div className={`w-full rounded-3xl overflow-hidden shadow-2xl border transition-all ${isDark ? 'shadow-teal-900/30 border-white/[0.08]' : 'shadow-slate-200/80 border-slate-200'} relative h-[482px] flex flex-col justify-between`} style={{ background: isDark ? 'linear-gradient(145deg, #031818 0%, #062828 50%, #020e0e 100%)' : 'linear-gradient(145deg, #f8fafc 0%, #f0fdfa 50%, #e2e8f0 100%)' }}>
+      {isDark && (
+        <div className="absolute top-0 right-1/4 w-64 h-64 bg-teal-600/10 rounded-full blur-[80px] pointer-events-none" />
+      )}
+
+      {/* Header */}
+      <div className={`relative px-5 pt-5 pb-4 flex items-center justify-between border-b shrink-0 ${isDark ? 'bg-white/[0.03] border-white/[0.06]' : 'bg-slate-50/50 border-slate-200'}`}>
+        <div className="flex items-center gap-3 text-left">
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-teal-500 to-emerald-600 flex items-center justify-center shadow-lg shadow-teal-500/30">
+            <Wallet size={18} className="text-white" />
+          </div>
+          <div>
+            <h3 className={`font-bold text-sm leading-none ${isDark ? 'text-white' : 'text-slate-800'}`}>Dues & Payments</h3>
+            <p className="text-[10px] text-slate-400 mt-0.5">Automated accounting & invoice tracking</p>
+          </div>
+        </div>
+        <span className="flex items-center gap-1.5 text-[10px] font-bold text-teal-650 dark:text-teal-400 bg-teal-500/10 border border-teal-500/20 px-2.5 py-1 rounded-full">
+          Q3 Billing Active
+        </span>
+      </div>
+
+      {/* Metrics & Ledger Preview */}
+      <div className="p-4 flex-1 flex flex-col justify-center space-y-4 text-left">
+        <div className="flex items-center gap-5">
+          <div className="relative w-14 h-14 shrink-0">
+            <svg viewBox="0 0 36 36" className="w-14 h-14 -rotate-90">
+              <circle cx="18" cy="18" r="14.5" fill="none" stroke={isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.04)"} strokeWidth="3.5" />
+              <circle cx="18" cy="18" r="14.5" fill="none" stroke="#14B8A6" strokeWidth="3.5" strokeDasharray="78 100" strokeLinecap="round" />
+            </svg>
+            <div className={`absolute inset-0 flex items-center justify-center text-[10px] font-black ${isDark ? 'text-white' : 'text-slate-800'}`}>78%</div>
+          </div>
+          <div>
+            <p className={`text-base font-black leading-none ${isDark ? 'text-white' : 'text-slate-800'}`}>$19,227.00 Collected</p>
+            <p className="text-[10px] text-slate-400 mt-1">$3,800.00 Pending • $1,623.00 Overdue</p>
+          </div>
+        </div>
+
+        <div className="space-y-1.5">
+          <p className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest">Recent Dues Actions</p>
+          {[
+            { title: "Unit 104 Q3 Dues Auto-Debit", desc: "Processed via Stripe ACH", amt: "+$150.00", status: "Success" },
+            { title: "Unit 305 Late Notice Auto-Email", desc: "Sent by compliance robot", amt: "+$25.00 Fine", status: "Sent" }
+          ].map((item, idx) => (
+            <div key={idx} className={`p-2.5 rounded-xl border flex items-center justify-between text-[11px] ${
+              isDark ? 'bg-white/[0.01] border-white/5' : 'bg-slate-50 border-slate-200'
+            }`}>
+              <div>
+                <h4 className={`font-bold ${isDark ? 'text-white' : 'text-slate-800'}`}>{item.title}</h4>
+                <p className="text-[9px] text-slate-400 mt-0.5">{item.desc}</p>
+              </div>
+              <div className="text-right shrink-0">
+                <span className="font-extrabold text-teal-600 dark:text-teal-400 block">{item.amt}</span>
+                <span className="text-[8px] font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400">{item.status}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Footer bar */}
+      <div className={`px-5 py-2.5 flex items-center justify-between border-t shrink-0 ${isDark ? 'border-white/[0.05] bg-white/[0.02]' : 'border-slate-200 bg-slate-50'}`}>
+        <span className="text-[10px] text-slate-550 dark:text-slate-500">QuickBooks Auto-Sync</span>
+        <span className="flex items-center gap-1.5 text-[9px] font-extrabold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/25 px-2 py-0.5 rounded uppercase tracking-wider shrink-0">
+          Synced
         </span>
       </div>
     </div>
@@ -748,6 +949,91 @@ export default function LandingPage() {
   const isDark = theme === 'dark';
   const [openFaq, setOpenFaq] = useState(null);
   const [activeFeature, setActiveFeature] = useState(0);
+  const [activeSlide, setActiveSlide] = useState(0);
+  const [isAutoPlaying, setIsAutoPlaying] = useState(true);
+
+  const automationSlides = [
+    {
+      tabLabel: "🤖 AI Assistant",
+      badge: "AI Copilot",
+      title: "Your AI assistant",
+      subtitle: "that never sleeps.",
+      desc: "Tired of answering the same bylaws queries at midnight? Our AI automatically handles resident queries, books amenities, and logs maintenance requests — freeing your board completely.",
+      points: [
+        { icon: '🛡️', text: 'Reduces resident queries by up to 85%' },
+        { icon: '🕐', text: 'Operates 24/7 in a friendly conversational tone' },
+        { icon: '🔧', text: 'Auto-logs service requests to the manager desk' },
+        { icon: '📖', text: 'Trained on your specific community bylaws' }
+      ],
+      linkText: "Explore AI Features",
+      linkTo: "/features",
+      badgeColor: "bg-violet-500/10 border-violet-500/25 text-violet-600 dark:text-violet-400",
+      btnColor: "bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 shadow-violet-500/20",
+      component: <AiOperationsConsole />
+    },
+    {
+      tabLabel: "📅 Manage Calendar",
+      badge: "Collaborative Schedules",
+      title: "Clean, collaborative",
+      subtitle: "calendar management.",
+      desc: "Schedule community meetings, track amenity reservations, and coordinate board schedules all in one unified calendar view linked directly to resident portals.",
+      points: [
+        { icon: '📅', text: 'Synced board meetings & reservation systems' },
+        { icon: '📢', text: 'Automated notification broadcasts to residents' },
+        { icon: '🔒', text: 'Custom privacy levels for board-only schedules' },
+        { icon: '⚡', text: 'Instant visual overview of facility occupancy rates' }
+      ],
+      linkText: "Explore Calendars",
+      linkTo: "/features",
+      badgeColor: "bg-blue-500/10 border-blue-500/25 text-blue-600 dark:text-blue-400",
+      btnColor: "bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-blue-500/20",
+      component: <CalendarOperationsConsole />
+    },
+    {
+      tabLabel: "📝 Notes & Reminders",
+      badge: "Task Automations",
+      title: "Shared checklists",
+      subtitle: "& automated reminders.",
+      desc: "Never forget inspection checks or compliance deadlines. Keep private manager logs, track inspect task-lists, and set automated follow-ups for vendors in seconds.",
+      points: [
+        { icon: '✅', text: 'Task checklists with automated status triggers' },
+        { icon: '🔔', text: 'Smart push notifications & email reminders' },
+        { icon: '🛡️', text: 'Compliance deadline countdown tracking' },
+        { icon: '📎', text: 'Attach documents and manuals to tasks' }
+      ],
+      linkText: "Explore Reminders",
+      linkTo: "/features",
+      badgeColor: "bg-emerald-500/10 border-emerald-500/25 text-emerald-600 dark:text-emerald-400",
+      btnColor: "bg-gradient-to-r from-emerald-600 to-teal-605 hover:from-emerald-700 hover:to-teal-700 shadow-emerald-500/20",
+      component: <NotesOperationsConsole />
+    },
+    {
+      tabLabel: "💳 Dues & Payments",
+      badge: "Autopilot Collections",
+      title: "Seamless collections",
+      subtitle: "& automated accounting.",
+      desc: "Autopilot your dues collection cycles. Send digital invoices, enable secure auto-debit payments via ACH/Stripe, and sync directly with QuickBooks ledger reports.",
+      points: [
+        { icon: '💳', text: 'ACH / Debit card digital processing portals' },
+        { icon: '🔄', text: 'Real-time sync to QuickBooks ledger records' },
+        { icon: '⚠️', text: 'Auto-applied late fees and collection letters' },
+        { icon: '📈', text: 'Beautiful financial progress dashboard metrics' }
+      ],
+      linkText: "Explore Payments",
+      linkTo: "/features",
+      badgeColor: "bg-teal-500/10 border-teal-500/25 text-teal-600 dark:text-teal-400",
+      btnColor: "bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 shadow-teal-500/20",
+      component: <PaymentsOperationsConsole />
+    }
+  ];
+
+  useEffect(() => {
+    if (!isAutoPlaying) return;
+    const timer = setInterval(() => {
+      setActiveSlide(prev => (prev + 1) % 4);
+    }, 5000);
+    return () => clearInterval(timer);
+  }, [isAutoPlaying]);
 
   const rotatingWords = [
     "Rental Property Management",
@@ -1179,13 +1465,17 @@ export default function LandingPage() {
                   </div>
                   <nav className="flex-1 px-2 pb-2 space-y-0.5 text-[9px] font-medium overflow-y-auto custom-scrollbar">
                     {[
-                      { label: 'All Communities', icon: Globe, active: false },
                       { label: 'Dashboard', icon: LayoutDashboard, active: true },
-                      { label: 'Manage Contracts', icon: FileText, active: false },
                       { label: 'Members', icon: Users, active: false },
                       { label: 'Violations', icon: Scale, active: false },
                       { label: 'Service Requests', icon: Wrench, active: false },
                       { label: 'Vendors', icon: Truck, active: false },
+                      { label: 'Manage Amenities', icon: Building2, active: false },
+                      { label: 'Payments', icon: Wallet, active: false },
+                      { label: 'Documents', icon: Folder, active: false },
+                      { label: 'Reports', icon: TrendingUp, active: false },
+                      { label: 'Meetings & Surveys', icon: CalendarRange, active: false },
+                      { label: 'News & Announcements', icon: Megaphone, active: false },
                     ].map((item) => {
                       const Icon = item.icon;
                       return (
@@ -1218,14 +1508,14 @@ export default function LandingPage() {
                     }`}>
                       <img 
                         src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?q=80&w=150&auto=format&fit=crop" 
-                        alt="James Mitchell" 
+                        alt="John Smith" 
                         className={`w-6 h-6 rounded-lg object-cover shrink-0 border ${
                           isDark ? 'border-white/10' : 'border-slate-200'
                         }`}
                       />
                       <div className="min-w-0">
-                        <div className={`text-[8px] font-bold truncate ${isDark ? 'text-white' : 'text-slate-800'}`}>James Mitchell</div>
-                        <div className={`text-[6px] font-extrabold uppercase tracking-widest truncate ${isDark ? 'text-blue-400' : 'text-blue-600'}`}>SUPER ADMIN</div>
+                        <div className={`text-[8px] font-bold truncate ${isDark ? 'text-white' : 'text-slate-800'}`}>John Smith</div>
+                        <div className={`text-[6px] font-extrabold uppercase tracking-widest truncate ${isDark ? 'text-blue-400' : 'text-blue-600'}`}>PROPERTY MANAGER</div>
                       </div>
                     </div>
                   </div>
@@ -1240,17 +1530,20 @@ export default function LandingPage() {
                       ? 'bg-[#0B132B] border-white/[0.06]' 
                       : 'bg-white border-slate-200/80 shadow-sm'
                   }`}>
-                    {/* Left: MANAGING Vikash Property Management */}
+                    {/* Left: MY COMMUNITY Willow Creek Community */}
                     <div className="flex items-center gap-3">
+                      <div className="w-6 h-6 rounded-lg bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center text-blue-600 dark:text-blue-400">
+                        <Building size={12} />
+                      </div>
                       <div className="text-left">
-                        <span className="text-[7px] font-bold text-slate-400 uppercase tracking-widest block">MANAGING</span>
-                        <div className="flex items-center gap-1.5 mt-0.5">
-                          <span className={`text-xs font-black ${isDark ? 'text-white' : 'text-slate-800'}`}>Vikash Property Management</span>
+                        <span className="text-[6px] font-extrabold text-slate-400 uppercase tracking-widest block leading-none">MY COMMUNITY</span>
+                        <div className="flex items-center gap-1 mt-0.5">
+                          <span className={`text-xs font-black ${isDark ? 'text-white' : 'text-slate-800'}`}>Willow Creek Community</span>
                           <span className={`text-[7px] font-extrabold px-1.5 py-0.5 rounded font-mono border ${
                             isDark 
                               ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' 
                               : 'bg-blue-50 text-blue-600 border-blue-500/20'
-                          }`}>VIK071 ▾</span>
+                          }`}>VIK774 ▾</span>
                         </div>
                       </div>
                     </div>
@@ -1271,12 +1564,12 @@ export default function LandingPage() {
                       {/* Profile Widget */}
                       <div className={`flex items-center gap-2 pl-3 border-l ${isDark ? 'border-white/[0.06]' : 'border-slate-200'}`}>
                         <div className="hidden sm:block text-right">
-                          <p className={`text-[8px] font-bold leading-none ${isDark ? 'text-white' : 'text-slate-800'}`}>James Mitchell</p>
-                          <span className={`text-[6px] font-extrabold uppercase tracking-wider ${isDark ? 'text-blue-400' : 'text-blue-600'}`}>SUPER ADMIN</span>
+                          <p className={`text-[8px] font-bold leading-none ${isDark ? 'text-white' : 'text-slate-800'}`}>John Smith</p>
+                          <span className={`text-[6px] font-extrabold uppercase tracking-wider ${isDark ? 'text-blue-400' : 'text-blue-600'}`}>PROPERTY MANAGER</span>
                         </div>
                         <img 
                           src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?q=80&w=150&auto=format&fit=crop" 
-                          alt="James Mitchell" 
+                          alt="John Smith" 
                           className={`w-6 h-6 rounded-lg object-cover shrink-0 border ${
                             isDark ? 'border-white/10' : 'border-slate-200'
                           }`}
@@ -1285,261 +1578,175 @@ export default function LandingPage() {
                     </div>
                   </div>
 
-                  {/* Dashboard body */}
-                  <div className={`flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar transition-colors duration-300 ${
+                  {/* Dashboard body (Updated to match the actual Property Manager dashboard) */}
+                  <div className={`flex-1 overflow-y-auto p-5 space-y-5 custom-scrollbar transition-colors duration-300 ${
                     isDark ? 'bg-[#090F16]' : 'bg-slate-50'
                   }`}>
 
-                    {/* Page Title & Action Buttons */}
-                    <div className="flex items-center justify-between shrink-0">
-                      <div>
-                        <h2 className={`text-base font-black tracking-tight leading-none ${isDark ? 'text-white' : 'text-slate-800'}`}>Dashboard</h2>
-                        <p className={`text-[8px] font-medium mt-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Vikash Property Management • America/New_York</p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <button className={`px-2.5 py-1.5 border rounded-lg text-[8px] font-bold transition flex items-center gap-1.5 ${
-                          isDark 
-                            ? 'bg-slate-900 border-white/[0.06] text-white hover:bg-slate-800' 
-                            : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50 shadow-sm'
-                        }`}>
-                          <RotateCcw size={10} />
-                          Refresh
-                        </button>
-                        <button className={`px-3 py-1.5 rounded-lg text-[8px] font-black transition flex items-center gap-1.5 shadow-md ${
-                          isDark 
-                            ? 'bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white shadow-violet-600/10' 
-                            : 'bg-blue-600 hover:bg-blue-700 text-white shadow-blue-600/10'
-                        }`}>
-                          <FileText size={10} />
-                          Export Report
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Main Banner Card */}
-                    <div className={`relative overflow-hidden rounded-2xl p-4 border shadow-md flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 transition-all ${
+                    {/* ── Page Header & Community Highlight Card ── */}
+                    <div className={`relative overflow-hidden rounded-2xl p-5 border shadow-sm flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 ${
                       isDark 
                         ? 'bg-gradient-to-r from-[#1E2E42] via-[#162535] to-[#121B2A] text-white border-white/[0.06]' 
-                        : 'bg-white text-slate-850 border-slate-200/85 shadow-sm'
+                        : 'bg-white text-slate-800 border-slate-200/80 shadow-sm'
                     }`}>
-                      <div className="flex items-center gap-3">
-                        <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border ${
-                          isDark 
-                            ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' 
-                            : 'bg-blue-600 text-white border-transparent shadow-sm shadow-blue-600/10'
-                        }`}>
-                          <Building size={16} />
-                        </div>
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-2">
-                            <h3 className={`text-xs font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>Vikash Property Management</h3>
-                            <span className={`text-[6px] font-black px-1.5 py-0.5 rounded border ${
-                              isDark 
-                                ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' 
-                                : 'bg-emerald-50 text-emerald-700 border-emerald-200/60'
-                            }`}>ACTIVE</span>
-                          </div>
-                          <p className={`text-[8px] ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                            Bazar Chowk, Chicholi • HOA Code: <span className={`font-mono font-bold ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>VIK071</span>
+                      {/* Left: Premium Welcome & Metadata */}
+                      <div className="flex-1 min-w-0 space-y-3 text-left">
+                        <div>
+                          <h2 className={`text-base sm:text-lg font-black tracking-tight leading-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                            Welcome back, John! 👋
+                          </h2>
+                          <p className={`text-[8px] mt-0.5 font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                            Here is a summary of your community's active operations today.
                           </p>
                         </div>
-                      </div>
-                      
-                      {/* Right side stats banner columns */}
-                      <div className="flex flex-wrap items-center gap-4 sm:gap-6 pr-2 w-full sm:w-auto justify-between sm:justify-end border-t sm:border-t-0 pt-3 sm:pt-0 border-slate-200/50 dark:border-white/[0.04]">
-                        {[
-                          { label: 'MEMBERS', value: '7', darkColor: 'text-sky-400', lightColor: 'text-blue-600' },
-                          { label: 'VIOLATIONS', value: '2', darkColor: 'text-red-400', lightColor: 'text-red-600' },
-                          { label: 'SERVICE REQ', value: '4', darkColor: 'text-blue-400', lightColor: 'text-blue-600' },
-                          { label: 'TOTAL UNITS', value: '120', darkColor: 'text-purple-400', lightColor: 'text-purple-600' }
-                        ].map((col, idx) => (
-                          <div key={idx} className="text-center">
-                            <div className={`text-xs font-black font-mono ${isDark ? 'text-white' : col.lightColor}`}>{col.value}</div>
-                            <div className={`text-[6px] font-extrabold tracking-wider mt-0.5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{col.label}</div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
 
-                    {/* Stat Card Grid (4 Columns) */}
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                      {[
-                        { 
-                          label: 'Total Members', 
-                          value: '7', 
-                          sub: 'Registered homeowners', 
-                          icon: Users,
-                          darkColor: 'text-sky-400 bg-sky-500/10 border-sky-500/20',
-                          lightColor: 'text-sky-600 bg-sky-50 border-sky-100',
-                          lightValColor: 'text-sky-600',
-                          lightSubColor: 'text-sky-600 font-medium'
-                        },
-                        { 
-                          label: 'Open Violations', 
-                          value: '2', 
-                          sub: 'Needs attention', 
-                          icon: Scale,
-                          darkColor: 'text-red-500 bg-red-500/10 border-red-500/20',
-                          lightColor: 'text-red-600 bg-red-50 border-red-100',
-                          lightValColor: 'text-red-600',
-                          lightSubColor: 'text-red-500 font-medium'
-                        },
-                        { 
-                          label: 'Service Requests', 
-                          value: '4', 
-                          sub: 'Open requests', 
-                          icon: Wrench,
-                          darkColor: 'text-blue-500 bg-blue-500/10 border-blue-500/20',
-                          lightColor: 'text-blue-600 bg-blue-50 border-blue-100',
-                          lightValColor: 'text-blue-600',
-                          lightSubColor: 'text-blue-600 font-medium'
-                        },
-                        { 
-                          label: 'Pending Payments', 
-                          value: '0', 
-                          sub: 'Due this month', 
-                          icon: CreditCard,
-                          darkColor: 'text-purple-500 bg-purple-500/10 border-purple-500/20',
-                          lightColor: 'text-purple-600 bg-purple-50 border-purple-100',
-                          lightValColor: 'text-purple-600',
-                          lightSubColor: 'text-purple-500 font-medium'
-                        },
-                      ].map((stat, i) => {
-                        const CardIcon = stat.icon;
-                        return (
-                          <div 
-                            key={i} 
-                            className={`rounded-xl p-3 border shadow-sm flex flex-col justify-between h-[100px] transition-all ${
-                              isDark 
-                                ? 'bg-[#1E2E42] border-white/[0.06] hover:border-white/10' 
-                                : 'bg-white border-slate-200/80 hover:border-slate-350 shadow-sm hover:shadow'
-                            }`}
-                          >
-                            <div className="flex items-start justify-between">
-                              <div>
-                                <span className={`text-[7px] font-bold block ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{stat.label}</span>
-                                <div className={`text-lg font-black mt-1.5 font-mono ${
-                                  isDark ? 'text-white' : stat.lightValColor
-                                }`}>{stat.value}</div>
-                              </div>
-                              <div className={`w-6 h-6 rounded-lg flex items-center justify-center border ${
-                                isDark ? stat.darkColor : stat.lightColor
-                              }`}>
-                                <CardIcon size={12} />
-                              </div>
-                            </div>
-                            <span className={`text-[7px] block truncate mt-1 ${
-                              isDark ? 'text-slate-400' : stat.lightSubColor
-                            }`}>{stat.sub}</span>
-                          </div>
-                        );
-                      })}
-                    </div>
-
-                    {/* Bottom layout: Recent Service Requests & Dues Progress */}
-                    <div className="grid grid-cols-12 gap-3.5 pt-1 text-left">
-                      
-                      {/* Recent Service Requests */}
-                      <div className={`col-span-12 sm:col-span-7 rounded-xl border p-3 shadow-sm flex flex-col justify-between transition-all ${
-                        isDark 
-                          ? 'bg-[#1E2E42] border-white/[0.06]' 
-                          : 'bg-white border-slate-200/80'
-                      }`}>
-                        <div className={`flex items-center justify-between mb-2 pb-1 border-b ${
-                          isDark ? 'border-white/[0.04]' : 'border-slate-100'
-                        }`}>
-                          <span className={`text-[7.5px] font-black uppercase tracking-wider ${
-                            isDark ? 'text-slate-300' : 'text-slate-700'
-                          }`}>Recent Service Requests</span>
-                          <span className={`text-[6.5px] font-bold cursor-pointer hover:underline ${
-                            isDark ? 'text-blue-400' : 'text-blue-600'
-                          }`}>View all →</span>
+                        <div className="flex flex-wrap items-center gap-1.5 mt-1">
+                          <span className={`inline-flex items-center text-[7px] font-bold px-2 py-0.5 rounded-lg border ${
+                            isDark ? 'bg-white/5 text-slate-300 border-white/10' : 'bg-slate-100 text-slate-600 border-slate-200'
+                          }`}>
+                            Code: VIK774
+                          </span>
+                          <span className="inline-flex items-center text-[7px] font-black text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-lg border border-emerald-500/20">
+                            ACTIVE PM LICENSE
+                          </span>
+                          <span className={`inline-flex items-center gap-1 text-[7px] font-semibold px-2 py-0.5 rounded-lg border ${
+                            isDark ? 'bg-white/[0.02] text-gray-300 border-white/5' : 'bg-slate-50 text-slate-600 border-slate-200/40'
+                          }`}>
+                            <MapPin size={8} className="text-slate-450" />
+                            123 Willow Creek Way, Sunnyvale, CA 94086
+                          </span>
                         </div>
-                        <div className="space-y-1.5">
-                          {[
-                            { 
-                              id: 'SR-4820', 
-                              title: 'Elevator C Braking Noise', 
-                              priority: 'HIGH', 
-                              status: 'Dispatched', 
-                              vendor: 'Schindler Group', 
-                              darkStatus: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
-                              lightStatus: 'bg-amber-50 text-amber-700 border-amber-200'
-                            },
-                            { 
-                              id: 'SR-4819', 
-                              title: 'Basement Parking Pipe Leak', 
-                              priority: 'HIGH', 
-                              status: 'Unassigned', 
-                              vendor: 'Awaiting Vendor', 
-                              darkStatus: 'bg-red-500/10 text-red-400 border-red-500/20',
-                              lightStatus: 'bg-red-50 text-red-700 border-red-200'
-                            },
-                            { 
-                              id: 'SR-4817', 
-                              title: 'Clubhouse AC Replacement', 
-                              priority: 'MEDIUM', 
-                              status: 'Completed', 
-                              vendor: 'Elite HVAC Services', 
-                              darkStatus: 'bg-green-500/10 text-green-400 border-green-500/20',
-                              lightStatus: 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                            }
-                          ].map((req) => (
-                            <div key={req.id} className={`flex items-center justify-between py-1 last:border-0 text-[7px] border-b ${
-                              isDark ? 'border-white/[0.02]' : 'border-slate-100'
+                      </div>
+
+                      {/* Right: Stats Grid */}
+                      <div className="w-full lg:w-auto mt-2 lg:mt-0 pt-3 lg:pt-0 border-t lg:border-t-0 border-slate-200/60 dark:border-white/5">
+                        <div className="flex flex-row justify-around lg:justify-end gap-6 sm:gap-8 lg:gap-9">
+                          <div className="text-center min-w-[40px]">
+                            <p className="text-base font-black text-blue-600 dark:text-blue-400 font-mono">3</p>
+                            <p className={`text-[6px] font-extrabold uppercase tracking-wider mt-0.5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Members</p>
+                          </div>
+                          <div className="text-center min-w-[40px]">
+                            <p className="text-base font-black text-amber-600 dark:text-amber-500 font-mono">2</p>
+                            <p className={`text-[6px] font-extrabold uppercase tracking-wider mt-0.5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Violations</p>
+                          </div>
+                          <div className="text-center min-w-[40px]">
+                            <p className="text-base font-black text-blue-600 dark:text-blue-400 font-mono">1</p>
+                            <p className={`text-[6px] font-extrabold uppercase tracking-wider mt-0.5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Service Req</p>
+                          </div>
+                          <div className="text-center min-w-[40px]">
+                            <p className="text-base font-black text-indigo-600 dark:text-indigo-400 font-mono">120</p>
+                            <p className={`text-[6px] font-extrabold uppercase tracking-wider mt-0.5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Total Units</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* ── Main Workspace Grid ── */}
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+                      
+                      {/* Left: Quick Links (7 Cols) */}
+                      <div className={`lg:col-span-7 border rounded-2xl p-4 shadow-sm flex flex-col justify-between ${
+                        isDark ? 'bg-[#1E2E42] border-white/[0.06]' : 'bg-white border-slate-200/80 shadow-sm'
+                      }`}>
+                        <div className="flex items-center justify-between mb-4 pb-2 border-b border-slate-200/50 dark:border-white/[0.05] text-left">
+                          <h3 className={`font-extrabold text-[9px] uppercase tracking-wider ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                            Quick Links
+                          </h3>
+                          <div className="flex items-center gap-2">
+                            <span className="text-[7px] font-bold text-slate-400 uppercase tracking-widest font-mono hidden sm:inline">
+                              July 2026
+                            </span>
+                            <button className={`px-2 py-0.5 rounded border text-[7.5px] font-bold ${
+                              isDark ? 'bg-white/5 border-white/10 text-white' : 'bg-slate-100 border-slate-200 text-slate-700'
                             }`}>
-                              <div className="min-w-0 pr-2">
-                                <p className={`font-bold truncate ${isDark ? 'text-white' : 'text-slate-800'}`}>{req.title}</p>
-                                <p className={`text-[6px] mt-0.5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{req.id} • {req.vendor}</p>
+                              All Communities
+                            </button>
+                            <button className="px-2 py-0.5 bg-blue-600 text-white rounded text-[7.5px] font-black flex items-center gap-1">
+                              <Download size={8} />
+                              Export Report
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Shortcuts Grid */}
+                        <div className="grid grid-cols-3 gap-3">
+                          {[
+                            { label: "Service Req", icon: <Wrench size={12} className="text-amber-500" />, badge: 1 },
+                            { label: "Vendor List", icon: <Users size={12} className="text-blue-500" /> },
+                            { label: "Violations", icon: <AlertTriangle size={12} className="text-red-500" /> },
+                            { label: "Amenities", icon: <Building2 size={12} className="text-blue-500" /> },
+                            { label: "Payments", icon: <Wallet size={12} className="text-emerald-500" /> },
+                            { label: "Documents", icon: <Folder size={12} className="text-slate-500" /> }
+                          ].map((btn, idx) => (
+                            <div
+                              key={idx}
+                              className={`relative p-3.5 rounded-xl border flex flex-col justify-between h-20 text-left transition-all ${
+                                isDark 
+                                  ? 'border-white/[0.04] bg-white/[0.01]' 
+                                  : 'border-slate-200/60 bg-slate-50/50'
+                              }`}
+                            >
+                              <div className="flex justify-between items-start">
+                                <div className={`p-1.5 rounded-lg ${isDark ? 'bg-white/5' : 'bg-slate-100'}`}>
+                                  {btn.icon}
+                                </div>
+                                {btn.badge && (
+                                  <span className="bg-red-500 text-white text-[7px] font-black px-1.5 py-0.5 rounded-full">
+                                    {btn.badge}
+                                  </span>
+                                )}
                               </div>
-                              <span className={`px-1.5 py-0.5 rounded border font-mono font-extrabold text-[5.5px] shrink-0 ${
-                                isDark ? req.darkStatus : req.lightStatus
-                              }`}>
-                                {req.status}
+                              <span className={`text-[8px] font-bold ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
+                                {btn.label}
                               </span>
                             </div>
                           ))}
                         </div>
                       </div>
 
-                      {/* Dues Progress & Integrations */}
-                      <div className={`col-span-12 sm:col-span-5 rounded-xl border p-3 shadow-sm flex flex-col justify-between transition-all ${
-                        isDark 
-                          ? 'bg-[#1E2E42] border-white/[0.06]' 
-                          : 'bg-white border-slate-200/80 shadow-sm'
+                      {/* Right: Calendar Schedule (5 Cols) */}
+                      <div className={`lg:col-span-5 border rounded-2xl p-4 shadow-sm text-left flex flex-col justify-between ${
+                        isDark ? 'bg-[#1E2E42] border-white/[0.06]' : 'bg-white border-slate-200/80 shadow-sm'
                       }`}>
-                        <div className={`flex items-center justify-between mb-2 pb-1 border-b ${
-                          isDark ? 'border-white/[0.04]' : 'border-slate-100'
-                        }`}>
-                          <span className={`text-[7.5px] font-black uppercase tracking-wider ${
-                            isDark ? 'text-slate-300' : 'text-slate-700'
-                          }`}>Dues Collection</span>
-                          <span className={`text-[6.5px] font-bold ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Q3 Cycle</span>
+                        <div className="flex items-center justify-between mb-3 pb-2 border-b border-slate-200/50 dark:border-white/[0.05]">
+                          <h3 className={`font-extrabold text-[9px] uppercase tracking-wider ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                            Calendar Schedule
+                          </h3>
+                          <span className="text-[7.5px] font-bold text-blue-600 hover:underline cursor-pointer">
+                            View Calendar
+                          </span>
                         </div>
-                        <div className="flex items-center gap-3 py-1">
-                          {/* Mini Progress Bar or Indicator */}
-                          <div className="relative w-8 h-8 shrink-0">
-                            <svg viewBox="0 0 36 36" className="w-8 h-8 -rotate-90">
-                              <circle cx="18" cy="18" r="14.5" fill="none" stroke={isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.04)"} strokeWidth="3.5" />
-                              <circle cx="18" cy="18" r="14.5" fill="none" stroke="#0D9488" strokeWidth="3.5" strokeDasharray="78 100" strokeLinecap="round" />
-                            </svg>
-                            <div className={`absolute inset-0 flex items-center justify-center text-[7.5px] font-black ${isDark ? 'text-white' : 'text-slate-800'}`}>78%</div>
+                        
+                        <div className="space-y-3 flex-1 flex flex-col justify-center">
+                          <p className="text-[6.5px] font-extrabold text-slate-450 uppercase tracking-widest mb-1">
+                            Upcoming Events & Tasks
+                          </p>
+
+                          <div className="space-y-2">
+                            {[
+                              { title: "Budget Meeting", date: "Jul 3, 2026, 04:31 PM" },
+                              { title: "Annual Budget Review & Fee...", date: "Jul 10, 2026, 11:00 AM" }
+                            ].map((evt, idx) => (
+                              <div
+                                key={idx}
+                                className={`p-2.5 rounded-xl border flex items-center justify-between gap-3 ${
+                                  isDark ? 'bg-white/[0.02] border-white/5' : 'bg-slate-50/70 border-slate-200/50'
+                                }`}
+                              >
+                                <div className="min-w-0 flex-1">
+                                  <h4 className={`text-[8px] font-bold truncate ${isDark ? 'text-white' : 'text-slate-800'}`}>
+                                    {evt.title}
+                                  </h4>
+                                  <p className="text-[7px] text-slate-405 mt-0.5">
+                                    {evt.date}
+                                  </p>
+                                </div>
+                                <span className="bg-purple-100 dark:bg-purple-500/10 text-purple-650 dark:text-purple-400 text-[6px] font-extrabold px-1.5 py-0.5 rounded border border-purple-200/30">
+                                  MEETING
+                                </span>
+                              </div>
+                            ))}
                           </div>
-                          <div className="min-w-0 space-y-0.5 text-[6.5px]">
-                            <p className={`font-bold text-[7.5px] ${isDark ? 'text-white' : 'text-slate-800'}`}>$19,227.00 <span className={`font-normal ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Collected</span></p>
-                            <p className={isDark ? 'text-slate-400' : 'text-slate-500'}>$3,800 Pending</p>
-                            <p className={isDark ? 'text-red-400 font-medium' : 'text-red-600 font-bold'}>$1,623 Overdue</p>
-                          </div>
-                        </div>
-                        <div className={`pt-2 mt-2 flex items-center justify-between text-[6px] border-t ${
-                          isDark ? 'border-white/[0.04]' : 'border-slate-100'
-                        }`}>
-                          <span className={isDark ? 'text-slate-400' : 'text-slate-500'}>QuickBooks Sync</span>
-                          <span className={`px-1.5 py-0.5 rounded border font-bold uppercase tracking-wider ${
-                            isDark 
-                              ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' 
-                              : 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                          }`}>SYNCED</span>
                         </div>
                       </div>
 
@@ -1620,124 +1827,83 @@ export default function LandingPage() {
               Tailored Portals for <span className="gradient-text">Your Community Scale.</span>
             </h2>
             <p className="text-base sm:text-lg text-slate-500 dark:text-slate-400 font-normal leading-relaxed">
-              NestBloq unifies administrative workflow and resident experiences across all community frameworks. Click a use-case below to test its interactive live simulator.
+              NestBloq unifies administrative workflow and resident experiences across all community frameworks. Explore our specialized portals tailored to your specific community scale.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
-            {/* Left Column: Interactive Tab Cards */}
-            <div className="lg:col-span-5 flex flex-col gap-4">
-              {[
-                {
-                  id: 'rental',
-                  title: 'Rental Property Management',
-                  tagline: 'Rent Roll & Vacancy Tracker',
-                  desc: 'Automating rent collection schedules, payment reminders, and tenant portals with zero friction.',
-                  icon: Wallet,
-                  colorClass: 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20',
-                  activeBorder: 'border-emerald-500/30 dark:border-emerald-500/20 bg-emerald-500/[0.03] dark:bg-emerald-950/10'
-                },
-                {
-                  id: 'condo',
-                  title: 'Condo Association Management',
-                  tagline: 'Shared Amenity Scheduler',
-                  desc: 'Enable seamless slot reservations for shared facilities like swimming pools, clubhouses, and gyms.',
-                  icon: CalendarRange,
-                  colorClass: 'text-violet-500 bg-violet-500/10 border-violet-500/20',
-                  activeBorder: 'border-violet-500/30 dark:border-violet-500/20 bg-violet-500/[0.03] dark:bg-violet-950/10'
-                },
-                {
-                  id: 'apartment',
-                  title: 'Apartment Complex Portal',
-                  tagline: 'Work Order & Dispatch Desk',
-                  desc: 'Collaborative work ticket dispatches, maintenance logs, and visitor directories for unified operations.',
-                  icon: Wrench,
-                  colorClass: 'text-blue-500 bg-blue-500/10 border-blue-500/20',
-                  activeBorder: 'border-blue-500/30 dark:border-blue-500/20 bg-blue-500/[0.03] dark:bg-blue-950/10'
-                },
-                {
-                  id: 'hoa',
-                  title: 'Homeowner Association (HOA)',
-                  tagline: 'Assemblies & e-Voting',
-                  desc: 'E-voting on society resolutions, regulatory bylaws audits, and quarterly security audits with absolute transparency.',
-                  icon: Users,
-                  colorClass: 'text-indigo-500 bg-indigo-500/10 border-indigo-500/20',
-                  activeBorder: 'border-indigo-500/30 dark:border-indigo-500/20 bg-indigo-500/[0.03] dark:bg-indigo-950/10'
-                }
-              ].map((solution) => {
-                const isActive = activeSolution === solution.id;
-                const IconComponent = solution.icon;
-                return (
-                  <button
-                    key={solution.id}
-                    onClick={() => setActiveSolution(solution.id)}
-                    className={`p-5 rounded-2xl border text-left transition-all duration-300 transform group hover:-translate-y-0.5 ${
-                      isActive 
-                        ? `${solution.activeBorder} border-transparent shadow-[0_15px_30px_rgba(0,0,0,0.02)]` 
-                        : 'border-slate-200/60 dark:border-white/[0.05] bg-white/50 dark:bg-white/[0.01] hover:bg-slate-50 dark:hover:bg-white/[0.02] hover:border-slate-300 dark:hover:border-white/10'
-                    }`}
-                  >
-                    <div className="flex gap-4">
-                      <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 border ${solution.colorClass}`}>
-                        <IconComponent className="w-5 h-5" />
-                      </div>
-                      <div className="space-y-1 flex-1">
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">{solution.tagline}</span>
-                          {isActive && <span className="w-1.5 h-1.5 rounded-full bg-violet-500 animate-ping" />}
-                        </div>
-                        <h3 className={`text-base font-black transition-colors ${isActive ? 'text-violet-600 dark:text-violet-400' : 'text-slate-800 dark:text-slate-200 group-hover:text-slate-900 dark:group-hover:text-white'}`}>
-                          {solution.title}
-                        </h3>
-                        <p className="text-xs text-slate-500 dark:text-slate-400 font-normal leading-relaxed mt-1">
-                          {solution.desc}
-                        </p>
-                      </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 pt-8">
+            {[
+              {
+                title: 'Rental Property Management',
+                tagline: 'Rent Roll & Vacancy Tracker',
+                desc: 'Automating rent collection schedules, payment reminders, and tenant portals with zero friction.',
+                icon: Wallet,
+                colorClass: 'text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 dark:bg-emerald-500/20 border-emerald-500/20',
+                cardBg: 'hover:border-emerald-500/40 dark:hover:border-emerald-500/35 hover:shadow-emerald-500/5',
+                textColor: 'text-emerald-600 dark:text-emerald-400'
+              },
+              {
+                title: 'Condo Association Management',
+                tagline: 'Shared Amenity Scheduler',
+                desc: 'Enable seamless slot reservations for shared facilities like swimming pools, clubhouses, and gyms.',
+                icon: CalendarRange,
+                colorClass: 'text-violet-600 dark:text-violet-400 bg-violet-500/10 dark:bg-violet-500/20 border-violet-500/20',
+                cardBg: 'hover:border-violet-500/40 dark:hover:border-violet-500/35 hover:shadow-violet-500/5',
+                textColor: 'text-violet-650 dark:text-violet-400'
+              },
+              {
+                title: 'Apartment Complex Portal',
+                tagline: 'Work Order & Dispatch Desk',
+                desc: 'Collaborative work ticket dispatches, maintenance logs, and visitor directories for unified operations.',
+                icon: Wrench,
+                colorClass: 'text-blue-600 dark:text-blue-400 bg-blue-500/10 dark:bg-blue-500/20 border-blue-500/20',
+                cardBg: 'hover:border-blue-500/40 dark:hover:border-blue-500/35 hover:shadow-blue-500/5',
+                textColor: 'text-blue-600 dark:text-blue-400'
+              },
+              {
+                title: 'Homeowner Association (HOA)',
+                tagline: 'Assemblies & e-Voting',
+                desc: 'E-voting on society resolutions, bylaws audits, and quarterly security audits with absolute transparency.',
+                icon: Users,
+                colorClass: 'text-indigo-600 dark:text-indigo-400 bg-indigo-500/10 dark:bg-indigo-500/20 border-indigo-500/20',
+                cardBg: 'hover:border-indigo-500/40 dark:hover:border-indigo-500/35 hover:shadow-indigo-500/5',
+                textColor: 'text-indigo-600 dark:text-indigo-400'
+              }
+            ].map((solution, i) => {
+              const IconComponent = solution.icon;
+              return (
+                <div
+                  key={i}
+                  className={`group relative overflow-hidden rounded-3xl border border-slate-200/80 dark:border-white/[0.07] bg-white/60 dark:bg-white/[0.01] p-6 sm:p-8 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 backdrop-blur-sm flex flex-col justify-between text-left ${solution.cardBg}`}
+                >
+                  <div className="space-y-5">
+                    {/* Icon */}
+                    <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 border ${solution.colorClass}`}>
+                      <IconComponent className="w-5 h-5" />
                     </div>
-                  </button>
-                );
-              })}
-            </div>
 
-            {/* Right Column: High-Fidelity Use Case Wallpapers */}
-            <div className="lg:col-span-7 h-full">
-              <div className="relative overflow-hidden rounded-3xl border border-slate-200/60 dark:border-white/[0.08] shadow-2xl aspect-[4/3] w-full bg-slate-100 dark:bg-[#0D1B2A]">
-                <img
-                  src={solutionRental}
-                  alt="Rental Property Management"
-                  className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ${activeSolution === 'rental' ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
-                />
-                <img
-                  src={solutionCondo}
-                  alt="Condo Management"
-                  className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ${activeSolution === 'condo' ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
-                />
-                <img
-                  src={solutionApartment}
-                  alt="Apartment Portal"
-                  className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ${activeSolution === 'apartment' ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
-                />
-                <img
-                  src={solutionHoa}
-                  alt="HOA Governance"
-                  className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ${activeSolution === 'hoa' ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
-                />
-                
-                {/* Visual Glassmorphic Info Badge */}
-                <div className="absolute bottom-5 left-5 right-5 p-4 rounded-2xl bg-black/45 backdrop-blur-md border border-white/10 text-white space-y-1 text-left">
-                  <div className="flex items-center gap-1.5 text-violet-400 font-bold uppercase tracking-wider text-[10px]">
-                    <Sparkles className="w-3.5 h-3.5" />
-                    <span>NestBloq Solutions</span>
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500">{solution.tagline}</span>
+                      </div>
+                      <h3 className="font-display font-black text-lg text-slate-900 dark:text-white leading-snug group-hover:text-violet-500 dark:group-hover:text-violet-400 transition-colors">
+                        {solution.title}
+                      </h3>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed pt-1.5 font-normal">
+                        {solution.desc}
+                      </p>
+                    </div>
                   </div>
-                  <h4 className="text-sm font-black tracking-tight">
-                    {activeSolution === 'rental' && 'Modern Living Spaces & Tenant Ledger Management'}
-                    {activeSolution === 'condo' && 'Clubhouse Amenities Scheduler & Shared Pool Reservations'}
-                    {activeSolution === 'apartment' && 'High-Rise Complex Maintenance & Vendor Logs Desk'}
-                    {activeSolution === 'hoa' && 'Transparent Governance, e-Voting Resolutions & Compliance Audits'}
-                  </h4>
+
+                  <div className="pt-6 border-t border-slate-100 dark:border-white/5 mt-6 flex items-center justify-between">
+                    <span className={`inline-flex items-center gap-1.5 text-xs font-bold transition-all uppercase tracking-wider ${solution.textColor}`}>
+                      Explore Portal
+                      <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                    </span>
+                  </div>
                 </div>
-              </div>
-            </div>
+              );
+            })}
           </div>
         </div>
       </section>
@@ -1873,40 +2039,120 @@ export default function LandingPage() {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 items-center">
 
             {/* Left: Text content */}
-            <div className="lg:col-span-5 space-y-6">
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-violet-500/10 border border-violet-500/25 text-violet-600 dark:text-violet-400 text-xs font-bold uppercase tracking-widest">
-                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
-                Intelligent Automation
+            <div className="lg:col-span-5 space-y-6 text-left">
+              {/* Slide selector tab pills */}
+              <div className="flex flex-wrap gap-2.5 pb-2">
+                {automationSlides.map((slide, idx) => {
+                  const isActive = activeSlide === idx;
+                  let activeColors = "";
+                  if (idx === 0) activeColors = "bg-violet-500/10 border-violet-500/40 text-violet-750 dark:text-violet-300";
+                  if (idx === 1) activeColors = "bg-blue-500/10 border-blue-500/40 text-blue-700 dark:text-blue-300";
+                  if (idx === 2) activeColors = "bg-emerald-500/10 border-emerald-500/40 text-emerald-700 dark:text-emerald-300";
+                  if (idx === 3) activeColors = "bg-teal-500/10 border-teal-500/40 text-teal-650 dark:text-teal-450";
+                  return (
+                    <button
+                      key={idx}
+                      onClick={() => {
+                        setActiveSlide(idx);
+                        setIsAutoPlaying(false);
+                      }}
+                      className={`px-3 py-1.5 rounded-xl border text-[11px] font-bold transition-all duration-300 ${
+                        isActive 
+                          ? activeColors 
+                          : "border-slate-200 dark:border-white/5 hover:border-slate-300 dark:hover:border-white/10 text-slate-500 dark:text-slate-400 bg-white/40 dark:bg-white/[0.01]"
+                      }`}
+                    >
+                      {slide.tabLabel}
+                    </button>
+                  );
+                })}
               </div>
-              <h2 className="font-display text-4xl sm:text-5xl font-black text-slate-900 dark:text-white tracking-tight leading-[1.08]">
-                Your AI assistant
-                <span className="block bg-gradient-to-r from-violet-600 to-indigo-500 bg-clip-text text-transparent">that never sleeps.</span>
-              </h2>
-              <p className="text-slate-500 dark:text-slate-400 leading-relaxed text-sm">
-                Tired of answering the same bylaws queries at midnight? Our AI automatically handles resident queries, books amenities, and logs maintenance requests — freeing your board completely.
-              </p>
-              <div className="space-y-3 pt-2">
-                {[
-                  { icon: '🛡️', text: 'Reduces resident queries by up to 85%' },
-                  { icon: '🕐', text: 'Operates 24/7 in a friendly conversational tone' },
-                  { icon: '🔧', text: 'Auto-logs service requests to the manager desk' },
-                  { icon: '📖', text: 'Trained on your specific community bylaws' },
-                ].map((item, i) => (
-                  <div key={i} className="flex items-center gap-3">
-                    <div className="w-7 h-7 rounded-lg bg-violet-500/10 border border-violet-500/20 flex items-center justify-center text-sm shrink-0">{item.icon}</div>
-                    <span className="text-sm text-slate-600 dark:text-slate-300">{item.text}</span>
-                  </div>
-                ))}
+
+              <div className="space-y-6 transition-all duration-500">
+                <div className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest transition-all ${automationSlides[activeSlide].badgeColor}`}>
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                  {automationSlides[activeSlide].badge}
+                </div>
+                <h2 className="font-display text-4xl sm:text-5xl font-black text-slate-900 dark:text-white tracking-tight leading-[1.08] min-h-[110px]">
+                  {automationSlides[activeSlide].title}
+                  <span className="block bg-gradient-to-r from-violet-600 to-indigo-500 bg-clip-text text-transparent">{automationSlides[activeSlide].subtitle}</span>
+                </h2>
+                <p className="text-slate-500 dark:text-slate-400 leading-relaxed text-sm min-h-[84px]">
+                  {automationSlides[activeSlide].desc}
+                </p>
+                <div className="space-y-3 pt-2">
+                  {automationSlides[activeSlide].points.map((item, i) => (
+                    <div key={i} className="flex items-center gap-3">
+                      <div className="w-7 h-7 rounded-lg bg-violet-500/10 border border-violet-500/20 flex items-center justify-center text-sm shrink-0">{item.icon}</div>
+                      <span className="text-sm text-slate-600 dark:text-slate-300">{item.text}</span>
+                    </div>
+                  ))}
+                </div>
+                <Link to={automationSlides[activeSlide].linkTo} className={`inline-flex items-center gap-2 px-6 py-3 text-white font-bold text-sm rounded-xl shadow-lg transition-all hover:-translate-y-0.5 group ${automationSlides[activeSlide].btnColor}`}>
+                  {automationSlides[activeSlide].linkText}
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+                </Link>
               </div>
-              <Link to="/features" className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white font-bold text-sm rounded-xl shadow-lg shadow-violet-500/20 transition-all hover:-translate-y-0.5 group">
-                Explore AI Features
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
-              </Link>
             </div>
 
-            {/* Right: Console */}
-            <div className="lg:col-span-7">
-              <AiOperationsConsole />
+            {/* Right: Console with Card-Like Slider Wrapper */}
+            <div 
+              className="lg:col-span-7 relative group cursor-pointer"
+              onMouseEnter={() => setIsAutoPlaying(false)}
+              onMouseLeave={() => setIsAutoPlaying(true)}
+              onClick={() => setActiveSlide(prev => (prev + 1) % 4)}
+            >
+              {/* Dynamic Slide Container with transition */}
+              <div className="transition-all duration-500 ease-in-out transform hover:scale-[1.01]">
+                {automationSlides[activeSlide].component}
+              </div>
+
+              {/* Slider Controls (Hover Visible) */}
+              <div className="absolute inset-y-0 left-3 flex items-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation(); // Prevent card click trigger
+                    setActiveSlide(prev => (prev - 1 + 4) % 4);
+                  }}
+                  className="w-10 h-10 rounded-full bg-black/60 hover:bg-black/80 backdrop-blur-sm text-white flex items-center justify-center pointer-events-auto border border-white/10 shadow-lg transition"
+                >
+                  <svg className="w-5 h-5 -translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
+              </div>
+
+              <div className="absolute inset-y-0 right-3 flex items-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation(); // Prevent card click trigger
+                    setActiveSlide(prev => (prev + 1) % 4);
+                  }}
+                  className="w-10 h-10 rounded-full bg-black/60 hover:bg-black/80 backdrop-blur-sm text-white flex items-center justify-center pointer-events-auto border border-white/10 shadow-lg transition"
+                >
+                  <svg className="w-5 h-5 translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+              </div>
+
+              {/* Bottom Dot Indicators Centered below the card */}
+              <div className="flex justify-center gap-2 mt-4 pointer-events-none">
+                {automationSlides.map((_, idx) => (
+                  <button
+                    key={idx}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setActiveSlide(idx);
+                    }}
+                    className={`w-2 h-2 rounded-full transition-all duration-300 pointer-events-auto ${
+                      activeSlide === idx 
+                        ? 'bg-gradient-to-r from-violet-500 to-indigo-600 w-5' 
+                        : 'bg-slate-300 dark:bg-white/15 w-2'
+                    }`}
+                  />
+                ))}
+              </div>
             </div>
           </div>
         </div>

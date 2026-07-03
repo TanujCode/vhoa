@@ -460,13 +460,13 @@ const Members = ({ community }) => {
   return (
     <div className="text-slate-900 dark:text-white">
       {/* Compact Page Header Row */}
-      <div className="flex flex-row justify-between items-center mb-5 pb-3 border-b border-slate-200/60 dark:border-white/5">
+      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3 mb-5 pb-3 border-b border-slate-200/60 dark:border-white/5">
         <h1 className="text-xl font-extrabold text-slate-900 dark:text-white tracking-tight">
           Members
         </h1>
         <button 
           onClick={() => setShowInviteModal(true)}
-          className="px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-xl text-xs font-semibold transition flex items-center gap-2 text-white shadow-md shadow-blue-500/20 whitespace-nowrap"
+          className="w-full sm:w-auto px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-xl text-xs font-semibold transition flex items-center justify-center gap-2 text-white shadow-md shadow-blue-500/20 whitespace-nowrap"
         >
           + Invite Member
         </button>

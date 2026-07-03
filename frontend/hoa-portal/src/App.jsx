@@ -15,6 +15,8 @@ import FeaturesPage from './pages/marketing/FeaturesPage';
 import PricingPage from './pages/marketing/PricingPage';
 import AboutPage from './pages/marketing/AboutPage';
 import ContactPage from './pages/marketing/ContactPage';
+import SecurityPage from './pages/marketing/SecurityPage';
+import ScrollToTop from './components/ScrollToTop';
 
 
 // Solution subpages
@@ -51,6 +53,7 @@ export default function App() {
 
   return (
     <BrowserRouter>
+      <ScrollToTop />
       <Routes>
         {/* --- Marketing Routes --- */}
         <Route path="/" element={<LandingPage />} />
@@ -59,6 +62,7 @@ export default function App() {
         <Route path="/pricing" element={<PricingPage />} />
         <Route path="/about" element={<AboutPage />} />
         <Route path="/contact" element={<ContactPage />} />
+        <Route path="/security" element={<SecurityPage />} />
         <Route path="/solutions/rental" element={<RentalSolutionPage />} />
         <Route path="/solutions/condo" element={<CondoSolutionPage />} />
         <Route path="/solutions/apartment" element={<ApartmentSolutionPage />} />

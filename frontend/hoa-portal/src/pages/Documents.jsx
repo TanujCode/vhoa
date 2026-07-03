@@ -109,7 +109,7 @@ const DocumentModal = ({ communityId, onClose, onSuccess }) => {
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 py-2.5 bg-slate-100 hover:bg-red-600 hover:text-white dark:bg-white/10 dark:hover:bg-red-600 dark:hover:text-white text-slate-600 dark:text-gray-300 rounded-xl text-sm font-medium transition"
+              className="flex-1 py-2.5 cancel-button-red-hover rounded-xl text-sm font-medium transition"
             >
               Cancel
             </button>
@@ -197,7 +197,7 @@ const Documents = ({ community, user }) => {
   return (
     <div className="text-slate-900 dark:text-white">
       {/* Compact Page Header Row */}
-      <div className="flex flex-row justify-between items-center mb-5 pb-3 border-b border-slate-200/60 dark:border-white/5">
+      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3 mb-5 pb-3 border-b border-slate-200/60 dark:border-white/5">
         <h1 className="text-xl font-extrabold text-slate-900 dark:text-white tracking-tight">
           HOA Documents
         </h1>
@@ -206,7 +206,7 @@ const Documents = ({ community, user }) => {
           <button
             onClick={fetchDocuments}
             disabled={loading}
-            className="px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 text-slate-700 dark:text-white rounded-xl transition flex items-center justify-center gap-2 disabled:opacity-60 text-xs font-semibold whitespace-nowrap"
+            className="flex-1 sm:flex-initial px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 text-slate-700 dark:text-white rounded-xl transition flex items-center justify-center gap-2 disabled:opacity-60 text-xs font-semibold whitespace-nowrap"
             title="Refresh"
           >
             <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
@@ -215,7 +215,7 @@ const Documents = ({ community, user }) => {
           {isManagement && (
             <button
               onClick={() => setShowUploadModal(true)}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-semibold transition flex items-center justify-center gap-2 shadow-md shadow-blue-500/25 whitespace-nowrap"
+              className="flex-1 sm:flex-initial px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-semibold transition flex items-center justify-center gap-2 shadow-md shadow-blue-500/25 whitespace-nowrap"
             >
               <Plus size={14} /> Upload Document
             </button>

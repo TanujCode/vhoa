@@ -79,7 +79,7 @@ const NewsModal = ({ communityId, onClose, onSuccess }) => {
             </div>
           </div>
           <div className="flex gap-3 pt-2">
-            <button type="button" onClick={onClose} className="flex-1 py-2.5 bg-slate-100 hover:bg-red-600 hover:text-white dark:bg-white/10 dark:hover:bg-red-600 dark:hover:text-white rounded-xl text-sm font-medium text-slate-700 dark:text-white transition-colors">Cancel</button>
+            <button type="button" onClick={onClose} className="flex-1 py-2.5 cancel-button-red-hover rounded-xl text-sm font-medium transition-colors">Cancel</button>
             <button type="submit" disabled={loading} className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-500 rounded-xl text-sm font-medium text-white disabled:opacity-50">
               {loading ? 'Posting...' : 'Post News'}
             </button>
@@ -133,7 +133,7 @@ const FAQModal = ({ communityId, onClose, onSuccess }) => {
               className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-teal-500" />
           </div>
           <div className="flex gap-3 pt-2">
-            <button type="button" onClick={onClose} className="flex-1 py-2.5 bg-slate-100 hover:bg-red-600 hover:text-white dark:bg-white/10 dark:hover:bg-red-600 dark:hover:text-white rounded-xl text-sm font-medium text-slate-700 dark:text-white transition-colors">Cancel</button>
+            <button type="button" onClick={onClose} className="flex-1 py-2.5 cancel-button-red-hover rounded-xl text-sm font-medium transition-colors">Cancel</button>
             <button type="submit" disabled={loading} className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-500 rounded-xl text-sm font-medium text-white disabled:opacity-50">
               {loading ? 'Adding...' : 'Add FAQ'}
             </button>
@@ -205,18 +205,18 @@ const News = ({ community, user }) => {
   return (
     <div className="text-slate-900 dark:text-white">
       {/* Compact Page Header Row */}
-      <div className="flex flex-row justify-between items-center mb-5 pb-3 border-b border-slate-200/60 dark:border-white/5">
+      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3 mb-5 pb-3 border-b border-slate-200/60 dark:border-white/5">
         <h1 className="text-xl font-extrabold text-slate-900 dark:text-white tracking-tight">
           News & FAQ
         </h1>
         {isAdmin && (
           <div className="flex flex-wrap gap-2 w-full sm:w-auto">
             <button onClick={() => setShowFaqModal(true)}
-              className="px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 rounded-xl text-xs font-semibold text-slate-700 dark:text-white transition flex items-center gap-2">
+              className="flex-1 sm:flex-initial px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 rounded-xl text-xs font-semibold text-slate-700 dark:text-white transition flex items-center justify-center gap-2">
               <Plus size={14} /> Add FAQ
             </button>
             <button onClick={() => setShowNewsModal(true)}
-              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-xl text-xs font-semibold transition shadow-md shadow-blue-500/25">
+              className="flex-1 sm:flex-initial flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-xl text-xs font-semibold transition shadow-md shadow-blue-500/25">
               <Plus size={14} /> Post News
             </button>
           </div>

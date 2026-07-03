@@ -83,6 +83,13 @@ const NotifPanel = ({ isOpen, onClose, notifications = [], onMarkAllRead, lastRe
       if (action.includes("CREATE")) details.title = "Booking Created";
       else if (action.includes("CANCEL")) details.title = "Booking Cancelled";
       else details.title = "Booking Updated";
+    } else if (module === 'community_change_request' || action.includes("CHANGE_REQUEST")) {
+      details.icon = AlertTriangle;
+      details.color = "text-amber-500";
+      if (action.includes("SUBMIT")) details.title = "Change Request Submitted";
+      else if (action.includes("APPROVE")) details.title = "Change Request Approved";
+      else if (action.includes("REJECT")) details.title = "Change Request Rejected";
+      else details.title = "Change Request Updated";
     }
 
     return details;

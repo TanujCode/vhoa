@@ -75,7 +75,7 @@ const Topbar = ({
       )}
 
       {/* Community Section */}
-      <div className="relative flex-1 lg:flex-none">
+      <div className="relative flex-1 lg:flex-none min-w-0">
         {(isResident || isBoardMember) && communities.length <= 1 ? (
           // Board Member + Resident ke liye Fixed Community
           <div className="flex items-center gap-1.5 sm:gap-3 max-w-[150px] xs:max-w-[200px] sm:max-w-[420px] lg:max-w-none select-none">
@@ -122,7 +122,7 @@ const Topbar = ({
 
         {/* Dropdown panel */}
         {isCommDropdownOpen && (
-          <div className="absolute top-[calc(100%+12px)] left-0 w-72 sm:w-80 bg-white dark:bg-[#1E3248] border border-slate-200 dark:border-white/20 rounded-3xl shadow-2xl z-50 py-3 overflow-hidden animate-in fade-in zoom-in-95">
+          <div className="fixed sm:absolute top-16 sm:top-[calc(100%+12px)] left-4 right-4 sm:left-0 sm:right-auto w-auto sm:w-80 bg-white dark:bg-[#1E3248] border border-slate-200 dark:border-white/20 rounded-3xl shadow-2xl z-50 py-3 overflow-hidden animate-in fade-in zoom-in-95">
             <div className="px-3 relative">
               <Search size={16} className="absolute left-7 top-1/2 -translate-y-1/2 text-gray-400" />
               <input
@@ -165,7 +165,7 @@ const Topbar = ({
       </div>
 
       {/* Right Side Actions */}
-      <div className="ml-auto flex items-center gap-1.5 sm:gap-2 lg:gap-4 flex-shrink-0">
+      <div className="ml-auto flex items-center gap-1 sm:gap-2 lg:gap-4 flex-shrink-0">
         
         {canSwitchView && (
           <button
@@ -180,7 +180,7 @@ const Topbar = ({
         
         <button
           onClick={() => window.location.reload()}
-          className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center rounded-xl hover:bg-slate-100 dark:hover:bg-white/10 text-gray-500 dark:text-gray-400 transition-colors"
+          className="hidden sm:flex w-8 h-8 sm:w-10 sm:h-10 items-center justify-center rounded-xl hover:bg-slate-100 dark:hover:bg-white/10 text-gray-500 dark:text-gray-400 transition-colors"
           title="Refresh Data"
         >
           <RefreshCw size={18} className="sm:w-5 sm:h-5" />
@@ -188,7 +188,7 @@ const Topbar = ({
 
         <button
           onClick={toggleTheme}
-          className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center rounded-xl hover:bg-slate-100 dark:hover:bg-white/10 text-gray-500 dark:text-gray-400 transition-colors"
+          className="hidden sm:flex w-8 h-8 sm:w-10 sm:h-10 items-center justify-center rounded-xl hover:bg-slate-100 dark:hover:bg-white/10 text-gray-500 dark:text-gray-400 transition-colors"
         >
           {theme === 'dark' ? <Sun size={18} className="sm:w-5 sm:h-5" /> : <Moon size={18} className="sm:w-5 sm:h-5" />}
         </button>
@@ -237,7 +237,7 @@ const Topbar = ({
           </div>
 
           {isUserDropdownOpen && (
-            <div className="absolute right-0 top-[calc(100%+12px)] w-60 bg-white dark:bg-[#1E3248] border border-slate-200 dark:border-white/20 rounded-3xl shadow-2xl z-50 py-2 overflow-hidden animate-in fade-in slide-in-from-top-2">
+            <div className="fixed sm:absolute top-16 sm:top-[calc(100%+12px)] left-4 right-4 sm:left-auto sm:right-0 w-auto sm:w-60 bg-white dark:bg-[#1E3248] border border-slate-200 dark:border-white/20 rounded-3xl shadow-2xl z-50 py-2 overflow-hidden animate-in fade-in slide-in-from-top-2">
               <div className="px-4 py-4 border-b border-slate-100 dark:border-white/5 bg-slate-50/50 dark:bg-white/5">
                 <p className="font-bold text-gray-900 dark:text-white truncate">{user?.name || "User"}</p>
                 <p className="text-[10px] text-blue-500 font-mono uppercase font-black tracking-widest mt-0.5">
@@ -261,6 +261,15 @@ const Topbar = ({
                       : "Switch to Resident View"}
                   </button>
                 )}
+
+                {/* Mobile-only Theme Toggle */}
+                <button 
+                  onClick={() => { toggleTheme(); }}
+                  className="sm:hidden w-full px-4 py-2.5 hover:bg-slate-100 dark:hover:bg-white/10 rounded-2xl flex items-center gap-3 text-sm text-gray-600 dark:text-gray-300 transition-colors mb-1"
+                >
+                  {theme === 'dark' ? <Sun size={16} className="text-blue-500" /> : <Moon size={16} className="text-blue-500" />}
+                  {theme === 'dark' ? "Light Mode" : "Dark Mode"}
+                </button>
 
                 <button 
                   onClick={() => { setIsUserDropdownOpen(false); setActivePage('profile'); }}

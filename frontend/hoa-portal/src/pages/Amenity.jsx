@@ -264,12 +264,12 @@ const CreateAmenityModal = ({ communityId, communityName, onClose, onSuccess }) 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="text-xs text-slate-500 dark:text-gray-400 mb-1 block">Location</label>
-              <input type="text" value={form.location} onChange={e => setForm({ ...form, location: e.target.value })}
+              <input type="text" required value={form.location} onChange={e => setForm({ ...form, location: e.target.value })}
                 className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500" />
             </div>
             <div>
               <label className="text-xs text-slate-500 dark:text-gray-400 mb-1 block">Capacity</label>
-              <input type="number" min="1" value={form.capacity}
+              <input type="number" min="1" required value={form.capacity}
                 onKeyPress={onlyDigitsKeyPress}
                 onChange={e => {
                   const val = e.target.value;
@@ -476,12 +476,12 @@ const EditAmenityModal = ({ amenity, communityName, onClose, onSuccess }) => {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="text-xs text-slate-500 dark:text-gray-400 mb-1 block">Location</label>
-              <input type="text" value={form.location} onChange={e => setForm({ ...form, location: e.target.value })}
+              <input type="text" required value={form.location} onChange={e => setForm({ ...form, location: e.target.value })}
                 className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-blue-500" />
             </div>
             <div>
               <label className="text-xs text-slate-500 dark:text-gray-400 mb-1 block">Capacity</label>
-              <input type="number" min="1" value={form.capacity}
+              <input type="number" min="1" required value={form.capacity}
                 onKeyPress={onlyDigitsKeyPress}
                 onChange={e => {
                   const val = e.target.value;
@@ -737,13 +737,13 @@ const Amenity = ({ community, user, setActivePage, setPaymentState }) => {
   return (
     <div className="text-slate-900 dark:text-white">
       {/* Compact Page Header Row */}
-      <div className="flex flex-row justify-between items-center mb-5 pb-3 border-b border-slate-200/60 dark:border-white/5">
+      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3 mb-5 pb-3 border-b border-slate-200/60 dark:border-white/5">
         <h1 className="text-xl font-extrabold text-slate-900 dark:text-white tracking-tight">
           Amenity Booking
         </h1>
         {isAdmin && (
           <button onClick={handleCreateAmenityClick}
-            className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-semibold transition flex items-center justify-center gap-1.5 shadow-md shadow-blue-500/25 whitespace-nowrap">
+            className="w-full sm:w-auto px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-semibold transition flex items-center justify-center gap-1.5 shadow-md shadow-blue-500/25 whitespace-nowrap">
             <Plus size={13} /> Create Amenity
           </button>
         )}
@@ -825,7 +825,7 @@ const Amenity = ({ community, user, setActivePage, setPaymentState }) => {
                   </div>
 
                   <div className="flex gap-2">
-                    {isAdmin && (
+                    {isAdmin ? (
                       <>
                         <button
                           onClick={() => setEditModal(a)}
@@ -835,20 +835,21 @@ const Amenity = ({ community, user, setActivePage, setPaymentState }) => {
                         </button>
                         <button
                           onClick={() => handleDelete(a.amenity_id, a.name)}
-                          className="p-2.5 bg-red-500/10 hover:bg-red-600 text-red-600 hover:text-white dark:bg-red-500/20 dark:hover:bg-red-600 rounded-2xl transition border border-red-500/20 dark:border-red-500/30 flex items-center justify-center"
+                          className="flex-1 py-2.5 bg-red-500/10 hover:bg-red-600 text-red-600 hover:text-white dark:bg-red-500/20 dark:hover:bg-red-600 rounded-2xl transition border border-red-500/20 dark:border-red-500/30 text-sm font-medium flex items-center justify-center gap-1.5"
                           title="Delete Amenity"
                         >
-                          <Trash2 size={16} />
+                          <Trash2 size={16} /> Delete
                         </button>
                       </>
+                    ) : (
+                      <button
+                        onClick={() => handleBookAmenityClick(a)}
+                        disabled={!a.active_status || !a.pool_open || a.is_pool_reserved}
+                        className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl text-sm font-medium transition disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+                      >
+                        {!a.pool_open ? 'Closed' : a.is_pool_reserved ? 'Reserved' : 'Book Now'}
+                      </button>
                     )}
-                    <button
-                      onClick={() => handleBookAmenityClick(a)}
-                      disabled={!a.active_status || !a.pool_open || (a.is_pool_reserved && !isAdmin)}
-                      className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl text-sm font-medium transition disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
-                    >
-                      {!a.pool_open ? 'Closed' : (a.is_pool_reserved && !isAdmin) ? 'Reserved' : 'Book Now'}
-                    </button>
                   </div>
                 </div>
               ))}

@@ -26,7 +26,7 @@ export default function Footer() {
     Platform: [
       { name: 'Features', path: '/features' },
       { name: 'Pricing', path: '/pricing' },
-      { name: 'Security', path: '#' },
+      { name: 'Security', path: '/security' },
       { name: 'Integrations', path: '#' },
     ],
     Products: [
@@ -53,11 +53,11 @@ export default function Footer() {
       <div className="absolute -top-12 left-1/4 w-[400px] h-[300px] bg-gradient-radial from-violet-500/[0.08] to-transparent rounded-full blur-3xl pointer-events-none z-0" />
       <div className="absolute -bottom-24 right-1/4 w-[350px] h-[250px] bg-gradient-radial from-indigo-500/[0.06] to-transparent rounded-full blur-3xl pointer-events-none z-0" />
 
-      <div className="relative max-w-7xl mx-auto px-5 sm:px-8 py-20 z-10">
+      <div className="relative max-w-7xl mx-auto px-5 sm:px-8 pt-12 pb-8 z-10">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-12 text-left">
 
           {/* Brand column */}
-          <div className="lg:col-span-4 space-y-6">
+          <div className="lg:col-span-4 space-y-4">
             <Link to="/" className="flex items-center group w-fit">
               <Logo className="h-8" forceWhite={true} />
             </Link>
@@ -65,46 +65,6 @@ export default function Footer() {
             <p className="text-sm text-slate-400 leading-relaxed max-w-xs font-normal">
               NestBloq helps property managers and HOA boards unify operations, automate dues, and build better community experiences.
             </p>
-
-            {/* Premium interactive social icon links */}
-            <div className="flex items-center gap-2.5">
-              {socialLinks.map((social, i) => (
-                <a 
-                  key={i} 
-                  href={social.href} 
-                  aria-label={social.name}
-                  className="w-10 h-10 rounded-2xl bg-white/[0.03] border border-white/[0.08] text-slate-400 hover:text-white hover:bg-gradient-to-r hover:from-violet-500 hover:to-indigo-600 hover:border-transparent flex items-center justify-center transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-violet-500/20"
-                >
-                  {social.svg}
-                </a>
-              ))}
-            </div>
-
-            {/* Newsletter Subscription with Premium Input style */}
-            <div className="space-y-3">
-              <p className="text-xs font-bold text-slate-300 uppercase tracking-wider">Stay in the loop</p>
-              <form onSubmit={handleSubmit} className="relative max-w-xs">
-                <input
-                  type="email" 
-                  required 
-                  value={email} 
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Enter your email"
-                  className="w-full pl-4 pr-12 py-3 rounded-xl border border-white/[0.08] text-sm bg-white/[0.03] text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500/40 focus:shadow-[0_0_20px_rgba(124,58,237,0.05)] transition-all duration-200"
-                />
-                <button 
-                  type="submit" 
-                  className="absolute right-1.5 top-1.5 bottom-1.5 w-9 rounded-lg bg-gradient-to-r from-violet-500 to-indigo-600 hover:from-violet-600 hover:to-indigo-700 text-white flex items-center justify-center transition-all shadow-md shadow-violet-500/25"
-                >
-                  {subscribed ? <Check size={15} /> : <Send size={15} />}
-                </button>
-              </form>
-              {subscribed && (
-                <p className="text-xs text-violet-400 font-semibold flex items-center gap-1.5 animate-fade-in-up">
-                  <Check size={12} />Thanks! You're subscribed.
-                </p>
-              )}
-            </div>
           </div>
 
           {/* Link columns with Sliding hover animations */}
@@ -137,23 +97,17 @@ export default function Footer() {
                 Book Demo
               </Link>
             </div>
-            <div className="pt-2 space-y-2">
-              <div className="flex items-center gap-2 text-xs text-slate-400">
-                <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                All systems operational
-              </div>
-              <div className="text-[10px] text-slate-500">Uptime: 99.9% · SOC2 Compliant</div>
-            </div>
           </div>
         </div>
 
         {/* Bottom bar */}
-        <div className="mt-16 pt-8 border-t border-white/[0.06] flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="mt-10 pt-6 border-t border-white/[0.06] flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-xs text-slate-500">© {new Date().getFullYear()} NestBloq Technologies Pvt Ltd. All rights reserved.</p>
           <div className="flex flex-wrap gap-6 text-xs text-slate-500">
-            {['Privacy Policy', 'Terms of Service', 'Cookie Preferences', 'Security'].map((item) => (
+            {['Privacy Policy', 'Terms of Service', 'Cookie Preferences'].map((item) => (
               <a key={item} href="#" className="hover:text-violet-400 transition-colors duration-150">{item}</a>
             ))}
+            <Link to="/security" className="hover:text-violet-400 transition-colors duration-150">Security</Link>
           </div>
         </div>
       </div>

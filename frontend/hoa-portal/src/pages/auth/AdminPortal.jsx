@@ -279,13 +279,16 @@ const AdminPortal = () => {
   };
 
   const fetchNotifications = async () => {
+    const role = user?.role || '';
+    const isSuperAdmin = role === 'super_admin';
     const commId = activeCommunity?.community_id || activeCommunity?.id;
-    if (!commId) return;
+    if (!commId && !isSuperAdmin) return;
 
     try {
-      const role = user?.role || '';
       let res;
-      if (['super_admin', 'property_manager', 'board_member'].includes(role)) {
+      if (isSuperAdmin) {
+        res = await API.get('/audit?limit=20');
+      } else if (['property_manager', 'board_member'].includes(role)) {
         res = await API.get(`/audit?community_id=${commId}&limit=20`);
       } else {
         res = await API.get('/audit/my?limit=20');
@@ -297,7 +300,7 @@ const AdminPortal = () => {
   };
 
   useEffect(() => {
-    if (activeCommunity && user) {
+    if (user) {
       fetchNotifications();
       
       // Setup a 15-second polling interval for real-time notifications
@@ -382,6 +385,8 @@ const AdminPortal = () => {
       setActivePage('meetings');
     } else if (module === 'document') {
       setActivePage('documents');
+    } else if (module === 'community_change_request') {
+      setActivePage('change_requests');
     }
     
     setIsNotifOpen(false);
