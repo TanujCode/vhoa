@@ -175,13 +175,23 @@ def run_db_upgrades():
         # Update user Vikash's name and email to English equivalent (John Smith)
         db.execute(text("UPDATE users SET first_name = 'John', last_name = 'Smith', email_id = 'john.smith@nestbloq.com' WHERE first_name = 'Vikash';"))
         # Update Willow Creek Community address to a USA address
-        db.execute(text("UPDATE communities SET address = '123 Willow Creek Way, Sunnyvale, CA 94086' WHERE name LIKE '%Willow Creek%' OR address LIKE '%Bazar Chowk%' OR address LIKE '%Chicholi%';"))
+        db.execute(text("""
+            UPDATE addresses 
+            SET address = '123 Willow Creek Way', 
+                city = 'Sunnyvale', 
+                zip_code = '94086',
+                state_id = (SELECT state_id FROM states WHERE state_code = 'CA' LIMIT 1)
+            WHERE address_id IN (
+                SELECT address_id FROM communities 
+                WHERE name LIKE '%Willow Creek%'
+            ) OR address LIKE '%Bazar Chowk%' OR address LIKE '%Chicholi%';
+        """))
 
         db.commit()
 
         # Debug database records
         users_list = db.execute(text("SELECT user_id, first_name, last_name, email_id, role_id FROM users;")).fetchall()
-        comms_list = db.execute(text("SELECT community_id, name, address FROM communities;")).fetchall()
+        comms_list = db.execute(text("SELECT c.community_id, c.name, a.address FROM communities c LEFT JOIN addresses a ON c.address_id = a.address_id;")).fetchall()
         with open("db_debug.txt", "w", encoding="utf-8") as f:
             f.write("=== USERS ===\n")
             for u in users_list:
