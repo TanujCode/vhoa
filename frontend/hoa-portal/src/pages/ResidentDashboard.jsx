@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CreditCard, Wrench, Bell, ArrowUpRight, Download, RefreshCw } from 'lucide-react';
+import { CreditCard, Wrench, Bell, ArrowUpRight, Download, RefreshCw, Calendar } from 'lucide-react';
 import API from '../services/api';
 
 const ResidentStatCard = ({ label, value, icon: Icon, color, sub, actionLabel, onClick }) => (
@@ -34,6 +34,8 @@ const ResidentDashboard = ({ community, user: initialUser, setActivePage }) => {
   const [dues, setDues] = useState([]);
   const [requests, setRequests] = useState([]);
   const [news, setNews] = useState([]);
+  const [bookings, setBookings] = useState([]);
+  const [violations, setViolations] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
 
   const fetchDashboardData = async (userObj) => {
@@ -41,15 +43,19 @@ const ResidentDashboard = ({ community, user: initialUser, setActivePage }) => {
     if (!communityId) return;
 
     try {
-      const [duesRes, requestsRes, newsRes] = await Promise.allSettled([
+      const [duesRes, requestsRes, newsRes, bookingsRes, violationsRes] = await Promise.allSettled([
         API.get(`/payment/due/${communityId}`),
         API.get(`/service-request/${communityId}?limit=20`),
-        API.get(`/news/${communityId}?limit=10`)
+        API.get(`/news/${communityId}?limit=10`),
+        API.get(`/amenity/booking/${communityId}?booked_by_id=${userObj.user_id}`),
+        API.get(`/violation/${communityId}`)
       ]);
 
       if (duesRes.status === 'fulfilled') setDues(duesRes.value.data || []);
       if (requestsRes.status === 'fulfilled') setRequests(requestsRes.value.data || []);
       if (newsRes.status === 'fulfilled') setNews(newsRes.value.data || []);
+      if (bookingsRes.status === 'fulfilled') setBookings(bookingsRes.value.data || []);
+      if (violationsRes.status === 'fulfilled') setViolations(violationsRes.value.data || []);
     } catch (err) {
       console.error("Error loading dashboard data", err);
     }
@@ -154,6 +160,29 @@ const ResidentDashboard = ({ community, user: initialUser, setActivePage }) => {
         </div>
       </div>
 
+      {/* Active Violations Alert Banner */}
+      {violations.filter(v => ['OPEN', 'IN_PROGRESS', 'APPEALED'].includes(v.violation_status)).length > 0 && (
+        <div className="bg-red-500/10 dark:bg-red-500/10 border border-red-500/35 rounded-3xl p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm animate-in slide-in-from-top duration-300">
+          <div className="flex items-start gap-3">
+            <span className="text-xl mt-0.5 sm:mt-0">⚠️</span>
+            <div>
+              <h4 className="font-bold text-sm text-red-700 dark:text-red-400">
+                Active Violation Notice{violations.filter(v => ['OPEN', 'IN_PROGRESS', 'APPEALED'].includes(v.violation_status)).length > 1 ? 's' : ''}
+              </h4>
+              <p className="text-xs text-red-650 dark:text-red-300/80 mt-0.5 leading-relaxed">
+                You have {violations.filter(v => ['OPEN', 'IN_PROGRESS', 'APPEALED'].includes(v.violation_status)).length} outstanding rule infraction{violations.filter(v => ['OPEN', 'IN_PROGRESS', 'APPEALED'].includes(v.violation_status)).length > 1 ? 's' : ''} requiring compliance action. Please review details or submit an appeal.
+              </p>
+            </div>
+          </div>
+          <button 
+            onClick={() => setActivePage?.('violations')}
+            className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-semibold text-xs rounded-xl shadow-md transition-all shrink-0"
+          >
+            Resolve & Appeal
+          </button>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <ResidentStatCard 
           label="Dues Outstanding" 
@@ -213,14 +242,79 @@ const ResidentDashboard = ({ community, user: initialUser, setActivePage }) => {
           </div>
         </div>
         
-        <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 shadow-sm dark:shadow-none">
-          <h3 className="text-slate-900 dark:text-white font-semibold mb-4">Quick Links</h3>
-          <div className="space-y-2">
-            {['HOA Bylaws', 'Monthly Minutes', 'Parking Rules'].map(doc => (
-              <button key={doc} className="w-full text-left p-3 hover:bg-slate-100 dark:hover:bg-white/5 rounded-xl text-sm text-slate-700 dark:text-gray-300 flex justify-between items-center transition" onClick={() => setActivePage?.('documents')}>
-                {doc} <Download size={14} className="text-gray-500" />
-              </button>
-            ))}
+        {/* Right Column Stack */}
+        <div className="space-y-6">
+          {/* Upcoming Bookings Widget */}
+          <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 shadow-sm dark:shadow-none">
+            <h3 className="text-slate-900 dark:text-white font-semibold mb-4 flex items-center justify-between">
+              <span className="flex items-center gap-2">
+                <Calendar size={18} className="text-blue-500" /> Upcoming Bookings
+              </span>
+              {bookings.length > 0 && (
+                <button 
+                  onClick={() => setActivePage?.('amenities')} 
+                  className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
+                >
+                  Book New
+                </button>
+              )}
+            </h3>
+
+            <div className="space-y-3">
+              {bookings.length === 0 ? (
+                <div className="text-center py-6">
+                  <p className="text-xs text-slate-500 dark:text-gray-400">No upcoming facility bookings.</p>
+                  <button
+                    onClick={() => setActivePage?.('amenities')}
+                    className="mt-3 w-full py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow transition"
+                  >
+                    Reserve an Amenity
+                  </button>
+                </div>
+              ) : (
+                bookings.slice(0, 3).map(booking => {
+                  const bookingDate = new Date(booking.booking_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                  
+                  let statusBadgeClass = "bg-blue-500/10 text-blue-650 dark:text-blue-400 border border-blue-500/20";
+                  if (booking.status === "CONFIRMED") {
+                    statusBadgeClass = "bg-emerald-500/10 text-emerald-650 dark:text-emerald-400 border border-emerald-500/20";
+                  } else if (booking.status === "PENDING_PAYMENT") {
+                    statusBadgeClass = "bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20";
+                  } else if (booking.status === "CANCELLED") {
+                    statusBadgeClass = "bg-slate-500/10 text-slate-500 dark:text-slate-400 border border-slate-500/20";
+                  }
+
+                  return (
+                    <div 
+                      key={booking.booking_id}
+                      className="p-3.5 bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-0 rounded-2xl flex items-center justify-between gap-3 hover:bg-slate-100/50 dark:hover:bg-white/10 transition-all"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <h4 className="text-xs font-bold text-slate-800 dark:text-white truncate">{booking.amenity_name}</h4>
+                        <p className="text-[10px] text-slate-450 dark:text-gray-400 mt-0.5 font-medium">
+                          {bookingDate} • {booking.slot_start} - {booking.slot_end}
+                        </p>
+                      </div>
+                      <span className={`text-[8px] font-black px-2 py-0.5 rounded uppercase tracking-wider ${statusBadgeClass}`}>
+                        {booking.status.replace('_', ' ')}
+                      </span>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </div>
+
+          {/* Quick Links Widget */}
+          <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 shadow-sm dark:shadow-none">
+            <h3 className="text-slate-900 dark:text-white font-semibold mb-4">Quick Links</h3>
+            <div className="space-y-2">
+              {['HOA Bylaws', 'Monthly Minutes', 'Parking Rules'].map(doc => (
+                <button key={doc} className="w-full text-left p-3 hover:bg-slate-100 dark:hover:bg-white/5 rounded-xl text-sm text-slate-700 dark:text-gray-300 flex justify-between items-center transition" onClick={() => setActivePage?.('documents')}>
+                  {doc} <Download size={14} className="text-gray-500" />
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       </div>

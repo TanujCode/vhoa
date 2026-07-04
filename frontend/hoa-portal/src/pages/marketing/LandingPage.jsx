@@ -590,8 +590,8 @@ function TestimonialCard({ testimonial }) {
   );
 }
 
-/* ─── AI Operations Console ─── */
-function AiOperationsConsole() {
+/* ─── Meetings Operations Console ─── */
+function MeetingsOperationsConsole() {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
 
@@ -609,36 +609,30 @@ function AiOperationsConsole() {
       {/* Header — glassmorphic / responsive */}
       <div className={`relative px-5 pt-5 pb-4 flex items-center justify-between border-b shrink-0 ${isDark ? 'bg-white/[0.03] border-white/[0.06]' : 'bg-slate-50/50 border-slate-200'}`}>
         <div className="flex items-center gap-3">
-          {/* AI Logo Badge */}
           <div className="relative">
             <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-violet-500/30">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 2L14.5 9H22L16 13.5L18.5 21L12 16.5L5.5 21L8 13.5L2 9H9.5L12 2Z" fill="white" fillOpacity="0.9" />
-              </svg>
+              <Users width="18" height="18" className="text-white" />
             </div>
-            <div className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-400 rounded-full border-2 ${isDark ? 'border-[#0a0618]' : 'border-white'} animate-pulse`} />
           </div>
           <div className="text-left">
-            <h3 className={`font-bold text-sm leading-none ${isDark ? 'text-white' : 'text-slate-800'}`}>NestBloq AI Console</h3>
-            <p className="text-[10px] text-slate-400 mt-0.5">Live community resolution · Real-time</p>
+            <h3 className={`font-bold text-sm leading-none ${isDark ? 'text-white' : 'text-slate-800'}`}>Meetings & Surveys</h3>
+            <p className="text-[10px] text-slate-400 mt-0.5">E-voting, RSVP and audio logs</p>
           </div>
         </div>
         {/* Status pills */}
         <div className="flex items-center gap-2">
-          <span className="flex items-center gap-1.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-full">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-pulse" />
-            Active
+          <span className="flex items-center gap-1.5 text-[10px] font-bold text-violet-600 dark:text-violet-305 bg-violet-500/10 border border-violet-250/20 dark:border-violet-500/20 px-2.5 py-1 rounded-full">
+            Active Resol.
           </span>
-          <span className="text-[10px] font-bold text-violet-600 dark:text-violet-300 bg-violet-500/10 border border-violet-250/20 dark:border-violet-500/20 px-2.5 py-1 rounded-full">v3.2 AI</span>
         </div>
       </div>
 
       {/* Metrics Row */}
       <div className={`grid grid-cols-3 border-b shrink-0 ${isDark ? 'divide-white/[0.05] bg-white/[0.02] border-white/[0.05]' : 'divide-slate-200/80 bg-slate-50 border-slate-200'}`}>
         {[
-          { label: 'Auto-Resolved', val: '85.4%', desc: 'No admin needed', color: 'text-violet-650 dark:text-violet-400', glow: isDark ? 'from-violet-500/20 to-transparent' : 'from-violet-500/10 to-transparent' },
-          { label: 'Avg Response', val: '0.85s', desc: 'Real-time pipeline', color: 'text-emerald-600 dark:text-emerald-400', glow: isDark ? 'from-emerald-500/20 to-transparent' : 'from-emerald-500/10 to-transparent' },
-          { label: 'Saved / mo', val: '42 hrs', desc: 'Per board member', color: 'text-amber-600 dark:text-amber-400', glow: isDark ? 'from-amber-500/20 to-transparent' : 'from-amber-500/10 to-transparent' }
+          { label: 'RSVP Rate', val: '92.5%', desc: 'High attendance', color: 'text-violet-650 dark:text-violet-400', glow: isDark ? 'from-violet-500/20 to-transparent' : 'from-violet-500/10 to-transparent' },
+          { label: 'Transcribed', val: '14 Meetings', desc: 'Diarized speakers', color: 'text-emerald-600 dark:text-emerald-400', glow: isDark ? 'from-emerald-500/20 to-transparent' : 'from-emerald-500/10 to-transparent' },
+          { label: 'Quorum Met', val: '100%', desc: 'Valid resolutions', color: 'text-amber-600 dark:text-amber-400', glow: isDark ? 'from-amber-500/20 to-transparent' : 'from-amber-500/10 to-transparent' }
         ].map((m, i) => (
           <div key={i} className="relative p-3 text-center overflow-hidden">
             <div className={`absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r ${m.glow}`} />
@@ -649,78 +643,65 @@ function AiOperationsConsole() {
         ))}
       </div>
 
-      {/* Conversation Feed */}
+      {/* Conversation Feed / Logs */}
       <div className="p-4 space-y-2.5 overflow-y-auto flex-1 custom-scrollbar">
 
-        {/* Log 1 — Inquiry */}
+        {/* E-Voting Log */}
         <div className={`rounded-2xl overflow-hidden border ${isDark ? 'bg-white/[0.03] border-white/[0.06]' : 'bg-white border-slate-200'}`}>
           <div className={`flex items-center justify-between px-3.5 py-2 border-b ${isDark ? 'border-white/[0.04]' : 'border-slate-100'}`}>
             <div className="flex items-center gap-2">
-              <span className="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Bylaws Query</span>
+              <span className="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Active Survey</span>
               <span className="w-1.5 h-1.5 rounded-full bg-slate-400 dark:bg-slate-600" />
-              <span className="text-[9px] text-slate-400 dark:text-slate-500 font-mono font-bold">Unit 304</span>
+              <span className="text-[9px] text-slate-400 dark:text-slate-500 font-mono font-bold">Q3 Budget Proposal</span>
             </div>
-            <span className="text-[8px] font-extrabold text-emerald-600 dark:text-emerald-300 bg-emerald-500/15 border border-emerald-500/25 px-2 py-0.5 rounded-full uppercase tracking-wide">✓ Auto-Resolved</span>
+            <span className="text-[8px] font-extrabold text-emerald-600 dark:text-emerald-300 bg-emerald-500/15 border border-emerald-500/25 px-2 py-0.5 rounded-full uppercase tracking-wide">✓ Quorum Reached</span>
           </div>
-          <div className="px-3.5 py-2 space-y-1.5 text-left">
-            <div className="flex items-start gap-2">
-              <div className="w-4 h-4 rounded-full bg-violet-500/10 dark:bg-violet-500/20 border border-violet-500/20 dark:border-violet-500/30 flex items-center justify-center text-[9px] shrink-0 mt-0.5">👤</div>
-              <p className="text-[11px] text-slate-700 dark:text-slate-300 leading-normal">"Are pets allowed in the clubhouse?"</p>
+          <div className="px-3.5 py-2 space-y-1.5 text-left text-xs">
+            <div className="flex justify-between items-center text-[11px] text-slate-600 dark:text-slate-450 font-bold">
+              <span>Option A (Approve Budget)</span>
+              <span className="text-emerald-600">82.4%</span>
             </div>
-            <div className="flex items-start gap-2">
-              <div className="w-4 h-4 rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-[9px] text-white shrink-0 mt-0.5">✦</div>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-normal"><span className="text-violet-605 dark:text-violet-305 font-bold">AI:</span> Per Article 4 §B — service dogs are permitted. Other pets must remain on-leash in courtyard areas only.</p>
+            <div className="w-full bg-slate-100 dark:bg-[#0D1B2A] h-1.5 rounded-full overflow-hidden">
+              <div className="bg-emerald-500 h-full rounded-full" style={{ width: '82.4%' }} />
             </div>
           </div>
         </div>
 
-        {/* Log 2 — Booking */}
+        {/* Audio Diarization Log */}
         <div className={`rounded-2xl overflow-hidden border ${isDark ? 'bg-white/[0.03] border-indigo-500/25' : 'bg-white border-indigo-200'}`}>
           <div className={`flex items-center justify-between px-3.5 py-2 border-b ${isDark ? 'border-white/[0.04]' : 'border-slate-100'}`}>
             <div className="flex items-center gap-2">
-              <span className="text-[9px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-widest">Facility Booking</span>
+              <span className="text-[9px] font-bold text-indigo-605 dark:text-indigo-400 uppercase tracking-widest">Meeting Audio Transcript</span>
               <span className="w-1.5 h-1.5 rounded-full bg-slate-400 dark:bg-slate-600" />
-              <span className="text-[9px] text-slate-400 dark:text-slate-500 font-mono font-bold">Unit 102</span>
+              <span className="text-[9px] text-slate-400 dark:text-slate-500 font-mono font-bold">Auto-Diarized</span>
             </div>
-            <span className="text-[8px] font-extrabold text-indigo-600 dark:text-indigo-300 bg-indigo-500/15 border border-indigo-500/25 px-2 py-0.5 rounded-full uppercase tracking-wide">📅 Confirmed</span>
+            <span className="text-[8px] font-extrabold text-indigo-600 dark:text-indigo-300 bg-indigo-500/15 border border-indigo-500/25 px-2 py-0.5 rounded-full uppercase tracking-wide">🎙️ Processed</span>
           </div>
           <div className="px-3.5 py-2 space-y-1.5 text-left">
             <div className="flex items-start gap-2">
               <div className="w-4 h-4 rounded-full bg-violet-500/10 dark:bg-violet-500/20 border border-violet-500/20 dark:border-violet-500/30 flex items-center justify-center text-[9px] shrink-0 mt-0.5">👤</div>
-              <p className="text-[11px] text-slate-700 dark:text-slate-300 leading-normal">"Can I book the tennis court for 4pm today?"</p>
+              <p className="text-[11px] text-slate-700 dark:text-slate-300 leading-normal"><span className="font-bold text-slate-900 dark:text-white">Speaker 1 (President):</span> "We will now begin voting on the clubhouse fencing project."</p>
             </div>
             <div className="flex items-start gap-2">
-              <div className="w-4 h-4 rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-[9px] text-white shrink-0 mt-0.5">✦</div>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-normal"><span className="text-violet-605 dark:text-violet-350 font-bold">AI:</span> Court 2 is available 4–6 PM. Slot reserved under Unit 102. Confirmation sent. 🎾</p>
+              <div className="w-4 h-4 rounded-full bg-violet-500/10 dark:bg-violet-500/20 border border-violet-500/20 dark:border-violet-500/30 flex items-center justify-center text-[9px] shrink-0 mt-0.5">👤</div>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-normal"><span className="font-bold text-slate-800 dark:text-slate-200">Speaker 2 (Auditor):</span> "The quotes from both fence builders are within our Q3 reserves."</p>
             </div>
-          </div>
-        </div>
-
-        {/* Typing indicator */}
-        <div className="flex items-center gap-3 px-1">
-          <div className="w-5 h-5 rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-[9px] text-white shrink-0 shadow-md shadow-violet-500/30">✦</div>
-          <div className={`flex items-center gap-1 px-3 py-1.5 rounded-xl border ${isDark ? 'bg-white/[0.04] border-white/[0.05]' : 'bg-slate-100 border-slate-200'}`}>
-            <span className="w-1 h-1 bg-violet-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-            <span className="w-1 h-1 bg-violet-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-            <span className="w-1 h-1 bg-violet-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-            <span className="text-[9px] text-slate-400 ml-2">AI is processing query...</span>
           </div>
         </div>
       </div>
 
       {/* Footer bar */}
       <div className={`px-5 py-2.5 flex items-center justify-between border-t shrink-0 ${isDark ? 'border-white/[0.05] bg-white/[0.02]' : 'border-slate-200 bg-slate-50'}`}>
-        <span className="text-[10px] text-slate-500 dark:text-slate-400">3 resolved · uptime 99.98%</span>
+        <span className="text-[10px] text-slate-500 dark:text-slate-400">Secure SHA-256 voting records</span>
         <span className="flex items-center gap-1.5 text-[10px] text-violet-650 dark:text-violet-400 font-semibold">
           <span className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-pulse" />
-          Powered by NestBloq AI
+          Verified Assemblies
         </span>
       </div>
     </div>
   );
 }
 
-/* ─── Calendar Operations Console ─── */
 function CalendarOperationsConsole() {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
@@ -738,8 +719,8 @@ function CalendarOperationsConsole() {
             <CalendarRange size={18} className="text-white" />
           </div>
           <div>
-            <h3 className={`font-bold text-sm leading-none ${isDark ? 'text-white' : 'text-slate-800'}`}>Community Calendar</h3>
-            <p className="text-[10px] text-slate-400 mt-0.5">Automated schedules & bookings</p>
+            <h3 className={`font-bold text-sm leading-none ${isDark ? 'text-white' : 'text-slate-800'}`}>Amenity Bookings</h3>
+            <p className="text-[10px] text-slate-400 mt-0.5">Real-time facility reservations</p>
           </div>
         </div>
         <span className="flex items-center gap-1.5 text-[10px] font-bold text-blue-650 dark:text-blue-400 bg-blue-500/10 border border-blue-500/20 px-2.5 py-1 rounded-full">
@@ -758,7 +739,7 @@ function CalendarOperationsConsole() {
             const isDay = dayNum > 0 && dayNum <= 31;
             const isToday = dayNum === 3;
             const isSelected = dayNum === 10;
-            const hasMeeting = dayNum === 3 || dayNum === 10;
+            const hasBooking = dayNum === 3 || dayNum === 10;
             return (
               <div
                 key={idx}
@@ -770,7 +751,7 @@ function CalendarOperationsConsole() {
                 }`}
               >
                 <span className="text-[10px] font-mono leading-none">{isDay ? dayNum : ''}</span>
-                {isDay && hasMeeting && (
+                {isDay && hasBooking && (
                   <span className={`w-1 h-1 rounded-full ${isSelected ? 'bg-white' : 'bg-purple-500 dark:bg-purple-400'}`} />
                 )}
               </div>
@@ -781,24 +762,24 @@ function CalendarOperationsConsole() {
 
       {/* Footer list */}
       <div className={`px-5 py-3.5 space-y-2 border-t shrink-0 ${isDark ? 'border-white/[0.05] bg-white/[0.02]' : 'border-slate-200 bg-slate-50'}`}>
-        <div className="flex items-center justify-between text-[9px] font-black text-slate-450 uppercase tracking-widest text-left">
-          <span>Today's Events</span>
-          <span className="text-blue-600 hover:underline cursor-pointer">Open Calendar →</span>
+        <div className="flex items-center justify-between text-[9px] font-black text-slate-455 uppercase tracking-widest text-left">
+          <span>Upcoming Bookings</span>
+          <span className="text-blue-605 hover:underline cursor-pointer">Open Scheduler →</span>
         </div>
         <div className="flex items-center justify-between gap-3 text-left">
           <div className="min-w-0 flex-1">
-            <h4 className={`text-[11px] font-black truncate ${isDark ? 'text-white' : 'text-slate-800'}`}>Budget Meeting</h4>
-            <p className="text-[9px] text-slate-400 mt-0.5">July 3, 2026, 04:31 PM • Clubhouse</p>
+            <h4 className={`text-[11px] font-black truncate ${isDark ? 'text-white' : 'text-slate-800'}`}>Clubhouse Party Reservation</h4>
+            <p className="text-[9px] text-slate-400 mt-0.5">July 3, 2026, 04:00 PM • Unit 104</p>
           </div>
-          <span className="bg-purple-100 dark:bg-purple-500/10 text-purple-650 dark:text-purple-450 text-[8px] font-black px-2 py-0.5 rounded border border-purple-200/30 uppercase shrink-0">Meeting</span>
+          <span className="bg-purple-100 dark:bg-purple-500/10 text-purple-650 dark:text-purple-455 text-[8px] font-black px-2 py-0.5 rounded border border-purple-200/30 uppercase shrink-0">APPROVED</span>
         </div>
       </div>
     </div>
   );
 }
 
-/* ─── Notes Operations Console ─── */
-function NotesOperationsConsole() {
+/* ─── Maintenance Operations Console ─── */
+function MaintenanceOperationsConsole() {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
 
@@ -812,25 +793,25 @@ function NotesOperationsConsole() {
       <div className={`relative px-5 pt-5 pb-4 flex items-center justify-between border-b shrink-0 ${isDark ? 'bg-white/[0.03] border-white/[0.06]' : 'bg-slate-50/50 border-slate-200'}`}>
         <div className="flex items-center gap-3 text-left">
           <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-650 flex items-center justify-center shadow-lg shadow-emerald-500/30">
-            <ClipboardSignature size={18} className="text-white" />
+            <Wrench size={18} className="text-white" />
           </div>
           <div>
-            <h3 className={`font-bold text-sm leading-none ${isDark ? 'text-white' : 'text-slate-800'}`}>Notes & Reminders</h3>
-            <p className="text-[10px] text-slate-400 mt-0.5">Private notes and action checklists</p>
+            <h3 className={`font-bold text-sm leading-none ${isDark ? 'text-white' : 'text-slate-800'}`}>Maintenance Kanban</h3>
+            <p className="text-[10px] text-slate-400 mt-0.5">Active work orders & dispatches</p>
           </div>
         </div>
         <span className="flex items-center gap-1.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-full">
-          Active Reminders
+          Active Orders
         </span>
       </div>
 
-      {/* Notes Checklist */}
+      {/* Work Orders */}
       <div className="p-4 flex-1 space-y-2.5 flex flex-col justify-center text-left">
         {[
-          { text: "Draft Q3 budget proposals for Board review", done: false, badge: "Pending" },
-          { text: "Call Schindler Elevator B inspector to confirm ETA", done: true, badge: "Completed" },
-          { text: "Inspect clubhouse pool fence for safety compliance", done: false, badge: "Due Tomorrow" },
-          { text: "Verify QuickBooks invoice syncing config", done: true, badge: "Completed" }
+          { text: "Repair leaking main valve in Courtyard B", done: false, badge: "In Progress" },
+          { text: "Inspect clubhouse elevator safety certificate", done: true, badge: "Completed" },
+          { text: "Replace broken lights in North Parking Lot", done: false, badge: "Open" },
+          { text: "Repair damaged lock on courtyard main gate", done: true, badge: "Completed" }
         ].map((item, i) => (
           <div key={i} className={`p-3 rounded-2xl border flex items-center justify-between gap-4 transition-all ${
             item.done 
@@ -848,9 +829,9 @@ function NotesOperationsConsole() {
             <span className={`text-[8px] font-extrabold px-2 py-0.5 rounded border uppercase shrink-0 ${
               item.done 
                 ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20' 
-                : item.badge.includes('Tomorrow')
+                : item.badge === 'In Progress'
                   ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20'
-                  : 'bg-blue-500/10 text-blue-600 dark:text-blue-450 border-blue-500/20'
+                  : 'bg-blue-500/10 text-blue-605 dark:text-blue-450 border-blue-500/20'
             }`}>{item.badge}</span>
           </div>
         ))}
@@ -858,16 +839,15 @@ function NotesOperationsConsole() {
 
       {/* Footer bar */}
       <div className={`px-5 py-2.5 flex items-center justify-between border-t shrink-0 ${isDark ? 'border-white/[0.05] bg-white/[0.02]' : 'border-slate-200 bg-slate-50'}`}>
-        <span className="text-[10px] text-slate-500 dark:text-slate-400">2 pending tasks · 2 done</span>
+        <span className="text-[10px] text-slate-500 dark:text-slate-400">2 active work orders · 2 completed</span>
         <span className="flex items-center gap-1 text-[10px] text-emerald-600 dark:text-emerald-400 font-bold cursor-pointer hover:underline text-left">
-          Manage Reminders →
+          Manage Dispatch →
         </span>
       </div>
     </div>
   );
 }
 
-/* ─── Payments Operations Console ─── */
 function PaymentsOperationsConsole() {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
@@ -885,7 +865,7 @@ function PaymentsOperationsConsole() {
             <Wallet size={18} className="text-white" />
           </div>
           <div>
-            <h3 className={`font-bold text-sm leading-none ${isDark ? 'text-white' : 'text-slate-800'}`}>Dues & Payments</h3>
+            <h3 className={`font-bold text-sm leading-none ${isDark ? 'text-white' : 'text-slate-800'}`}>Dues & Invoices</h3>
             <p className="text-[10px] text-slate-400 mt-0.5">Automated accounting & invoice tracking</p>
           </div>
         </div>
@@ -911,10 +891,10 @@ function PaymentsOperationsConsole() {
         </div>
 
         <div className="space-y-1.5">
-          <p className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest">Recent Dues Actions</p>
+          <p className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest">Recent Invoices</p>
           {[
-            { title: "Unit 104 Q3 Dues Auto-Debit", desc: "Processed via Stripe ACH", amt: "+$150.00", status: "Success" },
-            { title: "Unit 305 Late Notice Auto-Email", desc: "Sent by compliance robot", amt: "+$25.00 Fine", status: "Sent" }
+            { title: "Unit 104 Q3 Maintenance Dues", desc: "Digital bank transfer payment", amt: "+$150.00", status: "Paid" },
+            { title: "Unit 305 Late Payment Fine", desc: "Overdue fee notice generated", amt: "+$25.00 Fine", status: "Overdue" }
           ].map((item, idx) => (
             <div key={idx} className={`p-2.5 rounded-xl border flex items-center justify-between text-[11px] ${
               isDark ? 'bg-white/[0.01] border-white/5' : 'bg-slate-50 border-slate-200'
@@ -924,7 +904,7 @@ function PaymentsOperationsConsole() {
                 <p className="text-[9px] text-slate-400 mt-0.5">{item.desc}</p>
               </div>
               <div className="text-right shrink-0">
-                <span className="font-extrabold text-teal-600 dark:text-teal-400 block">{item.amt}</span>
+                <span className="font-extrabold text-teal-650 dark:text-teal-400 block">{item.amt}</span>
                 <span className="text-[8px] font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400">{item.status}</span>
               </div>
             </div>
@@ -934,15 +914,14 @@ function PaymentsOperationsConsole() {
 
       {/* Footer bar */}
       <div className={`px-5 py-2.5 flex items-center justify-between border-t shrink-0 ${isDark ? 'border-white/[0.05] bg-white/[0.02]' : 'border-slate-200 bg-slate-50'}`}>
-        <span className="text-[10px] text-slate-550 dark:text-slate-500">QuickBooks Auto-Sync</span>
+        <span className="text-[10px] text-slate-550 dark:text-slate-500">Verified Ledger Registry</span>
         <span className="flex items-center gap-1.5 text-[9px] font-extrabold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/25 px-2 py-0.5 rounded uppercase tracking-wider shrink-0">
-          Synced
+          Audited
         </span>
       </div>
     </div>
   );
 }
-
 
 export default function LandingPage() {
   const { theme } = useTheme();
@@ -954,74 +933,74 @@ export default function LandingPage() {
 
   const automationSlides = [
     {
-      tabLabel: "🤖 AI Assistant",
-      badge: "AI Copilot",
-      title: "Your AI assistant",
-      subtitle: "that never sleeps.",
-      desc: "Tired of answering the same bylaws queries at midnight? Our AI automatically handles resident queries, books amenities, and logs maintenance requests — freeing your board completely.",
+      tabLabel: "🔧 Maintenance Kanban",
+      badge: "Service Requests",
+      title: "Visual Kanban Board",
+      subtitle: "for maintenance dispatches.",
+      desc: "Coordinate community repairs and work orders. Track issues in real-time, dispatch jobs to vendors, and manage task columns from a simple interactive board.",
       points: [
-        { icon: '🛡️', text: 'Reduces resident queries by up to 85%' },
-        { icon: '🕐', text: 'Operates 24/7 in a friendly conversational tone' },
-        { icon: '🔧', text: 'Auto-logs service requests to the manager desk' },
-        { icon: '📖', text: 'Trained on your specific community bylaws' }
+        { icon: '📋', text: 'Drag-and-drop repair ticket workflow' },
+        { icon: '🛠️', text: 'Assign tasks to external community vendors' },
+        { icon: '📝', text: 'Log private manager notes and action steps' },
+        { icon: '🔔', text: 'Instantly update residents on repair status' }
       ],
-      linkText: "Explore AI Features",
+      linkText: "Explore Maintenance Features",
       linkTo: "/features",
-      badgeColor: "bg-violet-500/10 border-violet-500/25 text-violet-600 dark:text-violet-400",
-      btnColor: "bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 shadow-violet-500/20",
-      component: <AiOperationsConsole />
+      badgeColor: "bg-emerald-500/10 border-emerald-500/25 text-emerald-650 dark:text-emerald-400",
+      btnColor: "bg-gradient-to-r from-emerald-600 to-teal-650 hover:from-emerald-700 hover:to-teal-700 shadow-emerald-500/20",
+      component: <MaintenanceOperationsConsole />
     },
     {
-      tabLabel: "📅 Manage Calendar",
-      badge: "Collaborative Schedules",
-      title: "Clean, collaborative",
-      subtitle: "calendar management.",
-      desc: "Schedule community meetings, track amenity reservations, and coordinate board schedules all in one unified calendar view linked directly to resident portals.",
+      tabLabel: "🏊 Amenity Booking",
+      badge: "Facility Scheduler",
+      title: "Sleek reservation",
+      subtitle: "and booking approvals.",
+      desc: "Enable residents to reserve clubhouses, pools, gyms, or tennis courts. Prevent double bookings, manage slot constraints, and handle board approvals.",
       points: [
-        { icon: '📅', text: 'Synced board meetings & reservation systems' },
-        { icon: '📢', text: 'Automated notification broadcasts to residents' },
-        { icon: '🔒', text: 'Custom privacy levels for board-only schedules' },
-        { icon: '⚡', text: 'Instant visual overview of facility occupancy rates' }
+        { icon: '🏊', text: 'Double-booking protection for all time slots' },
+        { icon: '🔒', text: 'Customizable daily slot booking limits' },
+        { icon: '✔️', text: 'Seamless board approval and verification gates' },
+        { icon: '📅', text: 'Real-time visual slot availability calendar' }
       ],
-      linkText: "Explore Calendars",
+      linkText: "Explore Bookings",
       linkTo: "/features",
       badgeColor: "bg-blue-500/10 border-blue-500/25 text-blue-600 dark:text-blue-400",
       btnColor: "bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-blue-500/20",
       component: <CalendarOperationsConsole />
     },
     {
-      tabLabel: "📝 Notes & Reminders",
-      badge: "Task Automations",
-      title: "Shared checklists",
-      subtitle: "& automated reminders.",
-      desc: "Never forget inspection checks or compliance deadlines. Keep private manager logs, track inspect task-lists, and set automated follow-ups for vendors in seconds.",
+      tabLabel: "🗳️ Meetings & Surveys",
+      badge: "E-Voting & Assemblies",
+      title: "Community assemblies",
+      subtitle: "and resident surveys.",
+      desc: "Schedule and organize board meetings, general assemblies, and resident opinion polls. Enable secure voting on resolutions with absolute transparency.",
       points: [
-        { icon: '✅', text: 'Task checklists with automated status triggers' },
-        { icon: '🔔', text: 'Smart push notifications & email reminders' },
-        { icon: '🛡️', text: 'Compliance deadline countdown tracking' },
-        { icon: '📎', text: 'Attach documents and manuals to tasks' }
+        { icon: '🗳️', text: 'Run online community voting on key resolutions' },
+        { icon: '🎙️', text: 'Meeting audio recording and speaker diarization' },
+        { icon: '👥', text: 'Collaborative RSVP tracker for board assemblies' },
+        { icon: '📊', text: 'Real-time survey response analysis and logs' }
       ],
-      linkText: "Explore Reminders",
+      linkText: "Explore Meetings & Surveys",
       linkTo: "/features",
-      badgeColor: "bg-emerald-500/10 border-emerald-500/25 text-emerald-600 dark:text-emerald-400",
-      btnColor: "bg-gradient-to-r from-emerald-600 to-teal-605 hover:from-emerald-700 hover:to-teal-700 shadow-emerald-500/20",
-      component: <NotesOperationsConsole />
+      badgeColor: "bg-violet-500/10 border-violet-500/25 text-violet-650 dark:text-violet-400",
+      btnColor: "bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 shadow-violet-500/20",
+      component: <MeetingsOperationsConsole />
     },
     {
       tabLabel: "💳 Dues & Payments",
-      badge: "Autopilot Collections",
+      badge: "Financial Ledger",
       title: "Seamless collections",
-      subtitle: "& automated accounting.",
-      desc: "Autopilot your dues collection cycles. Send digital invoices, enable secure auto-debit payments via ACH/Stripe, and sync directly with QuickBooks ledger reports.",
+      subtitle: "and automated accounting.",
+      desc: "Track outstanding HOA dues and resident payments on a centralized ledger. Log payments, issue invoices, and manage community financial accounts.",
       points: [
-        { icon: '💳', text: 'ACH / Debit card digital processing portals' },
-        { icon: '🔄', text: 'Real-time sync to QuickBooks ledger records' },
-        { icon: '⚠️', text: 'Auto-applied late fees and collection letters' },
-        { icon: '📈', text: 'Beautiful financial progress dashboard metrics' }
+        { icon: '💳', text: 'Keep clear record of paid, pending, and overdue invoices' },
+        { icon: '📊', text: 'Financial metrics showing total collected funds' },
+        { icon: '📝', text: 'Direct logging of manual checks and digital payments' },
+        { icon: '📖', text: 'Clear audit trails linked to units and owner files' }
       ],
       linkText: "Explore Payments",
       linkTo: "/features",
-      badgeColor: "bg-teal-500/10 border-teal-500/25 text-teal-600 dark:text-teal-400",
+      badgeColor: "bg-teal-500/10 border-teal-500/25 text-teal-650 dark:text-teal-400",
       btnColor: "bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 shadow-teal-500/20",
       component: <PaymentsOperationsConsole />
     }
@@ -1810,7 +1789,7 @@ export default function LandingPage() {
       <section 
         id="solutions" 
         ref={solutionsSectionRef}
-        className="relative py-28 px-5 sm:px-8 border-t border-slate-200/40 dark:border-white/[0.06] overflow-hidden bg-white dark:bg-[#090F16]"
+        className="relative py-16 px-5 sm:px-8 border-t border-slate-200/40 dark:border-white/[0.06] overflow-hidden bg-white dark:bg-[#090F16]"
       >
         {/* Background glow effects */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[600px] bg-gradient-radial from-violet-500/[0.03] dark:from-violet-500/[0.06] to-transparent rounded-full blur-3xl pointer-events-none" />
@@ -1818,7 +1797,7 @@ export default function LandingPage() {
 
         <div className="max-w-7xl mx-auto relative z-10">
           {/* Header */}
-          <div className="text-center max-w-3xl mx-auto mb-20 space-y-4">
+          <div className="text-center max-w-3xl mx-auto mb-12 space-y-4">
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-violet-500/10 border border-violet-500/20 text-xs font-bold text-violet-600 dark:text-violet-400 uppercase tracking-wider">
               <Sparkles className="w-3.5 h-3.5 animate-pulse" />
               Solutions for Every Property Type
@@ -1926,14 +1905,14 @@ export default function LandingPage() {
       {/* ═══════════════════════════════════════════════════════
           FEATURES (Interactive Tabs)
       ═══════════════════════════════════════════════════════ */}
-      <section id="features" className="relative py-28 px-5 sm:px-8 overflow-hidden transition-colors duration-300">
+      <section id="features" className="relative py-16 px-5 sm:px-8 overflow-hidden transition-colors duration-300">
         
         {/* Background ambient light blobs */}
         <div className="absolute top-1/4 left-10 w-[500px] h-[400px] bg-gradient-radial from-violet-500/[0.02] dark:from-violet-500/[0.05] to-transparent rounded-full blur-3xl pointer-events-none z-0" />
         <div className="absolute bottom-1/4 right-10 w-[500px] h-[400px] bg-gradient-radial from-blue-500/[0.02] dark:from-blue-500/[0.05] to-transparent rounded-full blur-3xl pointer-events-none z-0" />
 
         <div className="max-w-7xl mx-auto relative z-10">
-          <div className="text-center max-w-2xl mx-auto mb-16 space-y-4">
+          <div className="text-center max-w-2xl mx-auto mb-12 space-y-4">
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-violet-500/10 border border-violet-500/20 text-violet-500 text-xs font-semibold">
               <Sparkles className="w-3.5 h-3.5" />
               Platform Features
@@ -2002,9 +1981,9 @@ export default function LandingPage() {
       {/* ═══════════════════════════════════════════════════════
           CORE CAPABILITIES (3D Tilt & Flip Showcase)
       ═══════════════════════════════════════════════════════ */}
-      <section id="features-grid" className="py-28 px-5 sm:px-8 bg-slate-50/60 dark:bg-[#0B1420]/70 border-y border-slate-100 dark:border-white/[0.06]">
+      <section id="features-grid" className="py-16 px-5 sm:px-8 bg-slate-50/60 dark:bg-[#0B1420]/70 border-y border-slate-100 dark:border-white/[0.06]">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center max-w-2xl mx-auto mb-16 space-y-4">
+          <div className="text-center max-w-2xl mx-auto mb-12 space-y-4">
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-500 text-xs font-semibold">
               <Shield className="w-3.5 h-3.5" />
               Advanced Capabilities
@@ -2030,7 +2009,7 @@ export default function LandingPage() {
       {/* ═══════════════════════════════════════════════════════
           AI COPILOT
       ═══════════════════════════════════════════════════════ */}
-      <section id="ai" className="relative py-24 px-5 sm:px-8 overflow-hidden bg-white dark:bg-[#090F16] border-y border-slate-100 dark:border-white/[0.06]">
+      <section id="ai" className="relative py-16 px-5 sm:px-8 overflow-hidden bg-white dark:bg-[#090F16] border-y border-slate-100 dark:border-white/[0.06]">
         {/* Soft glow orbs — light & subtle */}
         <div className="absolute -top-20 left-1/3 w-80 h-80 bg-violet-400/[0.06] dark:bg-violet-500/[0.08] rounded-full blur-3xl pointer-events-none" />
         <div className="absolute bottom-0 right-1/4 w-72 h-72 bg-indigo-400/[0.05] dark:bg-indigo-500/[0.07] rounded-full blur-3xl pointer-events-none" />
@@ -2045,9 +2024,9 @@ export default function LandingPage() {
                 {automationSlides.map((slide, idx) => {
                   const isActive = activeSlide === idx;
                   let activeColors = "";
-                  if (idx === 0) activeColors = "bg-violet-500/10 border-violet-500/40 text-violet-750 dark:text-violet-300";
+                  if (idx === 0) activeColors = "bg-emerald-500/10 border-emerald-500/40 text-emerald-750 dark:text-emerald-300";
                   if (idx === 1) activeColors = "bg-blue-500/10 border-blue-500/40 text-blue-700 dark:text-blue-300";
-                  if (idx === 2) activeColors = "bg-emerald-500/10 border-emerald-500/40 text-emerald-700 dark:text-emerald-300";
+                  if (idx === 2) activeColors = "bg-violet-500/10 border-violet-500/40 text-violet-750 dark:text-violet-300";
                   if (idx === 3) activeColors = "bg-teal-500/10 border-teal-500/40 text-teal-650 dark:text-teal-450";
                   return (
                     <button
@@ -2103,7 +2082,7 @@ export default function LandingPage() {
               onClick={() => setActiveSlide(prev => (prev + 1) % 4)}
             >
               {/* Dynamic Slide Container with transition */}
-              <div className="transition-all duration-500 ease-in-out transform hover:scale-[1.01]">
+              <div key={activeSlide} className="transition-all duration-500 ease-in-out transform hover:scale-[1.01]">
                 {automationSlides[activeSlide].component}
               </div>
 
@@ -2161,8 +2140,8 @@ export default function LandingPage() {
       {/* ═══════════════════════════════════════════════════════
           TESTIMONIALS (Apple-Style Staggered Grid Layout)
       ═══════════════════════════════════════════════════════ */}
-      <section id="testimonials" className="py-28 pb-36 px-5 sm:px-8 bg-slate-50/60 dark:bg-[#0B1420]/70 border-y border-slate-100 dark:border-white/[0.06]">
-        <div className="max-w-7xl mx-auto space-y-20">
+      <section id="testimonials" className="py-16 pb-24 px-5 sm:px-8 bg-slate-50/60 dark:bg-[#0B1420]/70 border-y border-slate-100 dark:border-white/[0.06]">
+        <div className="max-w-7xl mx-auto space-y-12">
           <div className="text-center space-y-4">
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-500 text-xs font-semibold">
               <Star className="w-3.5 h-3.5 fill-current" />
@@ -2192,8 +2171,8 @@ export default function LandingPage() {
       {/* ═══════════════════════════════════════════════════════
           FAQ
       ═══════════════════════════════════════════════════════ */}
-      <section id="faq" className="py-28 px-5 sm:px-8">
-        <div className="max-w-3xl mx-auto space-y-12">
+      <section id="faq" className="py-16 px-5 sm:px-8">
+        <div className="max-w-3xl mx-auto space-y-10">
           <div className="text-center space-y-4">
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-500 text-xs font-semibold">
               <MessageSquare className="w-3.5 h-3.5" />
@@ -2223,7 +2202,7 @@ export default function LandingPage() {
       {/* ═══════════════════════════════════════════════════════
           CTA BANNER
       ═══════════════════════════════════════════════════════ */}
-      <section className="py-20 px-5 sm:px-8 pb-28">
+      <section className="py-12 px-5 sm:px-8 pb-20">
         <div className="max-w-4xl mx-auto">
           <div className="relative overflow-hidden rounded-3xl p-12 md:p-16 text-center" style={{ background: 'linear-gradient(135deg, #4c1d95 0%, #5b21b6 25%, #4338ca 60%, #3730a3 100%)' }}>
             {/* Grid overlay */}
