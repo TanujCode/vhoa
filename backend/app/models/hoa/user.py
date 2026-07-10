@@ -18,7 +18,7 @@ class Role(Base):
     active_status = Column(Boolean, default=True)
     created_date  = Column(DateTime(timezone=True), server_default=func.now())
 
-    users         = relationship("User", back_populates="role")
+    users         = relationship("User", back_populates="role", foreign_keys="User.role_id")
 
 
 
@@ -67,12 +67,16 @@ class User(Base):
     # America/New_York | America/Chicago | America/Denver | America/Los_Angeles
     # Asia/Kolkata etc.
 
-    #Role & Type
+    #Role & Type (HOA)
     role_id              = Column(Integer, ForeignKey("roles.role_id"), nullable=False)
-    role                 = relationship("Role", back_populates="users")
+    role                 = relationship("Role", back_populates="users", foreign_keys=[role_id])
     is_client            = Column(Boolean, default=False)
     unit_no              = Column(String(50), nullable=True)
     unit_no_2            = Column(String(50), nullable=True)
+
+    # Rental Role — separate from HOA role so same email can be board_member in HOA + landlord in Rental
+    rental_role_id       = Column(Integer, ForeignKey("roles.role_id"), nullable=True)
+    rental_role          = relationship("Role", foreign_keys=[rental_role_id])
 
     #Profile
     active_status        = Column(Boolean, default=True)

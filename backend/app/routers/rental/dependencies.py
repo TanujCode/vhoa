@@ -23,7 +23,13 @@ def get_current_rental_user(
     user_id = int(payload.get("sub"))
     user = db.query(User).filter(User.user_id == user_id).first()
     if not user:
-        raise HTTPException(status_code=404, detail="User not found in rental database.")
+        raise HTTPException(status_code=404, detail="User not found.")
+    # Must have a rental role
+    if not user.rental_role_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You do not have a rental account. Please register for the rental portal first."
+        )
     return user
 
 
@@ -43,7 +49,9 @@ def require_rental_role(*allowed_roles: str):
         current_user: User = Depends(get_verified_rental_user),
         db: Session = Depends(get_rental_db)
     ) -> User:
-        if current_user.role.role_name not in allowed_roles:
+        # Use rental_role (not HOA role)
+        rental_role_name = current_user.rental_role.role_name if current_user.rental_role else ""
+        if rental_role_name not in allowed_roles:
             raise HTTPException(status_code=403, detail="Access denied for this rental user role.")
         return current_user
     return dependency

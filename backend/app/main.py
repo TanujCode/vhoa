@@ -110,6 +110,12 @@ def run_db_upgrades():
         "idx_users_user_code"
     )
 
+    # ── rental_role_id column (allows same email in HOA + Rental) ─
+    _safe_execute(
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS rental_role_id INTEGER REFERENCES roles(role_id) ON DELETE SET NULL;",
+        "users.rental_role_id"
+    )
+
     # ── community_join_requests table ────────────────────────────
     _safe_execute(
         "ALTER TABLE community_join_requests ADD COLUMN IF NOT EXISTS unit_no VARCHAR(50);",

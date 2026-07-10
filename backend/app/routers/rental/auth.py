@@ -117,56 +117,73 @@ def rental_register(
 ):
     try:
         _verify_captcha(body.captcha_token, body.captcha_answer)
-        if db.query(User).filter(User.email_id == body.email_id.lower().strip()).first():
-            raise HTTPException(status_code=400, detail="This email is already registered in rental system.")
 
-        role = db.query(Role).filter(Role.role_name == body.role).first()
-        if not role:
+        rental_role = db.query(Role).filter(Role.role_name == body.role).first()
+        if not rental_role:
             raise HTTPException(status_code=400, detail=f"Role '{body.role}' not found.")
 
-        first_name, middle_name, last_name = split_full_name(body.full_name)
-        u_code = generate_user_code(db, first_name, last_name)
+        existing_user = db.query(User).filter(User.email_id == body.email_id.lower().strip()).first()
 
-        new_user = User(
-            first_name=first_name,
-            middle_name=middle_name,
-            last_name=last_name,
-            user_code=u_code,
-            email_id=body.email_id.lower().strip(),
-            mobile_number=body.mobile_number,
-            password=hash_password(body.password),
-            role_id=role.role_id,
-            is_client=False,
-            active_status=True,
-            account_status="PENDING_VERIFICATION",
-            email_id_is_verified=False,
-            mobile_is_verified=False,
-            time_zone=body.time_zone
-        )
-        db.add(new_user)
-        db.commit()
-        db.refresh(new_user)
-        
-        lease = db.query(Lease).filter(Lease.tenant_email == new_user.email_id).first()
-        if lease:
-            lease.tenant_id = new_user.user_id
+        if existing_user:
+            # User already exists (HOA user) — just add their rental role
+            if existing_user.rental_role_id:
+                raise HTTPException(status_code=400, detail="This email already has a rental account. Please login instead.")
+            existing_user.rental_role_id = rental_role.role_id
+            db.commit()
+            db.refresh(existing_user)
+            user = existing_user
+        else:
+            # Brand new user — create with hoa_member as HOA role + rental role
+            hoa_member_role = db.query(Role).filter(Role.role_name == "hoa_member").first()
+            if not hoa_member_role:
+                hoa_member_role = rental_role  # fallback
+
+            first_name, middle_name, last_name = split_full_name(body.full_name)
+            u_code = generate_user_code(db, first_name, last_name)
+
+            user = User(
+                first_name=first_name,
+                middle_name=middle_name,
+                last_name=last_name,
+                user_code=u_code,
+                email_id=body.email_id.lower().strip(),
+                mobile_number=body.mobile_number,
+                password=hash_password(body.password),
+                role_id=hoa_member_role.role_id,
+                rental_role_id=rental_role.role_id,
+                is_client=False,
+                active_status=True,
+                account_status="PENDING_VERIFICATION",
+                email_id_is_verified=False,
+                mobile_is_verified=False,
+                time_zone=body.time_zone
+            )
+            db.add(user)
+            db.commit()
+            db.refresh(user)
+
+        # Link any pending leases to this user
+        lease = db.query(Lease).filter(Lease.tenant_email == user.email_id).first()
+        if lease and not lease.tenant_id:
+            lease.tenant_id = user.user_id
             db.commit()
 
-        access_token = create_access_token(new_user.user_id, new_user.email_id, body.role, False)
-        session_token = create_session_token(new_user.user_id, new_user.email_id, body.role, False)
+        access_token = create_access_token(user.user_id, user.email_id, body.role, user.email_id_is_verified)
+        session_token = create_session_token(user.user_id, user.email_id, body.role, user.email_id_is_verified)
 
         return {
             "access_token": access_token,
             "session_token": session_token,
             "token_type": "bearer",
             "role": body.role,
-            "user_id": new_user.user_id,
-            "full_name": f"{new_user.first_name} {new_user.last_name}"
+            "user_id": user.user_id,
+            "full_name": f"{user.first_name} {user.last_name}"
         }
     except Exception as e:
         if isinstance(e, HTTPException):
             raise e
         raise HTTPException(status_code=400, detail=str(e))
+
 
 
 @router.post("/auth/login")
@@ -180,25 +197,26 @@ def rental_login(
         if not user:
             raise HTTPException(status_code=401, detail="Invalid email or password")
 
-        role_name = user.role.role_name if user.role else ""
-        if role_name not in ["landlord", "tenant"]:
-            raise HTTPException(status_code=401, detail="This login page is for Rental users. Please use the HOA portal login.")
+        # Check rental_role_id (not HOA role_id)
+        rental_role_name = user.rental_role.role_name if user.rental_role else ""
+        if rental_role_name not in ["landlord", "tenant"]:
+            raise HTTPException(status_code=401, detail="This login page is for Rental users. Please use the HOA portal login or register for a rental account first.")
 
         if not user.active_status or user.account_status == "INACTIVE":
             raise HTTPException(status_code=403, detail="Your account is inactive. Please contact support or your landlord.")
 
         if hasattr(user, 'email_id_is_verified') and not user.email_id_is_verified:
             raise ValueError("Email not verified. Please verify your email first.")
-            
+
         result = login_user(body.email_id, body.password, db)
-        access_token = create_access_token(user.user_id, user.email_id, user.role.role_name, user.email_id_is_verified)
-        session_token = create_session_token(user.user_id, user.email_id, user.role.role_name, user.email_id_is_verified)
-        
+        access_token = create_access_token(user.user_id, user.email_id, rental_role_name, user.email_id_is_verified)
+        session_token = create_session_token(user.user_id, user.email_id, rental_role_name, user.email_id_is_verified)
+
         return {
             "access_token": access_token,
             "session_token": session_token,
             "token_type": "bearer",
-            "role": user.role.role_name,
+            "role": rental_role_name,
             "user_id": user.user_id,
             "full_name": f"{user.first_name} {user.last_name}"
         }
@@ -207,6 +225,7 @@ def rental_login(
             raise e
         status_code = 403 if "verified" in str(e).lower() else 401
         raise HTTPException(status_code=status_code, detail=str(e))
+
 
 
 @router.get("/auth/me")
@@ -228,8 +247,8 @@ def rental_get_me(
         "active_status": current_user.active_status,
         "account_status": current_user.account_status or "PENDING_VERIFICATION",
         "time_zone": current_user.time_zone or "America/New_York",
-        "role_id": current_user.role_id,
-        "role_name": current_user.role.role_name if current_user.role else None,
+        "role_id": current_user.rental_role_id,
+        "role_name": current_user.rental_role.role_name if current_user.rental_role else None,
         "user_profile_url": current_user.user_profile_url,
         "created_date": current_user.created_date,
         "last_login": current_user.last_login
@@ -283,22 +302,32 @@ def rental_google_auth(
         
         if user:
             if body.flow == "register":
-                raise HTTPException(status_code=400, detail="This Google account is already registered. Please login instead.")
-            if not user.active_status or user.account_status == "INACTIVE":
-                raise HTTPException(status_code=403, detail="Your account is inactive. Please contact support or your landlord.")
-            role_name = user.role.role_name if user.role else ""
-            if role_name not in ["landlord", "tenant"]:
-                raise HTTPException(status_code=400, detail="This Google account is registered for the HOA portal. Please use the HOA login page.")
+                # HOA user trying to register for rental - just add rental role
+                if user.rental_role_id:
+                    raise HTTPException(status_code=400, detail="This Google account already has a rental account. Please login instead.")
+                landlord_role = db.query(Role).filter(Role.role_name == "landlord").first()
+                user.rental_role_id = landlord_role.role_id
+                user.email_id_is_verified = True
+                user.account_status = "APPROVED"
+                db.commit()
+                db.refresh(user)
+            else:
+                if not user.active_status or user.account_status == "INACTIVE":
+                    raise HTTPException(status_code=403, detail="Your account is inactive. Please contact support or your landlord.")
+                rental_role_name = user.rental_role.role_name if user.rental_role else ""
+                if rental_role_name not in ["landlord", "tenant"]:
+                    raise HTTPException(status_code=400, detail="This Google account does not have a rental account. Please register for the rental portal first.")
         else:
             if body.flow == "login":
                 raise HTTPException(status_code=400, detail="Account not found. Please register first.")
-            role = db.query(Role).filter(Role.role_name == "landlord").first()
-            if not role:
-                raise HTTPException(status_code=500, detail="Default role 'landlord' not found in rental database.")
-            
+            landlord_role = db.query(Role).filter(Role.role_name == "landlord").first()
+            hoa_member_role = db.query(Role).filter(Role.role_name == "hoa_member").first()
+            if not landlord_role:
+                raise HTTPException(status_code=500, detail="Default role 'landlord' not found.")
+
             full_name = google_user.get("name", "Google User").strip()
             first_name, middle_name, last_name = split_full_name(full_name)
-            
+
             random_password = secrets.token_urlsafe(16)
             u_code = generate_user_code(db, first_name, last_name)
 
@@ -309,7 +338,8 @@ def rental_google_auth(
                 user_code=u_code,
                 email_id=email,
                 password=hash_password(random_password),
-                role_id=role.role_id,
+                role_id=hoa_member_role.role_id if hoa_member_role else landlord_role.role_id,
+                rental_role_id=landlord_role.role_id,
                 is_client=False,
                 active_status=True,
                 account_status="APPROVED",
@@ -322,18 +352,19 @@ def rental_google_auth(
             db.refresh(user)
 
             lease = db.query(Lease).filter(Lease.tenant_email == user.email_id).first()
-            if lease:
+            if lease and not lease.tenant_id:
                 lease.tenant_id = user.user_id
                 db.commit()
 
-        access_token = create_access_token(user.user_id, user.email_id, user.role.role_name, True)
-        session_token = create_session_token(user.user_id, user.email_id, user.role.role_name, True)
+        rental_role_name = user.rental_role.role_name if user.rental_role else "landlord"
+        access_token = create_access_token(user.user_id, user.email_id, rental_role_name, True)
+        session_token = create_session_token(user.user_id, user.email_id, rental_role_name, True)
 
         return {
             "access_token": access_token,
             "session_token": session_token,
             "token_type": "bearer",
-            "role": user.role.role_name,
+            "role": rental_role_name,
             "user_id": user.user_id,
             "full_name": f"{user.first_name} {user.last_name}"
         }
