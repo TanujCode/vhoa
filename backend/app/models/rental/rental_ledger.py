@@ -8,7 +8,7 @@ class RentalLedger(Base):
     __tablename__ = "rental_ledgers"
 
     invoice_id = Column(Integer, primary_key=True, index=True)
-    lease_id = Column(Integer, ForeignKey("leases.lease_id"), nullable=False)
+    lease_id = Column(Integer, ForeignKey("rental_leases.lease_id"), nullable=False)
     due_date = Column(Date, nullable=False)
     amount = Column(Double, default=0.0)
     late_fee_applied = Column(Double, default=0.0)

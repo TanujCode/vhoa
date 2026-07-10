@@ -5,10 +5,10 @@ from app.database import Base
 
 
 class Unit(Base):
-    __tablename__ = "units"
+    __tablename__ = "rental_units"
 
     unit_id = Column(Integer, primary_key=True, index=True)
-    property_id = Column(Integer, ForeignKey("properties.property_id"), nullable=False)
+    property_id = Column(Integer, ForeignKey("rental_properties.property_id"), nullable=False)
     unit_number = Column(String(50), nullable=False)
     status = Column(String(30), default="VACANT")  # VACANT, OCCUPIED, MAINTENANCE
     rent_amount = Column(Double, default=0.0)

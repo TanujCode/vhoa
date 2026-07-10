@@ -5,13 +5,13 @@ from app.database import Base
 
 
 class Lease(Base):
-    __tablename__ = "leases"
+    __tablename__ = "rental_leases"
 
     lease_id = Column(Integer, primary_key=True, index=True)
     landlord_id = Column(Integer, ForeignKey("users.user_id"), nullable=False)
     tenant_id = Column(Integer, ForeignKey("users.user_id"), nullable=True)  # Nullable until tenant signs up
     tenant_email = Column(String(255), nullable=True)
-    unit_id = Column(Integer, ForeignKey("units.unit_id"), nullable=False)
+    unit_id = Column(Integer, ForeignKey("rental_units.unit_id"), nullable=False)
     
     start_date = Column(Date, nullable=False)
     end_date = Column(Date, nullable=False)

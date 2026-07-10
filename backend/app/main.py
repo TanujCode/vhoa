@@ -12,90 +12,17 @@ from app.routers.rental import rental
 from app.routers.hoa import user
 
 try:
-    print("[INFO] Connecting to HOA database and verifying DDL...")
-    hoa_tables = [
-        tbl for name, tbl in Base.metadata.tables.items()
-        if name not in ["properties", "units", "leases", "rental_applications", "rental_ledgers", "rental_maintenance_requests"]
-    ]
-    Base.metadata.create_all(bind=engine, tables=hoa_tables)
-    print("[SUCCESS] HOA database connection verified and base tables created.")
+    print("[INFO] Connecting to database and creating all tables (HOA + Rental)...")
+    Base.metadata.create_all(bind=engine)
+    print("[SUCCESS] Database connected. All HOA and Rental tables created successfully.")
 except Exception as e:
     import traceback
-    print("[ERROR] CRITICAL HOA DATABASE ERROR ON STARTUP:")
+    print("[ERROR] CRITICAL DATABASE ERROR ON STARTUP:")
     traceback.print_exc()
     raise e
 
-RENTAL_DB_AVAILABLE = False
-try:
-    print("[INFO] Connecting to rental database and verifying DDL...")
-    rental_tables = [
-        tbl for name, tbl in Base.metadata.tables.items()
-        if name in [
-            "users", "roles", "otp_tokens", "audit_logs",
-            "properties", "units", "leases", "rental_applications", "rental_ledgers", "rental_maintenance_requests", "rental_vendors"
-        ]
-    ]
-    Base.metadata.create_all(bind=rental_engine, tables=rental_tables)
-    RENTAL_DB_AVAILABLE = True
-    print("[SUCCESS] Rental database connection verified and rental tables created.")
+RENTAL_DB_AVAILABLE = True
 
-    # Drop unwanted HOA tables from rental db
-    _rdb = RentalSessionLocal()
-    try:
-        unwanted_tables_ddl = """
-        DROP TABLE IF EXISTS 
-            amenity_bookings, service_requests, service_types, service_request_statuses, 
-            violation_documents, violations, violation_statuses, contracts, vendor_documents, 
-            vendors, payments, meeting_surveys, meeting_attendees, meeting_recording_shares, 
-            meetings, news, amenity_types, amenities, community_change_requests, 
-            community_join_requests, user_communities, communities, addresses, states, countries 
-        CASCADE;
-        """
-        _rdb.execute(text(unwanted_tables_ddl))
-        _rdb.commit()
-        print("[CLEAN] Cleaned up unwanted HOA tables from Rental database.")
-    except Exception as ddl_err:
-        _rdb.rollback()
-        print(f"[WARNING] could not drop unwanted HOA tables from Rental database: {ddl_err}")
-    finally:
-        _rdb.close()
-    # DIAGNOSTICS CODE & FORCE INSERT RENTAL APPLICATION
-    try:
-        _db = RentalSessionLocal()
-        try:
-            from app.models.rental.rental_application import RentalApplication
-            from app.models.rental.unit import Unit
-            
-            # Check if Tanuj application exists, insert if not
-            existing_app = _db.query(RentalApplication).filter(RentalApplication.tenant_email == 'tanujtongse@gmail.com').first()
-            if not existing_app:
-                unit = _db.query(Unit).filter(Unit.unit_number == '101').first()
-                if unit:
-                    new_app = RentalApplication(
-                        unit_id=unit.unit_id,
-                        tenant_email='tanujtongse@gmail.com',
-                        full_name='Tanuj Tongse',
-                        phone='(555) 019-2834',
-                        employment_status='Employed',
-                        monthly_income=9500.0,
-                        screening_status='APPROVED',
-                        credit_score=750,
-                        eviction_history='No eviction records found.',
-                        criminal_history='No criminal records found.'
-                    )
-                    _db.add(new_app)
-                    _db.commit()
-                    print("[SUCCESS] [DIAGNOSTIC] Inserted missing rental application for Tanuj Tongse in rental_db.")
-            
-        finally:
-            _db.close()
-    except Exception as diag_err:
-        print("DIAGNOSTICS ERROR", diag_err)
-except Exception as e:
-    import traceback
-    print("[WARNING] Rental database not available - server will start without rental features.")
-    print(f"[WARNING] Rental DB error: {e}")
-    # Do NOT raise - HOA portal should still work without rental DB
 
 def run_db_upgrades():
     """Run each DDL upgrade in its own transaction so one failure doesn't block others."""

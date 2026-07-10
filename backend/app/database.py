@@ -15,19 +15,9 @@ engine = create_engine(
 )
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-
-# --- RENTAL DB SETUP ---
-rental_db_url = settings.RENTAL_DATABASE_URL or settings.DATABASE_URL
-if rental_db_url.startswith("postgres://"):
-    rental_db_url = rental_db_url.replace("postgres://", "postgresql://", 1)
-
-rental_engine = create_engine(
-    rental_db_url,
-    pool_size=10,
-    max_overflow=5,
-    pool_pre_ping=True,
-)
-RentalSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=rental_engine)
+# Rental uses the SAME database — rental tables have rental_ prefix to avoid conflicts
+rental_engine = engine
+RentalSessionLocal = SessionLocal
 
 
 class Base(DeclarativeBase):

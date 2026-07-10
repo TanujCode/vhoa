@@ -8,7 +8,7 @@ class RentalApplication(Base):
     __tablename__ = "rental_applications"
 
     application_id = Column(Integer, primary_key=True, index=True)
-    unit_id = Column(Integer, ForeignKey("units.unit_id"), nullable=False)
+    unit_id = Column(Integer, ForeignKey("rental_units.unit_id"), nullable=False)
     tenant_email = Column(String(255), nullable=False)
     full_name = Column(String(255), nullable=False)
     phone = Column(String(50), nullable=True)

@@ -5,7 +5,7 @@ from app.database import Base
 
 
 class Property(Base):
-    __tablename__ = "properties"
+    __tablename__ = "rental_properties"
 
     property_id = Column(Integer, primary_key=True, index=True)
     name = Column(String(255), nullable=False)

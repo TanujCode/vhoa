@@ -8,7 +8,7 @@ class RentalMaintenanceRequest(Base):
     __tablename__ = "rental_maintenance_requests"
 
     request_id = Column(Integer, primary_key=True, index=True)
-    lease_id = Column(Integer, ForeignKey("leases.lease_id"), nullable=False)
+    lease_id = Column(Integer, ForeignKey("rental_leases.lease_id"), nullable=False)
     title = Column(String(255), nullable=False)
     description = Column(Text, nullable=False)
     priority = Column(String(30), default="NORMAL")  # LOW, NORMAL, HIGH, URGENT
