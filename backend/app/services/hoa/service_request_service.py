@@ -44,7 +44,7 @@ def seed_service_request_statuses(db: Session):
         ).first():
             db.add(ServiceRequestStatus(status_name=s))
     db.commit()
-    print("✅ Service Request statuses seeded.")
+    print("[SUCCESS] Service Request statuses seeded.")
 
 
 # ══════════════════════════════════════════════
@@ -73,7 +73,7 @@ def seed_default_service_types_for_all_communities(db: Session):
                 ))
     
     db.commit()
-    print(f"✅ Default service types seeded for {len(communities)} communities.")
+    print(f"[SUCCESS] Default service types seeded for {len(communities)} communities.")
 
 
 # ══════════════════════════════════════════════
@@ -541,4 +541,4 @@ def seed_default_service_types_for_all_communities(db: Session):
                 ))
                 count += 1
     db.commit()
-    print(f"✅ {count} default service types seeded across {len(communities)} communities.")
+    print(f"[SUCCESS] {count} default service types seeded across {len(communities)} communities.")

@@ -12,21 +12,21 @@ from app.routers.rental import rental
 from app.routers.hoa import user
 
 try:
-    print("⏳ Connecting to HOA database and verifying DDL...")
+    print("[INFO] Connecting to HOA database and verifying DDL...")
     hoa_tables = [
         tbl for name, tbl in Base.metadata.tables.items()
         if name not in ["properties", "units", "leases", "rental_applications", "rental_ledgers", "rental_maintenance_requests"]
     ]
     Base.metadata.create_all(bind=engine, tables=hoa_tables)
-    print("✅ HOA database connection verified and base tables created.")
+    print("[SUCCESS] HOA database connection verified and base tables created.")
 except Exception as e:
     import traceback
-    print("❌ CRITICAL HOA DATABASE ERROR ON STARTUP:")
+    print("[ERROR] CRITICAL HOA DATABASE ERROR ON STARTUP:")
     traceback.print_exc()
     raise e
 
 try:
-    print("⏳ Connecting to rental database and verifying DDL...")
+    print("[INFO] Connecting to rental database and verifying DDL...")
     rental_tables = [
         tbl for name, tbl in Base.metadata.tables.items()
         if name in [
@@ -35,7 +35,7 @@ try:
         ]
     ]
     Base.metadata.create_all(bind=rental_engine, tables=rental_tables)
-    print("✅ Rental database connection verified and rental tables created.")
+    print("[SUCCESS] Rental database connection verified and rental tables created.")
 
     # Drop unwanted HOA tables from rental db
     _rdb = RentalSessionLocal()
@@ -51,10 +51,10 @@ try:
         """
         _rdb.execute(text(unwanted_tables_ddl))
         _rdb.commit()
-        print("🗑️ Cleaned up unwanted HOA tables from Rental database.")
+        print("[CLEAN] Cleaned up unwanted HOA tables from Rental database.")
     except Exception as ddl_err:
         _rdb.rollback()
-        print(f"⚠️ Warning: could not drop unwanted HOA tables from Rental database: {ddl_err}")
+        print(f"[WARNING] could not drop unwanted HOA tables from Rental database: {ddl_err}")
     finally:
         _rdb.close()
     # DIAGNOSTICS CODE & FORCE INSERT RENTAL APPLICATION
@@ -83,7 +83,7 @@ try:
                     )
                     _db.add(new_app)
                     _db.commit()
-                    print("✅ [DIAGNOSTIC] Inserted missing rental application for Tanuj Tongse in rental_db.")
+                    print("[SUCCESS] [DIAGNOSTIC] Inserted missing rental application for Tanuj Tongse in rental_db.")
             
         finally:
             _db.close()
@@ -91,7 +91,7 @@ try:
         print("DIAGNOSTICS ERROR", diag_err)
 except Exception as e:
     import traceback
-    print("❌ CRITICAL RENTAL DATABASE ERROR ON STARTUP:")
+    print("[ERROR] CRITICAL RENTAL DATABASE ERROR ON STARTUP:")
     traceback.print_exc()
     raise e
 
@@ -247,8 +247,13 @@ def run_db_upgrades():
         db.execute(text("UPDATE users SET role_id = 1, community_id = NULL WHERE email_id = 'tanujtongse132@gmail.com';"))
         db.execute(text("DELETE FROM user_communities WHERE user_id = (SELECT user_id FROM users WHERE email_id = 'tanujtongse132@gmail.com');"))
 
-        # Update user Vikash's name and email to English equivalent (John Smith)
-        db.execute(text("UPDATE users SET first_name = 'John', last_name = 'Smith', email_id = 'john.smith@nestbloq.com' WHERE first_name = 'Vikash';"))
+        # Update user Vikash's name and email to English equivalent (John Smith) if not already exists
+        exists_john = db.execute(text("SELECT 1 FROM users WHERE email_id = 'john.smith@nestbloq.com';")).fetchone()
+        if not exists_john:
+            db.execute(text("UPDATE users SET first_name = 'John', last_name = 'Smith', email_id = 'john.smith@nestbloq.com' WHERE first_name = 'Vikash';"))
+        else:
+            db.execute(text("UPDATE users SET email_id = 'vikash.old@nestbloq.com' WHERE first_name = 'Vikash' AND email_id != 'john.smith@nestbloq.com';"))
+
         # Update Willow Creek Community address to a USA address
         db.execute(text("""
             UPDATE addresses 
@@ -275,10 +280,10 @@ def run_db_upgrades():
             for c in comms_list:
                 f.write(f"ID: {c[0]} | Name: {c[1]} | Address: {c[2]}\n")
 
-        print("✅ Database DDL upgrades and debugging completed.")
+        print("[SUCCESS] Database DDL upgrades and debugging completed.")
     except Exception as e:
         db.rollback()
-        print(f"❌ Database data migrations failed: {e}")
+        print(f"[ERROR] Database data migrations failed: {e}")
     finally:
         db.close()
 
@@ -293,13 +298,13 @@ def backfill_user_codes():
         try:
             result = db.execute(text("SELECT COUNT(*) FROM users WHERE user_code IS NULL OR user_code = ''")).fetchone()
             null_count = result[0] if result else 0
-            print(f"🔍 Backfill check: {null_count} user(s) have NULL/empty user_code")
+            print(f"[INFO] Backfill check: {null_count} user(s) have NULL/empty user_code")
         except Exception as check_e:
-            print(f"⚠️  Backfill column check failed (column may not exist): {check_e}")
+            print(f"[WARNING] Backfill column check failed (column may not exist): {check_e}")
             return
 
         if null_count == 0:
-            print("ℹ️  Backfill skipped: all users already have user_code")
+            print("[INFO] Backfill skipped: all users already have user_code")
             return
 
         # Step 2: Load users without code
@@ -308,7 +313,7 @@ def backfill_user_codes():
         users_without_code = db.query(User).filter(
             (User.user_code == None) | (User.user_code == '')
         ).all()
-        print(f"🔍 ORM found {len(users_without_code)} user(s) to backfill")
+        print(f"[INFO] ORM found {len(users_without_code)} user(s) to backfill")
 
         count = 0
         for user in users_without_code:
@@ -319,12 +324,12 @@ def backfill_user_codes():
                 count += 1
             except Exception as ue:
                 db.rollback()
-                print(f"  ⚠️  Could not generate code for user {user.user_id} ({user.first_name}): {ue}")
+                print(f"  [WARNING] Could not generate code for user {user.user_id} ({user.first_name}): {ue}")
         db.commit()
-        print(f"✅ Backfilled user_code for {count} existing user(s).")
+        print(f"[SUCCESS] Backfilled user_code for {count} existing user(s).")
     except Exception as e:
         db.rollback()
-        print(f"⚠️  user_code backfill error: {e}")
+        print(f"[WARNING] user_code backfill error: {e}")
     finally:
         db.close()
 
@@ -345,10 +350,10 @@ def migrate_duplicate_suffixes():
         # Check if more than one user has a user_code ending with '0001'
         count_0001 = sum(1 for u in users if u.user_code and u.user_code.endswith("0001"))
         if count_0001 <= 1:
-            print("ℹ️  User code sequence migration skipped: suffixes are already unique.")
+            print("[INFO] User code sequence migration skipped: suffixes are already unique.")
             return
 
-        print(f"🔄 Running user code sequence migration for {len(users)} users...")
+        print(f"[INFO] Running user code sequence migration for {len(users)} users...")
         
         for idx, user in enumerate(users, start=1):
             # 1. Determine Country Code
@@ -380,10 +385,10 @@ def migrate_duplicate_suffixes():
             print(f"  Updating user {user.user_id} ({user.first_name} {user.last_name}): -> {new_code}")
             
         db.commit()
-        print("✅ User code sequence migration completed successfully.")
+        print("[SUCCESS] User code sequence migration completed successfully.")
     except Exception as e:
         db.rollback()
-        print(f"⚠️  User code sequence migration failed: {e}")
+        print(f"[WARNING] User code sequence migration failed: {e}")
     finally:
         db.close()
 
@@ -426,10 +431,10 @@ def seed_roles():
                 db.commit()
             db.execute(text("DELETE FROM roles WHERE role_name IN ('landlord', 'tenant');"))
             db.commit()
-            print("✅ HOA Roles seeded and cleaned.")
+            print("[SUCCESS] HOA Roles seeded and cleaned.")
         except Exception as clean_err:
             db.rollback()
-            print(f"⚠️ Warning: Could not clean up rental roles from HOA database: {clean_err}")
+            print(f"[WARNING] Could not clean up rental roles from HOA database: {clean_err}")
     finally:
         db.close()
 
@@ -457,10 +462,10 @@ def seed_rental_roles():
                 db.commit()
             db.execute(text("DELETE FROM roles WHERE role_name IN ('property_manager', 'board_member', 'resident', 'vendor', 'sales_admin');"))
             db.commit()
-            print("✅ Rental Roles seeded and cleaned.")
+            print("[SUCCESS] Rental Roles seeded and cleaned.")
         except Exception as clean_err:
             db.rollback()
-            print(f"⚠️ Warning: Could not clean up HOA roles from Rental database: {clean_err}")
+            print(f"[WARNING] Could not clean up HOA roles from Rental database: {clean_err}")
     finally:
         db.close()
 
@@ -480,7 +485,7 @@ def seed_sr_statuses():
     db = SessionLocal()
     try:
         _seed(db)
-        print("✅ Service Request statuses seeded.")
+        print("[SUCCESS] Service Request statuses seeded.")
     finally:
         db.close()
 
@@ -521,9 +526,9 @@ def seed_amenity_types():
             if not db.query(AmenityType).filter(AmenityType.type_name == t["type_name"]).first():
                 db.add(AmenityType(**t))
         db.commit()
-        print("✅ Amenity types seeded.")
+        print("[SUCCESS] Amenity types seeded.")
     except Exception as e:
-        print(f"❌ Amenity types seed failed: {e}")
+        print(f"[ERROR] Amenity types seed failed: {e}")
     finally:
         db.close()
 
@@ -557,7 +562,7 @@ def seed_custom_users():
                 )
                 db.add(super_user)
                 db.commit()
-                print("✅ Super admin seeded.")
+                print("[SUCCESS] Super admin seeded.")
             else:
                 super_user.password = hash_password("Super1234")
                 super_user.role_id = super_admin_role.role_id
@@ -567,7 +572,7 @@ def seed_custom_users():
                 if not super_user.user_code:
                     super_user.user_code = generate_user_code(db, "Super", "Admin")
                 db.commit()
-                print("✅ Super admin updated.")
+                print("[SUCCESS] Super admin updated.")
 
         # 2. Sales Person (Sales Admin)
         sales_email = "tanujtongse0732@gmail.com"
@@ -591,7 +596,7 @@ def seed_custom_users():
                 )
                 db.add(sales_user)
                 db.commit()
-                print("✅ Sales admin seeded.")
+                print("[SUCCESS] Sales admin seeded.")
             else:
                 sales_user.password = hash_password("Sales1234")
                 sales_user.role_id = sales_role.role_id
@@ -601,11 +606,11 @@ def seed_custom_users():
                 if not sales_user.user_code:
                     sales_user.user_code = generate_user_code(db, "Sales", "Person")
                 db.commit()
-                print("✅ Sales admin updated.")
+                print("[SUCCESS] Sales admin updated.")
 
     except Exception as e:
         db.rollback()
-        print(f"❌ Failed to seed custom users: {e}")
+        print(f"[ERROR] Failed to seed custom users: {e}")
     finally:
         db.close()
 
@@ -662,4 +667,4 @@ app.include_router(rental.router,          prefix="/api")
 
 @app.get("/", tags=["Health"])
 def health():
-    return {"status": "running", "app": settings.APP_NAME, "version": "2.1.0"}
+    return {"status": "running", "app": settings.APP_NAME, "version": "2.5.0-test"}

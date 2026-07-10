@@ -17,7 +17,7 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
 # --- RENTAL DB SETUP ---
-rental_db_url = settings.RENTAL_DATABASE_URL
+rental_db_url = settings.RENTAL_DATABASE_URL or settings.DATABASE_URL
 if rental_db_url.startswith("postgres://"):
     rental_db_url = rental_db_url.replace("postgres://", "postgresql://", 1)
 
