@@ -84,12 +84,12 @@ const RequestChangeModal = ({ isOpen, onClose, community, onSuccess }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[100] p-4">
-      <div className="bg-white dark:bg-gradient-to-br dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200 text-slate-900 dark:text-white">
+    <div className="fixed inset-0 bg-black/80 flex items-start sm:items-center justify-center z-[100] p-4 overflow-y-auto">
+      <div className="my-auto bg-white dark:bg-gradient-to-br dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200 text-slate-900 dark:text-white">
         
         {/* Header */}
         <div className="p-6 border-b border-slate-200 dark:border-white/10 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-teal-500/10 text-teal-600 dark:text-teal-400 flex items-center justify-center">
+          <div className="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center">
             <Building2 size={20} />
           </div>
           <div>
@@ -106,7 +106,7 @@ const RequestChangeModal = ({ isOpen, onClose, community, onSuccess }) => {
               name="requested_name" 
               value={formData.requested_name} 
               onChange={handleChange} 
-              className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl p-3.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-teal-500 placeholder-slate-400" 
+              className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl p-3.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-blue-500 placeholder-slate-400" 
               placeholder="Enter new community name" 
             />
           </div>
@@ -119,7 +119,7 @@ const RequestChangeModal = ({ isOpen, onClose, community, onSuccess }) => {
                 name="requested_units" 
                 value={formData.requested_units} 
                 onChange={handleChange} 
-                className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl p-3.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-teal-500" 
+                className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl p-3.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-blue-500" 
               />
             </div>
             
@@ -145,7 +145,7 @@ const RequestChangeModal = ({ isOpen, onClose, community, onSuccess }) => {
                 )}
               </div>
               {currentPlan.plan !== requestedPlan.plan && (
-                <div className="text-[10px] text-teal-650 dark:text-teal-400 flex items-center gap-1 mt-1 font-medium">
+                <div className="text-[10px] text-blue-650 dark:text-blue-400 flex items-center gap-1 mt-1 font-medium">
                   <CheckCircle size={12} className="shrink-0" />
                   <span>Tier upgrade: {currentPlan.plan} to {requestedPlan.plan}</span>
                 </div>
@@ -161,7 +161,7 @@ const RequestChangeModal = ({ isOpen, onClose, community, onSuccess }) => {
               onChange={handleChange} 
               required
               rows="3"
-              className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl p-3.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-teal-500 placeholder-slate-400 dark:placeholder-gray-500 resize-none" 
+              className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl p-3.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-blue-500 placeholder-slate-400 dark:placeholder-gray-500 resize-none" 
               placeholder="Brief explanation for this plan/name change request..." 
             />
           </div>
@@ -177,7 +177,7 @@ const RequestChangeModal = ({ isOpen, onClose, community, onSuccess }) => {
             <button
               type="submit"
               disabled={loading}
-              className="flex-1 bg-teal-600 hover:bg-teal-500 py-3.5 rounded-2xl font-semibold text-white disabled:opacity-50 transition shadow-lg shadow-teal-500/25 flex items-center justify-center gap-1.5"
+              className="flex-1 bg-blue-600 hover:bg-blue-500 py-3.5 rounded-2xl font-semibold text-white disabled:opacity-50 transition shadow-lg shadow-blue-500/25 flex items-center justify-center gap-1.5"
             >
               {loading ? "Submitting..." : "Submit Request"}
               <ArrowRight size={15} />

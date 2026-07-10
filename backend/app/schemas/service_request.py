@@ -2,14 +2,18 @@ from datetime import datetime
 from pydantic import BaseModel, field_validator
 
 
+# ══════════════════════════════════════════════
 #  STATUS
+# ══════════════════════════════════════════════
 class ServiceRequestStatusOut(BaseModel):
     status_id:   int
     status_name: str
     model_config = {"from_attributes": True}
 
 
+# ══════════════════════════════════════════════
 #  TYPE
+# ══════════════════════════════════════════════
 class ServiceRequestTypeCreate(BaseModel):
     type_name:    str
     description:  str | None = None
@@ -25,7 +29,9 @@ class ServiceRequestTypeOut(BaseModel):
     model_config = {"from_attributes": True}
 
 
+# ══════════════════════════════════════════════
 #  SERVICE REQUEST
+# ══════════════════════════════════════════════
 class ServiceRequestCreate(BaseModel):
     community_id: int
     type_id:      int
@@ -77,7 +83,9 @@ class ServiceRequestNoteCreate(BaseModel):
         return v.strip()
 
 
+# ══════════════════════════════════════════════
 #  RESPONSE
+# ══════════════════════════════════════════════
 class NoteOut(BaseModel):
     note_id:      int
     note:         str

@@ -46,9 +46,9 @@ class RegisterRequest(BaseModel):
     @field_validator("role")
     @classmethod
     def role_valid(cls, v):
-        allowed = {"resident"}
+        allowed = {"resident", "landlord", "tenant"}
         if v not in allowed:
-            raise ValueError("Only resident role is allowed to sign up publicly.")
+            raise ValueError("Only resident, landlord, and tenant roles are allowed to sign up.")
         return v
 
     @field_validator("mobile_number")
@@ -118,6 +118,7 @@ class LoginRequest(BaseModel):
 
 class GoogleLoginRequest(BaseModel):
     access_token: str
+    flow: str = "login"
 
 
 # ══════════════════════════════════════════════

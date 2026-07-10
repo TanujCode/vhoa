@@ -20,45 +20,47 @@ const VerifyOtpPage = () => {
     }
   }, [emailFromState, navigate]);
 
-const handleVerify = async (e) => {
-  if (e) e.preventDefault();
-  setLoading(true);
-  setErrorMsg('');
-  
-  try {
-    const response = await API.post('/auth/otp/verify', {
-      email_id: email,
-      otp_code: otp,
-      otp_type: 'email_verify'
-    });
+  // OTP Verify Karne ka Function
+  const handleVerify = async (e) => {
+    if (e) e.preventDefault();
+    setLoading(true);
+    setErrorMsg('');
+    
+    try {
+      const response = await API.post('/auth/otp/verify', {
+        email_id: email,
+        otp_code: otp,
+        otp_type: 'email_verify' // ✅ FIX: Match with backend template keys
+      });
 
-    setSuccessMsg("Email Successfully Verified!");
-    setTimeout(() => navigate('/login'), 2500);
+      setSuccessMsg("Email Successfully Verified!");
+      setTimeout(() => navigate('/login'), 2500);
 
-  } catch (err) {
-    setErrorMsg(err.response?.data?.detail || "Invalid OTP.");
-  } finally {
-    setLoading(false);
-  }
-};
+    } catch (err) {
+      setErrorMsg(err.response?.data?.detail || "Invalid OTP.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  // OTP Resend Karne ka Function
   const handleResendOtp = async () => {
-  setLoading(true);
-  setErrorMsg('');
-  setSuccessMsg('');
-  try {
-    await API.post('/auth/otp/send', { 
-      email_id: email,
-      otp_type: 'email_verify' 
-    }); 
-    setSuccessMsg("New OTP sent to your email!");
-  } catch (err) {
-    console.error("Resend error:", err);
-    setErrorMsg("Send OTP failed. Please try again.");
-  } finally {
-    setLoading(false);
-  }
-};
+    setLoading(true);
+    setErrorMsg('');
+    setSuccessMsg('');
+    try {
+      await API.post('/auth/otp/send', { 
+        email_id: email,
+        otp_type: 'email_verify' 
+      }); 
+      setSuccessMsg("New OTP sent to your email!");
+    } catch (err) {
+      console.error("Resend error:", err);
+      setErrorMsg("Send OTP failed. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4 font-sans">

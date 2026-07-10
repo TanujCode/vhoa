@@ -12,8 +12,8 @@ from alembic import context
 sys.path.insert(0, os.path.realpath(os.path.join(os.path.dirname(__file__), '..')))
 
 from app.database import Base  
-from app.models.user import User 
-from app.models.community import Community, CommunityJoinRequest
+from app.models.hoa.user import User 
+from app.models.hoa.community import Community, CommunityJoinRequest
 
 # Metadata link (Sirf ek baar yahan set kiya hai)
 target_metadata = Base.metadata

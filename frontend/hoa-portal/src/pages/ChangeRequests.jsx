@@ -99,7 +99,7 @@ const ChangeRequests = ({ user }) => {
       {/* Header */}
       <div>
         <h1 className="text-3xl font-semibold text-slate-900 dark:text-white flex items-center gap-2.5">
-          <ClipboardList className="text-teal-600 dark:text-teal-400" />
+          <ClipboardList className="text-blue-600 dark:text-blue-400" />
           Community Change Requests
         </h1>
         <p className="text-slate-500 dark:text-gray-400 mt-1">Review requests from Property Managers to update community names or sizes.</p>
@@ -115,7 +115,7 @@ const ChangeRequests = ({ user }) => {
               onClick={() => setActiveTab(tab)}
               className={`pb-3 px-4 text-sm font-semibold tracking-wide transition-all border-b-2 relative ${
                 activeTab === tab 
-                  ? 'border-teal-500 text-teal-600 dark:text-teal-400' 
+                  ? 'border-blue-500 text-blue-600 dark:text-blue-400' 
                   : 'border-transparent text-slate-500 dark:text-gray-400 hover:text-slate-700 dark:hover:text-white'
               }`}
             >
@@ -131,12 +131,12 @@ const ChangeRequests = ({ user }) => {
       {/* Requests List */}
       {loading ? (
         <div className="text-center py-20 text-gray-400 font-mono text-sm">
-          <div className="w-8 h-8 border-2 border-teal-500 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+          <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
           FETCHING COMMUNITY REQUEST QUEUE...
         </div>
       ) : filteredRequests.length === 0 ? (
         <div className="text-center py-20 bg-slate-50/50 dark:bg-[#1E2E42]/20 border border-slate-200 dark:border-white/5 rounded-3xl text-gray-500 dark:text-gray-400">
-          <AlertCircle size={40} className="mx-auto mb-3 opacity-40 text-teal-600 dark:text-teal-400" />
+          <AlertCircle size={40} className="mx-auto mb-3 opacity-40 text-blue-600 dark:text-blue-400" />
           <p className="text-sm">No change requests found in this pool.</p>
         </div>
       ) : (
@@ -164,7 +164,7 @@ const ChangeRequests = ({ user }) => {
                       <div className="flex items-center gap-2 mt-1.5 text-sm font-medium">
                         <span className="text-slate-500 line-through truncate max-w-[150px]">{req.community_name}</span>
                         <ArrowRight size={14} className="text-slate-400 shrink-0" />
-                        <span className="text-teal-600 dark:text-teal-400 font-bold truncate">{req.requested_name}</span>
+                        <span className="text-blue-600 dark:text-blue-400 font-bold truncate">{req.requested_name}</span>
                       </div>
                     </div>
                   )}
@@ -175,7 +175,7 @@ const ChangeRequests = ({ user }) => {
                         <div className="flex items-center gap-2">
                           <span className="text-slate-500 line-through">Old Size</span>
                           <ArrowRight size={14} className="text-slate-400 shrink-0" />
-                          <span className="text-teal-600 dark:text-teal-400 font-bold">{req.requested_units} Units</span>
+                          <span className="text-blue-600 dark:text-blue-400 font-bold">{req.requested_units} Units</span>
                         </div>
                         <div className="text-[10px] text-indigo-650 dark:text-indigo-400 flex items-center gap-1 font-bold uppercase tracking-wide mt-1">
                           <CornerDownRight size={10} />
@@ -226,7 +226,7 @@ const ChangeRequests = ({ user }) => {
                   <button
                     disabled={actionLoading}
                     onClick={() => handleApprove(req.id)}
-                    className="flex-1 py-3 px-5 bg-teal-600 hover:bg-teal-500 text-white font-semibold rounded-2xl text-xs uppercase tracking-wider transition duration-200 active:scale-95 shadow-md shadow-teal-600/10 flex items-center justify-center gap-1.5 disabled:opacity-55"
+                    className="flex-1 py-3 px-5 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-2xl text-xs uppercase tracking-wider transition duration-200 active:scale-95 shadow-md shadow-blue-600/10 flex items-center justify-center gap-1.5 disabled:opacity-55"
                   >
                     <Check size={14} /> Approve
                   </button>
@@ -261,7 +261,7 @@ const ChangeRequests = ({ user }) => {
                 onChange={(e) => setRejectionReason(e.target.value)}
                 required
                 rows="4"
-                className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl p-3.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-teal-500 resize-none placeholder-slate-400"
+                className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl p-3.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-blue-500 resize-none placeholder-slate-400"
                 placeholder="Provide feedback on why the request was rejected (e.g. units mismatch, plan verification required)..."
               />
             </div>

@@ -5,18 +5,93 @@ import os
 
 from sqlalchemy import text
 from app.config import settings
-from app.database import Base, engine, SessionLocal
+from app.database import Base, engine, SessionLocal, rental_engine, RentalSessionLocal
 from app.models import *  # noqa
-from app.routers import auth, community, violation, audit_log, location, service_request, amenity, news, vendor, contract, payment, meeting_survey, report
-from app.routers import user
+from app.routers.hoa import auth, community, violation, audit_log, location, service_request, amenity, news, vendor, contract, payment, meeting_survey, report
+from app.routers.rental import rental
+from app.routers.hoa import user
 
 try:
-    print("⏳ Connecting to database and verifying DDL...")
-    Base.metadata.create_all(bind=engine)
-    print("✅ Database connection verified and base tables created.")
+    print("⏳ Connecting to HOA database and verifying DDL...")
+    hoa_tables = [
+        tbl for name, tbl in Base.metadata.tables.items()
+        if name not in ["properties", "units", "leases", "rental_applications", "rental_ledgers", "rental_maintenance_requests"]
+    ]
+    Base.metadata.create_all(bind=engine, tables=hoa_tables)
+    print("✅ HOA database connection verified and base tables created.")
 except Exception as e:
     import traceback
-    print("❌ CRITICAL DATABASE ERROR ON STARTUP:")
+    print("❌ CRITICAL HOA DATABASE ERROR ON STARTUP:")
+    traceback.print_exc()
+    raise e
+
+try:
+    print("⏳ Connecting to rental database and verifying DDL...")
+    rental_tables = [
+        tbl for name, tbl in Base.metadata.tables.items()
+        if name in [
+            "users", "roles", "otp_tokens", "audit_logs",
+            "properties", "units", "leases", "rental_applications", "rental_ledgers", "rental_maintenance_requests", "rental_vendors"
+        ]
+    ]
+    Base.metadata.create_all(bind=rental_engine, tables=rental_tables)
+    print("✅ Rental database connection verified and rental tables created.")
+
+    # Drop unwanted HOA tables from rental db
+    _rdb = RentalSessionLocal()
+    try:
+        unwanted_tables_ddl = """
+        DROP TABLE IF EXISTS 
+            amenity_bookings, service_requests, service_types, service_request_statuses, 
+            violation_documents, violations, violation_statuses, contracts, vendor_documents, 
+            vendors, payments, meeting_surveys, meeting_attendees, meeting_recording_shares, 
+            meetings, news, amenity_types, amenities, community_change_requests, 
+            community_join_requests, user_communities, communities, addresses, states, countries 
+        CASCADE;
+        """
+        _rdb.execute(text(unwanted_tables_ddl))
+        _rdb.commit()
+        print("🗑️ Cleaned up unwanted HOA tables from Rental database.")
+    except Exception as ddl_err:
+        _rdb.rollback()
+        print(f"⚠️ Warning: could not drop unwanted HOA tables from Rental database: {ddl_err}")
+    finally:
+        _rdb.close()
+    # DIAGNOSTICS CODE & FORCE INSERT RENTAL APPLICATION
+    try:
+        _db = RentalSessionLocal()
+        try:
+            from app.models.rental.rental_application import RentalApplication
+            from app.models.rental.unit import Unit
+            
+            # Check if Tanuj application exists, insert if not
+            existing_app = _db.query(RentalApplication).filter(RentalApplication.tenant_email == 'tanujtongse@gmail.com').first()
+            if not existing_app:
+                unit = _db.query(Unit).filter(Unit.unit_number == '101').first()
+                if unit:
+                    new_app = RentalApplication(
+                        unit_id=unit.unit_id,
+                        tenant_email='tanujtongse@gmail.com',
+                        full_name='Tanuj Tongse',
+                        phone='(555) 019-2834',
+                        employment_status='Employed',
+                        monthly_income=9500.0,
+                        screening_status='APPROVED',
+                        credit_score=750,
+                        eviction_history='No eviction records found.',
+                        criminal_history='No criminal records found.'
+                    )
+                    _db.add(new_app)
+                    _db.commit()
+                    print("✅ [DIAGNOSTIC] Inserted missing rental application for Tanuj Tongse in rental_db.")
+            
+        finally:
+            _db.close()
+    except Exception as diag_err:
+        print("DIAGNOSTICS ERROR", diag_err)
+except Exception as e:
+    import traceback
+    print("❌ CRITICAL RENTAL DATABASE ERROR ON STARTUP:")
     traceback.print_exc()
     raise e
 
@@ -228,7 +303,7 @@ def backfill_user_codes():
             return
 
         # Step 2: Load users without code
-        from app.models.user import User
+        from app.models.hoa.user import User
         from app.utils.user_code import generate_user_code
         users_without_code = db.query(User).filter(
             (User.user_code == None) | (User.user_code == '')
@@ -262,7 +337,7 @@ def migrate_duplicate_suffixes():
     from datetime import datetime
     db = SessionLocal()
     try:
-        from app.models.user import User
+        from app.models.hoa.user import User
         users = db.query(User).order_by(User.user_id).all()
         if not users:
             return
@@ -279,7 +354,7 @@ def migrate_duplicate_suffixes():
             # 1. Determine Country Code
             country_code = "US"
             if user.community_id:
-                from app.models.community import Community
+                from app.models.hoa.community import Community
                 comp = db.query(Community).filter(Community.community_id == user.community_id).first()
                 if comp and comp.address and comp.address.country:
                     code = comp.address.country.country_code
@@ -336,18 +411,62 @@ def seed_roles():
     ]
     db = SessionLocal()
     try:
-        from app.models.user import Role
+        from app.models.hoa.user import Role
         for r in default_roles:
             if not db.query(Role).filter(Role.role_name == r["role_name"]).first():
                 db.add(Role(**r))
         db.commit()
-        print("✅ Roles seeded.")
+
+        # Clean up rental roles from HOA db
+        try:
+            # Reassign any users with landlord/tenant roles to resident in HOA database
+            resident_role = db.query(Role).filter(Role.role_name == "resident").first()
+            if resident_role:
+                db.execute(text(f"UPDATE users SET role_id = {resident_role.role_id} WHERE role_id IN (SELECT role_id FROM roles WHERE role_name IN ('landlord', 'tenant'));"))
+                db.commit()
+            db.execute(text("DELETE FROM roles WHERE role_name IN ('landlord', 'tenant');"))
+            db.commit()
+            print("✅ HOA Roles seeded and cleaned.")
+        except Exception as clean_err:
+            db.rollback()
+            print(f"⚠️ Warning: Could not clean up rental roles from HOA database: {clean_err}")
+    finally:
+        db.close()
+
+
+def seed_rental_roles():
+    default_roles = [
+        {"role_name": "super_admin",      "description": "Full system control"},
+        {"role_name": "landlord",         "description": "Rental Property Owner/Landlord"},
+        {"role_name": "tenant",           "description": "Rental Property Tenant/Renter"},
+    ]
+    db = RentalSessionLocal()
+    try:
+        from app.models.hoa.user import Role
+        for r in default_roles:
+            if not db.query(Role).filter(Role.role_name == r["role_name"]).first():
+                db.add(Role(**r))
+        db.commit()
+
+        # Clean up HOA roles from Rental db
+        try:
+            # Reassign any users with HOA roles to tenant in Rental database
+            tenant_role = db.query(Role).filter(Role.role_name == "tenant").first()
+            if tenant_role:
+                db.execute(text(f"UPDATE users SET role_id = {tenant_role.role_id} WHERE role_id IN (SELECT role_id FROM roles WHERE role_name IN ('property_manager', 'board_member', 'resident', 'vendor', 'sales_admin'));"))
+                db.commit()
+            db.execute(text("DELETE FROM roles WHERE role_name IN ('property_manager', 'board_member', 'resident', 'vendor', 'sales_admin');"))
+            db.commit()
+            print("✅ Rental Roles seeded and cleaned.")
+        except Exception as clean_err:
+            db.rollback()
+            print(f"⚠️ Warning: Could not clean up HOA roles from Rental database: {clean_err}")
     finally:
         db.close()
 
 
 def seed_violation_statuses():
-    from app.services.violation_service import seed_violation_statuses as _seed
+    from app.services.hoa.violation_service import seed_violation_statuses as _seed
     db = SessionLocal()
     try:
         _seed(db)
@@ -357,7 +476,7 @@ def seed_violation_statuses():
 
 
 def seed_sr_statuses():
-    from app.services.service_request_service import seed_service_request_statuses as _seed
+    from app.services.hoa.service_request_service import seed_service_request_statuses as _seed
     db = SessionLocal()
     try:
         _seed(db)
@@ -367,7 +486,7 @@ def seed_sr_statuses():
 
 
 def seed_locations():
-    from app.services.location_service import seed_locations as _seed
+    from app.services.hoa.location_service import seed_locations as _seed
     db = SessionLocal()
     try:
         _seed(db)
@@ -376,8 +495,8 @@ def seed_locations():
 
 
 def seed_default_service_types_for_all_communities():
-    from app.services.service_request_service import seed_default_service_types_for_all_communities as _seed
-    from app.models.community import Community
+    from app.services.hoa.service_request_service import seed_default_service_types_for_all_communities as _seed
+    from app.models.hoa.community import Community
     db = SessionLocal()
     try:
         _seed(db)
@@ -397,7 +516,7 @@ def seed_amenity_types():
     ]
     db = SessionLocal()
     try:
-        from app.models.amenity import AmenityType
+        from app.models.hoa.amenity import AmenityType
         for t in default_types:
             if not db.query(AmenityType).filter(AmenityType.type_name == t["type_name"]).first():
                 db.add(AmenityType(**t))
@@ -412,8 +531,8 @@ def seed_amenity_types():
 def seed_custom_users():
     db = SessionLocal()
     try:
-        from app.models.user import User, Role
-        from app.services.token_service import hash_password
+        from app.models.hoa.user import User, Role
+        from app.services.hoa.token_service import hash_password
 
         # 1. Super Admin
         from app.utils.user_code import generate_user_code
@@ -494,6 +613,7 @@ def seed_custom_users():
 # ==================== RUN DATABASE UPGRADES & SEEDS ====================
 run_db_upgrades()
 seed_roles()
+seed_rental_roles()
 seed_violation_statuses()
 seed_sr_statuses()
 seed_locations()
@@ -537,6 +657,7 @@ app.include_router(contract.router,        prefix="/api")
 app.include_router(payment.router,         prefix="/api")
 app.include_router(meeting_survey.router,  prefix="/api")
 app.include_router(report.router,          prefix="/api")
+app.include_router(rental.router,          prefix="/api")
 
 
 @app.get("/", tags=["Health"])

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { Mail, Lock, User, Eye, EyeOff, Phone, RefreshCw } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import AuthLayout from '../../components/layout/AuthLayout';
 import API from '../../services/api';
 import { useGoogleLogin } from '@react-oauth/google';
@@ -10,6 +10,10 @@ import { validateName, onlyLettersKeyPress } from '../../utils/fieldValidators';
 import { formatPhoneAsYouType } from '../../utils/phoneFormatter';
 
 export default function RegisterPage() {
+  const [searchParams] = useSearchParams();
+  const roleFromUrl = searchParams.get('role') || 'resident';
+  
+  const [selectedRole, setSelectedRole] = useState(roleFromUrl);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
@@ -29,14 +33,12 @@ export default function RegisterPage() {
   const navigate = useNavigate();
 
   const fetchCaptcha = async () => {
-    // Generate new local captcha instantly to avoid empty state or delays
     setCaptcha(generateLocalCaptcha());
     setValue('captchaAnswer', ''); // Reset form input
 
     try {
       setRefreshing(true);
       const res = await API.get('/auth/captcha', { timeout: 2000 });
-      // If user hasn't started typing in the new captcha answer yet, we can safely sync with backend JWT captcha
       const currentAnswer = watch('captchaAnswer');
       if (!currentAnswer || currentAnswer.trim() === '') {
         setCaptcha({
@@ -52,7 +54,6 @@ export default function RegisterPage() {
   };
 
   useEffect(() => {
-    // Ping backend in background on mount to wake it up from cold-start sleep
     API.get('/auth/captcha', { timeout: 2000 }).catch(() => {});
   }, []);
 
@@ -79,12 +80,12 @@ export default function RegisterPage() {
     try {
       const response = await API.post('/auth/register', {
         full_name: data.fullName,
-        email_id: data.email, // Backend `email_id` expect kar raha hai
+        email_id: data.email,
         password: data.password,
-        confirm_password: data.confirmPassword, // Naya field
-        role: 'resident', // Public signup is restricted to Resident accounts only
-        mobile_number: data.mobileNumberOnly ? `+1${data.mobileNumberOnly.replace(/\D/g, '')}` : '', // Prepend country code +1
-        time_zone: 'America/New_York', // Default timezone
+        confirm_password: data.confirmPassword,
+        role: selectedRole,
+        mobile_number: data.mobileNumberOnly ? `+1${data.mobileNumberOnly.replace(/\D/g, '')}` : '',
+        time_zone: 'America/New_York',
         captcha_token: captcha.token,
         captcha_answer: data.captchaAnswer,
       });
@@ -108,9 +109,12 @@ export default function RegisterPage() {
       let errorMessage = 'Failed to register. Please check your inputs.';
       
       if (err.response?.data?.detail) {
-        errorMessage = typeof err.response.data.detail === 'string' 
-          ? err.response.data.detail 
-          : JSON.stringify(err.response.data.detail);
+        const detail = err.response.data.detail;
+        if (Array.isArray(detail)) {
+          errorMessage = detail.map(d => `${d.loc?.[d.loc.length - 1] || 'field'}: ${d.msg}`).join(', ');
+        } else {
+          errorMessage = typeof detail === 'string' ? detail : JSON.stringify(detail);
+        }
       } else if (err.response?.data) {
         errorMessage = JSON.stringify(err.response.data);
       }
@@ -119,6 +123,7 @@ export default function RegisterPage() {
       fetchCaptcha();
     }
   };
+
   const googleLogin = useGoogleLogin({
     onSuccess: async (tokenResponse) => {
       setErrorMsg('');
@@ -126,6 +131,7 @@ export default function RegisterPage() {
       try {
         const response = await API.post('/auth/google', {
           access_token: tokenResponse.access_token,
+          flow: 'register'
         });
 
         if (response.data && response.data.access_token) {
@@ -161,9 +167,12 @@ export default function RegisterPage() {
         console.error('Google Auth Error:', err);
         let errorMessage = 'Google Authentication failed.';
         if (err.response?.data?.detail) {
-          errorMessage = typeof err.response.data.detail === 'string'
-            ? err.response.data.detail
-            : JSON.stringify(err.response.data.detail);
+          const detail = err.response.data.detail;
+          if (Array.isArray(detail)) {
+            errorMessage = detail.map(d => `${d.loc?.[d.loc.length - 1] || 'field'}: ${d.msg}`).join(', ');
+          } else {
+            errorMessage = typeof detail === 'string' ? detail : JSON.stringify(detail);
+          }
         }
         setErrorMsg(errorMessage);
       }
@@ -188,8 +197,12 @@ export default function RegisterPage() {
   return (
     <AuthLayout>
       <div className="mb-8">
-        <h2 className="text-3xl font-bold text-gray-900">Resident Sign Up</h2>
-        <p className="text-gray-600 mt-1">Create your resident account to get started</p>
+        <h2 className="text-3xl font-bold text-gray-900">
+          Resident Sign Up
+        </h2>
+        <p className="text-gray-500 mt-1">
+          Create your resident account to get started
+        </p>
       </div>
 
       {errorMsg && (
@@ -403,12 +416,13 @@ export default function RegisterPage() {
         <button
           type="submit"
           disabled={isSubmitting}
-          className="w-full bg-[#0F2D59] hover:bg-[#0c2345] text-white py-2 px-4 rounded-lg font-medium transition duration-200 disabled:opacity-50"
+          className="w-full bg-[#0F2D59] hover:bg-[#0c2345] text-white py-2.5 px-4 rounded-lg font-medium transition duration-200 disabled:opacity-50 shadow-md"
         >
           {isSubmitting ? 'Submitting...' : 'Sign Up'}
         </button>
       </form>
 
+      {/* Google Button */}
       {/* Google Button */}
       <div className="relative my-6">
         <div className="absolute inset-0 flex items-center">

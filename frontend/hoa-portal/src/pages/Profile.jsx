@@ -38,6 +38,7 @@ const parsePhoneNumber = (fullNumber) => {
 };
 
 const Profile = ({ user, setUser, viewRole }) => {
+  const apiPrefix = '';
   // ── Form State ────────────────────────────
   const [form, setForm] = useState({
     first_name:    user?.first_name    || '',
@@ -378,7 +379,7 @@ const Profile = ({ user, setUser, viewRole }) => {
   const handleSendOtp = async () => {
     try {
       setSendingOtp(true);
-      await API.post('/auth/otp/send', {
+      await API.post(`${apiPrefix}/auth/otp/send`, {
         email_id: user?.email_id || user?.email,
         otp_type: 'password_reset',
       });
@@ -395,7 +396,7 @@ const Profile = ({ user, setUser, viewRole }) => {
   const handleSendPhoneOtp = async () => {
     try {
       setSendingPhoneOtp(true);
-      const res = await API.post('/auth/otp/send', {
+      const res = await API.post(`${apiPrefix}/auth/otp/send`, {
         email_id: user?.email_id || user?.email,
         otp_type: 'mobile_verify',
       });
@@ -419,7 +420,7 @@ const Profile = ({ user, setUser, viewRole }) => {
     }
     try {
       setVerifyingPhone(true);
-      const res = await API.post('/auth/otp/verify', {
+      const res = await API.post(`${apiPrefix}/auth/otp/verify`, {
         email_id: user?.email_id || user?.email,
         otp_code: phoneOtpCode,
         otp_type: 'mobile_verify',
@@ -458,7 +459,7 @@ const Profile = ({ user, setUser, viewRole }) => {
     }
     try {
       setSaving(true);
-      await API.post('/auth/password/reset', {
+      await API.post(`${apiPrefix}/auth/password/reset`, {
         email_id:     user?.email_id || user?.email,
         otp_code:     pwdForm.otp_code,
         new_password: pwdForm.new_password,

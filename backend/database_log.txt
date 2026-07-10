@@ -1,0 +1,4 @@
+=== DATABASE APPLICATIONS LOG ===
+Total Applications: 2
+App ID: 2 | Name: Vikash Singh | Email: vikaash266@gmail.com | Status: APPROVED
+App ID: 3 | Name: Tanuj Tongse | Email: tanujtongse@gmail.com | Status: APPROVED

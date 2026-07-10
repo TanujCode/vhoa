@@ -210,15 +210,15 @@ const BoardDashboard = ({ community, user, setActivePage }) => {
 
           <div className="flex flex-wrap items-center gap-2 mt-2">
             <span className="inline-flex items-center text-[10px] font-bold text-slate-600 dark:text-slate-350 bg-slate-100 dark:bg-white/5 px-2.5 py-1 rounded-xl border border-slate-200/50 dark:border-white/10 font-mono">
-              Code: {community.community_code}
+              Code: {community?.community_code || 'N/A'}
             </span>
             <span className="inline-flex items-center text-[10px] font-black text-blue-700 dark:text-blue-400 bg-blue-500/10 px-2.5 py-1 rounded-xl border border-blue-500/20">
               BOARD MEMBER PORTAL
             </span>
-            {community.address && (
+            {community?.address && (
               <span className="inline-flex items-center gap-1.5 text-[10px] font-semibold text-slate-600 dark:text-gray-300 bg-slate-50 dark:bg-white/[0.02] px-2.5 py-1 rounded-xl border border-slate-200/40 dark:border-white/5">
                 <MapPin size={11} className="text-slate-400 dark:text-slate-400 flex-shrink-0" />
-                {formatAddress(community.address)}
+                {formatAddress(community?.address)}
               </span>
             )}
           </div>

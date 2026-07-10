@@ -2,14 +2,18 @@ from datetime import date, datetime
 from pydantic import BaseModel, field_validator
 
 
+# ══════════════════════════════════════════════
 #  VIOLATION STATUS
+# ══════════════════════════════════════════════
 class ViolationStatusOut(BaseModel):
     violation_status_id: int
     violation_status:    str
     model_config = {"from_attributes": True}
 
 
+# ══════════════════════════════════════════════
 #  VIOLATION TYPE
+# ══════════════════════════════════════════════
 class ViolationTypeCreate(BaseModel):
     name:         str
     description:  str | None = None
@@ -55,7 +59,9 @@ class ViolationTypeOut(BaseModel):
     model_config = {"from_attributes": True}
 
 
+# ══════════════════════════════════════════════
 #  VIOLATION
+# ══════════════════════════════════════════════
 class ViolationCreate(BaseModel):
     violation_type_id: int
     violation_date:    date
@@ -77,6 +83,7 @@ class ViolationStatusUpdate(BaseModel):
     remarks:             str | None = None
 
 
+# ── Dispute — Member karta hai ────────────────
 class DisputeCreate(BaseModel):
     """
     The Member shall file a dispute within 30 days.
@@ -92,6 +99,7 @@ class DisputeCreate(BaseModel):
         return v.strip()
 
 
+# ── Dispute Resolve — Board karta hai ─────────
 class DisputeResolve(BaseModel):
     """
     The Board shall resolve the dispute within 30 days.
@@ -99,6 +107,7 @@ Resolution is mandatory.
     """
     dispute_resolution: str
     new_status_id:      int | None = None
+    # Agar status change karna hai — e.g. CLOSED ya RESOLVED
 
     @field_validator("dispute_resolution")
     @classmethod
@@ -108,6 +117,7 @@ Resolution is mandatory.
         return v.strip()
 
 
+# ── Violation Response ────────────────────────
 class ViolationOut(BaseModel):
     violation_id:         int
     violation_type_id:    int
@@ -141,7 +151,9 @@ class ViolationOut(BaseModel):
     model_config = {"from_attributes": True}
 
 
+# ══════════════════════════════════════════════
 #  VIOLATION DOCUMENT
+# ══════════════════════════════════════════════
 class ViolationDocumentOut(BaseModel):
     violation_document_id: int
     violation_id:          int

@@ -5,7 +5,7 @@ src_root = r"d:\Vhoa_Management"
 dest_root = r"D:\github code cc\vhoa"
 
 # Auto-copy generated portal image wallpapers from Brain folder
-brain_dir = r"C:\Users\tanuj\.gemini\antigravity-ide\brain\c0b6d5e9-bc31-4082-a932-7d0c9d5d1f0b"
+brain_dir = r"C:\Users\tanuj\.gemini\antigravity-ide\brain\5b0dd97a-c473-482a-8ec4-78cad4b837a4"
 local_assets = os.path.join(src_root, r"frontend\hoa-portal\src\assets")
 os.makedirs(local_assets, exist_ok=True)
 asset_files = {
@@ -24,10 +24,13 @@ for b_file, l_file in asset_files.items():
 copy_targets = [
     # (src_relative_path, dest_relative_path)
     (r"frontend\hoa-portal\src\App.jsx", r"frontend\hoa-portal\src\App.jsx"),
+    (r"frontend\hoa-portal\src\components\ScrollToTop.jsx", r"frontend\hoa-portal\src\components\ScrollToTop.jsx"),
     (r"frontend\hoa-portal\src\index.css", r"frontend\hoa-portal\src\index.css"),
     (r"frontend\hoa-portal\public\favicon.svg", r"frontend\hoa-portal\public\favicon.svg"),
+    (r"frontend\hoa-portal\public\favicon.png", r"frontend\hoa-portal\public\favicon.png"),
     (r"frontend\hoa-portal\public\logo_dark.png", r"frontend\hoa-portal\public\logo_dark.png"),
     (r"frontend\hoa-portal\public\logo_light.png", r"frontend\hoa-portal\public\logo_light.png"),
+    (r"frontend\hoa-portal\index.html", r"frontend\hoa-portal\index.html"),
 ]
 
 copy_dirs = [
@@ -95,6 +98,9 @@ old_targets = [
     (r"frontend\hoa-portal\src\components\AddCommunityModal.jsx", r"frontend\hoa-portal\src\components\AddCommunityModal.jsx"),
     (r"backend\app\services\email_service.py", r"backend\app\services\email_service.py"),
     (r"backend\app\routers\violation.py", r"backend\app\routers\violation.py"),
+    (r"frontend\hoa-portal\src\pages\Overview.jsx", r"frontend\hoa-portal\src\pages\Overview.jsx"),
+    (r"frontend\hoa-portal\src\pages\ResidentDashboard.jsx", r"frontend\hoa-portal\src\pages\ResidentDashboard.jsx"),
+    (r"frontend\hoa-portal\src\pages\News.jsx", r"frontend\hoa-portal\src\pages\News.jsx"),
 ]
 
 all_targets = copy_targets + old_targets

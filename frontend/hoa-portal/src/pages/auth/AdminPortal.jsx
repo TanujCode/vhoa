@@ -30,7 +30,6 @@ import AuditHistory from '../AuditHistory';
 import Documents from '../Documents';
 import Reports from '../Reports';
 import ChangeRequests from '../ChangeRequests';
-
 // Services
 import { getMe } from '../../services/authService';
 import { getCommunities } from '../../services/communityService';
@@ -130,12 +129,19 @@ const AdminPortal = () => {
         try { cachedUser = JSON.parse(rawUser); } catch (_) {}
       }
 
-      const [meData, communitiesData] = await Promise.all([
+      const res = await Promise.all([
         getMe(),
         getCommunities(),
       ]);
+      const meData = res[0];
+      const communitiesData = res[1];
 
-      const userRoleId = Number(meData.role_id || 3);
+      const roleStr = (meData.role_name || meData.role || '').toLowerCase();
+      let defaultRoleId = 3;
+      if (roleStr === 'sales_admin') defaultRoleId = 6;
+      else if (roleStr === 'resident') defaultRoleId = 4;
+      
+      const userRoleId = Number(meData.role_id || defaultRoleId);
       let userCommunityId = meData.community_id ? Number(meData.community_id) : null;
 
       // Safe storage tracking check
@@ -157,9 +163,9 @@ const AdminPortal = () => {
       if (userRoleId === 1) mappedRole = 'super_admin';
       else if (userRoleId === 2) mappedRole = 'property_manager';
       else if (userRoleId === 3) mappedRole = 'board_member';
-      else if (meData.role_name === 'sales_admin') mappedRole = 'sales_admin';
+      else if (roleStr === 'sales_admin') mappedRole = 'sales_admin';
 
-      if (meData.role_name === 'sales_admin') {
+      if (mappedRole === 'sales_admin') {
         setActivePage('dashboard');
       }
 

@@ -5,6 +5,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import AuthLayout from '../../components/layout/AuthLayout';
 import API from '../../services/api';
 import { useGoogleLogin } from '@react-oauth/google';
+import { validateEmail } from '../../utils/emailValidation';
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -32,6 +33,7 @@ export default function LoginPage() {
     try {
       setRefreshing(true);
       const res = await API.get('/auth/captcha', { timeout: 2000 });
+      // If user hasn't started typing in the new captcha answer yet, we can safely sync with backend JWT captcha
       const currentAnswer = watch('captchaAnswer');
       if (!currentAnswer || currentAnswer.trim() === '') {
         setCaptcha({
@@ -59,80 +61,81 @@ export default function LoginPage() {
     formState: { errors, isSubmitting },
   } = useForm({ mode: 'onTouched' });
 
-const onSubmit = async (data) => {
-  try {
-    setErrorMsg('');
-    
-    const response = await API.post('/auth/login', {
-      email_id: data.email,
-      password: data.password,
-      captcha_token: captcha.token,
-      captcha_answer: data.captchaAnswer,
-    });
-
-    if (response.data && response.data.access_token) {
-      const userData = response.data.user;
+  const onSubmit = async (data) => {
+    try {
+      setErrorMsg('');
       
-      localStorage.setItem('token', response.data.access_token);
-      if (response.data.session_token) {
-        localStorage.setItem('session_token', response.data.session_token);
-      }
-      localStorage.setItem('user', JSON.stringify(userData));
+      const response = await API.post('/auth/login', {
+        email_id: data.email,
+        password: data.password,
+        captcha_token: captcha.token,
+        captcha_answer: data.captchaAnswer,
+      });
 
-      sessionStorage.removeItem('token');
-      sessionStorage.removeItem('session_token');
-      sessionStorage.removeItem('user');
-
-      const role = (userData?.role_name || userData?.role || response.data?.role || '').toLowerCase();
-      const communityId = userData?.community_id;
-
-      console.log("Login Check -> Role:", role, "Community:", communityId);
-
-      if (role === 'super_admin' || role === 'property_manager' || role === 'board_member') {
-        console.log(`Sending ${role} to main AdminPortal wrapper...`);
-        navigate('/dashboard');
-      } 
-      else if (role === 'resident') {
-        if (!communityId || communityId === null || communityId === 0) {
-          if (userData?.account_status === 'PENDING_APPROVAL') {
-            console.log("Resident has a pending join request. Sending to WaitingApproval...");
-            navigate('/waiting-approval');
-          } else {
-            console.log("Resident has no community. Sending to SearchAndJoinHOA...");
-            navigate('/join-community'); 
-          }
-        } else {
-          console.log("Resident has community. Sending to Main Portal...");
-          navigate('/dashboard'); 
+      if (response.data && response.data.access_token) {
+        const userData = response.data.user;
+        
+        localStorage.setItem('token', response.data.access_token);
+        if (response.data.session_token) {
+          localStorage.setItem('session_token', response.data.session_token);
         }
-      } 
-      else {
-        navigate('/dashboard');
-      }
-    }
-  } catch (err) {
-    console.error("Login Error Details:", err);
-    const status = err.response?.status;
-    const detail = err.response?.data?.detail || "Login failed";
+        localStorage.setItem('user', JSON.stringify(userData));
 
-    if (status === 403 && detail.toLowerCase().includes("verify")) {
-      setErrorMsg("Email not verified! Sending OTP...");
-      try {
-        await API.post('/auth/otp/send', { 
-          email_id: data.email,
-          otp_type: 'email_verify' 
-        }); 
-      } catch (otpErr) {
-        console.error("OTP send failed:", otpErr);
+        sessionStorage.removeItem('token');
+        sessionStorage.removeItem('session_token');
+        sessionStorage.removeItem('user');
+
+        // Role aur Community extract karo
+        const role = (userData?.role_name || userData?.role || response.data?.role || '').toLowerCase();
+        const communityId = userData?.community_id;
+
+        // 🔥 ROLE-BASED EXACT REDIRECTS
+        if (role === 'super_admin' || role === 'property_manager' || role === 'board_member') {
+          navigate('/dashboard');
+        } 
+        else if (role === 'resident') {
+          if (!communityId || communityId === null || communityId === 0) {
+            if (userData?.account_status === 'PENDING_APPROVAL') {
+              navigate('/waiting-approval');
+            } else {
+              navigate('/join-community'); 
+            }
+          } else {
+            navigate('/dashboard'); 
+          }
+        } 
+        else {
+          navigate('/dashboard');
+        }
       }
-      setTimeout(() => navigate('/verify-otp', { state: { email: data.email } }), 2000);
-    } else {
-      setErrorMsg(detail);
-      alert(detail);
-      fetchCaptcha();
+    } catch (err) {
+      console.error("Login Error Details:", err);
+      const status = err.response?.status;
+      let detail = err.response?.data?.detail || "Login failed";
+      if (Array.isArray(detail)) {
+        detail = detail.map(d => `${d.loc?.[d.loc.length - 1] || 'field'}: ${d.msg}`).join(', ');
+      } else if (typeof detail === 'object') {
+        detail = JSON.stringify(detail);
+      }
+
+      if (status === 403 && typeof detail === 'string' && detail.toLowerCase().includes("verify")) {
+        setErrorMsg("Email not verified! Sending OTP...");
+        try {
+          await API.post('/auth/otp/send', { 
+            email_id: data.email,
+            otp_type: 'email_verify' 
+          }); 
+        } catch (otpErr) {
+          console.error("OTP send failed:", otpErr);
+        }
+        setTimeout(() => navigate('/verify-otp', { state: { email: data.email } }), 2000);
+      } else {
+        setErrorMsg(detail);
+        alert(detail);
+        fetchCaptcha();
+      }
     }
-  }
-};
+  };
 
   const googleLogin = useGoogleLogin({
     onSuccess: async (tokenResponse) => {
@@ -141,6 +144,7 @@ const onSubmit = async (data) => {
       try {
         const response = await API.post('/auth/google', {
           access_token: tokenResponse.access_token,
+          flow: 'login',
         });
 
         if (response.data && response.data.access_token) {
@@ -177,9 +181,12 @@ const onSubmit = async (data) => {
         console.error('Google Auth Error:', err);
         let errorMessage = 'Google Authentication failed.';
         if (err.response?.data?.detail) {
-          errorMessage = typeof err.response.data.detail === 'string'
-            ? err.response.data.detail
-            : JSON.stringify(err.response.data.detail);
+          const detail = err.response.data.detail;
+          if (Array.isArray(detail)) {
+            errorMessage = detail.map(d => `${d.loc?.[d.loc.length - 1] || 'field'}: ${d.msg}`).join(', ');
+          } else {
+            errorMessage = typeof detail === 'string' ? detail : JSON.stringify(detail);
+          }
         }
         setErrorMsg(errorMessage);
         alert(errorMessage);
@@ -204,8 +211,12 @@ const onSubmit = async (data) => {
   return (
     <AuthLayout>
       <div className="mb-8">
-        <h2 className="text-3xl font-bold text-gray-900">Login</h2>
-        <p className="text-gray-600 mt-1">Login to get started</p>
+        <h2 className="text-3xl font-bold text-gray-900">
+          Login
+        </h2>
+        <p className="text-gray-600 mt-1">
+          Login to get started
+        </p>
       </div>
 
       {errorMsg && (
@@ -231,29 +242,7 @@ const onSubmit = async (data) => {
               type="email"
               {...register('email', {
                 required: 'Email is required',
-                validate: (value) => {
-                  const emailRegex = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i;
-                  if (!emailRegex.test(value.trim())) {
-                    return 'Please enter a valid email address.';
-                  }
-
-                  const domain = value.split('@')[1]?.toLowerCase() || '';
-                  const commonTypos = [
-                    'gmailgmail.com', 'yahooyahoo.com', 'outlookoutlook.com',
-                    'gamil.com', 'gmial.com', 'gml.com', 'gmail.co',
-                    'yahooo.com', 'yaho.com', 'hotmial.com'
-                  ];
-
-                  if (commonTypos.includes(domain)) {
-                    const suggestedDomain = domain
-                      .replace(/gmailgmail|gamil|gmial|gml|gmail\.co/, 'gmail.com')
-                      .replace(/yahooyahoo|yahooo|yaho/, 'yahoo.com')
-                      .replace(/outlookoutlook/, 'outlook.com')
-                      .replace(/hotmial/, 'hotmail.com');
-                    return `Suspicious domain! Did you mean ${suggestedDomain}?`;
-                  }
-                  return true;
-                },
+                validate: validateEmail,
               })}
               className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none pl-10 text-sm text-gray-900 bg-white dark:text-gray-900 dark:bg-white ${
                 errors.email ? 'border-red-500' : 'border-gray-300'
@@ -275,11 +264,8 @@ const onSubmit = async (data) => {
           <div className="relative">
             <input
               type={showPassword ? 'text' : 'password'}
-              {...register('password', {
-                required: 'Password is required',
-                minLength: { value: 6, message: 'Min 6 characters' },
-              })}
-              className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none pl-10 pr-10 text-sm text-gray-900 bg-white dark:text-gray-900 dark:bg-white ${
+              {...register('password', { required: 'Password is required' })}
+              className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none pl-10 text-sm text-gray-900 bg-white dark:text-gray-900 dark:bg-white ${
                 errors.password ? 'border-red-500' : 'border-gray-300'
               }`}
               placeholder="••••••••"
@@ -354,7 +340,7 @@ const onSubmit = async (data) => {
         <button
           type="submit"
           disabled={isSubmitting}
-          className="w-full bg-[#0F2D59] hover:bg-[#0c2345] text-white py-2 px-4 rounded-lg font-medium transition duration-200 disabled:opacity-50"
+          className="w-full bg-[#0F2D59] hover:bg-[#0c2345] text-white py-2.5 px-4 rounded-lg font-medium transition duration-200 disabled:opacity-50 shadow-md"
         >
           {isSubmitting ? 'Logging in...' : 'Log In'}
         </button>

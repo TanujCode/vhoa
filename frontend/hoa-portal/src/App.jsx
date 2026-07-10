@@ -8,6 +8,15 @@ import SearchAndJoinHOA from './pages/SearchAndJoinHOA';
 import VerifyOtpPage from './pages/VerifyOtpPage';
 import WaitingApproval from './pages/WaitingApproval'; // 🔥 Waiting page ko import kiya
 import ClientOnboarding from './pages/auth/ClientOnboarding';
+import PortalSelect from './pages/auth/PortalSelect';
+
+// Decoupled Rental Pages
+import RentalLoginPage from './pages/rental/auth/RentalLoginPage';
+import RentalRegisterPage from './pages/rental/auth/RentalRegisterPage';
+import RentalForgotPassword from './pages/rental/auth/RentalForgotPassword';
+import RentalVerifyOtpPage from './pages/rental/auth/RentalVerifyOtpPage';
+import RentalAdminPortal from './pages/rental/RentalAdminPortal';
+
 
 // Marketing pages
 import LandingPage from './pages/marketing/LandingPage';
@@ -28,11 +37,13 @@ import HoaSolutionPage from './pages/marketing/solutions/HoaSolutionPage';
 
 // Smart Protected Route with Security Check
 const ProtectedRoute = () => {
-  const token = localStorage.getItem('token') || sessionStorage.getItem('token') || localStorage.getItem('access_token') || sessionStorage.getItem('access_token');
+  const isRentalPath = window.location.pathname.startsWith('/rental') || window.location.search.includes('role=tenant') || window.location.search.includes('role=landlord');
+  const tokenKey = isRentalPath ? 'rental_token' : 'token';
+  const token = localStorage.getItem(tokenKey) || sessionStorage.getItem(tokenKey) || localStorage.getItem('access_token') || sessionStorage.getItem('access_token');
   
-  // Agar token nahi hai toh seedha login pe bhejo
+  // Agar token nahi hai toh seedha corresponding login pe bhejo
   if (!token) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to={isRentalPath ? "/rental/login" : "/login"} replace />;
   }
 
   return <Outlet />;
@@ -69,8 +80,16 @@ export default function App() {
         <Route path="/solutions/hoa" element={<HoaSolutionPage />} />
 
         {/* --- Public Routes --- */}
+        <Route path="/portal-select" element={<PortalSelect />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        
+        {/* --- Public Decoupled Rental Routes --- */}
+        <Route path="/rental/login" element={<RentalLoginPage />} />
+        <Route path="/rental/register" element={<RentalRegisterPage />} />
+        <Route path="/rental/forgot-password" element={<RentalForgotPassword />} />
+        <Route path="/rental/verify-otp" element={<RentalVerifyOtpPage />} />
+
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/verify-otp" element={<VerifyOtpPage />} />
         <Route path="/onboarding" element={<ClientOnboarding />} />
@@ -85,6 +104,7 @@ export default function App() {
           
           {/* 3. Final Main Dashboard Portal view */}
           <Route path="/dashboard" element={<AdminPortal />} />
+          <Route path="/rental/dashboard" element={<RentalAdminPortal />} />
         </Route>
 
         {/* --- Redirects & Fallbacks --- */}

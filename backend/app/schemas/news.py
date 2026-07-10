@@ -2,7 +2,9 @@ from datetime import datetime
 from pydantic import BaseModel, field_validator
 
 
+# ══════════════════════════════════════════════
 #  NEWS SCHEMAS
+# ══════════════════════════════════════════════
 class NewsCreate(BaseModel):
     community_id: int
     title:        str
@@ -49,7 +51,9 @@ class NewsOut(BaseModel):
     model_config = {"from_attributes": True}
 
 
+# ══════════════════════════════════════════════
 #  FAQ SCHEMAS
+# ══════════════════════════════════════════════
 class FAQCreate(BaseModel):
     community_id: int
     question:     str

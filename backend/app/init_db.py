@@ -71,6 +71,7 @@ def run_db_upgrades():
 
         # Note: Do not copy existing user unit numbers globally to user_communities,
         # as some user_communities associations (like property managers) are intentionally NULL.
+        db.execute(text("ALTER TABLE leases ADD COLUMN IF NOT EXISTS tenant_email VARCHAR(255);"))
         pass
         
         db.commit()
@@ -90,10 +91,12 @@ def seed_roles():
         {"role_name": "resident",         "description": "Homeowner or tenant"},
         {"role_name": "vendor",           "description": "External contractor"},
         {"role_name": "sales_admin",      "description": "Sales and Contract Administrator"},
+        {"role_name": "landlord",         "description": "Rental Property Owner/Landlord"},
+        {"role_name": "tenant",           "description": "Rental Property Tenant/Renter"},
     ]
     db = SessionLocal()
     try:
-        from app.models.user import Role
+        from app.models.hoa.user import Role
         for r in default_roles:
             if not db.query(Role).filter(Role.role_name == r["role_name"]).first():
                 db.add(Role(**r))
@@ -104,7 +107,7 @@ def seed_roles():
 
 
 def seed_violation_statuses():
-    from app.services.violation_service import seed_violation_statuses as _seed
+    from app.services.hoa.violation_service import seed_violation_statuses as _seed
     db = SessionLocal()
     try:
         _seed(db)
@@ -114,7 +117,7 @@ def seed_violation_statuses():
 
 
 def seed_sr_statuses():
-    from app.services.service_request_service import seed_service_request_statuses as _seed
+    from app.services.hoa.service_request_service import seed_service_request_statuses as _seed
     db = SessionLocal()
     try:
         _seed(db)
@@ -124,7 +127,7 @@ def seed_sr_statuses():
 
 
 def seed_locations():
-    from app.services.location_service import seed_locations as _seed
+    from app.services.hoa.location_service import seed_locations as _seed
     db = SessionLocal()
     try:
         _seed(db)
@@ -133,7 +136,7 @@ def seed_locations():
 
 
 def seed_default_service_types_for_all_communities():
-    from app.services.service_request_service import seed_default_service_types_for_all_communities as _seed
+    from app.services.hoa.service_request_service import seed_default_service_types_for_all_communities as _seed
     db = SessionLocal()
     try:
         _seed(db)

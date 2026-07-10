@@ -2,7 +2,9 @@ from datetime import date, datetime
 from pydantic import BaseModel, field_validator
 
 
+# ══════════════════════════════════════════════
 #  AMENITY TYPE
+# ══════════════════════════════════════════════
 class AmenityTypeCreate(BaseModel):
     type_name:   str
     description: str | None = None
@@ -16,17 +18,20 @@ class AmenityTypeOut(BaseModel):
     model_config = {"from_attributes": True}
 
 
+# ══════════════════════════════════════════════
 #  AMENITY
+# ══════════════════════════════════════════════
 class AmenityCreate(BaseModel):
     community_id:    int
     amenity_type_id: int
     name:            str
     description:     str | None = None
-    location:        str | None = None
-    capacity:        int | None = None
+    location:        str
+    capacity:        int
     fee_enabled:     bool  = False
     booking_fee:     float = 0.0
 
+    # Single time slot (start → end)
     slot1_start: str = "08:00"
     slot1_end:   str = "20:00"
 
@@ -63,37 +68,38 @@ class AmenityUpdate(BaseModel):
 
 
 class AmenityOut(BaseModel):
-    amenity_id:      int
-    community_id:    int
-    amenity_type_id: int
-    amenity_type_name: str | None = None
-    name:            str
-    description:     str | None
-    location:        str | None
-    capacity:        int | None
-    fee_enabled:     bool
-    booking_fee:     float
-    slot1_start:     str
-    slot1_end:       str
-    slot2_start:     str | None = None
-    slot2_end:       str | None = None
+    amenity_id:          int
+    community_id:        int
+    amenity_type_id:     int
+    amenity_type_name:   str | None = None
+    name:                str
+    description:         str | None
+    location:            str | None
+    capacity:            int | None
+    fee_enabled:         bool
+    booking_fee:         float
+    slot1_start:         str
+    slot1_end:           str
+    slot2_start:         str | None = None
+    slot2_end:           str | None = None
     # Pool Status
     pool_open:           bool = True
     tentative_open_date: datetime | None = None
     is_pool_reserved:    bool = False
-    active_status:   bool
-    created_date:    datetime
+    active_status:       bool
+    created_date:        datetime
     model_config = {"from_attributes": True}
 
 
+# ══════════════════════════════════════════════
 #  BOOKING
+# ══════════════════════════════════════════════
 class BookingCreate(BaseModel):
     amenity_id:   int
     community_id: int
     booking_date: date
     slot_number:  int
-    # 1 = Slot 1 (8am - 2pm)
-    # 2 = Slot 2 (2pm - 8pm)
+    # 1 = Only slot (full day reservation)
 
     @field_validator("slot_number")
     @classmethod
@@ -133,9 +139,12 @@ class BookingOut(BaseModel):
     model_config = {"from_attributes": True}
 
 
+# ══════════════════════════════════════════════
+#  AVAILABILITY CHECK
+# ══════════════════════════════════════════════
 class SlotAvailability(BaseModel):
-    booking_date: date
+    booking_date:     date
     slot_1_available: bool
     slot_2_available: bool
-    slot_1_time:      str = "8:00 AM - 2:00 PM"
+    slot_1_time:      str = "8:00 AM - 8:00 PM"
     slot_2_time:      str = "2:00 PM - 8:00 PM"

@@ -50,6 +50,7 @@ copy /Y "d:\Vhoa_Management\backend\app\services\community_service.py" "D:\githu
 copy /Y "d:\Vhoa_Management\backend\app\routers\community.py" "D:\github code cc\vhoa\backend\app\routers\community.py"
 copy /Y "d:\Vhoa_Management\frontend\hoa-portal\src\components\AiAssistant.jsx" "D:\github code cc\vhoa\frontend\hoa-portal\src\components\AiAssistant.jsx"
 copy /Y "d:\Vhoa_Management\frontend\hoa-portal\src\App.jsx" "D:\github code cc\vhoa\frontend\hoa-portal\src\App.jsx"
+copy /Y "d:\Vhoa_Management\frontend\hoa-portal\src\components\ScrollToTop.jsx" "D:\github code cc\vhoa\frontend\hoa-portal\src\components\ScrollToTop.jsx"
 copy /Y "d:\Vhoa_Management\backend\requirements.txt" "D:\github code cc\vhoa\backend\requirements.txt"
 copy /Y "d:\Vhoa_Management\backend\app\routers\report.py" "D:\github code cc\vhoa\backend\app\routers\report.py"
 copy /Y "d:\Vhoa_Management\frontend\hoa-portal\src\pages\Dashboard.jsx" "D:\github code cc\vhoa\frontend\hoa-portal\src\pages\Dashboard.jsx"

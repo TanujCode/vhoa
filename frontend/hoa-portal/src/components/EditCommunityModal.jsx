@@ -91,7 +91,7 @@ const EditCommunityModal = ({ isOpen, onClose, community, onSuccess }) => {
               value={formData.name} 
               onChange={handleChange} 
               required 
-              className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl p-3.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-teal-500 placeholder-slate-400 dark:placeholder-gray-500" 
+              className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl p-3.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-blue-500 placeholder-slate-400 dark:placeholder-gray-500" 
               placeholder="Community Name" 
             />
           </div>
@@ -105,7 +105,7 @@ const EditCommunityModal = ({ isOpen, onClose, community, onSuccess }) => {
                 value={formData.community_size} 
                 onChange={handleChange} 
                 required
-                className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl p-3.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-teal-500" 
+                className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl p-3.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-blue-500" 
               />
             </div>
             <div>
@@ -114,7 +114,7 @@ const EditCommunityModal = ({ isOpen, onClose, community, onSuccess }) => {
                 name="license_status" 
                 value={formData.license_status} 
                 onChange={handleChange}
-                className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl p-3.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-teal-500"
+                className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl p-3.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-blue-500"
               >
                 <option value="ACTIVE">ACTIVE</option>
                 <option value="EXPIRED">EXPIRED</option>
@@ -129,7 +129,7 @@ const EditCommunityModal = ({ isOpen, onClose, community, onSuccess }) => {
               name="contact_person" 
               value={formData.contact_person} 
               onChange={handleChange} 
-              className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl p-3.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-teal-500 placeholder-slate-400 dark:placeholder-gray-500" 
+              className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl p-3.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-blue-500 placeholder-slate-400 dark:placeholder-gray-500" 
               placeholder="Rahul Sharma" 
             />
           </div>
@@ -143,7 +143,7 @@ const EditCommunityModal = ({ isOpen, onClose, community, onSuccess }) => {
                   name="bank_name" 
                   value={formData.bank_name} 
                   onChange={handleChange} 
-                  className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl p-2.5 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-teal-500" 
+                  className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl p-2.5 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-blue-500" 
                   placeholder="Chase Bank"
                 />
               </div>
@@ -154,7 +154,7 @@ const EditCommunityModal = ({ isOpen, onClose, community, onSuccess }) => {
                     name="bank_routing_no" 
                     value={formData.bank_routing_no} 
                     onChange={handleChange} 
-                    className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl p-2.5 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-teal-500" 
+                    className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl p-2.5 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-blue-500" 
                     placeholder="123456789"
                   />
                 </div>
@@ -164,7 +164,7 @@ const EditCommunityModal = ({ isOpen, onClose, community, onSuccess }) => {
                     name="bank_account_no" 
                     value={formData.bank_account_no} 
                     onChange={handleChange} 
-                    className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl p-2.5 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-teal-500" 
+                    className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl p-2.5 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-blue-500" 
                     placeholder="987654321"
                   />
                 </div>
@@ -175,7 +175,7 @@ const EditCommunityModal = ({ isOpen, onClose, community, onSuccess }) => {
                   name="bank_account_name" 
                   value={formData.bank_account_name} 
                   onChange={handleChange} 
-                  className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl p-2.5 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-teal-500" 
+                  className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl p-2.5 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-blue-500" 
                   placeholder="Green Valley HOA Escrow"
                 />
               </div>
@@ -185,7 +185,7 @@ const EditCommunityModal = ({ isOpen, onClose, community, onSuccess }) => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-teal-600 hover:bg-teal-500 py-3.5 rounded-2xl font-medium text-white disabled:opacity-50 transition mt-2 shadow-lg shadow-teal-500/20"
+            className="w-full bg-blue-600 hover:bg-blue-500 py-3.5 rounded-2xl font-medium text-white disabled:opacity-50 transition mt-2 shadow-lg shadow-blue-500/20"
           >
             {loading ? "Saving Changes..." : "Save Changes"}
           </button>
@@ -203,7 +203,7 @@ const EditCommunityModal = ({ isOpen, onClose, community, onSuccess }) => {
           <button 
             type="button"
             onClick={onClose} 
-            className="w-full py-3 text-slate-500 hover:bg-red-600 hover:text-white dark:text-gray-400 dark:hover:bg-red-600 dark:hover:text-white rounded-xl text-sm font-medium transition"
+            className="w-full py-3 cancel-button-red-hover rounded-xl text-sm font-medium transition"
           >
             Cancel
           </button>

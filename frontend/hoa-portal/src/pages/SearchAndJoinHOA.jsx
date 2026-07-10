@@ -41,6 +41,7 @@ const SearchAndJoinHOA = () => {
                     return;
                 }
 
+                // Check active user details fresh from backend
                 const meRes = await API.get('/auth/me');
                 if (meRes.data && meRes.data.account_status === 'PENDING_APPROVAL') {
                     localStorage.setItem('user', JSON.stringify(meRes.data));
@@ -101,12 +102,14 @@ const SearchAndJoinHOA = () => {
         
         alert("✅ " + (res.data.message || "Request submitted successfully!"));
         
+        // 🔥 FIXED THE TYPO HERE:
         setPassCode('');
         setUnitNo('');
         setIdProof(null);
-        setAddressProof(null);
+        setAddressProof(null); // <-- Yeh pehle addressProof(null) tha, ab setAddressProof kar diya
         setSelectedHOA(null);
 
+        // Ab user perfectly automatic Is screen par navigate kar jayega
         navigate('/waiting-approval');
 
     } catch (err) {
@@ -126,7 +129,7 @@ const SearchAndJoinHOA = () => {
         <div className="min-h-screen bg-slate-50 dark:bg-[#0D1B2A] text-slate-900 dark:text-white p-8 flex flex-col items-center font-sans">
             <div className="max-w-2xl w-full">
                 <h1 className="text-3xl font-bold mb-2 flex items-center gap-3 text-slate-900 dark:text-white">
-                    <ShieldCheck className="text-teal-600 dark:text-teal-400" size={32} />
+                    <ShieldCheck className="text-blue-600 dark:text-blue-400" size={32} />
                     Join Your Community
                 </h1>
                 <p className="text-slate-500 dark:text-slate-400 mb-8 text-sm tracking-wide">Resident Registration & Verification</p>
@@ -145,7 +148,7 @@ const SearchAndJoinHOA = () => {
                             <Search className="absolute left-3 top-3 text-slate-400 dark:text-slate-500" size={20} />
                             <input 
                                 type="text"
-                                className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl py-2.5 pl-10 pr-4 focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500 outline-none transition-all text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500"
+                                className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl py-2.5 pl-10 pr-4 focus:ring-2 focus:ring-teal-500/50 focus:border-blue-500 outline-none transition-all text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500"
                                 placeholder="Start typing name..."
                                 onChange={(e) => setSearchTerm(e.target.value)}
                             />
@@ -160,10 +163,10 @@ const SearchAndJoinHOA = () => {
                                     <div 
                                         key={hoa.community_id}
                                         onClick={() => setSelectedHOA(hoa)}
-                                        className="p-3.5 bg-slate-50 dark:bg-white/5 rounded-xl hover:bg-teal-500/10 cursor-pointer border border-slate-200 dark:border-transparent hover:border-teal-500/30 transition-all flex justify-between items-center text-sm"
+                                        className="p-3.5 bg-slate-50 dark:bg-white/5 rounded-xl hover:bg-blue-500/10 cursor-pointer border border-slate-200 dark:border-transparent hover:border-blue-500/30 transition-all flex justify-between items-center text-sm"
                                     >
                                         <span className="font-medium text-slate-800 dark:text-slate-200">{hoa.name}</span> 
-                                        <span className="text-xs font-mono text-teal-600 dark:text-teal-400 bg-teal-500/10 px-2 py-0.5 rounded">Zip: {hoa.address?.zip_code || hoa.zip_code || 'N/A'}</span>
+                                        <span className="text-xs font-mono text-blue-600 dark:text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded">Zip: {hoa.address?.zip_code || hoa.zip_code || 'N/A'}</span>
                                     </div>
                                 ))
                             )}
@@ -172,8 +175,8 @@ const SearchAndJoinHOA = () => {
                 ) : (
                     <form onSubmit={handleSubmit} className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] p-6 rounded-2xl border border-slate-200/80 dark:border-white/10 space-y-6 shadow-xl text-slate-900 dark:text-white">
                         <div className="flex justify-between items-center border-b border-slate-200 dark:border-white/10 pb-4">
-                            <h2 className="text-xl font-bold text-teal-600 dark:text-teal-400 tracking-tight">{selectedHOA.name}</h2>
-                            <button type="button" onClick={() => setSelectedHOA(null)} className="text-xs text-slate-500 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white underline transition-colors">Change</button>
+                            <h2 className="text-xl font-bold text-blue-600 dark:text-blue-400 tracking-tight">{selectedHOA.name}</h2>
+                            <button type="button" onClick={() => setSelectedHOA(null)} className="text-xs text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white underline transition-colors">Change</button>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -182,7 +185,7 @@ const SearchAndJoinHOA = () => {
                                 <input 
                                     type="text"
                                     required
-                                    className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl py-2.5 px-4 outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500"
+                                    className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl py-2.5 px-4 outline-none focus:border-blue-500 focus:ring-2 focus:ring-teal-500/20 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500"
                                     placeholder="Enter code provided by Board"
                                     value={passCode}
                                     onChange={(e) => setPassCode(e.target.value)}
@@ -193,7 +196,7 @@ const SearchAndJoinHOA = () => {
                                 <input 
                                     type="text"
                                     required
-                                    className={`w-full bg-slate-50 dark:bg-[#0D1B2A] border rounded-xl py-2.5 px-4 outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 ${unitError ? 'border-red-500' : 'border-slate-200 dark:border-white/10'}`}
+                                    className={`w-full bg-slate-50 dark:bg-[#0D1B2A] border rounded-xl py-2.5 px-4 outline-none focus:border-blue-500 focus:ring-2 focus:ring-teal-500/20 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 ${unitError ? 'border-red-500' : 'border-slate-200 dark:border-white/10'}`}
                                     placeholder="e.g. Unit 4B, Apt 102"
                                     value={unitNo}
                                     onKeyPress={(e) => {
@@ -219,8 +222,8 @@ const SearchAndJoinHOA = () => {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label className="block text-sm font-medium mb-2 text-slate-700 dark:text-slate-300">Identity Proof (ID Card)</label>
-                                <div className="border-2 border-dashed border-slate-200 dark:border-white/10 rounded-xl p-5 text-center hover:border-teal-500 bg-slate-50 dark:bg-[#0D1B2A]/50 cursor-pointer transition-all relative group">
-                                    <Upload className="mx-auto text-slate-400 dark:text-slate-500 group-hover:text-teal-600 dark:group-hover:text-teal-400 mb-2 transition-colors" size={24} />
+                                <div className="border-2 border-dashed border-slate-200 dark:border-white/10 rounded-xl p-5 text-center hover:border-blue-500 bg-slate-50 dark:bg-[#0D1B2A]/50 cursor-pointer transition-all relative group">
+                                    <Upload className="mx-auto text-slate-400 dark:text-slate-500 group-hover:text-blue-600 dark:group-hover:text-blue-400 mb-2 transition-colors" size={24} />
                                     <span className="text-xs block text-slate-500 dark:text-slate-400 truncate max-w-full px-2">
                                         {idProof ? idProof.name : "Click to upload ID"}
                                     </span>
@@ -229,8 +232,8 @@ const SearchAndJoinHOA = () => {
                             </div>
                             <div>
                                 <label className="block text-sm font-medium mb-2 text-slate-700 dark:text-slate-300">Address Proof</label>
-                                <div className="border-2 border-dashed border-slate-200 dark:border-white/10 rounded-xl p-5 text-center hover:border-teal-500 bg-slate-50 dark:bg-[#0D1B2A]/50 cursor-pointer transition-all relative group">
-                                    <Upload className="mx-auto text-slate-400 dark:text-slate-500 group-hover:text-teal-600 dark:group-hover:text-teal-400 mb-2 transition-colors" size={24} />
+                                <div className="border-2 border-dashed border-slate-200 dark:border-white/10 rounded-xl p-5 text-center hover:border-blue-500 bg-slate-50 dark:bg-[#0D1B2A]/50 cursor-pointer transition-all relative group">
+                                    <Upload className="mx-auto text-slate-400 dark:text-slate-500 group-hover:text-blue-600 dark:group-hover:text-blue-400 mb-2 transition-colors" size={24} />
                                     <span className="text-xs block text-slate-500 dark:text-slate-400 truncate max-w-full px-2">
                                         {addressProof ? addressProof.name : "Click to upload Proof"}
                                     </span>
@@ -249,7 +252,7 @@ const SearchAndJoinHOA = () => {
                         <button 
                             disabled={loading}
                             type="submit"
-                            className="w-full bg-teal-600 hover:bg-teal-500 text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-all shadow-lg shadow-teal-500/25 disabled:opacity-50 text-sm"
+                            className="w-full bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-all shadow-lg shadow-blue-500/25 disabled:opacity-50 text-sm"
                         >
                             {loading ? "Submitting..." : <><Send size={16} /> Submit Join Request</>}
                         </button>

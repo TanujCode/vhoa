@@ -121,7 +121,7 @@ const Topbar = ({
         )}
 
         {/* Dropdown panel */}
-        {isCommDropdownOpen && (
+        {isCommDropdownOpen && !(user?.role === 'landlord' || user?.role === 'tenant') && (
           <div className="fixed sm:absolute top-16 sm:top-[calc(100%+12px)] left-4 right-4 sm:left-0 sm:right-auto w-auto sm:w-80 bg-white dark:bg-[#1E3248] border border-slate-200 dark:border-white/20 rounded-3xl shadow-2xl z-50 py-3 overflow-hidden animate-in fade-in zoom-in-95">
             <div className="px-3 relative">
               <Search size={16} className="absolute left-7 top-1/2 -translate-y-1/2 text-gray-400" />

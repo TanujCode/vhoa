@@ -3,6 +3,8 @@
  * Provides reusable React Hook Form validators + key-press blockers for all forms.
  */
 
+// ─── Name Fields ─────────────────────────────────────────────────────────────
+/** First / Last / Middle name – only letters, spaces, hyphens, apostrophes */
 export const validateName = (label = 'Name') => (value) => {
   if (!value || !value.trim()) return true; // required handled separately
   const v = value.trim();
@@ -18,6 +20,8 @@ export const onlyLettersKeyPress = (e) => {
   if (!/[A-Za-z\s'\-]/.test(e.key)) e.preventDefault();
 };
 
+// ─── City / Country ──────────────────────────────────────────────────────────
+/** City – only letters, spaces, hyphens */
 export const validateCity = (value) => {
   if (!value || !value.trim()) return true;
   if (!/^[A-Za-z\s\-']+$/.test(value.trim()))
@@ -25,6 +29,7 @@ export const validateCity = (value) => {
   return true;
 };
 
+/** Country – only letters, spaces */
 export const validateCountry = (value) => {
   if (!value || !value.trim()) return true;
   if (!/^[A-Za-z\s]+$/.test(value.trim()))
@@ -32,6 +37,7 @@ export const validateCountry = (value) => {
   return true;
 };
 
+// ─── Zip / Postal Code ───────────────────────────────────────────────────────
 /**
  * Zip / Postal code – alphanumeric with optional space or hyphen
  * Accepts: 12345  |  12345-6789  |  SW1A 1AA  |  110001
@@ -51,6 +57,8 @@ export const onlyZipKeyPress = (e) => {
   if (!/[A-Za-z0-9\s\-]/.test(e.key)) e.preventDefault();
 };
 
+// ─── Business / HOA Name ─────────────────────────────────────────────────────
+/** Business or HOA name – letters, numbers, spaces, and common punctuation */
 export const validateBusinessName = (value) => {
   if (!value || !value.trim()) return true;
   const v = value.trim();
@@ -61,6 +69,7 @@ export const validateBusinessName = (value) => {
   return true;
 };
 
+// ─── Amount / Number Fields ───────────────────────────────────────────────────
 /** Positive decimal amount (e.g. setup fee, renewal fee) */
 export const validateAmount = (label = 'Amount') => (value) => {
   if (value === '' || value === null || value === undefined) return true;
@@ -92,6 +101,8 @@ export const onlyDecimalKeyPress = (e) => {
   if (!/[0-9.]/.test(e.key)) e.preventDefault();
 };
 
+// ─── Unit Number ─────────────────────────────────────────────────────────────
+/** Unit number – alphanumeric + a few special chars */
 export const validateUnitNo = (value) => {
   if (!value || !value.trim()) return true;
   if (!/^[A-Za-z0-9\s\-/#]+$/.test(value.trim()))
@@ -99,6 +110,8 @@ export const validateUnitNo = (value) => {
   return true;
 };
 
+// ─── Password ─────────────────────────────────────────────────────────────────
+/** Strong password – min 8 chars, at least 1 uppercase, 1 number */
 export const validatePassword = (value) => {
   if (!value) return true;
   if (value.length < 8) return 'Password must be at least 8 characters.';
