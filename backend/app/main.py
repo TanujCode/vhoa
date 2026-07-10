@@ -25,6 +25,7 @@ except Exception as e:
     traceback.print_exc()
     raise e
 
+RENTAL_DB_AVAILABLE = False
 try:
     print("[INFO] Connecting to rental database and verifying DDL...")
     rental_tables = [
@@ -35,6 +36,7 @@ try:
         ]
     ]
     Base.metadata.create_all(bind=rental_engine, tables=rental_tables)
+    RENTAL_DB_AVAILABLE = True
     print("[SUCCESS] Rental database connection verified and rental tables created.")
 
     # Drop unwanted HOA tables from rental db
@@ -91,9 +93,9 @@ try:
         print("DIAGNOSTICS ERROR", diag_err)
 except Exception as e:
     import traceback
-    print("[ERROR] CRITICAL RENTAL DATABASE ERROR ON STARTUP:")
-    traceback.print_exc()
-    raise e
+    print("[WARNING] Rental database not available - server will start without rental features.")
+    print(f"[WARNING] Rental DB error: {e}")
+    # Do NOT raise - HOA portal should still work without rental DB
 
 def run_db_upgrades():
     """Run each DDL upgrade in its own transaction so one failure doesn't block others."""
