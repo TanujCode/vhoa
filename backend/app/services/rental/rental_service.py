@@ -155,7 +155,8 @@ def create_lease_and_invite(landlord_id: int, data: LeaseCreate, db: Session) ->
     db.refresh(new_lease)
 
     # 4. If tenant doesn't exist or is not registered, send an email invite
-    invitation_url = f"http://localhost:5173/rental/register?email={data.tenant_email}&role=tenant"
+    from app.config import settings
+    invitation_url = f"{settings.FRONTEND_URL}/rental/register?email={data.tenant_email}&role=tenant"
     email_body = f"""
     <div style="padding: 30px; font-size: 16px; line-height: 1.6; color: #D1D5DB;">
       <h2 style="color: #3B82F6; margin-top: 0;">Lease Agreement Invitation</h2>
