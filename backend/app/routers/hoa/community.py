@@ -6,7 +6,7 @@ from sqlalchemy import text
 from app.database import get_db
 from app.dependencies.auth import get_current_user, require_role
 from app.models.hoa.user import User
-# 🔥 Your models imports are linked here
+# Your models imports are linked here
 from app.models.hoa.community import Community, CommunityJoinRequest 
 from app.models.hoa.community_change_request import CommunityChangeRequest
 from app.schemas.community import (
@@ -25,9 +25,9 @@ from app.utils.file_service import save_document
 
 router = APIRouter(prefix="/community", tags=["Community"])
 
-# Input schema action approve/reject ke liye
+# Input schema action approve/reject
 class RequestActionInput(BaseModel):
-    action: str  # "APPROVE" ya "REJECT"
+    action: str  # "APPROVE" or "REJECT"
 
 
 #  POST /api/community
@@ -171,7 +171,7 @@ def get_stats(
     return CommunityStatsOut(**stats)
 
 
-# 🔥 Pending Join Requests (For Board Member)
+# Pending Join Requests (For Board Member)
 @router.get("/{community_id}/join-requests/pending")
 def get_pending_requests(
     community_id: int,
@@ -607,7 +607,7 @@ def create_change_request(
     db.commit()
     db.refresh(req)
 
-    # 🔔 Log action so Super Admin sees it in notifications
+    # Log action so Super Admin sees it in notifications
     requester_name = f"{current_user.first_name or ''} {current_user.last_name or ''}".strip() or current_user.email_id
     changes_summary = []
     if body.requested_name and body.requested_name.strip() != community.name:

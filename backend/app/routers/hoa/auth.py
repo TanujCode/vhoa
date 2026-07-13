@@ -37,7 +37,7 @@ router = APIRouter(prefix="/auth", tags=["Auth"])
 
 
 
-from sqlalchemy import func # 🔥 Check this import above
+from sqlalchemy import func
 
 def _verify_captcha(captcha_token: str, captcha_answer: str):
     if not captcha_token:
@@ -93,7 +93,7 @@ def register(request: Request, body: RegisterRequest, db: Session = Depends(get_
                 lease.tenant_id = user.user_id
             db.commit()
 
-        # 🔥 AUTO-LINK WITH CASE INSENSITIVE LOWERCASE MATCHING
+        # Auto-link with case insensitive lowercase matching
         community = db.query(Community).filter(
             (func.lower(Community.president_email_id) == user_email_clean) |
             (func.lower(Community.secretary_email_id) == user_email_clean) |
@@ -122,7 +122,7 @@ def register(request: Request, body: RegisterRequest, db: Session = Depends(get_
                 community.admin_invite_status = "ACCEPTED"
             
             db.commit()
-            db.refresh(user)  # 🔥 Refresh is required so data goes into UserOut schema
+            db.refresh(user)  # Refresh is required so data goes into UserOut schema
 
             # Link in user_communities table
             from app.models.hoa.user import UserCommunity
@@ -134,7 +134,7 @@ def register(request: Request, body: RegisterRequest, db: Session = Depends(get_
                 db.add(UserCommunity(user_id=user.user_id, community_id=community.community_id))
                 db.commit()
 
-            print(f"🔥 Success Auto-Linked: {user_email_clean} with Community {community.community_id}")
+            print(f"Success Auto-Linked: {user_email_clean} with Community {community.community_id}")
 
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -306,7 +306,7 @@ def google_auth(request: Request, body: GoogleLoginRequest, db: Session = Depend
             
             db.commit()
             db.refresh(user)
-            print(f"🔥 Google Registration Auto-Linked: {email} with Community {community.community_id}")
+            print(f"Google Registration Auto-Linked: {email} with Community {community.community_id}")
             
         log_action(
             db=db,
@@ -459,7 +459,7 @@ def get_me(
         user_profile_url     = user.user_profile_url,
         created_date         = user.created_date,
         last_login           = user.last_login,
-        # 🔥 Yeh dono important hain
+        # Include community_id and name
         community_id         = user.community_id,
         community_name       = community_name,
         unit_no              = unit_no,
@@ -507,13 +507,13 @@ def send_otp(request: Request, body: SendOtpRequest, db: Session = Depends(get_d
                 "expires_in": "10 minutes"
             }
             if body.otp_type == "mobile_verify":
-                print(f"🔥 [SMS OTP] Mobile Verification OTP for {user.email_id} ({user.mobile_number}): {otp_code}")
+                print(f"[SMS OTP] Mobile Verification OTP for {user.email_id} ({user.mobile_number}): {otp_code}")
                 response_data["otp_code"] = otp_code
                 response_data["message"] = f"Verification code sent (Dev Mode - Code is: {otp_code})"
                 
             return response_data
         else:
-            print(f"❌ [SMTP ERROR] Failed to send email to {user.email_id}. Generated OTP is: {otp_code}")
+            print(f"[SMTP ERROR] Failed to send email to {user.email_id}. Generated OTP is: {otp_code}")
             raise HTTPException(status_code=500, detail="Failed to send email")
 
     except ValueError as e:

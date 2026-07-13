@@ -151,12 +151,6 @@ const AdminPortal = () => {
         }
       }
 
-      // 🔥 CRITICAL HARD OVERRIDE BYPASS: Check chalne se PEHLE hi Board member ko linked id do
-      if (!userCommunityId && userRoleId === 3) {
-        console.log("🛠️ Fixing Board Member metadata stream: Setting forced fallback ID 7");
-        userCommunityId = 7; 
-      }
-
       console.log("🚀 AdminPortal Synchronized -> Role ID:", userRoleId, "Community ID:", userCommunityId);
 
       let mappedRole = 'resident';
