@@ -154,6 +154,15 @@ def seed_default_service_types_for_all_communities():
         db.close()
 
 
+def seed_default_violation_types_for_all_communities():
+    from app.services.hoa.violation_service import seed_default_violation_types_for_all_communities as _seed
+    db = SessionLocal()
+    try:
+        _seed(db)
+    finally:
+        db.close()
+
+
 def init_database():
     print("Initializing database...")
     # Create tables defined in models if they don't exist
@@ -176,5 +185,6 @@ def init_database():
     seed_sr_statuses()
     seed_locations()
     seed_default_service_types_for_all_communities()
+    seed_default_violation_types_for_all_communities()
 
     print("All database initialization and seeding completed successfully!")

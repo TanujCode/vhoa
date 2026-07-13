@@ -203,24 +203,22 @@ const Dashboard = ({ community, user, setActivePage }) => {
           </div>
         </div>
 
-        {/* Right: Stats Grid */}
         <div className="relative z-10 w-full lg:w-auto mt-5 lg:mt-0 pt-5 lg:pt-0 border-t border-slate-200/60 dark:border-white/5 lg:border-t-0">
-          {/* Stats columns */}
           <div className="grid grid-cols-2 sm:flex sm:flex-row sm:items-center sm:justify-around lg:justify-end gap-5 sm:gap-8 lg:gap-11 w-full">
             <div className="text-center flex flex-col items-center min-w-[65px]">
-              <p className="text-3xl sm:text-4xl font-black text-blue-600 dark:text-blue-400 font-mono tracking-tight">{stats?.total_residents || 7}</p>
-              <p className="text-[9px] sm:text-[10px] font-bold text-slate-500 dark:text-gray-450 uppercase tracking-widest mt-1">Members</p>
+              <p className="text-3xl sm:text-4xl font-black text-blue-600 dark:text-blue-400 font-mono tracking-tight">{stats?.total_residents ?? 0}</p>
+              <p className="text-[9px] sm:text-[10px] font-bold text-slate-500 dark:text-gray-455 uppercase tracking-widest mt-1">Members</p>
             </div>
             <div className="text-center flex flex-col items-center min-w-[65px]">
-              <p className="text-3xl sm:text-4xl font-black text-amber-600 dark:text-amber-500 font-mono tracking-tight">{stats?.active_violations || 2}</p>
+              <p className="text-3xl sm:text-4xl font-black text-amber-600 dark:text-amber-500 font-mono tracking-tight">{stats?.active_violations ?? 0}</p>
               <p className="text-[9px] sm:text-[10px] font-bold text-slate-500 dark:text-gray-455 uppercase tracking-widest mt-1">Violations</p>
             </div>
             <div className="text-center flex flex-col items-center min-w-[65px]">
-              <p className="text-3xl sm:text-4xl font-black text-blue-600 dark:text-blue-400 font-mono tracking-tight">{stats?.open_requests || 4}</p>
+              <p className="text-3xl sm:text-4xl font-black text-blue-600 dark:text-blue-400 font-mono tracking-tight">{stats?.open_requests ?? 0}</p>
               <p className="text-[9px] sm:text-[10px] font-bold text-slate-500 dark:text-gray-455 uppercase tracking-widest mt-1">Service Req</p>
             </div>
             <div className="text-center flex flex-col items-center min-w-[65px]">
-              <p className="text-3xl sm:text-4xl font-black text-indigo-600 dark:text-indigo-400 font-mono tracking-tight">{stats?.total_units || 120}</p>
+              <p className="text-3xl sm:text-4xl font-black text-indigo-600 dark:text-indigo-400 font-mono tracking-tight">{stats?.total_units ?? 0}</p>
               <p className="text-[9px] sm:text-[10px] font-bold text-slate-500 dark:text-gray-455 uppercase tracking-widest mt-1">Total Units</p>
             </div>
           </div>

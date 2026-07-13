@@ -369,12 +369,6 @@ def get_community_stats(community_id: int, db: Session) -> dict:
         except Exception:
             pass
 
-    # Baseline defaults if database has no records (to match the screenshot)
-    if dues_collected == 0.0 and dues_pending == 0.0 and dues_overdue == 0.0:
-        dues_collected = 19227.00
-        dues_pending = 3800.00
-        dues_overdue = 1623.00
-
     return {
         "community_id":      community.community_id,
         "name":              community.name,
@@ -388,6 +382,7 @@ def get_community_stats(community_id: int, db: Session) -> dict:
         "dues_collected":    dues_collected,
         "dues_pending":      dues_pending,
         "dues_overdue":      dues_overdue,
+        "total_units":       community.community_size or 0,
     }
 
 

@@ -438,6 +438,15 @@ def seed_default_service_types_for_all_communities():
         db.close()
 
 
+def seed_default_violation_types_for_all_communities():
+    from app.services.hoa.violation_service import seed_default_violation_types_for_all_communities as _seed
+    db = SessionLocal()
+    try:
+        _seed(db)
+    finally:
+        db.close()
+
+
 def seed_amenity_types():
     default_types = [
         {"type_name": "Clubhouse", "description": "Community clubhouse for events and gatherings"},
@@ -551,6 +560,7 @@ seed_violation_statuses()
 seed_sr_statuses()
 seed_locations()
 seed_default_service_types_for_all_communities()   # Seed default service types for communities
+seed_default_violation_types_for_all_communities()
 seed_amenity_types()
 seed_custom_users()
 

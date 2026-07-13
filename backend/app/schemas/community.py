@@ -163,6 +163,7 @@ class CommunityStatsOut(BaseModel):
     dues_collected:    float = 0.0
     dues_pending:      float = 0.0
     dues_overdue:      float = 0.0
+    total_units:       int = 0
 
 
 # ══════════════════════════════════════════════
