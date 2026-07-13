@@ -38,16 +38,6 @@ def get_contracts(
     db: Session = Depends(get_db),
     current_user: User = Depends(require_role("super_admin", "sales_admin")),
 ):
-    try:
-        from app.models.hoa.contract import Contract
-        all_c = db.query(Contract).all()
-        with open("d:/Vhoa_Management/backend/contracts_get_debug.txt", "w") as f:
-            f.write(f"Total in DB: {len(all_c)}\n")
-            for c in all_c:
-                f.write(f"ID={c.contract_id} | Code={c.contract_code} | Client={c.client_first_name} {c.client_last_name} | Status={c.status}\n")
-    except Exception as e:
-        with open("d:/Vhoa_Management/backend/contracts_get_debug_error.txt", "w") as f:
-            f.write(str(e))
     return get_all_contracts(db, skip, limit)
 
 

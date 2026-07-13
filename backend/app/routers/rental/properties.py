@@ -2,10 +2,10 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List
 from app.database import get_rental_db
-from app.models.hoa.user import User
+from app.models.rental.rental_user import RentalUser
 from app.schemas.rental import PropertyCreate, PropertyOut, UnitCreate, UnitOut
 from app.services.rental import rental_service
-from app.services.hoa.audit_service import log_action
+from app.services.rental.audit_service import log_rental_action
 from app.routers.rental.dependencies import require_rental_role, get_verified_rental_user
 
 router = APIRouter(prefix="/rental", tags=["Rental - Properties & Units"])
@@ -14,11 +14,11 @@ router = APIRouter(prefix="/rental", tags=["Rental - Properties & Units"])
 def create_property(
     body: PropertyCreate,
     db: Session = Depends(get_rental_db),
-    current_user: User = Depends(require_rental_role("super_admin", "landlord"))
+    current_user: RentalUser = Depends(require_rental_role("super_admin", "landlord"))
 ):
     try:
         prop = rental_service.create_property(current_user.user_id, body, db)
-        log_action(db, "CREATE_PROPERTY", "rental", f"Property '{prop.name}' created.", current_user.user_id)
+        log_rental_action(db, "CREATE_PROPERTY", "rental", f"Property '{prop.name}' created.", current_user.user_id)
         return prop
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -27,9 +27,10 @@ def create_property(
 @router.get("/properties", response_model=List[PropertyOut])
 def list_properties(
     db: Session = Depends(get_rental_db),
-    current_user: User = Depends(require_rental_role("super_admin", "landlord", "tenant"))
+    current_user: RentalUser = Depends(require_rental_role("super_admin", "landlord", "tenant"))
 ):
-    if current_user.role.role_name == "tenant":
+    rental_role = current_user.role.role_name if current_user.role else ""
+    if rental_role == "tenant":
         from app.models.rental.property import Property
         return db.query(Property).filter(Property.active_status == True).all()
     return rental_service.get_properties(current_user.user_id, db)
@@ -39,11 +40,11 @@ def list_properties(
 def create_unit(
     body: UnitCreate,
     db: Session = Depends(get_rental_db),
-    current_user: User = Depends(require_rental_role("super_admin", "landlord"))
+    current_user: RentalUser = Depends(require_rental_role("super_admin", "landlord"))
 ):
     try:
         unit = rental_service.create_unit(body, db)
-        log_action(db, "CREATE_UNIT", "rental", f"Unit '{unit.unit_number}' added to property {body.property_id}.", current_user.user_id)
+        log_rental_action(db, "CREATE_UNIT", "rental", f"Unit '{unit.unit_number}' added to property {body.property_id}.", current_user.user_id)
         return unit
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -53,7 +54,7 @@ def create_unit(
 def list_units(
     property_id: int,
     db: Session = Depends(get_rental_db),
-    current_user: User = Depends(get_verified_rental_user)
+    current_user: RentalUser = Depends(get_verified_rental_user)
 ):
     return rental_service.get_units_by_property(property_id, db)
 
@@ -63,11 +64,11 @@ def update_property(
     property_id: int,
     body: PropertyCreate,
     db: Session = Depends(get_rental_db),
-    current_user: User = Depends(require_rental_role("super_admin", "landlord"))
+    current_user: RentalUser = Depends(require_rental_role("super_admin", "landlord"))
 ):
     try:
         prop = rental_service.update_property(property_id, current_user.user_id, body, db)
-        log_action(db, "UPDATE_PROPERTY", "rental", f"Property '{prop.name}' updated.", current_user.user_id)
+        log_rental_action(db, "UPDATE_PROPERTY", "rental", f"Property '{prop.name}' updated.", current_user.user_id)
         return prop
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
@@ -79,11 +80,11 @@ def update_property(
 def delete_property(
     property_id: int,
     db: Session = Depends(get_rental_db),
-    current_user: User = Depends(require_rental_role("super_admin", "landlord"))
+    current_user: RentalUser = Depends(require_rental_role("super_admin", "landlord"))
 ):
     try:
         rental_service.delete_property(property_id, current_user.user_id, db)
-        log_action(db, "DELETE_PROPERTY", "rental", f"Property {property_id} soft deleted.", current_user.user_id)
+        log_rental_action(db, "DELETE_PROPERTY", "rental", f"Property {property_id} soft deleted.", current_user.user_id)
         return {"detail": "Property deleted successfully"}
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
@@ -95,11 +96,11 @@ def delete_property(
 def delete_unit(
     unit_id: int,
     db: Session = Depends(get_rental_db),
-    current_user: User = Depends(require_rental_role("super_admin", "landlord"))
+    current_user: RentalUser = Depends(require_rental_role("super_admin", "landlord"))
 ):
     try:
         rental_service.delete_unit(unit_id, current_user.user_id, db)
-        log_action(db, "DELETE_UNIT", "rental", f"Unit {unit_id} soft deleted.", current_user.user_id)
+        log_rental_action(db, "DELETE_UNIT", "rental", f"Unit {unit_id} soft deleted.", current_user.user_id)
         return {"detail": "Unit deleted successfully"}
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
@@ -112,11 +113,11 @@ def update_unit(
     unit_id: int,
     body: UnitCreate,
     db: Session = Depends(get_rental_db),
-    current_user: User = Depends(require_rental_role("super_admin", "landlord"))
+    current_user: RentalUser = Depends(require_rental_role("super_admin", "landlord"))
 ):
     try:
         unit = rental_service.update_unit(unit_id, current_user.user_id, body, db)
-        log_action(db, "UPDATE_UNIT", "rental", f"Unit '{unit.unit_number}' updated.", current_user.user_id)
+        log_rental_action(db, "UPDATE_UNIT", "rental", f"Unit '{unit.unit_number}' updated.", current_user.user_id)
         return unit
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))

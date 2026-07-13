@@ -46,12 +46,17 @@ const AddCommunityModal = ({ isOpen, onClose, onSuccess }) => {
       const res = await API.get('/location/countries');
       setCountries(res.data);
       if (res.data.length > 0) {
-        const firstCountryId = res.data[0].country_id;
+        const usaCountry = res.data.find(c => 
+          c.country_code === "US" || 
+          c.country_code === "USA" || 
+          (c.country_name && c.country_name.toLowerCase().includes("united states"))
+        );
+        const defaultCountryId = usaCountry ? usaCountry.country_id : res.data[0].country_id;
         setFormData(prev => ({
           ...prev,
-          address: { ...prev.address, country_id: firstCountryId }
+          address: { ...prev.address, country_id: defaultCountryId }
         }));
-        fetchStates(firstCountryId);
+        fetchStates(defaultCountryId);
       }
     } catch (err) {
       console.error('Failed to load countries:', err);

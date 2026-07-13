@@ -3,8 +3,9 @@ from sqlalchemy.orm import Session
 from typing import Optional
 from pydantic import BaseModel
 from app.database import get_rental_db
-from app.models.hoa.user import User
-from app.services.hoa.audit_service import log_action
+from app.models.rental.rental_user import RentalUser
+from app.models.hoa.user import Role
+from app.services.rental.audit_service import log_rental_action
 from app.routers.rental.dependencies import require_rental_role
 
 router = APIRouter(prefix="/rental", tags=["Rental - Tenants Directory"])
@@ -20,11 +21,11 @@ class TenantUpdateRequest(BaseModel):
 @router.get("/tenants")
 def get_tenants(
     db: Session = Depends(get_rental_db),
-    current_user: User = Depends(require_rental_role("super_admin", "landlord"))
+    current_user: RentalUser = Depends(require_rental_role("super_admin", "landlord"))
 ):
-    from app.models.hoa.user import User, Role
     from app.models.rental.lease import Lease
-    tenants = db.query(User).join(Role).filter(Role.role_name == "tenant").all()
+    # Join on Role using RentalUser.role_id
+    tenants = db.query(RentalUser).join(Role, RentalUser.role_id == Role.role_id).filter(Role.role_name == "tenant").all()
     res = []
     for t in tenants:
         from sqlalchemy import func
@@ -35,7 +36,7 @@ def get_tenants(
         unit_number = None
         if active_lease and active_lease.unit:
             unit_number = active_lease.unit.unit_number
-        elif t.unit_no:
+        elif hasattr(t, 'unit_no') and t.unit_no:
             unit_number = t.unit_no
 
         res.append({
@@ -60,15 +61,14 @@ def toggle_tenant_status(
     tenant_id: int,
     active_status: bool,
     db: Session = Depends(get_rental_db),
-    current_user: User = Depends(require_rental_role("super_admin", "landlord"))
+    current_user: RentalUser = Depends(require_rental_role("super_admin", "landlord"))
 ):
-    from app.models.hoa.user import User
-    tenant = db.query(User).filter(User.user_id == tenant_id).first()
+    tenant = db.query(RentalUser).filter(RentalUser.user_id == tenant_id).first()
     if not tenant:
         raise HTTPException(status_code=404, detail="Tenant not found.")
     tenant.active_status = active_status
     db.commit()
-    log_action(db, "TOGGLE_TENANT_STATUS", "rental", f"Tenant status set to {active_status} for User ID {tenant_id}.", current_user.user_id)
+    log_rental_action(db, "TOGGLE_TENANT_STATUS", "rental", f"Tenant status set to {active_status} for User ID {tenant_id}.", current_user.user_id)
     return {"detail": "Tenant status updated successfully", "active_status": tenant.active_status}
 
 
@@ -77,15 +77,14 @@ def update_tenant(
     tenant_id: int,
     body: TenantUpdateRequest,
     db: Session = Depends(get_rental_db),
-    current_user: User = Depends(require_rental_role("super_admin", "landlord"))
+    current_user: RentalUser = Depends(require_rental_role("super_admin", "landlord"))
 ):
-    from app.models.hoa.user import User
-    tenant = db.query(User).filter(User.user_id == tenant_id).first()
+    tenant = db.query(RentalUser).filter(RentalUser.user_id == tenant_id).first()
     if not tenant:
         raise HTTPException(status_code=404, detail="Tenant not found.")
     
     if body.email_id.lower().strip() != tenant.email_id.lower().strip():
-        existing = db.query(User).filter(User.email_id == body.email_id.lower().strip()).first()
+        existing = db.query(RentalUser).filter(RentalUser.email_id == body.email_id.lower().strip()).first()
         if existing:
             raise HTTPException(status_code=400, detail="Email is already taken by another user.")
             
@@ -93,9 +92,10 @@ def update_tenant(
     tenant.last_name = body.last_name.strip()
     tenant.email_id = body.email_id.lower().strip()
     tenant.mobile_number = body.mobile_number
-    tenant.unit_no = body.unit_no
+    if hasattr(tenant, 'unit_no'):
+        tenant.unit_no = body.unit_no
     db.commit()
-    log_action(db, "UPDATE_TENANT", "rental", f"Tenant updated details for User ID {tenant_id}.", current_user.user_id)
+    log_rental_action(db, "UPDATE_TENANT", "rental", f"Tenant updated details for User ID {tenant_id}.", current_user.user_id)
     return {"detail": "Tenant updated successfully"}
 
 
@@ -103,13 +103,12 @@ def update_tenant(
 def delete_tenant(
     tenant_id: int,
     db: Session = Depends(get_rental_db),
-    current_user: User = Depends(require_rental_role("super_admin", "landlord"))
+    current_user: RentalUser = Depends(require_rental_role("super_admin", "landlord"))
 ):
-    from app.models.hoa.user import User
-    tenant = db.query(User).filter(User.user_id == tenant_id).first()
+    tenant = db.query(RentalUser).filter(RentalUser.user_id == tenant_id).first()
     if not tenant:
         raise HTTPException(status_code=404, detail="Tenant not found.")
     db.delete(tenant)
     db.commit()
-    log_action(db, "DELETE_TENANT", "rental", f"Tenant deleted with User ID {tenant_id}.", current_user.user_id)
+    log_rental_action(db, "DELETE_TENANT", "rental", f"Tenant deleted with User ID {tenant_id}.", current_user.user_id)
     return {"detail": "Tenant user deleted successfully"}

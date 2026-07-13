@@ -8,8 +8,8 @@ class Lease(Base):
     __tablename__ = "rental_leases"
 
     lease_id = Column(Integer, primary_key=True, index=True)
-    landlord_id = Column(Integer, ForeignKey("users.user_id"), nullable=False)
-    tenant_id = Column(Integer, ForeignKey("users.user_id"), nullable=True)  # Nullable until tenant signs up
+    landlord_id = Column(Integer, ForeignKey("rental_users.user_id"), nullable=False)
+    tenant_id = Column(Integer, ForeignKey("rental_users.user_id"), nullable=True)  # Nullable until tenant signs up
     tenant_email = Column(String(255), nullable=True)
     unit_id = Column(Integer, ForeignKey("rental_units.unit_id"), nullable=False)
     
@@ -32,7 +32,7 @@ class Lease(Base):
     created_date = Column(DateTime(timezone=True), server_default=func.now())
 
     # Relationships
-    landlord = relationship("User", foreign_keys=[landlord_id])
-    tenant = relationship("User", foreign_keys=[tenant_id])
+    landlord = relationship("RentalUser", foreign_keys=[landlord_id])
+    tenant = relationship("RentalUser", foreign_keys=[tenant_id])
     unit = relationship("Unit", back_populates="leases")
     ledgers = relationship("RentalLedger", back_populates="lease", cascade="all, delete-orphan")

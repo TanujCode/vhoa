@@ -40,18 +40,18 @@ def get_rental_logs(
     db:           Session    = Depends(get_rental_db),
     current_user: User       = Depends(get_current_rental_user),
 ):
-    from app.models.hoa.audit_log import AuditLog
-    query = db.query(AuditLog)
+    from app.models.rental.rental_audit_log import RentalAuditLog
+    query = db.query(RentalAuditLog)
     if module:
-        query = query.filter(AuditLog.module == module)
+        query = query.filter(RentalAuditLog.module == module)
     if action:
-        query = query.filter(AuditLog.action == action)
+        query = query.filter(RentalAuditLog.action == action)
     
-    role = current_user.role.role_name if current_user.role else ""
+    role = current_user.rental_role.role_name if current_user.rental_role else ""
     if role == "tenant":
-        query = query.filter(AuditLog.user_id == current_user.user_id)
+        query = query.filter(RentalAuditLog.user_id == current_user.user_id)
         
-    logs = query.order_by(AuditLog.created_at.desc()).offset(skip).limit(limit).all()
+    logs = query.order_by(RentalAuditLog.created_at.desc()).offset(skip).limit(limit).all()
     return [_to_audit_out(log) for log in logs]
 
 
@@ -62,11 +62,11 @@ def get_my_rental_logs(
     db:    Session = Depends(get_rental_db),
     current_user: User = Depends(get_current_rental_user),
 ):
-    from app.models.hoa.audit_log import AuditLog
+    from app.models.rental.rental_audit_log import RentalAuditLog
     logs = (
-        db.query(AuditLog)
-        .filter(AuditLog.user_id == current_user.user_id)
-        .order_by(AuditLog.created_at.desc())
+        db.query(RentalAuditLog)
+        .filter(RentalAuditLog.user_id == current_user.user_id)
+        .order_by(RentalAuditLog.created_at.desc())
         .offset(skip)
         .limit(limit)
         .all()

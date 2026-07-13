@@ -8,7 +8,7 @@ class RentalVendor(Base):
     __tablename__ = "rental_vendors"
 
     vendor_id = Column(Integer, primary_key=True, index=True)
-    landlord_id = Column(Integer, ForeignKey("users.user_id"), nullable=False)
+    landlord_id = Column(Integer, ForeignKey("rental_users.user_id"), nullable=False)
 
     # ── Basic Info ────────────────────────────
     company_name = Column(String(255), nullable=False)
@@ -32,4 +32,4 @@ class RentalVendor(Base):
     created_date = Column(DateTime(timezone=True), server_default=func.now())
 
     # Relationships
-    landlord = relationship("User", foreign_keys=[landlord_id])
+    landlord = relationship("RentalUser", foreign_keys=[landlord_id])

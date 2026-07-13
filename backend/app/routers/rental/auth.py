@@ -9,14 +9,22 @@ from sqlalchemy.orm import Session
 from pydantic import BaseModel, EmailStr, field_validator, model_validator
 from app.config import settings
 from app.database import get_rental_db
-from app.models.hoa.user import User, Role
+from app.models.rental.rental_user import RentalUser
+from app.models.hoa.user import Role
 from app.models.rental.lease import Lease
 from app.schemas.auth import SendOtpRequest, PasswordResetRequest, VerifyOtpRequest, RefreshRequest
-from app.services.hoa.auth_service import login_user, split_full_name, send_otp_for_password_reset, reset_password, generate_otp, verify_otp
+from app.services.hoa.auth_service import split_full_name
+from app.services.rental.auth_service import (
+    send_rental_otp_for_password_reset,
+    reset_rental_password,
+    generate_rental_otp,
+    verify_rental_otp,
+    login_rental_user,
+)
 from app.services.hoa.email_service import send_otp_email
 from app.services.hoa.token_service import decode_access_token, decode_session_token, create_access_token, create_session_token, hash_password
 from app.utils.user_code import generate_user_code
-from app.services.hoa.audit_service import log_action
+from app.services.rental.audit_service import log_rental_action
 from app.routers.rental.dependencies import get_current_rental_user
 
 router = APIRouter(prefix="/rental", tags=["Rental - Auth"])
@@ -122,45 +130,32 @@ def rental_register(
         if not rental_role:
             raise HTTPException(status_code=400, detail=f"Role '{body.role}' not found.")
 
-        existing_user = db.query(User).filter(User.email_id == body.email_id.lower().strip()).first()
+        existing_user = db.query(RentalUser).filter(RentalUser.email_id == body.email_id.lower().strip()).first()
 
         if existing_user:
-            # User already exists (HOA user) — just add their rental role
-            if existing_user.rental_role_id:
-                raise HTTPException(status_code=400, detail="This email already has a rental account. Please login instead.")
-            existing_user.rental_role_id = rental_role.role_id
-            db.commit()
-            db.refresh(existing_user)
-            user = existing_user
-        else:
-            # Brand new user — create with hoa_member as HOA role + rental role
-            hoa_member_role = db.query(Role).filter(Role.role_name == "hoa_member").first()
-            if not hoa_member_role:
-                hoa_member_role = rental_role  # fallback
+            raise HTTPException(status_code=400, detail="This email already has a rental account. Please login instead.")
 
-            first_name, middle_name, last_name = split_full_name(body.full_name)
-            u_code = generate_user_code(db, first_name, last_name)
+        first_name, middle_name, last_name = split_full_name(body.full_name)
+        u_code = generate_user_code(db, first_name, last_name, is_rental=True)
 
-            user = User(
-                first_name=first_name,
-                middle_name=middle_name,
-                last_name=last_name,
-                user_code=u_code,
-                email_id=body.email_id.lower().strip(),
-                mobile_number=body.mobile_number,
-                password=hash_password(body.password),
-                role_id=hoa_member_role.role_id,
-                rental_role_id=rental_role.role_id,
-                is_client=False,
-                active_status=True,
-                account_status="PENDING_VERIFICATION",
-                email_id_is_verified=False,
-                mobile_is_verified=False,
-                time_zone=body.time_zone
-            )
-            db.add(user)
-            db.commit()
-            db.refresh(user)
+        user = RentalUser(
+            first_name=first_name,
+            middle_name=middle_name,
+            last_name=last_name,
+            user_code=u_code,
+            email_id=body.email_id.lower().strip(),
+            mobile_number=body.mobile_number,
+            password=hash_password(body.password),
+            role_id=rental_role.role_id,
+            active_status=True,
+            account_status="PENDING_VERIFICATION",
+            email_id_is_verified=False,
+            mobile_is_verified=False,
+            time_zone=body.time_zone
+        )
+        db.add(user)
+        db.commit()
+        db.refresh(user)
 
         # Link any pending leases to this user
         lease = db.query(Lease).filter(Lease.tenant_email == user.email_id).first()
@@ -193,22 +188,16 @@ def rental_login(
 ):
     try:
         _verify_captcha(body.captcha_token, body.captcha_answer)
-        user = db.query(User).filter(User.email_id == body.email_id.lower().strip()).first()
+        user = db.query(RentalUser).filter(RentalUser.email_id == body.email_id.lower().strip()).first()
         if not user:
             raise HTTPException(status_code=401, detail="Invalid email or password")
 
-        # Check rental_role_id (not HOA role_id)
-        rental_role_name = user.rental_role.role_name if user.rental_role else ""
+        # Check role_id on RentalUser
+        rental_role_name = user.role.role_name if user.role else ""
         if rental_role_name not in ["landlord", "tenant"]:
             raise HTTPException(status_code=401, detail="This login page is for Rental users. Please use the HOA portal login or register for a rental account first.")
 
-        if not user.active_status or user.account_status == "INACTIVE":
-            raise HTTPException(status_code=403, detail="Your account is inactive. Please contact support or your landlord.")
-
-        if hasattr(user, 'email_id_is_verified') and not user.email_id_is_verified:
-            raise ValueError("Email not verified. Please verify your email first.")
-
-        result = login_user(body.email_id, body.password, db)
+        result = login_rental_user(body.email_id, body.password, db)
         access_token = create_access_token(user.user_id, user.email_id, rental_role_name, user.email_id_is_verified)
         session_token = create_session_token(user.user_id, user.email_id, rental_role_name, user.email_id_is_verified)
 
@@ -230,7 +219,7 @@ def rental_login(
 
 @router.get("/auth/me")
 def rental_get_me(
-    current_user: User = Depends(get_current_rental_user)
+    current_user: RentalUser = Depends(get_current_rental_user)
 ):
     return {
         "user_id": current_user.user_id,
@@ -247,8 +236,8 @@ def rental_get_me(
         "active_status": current_user.active_status,
         "account_status": current_user.account_status or "PENDING_VERIFICATION",
         "time_zone": current_user.time_zone or "America/New_York",
-        "role_id": current_user.rental_role_id,
-        "role_name": current_user.rental_role.role_name if current_user.rental_role else None,
+        "role_id": current_user.role_id,
+        "role_name": current_user.role.role_name if current_user.role else None,
         "user_profile_url": current_user.user_profile_url,
         "created_date": current_user.created_date,
         "last_login": current_user.last_login
@@ -264,7 +253,7 @@ def rental_refresh(body: RefreshRequest, db: Session = Depends(get_rental_db)):
     except JWTError:
         raise HTTPException(status_code=401, detail="Session token expired. Please login again.")
 
-    user = db.query(User).filter(User.user_id == int(payload["sub"])).first()
+    user = db.query(RentalUser).filter(RentalUser.user_id == int(payload["sub"])).first()
     if not user or not user.active_status:
         raise HTTPException(status_code=401, detail="User not found or is inactive.")
 
@@ -298,30 +287,22 @@ def rental_google_auth(
             raise HTTPException(status_code=400, detail="Could not retrieve email from Google account.")
 
         email = email.lower().strip()
-        user = db.query(User).filter(User.email_id == email).first()
+        user = db.query(RentalUser).filter(RentalUser.email_id == email).first()
         
         if user:
             if body.flow == "register":
-                # HOA user trying to register for rental - just add rental role
-                if user.rental_role_id:
-                    raise HTTPException(status_code=400, detail="This Google account already has a rental account. Please login instead.")
-                landlord_role = db.query(Role).filter(Role.role_name == "landlord").first()
-                user.rental_role_id = landlord_role.role_id
-                user.email_id_is_verified = True
-                user.account_status = "APPROVED"
-                db.commit()
-                db.refresh(user)
+                # Rental user trying to register for rental - just add rental role
+                raise HTTPException(status_code=400, detail="This Google account already has a rental account. Please login instead.")
             else:
                 if not user.active_status or user.account_status == "INACTIVE":
                     raise HTTPException(status_code=403, detail="Your account is inactive. Please contact support or your landlord.")
-                rental_role_name = user.rental_role.role_name if user.rental_role else ""
+                rental_role_name = user.role.role_name if user.role else ""
                 if rental_role_name not in ["landlord", "tenant"]:
                     raise HTTPException(status_code=400, detail="This Google account does not have a rental account. Please register for the rental portal first.")
         else:
             if body.flow == "login":
                 raise HTTPException(status_code=400, detail="Account not found. Please register first.")
             landlord_role = db.query(Role).filter(Role.role_name == "landlord").first()
-            hoa_member_role = db.query(Role).filter(Role.role_name == "hoa_member").first()
             if not landlord_role:
                 raise HTTPException(status_code=500, detail="Default role 'landlord' not found.")
 
@@ -329,18 +310,16 @@ def rental_google_auth(
             first_name, middle_name, last_name = split_full_name(full_name)
 
             random_password = secrets.token_urlsafe(16)
-            u_code = generate_user_code(db, first_name, last_name)
+            u_code = generate_user_code(db, first_name, last_name, is_rental=True)
 
-            user = User(
+            user = RentalUser(
                 first_name=first_name,
                 middle_name=middle_name,
                 last_name=last_name,
                 user_code=u_code,
                 email_id=email,
                 password=hash_password(random_password),
-                role_id=hoa_member_role.role_id if hoa_member_role else landlord_role.role_id,
-                rental_role_id=landlord_role.role_id,
-                is_client=False,
+                role_id=landlord_role.role_id,
                 active_status=True,
                 account_status="APPROVED",
                 email_id_is_verified=True,
@@ -356,7 +335,7 @@ def rental_google_auth(
                 lease.tenant_id = user.user_id
                 db.commit()
 
-        rental_role_name = user.rental_role.role_name if user.rental_role else "landlord"
+        rental_role_name = user.role.role_name if user.role else "landlord"
         access_token = create_access_token(user.user_id, user.email_id, rental_role_name, True)
         session_token = create_session_token(user.user_id, user.email_id, rental_role_name, True)
 
@@ -383,19 +362,19 @@ def rental_send_otp(request: Request, body: SendOtpRequest, db: Session = Depend
 
     try:
         if body.otp_type == "password_reset":
-            otp_code, user = send_otp_for_password_reset(body.email_id, db)
+            otp_code, user = send_rental_otp_for_password_reset(body.email_id, db)
         else:
-            user = db.query(User).filter(User.email_id == body.email_id.lower()).first()
+            user = db.query(RentalUser).filter(RentalUser.email_id == body.email_id.lower()).first()
             if not user:
                 raise ValueError("This email is not registered with us.")
             if body.otp_type == "mobile_verify" and not user.mobile_number:
                 raise ValueError("Please add and save a mobile number to your profile first.")
-            otp_code = generate_otp(user.user_id, body.otp_type, db)
+            otp_code = generate_rental_otp(user.user_id, body.otp_type, db)
 
         success = send_otp_email(user.email_id, otp_code, body.otp_type, system_name="Rental Management")
 
         if success or body.otp_type == "mobile_verify":
-            log_action(
+            log_rental_action(
                 db          = db,
                 action      = "OTP_SENT",
                 module      = "auth",
@@ -409,13 +388,13 @@ def rental_send_otp(request: Request, body: SendOtpRequest, db: Session = Depend
                 "expires_in": "10 minutes"
             }
             if body.otp_type == "mobile_verify":
-                print(f"🔥 [SMS OTP] Mobile Verification OTP for {user.email_id} ({user.mobile_number}): {otp_code}")
+                print(f"[SMS OTP] Mobile Verification OTP for {user.email_id} ({user.mobile_number}): {otp_code}")
                 response_data["otp_code"] = otp_code
                 response_data["message"] = f"Verification code sent (Dev Mode - Code is: {otp_code})"
                 
             return response_data
         else:
-            print(f"❌ [SMTP ERROR] Failed to send email to {user.email_id}. Generated OTP is: {otp_code}")
+            print(f"[SMTP ERROR] Failed to send email to {user.email_id}. Generated OTP is: {otp_code}")
             raise HTTPException(status_code=500, detail="Failed to send email")
 
     except ValueError as e:
@@ -428,12 +407,12 @@ def rental_send_otp(request: Request, body: SendOtpRequest, db: Session = Depend
 @router.post("/auth/password/reset")
 def rental_password_reset(request: Request, body: PasswordResetRequest, db: Session = Depends(get_rental_db)):
     try:
-        reset_password(body.email_id, body.otp_code, body.new_password, db)
+        reset_rental_password(body.email_id, body.otp_code, body.new_password, db)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
-    user = db.query(User).filter(User.email_id == body.email_id.lower()).first()
-    log_action(
+    user = db.query(RentalUser).filter(RentalUser.email_id == body.email_id.lower()).first()
+    log_rental_action(
         db          = db,
         action      = "PASSWORD_RESET",
         module      = "auth",
@@ -447,11 +426,11 @@ def rental_password_reset(request: Request, body: PasswordResetRequest, db: Sess
 @router.post("/auth/otp/verify")
 def rental_verify_otp(request: Request, body: VerifyOtpRequest, db: Session = Depends(get_rental_db)):
     try:
-        user = verify_otp(body.email_id, body.otp_code, body.otp_type, db)
+        user = verify_rental_otp(body.email_id, body.otp_code, body.otp_type, db)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
-    log_action(
+    log_rental_action(
         db          = db,
         action      = "OTP_VERIFIED",
         module      = "auth",

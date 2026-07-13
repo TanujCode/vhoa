@@ -74,9 +74,7 @@ class User(Base):
     unit_no              = Column(String(50), nullable=True)
     unit_no_2            = Column(String(50), nullable=True)
 
-    # Rental Role — separate from HOA role so same email can be board_member in HOA + landlord in Rental
-    rental_role_id       = Column(Integer, ForeignKey("roles.role_id"), nullable=True)
-    rental_role          = relationship("Role", foreign_keys=[rental_role_id])
+
 
     #Profile
     active_status        = Column(Boolean, default=True)

@@ -5,7 +5,7 @@ import os
 
 from sqlalchemy import text
 from app.config import settings
-from app.database import Base, engine, SessionLocal, rental_engine, RentalSessionLocal
+from app.database import Base, engine, SessionLocal
 from app.models import *  # noqa
 from app.routers.hoa import auth, community, violation, audit_log, location, service_request, amenity, news, vendor, contract, payment, meeting_survey, report
 from app.routers.rental import rental
@@ -38,7 +38,7 @@ def run_db_upgrades():
             # Ignore "already exists" type errors (idempotent), print others
             err_str = str(_e).lower()
             if "already exists" not in err_str and "duplicate" not in err_str:
-                print(f"  ⚠️  DDL warning [{label}]: {_e}")
+                print(f"  [DDL Warning] [{label}]: {_e}")
         finally:
             _db.close()
 
@@ -137,6 +137,19 @@ def run_db_upgrades():
         "user_communities.role_id"
     )
 
+    # ── rental_vendors table ─────────────────────────────────────
+    for col_name, col_type in [
+        ("zip_code", "VARCHAR(20)"),
+        ("license_number", "VARCHAR(100)"),
+        ("license_expiry", "DATE"),
+        ("insurance_number", "VARCHAR(100)"),
+        ("insurance_expiry", "DATE"),
+    ]:
+        _safe_execute(
+            f"ALTER TABLE rental_vendors ADD COLUMN IF NOT EXISTS {col_name} {col_type};",
+            f"rental_vendors.{col_name}"
+        )
+
     # ── meetings table columns (recording_url, transcript, and summary) ─────
     for col_name, col_type in [
         ("recording_url", "VARCHAR(500)"),
@@ -148,14 +161,63 @@ def run_db_upgrades():
             f"meetings.{col_name}"
         )
 
+    # ── Separate Rental Users and constraints ─────────────────────
+    # 2. Copy existing users from users to rental_users if they have a rental role
+    _safe_execute("""
+        INSERT INTO rental_users (
+            user_id, user_code, first_name, middle_name, last_name,
+            mobile_number, mobile_is_verified, email_id, email_id_is_verified,
+            password, login_attempts, account_locked_until, last_failed_login,
+            account_status, time_zone, role_id, active_status, user_profile_url,
+            created_date, modified_date, last_login
+        )
+        SELECT 
+            user_id, user_code, first_name, middle_name, last_name,
+            mobile_number, mobile_is_verified, email_id, email_id_is_verified,
+            password, login_attempts, account_locked_until, last_failed_login,
+            account_status, time_zone, rental_role_id, active_status, user_profile_url,
+            created_date, modified_date, last_login
+        FROM users
+        WHERE rental_role_id IS NOT NULL
+        ON CONFLICT (user_id) DO NOTHING;
+    """, "copy_rental_users")
+
+    # 3. Reset primary key sequence on rental_users
+    _safe_execute("""
+        SELECT setval('rental_users_user_id_seq', COALESCE((SELECT MAX(user_id) FROM rental_users), 1) + 1, false);
+    """, "reset_rental_users_seq")
+
+    # 4. Migrate foreign keys of rental tables
+    # rental_properties (landlord_id)
+    _safe_execute("ALTER TABLE rental_properties DROP CONSTRAINT IF EXISTS rental_properties_landlord_id_fkey;", "drop_prop_fk")
+    _safe_execute("ALTER TABLE rental_properties ADD CONSTRAINT rental_properties_landlord_id_fkey FOREIGN KEY (landlord_id) REFERENCES rental_users(user_id) ON DELETE CASCADE;", "add_prop_fk")
+
+    # rental_leases (landlord_id, tenant_id)
+    _safe_execute("ALTER TABLE rental_leases DROP CONSTRAINT IF EXISTS rental_leases_landlord_id_fkey;", "drop_lease_landlord_fk")
+    _safe_execute("ALTER TABLE rental_leases ADD CONSTRAINT rental_leases_landlord_id_fkey FOREIGN KEY (landlord_id) REFERENCES rental_users(user_id) ON DELETE CASCADE;", "add_lease_landlord_fk")
+    _safe_execute("ALTER TABLE rental_leases DROP CONSTRAINT IF EXISTS rental_leases_tenant_id_fkey;", "drop_lease_tenant_fk")
+    _safe_execute("ALTER TABLE rental_leases ADD CONSTRAINT rental_leases_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES rental_users(user_id) ON DELETE SET NULL;", "add_lease_tenant_fk")
+
+    # rental_audit_logs (user_id)
+    _safe_execute("ALTER TABLE rental_audit_logs DROP CONSTRAINT IF EXISTS rental_audit_logs_user_id_fkey;", "drop_audit_user_fk")
+    _safe_execute("ALTER TABLE rental_audit_logs ADD CONSTRAINT rental_audit_logs_user_id_fkey FOREIGN KEY (user_id) REFERENCES rental_users(user_id) ON DELETE SET NULL;", "add_audit_user_fk")
+
+    # rental_otp_tokens (user_id)
+    _safe_execute("ALTER TABLE rental_otp_tokens DROP CONSTRAINT IF EXISTS rental_otp_tokens_user_id_fkey;", "drop_otp_user_fk")
+    _safe_execute("ALTER TABLE rental_otp_tokens ADD CONSTRAINT rental_otp_tokens_user_id_fkey FOREIGN KEY (user_id) REFERENCES rental_users(user_id) ON DELETE CASCADE;", "add_otp_user_fk")
+
+    # rental_vendors (landlord_id)
+    _safe_execute("ALTER TABLE rental_vendors DROP CONSTRAINT IF EXISTS rental_vendors_landlord_id_fkey;", "drop_vendor_landlord_fk")
+    _safe_execute("ALTER TABLE rental_vendors ADD CONSTRAINT rental_vendors_landlord_id_fkey FOREIGN KEY (landlord_id) REFERENCES rental_users(user_id) ON DELETE CASCADE;", "add_vendor_landlord_fk")
+
     # ── Data migrations (run in one transaction) ──────────────────
     db = SessionLocal()
     try:
         # Copy existing user community_id values to user_communities junction table
         db.execute(text("""
             INSERT INTO user_communities (user_id, community_id)
-            SELECT user_id, community_id FROM users
-            WHERE community_id IS NOT NULL
+            SELECT u.user_id, u.community_id FROM users u
+            JOIN communities c ON u.community_id = c.community_id
             ON CONFLICT DO NOTHING;
         """))
 
@@ -167,55 +229,28 @@ def run_db_upgrades():
             WHERE uc.user_id = u.user_id AND uc.role_id IS NULL;
         """))
 
-        # Force specific board member emails to be board_member (role_id=3) and community_id=7 if it exists
+        # Force specific board member emails to be board_member and community_id=7 if it exists
         community_7_exists = db.execute(text("SELECT 1 FROM communities WHERE community_id = 7")).fetchone()
-        if community_7_exists:
-            db.execute(text("UPDATE users SET role_id = 3, community_id = 7 WHERE email_id IN ('tanujtongse@gmail.com', 'rajeshtongse042@gmail.com');"))
-            db.execute(text("UPDATE users SET community_id = 7 WHERE role_id = 3;"))
-            db.execute(text("""
+        board_role = db.query(Role).filter(Role.role_name == "board_member").first()
+        super_role = db.query(Role).filter(Role.role_name == "super_admin").first()
+
+        if community_7_exists and board_role:
+            db.execute(text(f"UPDATE users SET role_id = {board_role.role_id}, community_id = 7 WHERE email_id IN ('tanujtongse@gmail.com', 'rajeshtongse042@gmail.com');"))
+            db.execute(text(f"UPDATE users SET community_id = 7 WHERE role_id = {board_role.role_id};"))
+            db.execute(text(f"""
                 INSERT INTO user_communities (user_id, community_id)
                 SELECT user_id, 7 FROM users
-                WHERE role_id = 3
+                WHERE role_id = {board_role.role_id}
                 ON CONFLICT DO NOTHING;
             """))
         # Restore tanujtongse132@gmail.com to super_admin and clean up community mappings
-        db.execute(text("UPDATE users SET role_id = 1, community_id = NULL WHERE email_id = 'tanujtongse132@gmail.com';"))
+        if super_role:
+            db.execute(text(f"UPDATE users SET role_id = {super_role.role_id}, community_id = NULL WHERE email_id = 'tanujtongse132@gmail.com';"))
         db.execute(text("DELETE FROM user_communities WHERE user_id = (SELECT user_id FROM users WHERE email_id = 'tanujtongse132@gmail.com');"))
 
-        # Update user Vikash's name and email to English equivalent (John Smith) if not already exists
-        exists_john = db.execute(text("SELECT 1 FROM users WHERE email_id = 'john.smith@nestbloq.com';")).fetchone()
-        if not exists_john:
-            db.execute(text("UPDATE users SET first_name = 'John', last_name = 'Smith', email_id = 'john.smith@nestbloq.com' WHERE first_name = 'Vikash';"))
-        else:
-            db.execute(text("UPDATE users SET email_id = 'vikash.old@nestbloq.com' WHERE first_name = 'Vikash' AND email_id != 'john.smith@nestbloq.com';"))
-
-        # Update Willow Creek Community address to a USA address
-        db.execute(text("""
-            UPDATE addresses 
-            SET address = '123 Willow Creek Way', 
-                city = 'Sunnyvale', 
-                zip_code = '94086',
-                state_id = (SELECT state_id FROM states WHERE state_code = 'CA' LIMIT 1)
-            WHERE address_id IN (
-                SELECT address_id FROM communities 
-                WHERE name LIKE '%Willow Creek%'
-            ) OR address LIKE '%Bazar Chowk%' OR address LIKE '%Chicholi%';
-        """))
 
         db.commit()
-
-        # Debug database records
-        users_list = db.execute(text("SELECT user_id, first_name, last_name, email_id, role_id FROM users;")).fetchall()
-        comms_list = db.execute(text("SELECT c.community_id, c.name, a.address FROM communities c LEFT JOIN addresses a ON c.address_id = a.address_id;")).fetchall()
-        with open("db_debug.txt", "w", encoding="utf-8") as f:
-            f.write("=== USERS ===\n")
-            for u in users_list:
-                f.write(f"ID: {u[0]} | Name: {u[1]} {u[2]} | Email: {u[3]} | Role ID: {u[4]}\n")
-            f.write("\n=== COMMUNITIES ===\n")
-            for c in comms_list:
-                f.write(f"ID: {c[0]} | Name: {c[1]} | Address: {c[2]}\n")
-
-        print("[SUCCESS] Database DDL upgrades and debugging completed.")
+        print("[SUCCESS] Database DDL upgrades completed.")
     except Exception as e:
         db.rollback()
         print(f"[ERROR] Database data migrations failed: {e}")
@@ -348,6 +383,8 @@ def seed_roles():
         {"role_name": "resident",         "description": "Homeowner or tenant"},
         {"role_name": "vendor",           "description": "External contractor"},
         {"role_name": "sales_admin",      "description": "Sales and Contract Administrator"},
+        {"role_name": "landlord",         "description": "Rental Property Owner/Landlord"},
+        {"role_name": "tenant",           "description": "Rental Property Tenant/Renter"},
     ]
     db = SessionLocal()
     try:
@@ -356,53 +393,11 @@ def seed_roles():
             if not db.query(Role).filter(Role.role_name == r["role_name"]).first():
                 db.add(Role(**r))
         db.commit()
-
-        # Clean up rental roles from HOA db
-        try:
-            # Reassign any users with landlord/tenant roles to resident in HOA database
-            resident_role = db.query(Role).filter(Role.role_name == "resident").first()
-            if resident_role:
-                db.execute(text(f"UPDATE users SET role_id = {resident_role.role_id} WHERE role_id IN (SELECT role_id FROM roles WHERE role_name IN ('landlord', 'tenant'));"))
-                db.commit()
-            db.execute(text("DELETE FROM roles WHERE role_name IN ('landlord', 'tenant');"))
-            db.commit()
-            print("[SUCCESS] HOA Roles seeded and cleaned.")
-        except Exception as clean_err:
-            db.rollback()
-            print(f"[WARNING] Could not clean up rental roles from HOA database: {clean_err}")
+        print("[SUCCESS] Roles seeded successfully.")
     finally:
         db.close()
 
 
-def seed_rental_roles():
-    default_roles = [
-        {"role_name": "super_admin",      "description": "Full system control"},
-        {"role_name": "landlord",         "description": "Rental Property Owner/Landlord"},
-        {"role_name": "tenant",           "description": "Rental Property Tenant/Renter"},
-    ]
-    db = RentalSessionLocal()
-    try:
-        from app.models.hoa.user import Role
-        for r in default_roles:
-            if not db.query(Role).filter(Role.role_name == r["role_name"]).first():
-                db.add(Role(**r))
-        db.commit()
-
-        # Clean up HOA roles from Rental db
-        try:
-            # Reassign any users with HOA roles to tenant in Rental database
-            tenant_role = db.query(Role).filter(Role.role_name == "tenant").first()
-            if tenant_role:
-                db.execute(text(f"UPDATE users SET role_id = {tenant_role.role_id} WHERE role_id IN (SELECT role_id FROM roles WHERE role_name IN ('property_manager', 'board_member', 'resident', 'vendor', 'sales_admin'));"))
-                db.commit()
-            db.execute(text("DELETE FROM roles WHERE role_name IN ('property_manager', 'board_member', 'resident', 'vendor', 'sales_admin');"))
-            db.commit()
-            print("[SUCCESS] Rental Roles seeded and cleaned.")
-        except Exception as clean_err:
-            db.rollback()
-            print(f"[WARNING] Could not clean up HOA roles from Rental database: {clean_err}")
-    finally:
-        db.close()
 
 
 def seed_violation_statuses():
@@ -553,11 +548,10 @@ def seed_custom_users():
 # ==================== RUN DATABASE UPGRADES & SEEDS ====================
 run_db_upgrades()
 seed_roles()
-seed_rental_roles()
 seed_violation_statuses()
 seed_sr_statuses()
 seed_locations()
-seed_default_service_types_for_all_communities()   # ← Yeh important hai
+seed_default_service_types_for_all_communities()   # Seed default service types for communities
 seed_amenity_types()
 seed_custom_users()
 

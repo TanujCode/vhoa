@@ -8,7 +8,8 @@ from app.models.rental.rental_application import RentalApplication
 from app.models.rental.rental_ledger import RentalLedger
 from app.models.rental.rental_maintenance import RentalMaintenanceRequest
 from app.models.rental.rental_vendor import RentalVendor
-from app.models.hoa.user import User, Role
+from app.models.rental.rental_user import RentalUser
+from app.models.hoa.user import Role
 from app.schemas.rental import PropertyCreate, UnitCreate, LeaseCreate, RentalApplicationCreate, RentalMaintenanceCreate, RentalVendorCreate
 from app.services.hoa.email_service import send_email, _wrap_in_responsive_layout
 
@@ -130,7 +131,7 @@ def create_lease_and_invite(landlord_id: int, data: LeaseCreate, db: Session) ->
         raise ValueError("Unit not found.")
 
     # 2. Check if there is an existing user with this email
-    tenant_user = db.query(User).filter(User.email_id == data.tenant_email.lower().strip()).first()
+    tenant_user = db.query(RentalUser).filter(RentalUser.email_id == data.tenant_email.lower().strip()).first()
     tenant_id = tenant_user.user_id if tenant_user else None
 
     # 3. Create the lease record

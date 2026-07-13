@@ -128,8 +128,12 @@ export default function ClientOnboarding() {
       const res = await API.get('/location/countries');
       setCountries(res.data);
       if (res.data.length > 0) {
-        // Default to first country (usually USA or India)
-        const defaultCountryId = res.data[0].country_id;
+        const usaCountry = res.data.find(c => 
+          c.country_code === "US" || 
+          c.country_code === "USA" || 
+          (c.country_name && c.country_name.toLowerCase().includes("united states"))
+        );
+        const defaultCountryId = usaCountry ? usaCountry.country_id : res.data[0].country_id;
         setValue('hoa_country_id', defaultCountryId);
         setSelectedCountry(defaultCountryId);
         fetchStates(defaultCountryId, res.data);

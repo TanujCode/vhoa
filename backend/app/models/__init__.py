@@ -19,4 +19,7 @@ from app.models.rental.unit import Unit                                         
 from app.models.rental.lease import Lease                                                             # noqa
 from app.models.rental.rental_application import RentalApplication                                     # noqa
 from app.models.rental.rental_ledger import RentalLedger                                               # noqa
-from app.models.rental.rental_maintenance import RentalMaintenanceRequest                              # noqa
+from app.models.rental.rental_maintenance import RentalMaintenanceRequest                              # noqa
+from app.models.rental.rental_otp import RentalOtpToken                                                 # noqa
+from app.models.rental.rental_audit_log import RentalAuditLog                                           # noqa
+from app.models.rental.rental_user import RentalUser                                                 # noqa

@@ -2,11 +2,11 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List
 from app.database import get_rental_db
-from app.models.hoa.user import User
+from app.models.rental.rental_user import RentalUser
 from app.models.rental.rental_vendor import RentalVendor
 from app.schemas.rental import RentalMaintenanceCreate, RentalMaintenanceOut, RentalPaymentRequest
 from app.services.rental import rental_service
-from app.services.hoa.audit_service import log_action
+from app.services.rental.audit_service import log_rental_action
 from app.routers.rental.dependencies import get_verified_rental_user, require_rental_role
 
 router = APIRouter(prefix="/rental", tags=["Rental - Maintenance Desk"])
@@ -15,11 +15,11 @@ router = APIRouter(prefix="/rental", tags=["Rental - Maintenance Desk"])
 def create_maintenance(
     body: RentalMaintenanceCreate,
     db: Session = Depends(get_rental_db),
-    current_user: User = Depends(get_verified_rental_user)
+    current_user: RentalUser = Depends(get_verified_rental_user)
 ):
     try:
         req = rental_service.submit_maintenance_request(body, db)
-        log_action(db, "CREATE_MAINTENANCE", "rental", f"Maintenance request '{body.title}' submitted.", current_user.user_id)
+        log_rental_action(db, "CREATE_MAINTENANCE", "rental", f"Maintenance request '{body.title}' submitted.", current_user.user_id)
         return req
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -28,9 +28,9 @@ def create_maintenance(
 @router.get("/maintenance", response_model=List[RentalMaintenanceOut])
 def list_maintenance(
     db: Session = Depends(get_rental_db),
-    current_user: User = Depends(get_verified_rental_user)
+    current_user: RentalUser = Depends(get_verified_rental_user)
 ):
-    role_name = current_user.role.role_name
+    role_name = current_user.role.role_name if current_user.role else ""
     reqs = []
     if role_name in ["super_admin", "landlord"]:
         reqs = rental_service.get_maintenance_requests_by_landlord(current_user.user_id, db)
@@ -56,11 +56,11 @@ def update_maintenance(
     vendor_id: int | None = None,
     estimated_cost: float | None = None,
     db: Session = Depends(get_rental_db),
-    current_user: User = Depends(require_rental_role("super_admin", "landlord"))
+    current_user: RentalUser = Depends(require_rental_role("super_admin", "landlord"))
 ):
     try:
         req = rental_service.update_maintenance_request(request_id, status, vendor_id, estimated_cost, db)
-        log_action(db, "UPDATE_MAINTENANCE", "rental", f"Maintenance request {request_id} updated.", current_user.user_id)
+        log_rental_action(db, "UPDATE_MAINTENANCE", "rental", f"Maintenance request {request_id} updated.", current_user.user_id)
         
         # Populate vendor company name
         if req.vendor_id:
@@ -76,11 +76,11 @@ def pay_maintenance(
     request_id: int,
     body: RentalPaymentRequest,
     db: Session = Depends(get_rental_db),
-    current_user: User = Depends(require_rental_role("super_admin", "tenant"))
+    current_user: RentalUser = Depends(require_rental_role("super_admin", "tenant"))
 ):
     try:
         req = rental_service.pay_maintenance_request(request_id, body.payment_method, db)
-        log_action(db, "PAY_MAINTENANCE_REQUEST", "rental", f"Maintenance request {request_id} cost of {req.estimated_cost} paid.", current_user.user_id)
+        log_rental_action(db, "PAY_MAINTENANCE_REQUEST", "rental", f"Maintenance request {request_id} cost of {req.estimated_cost} paid.", current_user.user_id)
         
         # Populate vendor company name
         if req.vendor_id:

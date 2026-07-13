@@ -2,7 +2,7 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 from app.database import get_rental_db
-from app.models.hoa.user import User
+from app.models.rental.rental_user import RentalUser
 from app.services.hoa.token_service import decode_access_token
 
 bearer_scheme = HTTPBearer()
@@ -10,7 +10,7 @@ bearer_scheme = HTTPBearer()
 def get_current_rental_user(
     credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
     db: Session = Depends(get_rental_db),
-) -> User:
+) -> RentalUser:
     token = credentials.credentials
     try:
         payload = decode_access_token(token)
@@ -21,21 +21,15 @@ def get_current_rental_user(
             headers={"WWW-Authenticate": "Bearer"},
         )
     user_id = int(payload.get("sub"))
-    user = db.query(User).filter(User.user_id == user_id).first()
+    user = db.query(RentalUser).filter(RentalUser.user_id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found.")
-    # Must have a rental role
-    if not user.rental_role_id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="You do not have a rental account. Please register for the rental portal first."
-        )
     return user
 
 
 def get_verified_rental_user(
-    current_user: User = Depends(get_current_rental_user)
-) -> User:
+    current_user: RentalUser = Depends(get_current_rental_user)
+) -> RentalUser:
     if hasattr(current_user, 'email_id_is_verified') and not current_user.email_id_is_verified:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -46,11 +40,11 @@ def get_verified_rental_user(
 
 def require_rental_role(*allowed_roles: str):
     def dependency(
-        current_user: User = Depends(get_verified_rental_user),
+        current_user: RentalUser = Depends(get_verified_rental_user),
         db: Session = Depends(get_rental_db)
-    ) -> User:
-        # Use rental_role (not HOA role)
-        rental_role_name = current_user.rental_role.role_name if current_user.rental_role else ""
+    ) -> RentalUser:
+        # Use role (not rental_role)
+        rental_role_name = current_user.role.role_name if current_user.role else ""
         if rental_role_name not in allowed_roles:
             raise HTTPException(status_code=403, detail="Access denied for this rental user role.")
         return current_user

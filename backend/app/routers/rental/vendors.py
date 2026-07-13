@@ -2,10 +2,10 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List
 from app.database import get_rental_db
-from app.models.hoa.user import User
+from app.models.rental.rental_user import RentalUser
 from app.schemas.rental import RentalVendorCreate, RentalVendorOut
 from app.services.rental import rental_service
-from app.services.hoa.audit_service import log_action
+from app.services.rental.audit_service import log_rental_action
 from app.routers.rental.dependencies import require_rental_role, get_verified_rental_user
 
 router = APIRouter(prefix="/rental", tags=["Rental - Contractors / Vendors"])
@@ -14,22 +14,25 @@ router = APIRouter(prefix="/rental", tags=["Rental - Contractors / Vendors"])
 def create_rental_vendor(
     body: RentalVendorCreate,
     db: Session = Depends(get_rental_db),
-    current_user: User = Depends(require_rental_role("super_admin", "landlord"))
+    current_user: RentalUser = Depends(require_rental_role("super_admin", "landlord"))
 ):
     try:
         vendor = rental_service.create_rental_vendor(current_user.user_id, body, db)
-        log_action(db, "CREATE_RENTAL_VENDOR", "rental", f"Rental vendor '{vendor.company_name}' onboarded.", current_user.user_id)
+        log_rental_action(db, "CREATE_RENTAL_VENDOR", "rental", f"Rental vendor '{vendor.company_name}' onboarded.", current_user.user_id)
         return vendor
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         raise HTTPException(status_code=400, detail=str(e))
 
 
 @router.get("/vendors", response_model=List[RentalVendorOut])
 def list_vendors_for_rental(
     db: Session = Depends(get_rental_db),
-    current_user: User = Depends(get_verified_rental_user)
+    current_user: RentalUser = Depends(get_verified_rental_user)
 ):
-    if current_user.role.role_name in ["super_admin", "landlord"]:
+    rental_role = current_user.role.role_name if current_user.role else ""
+    if rental_role in ["super_admin", "landlord"]:
         return rental_service.get_rental_vendors(current_user.user_id, db)
     return []
 
@@ -38,11 +41,11 @@ def list_vendors_for_rental(
 def delete_rental_vendor(
     vendor_id: int,
     db: Session = Depends(get_rental_db),
-    current_user: User = Depends(require_rental_role("super_admin", "landlord"))
+    current_user: RentalUser = Depends(require_rental_role("super_admin", "landlord"))
 ):
     try:
         rental_service.delete_rental_vendor(vendor_id, current_user.user_id, db)
-        log_action(db, "DELETE_RENTAL_VENDOR", "rental", f"Rental vendor {vendor_id} deleted.", current_user.user_id)
+        log_rental_action(db, "DELETE_RENTAL_VENDOR", "rental", f"Rental vendor {vendor_id} deleted.", current_user.user_id)
         return {"message": "Vendor deleted successfully."}
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))

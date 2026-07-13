@@ -64,8 +64,8 @@ def run_db_upgrades():
         # Copy existing user community_id values to user_communities junction table
         db.execute(text("""
             INSERT INTO user_communities (user_id, community_id)
-            SELECT user_id, community_id FROM users
-            WHERE community_id IS NOT NULL
+            SELECT u.user_id, u.community_id FROM users u
+            JOIN communities c ON u.community_id = c.community_id
             ON CONFLICT DO NOTHING;
         """))
 
@@ -85,21 +85,31 @@ def run_db_upgrades():
 
 def seed_roles():
     default_roles = [
-        {"role_name": "super_admin",      "description": "Full system control"},
-        {"role_name": "property_manager", "description": "Manages communities"},
-        {"role_name": "board_member",     "description": "Elected governance member"},
-        {"role_name": "resident",         "description": "Homeowner or tenant"},
-        {"role_name": "vendor",           "description": "External contractor"},
-        {"role_name": "sales_admin",      "description": "Sales and Contract Administrator"},
-        {"role_name": "landlord",         "description": "Rental Property Owner/Landlord"},
-        {"role_name": "tenant",           "description": "Rental Property Tenant/Renter"},
+        {"role_id": 1, "role_name": "super_admin",      "description": "Full system control"},
+        {"role_id": 2, "role_name": "property_manager", "description": "Manages communities"},
+        {"role_id": 3, "role_name": "board_member",     "description": "Elected governance member"},
+        {"role_id": 4, "role_name": "resident",         "description": "Homeowner or tenant"},
+        {"role_id": 5, "role_name": "vendor",           "description": "External contractor"},
+        {"role_id": 6, "role_name": "sales_admin",      "description": "Sales and Contract Administrator"},
+        {"role_id": 7, "role_name": "landlord",         "description": "Rental Property Owner/Landlord"},
+        {"role_id": 8, "role_name": "tenant",           "description": "Rental Property Tenant/Renter"},
     ]
     db = SessionLocal()
     try:
         from app.models.hoa.user import Role
         for r in default_roles:
-            if not db.query(Role).filter(Role.role_name == r["role_name"]).first():
-                db.add(Role(**r))
+            existing = db.query(Role).filter(Role.role_id == r["role_id"]).first()
+            if not existing:
+                existing_by_name = db.query(Role).filter(Role.role_name == r["role_name"]).first()
+                if existing_by_name:
+                    existing_by_name.role_id = r["role_id"]
+                else:
+                    db.add(Role(**r))
+            else:
+                existing.role_name = r["role_name"]
+                existing.description = r["description"]
+        db.commit()
+        db.execute(text("SELECT setval('roles_role_id_seq', COALESCE((SELECT MAX(role_id) FROM roles), 1) + 1, false);"))
         db.commit()
         print("✅ Roles seeded.")
     finally:

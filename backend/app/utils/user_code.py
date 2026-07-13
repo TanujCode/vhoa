@@ -7,17 +7,24 @@ def generate_user_code(
     first_name: str,
     last_name: str,
     community_id: int | None = None,
-    signup_date: datetime | None = None,   # ← pass user's created_date for backfill
+    signup_date: datetime | None = None,   # pass user's created_date for backfill
+    is_rental: bool = False,
 ) -> str:
     # 1. Determine Country Code
-    country_code = "US"
+    country_code = "USA"
     if community_id:
         from app.models.hoa.community import Community
         comp = db.query(Community).filter(Community.community_id == community_id).first()
         if comp and comp.address and comp.address.country:
             code = comp.address.country.country_code
-            if code and len(code.strip()) >= 2:
-                country_code = code.strip().upper()[:2]
+            if code:
+                code_upper = code.strip().upper()
+                if code_upper in ("US", "USA"):
+                    country_code = "USA"
+                elif code_upper in ("IN", "IND"):
+                    country_code = "IND"
+                else:
+                    country_code = code_upper[:3]
 
     # 2. First 4 letters of the name (clean alphabetic characters)
     name_str = "".join(c for c in (first_name or "") if c.isalpha()).upper()
@@ -34,8 +41,12 @@ def generate_user_code(
     # 4. Global Sequence number — find max sequence suffix from all existing users in the system
     prefix = f"{country_code}{name_str}{date_str}"
 
-    from app.models.hoa.user import User
-    existing = db.query(User.user_code).all()
+    if is_rental:
+        from app.models.rental.rental_user import RentalUser
+        existing = db.query(RentalUser.user_code).all()
+    else:
+        from app.models.hoa.user import User
+        existing = db.query(User.user_code).all()
 
     max_seq = 0
     for row in existing:

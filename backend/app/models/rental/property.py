@@ -13,10 +13,10 @@ class Property(Base):
     city = Column(String(100), nullable=True)
     state = Column(String(100), nullable=True)
     zip_code = Column(String(20), nullable=True)
-    landlord_id = Column(Integer, ForeignKey("users.user_id"), nullable=False)
+    landlord_id = Column(Integer, ForeignKey("rental_users.user_id"), nullable=False)
     active_status = Column(Boolean, default=True)
     created_date = Column(DateTime(timezone=True), server_default=func.now())
 
     # Relationships
-    landlord = relationship("User", foreign_keys=[landlord_id])
+    landlord = relationship("RentalUser", foreign_keys=[landlord_id])
     units = relationship("Unit", back_populates="property", cascade="all, delete-orphan")

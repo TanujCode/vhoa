@@ -2,7 +2,7 @@ import base64
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from sqlalchemy.orm import Session
 from app.database import get_rental_db
-from app.models.hoa.user import User
+from app.models.rental.rental_user import RentalUser
 from app.schemas.user import ProfileUpdateRequest
 from app.utils.file_service import delete_profile_picture, save_document
 from app.routers.rental.dependencies import get_current_rental_user
@@ -14,12 +14,12 @@ router = APIRouter(prefix="/rental", tags=["Rental - Profile"])
 def rental_update_profile(
     body: ProfileUpdateRequest,
     db: Session = Depends(get_rental_db),
-    current_user: User = Depends(get_current_rental_user),
+    current_user: RentalUser = Depends(get_current_rental_user),
 ):
     if body.mobile_number:
-        existing = db.query(User).filter(
-            User.mobile_number == body.mobile_number,
-            User.user_id != current_user.user_id
+        existing = db.query(RentalUser).filter(
+            RentalUser.mobile_number == body.mobile_number,
+            RentalUser.user_id != current_user.user_id
         ).first()
         if existing:
             raise HTTPException(
@@ -48,7 +48,7 @@ def rental_update_profile(
 async def rental_upload_profile_picture(
     file: UploadFile = File(..., description="Profile picture (JPEG, PNG, WebP — max 5MB)"),
     db: Session = Depends(get_rental_db),
-    current_user: User = Depends(get_current_rental_user),
+    current_user: RentalUser = Depends(get_current_rental_user),
 ):
     content_type = file.content_type
     if not content_type or content_type == "application/octet-stream":
@@ -90,7 +90,7 @@ async def rental_upload_profile_picture(
 @router.delete("/user/profile/picture")
 def rental_delete_picture(
     db: Session = Depends(get_rental_db),
-    current_user: User = Depends(get_current_rental_user),
+    current_user: RentalUser = Depends(get_current_rental_user),
 ):
     if not current_user.user_profile_url:
         raise HTTPException(status_code=400, detail="There is no profile picture.")
@@ -105,7 +105,7 @@ def rental_delete_picture(
 async def rental_upload_my_id_proof(
     file: UploadFile = File(...),
     db: Session = Depends(get_rental_db),
-    current_user: User = Depends(get_current_rental_user),
+    current_user: RentalUser = Depends(get_current_rental_user),
 ):
     url = await save_document(file, folder_name="identity_proofs")
     current_user.id_proof_url = url
@@ -118,7 +118,7 @@ async def rental_upload_my_id_proof(
 async def rental_upload_my_address_proof(
     file: UploadFile = File(...),
     db: Session = Depends(get_rental_db),
-    current_user: User = Depends(get_current_rental_user),
+    current_user: RentalUser = Depends(get_current_rental_user),
 ):
     url = await save_document(file, folder_name="address_proofs")
     current_user.address_proof_url = url
