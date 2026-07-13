@@ -229,21 +229,8 @@ def run_db_upgrades():
             WHERE uc.user_id = u.user_id AND uc.role_id IS NULL;
         """))
 
-        # Force specific board member emails to be board_member and community_id=7 if it exists
-        community_7_exists = db.execute(text("SELECT 1 FROM communities WHERE community_id = 7")).fetchone()
-        board_role = db.query(Role).filter(Role.role_name == "board_member").first()
-        super_role = db.query(Role).filter(Role.role_name == "super_admin").first()
-
-        if community_7_exists and board_role:
-            db.execute(text(f"UPDATE users SET role_id = {board_role.role_id}, community_id = 7 WHERE email_id IN ('tanujtongse@gmail.com', 'rajeshtongse042@gmail.com');"))
-            db.execute(text(f"UPDATE users SET community_id = 7 WHERE role_id = {board_role.role_id};"))
-            db.execute(text(f"""
-                INSERT INTO user_communities (user_id, community_id)
-                SELECT user_id, 7 FROM users
-                WHERE role_id = {board_role.role_id}
-                ON CONFLICT DO NOTHING;
-            """))
         # Restore tanujtongse132@gmail.com to super_admin and clean up community mappings
+        super_role = db.query(Role).filter(Role.role_name == "super_admin").first()
         if super_role:
             db.execute(text(f"UPDATE users SET role_id = {super_role.role_id}, community_id = NULL WHERE email_id = 'tanujtongse132@gmail.com';"))
         db.execute(text("DELETE FROM user_communities WHERE user_id = (SELECT user_id FROM users WHERE email_id = 'tanujtongse132@gmail.com');"))
