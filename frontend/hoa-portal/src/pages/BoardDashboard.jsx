@@ -242,7 +242,7 @@ const BoardDashboard = ({ community, user, setActivePage }) => {
               <p className="text-3xl sm:text-4xl font-black text-indigo-600 dark:text-indigo-400 font-mono tracking-tight">{stats?.total_units ?? 0}</p>
               <p className="text-[9px] sm:text-[10px] font-bold text-slate-500 dark:text-gray-455 uppercase tracking-widest mt-1">Total Units</p>
             </div>
-          </div>     </div>
+          </div>
         </div>
       </div>
 
