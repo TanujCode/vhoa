@@ -61,7 +61,7 @@ def seed_default_violation_types_for_all_communities(db: Session):
                     due_days=dt["due_days"],
                     community_id=comm.community_id,
                     active_status=True,
-                    created_by_id=1,   # Default super_admin
+                    created_by_id=None,
                 )
                 db.add(vtype)
                 seeded_count += 1
