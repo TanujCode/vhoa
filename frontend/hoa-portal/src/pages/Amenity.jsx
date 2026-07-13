@@ -774,7 +774,7 @@ const Amenity = ({ community, user, setActivePage, setPaymentState }) => {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
               {amenities.map(a => (
-                <div key={a.amenity_id} className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 hover:border-blue-500/40 transition shadow-sm">
+                <div key={a.amenity_id} className="flex flex-col h-full bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 hover:border-blue-500/40 transition shadow-sm">
                   <div className="flex items-start justify-between mb-4">
                     <div>
                       <h3 className="font-semibold text-slate-900 dark:text-white text-lg">{a.name}</h3>
@@ -824,7 +824,7 @@ const Amenity = ({ community, user, setActivePage, setPaymentState }) => {
                     )}
                   </div>
 
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 mt-auto">
                     {isAdmin ? (
                       <>
                         <button

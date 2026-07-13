@@ -295,9 +295,9 @@ def create_booking(
         slot_end   = s2_end
     slot_time_str = f"{slot_start} - {slot_end}"
 
-    # Fee calculate based on community setting & amenity fee setting
+    # Fee calculate based on amenity fee setting
     fee_amount = 0.0
-    if community.amenity_fee_enabled and amenity.fee_enabled:
+    if amenity.fee_enabled:
         fee_amount = amenity.booking_fee or 0.0
 
     # Payment due date — 1 day before booking
