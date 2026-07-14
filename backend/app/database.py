@@ -15,10 +15,6 @@ engine = create_engine(
 )
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-# Rental uses the SAME database — rental tables have rental_ prefix to avoid conflicts
-rental_engine = engine
-RentalSessionLocal = SessionLocal
-
 
 class Base(DeclarativeBase):
     pass
@@ -33,7 +29,7 @@ def get_db():
 
 
 def get_rental_db():
-    db = RentalSessionLocal()
+    db = SessionLocal()
     try:
         yield db
     finally:

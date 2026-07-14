@@ -118,7 +118,7 @@ const RentalAdminPortal = () => {
         return <PropertiesHub user={user} />;
 
       case 'screening_hub':
-        return <ScreeningHub user={user} />;
+        return <ScreeningHub user={user} setActivePage={setActivePage} />;
 
       case 'leases_hub':
         return <LeasesHub user={user} />;

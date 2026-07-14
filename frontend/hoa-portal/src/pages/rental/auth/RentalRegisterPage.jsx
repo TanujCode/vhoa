@@ -99,7 +99,8 @@ export default function RentalRegisterPage() {
         console.error("OTP send failed:", otpErr);
       }
 
-      setSuccessMsg('Rental Registration successful! Sending verification code to your email...');
+      const roleStr = selectedRole === 'landlord' ? 'Landlord' : selectedRole === 'tenant' ? 'Tenant' : 'Rental';
+      setSuccessMsg(`${roleStr} Registration successful! Sending verification code to your email...`);
       setTimeout(() => {
         navigate('/rental/verify-otp', { state: { email: data.email, isRental: true } });
       }, 2000);
@@ -145,7 +146,8 @@ export default function RentalRegisterPage() {
           sessionStorage.removeItem('rental_session_token');
           sessionStorage.removeItem('rental_user');
 
-          setSuccessMsg('Google registration successful!');
+          const roleStr = response.data.role === 'landlord' ? 'Landlord' : response.data.role === 'tenant' ? 'Tenant' : 'Rental';
+          setSuccessMsg(`Google ${roleStr} registration successful!`);
           setTimeout(() => navigate('/rental/dashboard'), 1000);
         }
       } catch (err) {

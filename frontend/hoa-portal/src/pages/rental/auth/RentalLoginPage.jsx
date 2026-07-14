@@ -84,7 +84,9 @@ export default function RentalLoginPage() {
         sessionStorage.removeItem('rental_session_token');
         sessionStorage.removeItem('rental_user');
         
-        setSuccessMsg('Rental Login successful!');
+        const role = response.data.role || 'User';
+        const capitalizedRole = role.charAt(0).toUpperCase() + role.slice(1);
+        setSuccessMsg(`${capitalizedRole} Login successful!`);
         setTimeout(() => navigate('/rental/dashboard'), 1000);
       }
     } catch (err) {
@@ -140,7 +142,9 @@ export default function RentalLoginPage() {
           sessionStorage.removeItem('rental_session_token');
           sessionStorage.removeItem('rental_user');
 
-          setSuccessMsg('Google Login successful!');
+          const role = response.data.role || 'User';
+          const capitalizedRole = role.charAt(0).toUpperCase() + role.slice(1);
+          setSuccessMsg(`Google ${capitalizedRole} Login successful!`);
           setTimeout(() => navigate('/rental/dashboard'), 1000);
         }
       } catch (err) {

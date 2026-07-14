@@ -52,6 +52,10 @@ export default function LeasesHub({ user }) {
   const [utilFee, setUtilFee] = useState('0');
   const [parkingFee, setParkingFee] = useState('0');
   const [petFee, setPetFee] = useState('0');
+  
+  // Co-Landlord states
+  const [coLandlordName, setCoLandlordName] = useState('');
+  const [signingAsRole, setSigningAsRole] = useState('landlord');
 
   // Signature state
   const [signature, setSignature] = useState('');
@@ -61,7 +65,16 @@ export default function LeasesHub({ user }) {
   const [successMsg, setSuccessMsg] = useState('');
   const [formErrors, setFormErrors] = useState({});
   const [searchQuery, setSearchQuery] = useState('');
-  const hasVacantUnits = units.some(u => u.status !== 'OCCUPIED');
+  const canSignAsPrimary = selectedLease && isLandlord && !selectedLease.landlord_signature;
+  const isUserPrimaryLandlord = selectedLease && selectedLease.landlord_signature && 
+    (user?.name && (
+      selectedLease.landlord_signature.toLowerCase().trim().includes(user.name.toLowerCase().trim()) ||
+      user.name.toLowerCase().trim().includes(selectedLease.landlord_signature.toLowerCase().trim())
+    ));
+  const canSignAsCo = selectedLease && isLandlord && selectedLease.co_landlord_name && !selectedLease.co_landlord_signature && !isUserPrimaryLandlord;
+  const canSignAsTenant = selectedLease && !isLandlord && !selectedLease.tenant_signature && selectedLease.tenant_id === user?.user_id;
+
+  const showSignPad = selectedLease && (canSignAsPrimary || canSignAsCo || canSignAsTenant);
 
   const validateLeaseForm = () => {
     const errs = {};
@@ -161,6 +174,16 @@ export default function LeasesHub({ user }) {
     }
   }, [selectedTemplate, rentAmount, deposit, startDate, endDate, gracePeriod, feeAmount, tenantEmail, selectedUnitId, showCreateModal, units, utilFee, parkingFee, petFee]);
 
+  useEffect(() => {
+    if (selectedLease) {
+      if (selectedLease.landlord_signature && !selectedLease.co_landlord_signature) {
+        setSigningAsRole('co_landlord');
+      } else {
+        setSigningAsRole('landlord');
+      }
+    }
+  }, [selectedLease]);
+
   async function fetchLeases() {
     try {
       setLoading(true);
@@ -183,7 +206,19 @@ export default function LeasesHub({ user }) {
         allUnits.push(...unitRes.data);
       }
       setUnits(allUnits);
-      if (allUnits.length > 0) {
+      
+      const prefillEmail = localStorage.getItem('prefill_lease_email');
+      const prefillUnitId = localStorage.getItem('prefill_lease_unit_id');
+      
+      if (prefillUnitId) {
+        setSelectedUnitId(prefillUnitId);
+        localStorage.removeItem('prefill_lease_unit_id');
+        if (prefillEmail) {
+          setTenantEmail(prefillEmail);
+          localStorage.removeItem('prefill_lease_email');
+        }
+        setShowCreateModal(true);
+      } else if (allUnits.length > 0) {
         const firstVacant = allUnits.find(u => u.status !== 'OCCUPIED');
         if (firstVacant) {
           setSelectedUnitId(firstVacant.unit_id);
@@ -224,7 +259,8 @@ export default function LeasesHub({ user }) {
         lease_agreement_text: leaseText,
         utilities_fee: parseFloat(utilFee || 0),
         parking_fee: parseFloat(parkingFee || 0),
-        pet_fee: parseFloat(petFee || 0)
+        pet_fee: parseFloat(petFee || 0),
+        co_landlord_name: coLandlordName.trim() || null
       });
       setLeases(prev => [...prev, res.data]);
       setSelectedLease(res.data);
@@ -238,6 +274,7 @@ export default function LeasesHub({ user }) {
       setUtilFee('0');
       setParkingFee('0');
       setPetFee('0');
+      setCoLandlordName('');
       setFormErrors({});
     } catch (err) {
       setErrorMsg(err.response?.data?.detail || "Failed to create lease.");
@@ -250,7 +287,8 @@ export default function LeasesHub({ user }) {
     setSuccessMsg('');
     try {
       const res = await API.post(`/rental/leases/${selectedLease.lease_id}/sign`, {
-        signature_text: signature
+        signature_text: signature,
+        signing_as: isLandlord ? signingAsRole : 'tenant'
       });
       setLeases(prev => prev.map(l => l.lease_id === selectedLease.lease_id ? res.data : l));
       setSelectedLease(res.data);
@@ -359,7 +397,7 @@ export default function LeasesHub({ user }) {
                       <td className="px-4 py-4 font-mono text-xs font-bold text-indigo-650 dark:text-[#5BA4F5]">Lease #{l.lease_id}</td>
                       <td className="px-4 py-4 text-slate-600 dark:text-gray-400">{l.tenant_email}</td>
                       <td className="px-4 py-4">
-                        <span className="bg-blue-500/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400 px-2.5 py-0.5 rounded text-[10px] font-bold border border-blue-500/20">
+                        <span className="bg-blue-500/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400 px-2.5 py-0.5 rounded text-[10px] font-bold border border-blue-500/20 whitespace-nowrap">
                           Unit {l.unit?.unit_number || 'N/A'}
                         </span>
                       </td>
@@ -492,9 +530,9 @@ export default function LeasesHub({ user }) {
               </div>
 
               {/* Signatures display */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 border-t border-gray-100 dark:border-white/5 pt-6 text-sm text-left">
-                <div className="p-4 rounded-xl border border-gray-100 dark:border-white/5">
-                  <span className="text-gray-400 block text-xs mb-1">Landlord Signature</span>
+              <div className={`grid grid-cols-1 ${selectedLease.co_landlord_name ? 'md:grid-cols-3' : 'md:grid-cols-2'} gap-6 border-t border-gray-100 dark:border-white/5 pt-6 text-sm text-left`}>
+                <div className="p-4 rounded-xl border border-gray-100 dark:border-white/5 bg-gray-50/50 dark:bg-white/[0.01]">
+                  <span className="text-gray-400 block text-xs mb-1">Primary Landlord Signature</span>
                   {selectedLease.landlord_signature ? (
                     <span className="font-semibold text-gray-900 dark:text-white italic text-lg font-serif">/ {selectedLease.landlord_signature} /</span>
                   ) : (
@@ -504,7 +542,20 @@ export default function LeasesHub({ user }) {
                   )}
                 </div>
 
-                <div className="p-4 rounded-xl border border-gray-100 dark:border-white/5">
+                {selectedLease.co_landlord_name && (
+                  <div className="p-4 rounded-xl border border-gray-100 dark:border-white/5 bg-gray-50/50 dark:bg-white/[0.01]">
+                    <span className="text-gray-400 block text-xs mb-1">Co-Landlord Signature ({selectedLease.co_landlord_name})</span>
+                    {selectedLease.co_landlord_signature ? (
+                      <span className="font-semibold text-gray-900 dark:text-white italic text-lg font-serif">/ {selectedLease.co_landlord_signature} /</span>
+                    ) : (
+                      <span className="text-slate-400 text-xs flex items-center gap-1 font-medium">
+                        <Clock className="w-3.5 h-3.5" /> Pending Co-Landlord (Optional)
+                      </span>
+                    )}
+                  </div>
+                )}
+
+                <div className="p-4 rounded-xl border border-gray-100 dark:border-white/5 bg-gray-50/50 dark:bg-white/[0.01]">
                   <span className="text-gray-400 block text-xs mb-1">Tenant Signature</span>
                   {selectedLease.tenant_signature ? (
                     <span className="font-semibold text-gray-900 dark:text-white italic text-lg font-serif">/ {selectedLease.tenant_signature} /</span>
@@ -517,14 +568,33 @@ export default function LeasesHub({ user }) {
               </div>
 
               {/* Signing Pad Form */}
-              {((isLandlord && !selectedLease.landlord_signature) || (!isLandlord && !selectedLease.tenant_signature && selectedLease.tenant_id === user?.user_id)) && (
+              {showSignPad && (
                 <form onSubmit={handleSignLease} className="p-5 border border-dashed border-blue-500/30 rounded-xl bg-blue-500/[0.02] space-y-4">
-                  <div className="flex items-center gap-2">
-                    <PenTool className="w-5 h-5 text-blue-500" />
-                    <h3 className="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider text-left">E-Signature Pad</h3>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <PenTool className="w-5 h-5 text-blue-500" />
+                      <h3 className="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider text-left">E-Signature Pad</h3>
+                    </div>
+                    {isLandlord && selectedLease.co_landlord_name && (
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase tracking-wider">Signing As:</span>
+                        <select 
+                          value={signingAsRole} 
+                          onChange={e => setSigningAsRole(e.target.value)} 
+                          className="text-xs px-2.5 py-1.5 border border-slate-200 dark:border-white/10 rounded-lg bg-white dark:bg-[#1a2736] text-slate-900 dark:text-white outline-none cursor-pointer font-bold"
+                        >
+                          {!selectedLease.landlord_signature && (
+                            <option value="landlord">Primary Landlord</option>
+                          )}
+                          {!selectedLease.co_landlord_signature && (
+                            <option value="co_landlord">Co-Landlord ({selectedLease.co_landlord_name})</option>
+                          )}
+                        </select>
+                      </div>
+                    )}
                   </div>
-                  {successMsg && <p className="text-xs text-green-600 bg-green-50 p-2.5 rounded-lg">{successMsg}</p>}
-                  {errorMsg && <p className="text-xs text-red-500 bg-red-50 p-2.5 rounded-lg">{errorMsg}</p>}
+                  {successMsg && <p className="text-xs text-green-600 bg-green-50 p-2.5 rounded-lg font-medium">{successMsg}</p>}
+                  {errorMsg && <p className="text-xs text-red-500 bg-red-50 p-2.5 rounded-lg font-medium">{errorMsg}</p>}
                   
                   <div className="space-y-2 text-left">
                     <label className="block text-xs font-bold text-gray-600 dark:text-gray-400 tracking-wider">TYPE YOUR LEGAL FULL NAME TO SIGN</label>
@@ -537,7 +607,7 @@ export default function LeasesHub({ user }) {
                         className="flex-1 text-sm px-4 py-2.5 border rounded-lg bg-white dark:bg-black/20 text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-600" 
                         placeholder="e.g. Johnathan Doe" 
                       />
-                      <button type="submit" className="px-5 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-bold hover:bg-blue-700">
+                      <button type="submit" className="px-5 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-bold hover:bg-blue-700 cursor-pointer transition">
                         Sign Contract
                       </button>
                     </div>
@@ -672,6 +742,20 @@ export default function LeasesHub({ user }) {
                     <input required type="number" value={feeAmount} onChange={e=>setFeeAmount(e.target.value)} className={`w-full text-sm px-3 py-2 border rounded-lg bg-white dark:bg-black/20 text-gray-900 dark:text-white ${formErrors.feeAmount ? 'border-red-500' : 'border-gray-250 dark:border-white/10'}`} />
                     {formErrors.feeAmount && <p className="text-[10px] text-red-500 mt-0.5">{formErrors.feeAmount}</p>}
                   </div>
+                </div>
+                
+                <div className="pt-2">
+                  <label className="block text-xs font-bold text-gray-605 dark:text-gray-400 tracking-wider mb-1">CO-LANDLORD FULL NAME (OPTIONAL)</label>
+                  <input 
+                    type="text" 
+                    value={coLandlordName} 
+                    onChange={e => setCoLandlordName(e.target.value)} 
+                    className="w-full text-sm px-3 py-2 border rounded-lg bg-white dark:bg-black/20 text-gray-900 dark:text-white border-gray-250 dark:border-white/10 outline-none focus:border-blue-500" 
+                    placeholder="e.g. Jane Doe (Joint Landlord)" 
+                  />
+                  <p className="text-[10px] text-gray-400 mt-1 italic">
+                    If specified, they will be given the option to sign the lease contract as an optional second landlord.
+                  </p>
                 </div>
               </div>
 

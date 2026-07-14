@@ -1,4 +1,1 @@
-Total in DB: 3
-ID=4 | Code=CON-TAN813 | Client=Tanuj Tongse | Status=ONBOARDED
-ID=5 | Code=CON-PW6VGV | Client=Vijay Sharma | Status=ONBOARDED
-ID=1 | Code=CON-WUS0XZ | Client=Vikash Singh | Status=ONBOARDED
+Total in DB: 0

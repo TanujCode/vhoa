@@ -2,12 +2,24 @@ import React, { useState, useEffect } from 'react';
 import { Users, FileText, CheckCircle2, ShieldAlert, Sparkles, User, Mail, DollarSign, Briefcase, Phone, ShieldCheck, Info, Trash2, Search, X, Eye } from 'lucide-react';
 import API from '../../services/api';
 
-export default function ScreeningHub({ user }) {
+export default function ScreeningHub({ user, setActivePage }) {
   const isLandlord = user?.role === 'landlord' || user?.role_name === 'landlord' || user?.role_id === 1; // Super admin also landlord
   
   const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedApp, setSelectedApp] = useState(null);
+
+  // Invite states for landlord
+  const [inviteModalOpen, setInviteModalOpen] = useState(false);
+  const [inviteName, setInviteName] = useState('');
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [inviteUnitId, setInviteUnitId] = useState('');
+  const [inviteError, setInviteError] = useState('');
+  const [inviteSuccess, setInviteSuccess] = useState('');
+
+  // Complete invited application states
+  const [activeInviteAppId, setActiveInviteAppId] = useState(null);
+  const [simulationMode, setSimulationMode] = useState('CLEAN');
   
   // Renter Application Form States
   const [units, setUnits] = useState([]);
@@ -199,6 +211,22 @@ export default function ScreeningHub({ user }) {
       setLoading(true);
       const res = await API.get('/rental/applications');
       setApplications(res.data);
+      
+      // Fetch units for landlord to invite tenants (only vacant units)
+      const propRes = await API.get('/rental/properties');
+      const props = propRes.data;
+      const allUnits = [];
+      for (const p of props) {
+        const unitRes = await API.get(`/rental/properties/${p.property_id}/units`);
+        const vacant = unitRes.data.filter(u => u.status !== 'OCCUPIED');
+        allUnits.push(...vacant.map(u => ({ ...u, propertyName: p.name })));
+      }
+      setUnits(allUnits);
+      if (allUnits.length > 0) {
+        setInviteUnitId(allUnits[0].unit_id.toString());
+      } else {
+        setInviteUnitId('');
+      }
     } catch (err) {
       console.error(err);
     } finally {
@@ -206,16 +234,47 @@ export default function ScreeningHub({ user }) {
     }
   }
 
+  async function handleSendInvite(e) {
+    e.preventDefault();
+    setInviteError('');
+    setInviteSuccess('');
+    
+    if (!inviteName.trim()) return setInviteError("Applicant Full Name is required.");
+    if (!inviteEmail.trim()) return setInviteError("Applicant Email is required.");
+    if (!inviteUnitId) return setInviteError("Please select a unit.");
+
+    try {
+      await API.post('/rental/applications/invite', {
+        unit_id: parseInt(inviteUnitId),
+        tenant_email: inviteEmail.trim(),
+        full_name: inviteName.trim()
+      });
+      setInviteSuccess("Screening invitation sent successfully!");
+      setInviteName('');
+      setInviteEmail('');
+      // Refresh list
+      const res = await API.get('/rental/applications');
+      setApplications(res.data);
+      setTimeout(() => {
+        setInviteModalOpen(false);
+        setInviteSuccess('');
+      }, 1000);
+    } catch (err) {
+      setInviteError(err.response?.data?.detail || "Failed to send invitation.");
+    }
+  }
+
   async function fetchTenantScreeningData() {
     try {
       setLoading(true);
-      // Fetch available units
+      // Fetch available units (only vacant units)
       const propRes = await API.get('/rental/properties');
       const props = propRes.data;
       const allUnits = [];
       for (const p of props) {
         const unitRes = await API.get(`/rental/properties/${p.property_id}/units`);
-        allUnits.push(...unitRes.data.map(u => ({ ...u, propertyName: p.name })));
+        const vacant = unitRes.data.filter(u => u.status !== 'OCCUPIED');
+        allUnits.push(...vacant.map(u => ({ ...u, propertyName: p.name })));
       }
       setUnits(allUnits);
       if (allUnits.length > 0) {
@@ -290,13 +349,20 @@ export default function ScreeningHub({ user }) {
     const refErr = validateReferences(references);
     const petsErr = validatePets(pets);
 
+    // Validate unit selection
+    let unitErr = '';
+    if (!selectedUnitId || isNaN(parseInt(selectedUnitId))) {
+      unitErr = 'Please select a valid unit.';
+    }
+
     const validationErrors = {
       fullName: nameErr,
       tenantEmail: emailErr,
       phone: phoneErr,
       income: incomeErr,
       references: refErr,
-      pets: petsErr
+      pets: petsErr,
+      unitId: unitErr
     };
 
     if (!consent) {
@@ -307,22 +373,33 @@ export default function ScreeningHub({ user }) {
 
     const hasErrors = Object.values(validationErrors).some(err => err !== '');
     if (hasErrors) {
-      setErrorMsg('Please fix the validation errors in the form.');
+      setErrorMsg(unitErr || 'Please fix the validation errors in the form.');
       return;
     }
 
     setSubmitting(true);
     try {
-      await API.post('/rental/applications', {
-        unit_id: parseInt(selectedUnitId),
-        tenant_email: tenantEmail,
-        full_name: fullName.trim(),
-        phone: phone.replace(/[^\d]/g, ''), // clean digits for API
-        employment_status: empStatus,
-        monthly_income: parseFloat(income),
-        references_data: references.trim(),
-        pet_details: pets.trim()
-      });
+      if (activeInviteAppId) {
+        await API.put(`/rental/applications/${activeInviteAppId}/complete`, {
+          phone: phone.replace(/[^\d]/g, ''),
+          employment_status: empStatus,
+          monthly_income: parseFloat(income),
+          references_data: references.trim(),
+          pet_details: pets.trim(),
+          simulation_mode: simulationMode
+        });
+      } else {
+        await API.post('/rental/applications', {
+          unit_id: parseInt(selectedUnitId),
+          tenant_email: tenantEmail,
+          full_name: fullName.trim(),
+          phone: phone.replace(/[^\d]/g, ''), // clean digits for API
+          employment_status: empStatus,
+          monthly_income: parseFloat(income),
+          references_data: references.trim(),
+          pet_details: pets.trim()
+        });
+      }
       setSuccessMsg('Application submitted successfully! Renter background check is pending review.');
       setTenantEmail('');
       setFullName('');
@@ -334,9 +411,21 @@ export default function ScreeningHub({ user }) {
       setErrors({});
       setTouched({});
       setReapply(false);
+      setActiveInviteAppId(null);
       fetchMyApplications();
     } catch (err) {
-      setErrorMsg(err.response?.data?.detail || "Failed to submit application.");
+      let msg = "Failed to submit application.";
+      const detail = err.response?.data?.detail;
+      if (detail) {
+        if (Array.isArray(detail)) {
+          msg = detail.map(d => `${d.loc?.[d.loc.length - 1] || 'field'}: ${d.msg}`).join(', ');
+        } else if (typeof detail === 'string') {
+          msg = detail;
+        } else {
+          msg = JSON.stringify(detail);
+        }
+      }
+      setErrorMsg(msg);
     } finally {
       setSubmitting(false);
     }
@@ -358,8 +447,16 @@ export default function ScreeningHub({ user }) {
           
           {/* Header Section */}
           <div className="p-5 border-b border-slate-200 dark:border-white/10 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div className="text-slate-800 dark:text-white font-medium text-sm flex items-center gap-2">
-              <Users size={16} /> Tenant Screening Directory
+            <div className="flex items-center gap-3">
+              <div className="text-slate-800 dark:text-white font-medium text-sm flex items-center gap-2">
+                <Users size={16} /> Tenant Screening Directory
+              </div>
+              <button 
+                onClick={() => { setInviteError(''); setInviteSuccess(''); setInviteModalOpen(true); }}
+                className="bg-blue-600 hover:bg-blue-500 text-white px-3.5 py-1.5 rounded-xl flex items-center gap-1.5 text-xs font-semibold transition-all shadow-md shadow-blue-500/20 whitespace-nowrap cursor-pointer"
+              >
+                <Users className="w-3.5 h-3.5" /> Invite Applicant
+              </button>
             </div>
             
             {/* Search Input */}
@@ -423,7 +520,11 @@ export default function ScreeningHub({ user }) {
                           </span>
                         </td>
                         <td className="px-4 py-4 font-mono font-bold text-slate-900 dark:text-white">
-                          {a.credit_score || 'N/A'}
+                          {a.screening_status === 'INVITED' ? (
+                            <span className="text-slate-400 dark:text-slate-500 italic text-xs">Pending Invite</span>
+                          ) : (
+                            a.credit_score || 'N/A'
+                          )}
                         </td>
                         <td className="px-4 py-4 text-right whitespace-nowrap">
                           <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${
@@ -431,7 +532,9 @@ export default function ScreeningHub({ user }) {
                               ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 dark:bg-emerald-500/20 border-emerald-500/20'
                               : a.screening_status === 'REJECTED'
                                 ? 'text-rose-600 dark:text-rose-400 bg-rose-500/10 dark:bg-rose-500/20 border-rose-500/20'
-                                : 'text-amber-600 dark:text-amber-400 bg-amber-500/10 dark:bg-amber-500/20 border-amber-500/20'
+                                : a.screening_status === 'INVITED'
+                                  ? 'text-indigo-650 dark:text-[#5BA4F5] bg-indigo-500/10 dark:bg-indigo-500/20 border-indigo-500/20'
+                                  : 'text-amber-600 dark:text-amber-400 bg-amber-500/10 dark:bg-amber-500/20 border-amber-500/20'
                           }`}>
                             {a.screening_status}
                           </span>
@@ -439,9 +542,10 @@ export default function ScreeningHub({ user }) {
                         <td className="px-4 py-4 text-right whitespace-nowrap space-x-1">
                           <button
                             type="button"
+                            disabled={a.screening_status === 'INVITED'}
                             onClick={() => setSelectedApp(a)}
-                            className="p-1.5 hover:bg-slate-100 dark:hover:bg-white/10 rounded-lg text-slate-400 hover:text-blue-500 transition cursor-pointer"
-                            title="View Report"
+                            className="p-1.5 hover:bg-slate-100 dark:hover:bg-white/10 rounded-lg text-slate-400 hover:text-blue-500 transition cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+                            title={a.screening_status === 'INVITED' ? "Waiting for tenant details" : "View Report"}
                           >
                             <Eye size={14} />
                           </button>
@@ -529,18 +633,44 @@ export default function ScreeningHub({ user }) {
 
                     <div className="p-4 rounded-xl border border-gray-200/80 dark:border-white/[0.04] bg-gray-50/50 dark:bg-white/[0.02] text-left">
                       <span className="text-[10px] font-bold text-gray-450 tracking-wider block uppercase">Eviction History</span>
-                      <div className="mt-2 flex items-center gap-1.5 text-sm font-bold text-emerald-500">
-                        <CheckCircle2 className="w-4 h-4" /> Clear Record
-                      </div>
-                      <span className="text-[10px] mt-2 block text-gray-400">No eviction records.</span>
+                      {selectedApp.eviction_history && selectedApp.eviction_history.includes("EVICTION DETECTED") ? (
+                        <>
+                          <div className="mt-2 flex items-center gap-1.5 text-sm font-bold text-red-500">
+                            <ShieldAlert className="w-4 h-4 text-red-500" /> Record Flagged
+                          </div>
+                          <span className="text-[10px] mt-2 block text-red-500/80 leading-relaxed font-semibold">
+                            {selectedApp.eviction_history}
+                          </span>
+                        </>
+                      ) : (
+                        <>
+                          <div className="mt-2 flex items-center gap-1.5 text-sm font-bold text-emerald-500">
+                            <CheckCircle2 className="w-4 h-4 text-emerald-500" /> Clear Record
+                          </div>
+                          <span className="text-[10px] mt-2 block text-gray-400">No eviction record matches found.</span>
+                        </>
+                      )}
                     </div>
 
                     <div className="p-4 rounded-xl border border-gray-200/80 dark:border-white/[0.04] bg-gray-50/50 dark:bg-white/[0.02] text-left">
                       <span className="text-[10px] font-bold text-gray-450 tracking-wider block uppercase">Criminal Check</span>
-                      <div className="mt-2 flex items-center gap-1.5 text-sm font-bold text-emerald-500">
-                        <CheckCircle2 className="w-4 h-4" /> Clean Record
-                      </div>
-                      <span className="text-[10px] mt-2 block text-gray-400">No matches found.</span>
+                      {selectedApp.criminal_history && selectedApp.criminal_history.includes("MATCH FOUND") ? (
+                        <>
+                          <div className="mt-2 flex items-center gap-1.5 text-sm font-bold text-red-500">
+                            <ShieldAlert className="w-4 h-4 text-red-500" /> Record Flagged
+                          </div>
+                          <span className="text-[10px] mt-2 block text-red-500/80 leading-relaxed font-semibold">
+                            {selectedApp.criminal_history}
+                          </span>
+                        </>
+                      ) : (
+                        <>
+                          <div className="mt-2 flex items-center gap-1.5 text-sm font-bold text-emerald-500">
+                            <CheckCircle2 className="w-4 h-4" /> Clean Record
+                          </div>
+                          <span className="text-[10px] mt-2 block text-gray-400">No criminal matches found.</span>
+                        </>
+                      )}
                     </div>
                   </div>
                 )}
@@ -576,10 +706,23 @@ export default function ScreeningHub({ user }) {
                   </div>
                 </div>
 
-                <div className="flex justify-end pt-4 border-t border-gray-100 dark:border-white/5">
+                <div className="flex justify-end gap-3 pt-4 border-t border-gray-100 dark:border-white/5">
+                  {selectedApp.screening_status === 'APPROVED' && (
+                    <button
+                      onClick={() => {
+                        localStorage.setItem('prefill_lease_email', selectedApp.tenant_email);
+                        localStorage.setItem('prefill_lease_unit_id', selectedApp.unit_id.toString());
+                        setSelectedApp(null);
+                        if (setActivePage) setActivePage('leases_hub');
+                      }}
+                      className="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-sm transition-all flex items-center gap-1.5 shadow-md shadow-blue-500/20 cursor-pointer"
+                    >
+                      <FileText className="w-4 h-4" /> Create Lease Agreement
+                    </button>
+                  )}
                   <button
                     onClick={() => setSelectedApp(null)}
-                    className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-gray-700 dark:text-gray-300 font-bold rounded-xl text-sm transition-all"
+                    className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-gray-700 dark:text-gray-300 font-bold rounded-xl text-sm transition-all cursor-pointer"
                   >
                     Close Report
                   </button>
@@ -607,9 +750,38 @@ export default function ScreeningHub({ user }) {
             const isApproved = latestApp.screening_status === 'APPROVED';
             const isRejected = latestApp.screening_status === 'REJECTED';
             const isSubmitted = latestApp.screening_status === 'SUBMITTED' || latestApp.screening_status === 'PENDING';
+            const isInvited = latestApp.screening_status === 'INVITED';
 
             return (
               <div className="space-y-6">
+                {isInvited && (
+                  <div className="p-5 rounded-2xl bg-indigo-500/5 dark:bg-indigo-550/10 border border-indigo-500/20 space-y-3">
+                    <div className="flex items-center gap-2.5 text-indigo-700 dark:text-indigo-400 font-bold text-base">
+                      <Sparkles className="w-6 h-6 text-indigo-500" />
+                      <span>Pending Background Check Invitation</span>
+                    </div>
+                    <p className="text-sm text-slate-600 dark:text-slate-350 leading-relaxed">
+                      You have been invited by the landlord to run a tenant screening background check for <strong>Unit {latestApp.unit?.unit_number}</strong> at {latestApp.unit?.propertyName || latestApp.unit?.property?.name || 'Assigned Property'}.
+                      Please complete the form below to authorize the credit and criminal history check.
+                    </p>
+                    <div className="pt-2">
+                      <button
+                        onClick={() => {
+                          setActiveInviteAppId(latestApp.application_id);
+                          setSelectedUnitId(latestApp.unit_id.toString());
+                          setTenantEmail(latestApp.tenant_email);
+                          setFullName(latestApp.full_name);
+                          setShowApplyForm(true);
+                          setReapply(true); // forces apply form view
+                        }}
+                        className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer shadow-md shadow-indigo-500/20"
+                      >
+                        Complete Application & Background Check
+                      </button>
+                    </div>
+                  </div>
+                )}
+
                 {isApproved && (
                   <div className="p-5 rounded-2xl bg-emerald-500/5 dark:bg-emerald-550/10 border border-emerald-500/20 space-y-3">
                     <div className="flex items-center gap-2.5 text-emerald-700 dark:text-emerald-450 font-bold text-base">
@@ -1005,6 +1177,25 @@ export default function ScreeningHub({ user }) {
               </div>
             </div>
 
+            {/* Background Simulation Dropdown for Demo */}
+            <div className="space-y-3 pt-2">
+              <h3 className="text-xs font-bold text-amber-650 dark:text-amber-400 uppercase tracking-widest flex items-center gap-1">
+                <Sparkles className="w-3.5 h-3.5" /> ★ Demo Background Simulation Mode
+              </h3>
+              <div className="p-4 rounded-2xl border border-amber-500/20 bg-amber-500/5 text-xs space-y-2">
+                <p className="text-slate-650 dark:text-slate-300 font-medium">Select a background check result to simulate for this demo:</p>
+                <select
+                  value={simulationMode}
+                  onChange={e => setSimulationMode(e.target.value)}
+                  className="w-full text-xs px-3 py-2.5 border border-amber-500/30 rounded-lg bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 outline-none focus:ring-1 focus:ring-amber-500 focus:border-amber-500 cursor-pointer font-semibold"
+                >
+                  <option value="CLEAN">Clean Record (No records found, Good standing)</option>
+                  <option value="CRIMINAL">Simulate Criminal Record Match (Flag Theft / Burglary)</option>
+                  <option value="EVICTION">Simulate Eviction Registry Match (Flag Eviction Judgment)</option>
+                </select>
+              </div>
+            </div>
+
             {/* Section 5: Authorization */}
             <div className="space-y-3 pt-2">
               <h3 className="text-xs font-bold text-indigo-650 dark:text-indigo-400 uppercase tracking-widest">5. Disclosures & Consent</h3>
@@ -1059,6 +1250,97 @@ export default function ScreeningHub({ user }) {
               )}
             </button>
           </form>
+        </div>
+      )}
+      {/* Landlord Invite to Screen Modal */}
+      {inviteModalOpen && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/[0.08] w-full max-w-md rounded-2xl p-6 space-y-4 shadow-2xl animate-scale-up text-slate-900 dark:text-white text-left">
+            <div className="flex justify-between items-center border-b dark:border-white/5 pb-3">
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                <Users className="w-5 h-5 text-blue-500" /> Send Screening Invitation
+              </h3>
+              <button 
+                onClick={() => setInviteModalOpen(false)} 
+                className="text-slate-400 hover:text-slate-900 dark:text-gray-500 dark:hover:text-white text-lg cursor-pointer"
+              >
+                ×
+              </button>
+            </div>
+            
+            {inviteError && (
+              <p className="text-xs text-red-500 bg-red-50 dark:bg-red-500/10 dark:text-red-400 p-3 rounded-xl font-medium">
+                {inviteError}
+              </p>
+            )}
+            {inviteSuccess && (
+              <p className="text-xs text-green-600 bg-green-50 dark:bg-green-500/10 dark:text-green-400 p-3 rounded-xl font-medium">
+                {inviteSuccess}
+              </p>
+            )}
+
+            <form onSubmit={handleSendInvite} className="space-y-4">
+              <div>
+                <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Applicant Full Name</label>
+                <input 
+                  required 
+                  type="text" 
+                  value={inviteName} 
+                  onChange={e => setInviteName(e.target.value)} 
+                  className="w-full bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 focus:border-blue-500 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none" 
+                  placeholder="e.g. John Doe" 
+                />
+              </div>
+              
+              <div>
+                <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Applicant Email Address</label>
+                <input 
+                  required 
+                  type="email" 
+                  value={inviteEmail} 
+                  onChange={e => setInviteEmail(e.target.value)} 
+                  className="w-full bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 focus:border-blue-500 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none" 
+                  placeholder="john.doe@example.com" 
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Target Rental Unit</label>
+                <select 
+                  required 
+                  value={inviteUnitId} 
+                  onChange={e => setInviteUnitId(e.target.value)} 
+                  className="w-full bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 focus:border-blue-500 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none cursor-pointer"
+                >
+                  {units.length === 0 ? (
+                    <option value="">No vacant units available</option>
+                  ) : (
+                    units.map(u => (
+                      <option key={u.unit_id} value={u.unit_id}>
+                        Unit {u.unit_number} at {u.propertyName} (${u.rent_amount}/mo)
+                      </option>
+                    ))
+                  )}
+                </select>
+              </div>
+
+              <div className="pt-4 flex gap-3">
+                <button 
+                  type="button" 
+                  onClick={() => setInviteModalOpen(false)} 
+                  className="flex-1 py-2.5 rounded-xl text-sm font-semibold border border-slate-200 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit" 
+                  className="flex-1 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-semibold hover:bg-blue-500 transition-all shadow-md shadow-blue-500/25 cursor-pointer"
+                >
+                  Send Invite
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
     </div>
