@@ -46,8 +46,8 @@ def sign_lease_agreement(
     current_user: RentalUser = Depends(get_verified_rental_user)
 ):
     try:
-        lease = rental_service.sign_lease(lease_id, current_user.user_id, body.signature_text, db)
-        log_rental_action(db, "SIGN_LEASE", "rental", f"Lease {lease_id} signed by user {current_user.user_id}.", current_user.user_id)
+        lease = rental_service.sign_lease(lease_id, current_user.user_id, body.signature_text, body.signing_as, db)
+        log_rental_action(db, "SIGN_LEASE", "rental", f"Lease {lease_id} signed as {body.signing_as} by user {current_user.user_id}.", current_user.user_id)
         return lease
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))

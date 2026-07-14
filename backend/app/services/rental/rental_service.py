@@ -10,7 +10,7 @@ from app.models.rental.rental_maintenance import RentalMaintenanceRequest
 from app.models.rental.rental_vendor import RentalVendor
 from app.models.rental.rental_user import RentalUser
 from app.models.hoa.user import Role
-from app.schemas.rental import PropertyCreate, UnitCreate, LeaseCreate, RentalApplicationCreate, RentalMaintenanceCreate, RentalVendorCreate
+from app.schemas.rental import PropertyCreate, UnitCreate, LeaseCreate, RentalApplicationCreate, RentalMaintenanceCreate, RentalVendorCreate, RentalApplicationInvite, RentalApplicationComplete
 from app.services.hoa.email_service import send_email, _wrap_in_responsive_layout
 
 
@@ -148,11 +148,23 @@ def create_lease_and_invite(landlord_id: int, data: LeaseCreate, db: Session) ->
         late_fee_type=data.late_fee_type,
         late_fee_amount=data.late_fee_amount,
         status="PENDING_SIGNATURE",
-        lease_agreement_text=data.lease_agreement_text or f"Standard Lease Agreement for Unit {unit.unit_number}"
+        lease_agreement_text=data.lease_agreement_text or f"Standard Lease Agreement for Unit {unit.unit_number}",
+        co_landlord_name=data.co_landlord_name
     )
     db.add(new_lease)
     db.commit()
     db.refresh(new_lease)
+
+    # Auto-approve any pending screening applications for this tenant and this unit
+    pending_apps = db.query(RentalApplication).filter(
+        RentalApplication.tenant_email == data.tenant_email.lower().strip(),
+        RentalApplication.unit_id == data.unit_id,
+        RentalApplication.screening_status.in_(["INVITED", "SUBMITTED", "PENDING"])
+    ).all()
+    for app in pending_apps:
+        app.screening_status = "APPROVED"
+        app.approved_date = datetime.utcnow()
+    db.commit()
 
     # 4. If tenant doesn't exist or is not registered, send an email invite
     from app.config import settings
@@ -183,19 +195,26 @@ def get_leases_by_tenant(tenant_id: int, db: Session) -> List[Lease]:
     return db.query(Lease).filter(Lease.tenant_id == tenant_id).all()
 
 
-def sign_lease(lease_id: int, user_id: int, signature: str, db: Session) -> Lease:
+def sign_lease(lease_id: int, user_id: int, signature: str, signing_as: str, db: Session) -> Lease:
     lease = db.query(Lease).filter(Lease.lease_id == lease_id).first()
     if not lease:
         raise ValueError("Lease not found.")
 
-    if lease.landlord_id == user_id:
-        lease.landlord_signature = signature
-    elif lease.tenant_id == user_id:
+    user = db.query(RentalUser).filter(RentalUser.user_id == user_id).first()
+    role_name = user.role.role_name if user and user.role else ""
+
+    if role_name in ["super_admin", "landlord"] or lease.landlord_id == user_id:
+        if signing_as == "CO_LANDLORD":
+            lease.co_landlord_signature = signature
+        else:
+            lease.landlord_signature = signature
+    elif role_name == "tenant" or lease.tenant_id == user_id:
         lease.tenant_signature = signature
     else:
         raise ValueError("Unauthorized signature attempt.")
 
-    # If both signed, mark lease as ACTIVE and update Unit status to OCCUPIED
+    # Primary Landlord and Tenant signatures are required.
+    # Co-landlord signature is optional and does not block lease activation.
     if lease.landlord_signature and lease.tenant_signature:
         lease.status = "ACTIVE"
         lease.unit.status = "OCCUPIED"
@@ -297,6 +316,104 @@ def delete_application(application_id: int, db: Session) -> bool:
     db.delete(app)
     db.commit()
     return True
+
+
+def invite_tenant_screening(data: RentalApplicationInvite, landlord_id: int, db: Session) -> RentalApplication:
+    # 1. Verify unit exists
+    unit = db.query(Unit).filter(Unit.unit_id == data.unit_id).first()
+    if not unit:
+        raise ValueError("Unit not found.")
+
+    # Check if there is already an active or pending lease for this unit or this email
+    existing_lease = db.query(Lease).filter(
+        (Lease.unit_id == data.unit_id) | (Lease.tenant_email == data.tenant_email.lower().strip()),
+        Lease.status.in_(["ACTIVE", "PENDING_SIGNATURE"])
+    ).first()
+    if existing_lease:
+        raise ValueError("A lease already exists for this unit or tenant email. Screening is not required.")
+
+    # 2. Create the application in INVITED status
+    new_app = RentalApplication(
+        unit_id=data.unit_id,
+        tenant_email=data.tenant_email.lower().strip(),
+        full_name=data.full_name,
+        screening_status="INVITED",
+        credit_score=0,
+        eviction_history="",
+        criminal_history=""
+    )
+    db.add(new_app)
+    db.commit()
+    db.refresh(new_app)
+
+    # 3. Send screening invitation email
+    from app.config import settings
+    invitation_url = f"{settings.FRONTEND_URL}/rental/register?email={data.tenant_email}&role=tenant"
+    email_body = f"""
+    <div style="padding: 30px; font-size: 16px; line-height: 1.6; color: #D1D5DB;">
+      <h2 style="color: #3B82F6; margin-top: 0;">Tenant Screening Background Check Invitation</h2>
+      <p>Hello {data.full_name},</p>
+      <p>You have been invited by the landlord to complete a tenant screening application and background check for <strong>Unit {unit.unit_number}</strong> at {unit.property.name}.</p>
+      <p>Please click the button below to register/log in and submit your screening application details:</p>
+      <div style="text-align: center; margin: 30px 0;">
+        <a href="{invitation_url}" style="background: #3B82F6; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold; display: inline-block;">Complete Application</a>
+      </div>
+      <p style="font-size: 13px; color: #9CA3AF;">If you cannot click the button, copy and paste this URL into your browser:<br/>{invitation_url}</p>
+    </div>
+    """
+    wrapped_html = _wrap_in_responsive_layout(email_body, subtitle="Rental Property Management")
+    send_email(data.tenant_email, "Invitation to Complete Background Check & Rental Application", wrapped_html)
+
+    return new_app
+
+
+def complete_rental_application(application_id: int, data: RentalApplicationComplete, db: Session) -> RentalApplication:
+    app = db.query(RentalApplication).filter(RentalApplication.application_id == application_id).first()
+    if not app:
+        raise ValueError("Application not found.")
+
+    # Simulating background screening score pulls (mocked)
+    import random
+    credit_scores = [620, 680, 710, 740, 780, 810]
+    credit_score = random.choice(credit_scores)
+
+    # Set mock background check results based on simulation mode
+    mode = (data.simulation_mode or "CLEAN").upper()
+    if mode == "CRIMINAL":
+        credit_score = 640
+        criminal_history = (
+            f"MATCH FOUND: Federal Criminal Registry. Name: {app.full_name}, "
+            "Offense: Petit Larceny (Theft), Case ID: FED-8912-T, Date: 2024-03-15, "
+            "Disposition: Guilty - 1 Year Probation.\n"
+            "MATCH FOUND: State Felony Search. Offense: Burglary - 3rd Degree, "
+            "Date: 2022-09-10, Disposition: Dismissed after restitution."
+        )
+        eviction_history = "No eviction records found."
+    elif mode == "EVICTION":
+        credit_score = 580
+        criminal_history = "No criminal records found."
+        eviction_history = (
+            f"EVICTION DETECTED: Cook County Civil Court. Eviction filing by Landlord Oakwood Properties, "
+            "Case ID: EVC-44512, Date: 2023-01-20, Reason: Non-payment of rent. Disposition: Judgment for Plaintiff."
+        )
+    else:
+        # CLEAN
+        criminal_history = "No criminal history matches found."
+        eviction_history = "No eviction record matches found within the past 7 years."
+
+    app.phone = data.phone
+    app.employment_status = data.employment_status
+    app.monthly_income = data.monthly_income
+    app.references_data = data.references_data
+    app.pet_details = data.pet_details
+    app.screening_status = "SUBMITTED"
+    app.credit_score = credit_score
+    app.criminal_history = criminal_history
+    app.eviction_history = eviction_history
+
+    db.commit()
+    db.refresh(app)
+    return app
 
 
 # --- LEDGER & PAYMENTS ---

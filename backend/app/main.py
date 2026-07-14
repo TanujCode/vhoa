@@ -202,6 +202,16 @@ def run_db_upgrades():
     _safe_execute("ALTER TABLE rental_audit_logs DROP CONSTRAINT IF EXISTS rental_audit_logs_user_id_fkey;", "drop_audit_user_fk")
     _safe_execute("ALTER TABLE rental_audit_logs ADD CONSTRAINT rental_audit_logs_user_id_fkey FOREIGN KEY (user_id) REFERENCES rental_users(user_id) ON DELETE SET NULL;", "add_audit_user_fk")
 
+    # rental_leases columns for co-landlord support
+    for col_name, col_type in [
+        ("co_landlord_name", "VARCHAR(255)"),
+        ("co_landlord_signature", "TEXT"),
+    ]:
+        _safe_execute(
+            f"ALTER TABLE rental_leases ADD COLUMN IF NOT EXISTS {col_name} {col_type};",
+            f"rental_leases.{col_name}"
+        )
+
     # rental_otp_tokens (user_id)
     _safe_execute("ALTER TABLE rental_otp_tokens DROP CONSTRAINT IF EXISTS rental_otp_tokens_user_id_fkey;", "drop_otp_user_fk")
     _safe_execute("ALTER TABLE rental_otp_tokens ADD CONSTRAINT rental_otp_tokens_user_id_fkey FOREIGN KEY (user_id) REFERENCES rental_users(user_id) ON DELETE CASCADE;", "add_otp_user_fk")

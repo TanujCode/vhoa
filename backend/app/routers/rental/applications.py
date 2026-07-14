@@ -3,12 +3,41 @@ from sqlalchemy.orm import Session
 from typing import List
 from app.database import get_rental_db
 from app.models.hoa.user import User
-from app.schemas.rental import RentalApplicationCreate, RentalApplicationOut
+from app.schemas.rental import RentalApplicationCreate, RentalApplicationOut, RentalApplicationInvite, RentalApplicationComplete
 from app.services.rental import rental_service
 from app.services.rental.audit_service import log_rental_action
 from app.routers.rental.dependencies import require_rental_role, get_verified_rental_user
 
 router = APIRouter(prefix="/rental", tags=["Rental - Tenant Screening"])
+
+@router.post("/applications/invite", response_model=RentalApplicationOut, status_code=201)
+def invite_tenant(
+    body: RentalApplicationInvite,
+    db: Session = Depends(get_rental_db),
+    current_user: User = Depends(require_rental_role("super_admin", "landlord"))
+):
+    try:
+        app = rental_service.invite_tenant_screening(body, current_user.user_id, db)
+        log_rental_action(db, "INVITE_TENANT_SCREENING", "rental", f"Screening invitation sent to {body.tenant_email} for unit {body.unit_id}.", current_user.user_id)
+        return app
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.put("/applications/{application_id}/complete", response_model=RentalApplicationOut)
+def complete_application(
+    application_id: int,
+    body: RentalApplicationComplete,
+    db: Session = Depends(get_rental_db)
+):
+    try:
+        app = rental_service.complete_rental_application(application_id, body, db)
+        return app
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
 
 @router.post("/applications", response_model=RentalApplicationOut, status_code=201)
 def submit_application(

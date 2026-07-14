@@ -4,7 +4,7 @@ import {
   Calendar, TrendingUp, RefreshCw, UserPlus,
   Clock, CheckCircle, XCircle, Building2, Download,
   ShieldAlert, Settings2, Wallet, Sparkles, Folder, FileText, Megaphone,
-  Check, Trash2, Plus, MapPin, Search
+  Check, Trash2, Plus, MapPin, Search, ChevronLeft, ChevronRight
 } from 'lucide-react';
 import API from "../services/api";
 
@@ -17,6 +17,9 @@ const Dashboard = ({ community, user, setActivePage }) => {
   const [exportFormat, setExportFormat] = useState("csv");
 
   const [upcomingEvents, setUpcomingEvents] = useState([]);
+  const [allEvents, setAllEvents] = useState([]);
+  const [selectedCalendarDate, setSelectedCalendarDate] = useState(null);
+  const [currentMonth, setCurrentMonth] = useState(new Date());
   const [newTaskText, setNewTaskText] = useState('');
   const [quickTasks, setQuickTasks] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -47,13 +50,15 @@ const Dashboard = ({ community, user, setActivePage }) => {
   const fetchDashboardData = async (communityId) => {
     try {
       setLoading(true);
-      const [statsRes, meetingsRes] = await Promise.all([
+      const [statsRes, meetingsRes, bookingsRes] = await Promise.all([
         API.get(`/community/${communityId}/stats`),
-        API.get(`/meeting-survey/meetings?community_id=${communityId}`).catch(() => ({ data: [] }))
+        API.get(`/meeting-survey/meetings?community_id=${communityId}`).catch(() => ({ data: [] })),
+        API.get(`/amenity/booking/${communityId}?limit=100&skip=0`).catch(() => ({ data: [] }))
       ]);
       setStats(statsRes.data);
       
       const meetingsData = meetingsRes?.data || [];
+      const bookingsData = bookingsRes?.data || [];
       
       // Load personal notes
       let localNotes = [];
@@ -70,6 +75,15 @@ const Dashboard = ({ community, user, setActivePage }) => {
           date: m.meeting_date,
           type: 'meeting'
         })),
+        ...bookingsData
+          .filter(b => b.status !== 'CANCELLED')
+          .map(b => ({
+            id: `booking-${b.booking_id}`,
+            title: `${b.amenity_name || 'Amenity'} Booking`,
+            date: b.booking_date,
+            type: 'booking',
+            status: b.status
+          })),
         ...localNotes.map(n => ({
           id: `note-${n.note_id}`,
           title: n.title,
@@ -78,14 +92,26 @@ const Dashboard = ({ community, user, setActivePage }) => {
         }))
       ];
 
+      // Parse date string as LOCAL date (avoid UTC midnight off-by-one in IST)
+      const parseLocalDate = (dateStr) => {
+        if (!dateStr) return new Date(0);
+        const s = String(dateStr);
+        const m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+        if (m) return new Date(parseInt(m[1]), parseInt(m[2]) - 1, parseInt(m[3]));
+        return new Date(s);
+      };
+
+      // Sort allEvents chronologically
+      const sortedAll = combined.sort((a, b) => parseLocalDate(a.date) - parseLocalDate(b.date));
+      setAllEvents(sortedAll);
+
+      // Show all events sorted by date (future first, then past)
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-
-      const filtered = combined
-        .filter(item => new Date(item.date) >= today)
-        .sort((a, b) => new Date(a.date) - new Date(b.date));
-
-      setUpcomingEvents(filtered.slice(0, 4));
+      const futureEvents = sortedAll.filter(item => parseLocalDate(item.date) >= today);
+      const pastEvents = sortedAll.filter(item => parseLocalDate(item.date) < today).reverse();
+      const displayed = [...futureEvents, ...pastEvents];
+      setUpcomingEvents(displayed.slice(0, 4));
     } catch (err) {
       console.error('Dashboard fetch error:', err);
     } finally {
@@ -165,8 +191,118 @@ const Dashboard = ({ community, user, setActivePage }) => {
     { label: "Reports", page: "reports", icon: <TrendingUp size={18} className="text-purple-500" /> },
     { label: "Payments", page: "payments", count: stats?.pending_payments, icon: <Wallet size={18} className="text-emerald-500" /> },
     { label: "Documents", page: "documents", icon: <Folder size={18} className="text-slate-500" /> },
-    { label: "News & Announce", page: "news", icon: <Megaphone size={18} className="text-orange-500" /> },
+    { label: "News & Announce", page: "news", icon: <Megaphone size={18} className="text-orange-500" /> }
   ];
+
+  const getDaysInMonth = (year, month) => {
+    return new Date(year, month + 1, 0).getDate();
+  };
+
+  const getFirstDayOfMonth = (year, month) => {
+    return new Date(year, month, 1).getDay();
+  };
+
+  const renderDashboardCalendar = () => {
+    const year = currentMonth.getFullYear();
+    const month = currentMonth.getMonth();
+    
+    const daysInMonth = getDaysInMonth(year, month);
+    const firstDay = getFirstDayOfMonth(year, month);
+    
+    const blanks = Array(firstDay).fill(null);
+    const days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
+    const totalSlots = [...blanks, ...days];
+    
+    const monthName = currentMonth.toLocaleString('en-US', { month: 'long', year: 'numeric' });
+    
+    return (
+      <div className="bg-slate-50/50 dark:bg-black/25 border border-slate-200/60 dark:border-white/5 rounded-2xl p-4 shadow-sm mb-4">
+        {/* Calendar Navigation Header */}
+        <div className="flex items-center justify-between mb-3">
+          <span className="text-xs font-black text-slate-800 dark:text-slate-200 uppercase tracking-wider">{monthName}</span>
+          <div className="flex gap-1">
+            <button
+              type="button"
+              onClick={() => setCurrentMonth(new Date(year, month - 1, 1))}
+              className="p-1 hover:bg-slate-205 dark:hover:bg-white/10 rounded-lg text-slate-500 dark:text-gray-400 transition"
+            >
+              <ChevronLeft size={14} />
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                const today = new Date();
+                setCurrentMonth(today);
+                setSelectedCalendarDate(today);
+              }}
+              className="px-2 py-0.5 bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 rounded text-[9px] font-extrabold transition uppercase"
+            >
+              Today
+            </button>
+            <button
+              type="button"
+              onClick={() => setCurrentMonth(new Date(year, month + 1, 1))}
+              className="p-1 hover:bg-slate-205 dark:hover:bg-white/10 rounded-lg text-slate-500 dark:text-gray-400 transition"
+            >
+              <ChevronRight size={14} />
+            </button>
+          </div>
+        </div>
+        
+        {/* Days of Week Headers */}
+        <div className="grid grid-cols-7 gap-1 text-center text-[9px] font-black text-slate-400 dark:text-gray-500 mb-1.5">
+          {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d, i) => <div key={i}>{d}</div>)}
+        </div>
+        
+        {/* Days Grid */}
+        <div className="grid grid-cols-7 gap-1">
+          {totalSlots.map((day, idx) => {
+            if (!day) return <div key={idx} className="aspect-square"></div>;
+            
+            const dateObj = new Date(year, month, day);
+            const isToday = new Date().toDateString() === dateObj.toDateString();
+            const isSelected = selectedCalendarDate && selectedCalendarDate.toDateString() === dateObj.toDateString();
+            
+            // Parse local date to avoid UTC midnight off-by-one
+            const parseLD = (d) => { const s = String(d); const m2 = s.match(/^(\d{4})-(\d{2})-(\d{2})/); return m2 ? new Date(+m2[1], +m2[2]-1, +m2[3]) : new Date(s); };
+            // Check if day has meetings, bookings or notes
+            const dayEvents = allEvents.filter(evt => parseLD(evt.date).toDateString() === dateObj.toDateString());
+            const hasMeeting = dayEvents.some(e => e.type === 'meeting');
+            const hasBooking = dayEvents.some(e => e.type === 'booking');
+            const hasNote = dayEvents.some(e => e.type === 'note');
+            
+            return (
+              <button
+                key={idx}
+                type="button"
+                onClick={() => setSelectedCalendarDate(dateObj)}
+                className={`aspect-square flex flex-col items-center justify-center text-[10px] font-mono rounded-lg transition relative ${
+                  isSelected
+                    ? 'bg-gradient-to-br from-blue-500 to-indigo-650 text-white font-extrabold shadow-sm'
+                    : isToday
+                      ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400 font-extrabold border border-blue-500/20'
+                      : 'hover:bg-slate-205 dark:hover:bg-white/5 text-slate-700 dark:text-gray-300'
+                }`}
+              >
+                <span>{day}</span>
+                <div className="flex gap-0.5 justify-center absolute bottom-0.5">
+                  {hasMeeting && (
+                    <span className={`w-1 h-1 rounded-full ${isSelected ? 'bg-white' : 'bg-purple-500'}`}></span>
+                  )}
+                  {hasBooking && (
+                    <span className={`w-1 h-1 rounded-full ${isSelected ? 'bg-white' : 'bg-blue-500'}`}></span>
+                  )}
+                  {hasNote && (
+                    <span className={`w-1 h-1 rounded-full ${isSelected ? 'bg-white' : 'bg-emerald-500'}`}></span>
+                  )}
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className="space-y-6 text-slate-900 dark:text-white pb-12">
@@ -295,7 +431,7 @@ const Dashboard = ({ community, user, setActivePage }) => {
 
         {/* Right Top: Calendar Schedules & Upcoming events */}
         <div className="lg:col-span-5 bg-gradient-to-br from-white/80 to-slate-50/80 dark:from-[#1E2E42]/80 dark:to-[#162535]/80 backdrop-blur-md border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 shadow-sm flex flex-col justify-between">
-          <div>
+          <div className="flex flex-col h-full">
             <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-200/60 dark:border-white/[0.05]">
               <h3 className="font-extrabold text-sm text-slate-900 dark:text-white uppercase tracking-wider">
                 Calendar Schedule
@@ -308,46 +444,101 @@ const Dashboard = ({ community, user, setActivePage }) => {
               </button>
             </div>
 
+            {/* Premium Mini Calendar */}
+            {renderDashboardCalendar()}
+
             {/* Checklist upcoming items */}
-            <div className="space-y-3.5">
-              <span className="text-[10px] font-bold text-slate-400 dark:text-gray-500 uppercase tracking-widest block mb-2 font-mono">Upcoming Events & Tasks</span>
-              {upcomingEvents.length === 0 ? (
-                <p className="text-xs text-slate-405 text-slate-400 dark:text-gray-500 italic pl-1 py-4">
-                  No upcoming meetings or private notes scheduled.
-                </p>
-              ) : (
-                upcomingEvents.map((evt, idx) => {
-                  const dateStr = new Date(evt.date).toLocaleDateString('en-US', {
-                    month: 'short',
-                    day: 'numeric',
-                    year: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                  });
+            <div className="space-y-3.5 mt-2 flex-1">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-bold text-slate-400 dark:text-gray-500 uppercase tracking-widest block mb-2 font-mono">
+                  {selectedCalendarDate 
+                    ? `Events on ${selectedCalendarDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`
+                    : "Upcoming Events & Tasks"
+                  }
+                </span>
+                {selectedCalendarDate && (
+                  <button
+                    onClick={() => setSelectedCalendarDate(null)}
+                    className="text-[9px] text-blue-605 dark:text-blue-400 font-extrabold hover:underline uppercase transition"
+                  >
+                    Clear Filter
+                  </button>
+                )}
+              </div>
+
+              {(() => {
+                const parseLD = (d) => { const s = String(d); const m = s.match(/^(\d{4})-(\d{2})-(\d{2})/); return m ? new Date(+m[1], +m[2]-1, +m[3]) : new Date(s); };
+                const eventsToDisplay = selectedCalendarDate 
+                  ? allEvents.filter(evt => parseLD(evt.date).toDateString() === selectedCalendarDate.toDateString())
+                  : upcomingEvents;
+
+                if (eventsToDisplay.length === 0) {
                   return (
-                    <div key={evt.id} className="flex gap-4 items-center p-3.5 bg-white/40 dark:bg-white/[0.02] border border-slate-200/85 dark:border-white/[0.05] rounded-2xl hover:border-blue-500/25 dark:hover:border-blue-400/25 transition-all duration-300">
-                      <div className={`w-8 h-8 rounded-xl flex items-center justify-center font-bold text-xs flex-shrink-0 ${
-                        evt.type === 'meeting' 
-                          ? 'bg-purple-500/10 text-purple-600 dark:text-purple-400' 
-                          : 'bg-blue-500/10 text-blue-600 dark:text-blue-400'
-                      }`}>
-                        {idx + 1}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs font-extrabold text-slate-800 dark:text-slate-200 truncate">{evt.title}</p>
-                        <span className="text-[10px] text-slate-450 dark:text-gray-500 font-semibold">{dateStr}</span>
-                      </div>
-                      <span className={`text-[9px] px-2 py-0.5 rounded-md font-bold uppercase tracking-wider ${
-                        evt.type === 'meeting' 
-                          ? 'bg-purple-500/10 text-purple-600 dark:text-purple-400' 
-                          : 'bg-blue-500/10 text-blue-600 dark:text-blue-400'
-                      }`}>
-                        {evt.type === 'meeting' ? 'Meeting' : 'Note'}
-                      </span>
-                    </div>
+                    <p className="text-xs text-slate-405 dark:text-gray-505 italic py-6 text-center bg-slate-50/30 dark:bg-black/10 rounded-2xl border border-dashed border-slate-200/60 dark:border-white/5 font-medium">
+                      {selectedCalendarDate 
+                        ? "No events scheduled for this day." 
+                        : "No meetings, bookings or notes found."
+                      }
+                    </p>
                   );
-                })
-              )}
+                }
+
+                const limit = 1;
+                const slicedEvents = eventsToDisplay.slice(0, limit);
+                const hasMore = eventsToDisplay.length > 0;
+
+                return (
+                  <div className="space-y-2">
+                    {slicedEvents.map((evt, idx) => {
+                      const parseLD2 = (d) => { const s = String(d); const m2 = s.match(/^(\d{4})-(\d{2})-(\d{2})/); return m2 ? new Date(+m2[1], +m2[2]-1, +m2[3]) : new Date(s); };
+                      const dateStr = parseLD2(evt.date).toLocaleDateString('en-US', {
+                        month: 'short',
+                        day: 'numeric',
+                        year: 'numeric'
+                      });
+                      return (
+                        <div 
+                          key={evt.id} 
+                          className="flex gap-3 items-center p-3 bg-white/40 dark:bg-white/[0.02] border border-slate-200/85 dark:border-white/[0.05] rounded-xl hover:border-blue-500/25 dark:hover:border-blue-400/25 hover:shadow-sm transition-all duration-200 cursor-pointer"
+                          onClick={() => setActivePage('meetings')}
+                        >
+                          <div className={`w-7 h-7 rounded-lg flex items-center justify-center font-bold text-xs flex-shrink-0 ${
+                            evt.type === 'meeting' 
+                              ? 'bg-purple-500/10 text-purple-600 dark:text-purple-400' 
+                              : evt.type === 'booking'
+                                ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400'
+                                : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                          }`}>
+                            {idx + 1}
+                          </div>
+                          <div className="flex-1 min-w-0 text-left">
+                            <p className="text-xs font-extrabold text-slate-800 dark:text-slate-200 truncate">{evt.title}</p>
+                            <span className="text-[10px] text-slate-455 dark:text-gray-500 font-semibold">{dateStr}</span>
+                          </div>
+                          <span className={`text-[9px] px-2 py-0.5 rounded-md font-bold uppercase tracking-wider flex-shrink-0 ${
+                            evt.type === 'meeting' 
+                              ? 'bg-purple-500/10 text-purple-600 dark:text-purple-400' 
+                              : evt.type === 'booking'
+                                ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400'
+                                : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                          }`}>
+                            {evt.type === 'meeting' ? 'Meeting' : evt.type === 'booking' ? 'Booking' : 'Note'}
+                          </span>
+                        </div>
+                      );
+                    })}
+                    {hasMore && (
+                      <button
+                        type="button"
+                        onClick={() => setActivePage('meetings')}
+                        className="w-full py-2 bg-blue-50 hover:bg-blue-100 dark:bg-white/5 dark:hover:bg-white/10 text-blue-600 dark:text-blue-400 rounded-xl text-xs font-extrabold transition border border-blue-200/50 dark:border-white/5 shadow-sm text-center uppercase tracking-wider block"
+                      >
+                        + View All {eventsToDisplay.length} Events
+                      </button>
+                    )}
+                  </div>
+                );
+              })()}
             </div>
           </div>
         </div>

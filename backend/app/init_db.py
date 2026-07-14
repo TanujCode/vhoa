@@ -72,6 +72,14 @@ def run_db_upgrades():
         # Note: Do not copy existing user unit numbers globally to user_communities,
         # as some user_communities associations (like property managers) are intentionally NULL.
         db.execute(text("ALTER TABLE leases ADD COLUMN IF NOT EXISTS tenant_email VARCHAR(255);"))
+        
+        # Add columns to rental_leases table for co-landlord support
+        columns_to_add_co_landlord = [
+            ("co_landlord_name", "VARCHAR(255)"),
+            ("co_landlord_signature", "TEXT")
+        ]
+        for col_name, col_type in columns_to_add_co_landlord:
+            db.execute(text(f"ALTER TABLE rental_leases ADD COLUMN IF NOT EXISTS {col_name} {col_type};"))
         pass
         
         db.commit()

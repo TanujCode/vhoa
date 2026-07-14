@@ -3,12 +3,43 @@ from sqlalchemy.orm import Session
 from typing import List
 from app.database import get_rental_db
 from app.models.rental.rental_user import RentalUser
-from app.schemas.rental import PropertyCreate, PropertyOut, UnitCreate, UnitOut
+from app.schemas.rental import PropertyCreate, PropertyOut, UnitCreate, UnitOut, PropertyWithUnitsCreate
 from app.services.rental import rental_service
 from app.services.rental.audit_service import log_rental_action
 from app.routers.rental.dependencies import require_rental_role, get_verified_rental_user
 
 router = APIRouter(prefix="/rental", tags=["Rental - Properties & Units"])
+
+@router.post("/properties-with-units", response_model=PropertyOut, status_code=201)
+def create_property_with_units(
+    body: PropertyWithUnitsCreate,
+    db: Session = Depends(get_rental_db),
+    current_user: RentalUser = Depends(require_rental_role("super_admin", "landlord"))
+):
+    try:
+        prop_data = PropertyCreate(
+            name=body.name,
+            address=body.address,
+            city=body.city,
+            state=body.state,
+            zip_code=body.zip_code
+        )
+        prop = rental_service.create_property(current_user.user_id, prop_data, db)
+        log_rental_action(db, "CREATE_PROPERTY", "rental", f"Property '{prop.name}' created via wizard.", current_user.user_id)
+        
+        for unit_item in body.units:
+            unit_data = UnitCreate(
+                property_id=prop.property_id,
+                unit_number=unit_item.unit_number,
+                rent_amount=unit_item.rent_amount
+            )
+            rental_service.create_unit(unit_data, db)
+            log_rental_action(db, "CREATE_UNIT", "rental", f"Unit '{unit_item.unit_number}' added via wizard.", current_user.user_id)
+            
+        return prop
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
 
 @router.post("/properties", response_model=PropertyOut, status_code=201)
 def create_property(

@@ -29,6 +29,8 @@ class Lease(Base):
     lease_agreement_text = Column(Text, nullable=True)
     landlord_signature = Column(Text, nullable=True)
     tenant_signature = Column(Text, nullable=True)
+    co_landlord_name = Column(String(255), nullable=True)
+    co_landlord_signature = Column(Text, nullable=True)
     created_date = Column(DateTime(timezone=True), server_default=func.now())
 
     # Relationships
