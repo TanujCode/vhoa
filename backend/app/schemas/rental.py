@@ -27,6 +27,20 @@ class PropertyOut(BaseModel):
         from_attributes = True
 
 
+class UnitCreateNested(BaseModel):
+    unit_number: str
+    rent_amount: float
+
+
+class PropertyWithUnitsCreate(BaseModel):
+    name: str
+    address: str
+    city: Optional[str] = None
+    state: Optional[str] = None
+    zip_code: Optional[str] = None
+    units: List[UnitCreateNested] = []
+
+
 # --- UNIT SCHEMAS ---
 class UnitCreate(BaseModel):
     property_id: int
@@ -62,6 +76,7 @@ class LeaseCreate(BaseModel):
     utilities_fee: float = 0.0
     parking_fee: float = 0.0
     pet_fee: float = 0.0
+    co_landlord_name: Optional[str] = None
 
 
 class LeaseOut(BaseModel):
@@ -80,6 +95,8 @@ class LeaseOut(BaseModel):
     lease_agreement_text: Optional[str] = None
     landlord_signature: Optional[str] = None
     tenant_signature: Optional[str] = None
+    co_landlord_name: Optional[str] = None
+    co_landlord_signature: Optional[str] = None
     created_date: datetime
     utilities_fee: float
     parking_fee: float
@@ -93,6 +110,7 @@ class LeaseOut(BaseModel):
 
 class LeaseSignRequest(BaseModel):
     signature_text: str
+    signing_as: Optional[str] = "PRIMARY"
 
 
 # --- RENTAL APPLICATION SCHEMAS ---
@@ -105,6 +123,21 @@ class RentalApplicationCreate(BaseModel):
     monthly_income: float
     references_data: Optional[str] = None
     pet_details: Optional[str] = None
+
+
+class RentalApplicationInvite(BaseModel):
+    unit_id: int
+    tenant_email: EmailStr
+    full_name: str
+
+
+class RentalApplicationComplete(BaseModel):
+    phone: Optional[str] = None
+    employment_status: Optional[str] = None
+    monthly_income: float
+    references_data: Optional[str] = None
+    pet_details: Optional[str] = None
+    simulation_mode: Optional[str] = "CLEAN"
 
 
 class RentalApplicationOut(BaseModel):
