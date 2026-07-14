@@ -492,6 +492,7 @@ const BoardDashboard = ({ community, user, setActivePage }) => {
                   return (
                     <p className="text-xs text-slate-405 dark:text-gray-505 italic py-6 text-center bg-slate-50/30 dark:bg-black/10 rounded-2xl border border-dashed border-slate-200/60 dark:border-white/5 font-medium">
                       {selectedCalendarDate 
+                        ? "No events scheduled for this day." 
                         : "No meetings, bookings or notes found."
                       }
                     </p>
