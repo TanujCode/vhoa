@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 import API from '../../services/api';
 
-export default function TenantsHub() {
+export default function TenantsHub({ selectedPropertyFilterId = 'all' }) {
   const [tenants, setTenants] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -128,7 +128,9 @@ export default function TenantsHub() {
       (statusFilter === 'ACTIVE' && t.active_status === true) ||
       (statusFilter === 'INACTIVE' && t.active_status === false);
 
-    return matchesSearch && matchesStatus;
+    const matchesProperty = selectedPropertyFilterId === 'all' || String(t.property_id) === String(selectedPropertyFilterId);
+
+    return matchesSearch && matchesStatus && matchesProperty;
   });
 
   const totalCount = tenants.length;

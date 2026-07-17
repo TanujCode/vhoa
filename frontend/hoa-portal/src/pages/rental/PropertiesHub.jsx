@@ -1,13 +1,32 @@
 import React, { useState, useEffect } from 'react';
-import { Building2, Plus, DoorOpen, BadgeAlert, PlusCircle, CheckCircle, Edit3, Trash2, Home, Building, ArrowLeft, ArrowRight } from 'lucide-react';
+import { Building2, Plus, DoorOpen, BadgeAlert, PlusCircle, CheckCircle, Edit3, Trash2, Home, Building, ArrowLeft, ArrowRight, ChevronDown, Check } from 'lucide-react';
 import API from '../../services/api';
 
-export default function PropertiesHub() {
+export default function PropertiesHub({ 
+  user, 
+  selectedPropertyFilterId = 'all', 
+  setSelectedPropertyFilterId, 
+  properties: globalProperties 
+}) {
   const [properties, setProperties] = useState([]);
   const [selectedProperty, setSelectedProperty] = useState(null);
   const [units, setUnits] = useState([]);
   const [loadingProps, setLoadingProps] = useState(true);
   const [loadingUnits, setLoadingUnits] = useState(false);
+  const [showPropDropdown, setShowPropDropdown] = useState(false);
+
+  // Helper to determine property type
+  function getPropertyType(property) {
+    if (!property) return 'Multi-Unit';
+    const activeUnits = (property.units || []).filter(u => u.active_status !== false);
+    if (activeUnits.length === 0) return 'Multi-Unit';
+    const firstUnit = activeUnits[0].unit_number;
+    if (activeUnits.length === 1) {
+      if (firstUnit === 'Single Family') return 'Single Family';
+      if (firstUnit === 'Condo Unit') return 'Condo';
+    }
+    return 'Multi-Unit';
+  }
 
   // Add Property states
   const [propName, setPropName] = useState('');
@@ -153,6 +172,15 @@ export default function PropertiesHub() {
     fetchProperties();
   }, []);
 
+  useEffect(() => {
+    if (selectedPropertyFilterId && selectedPropertyFilterId !== 'all') {
+      const match = properties.find(p => String(p.property_id) === String(selectedPropertyFilterId));
+      if (match && (!selectedProperty || selectedProperty.property_id !== match.property_id)) {
+        handleSelectProperty(match);
+      }
+    }
+  }, [selectedPropertyFilterId, properties]);
+
   async function fetchProperties() {
     try {
       setLoadingProps(true);
@@ -170,6 +198,9 @@ export default function PropertiesHub() {
 
   async function handleSelectProperty(prop) {
     setSelectedProperty(prop);
+    if (setSelectedPropertyFilterId && String(selectedPropertyFilterId) !== String(prop.property_id)) {
+      setSelectedPropertyFilterId(String(prop.property_id));
+    }
     setLoadingUnits(true);
     try {
       const res = await API.get(`/rental/properties/${prop.property_id}/units`);
@@ -392,159 +423,128 @@ export default function PropertiesHub() {
           <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">Properties & Units Hub</h1>
           <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Add rental portfolios and register distinct rooms/apartments.</p>
         </div>
-        <button 
-          onClick={() => { setErrorMsg(''); setShowPropModal(true); }}
-          className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2.5 rounded-xl flex items-center gap-1.5 text-xs font-bold transition-all shadow-md shadow-blue-500/20 whitespace-nowrap cursor-pointer"
-        >
-          <Plus className="w-4 h-4" /> Add Property
-        </button>
+        <div className="flex items-center gap-3 w-full sm:w-auto self-stretch sm:self-auto justify-end">
+
+
+          <button 
+            onClick={() => { setErrorMsg(''); setShowPropModal(true); }}
+            className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2.5 rounded-xl flex items-center gap-1.5 text-xs font-bold transition-all shadow-md shadow-blue-500/20 whitespace-nowrap cursor-pointer"
+          >
+            <Plus className="w-4 h-4" /> Add Property
+          </button>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        {/* Properties Side Column */}
-        <div className="lg:col-span-4 bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-xl overflow-hidden shadow-sm">
-          <div className="p-4 border-b border-slate-200 dark:border-white/10 text-slate-800 dark:text-white font-medium text-xs flex items-center gap-2">
-            <Building2 size={14} /> Property Directory
+      <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-xl overflow-hidden shadow-sm">
+        {properties.length === 0 ? (
+          <div className="py-32 text-center text-slate-450 dark:text-slate-400 text-sm">
+            <Building2 className="w-12 h-12 mx-auto text-slate-350 dark:text-slate-650 mb-3 animate-pulse" />
+            <p className="font-bold text-slate-700 dark:text-slate-300">No properties added yet.</p>
+            <p className="text-xs text-slate-550 mt-1">Click the "Add Property" button above to register your first property.</p>
           </div>
-          <div className="p-4">
-            {loadingProps ? (
-              <div className="py-8 text-center text-slate-400 text-sm animate-pulse">Loading properties...</div>
-            ) : properties.length === 0 ? (
-              <div className="py-12 text-center text-slate-400 text-sm">No properties added yet. Click "Add Property" above.</div>
-            ) : (
-              <div className="space-y-2.5">
-                {properties.map(p => (
-                  <div
-                    key={p.property_id}
-                    onClick={() => handleSelectProperty(p)}
-                    className={`p-4 rounded-xl cursor-pointer transition-all border text-left flex items-center justify-between group ${
-                      selectedProperty?.property_id === p.property_id
-                        ? 'bg-blue-600/10 border-blue-500 text-blue-600 dark:text-blue-400 shadow-md shadow-blue-500/5'
-                        : 'border-slate-100 dark:border-white/[0.03] hover:bg-slate-50 dark:hover:bg-white/5 hover:border-slate-200 dark:hover:border-white/[0.08]'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <Building2 className={`w-5 h-5 ${selectedProperty?.property_id === p.property_id ? 'text-blue-500' : 'text-slate-400'}`} />
-                      <div>
-                        <h4 className="text-sm font-bold dark:text-white text-slate-900">{p.name}</h4>
-                        <p className="text-xs text-slate-450 dark:text-slate-400 mt-0.5 truncate max-w-[160px]">{p.address}</p>
-                      </div>
-                    </div>
-                    
-                    {/* Actions Column (visible on hover) */}
-                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                      <button 
-                        onClick={(e) => { e.stopPropagation(); openEditModal(p); }} 
-                        className="p-1.5 hover:bg-slate-100 dark:hover:bg-white/10 rounded-lg text-slate-400 hover:text-blue-500 transition"
-                        title="Edit Property"
-                      >
-                        <Edit3 className="w-3.5 h-3.5" />
-                      </button>
-                      <button 
-                        onClick={(e) => { e.stopPropagation(); handleDeleteProperty(p.property_id); }} 
-                        className="p-1.5 hover:bg-red-500/10 rounded-lg text-slate-400 hover:text-red-500 transition"
-                        title="Delete Property"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Units Main List Column */}
-        <div className="lg:col-span-8 bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-xl overflow-hidden shadow-sm">
-          {selectedProperty ? (
-            <>
-              <div className="p-5 border-b border-slate-200 dark:border-white/10 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                <div>
+        ) : selectedProperty ? (
+          <>
+            <div className="p-5 border-b border-slate-200 dark:border-white/10 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <div>
+                <div className="flex items-center gap-2.5 flex-wrap">
                   <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">{selectedProperty.name}</h2>
-                  <p className="text-xs text-slate-450 dark:text-slate-400 mt-1 font-medium">{selectedProperty.address}, {selectedProperty.city}, {selectedProperty.state} {selectedProperty.zip_code}</p>
+                  <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded border ${
+                    getPropertyType(selectedProperty) === 'Single Family'
+                      ? 'bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-450 border border-emerald-500/20'
+                      : getPropertyType(selectedProperty) === 'Condo'
+                        ? 'bg-indigo-500/10 text-indigo-650 dark:bg-indigo-500/20 dark:text-indigo-400 border border-indigo-500/20'
+                        : 'bg-blue-500/10 text-blue-655 dark:bg-blue-500/20 dark:text-blue-400 border border-blue-500/20'
+                  }`}>
+                    {getPropertyType(selectedProperty)}
+                  </span>
                 </div>
-                <div className="flex items-center gap-2 self-stretch sm:self-auto">
-                  <button
-                    onClick={() => openEditModal(selectedProperty)}
-                    className="flex-1 sm:flex-none px-3.5 py-1.5 border border-slate-200 dark:border-white/10 rounded-xl flex items-center justify-center gap-1.5 hover:bg-slate-50 dark:hover:bg-white/5 text-xs font-semibold text-slate-700 dark:text-slate-350 transition duration-200 cursor-pointer"
-                  >
-                    <Edit3 className="w-4 h-4 text-slate-400" /> Edit
-                  </button>
-                  <button
-                    onClick={() => handleDeleteProperty(selectedProperty.property_id)}
-                    className="flex-1 sm:flex-none px-3.5 py-1.5 border border-red-100 hover:border-red-200 dark:border-red-500/20 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-xl flex items-center justify-center gap-1.5 text-xs font-semibold text-red-655 dark:text-red-400 transition duration-200 cursor-pointer"
-                  >
-                    <Trash2 className="w-4 h-4" /> Delete
-                  </button>
-                  {!units.some(u => u.unit_number === 'Single Family' || u.unit_number === 'Condo Unit') && (
-                    <button
-                      onClick={() => { setErrorMsg(''); setShowUnitModal(true); }}
-                      className="flex-1 sm:flex-none px-4 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl flex items-center justify-center gap-1.5 text-xs font-bold transition duration-200 shadow-md shadow-blue-500/10 cursor-pointer"
-                    >
-                      <PlusCircle className="w-4.5 h-4.5" /> Add Unit
-                    </button>
-                  )}
-                </div>
+                <p className="text-xs text-slate-450 dark:text-slate-400 mt-1 font-medium">{selectedProperty.address}, {selectedProperty.city}, {selectedProperty.state} {selectedProperty.zip_code}</p>
               </div>
-
-              <div className="p-5">
-                {loadingUnits ? (
-                  <div className="py-24 text-center text-slate-400 text-sm animate-pulse">Loading units...</div>
-                ) : units.length === 0 ? (
-                  <div className="py-24 text-center text-slate-400 text-sm">No units added in this property yet. Click "Add Unit" to get started.</div>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {units.map(u => (
-                      <div 
-                        key={u.unit_id}
-                        className="p-5 rounded-2xl border border-slate-100 dark:border-white/[0.03] bg-slate-50/50 dark:bg-black/20 hover:border-slate-200 dark:hover:border-white/[0.06] transition duration-250 flex justify-between items-center"
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className="p-2.5 rounded-xl bg-blue-500/10 text-blue-500">
-                            <DoorOpen className="w-4 h-4" />
-                          </div>
-                          <div>
-                            <h4 className="text-sm font-bold text-slate-900 dark:text-white">Unit {u.unit_number}</h4>
-                            <p className="text-xs text-slate-450 dark:text-slate-400 mt-0.5 font-medium">Rent: ${u.rent_amount}/mo</p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded border ${
-                            u.status === 'OCCUPIED'
-                              ? 'bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400 border-emerald-500/20'
-                              : u.status === 'VACANT'
-                                ? 'bg-orange-500/10 text-orange-600 dark:bg-orange-500/20 dark:text-orange-400 border-orange-500/20'
-                                : 'bg-red-500/10 text-red-600 dark:bg-red-500/20 dark:text-red-400 border-red-500/20'
-                          }`}>
-                            {u.status}
-                          </span>
-                          
-                          <button 
-                            onClick={() => openEditUnitModal(u)}
-                            className="p-1.5 hover:bg-slate-100 dark:hover:bg-white/10 rounded-lg text-slate-400 hover:text-blue-500 transition cursor-pointer"
-                            title="Edit Unit"
-                          >
-                            <Edit3 className="w-3.5 h-3.5" />
-                          </button>
-                          <button 
-                            onClick={() => handleDeleteUnit(u.unit_id)}
-                            className="p-1.5 hover:bg-red-500/10 rounded-lg text-slate-400 hover:text-red-550 dark:hover:text-red-450 transition cursor-pointer"
-                            title="Delete Unit"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+              <div className="flex items-center gap-2 self-stretch sm:self-auto">
+                <button
+                  onClick={() => openEditModal(selectedProperty)}
+                  className="flex-1 sm:flex-none px-3.5 py-1.5 border border-slate-200 dark:border-white/10 rounded-xl flex items-center justify-center gap-1.5 hover:bg-slate-50 dark:hover:bg-white/5 text-xs font-semibold text-slate-700 dark:text-slate-350 transition duration-200 cursor-pointer"
+                >
+                  <Edit3 className="w-4 h-4 text-slate-400" /> Edit
+                </button>
+                <button
+                  onClick={() => handleDeleteProperty(selectedProperty.property_id)}
+                  className="flex-1 sm:flex-none px-3.5 py-1.5 border border-red-100 hover:border-red-200 dark:border-red-500/20 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-xl flex items-center justify-center gap-1.5 text-xs font-semibold text-red-655 dark:text-red-400 transition duration-200 cursor-pointer"
+                >
+                  <Trash2 className="w-4 h-4" /> Delete
+                </button>
+                {!units.some(u => u.unit_number === 'Single Family' || u.unit_number === 'Condo Unit') && (
+                  <button
+                    onClick={() => { setErrorMsg(''); setShowUnitModal(true); }}
+                    className="flex-1 sm:flex-none px-4 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl flex items-center justify-center gap-1.5 text-xs font-bold transition duration-200 shadow-md shadow-blue-500/10 cursor-pointer"
+                  >
+                    <PlusCircle className="w-4.5 h-4.5" /> Add Unit
+                  </button>
                 )}
               </div>
-            </>
-          ) : (
-            <div className="py-32 text-center text-slate-400 text-sm">Please select or add a property from the left list to manage units.</div>
-          )}
-        </div>
+            </div>
+
+            <div className="p-5">
+              {loadingUnits ? (
+                <div className="py-24 text-center text-slate-400 text-sm animate-pulse">Loading units...</div>
+              ) : units.length === 0 ? (
+                <div className="py-24 text-center text-slate-400 text-sm">No units added in this property yet. Click "Add Unit" to get started.</div>
+              ) : (
+                <div className="flex flex-col gap-3">
+                  {units.map(u => (
+                    <div 
+                      key={u.unit_id}
+                      className="p-4 rounded-xl border border-slate-100 dark:border-white/[0.03] bg-slate-50/30 dark:bg-black/20 hover:border-slate-200 dark:hover:border-white/[0.06] transition duration-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"
+                    >
+                      <div className="flex items-center gap-4 w-full sm:w-auto">
+                        <div className="p-3 rounded-xl bg-blue-500/10 text-blue-500 flex-shrink-0">
+                          <DoorOpen className="w-5 h-5" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <h4 className="text-sm font-bold text-slate-900 dark:text-white truncate">Unit {u.unit_number}</h4>
+                            <span className={`text-[9px] font-bold px-2 py-0.5 rounded border flex-shrink-0 ${
+                              u.status === 'OCCUPIED'
+                                ? 'bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400 border-emerald-500/20'
+                                : u.status === 'VACANT'
+                                  ? 'bg-orange-500/10 text-orange-600 dark:bg-orange-500/20 dark:text-orange-400 border-orange-500/20'
+                                  : 'bg-red-500/10 text-red-650 dark:bg-red-500/20 dark:text-red-400 border-red-500/20'
+                            }`}>
+                              {u.status}
+                            </span>
+                          </div>
+                          <p className="text-xs text-slate-450 dark:text-slate-400 mt-1 font-semibold">
+                            Rent: <strong className="text-slate-800 dark:text-slate-200">${u.rent_amount}/mo</strong>
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 w-full sm:w-auto justify-end sm:justify-start border-t sm:border-t-0 pt-3 sm:pt-0 border-slate-100 dark:border-white/5">
+                        <button 
+                          onClick={() => openEditUnitModal(u)}
+                          className="p-2 hover:bg-slate-100 dark:hover:bg-white/10 rounded-xl text-slate-400 hover:text-blue-500 transition duration-150 flex items-center gap-1.5 text-xs font-semibold cursor-pointer border border-transparent hover:border-blue-500/10"
+                          title="Edit Unit"
+                        >
+                          <Edit3 className="w-3.5 h-3.5" />
+                          <span className="sm:hidden lg:inline text-[10px]">Edit</span>
+                        </button>
+                        <button 
+                          onClick={() => handleDeleteUnit(u.unit_id)}
+                          className="p-2 hover:bg-red-500/10 rounded-xl text-slate-400 hover:text-red-550 dark:hover:text-red-450 transition duration-150 flex items-center gap-1.5 text-xs font-semibold cursor-pointer border border-transparent hover:border-red-500/10"
+                          title="Delete Unit"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                          <span className="sm:hidden lg:inline text-[10px]">Delete</span>
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </>
+        ) : (
+          <div className="py-32 text-center text-slate-400 text-sm">Please select or add a property from the dropdown above to manage units.</div>
+        )}
       </div>
 
       {/* Property Creation Modal (Stepper Wizard) */}

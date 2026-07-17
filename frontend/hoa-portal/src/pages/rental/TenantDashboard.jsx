@@ -8,6 +8,7 @@ export default function TenantDashboard({ user, setActivePage }) {
   const [activeLease, setActiveLease] = useState(null);
   const [loading, setLoading] = useState(true);
   const [invoices, setInvoices] = useState([]);
+  const [applications, setApplications] = useState([]);
 
   useEffect(() => {
     fetchTenantLeaseData();
@@ -27,6 +28,10 @@ export default function TenantDashboard({ user, setActivePage }) {
         const ledgerRes = await API.get(`/rental/leases/${active.lease_id}/ledgers`);
         setInvoices(ledgerRes.data.slice(0, 3)); // show top 3 recent invoices
       }
+
+      // Fetch applications to check for pending invites
+      const appRes = await API.get('/rental/applications/my');
+      setApplications(appRes.data);
     } catch (err) {
       console.error("Error fetching tenant lease data:", err);
     } finally {
@@ -71,10 +76,88 @@ export default function TenantDashboard({ user, setActivePage }) {
 
   return (
     <div className="space-y-8 animate-fade-in text-left">
-      <div>
-        <h1 className="text-3xl font-black text-gray-950 dark:text-white">Tenant Portal</h1>
-        <p className="text-gray-500 dark:text-gray-400 mt-1">Manage your rental payments, lease signing, and maintenance tickets.</p>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h1 className="text-3xl font-black text-gray-950 dark:text-white">Tenant Portal</h1>
+          <p className="text-gray-500 dark:text-gray-400 mt-1">Manage your rental payments, lease signing, and maintenance tickets.</p>
+        </div>
+        {leases.length > 1 && (
+          <div className="flex items-center gap-2 shrink-0 bg-slate-50 dark:bg-white/[0.02] border border-slate-200 dark:border-white/5 p-2 rounded-xl">
+            <span className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Switch Unit:</span>
+            <select
+              value={activeLease?.lease_id}
+              onChange={async (e) => {
+                const selectedId = parseInt(e.target.value);
+                const selected = leases.find(l => l.lease_id === selectedId);
+                if (selected) {
+                  setActiveLease(selected);
+                  try {
+                    setLoading(true);
+                    const ledgerRes = await API.get(`/rental/leases/${selected.lease_id}/ledgers`);
+                    setInvoices(ledgerRes.data.slice(0, 3));
+                  } catch (err) {
+                    console.error("Error switching lease:", err);
+                  } finally {
+                    setLoading(false);
+                  }
+                }
+              }}
+              className="bg-white dark:bg-[#1A2736] border border-slate-200 dark:border-white/10 rounded-lg px-2.5 py-1 text-xs font-bold text-slate-800 dark:text-white outline-none cursor-pointer focus:border-blue-500"
+            >
+              {leases.map(l => (
+                <option key={l.lease_id} value={l.lease_id}>
+                  Unit {l.unit?.unit_number || 'N/A'} ({l.status})
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
       </div>
+
+      {/* Pending Invites & Signature alerts */}
+      {(applications.some(a => a.screening_status === 'INVITED') || leases.some(l => l.status === 'PENDING_SIGNATURE')) && (
+        <div className="space-y-3">
+          {applications.filter(a => a.screening_status === 'INVITED').map(app => (
+            <div key={app.application_id} className="p-4 rounded-xl bg-indigo-500/5 dark:bg-indigo-550/10 border border-indigo-500/20 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 text-xs font-semibold animate-pulse">
+              <div className="space-y-1">
+                <span className="text-[10px] text-indigo-500 dark:text-indigo-400 font-bold uppercase tracking-wider block">Screening Invitation</span>
+                <p className="text-sm text-slate-905 dark:text-white font-bold">
+                  Unit {app.unit?.unit_number} at {app.unit?.propertyName || app.unit?.property?.name || 'Assigned Property'}
+                </p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 font-normal">
+                  Your landlord has invited you to complete a background screening check.
+                </p>
+              </div>
+              <button
+                onClick={() => setActivePage('screening_hub')}
+                className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl text-xs font-bold transition shadow-md shadow-indigo-500/20 whitespace-nowrap cursor-pointer"
+              >
+                Complete Application
+              </button>
+            </div>
+          ))}
+
+          {leases.filter(l => l.status === 'PENDING_SIGNATURE').map(lease => (
+            <div key={lease.lease_id} className="p-4 rounded-xl bg-blue-500/5 dark:bg-blue-550/10 border border-blue-500/20 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 text-xs font-semibold">
+              <div className="space-y-1">
+                <span className="text-[10px] text-blue-500 dark:text-blue-400 font-bold uppercase tracking-wider block">Lease Agreement Signature Pending</span>
+                <p className="text-sm text-slate-905 dark:text-white font-bold">
+                  Unit {lease.unit?.unit_number} at {lease.property?.name || 'Assigned Property'}
+                </p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 font-normal">
+                  A new lease agreement is ready for your digital signature.
+                </p>
+              </div>
+              <button
+                onClick={() => setActivePage('leases_hub')}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-xs font-bold transition shadow-md shadow-blue-500/20 whitespace-nowrap cursor-pointer"
+              >
+                Sign Lease Contract
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

@@ -30,12 +30,18 @@ def list_leases(
     current_user: RentalUser = Depends(get_verified_rental_user)
 ):
     role_name = current_user.role.role_name if current_user.role else ""
+    leases = []
     if role_name in ["super_admin", "landlord"]:
-        return rental_service.get_leases_by_landlord(current_user.user_id, db)
+        leases = rental_service.get_leases_by_landlord(current_user.user_id, db)
     elif role_name == "tenant":
-        return rental_service.get_leases_by_tenant(current_user.user_id, db)
-    else:
-        return []
+        leases = rental_service.get_leases_by_tenant(current_user.user_id, db)
+    
+    # Populate property_name
+    for l in leases:
+        if l.unit and l.unit.property:
+            l.property_name = l.unit.property.name
+            
+    return leases
 
 
 @router.post("/leases/{lease_id}/sign", response_model=LeaseOut)
@@ -48,6 +54,8 @@ def sign_lease_agreement(
     try:
         lease = rental_service.sign_lease(lease_id, current_user.user_id, body.signature_text, body.signing_as, db)
         log_rental_action(db, "SIGN_LEASE", "rental", f"Lease {lease_id} signed as {body.signing_as} by user {current_user.user_id}.", current_user.user_id)
+        if lease.unit and lease.unit.property:
+            lease.property_name = lease.unit.property.name
         return lease
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))

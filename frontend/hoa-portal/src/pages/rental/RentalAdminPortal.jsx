@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../../context/ThemeContext';
+import API from '../../services/api';
 
 // Layout Components
 import RentalSidebar from '../../components/rental/RentalSidebar';
@@ -18,6 +19,7 @@ import RentalVendors from './RentalVendors';
 import RentalProfile from './RentalProfile';
 import RentalAuditHistory from './RentalAuditHistory';
 import TenantsHub from './TenantsHub';
+import NotifPanel from '../../components/NotifPanel';
 
 // Services
 import { getRentalMe } from '../../services/authService';
@@ -26,8 +28,32 @@ const RentalAdminPortal = () => {
   const { theme } = useTheme();
   const navigate = useNavigate();
 
+  const [properties, setProperties] = useState([]);
+  const [selectedPropertyFilterId, setSelectedPropertyFilterId] = useState('all');
+
   const [activePage, _setActivePage] = useState('dashboard');
   const [pageHistory, setPageHistory] = useState(['dashboard']);
+  
+  // Notification states
+  const [isNotifOpen, setIsNotifOpen] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const [lastReadTimestamp, setLastReadTimestamp] = useState(() => {
+    return Number(localStorage.getItem('rental_last_read_notifications') || 0);
+  });
+  const [badgeClearedTimestamp, setBadgeClearedTimestamp] = useState(() => {
+    return Number(localStorage.getItem('rental_last_read_notifications') || 0);
+  });
+  const [readNotificationIds, setReadNotificationIds] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('rental_read_notification_ids') || '[]');
+    } catch (_) {
+      return [];
+    }
+  });
+
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState(null);
 
   const setActivePage = (newPage) => {
     if (newPage === activePage) return;
@@ -55,9 +81,90 @@ const RentalAdminPortal = () => {
     }
   };
 
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState(null);
+  const fetchNotifications = async () => {
+    if (!user) return;
+    try {
+      let res;
+      if (user.role === 'landlord') {
+        res = await API.get('/rental/audit?limit=20');
+      } else {
+        res = await API.get('/rental/audit/my?limit=20');
+      }
+      setNotifications(res.data || []);
+    } catch (err) {
+      console.error("Failed to fetch rental notifications:", err);
+    }
+  };
+
+  useEffect(() => {
+    if (user) {
+      fetchNotifications();
+      const interval = setInterval(fetchNotifications, 15000);
+      return () => clearInterval(interval);
+    }
+  }, [user]);
+
+  const unreadCount = notifications.filter(n => 
+    new Date(n.created_at).getTime() > badgeClearedTimestamp &&
+    !readNotificationIds.includes(n.audit_id)
+  ).length;
+
+  const getReadThresholdTimestamp = () => {
+    let threshold = Date.now();
+    if (notifications.length > 0) {
+      const times = notifications.map(n => new Date(n.created_at).getTime()).filter(t => !isNaN(t));
+      if (times.length > 0) {
+        threshold = Math.max(threshold, ...times) + 1000;
+      }
+    }
+    return threshold;
+  };
+
+  const handleToggleNotif = () => {
+    const nextState = !isNotifOpen;
+    setIsNotifOpen(nextState);
+    if (nextState) {
+      setBadgeClearedTimestamp(Date.now());
+    } else {
+      const threshold = getReadThresholdTimestamp();
+      localStorage.setItem('rental_last_read_notifications', String(threshold));
+      setLastReadTimestamp(threshold);
+      setBadgeClearedTimestamp(threshold);
+      localStorage.setItem('rental_read_notification_ids', '[]');
+      setReadNotificationIds([]);
+    }
+  };
+
+  const handleNotifClick = (log) => {
+    if (!log) return;
+    const currentReadIds = [...readNotificationIds];
+    if (!currentReadIds.includes(log.audit_id)) {
+      currentReadIds.push(log.audit_id);
+      localStorage.setItem('rental_read_notification_ids', JSON.stringify(currentReadIds));
+      setReadNotificationIds(currentReadIds);
+    }
+    const module = log.module || "";
+    if (module === 'service_request') {
+      setActivePage('servicereq');
+    } else if (module === 'payment') {
+      setActivePage('rent_ledger');
+    } else if (module === 'community') {
+      setActivePage('properties_hub');
+    }
+    setIsNotifOpen(false);
+  };
+
+  const handleMarkAllRead = () => {
+    const threshold = getReadThresholdTimestamp();
+    localStorage.setItem('rental_last_read_notifications', String(threshold));
+    setLastReadTimestamp(threshold);
+    setBadgeClearedTimestamp(threshold);
+    localStorage.setItem('rental_read_notification_ids', '[]');
+    setReadNotificationIds([]);
+    setIsNotifOpen(false);
+  };
+
+
 
   useEffect(() => {
     fetchInitialData();
@@ -95,6 +202,33 @@ const RentalAdminPortal = () => {
         localStorage.setItem('rental_user', JSON.stringify(freshUser));
       } catch (_) {}
 
+      if (freshUser.role === 'landlord') {
+        try {
+          const propRes = await API.get('/rental/properties');
+          setProperties(propRes.data);
+        } catch (propErr) {
+          console.error("Failed to load landlord properties list at root:", propErr);
+        }
+      } else if (freshUser.role === 'tenant') {
+        try {
+          const leaseRes = await API.get('/rental/leases');
+          const activeLease = leaseRes.data.find(l => l.status === 'ACTIVE') || leaseRes.data[0];
+          if (activeLease) {
+            const updatedUser = {
+              ...freshUser,
+              property_name: activeLease.property_name || (activeLease.unit && activeLease.unit.property ? activeLease.unit.property.name : null),
+              unit_number: activeLease.unit ? activeLease.unit.unit_number : null
+            };
+            setUser(updatedUser);
+            try {
+              localStorage.setItem('rental_user', JSON.stringify(updatedUser));
+            } catch (_) {}
+          }
+        } catch (leaseErr) {
+          console.error("Failed to load tenant lease at root:", leaseErr);
+        }
+      }
+
     } catch (err) {
       console.error('Failed to parse database records in initial stream:', err);
       // Redirect to login if user cannot be loaded
@@ -111,26 +245,26 @@ const RentalAdminPortal = () => {
 
     switch (activePage) {
       case 'dashboard':
-        if (role === 'landlord') return <LandlordDashboard user={user} setActivePage={setActivePage} />;
+        if (role === 'landlord') return <LandlordDashboard user={user} setActivePage={setActivePage} selectedPropertyFilterId={selectedPropertyFilterId} setSelectedPropertyFilterId={setSelectedPropertyFilterId} properties={properties} />;
         return <TenantDashboard user={user} setActivePage={setActivePage} />;
 
       case 'properties_hub':
-        return <PropertiesHub user={user} />;
+        return <PropertiesHub user={user} selectedPropertyFilterId={selectedPropertyFilterId} setSelectedPropertyFilterId={setSelectedPropertyFilterId} properties={properties} />;
 
       case 'screening_hub':
-        return <ScreeningHub user={user} setActivePage={setActivePage} />;
+        return <ScreeningHub user={user} setActivePage={setActivePage} selectedPropertyFilterId={selectedPropertyFilterId} />;
 
       case 'leases_hub':
-        return <LeasesHub user={user} />;
+        return <LeasesHub user={user} selectedPropertyFilterId={selectedPropertyFilterId} />;
 
       case 'tenants_hub':
-        return <TenantsHub user={user} />;
+        return <TenantsHub user={user} selectedPropertyFilterId={selectedPropertyFilterId} />;
 
       case 'rent_ledger':
-        return <RentLedger user={user} />;
+        return <RentLedger user={user} selectedPropertyFilterId={selectedPropertyFilterId} />;
 
       case 'servicereq':
-        return <RentalMaintenanceDesk user={user} />;
+        return <RentalMaintenanceDesk user={user} selectedPropertyFilterId={selectedPropertyFilterId} />;
 
       case 'vendors_hub':
         return <RentalVendors user={user} />;
@@ -142,7 +276,7 @@ const RentalAdminPortal = () => {
         return <RentalAuditHistory user={user} />;
 
       default:
-        if (role === 'landlord') return <LandlordDashboard user={user} setActivePage={setActivePage} />;
+        if (role === 'landlord') return <LandlordDashboard user={user} setActivePage={setActivePage} selectedPropertyFilterId={selectedPropertyFilterId} setSelectedPropertyFilterId={setSelectedPropertyFilterId} properties={properties} />;
         return <TenantDashboard user={user} setActivePage={setActivePage} />;
     }
   };
@@ -175,6 +309,11 @@ const RentalAdminPortal = () => {
           setActivePage={setActivePage}
           canGoBack={pageHistory.length > 1}
           onBack={handleBack}
+          properties={properties}
+          selectedPropertyFilterId={selectedPropertyFilterId}
+          setSelectedPropertyFilterId={setSelectedPropertyFilterId}
+          unreadCount={unreadCount}
+          toggleNotif={handleToggleNotif}
         />
 
         <main className="flex-1 overflow-auto p-5 lg:p-7 bg-white dark:bg-[#0D1B2A] custom-scrollbar">
@@ -183,6 +322,16 @@ const RentalAdminPortal = () => {
           </div>
         </main>
       </div>
+
+      <NotifPanel
+        isOpen={isNotifOpen}
+        onClose={handleToggleNotif}
+        notifications={notifications}
+        onMarkAllRead={handleMarkAllRead}
+        lastReadTimestamp={lastReadTimestamp}
+        readNotificationIds={readNotificationIds}
+        onNotifClick={handleNotifClick}
+      />
     </div>
   );
 };

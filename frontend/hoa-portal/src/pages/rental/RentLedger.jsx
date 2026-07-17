@@ -3,6 +3,7 @@ import {
   CreditCard, DollarSign, Activity, Settings2, 
   ShieldAlert, Sparkles, CheckCircle2, X 
 } from 'lucide-react';
+import { toast } from 'react-hot-toast';
 import API from '../../services/api';
 
 // Translucent Status Badge mapping
@@ -19,7 +20,7 @@ const StatusBadge = ({ status }) => {
   );
 };
 
-export default function RentLedger({ user }) {
+export default function RentLedger({ user, selectedPropertyFilterId = 'all' }) {
   const isLandlord = user?.role === 'landlord' || user?.role_name === 'landlord' || user?.role_id === 1;
 
   const [invoices, setInvoices] = useState([]);
@@ -30,9 +31,6 @@ export default function RentLedger({ user }) {
   const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [payMethod, setPayMethod] = useState('ACH');
   const [showPayModal, setShowPayModal] = useState(false);
-
-  const [successMsg, setSuccessMsg] = useState('');
-  const [errorMsg, setErrorMsg] = useState('');
 
   useEffect(() => {
     fetchData();
@@ -61,42 +59,36 @@ export default function RentLedger({ user }) {
   }
 
   async function handleSimulateBilling() {
-    setSuccessMsg('');
-    setErrorMsg('');
     try {
       const res = await API.post('/rental/simulate/monthly-billing');
-      setSuccessMsg(res.data.message || 'Billing simulation executed.');
+      toast.success(res.data.message || 'Billing simulation executed.');
       fetchData();
     } catch (err) {
-      setErrorMsg('Failed to run billing simulation.');
+      toast.error('Failed to run billing simulation.');
     }
   }
 
   async function handleSimulateLateFees() {
-    setSuccessMsg('');
-    setErrorMsg('');
     try {
       const res = await API.post('/rental/simulate/late-fees');
-      setSuccessMsg(res.data.message || 'Late fee simulation executed.');
+      toast.success(res.data.message || 'Late fee simulation executed.');
       fetchData();
     } catch (err) {
-      setErrorMsg('Failed to run late fee simulation.');
+      toast.error('Failed to run late fee simulation.');
     }
   }
 
   async function handlePayInvoice(e) {
     e.preventDefault();
-    setErrorMsg('');
-    setSuccessMsg('');
     try {
       const res = await API.post(`/rental/ledgers/${selectedInvoice.invoice_id}/pay`, {
         payment_method: payMethod
       });
       setInvoices(prev => prev.map(inv => inv.invoice_id === selectedInvoice.invoice_id ? { ...res.data, lease: selectedInvoice.lease } : inv));
       setShowPayModal(false);
-      setSuccessMsg(`Invoice #${selectedInvoice.invoice_id} successfully paid via mock ${payMethod}!`);
+      toast.success(`Invoice #${selectedInvoice.invoice_id} successfully paid via mock ${payMethod}!`);
     } catch (err) {
-      setErrorMsg(err.response?.data?.detail || "Failed to make payment.");
+      toast.error(err.response?.data?.detail || "Failed to make payment.");
     }
   }
 
@@ -140,38 +132,33 @@ export default function RentLedger({ user }) {
           )}
         </div>
 
-        {/* Success / Error Messages inside the card container */}
-        {successMsg && (
-          <div className="m-5 p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-400 rounded-xl text-xs font-semibold flex items-center gap-2.5">
-            <CheckCircle2 className="w-5 h-5 text-emerald-500 flex-shrink-0" />
-            <span>{successMsg}</span>
-          </div>
-        )}
-        {errorMsg && (
-          <div className="m-5 p-4 bg-rose-500/10 border border-rose-500/20 text-rose-700 dark:text-rose-400 rounded-xl text-xs font-semibold flex items-center gap-2.5">
-            <ShieldAlert className="w-5 h-5 text-rose-500 flex-shrink-0" />
-            <span>{errorMsg}</span>
-          </div>
-        )}
 
-        {invoices.length === 0 ? (
-          <div className="py-20 text-center text-slate-400 text-sm">No transaction invoices generated in ledger records.</div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm text-left">
-              <thead className="bg-slate-50 dark:bg-white/5 border-b border-slate-200 dark:border-white/10 uppercase text-[10px] tracking-wider font-bold text-slate-500 dark:text-gray-400">
-                <tr>
-                  <th className="px-4 py-4">Invoice ID</th>
-                  <th className="px-4 py-4">Lease Unit</th>
-                  <th className="px-4 py-4">Due Date</th>
-                  <th className="px-4 py-4">Amount Due</th>
-                  <th className="px-4 py-4">Late Penalty</th>
-                  <th className="px-4 py-4 text-center">Status</th>
-                  <th className="px-4 py-4 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-white/5 text-slate-700 dark:text-gray-300">
-                {invoices.map(inv => (
+
+        {(() => {
+          const filteredInvoices = invoices.filter(inv => {
+            return selectedPropertyFilterId === 'all' || String(inv.lease?.unit?.property_id) === String(selectedPropertyFilterId);
+          });
+
+          if (filteredInvoices.length === 0) {
+            return <div className="py-20 text-center text-slate-400 text-sm">No transaction invoices generated in ledger records.</div>;
+          }
+
+          return (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm text-left">
+                <thead className="bg-slate-50 dark:bg-white/5 border-b border-slate-200 dark:border-white/10 uppercase text-[10px] tracking-wider font-bold text-slate-500 dark:text-gray-400">
+                  <tr>
+                    <th className="px-4 py-4">Invoice ID</th>
+                    <th className="px-4 py-4">Lease Unit</th>
+                    <th className="px-4 py-4">Due Date</th>
+                    <th className="px-4 py-4">Amount Due</th>
+                    <th className="px-4 py-4">Late Penalty</th>
+                    <th className="px-4 py-4 text-center">Status</th>
+                    <th className="px-4 py-4 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 dark:divide-white/5 text-slate-700 dark:text-gray-300">
+                  {filteredInvoices.map(inv => (
                   <tr key={inv.invoice_id} className="hover:bg-slate-50 dark:hover:bg-white/5 transition-colors group">
                     <td className="px-4 py-4 font-mono text-xs font-bold text-indigo-650 dark:text-[#5BA4F5] whitespace-nowrap">#{inv.invoice_id}</td>
                     <td className="px-4 py-4 whitespace-nowrap">
@@ -216,7 +203,7 @@ export default function RentLedger({ user }) {
               </tbody>
             </table>
           </div>
-        )}
+        ); })()}
       </div>
 
       {/* Pay Invoice Modal */}

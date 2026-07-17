@@ -216,17 +216,17 @@ const Dashboard = ({ community, user, setActivePage }) => {
     const monthName = currentMonth.toLocaleString('en-US', { month: 'long', year: 'numeric' });
     
     return (
-      <div className="bg-slate-50/50 dark:bg-black/25 border border-slate-200/60 dark:border-white/5 rounded-2xl p-4 shadow-sm mb-4">
+      <div className="bg-slate-50/40 dark:bg-slate-900/40 backdrop-blur-sm border border-slate-200/50 dark:border-white/[0.04] rounded-2xl p-3 shadow-sm mb-3 w-full">
         {/* Calendar Navigation Header */}
-        <div className="flex items-center justify-between mb-3">
-          <span className="text-xs font-black text-slate-800 dark:text-slate-200 uppercase tracking-wider">{monthName}</span>
-          <div className="flex gap-1">
+        <div className="flex items-center justify-between mb-3 pb-2 border-b border-slate-200/50 dark:border-white/[0.04]">
+          <span className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider">{monthName}</span>
+          <div className="flex gap-1.5">
             <button
               type="button"
               onClick={() => setCurrentMonth(new Date(year, month - 1, 1))}
-              className="p-1 hover:bg-slate-205 dark:hover:bg-white/10 rounded-lg text-slate-500 dark:text-gray-400 transition"
+              className="p-1 hover:bg-slate-100 dark:hover:bg-white/10 rounded-lg text-slate-500 dark:text-gray-400 transition"
             >
-              <ChevronLeft size={14} />
+              <ChevronLeft size={13} />
             </button>
             <button
               type="button"
@@ -235,29 +235,29 @@ const Dashboard = ({ community, user, setActivePage }) => {
                 setCurrentMonth(today);
                 setSelectedCalendarDate(today);
               }}
-              className="px-2 py-0.5 bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 rounded text-[9px] font-extrabold transition uppercase"
+              className="px-2 py-0.5 bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 rounded-md text-[9px] font-extrabold transition uppercase tracking-wider"
             >
               Today
             </button>
             <button
               type="button"
               onClick={() => setCurrentMonth(new Date(year, month + 1, 1))}
-              className="p-1 hover:bg-slate-205 dark:hover:bg-white/10 rounded-lg text-slate-500 dark:text-gray-400 transition"
+              className="p-1 hover:bg-slate-100 dark:hover:bg-white/10 rounded-lg text-slate-500 dark:text-gray-400 transition"
             >
-              <ChevronRight size={14} />
+              <ChevronRight size={13} />
             </button>
           </div>
         </div>
         
         {/* Days of Week Headers */}
-        <div className="grid grid-cols-7 gap-1 text-center text-[9px] font-black text-slate-400 dark:text-gray-500 mb-1.5">
+        <div className="grid grid-cols-7 gap-1 text-center text-[10px] font-semibold text-slate-400 dark:text-gray-500 mb-2">
           {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d, i) => <div key={i}>{d}</div>)}
         </div>
         
         {/* Days Grid */}
         <div className="grid grid-cols-7 gap-1">
           {totalSlots.map((day, idx) => {
-            if (!day) return <div key={idx} className="aspect-square"></div>;
+            if (!day) return <div key={idx} className="h-8"></div>;
             
             const dateObj = new Date(year, month, day);
             const isToday = new Date().toDateString() === dateObj.toDateString();
@@ -276,16 +276,16 @@ const Dashboard = ({ community, user, setActivePage }) => {
                 key={idx}
                 type="button"
                 onClick={() => setSelectedCalendarDate(dateObj)}
-                className={`aspect-square flex flex-col items-center justify-center text-[10px] font-mono rounded-lg transition relative ${
+                className={`h-8 w-full flex flex-col items-center justify-center text-xs font-semibold rounded-xl transition-all relative ${
                   isSelected
-                    ? 'bg-gradient-to-br from-blue-500 to-indigo-650 text-white font-extrabold shadow-sm'
+                    ? 'bg-blue-600 text-white font-bold shadow-md shadow-blue-500/20'
                     : isToday
-                      ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400 font-extrabold border border-blue-500/20'
-                      : 'hover:bg-slate-205 dark:hover:bg-white/5 text-slate-700 dark:text-gray-300'
+                      ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400 font-bold border border-blue-500/25'
+                      : 'hover:bg-slate-100 dark:hover:bg-white/5 text-slate-700 dark:text-gray-300'
                 }`}
               >
-                <span>{day}</span>
-                <div className="flex gap-0.5 justify-center absolute bottom-0.5">
+                <span className="relative z-10 leading-none">{day}</span>
+                <div className="flex gap-0.5 justify-center absolute bottom-1">
                   {hasMeeting && (
                     <span className={`w-1 h-1 rounded-full ${isSelected ? 'bg-white' : 'bg-purple-500'}`}></span>
                   )}
@@ -432,7 +432,7 @@ const Dashboard = ({ community, user, setActivePage }) => {
         {/* Right Top: Calendar Schedules & Upcoming events */}
         <div className="lg:col-span-5 bg-gradient-to-br from-white/80 to-slate-50/80 dark:from-[#1E2E42]/80 dark:to-[#162535]/80 backdrop-blur-md border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 shadow-sm flex flex-col justify-between">
           <div className="flex flex-col h-full">
-            <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-200/60 dark:border-white/[0.05]">
+            <div className="flex items-center justify-between mb-3 pb-2 border-b border-slate-200/60 dark:border-white/[0.05]">
               <h3 className="font-extrabold text-sm text-slate-900 dark:text-white uppercase tracking-wider">
                 Calendar Schedule
               </h3>
@@ -448,9 +448,9 @@ const Dashboard = ({ community, user, setActivePage }) => {
             {renderDashboardCalendar()}
 
             {/* Checklist upcoming items */}
-            <div className="space-y-3.5 mt-2 flex-1">
+            <div className="space-y-2.5 mt-1 flex-1">
               <div className="flex items-center justify-between">
-                <span className="text-[10px] font-bold text-slate-400 dark:text-gray-500 uppercase tracking-widest block mb-2 font-mono">
+                <span className="text-[10px] font-bold text-slate-400 dark:text-gray-500 uppercase tracking-widest block mb-1 font-mono">
                   {selectedCalendarDate 
                     ? `Events on ${selectedCalendarDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`
                     : "Upcoming Events & Tasks"

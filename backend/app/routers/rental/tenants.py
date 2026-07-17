@@ -34,8 +34,10 @@ def get_tenants(
         ).filter(Lease.status.in_(["ACTIVE", "PENDING_SIGNATURE"])).first()
         
         unit_number = None
+        property_id = None
         if active_lease and active_lease.unit:
             unit_number = active_lease.unit.unit_number
+            property_id = active_lease.unit.property_id
         elif hasattr(t, 'unit_no') and t.unit_no:
             unit_number = t.unit_no
 
@@ -51,6 +53,7 @@ def get_tenants(
             "active_status": t.active_status,
             "account_status": t.account_status,
             "unit_no": unit_number,
+            "property_id": property_id,
             "created_date": t.created_date.isoformat() if t.created_date else None
         })
     return res

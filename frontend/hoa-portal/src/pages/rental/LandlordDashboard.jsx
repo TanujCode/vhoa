@@ -9,17 +9,26 @@ import {
 } from 'lucide-react';
 import API from '../../services/api';
 
-export default function LandlordDashboard({ user, setActivePage }) {
+export default function LandlordDashboard({ 
+  user, 
+  setActivePage,
+  selectedPropertyFilterId = 'all',
+  setSelectedPropertyFilterId,
+  properties: globalProperties
+}) {
   // Filters & State
-  const [properties, setProperties] = useState([]);
+  const [properties, setProperties] = useState(globalProperties || []);
   const [units, setUnits] = useState([]);
   const [leases, setLeases] = useState([]);
   const [ledgers, setLedgers] = useState([]);
   const [maintRequests, setMaintRequests] = useState([]);
+  const [applications, setApplications] = useState([]);
+  const [recentLogs, setRecentLogs] = useState([]);
   const [loading, setLoading] = useState(true);
 
   // Selected filters
-  const [selectedPropertyId, setSelectedPropertyId] = useState('all');
+  const selectedPropertyId = selectedPropertyFilterId;
+  const setSelectedPropertyId = setSelectedPropertyFilterId;
   const [selectedPeriod, setSelectedPeriod] = useState('12months'); // "thismonth", "3months", "12months", "alltime"
   
   // Interactive UI state
@@ -41,9 +50,9 @@ export default function LandlordDashboard({ user, setActivePage }) {
 
       // 2. Fetch units for each property in parallel
       const unitsPromises = props.map(p => 
-        API.get(`/rental/properties/${p.property_id}/units`)
-          .then(res => res.data.map(u => ({ ...u, property_id: p.property_id, property_name: p.name })))
-          .catch(() => [])
+          API.get(`/rental/properties/${p.property_id}/units`)
+            .then(res => res.data.map(u => ({ ...u, property_id: p.property_id, property_name: p.name })))
+            .catch(() => [])
       );
       const unitsArrays = await Promise.all(unitsPromises);
       const allUnits = unitsArrays.flat();
@@ -92,6 +101,18 @@ export default function LandlordDashboard({ user, setActivePage }) {
         };
       });
       setMaintRequests(allMaint);
+
+      // 6. Fetch applications
+      const appRes = await API.get('/rental/applications');
+      setApplications(appRes.data);
+
+      // 7. Fetch recent audit logs
+      try {
+        const auditRes = await API.get('/rental/audit?limit=5');
+        setRecentLogs(auditRes.data || []);
+      } catch (auditErr) {
+        console.error("Failed to load dashboard recent logs:", auditErr);
+      }
 
     } catch (err) {
       console.error("Failed to load landlord dashboard data:", err);
@@ -269,20 +290,6 @@ export default function LandlordDashboard({ user, setActivePage }) {
 
         {/* Filters and Actions Control Bar */}
         <div className="flex flex-wrap items-center gap-3">
-          {/* Property Dropdown Filter */}
-          <div className="relative">
-            <select
-              value={selectedPropertyId}
-              onChange={(e) => setSelectedPropertyId(e.target.value)}
-              className="appearance-none bg-white dark:bg-[#1E2E42] border border-slate-200 dark:border-white/10 text-slate-800 dark:text-slate-200 py-2.5 pl-4 pr-10 rounded-xl text-xs font-bold shadow-sm hover:border-blue-500 dark:hover:border-blue-500/50 transition focus:outline-none cursor-pointer"
-            >
-              <option value="all">🏢 All Properties</option>
-              {properties.map(p => (
-                <option key={p.property_id} value={p.property_id}>🏠 {p.name}</option>
-              ))}
-            </select>
-            <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" />
-          </div>
 
           {/* Time Period Filter */}
           <div className="relative">
@@ -333,6 +340,100 @@ export default function LandlordDashboard({ user, setActivePage }) {
           </div>
         </div>
       </div>
+
+      {/* --- Action Required Board --- */}
+      {(() => {
+        const pendingScreening = applications.filter(a => a.screening_status === 'SUBMITTED');
+        const approvedScreeningNoLease = applications.filter(a => {
+          if (a.screening_status !== 'APPROVED') return false;
+          return !leases.some(l => l.unit_id === a.unit_id && l.tenant_email === a.tenant_email);
+        });
+        const pendingSignatures = leases.filter(l => l.status === 'PENDING_SIGNATURE');
+        const openMaint = maintRequests.filter(m => m.status === 'OPEN');
+        
+        const hasActions = pendingScreening.length > 0 || approvedScreeningNoLease.length > 0 || pendingSignatures.length > 0 || openMaint.length > 0;
+        
+        if (!hasActions) return null;
+        
+        return (
+          <div className="p-6 rounded-3xl bg-amber-500/[0.03] dark:bg-amber-500/[0.02] border border-amber-500/10 dark:border-amber-500/5 space-y-4">
+            <div className="flex items-center gap-2">
+              <AlertCircle className="w-5 h-5 text-amber-500 shrink-0" />
+              <h2 className="text-base font-black text-gray-905 dark:text-white">Action Required ({pendingScreening.length + approvedScreeningNoLease.length + pendingSignatures.length + openMaint.length})</h2>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {pendingScreening.map(app => (
+                <div key={app.application_id} className="p-4 rounded-2xl bg-white dark:bg-slate-900/60 border border-slate-200/50 dark:border-white/[0.04] flex items-center justify-between gap-4 text-xs font-semibold shadow-sm hover:border-amber-500/30 transition">
+                  <div className="space-y-1">
+                    <span className="text-[10px] text-amber-600 dark:text-amber-400 font-bold uppercase tracking-wider block">New Screening Application</span>
+                    <p className="text-sm text-slate-800 dark:text-white font-bold">{app.full_name}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 font-normal">Submitted details for Unit {app.unit?.unit_number} (FICO: {app.credit_score})</p>
+                  </div>
+                  <button 
+                    onClick={() => setActivePage('screening_hub')}
+                    className="bg-amber-500 hover:bg-amber-600 text-white px-3.5 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap cursor-pointer"
+                  >
+                    Review Report
+                  </button>
+                </div>
+              ))}
+
+              {approvedScreeningNoLease.map(app => (
+                <div key={app.application_id} className="p-4 rounded-2xl bg-white dark:bg-slate-900/60 border border-slate-200/50 dark:border-white/[0.04] flex items-center justify-between gap-4 text-xs font-semibold shadow-sm hover:border-blue-500/30 transition">
+                  <div className="space-y-1">
+                    <span className="text-[10px] text-blue-600 dark:text-blue-400 font-bold uppercase tracking-wider block">Application Approved</span>
+                    <p className="text-sm text-slate-800 dark:text-white font-bold">{app.full_name}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 font-normal">Ready for lease agreement in Unit {app.unit?.unit_number}</p>
+                  </div>
+                  <button 
+                    onClick={() => {
+                      localStorage.setItem('prefill_lease_email', app.tenant_email);
+                      localStorage.setItem('prefill_lease_unit_id', app.unit_id.toString());
+                      setActivePage('leases_hub');
+                    }}
+                    className="bg-blue-600 hover:bg-blue-500 text-white px-3.5 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap cursor-pointer"
+                  >
+                    Draft Lease
+                  </button>
+                </div>
+              ))}
+
+              {pendingSignatures.map(lease => (
+                <div key={lease.lease_id} className="p-4 rounded-2xl bg-white dark:bg-slate-900/60 border border-slate-200/50 dark:border-white/[0.04] flex items-center justify-between gap-4 text-xs font-semibold shadow-sm hover:border-purple-500/30 transition">
+                  <div className="space-y-1">
+                    <span className="text-[10px] text-purple-600 dark:text-purple-400 font-bold uppercase tracking-wider block">Lease Out for Signature</span>
+                    <p className="text-sm text-slate-800 dark:text-white font-bold">Unit {lease.unit?.unit_number || 'N/A'}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 font-normal">Waiting for signature from {lease.tenant_email}</p>
+                  </div>
+                  <button 
+                    onClick={() => setActivePage('leases_hub')}
+                    className="bg-purple-600 hover:bg-purple-500 text-white px-3.5 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap cursor-pointer"
+                  >
+                    View Status
+                  </button>
+                </div>
+              ))}
+
+              {openMaint.map(req => (
+                <div key={req.request_id} className="p-4 rounded-2xl bg-white dark:bg-slate-900/60 border border-slate-200/50 dark:border-white/[0.04] flex items-center justify-between gap-4 text-xs font-semibold shadow-sm hover:border-rose-500/30 transition">
+                  <div className="space-y-1">
+                    <span className="text-[10px] text-rose-600 dark:text-rose-450 font-bold uppercase tracking-wider block">New Maintenance Request</span>
+                    <p className="text-sm text-slate-800 dark:text-white font-bold truncate max-w-[180px]">{req.title}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 font-normal">Unit {req.unit_number} • Priority: {req.priority}</p>
+                  </div>
+                  <button 
+                    onClick={() => setActivePage('servicereq')}
+                    className="bg-rose-500 hover:bg-rose-600 text-white px-3.5 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap cursor-pointer"
+                  >
+                    Assign Vendor
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      })()}
 
       {/* --- Main 4-Metrics Row --- */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -783,6 +884,64 @@ export default function LandlordDashboard({ user, setActivePage }) {
               </div>
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* --- Recent Portfolio Activity Section --- */}
+      <div className="p-6 rounded-3xl bg-white dark:bg-slate-900/60 dark:backdrop-blur-md border border-slate-200/60 dark:border-white/[0.05] shadow-sm mt-6">
+        <div className="flex justify-between items-center mb-5">
+          <h2 className="text-lg font-black text-gray-900 dark:text-white flex items-center gap-2">
+            <Activity className="w-5 h-5 text-blue-500" /> Recent Portfolio Activity
+          </h2>
+          <button 
+            onClick={() => setActivePage('audit')}
+            className="text-xs font-bold text-blue-500 hover:underline"
+          >
+            View Full Audit Trail
+          </button>
+        </div>
+
+        <div className="divide-y divide-slate-100 dark:divide-white/[0.06]">
+          {recentLogs.length === 0 ? (
+            <div className="py-10 text-center text-gray-400 dark:text-gray-500">
+              <Clock className="w-8 h-8 mx-auto mb-2 text-slate-350 dark:text-slate-650 animate-pulse" />
+              <p className="text-xs font-bold">No recent activities logged</p>
+            </div>
+          ) : (
+            recentLogs.map((log, idx) => (
+              <div 
+                key={log.audit_id || idx}
+                className="py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs"
+              >
+                <div className="flex items-start sm:items-center gap-3">
+                  <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider ${
+                    log.action?.includes('CREATE') || log.action?.includes('LOGIN')
+                      ? 'bg-blue-500/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400 border border-blue-500/10'
+                      : log.action?.includes('DELETE')
+                        ? 'bg-red-500/10 text-red-655 dark:bg-red-500/20 dark:text-red-400 border border-red-500/10'
+                        : 'bg-amber-500/10 text-amber-600 dark:bg-amber-500/20 dark:text-amber-300 border border-amber-500/10'
+                  }`}>
+                    {log.action}
+                  </span>
+                  <div className="text-left">
+                    <span className="font-bold text-slate-800 dark:text-slate-200">
+                      {log.description ? log.description.replace(/User:\s+([^(]+)\s+\(ID:[^)]+\)/gi, '$1') : '—'}
+                    </span>
+                    {log.user_name && (
+                      <span className="text-[10px] text-slate-400 dark:text-gray-500 block mt-0.5">
+                        Performed by {log.user_name}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <span className="text-[10px] text-slate-450 dark:text-gray-500 font-medium shrink-0">
+                  {new Date(log.created_at).toLocaleString('en-US', {
+                    month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+                  })}
+                </span>
+              </div>
+            ))
+          )}
         </div>
       </div>
       

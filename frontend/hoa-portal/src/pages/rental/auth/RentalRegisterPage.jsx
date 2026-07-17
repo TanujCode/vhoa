@@ -12,6 +12,7 @@ import { formatPhoneAsYouType } from '../../../utils/phoneFormatter';
 export default function RentalRegisterPage() {
   const [searchParams] = useSearchParams();
   const roleFromUrl = searchParams.get('role') || 'landlord';
+  const emailFromUrl = searchParams.get('email') || '';
   
   const [selectedRole, setSelectedRole] = useState(roleFromUrl);
   const [showPassword, setShowPassword] = useState(false);
@@ -56,6 +57,21 @@ export default function RentalRegisterPage() {
   useEffect(() => {
     API.get('/auth/captcha', { timeout: 2000 }).catch(() => {});
   }, []);
+
+  useEffect(() => {
+    if (emailFromUrl) {
+      setValue('email', emailFromUrl);
+      API.get(`/rental/auth/check-email?email=${encodeURIComponent(emailFromUrl)}`)
+        .then(res => {
+          if (res.data && res.data.exists) {
+            navigate(`/rental/login?email=${encodeURIComponent(emailFromUrl)}&msg=already_registered`);
+          }
+        })
+        .catch(err => {
+          console.error("Error checking email registry status:", err);
+        });
+    }
+  }, [emailFromUrl, setValue, navigate]);
 
   const {
     register,

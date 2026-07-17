@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Users, FileText, CheckCircle2, ShieldAlert, Sparkles, User, Mail, DollarSign, Briefcase, Phone, ShieldCheck, Info, Trash2, Search, X, Eye } from 'lucide-react';
+import { toast } from 'react-hot-toast';
 import API from '../../services/api';
 
-export default function ScreeningHub({ user, setActivePage }) {
+export default function ScreeningHub({ user, setActivePage, selectedPropertyFilterId = 'all' }) {
   const isLandlord = user?.role === 'landlord' || user?.role_name === 'landlord' || user?.role_id === 1; // Super admin also landlord
   
   const [applications, setApplications] = useState([]);
@@ -33,8 +34,6 @@ export default function ScreeningHub({ user, setActivePage }) {
   const [references, setReferences] = useState('');
 
   const [showApplyForm, setShowApplyForm] = useState(!isLandlord);
-  const [successMsg, setSuccessMsg] = useState('');
-  const [errorMsg, setErrorMsg] = useState('');
 
   // Additional US Specific & Validation States
   const [consent, setConsent] = useState(false);
@@ -206,6 +205,27 @@ export default function ScreeningHub({ user, setActivePage }) {
     }
   }, [isLandlord]);
 
+  useEffect(() => {
+    if (!isLandlord && user && !activeInviteAppId) {
+      if (user.name) setFullName(user.name);
+      if (user.email) setTenantEmail(user.email);
+    }
+  }, [user, isLandlord, activeInviteAppId]);
+
+  useEffect(() => {
+    if (selectedApp) {
+      if (selectedApp.screening_status === 'APPROVED') {
+        toast.success(`This application has been APPROVED. You can now create a lease agreement for ${selectedApp.full_name}.`, {
+          id: 'screening-status-toast',
+        });
+      } else if (selectedApp.screening_status === 'REJECTED') {
+        toast.error(`This application has been REJECTED.`, {
+          id: 'screening-status-toast',
+        });
+      }
+    }
+  }, [selectedApp]);
+
   async function fetchApplications() {
     try {
       setLoading(true);
@@ -328,8 +348,6 @@ export default function ScreeningHub({ user, setActivePage }) {
 
   async function handleApply(e) {
     e.preventDefault();
-    setErrorMsg('');
-    setSuccessMsg('');
 
     // Mark all as touched
     const newTouched = {
@@ -373,7 +391,7 @@ export default function ScreeningHub({ user, setActivePage }) {
 
     const hasErrors = Object.values(validationErrors).some(err => err !== '');
     if (hasErrors) {
-      setErrorMsg(unitErr || 'Please fix the validation errors in the form.');
+      toast.error(unitErr || 'Please fix the validation errors in the form.');
       return;
     }
 
@@ -400,7 +418,7 @@ export default function ScreeningHub({ user, setActivePage }) {
           pet_details: pets.trim()
         });
       }
-      setSuccessMsg('Application submitted successfully! Renter background check is pending review.');
+      toast.success('Application submitted successfully! Renter background check is pending review.');
       setTenantEmail('');
       setFullName('');
       setPhone('');
@@ -425,7 +443,7 @@ export default function ScreeningHub({ user, setActivePage }) {
           msg = JSON.stringify(detail);
         }
       }
-      setErrorMsg(msg);
+      toast.error(msg);
     } finally {
       setSubmitting(false);
     }
@@ -481,11 +499,14 @@ export default function ScreeningHub({ user, setActivePage }) {
           </div>
 
           {(() => {
-            const filteredApps = applications.filter(a => 
-              a.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-              a.tenant_email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-              (a.unit?.unit_number && String(a.unit.unit_number).includes(searchQuery))
-            );
+            const filteredApps = applications.filter(a => {
+              const matchesSearch = 
+                a.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                a.tenant_email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                (a.unit?.unit_number && String(a.unit.unit_number).includes(searchQuery));
+              const matchesProperty = selectedPropertyFilterId === 'all' || String(a.unit?.property_id) === String(selectedPropertyFilterId);
+              return matchesSearch && matchesProperty;
+            });
 
             if (filteredApps.length === 0) {
               return <div className="py-12 text-center text-slate-400 text-sm">No applications found matching your search.</div>;
@@ -584,17 +605,7 @@ export default function ScreeningHub({ user, setActivePage }) {
                   </button>
                 </div>
 
-                {/* Status Banners */}
-                {selectedApp.screening_status === 'APPROVED' && (
-                  <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-450 rounded-xl text-xs font-semibold flex items-center gap-2">
-                    <CheckCircle2 size={16} /> This application has been APPROVED. You can now create a lease agreement for this tenant.
-                  </div>
-                )}
-                {selectedApp.screening_status === 'REJECTED' && (
-                  <div className="p-4 bg-red-500/10 border border-red-500/20 text-red-700 dark:text-red-400 rounded-xl text-xs font-semibold flex items-center gap-2">
-                    <ShieldAlert size={16} /> This application has been REJECTED.
-                  </div>
-                )}
+
 
                 {/* Decision review buttons */}
                 {selectedApp.screening_status === 'SUBMITTED' && (
@@ -707,19 +718,7 @@ export default function ScreeningHub({ user, setActivePage }) {
                 </div>
 
                 <div className="flex justify-end gap-3 pt-4 border-t border-gray-100 dark:border-white/5">
-                  {selectedApp.screening_status === 'APPROVED' && (
-                    <button
-                      onClick={() => {
-                        localStorage.setItem('prefill_lease_email', selectedApp.tenant_email);
-                        localStorage.setItem('prefill_lease_unit_id', selectedApp.unit_id.toString());
-                        setSelectedApp(null);
-                        if (setActivePage) setActivePage('leases_hub');
-                      }}
-                      className="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-sm transition-all flex items-center gap-1.5 shadow-md shadow-blue-500/20 cursor-pointer"
-                    >
-                      <FileText className="w-4 h-4" /> Create Lease Agreement
-                    </button>
-                  )}
+
                   <button
                     onClick={() => setSelectedApp(null)}
                     className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-gray-700 dark:text-gray-300 font-bold rounded-xl text-sm transition-all cursor-pointer"
@@ -884,15 +883,17 @@ export default function ScreeningHub({ user, setActivePage }) {
                 </div>
 
                 {/* Action buttons */}
-                <div className="flex gap-3 pt-2">
-                  <button 
-                    type="button"
-                    onClick={() => setReapply(true)}
-                    className="flex-1 py-2.5 border border-gray-250 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/5 rounded-xl text-xs font-bold transition-all text-center text-gray-800 dark:text-gray-200"
-                  >
-                    Submit Another Application
-                  </button>
-                </div>
+                {isRejected && (
+                  <div className="flex gap-3 pt-2">
+                    <button 
+                      type="button"
+                      onClick={() => setReapply(true)}
+                      className="flex-1 py-2.5 border border-gray-250 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/5 rounded-xl text-xs font-bold transition-all text-center text-gray-800 dark:text-gray-200"
+                    >
+                      Submit Another Application
+                    </button>
+                  </div>
+                )}
               </div>
             );
           })()}
@@ -912,19 +913,7 @@ export default function ScreeningHub({ user, setActivePage }) {
             </div>
           </div>
 
-          {successMsg && (
-            <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-400 rounded-xl text-sm font-semibold flex items-center gap-2.5">
-              <CheckCircle2 className="w-5 h-5 text-emerald-500 flex-shrink-0" />
-              <span>{successMsg}</span>
-            </div>
-          )}
-          
-          {errorMsg && (
-            <div className="p-4 bg-red-500/10 border border-red-500/20 text-red-700 dark:text-red-400 rounded-xl text-sm font-semibold flex items-center gap-2.5">
-              <ShieldAlert className="w-5 h-5 text-red-550 flex-shrink-0" />
-              <span>{errorMsg}</span>
-            </div>
-          )}
+
 
           {isAllOccupied && (
             <div className="p-4 bg-blue-500/5 border border-blue-500/10 text-blue-700 dark:text-blue-450 rounded-xl text-xs font-semibold leading-relaxed flex gap-2">
@@ -939,8 +928,27 @@ export default function ScreeningHub({ user, setActivePage }) {
               <h3 className="text-xs font-bold text-indigo-650 dark:text-indigo-400 uppercase tracking-widest">1. Property & Unit Selection</h3>
               <div className="p-4 rounded-2xl border border-gray-100 dark:border-white/5 bg-gray-50/50 dark:bg-white/[0.01] space-y-3">
                 <div>
-                  <label className="block text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">SELECT AVAILABLE UNIT</label>
-                  {units.length === 0 ? (
+                  <label className="block text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">
+                    {activeInviteAppId ? 'INVITED UNIT (LOCKED)' : 'SELECT AVAILABLE UNIT'}
+                  </label>
+                  {activeInviteAppId ? (
+                    (() => {
+                      const inviteApp = myApplications.find(a => a.application_id === activeInviteAppId);
+                      return (
+                        <div className="w-full text-sm px-4 py-3 border border-indigo-200 dark:border-indigo-500/30 rounded-xl bg-indigo-500/5 text-gray-905 dark:text-white font-medium flex items-center justify-between">
+                          <div>
+                            <span className="block text-[10px] text-indigo-500 dark:text-indigo-400 font-bold uppercase tracking-wider">Invited Unit</span>
+                            <span className="text-sm font-semibold">
+                              Unit {inviteApp?.unit?.unit_number || 'N/A'} at {inviteApp?.unit?.propertyName || inviteApp?.unit?.property?.name || 'Assigned Property'}
+                            </span>
+                          </div>
+                          <span className="bg-indigo-650/10 text-indigo-600 dark:bg-indigo-550/20 dark:text-indigo-400 px-2.5 py-1 rounded-lg text-[10px] font-bold border border-indigo-500/20">
+                            Locked
+                          </span>
+                        </div>
+                      );
+                    })()
+                  ) : units.length === 0 ? (
                     <div className="text-sm p-4 bg-amber-500/10 text-amber-700 dark:text-amber-400 rounded-xl border border-amber-500/20 text-center font-medium">
                       No units are currently available for application.
                     </div>
@@ -990,16 +998,19 @@ export default function ScreeningHub({ user, setActivePage }) {
                     </div>
                     <input 
                       required 
+                      disabled={!!activeInviteAppId}
                       type="text" 
                       value={fullName} 
                       onChange={handleNameChange}
                       onBlur={e => handleBlur('fullName', e.target.value)}
                       className={`pl-10 w-full text-sm px-4 py-2.5 border rounded-xl bg-white dark:bg-slate-950 text-gray-900 dark:text-white focus:outline-none focus:ring-2 transition-all duration-200 ${
-                        errors.fullName 
-                          ? 'border-red-500 focus:ring-red-100 dark:focus:ring-red-950' 
-                          : touched.fullName
-                            ? 'border-emerald-500 focus:ring-emerald-50/50 dark:focus:ring-emerald-950/20'
-                            : 'border-gray-250 dark:border-white/10 focus:ring-indigo-150 focus:border-indigo-500'
+                        !!activeInviteAppId 
+                          ? 'bg-gray-100 dark:bg-slate-900 text-gray-450 dark:text-gray-500 cursor-not-allowed border-gray-200 dark:border-white/5' 
+                          : errors.fullName 
+                            ? 'border-red-500 focus:ring-red-100 dark:focus:ring-red-950' 
+                            : touched.fullName
+                              ? 'border-emerald-500 focus:ring-emerald-50/50 dark:focus:ring-emerald-950/20'
+                              : 'border-gray-250 dark:border-white/10 focus:ring-indigo-150 focus:border-indigo-500'
                       }`} 
                       placeholder="e.g., Jane Smith" 
                     />
@@ -1019,16 +1030,19 @@ export default function ScreeningHub({ user, setActivePage }) {
                     </div>
                     <input 
                       required 
+                      disabled={!!activeInviteAppId}
                       type="email" 
                       value={tenantEmail} 
                       onChange={handleEmailChange}
                       onBlur={e => handleBlur('tenantEmail', e.target.value)}
                       className={`pl-10 w-full text-sm px-4 py-2.5 border rounded-xl bg-white dark:bg-slate-950 text-gray-900 dark:text-white focus:outline-none focus:ring-2 transition-all duration-200 ${
-                        errors.tenantEmail 
-                          ? 'border-red-500 focus:ring-red-100 dark:focus:ring-red-950' 
-                          : touched.tenantEmail
-                            ? 'border-emerald-500 focus:ring-emerald-50/50 dark:focus:ring-emerald-950/20'
-                            : 'border-gray-250 dark:border-white/10 focus:ring-indigo-150 focus:border-indigo-500'
+                        !!activeInviteAppId
+                          ? 'bg-gray-100 dark:bg-slate-900 text-gray-450 dark:text-gray-500 cursor-not-allowed border-gray-200 dark:border-white/5'
+                          : errors.tenantEmail 
+                            ? 'border-red-500 focus:ring-red-100 dark:focus:ring-red-950' 
+                            : touched.tenantEmail
+                              ? 'border-emerald-500 focus:ring-emerald-50/50 dark:focus:ring-emerald-950/20'
+                              : 'border-gray-250 dark:border-white/10 focus:ring-indigo-150 focus:border-indigo-500'
                       }`} 
                       placeholder="jane.smith@example.com" 
                     />

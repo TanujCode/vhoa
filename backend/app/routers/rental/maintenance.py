@@ -11,6 +11,20 @@ from app.routers.rental.dependencies import get_verified_rental_user, require_re
 
 router = APIRouter(prefix="/rental", tags=["Rental - Maintenance Desk"])
 
+def populate_maintenance_extra_fields(r, db: Session):
+    if r.vendor_id:
+        vendor = db.query(RentalVendor).filter(RentalVendor.vendor_id == r.vendor_id).first()
+        r.vendor_company_name = vendor.company_name if vendor else None
+    else:
+        r.vendor_company_name = None
+        
+    if r.lease and r.lease.unit:
+        r.property_id = r.lease.unit.property_id
+    else:
+        r.property_id = None
+    return r
+
+
 @router.post("/maintenance", response_model=RentalMaintenanceOut, status_code=201)
 def create_maintenance(
     body: RentalMaintenanceCreate,
@@ -20,7 +34,7 @@ def create_maintenance(
     try:
         req = rental_service.submit_maintenance_request(body, db)
         log_rental_action(db, "CREATE_MAINTENANCE", "rental", f"Maintenance request '{body.title}' submitted.", current_user.user_id)
-        return req
+        return populate_maintenance_extra_fields(req, db)
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
@@ -41,11 +55,9 @@ def list_maintenance(
     else:
         reqs = []
 
-    # Populate vendor company names
+    # Populate extra fields
     for r in reqs:
-        if r.vendor_id:
-            vendor = db.query(RentalVendor).filter(RentalVendor.vendor_id == r.vendor_id).first()
-            r.vendor_company_name = vendor.company_name if vendor else None
+        populate_maintenance_extra_fields(r, db)
     return reqs
 
 
@@ -61,12 +73,7 @@ def update_maintenance(
     try:
         req = rental_service.update_maintenance_request(request_id, status, vendor_id, estimated_cost, db)
         log_rental_action(db, "UPDATE_MAINTENANCE", "rental", f"Maintenance request {request_id} updated.", current_user.user_id)
-        
-        # Populate vendor company name
-        if req.vendor_id:
-            vendor = db.query(RentalVendor).filter(RentalVendor.vendor_id == req.vendor_id).first()
-            req.vendor_company_name = vendor.company_name if vendor else None
-        return req
+        return populate_maintenance_extra_fields(req, db)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
@@ -81,11 +88,6 @@ def pay_maintenance(
     try:
         req = rental_service.pay_maintenance_request(request_id, body.payment_method, db)
         log_rental_action(db, "PAY_MAINTENANCE_REQUEST", "rental", f"Maintenance request {request_id} cost of {req.estimated_cost} paid.", current_user.user_id)
-        
-        # Populate vendor company name
-        if req.vendor_id:
-            vendor = db.query(RentalVendor).filter(RentalVendor.vendor_id == req.vendor_id).first()
-            req.vendor_company_name = vendor.company_name if vendor else None
-        return req
+        return populate_maintenance_extra_fields(req, db)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))

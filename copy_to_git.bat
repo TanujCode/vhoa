@@ -40,6 +40,7 @@ copy /Y "d:\Vhoa_Management\frontend\hoa-portal\src\pages\Payments.jsx" "D:\gith
 copy /Y "d:\Vhoa_Management\frontend\hoa-portal\src\pages\SalesDashboard.jsx" "D:\github code cc\vhoa\frontend\hoa-portal\src\pages\SalesDashboard.jsx"
 copy /Y "d:\Vhoa_Management\backend\app\models\meeting_survey.py" "D:\github code cc\vhoa\backend\app\models\meeting_survey.py"
 copy /Y "d:\Vhoa_Management\backend\app\schemas\meeting_survey.py" "D:\github code cc\vhoa\backend\app\schemas\meeting_survey.py"
+copy /Y "d:\Vhoa_Management\backend\app\schemas\rental.py" "D:\github code cc\vhoa\backend\app\schemas\rental.py"
 copy /Y "d:\Vhoa_Management\backend\app\routers\meeting_survey.py" "D:\github code cc\vhoa\backend\app\routers\meeting_survey.py"
 copy /Y "d:\Vhoa_Management\frontend\hoa-portal\src\services\meetingSurveyService.js" "D:\github code cc\vhoa\frontend\hoa-portal\src\services\meetingSurveyService.js"
 copy /Y "d:\Vhoa_Management\backend\app\services\meeting_survey_service.py" "D:\github code cc\vhoa\backend\app\services\meeting_survey_service.py"

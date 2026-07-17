@@ -91,6 +91,55 @@ def submit_meeting_rsvp(
         raise HTTPException(status_code=400, detail=str(e))
 
 
+@router.get("/meetings/{meeting_id}/rsvps")
+def get_meeting_rsvps(
+    meeting_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    role_name = current_user.role.role_name if current_user.role else None
+    allowed_roles = ["super_admin", "property_manager", "board_member"]
+    if role_name not in allowed_roles:
+        raise HTTPException(status_code=403, detail="You do not have permission to view RSVP details.")
+
+    from app.models.hoa.meeting_survey import Meeting, MeetingRSVP
+    meeting = db.query(Meeting).filter(Meeting.meeting_id == meeting_id, Meeting.active_status == True).first()
+    if not meeting:
+        raise HTTPException(status_code=404, detail="Meeting not found.")
+
+    from app.models.hoa.user import User as DBUser
+    members = db.query(DBUser).filter(DBUser.community_id == meeting.community_id, DBUser.active_status == True).all()
+    rsvps = db.query(MeetingRSVP).filter(MeetingRSVP.meeting_id == meeting_id).all()
+    
+    rsvp_map = {r.user_id: r for r in rsvps}
+    
+    result = []
+    for m in members:
+        # Skip super admin from community response check
+        role_n = m.role.role_name if m.role else ""
+        if role_n == "super_admin":
+            continue
+
+        user_rsvp = rsvp_map.get(m.user_id)
+        status = user_rsvp.status if user_rsvp else "NO_RESPONSE"
+        rsvp_id = user_rsvp.rsvp_id if user_rsvp else None
+        updated_at = user_rsvp.updated_at if user_rsvp else None
+
+        user_name = f"{m.first_name or ''} {m.last_name or ''}".strip() or m.email
+        result.append({
+            "rsvp_id": rsvp_id,
+            "user_id": m.user_id,
+            "user_name": user_name,
+            "email": m.email,
+            "status": status,
+            "updated_at": updated_at
+        })
+
+    # Sort results: YES/NO/MAYBE first, NO_RESPONSE at the end, alphabetically within each status
+    result.sort(key=lambda x: (x["status"] == "NO_RESPONSE", x["user_name"].lower()))
+    return result
+
+
 # ══════════════════════════════════════════════
 #  SURVEY ENDPOINTS
 # ══════════════════════════════════════════════
@@ -534,9 +583,7 @@ def generate_simulated_diarization(meeting, db: Session) -> str:
             f"{names[0]}: Thank you, that will make a big difference for the children playing there in the evenings.",
             f"{names[2]}: Outstanding. Let's move to the next item on the list. We will send the full minutes of the meeting shortly."
         ]
-        
-    disclaimer = "[AI Notice: This is a high-fidelity simulated diarization transcript. Configure ASSEMBLYAI_API_KEY or DEEPGRAM_API_KEY in .env for live audio diarization.]"
-    return disclaimer + "\n\n" + "\n".join(script)
+    return "\n".join(script)
 
 
 @router.post("/meetings/{meeting_id}/diarize", response_model=MeetingOut)

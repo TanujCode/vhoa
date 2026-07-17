@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FileText, Plus, CheckCircle, Clock, Send, Lock, PenTool, Sparkles, Trash2, ShieldAlert, Search, X, Eye } from 'lucide-react';
+import { toast } from 'react-hot-toast';
 import API from '../../services/api';
 
 const LEASE_TEMPLATES = {
@@ -29,13 +30,15 @@ The Co-Signer guarantees the payment of monthly rent of \${{RENT_AMOUNT}} and an
 - Co-Signer Email: {{TENANT_EMAIL}}`
 };
 
-export default function LeasesHub({ user }) {
+export default function LeasesHub({ user, selectedPropertyFilterId = 'all' }) {
   const isLandlord = user?.role === 'landlord' || user?.role_name === 'landlord' || user?.role_id === 1;
 
   const [leases, setLeases] = useState([]);
   const [units, setUnits] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedLease, setSelectedLease] = useState(null);
+  const [prefilledFromApp, setPrefilledFromApp] = useState(false);
+  const hasVacantUnits = units.length === 0 || units.some(u => u.status === 'VACANT');
 
   // Create Lease Form States
   const [selectedTemplate, setSelectedTemplate] = useState('standard');
@@ -61,8 +64,6 @@ export default function LeasesHub({ user }) {
   const [signature, setSignature] = useState('');
 
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [errorMsg, setErrorMsg] = useState('');
-  const [successMsg, setSuccessMsg] = useState('');
   const [formErrors, setFormErrors] = useState({});
   const [searchQuery, setSearchQuery] = useState('');
   const canSignAsPrimary = selectedLease && isLandlord && !selectedLease.landlord_signature;
@@ -217,6 +218,7 @@ export default function LeasesHub({ user }) {
           setTenantEmail(prefillEmail);
           localStorage.removeItem('prefill_lease_email');
         }
+        setPrefilledFromApp(true);
         setShowCreateModal(true);
       } else if (allUnits.length > 0) {
         const firstVacant = allUnits.find(u => u.status !== 'OCCUPIED');
@@ -233,15 +235,13 @@ export default function LeasesHub({ user }) {
 
   async function handleCreateLease(e) {
     e.preventDefault();
-    setErrorMsg('');
-    setSuccessMsg('');
     
     const validationErrors = validateLeaseForm();
     setFormErrors(validationErrors);
     
     const hasErrors = Object.keys(validationErrors).length > 0;
     if (hasErrors) {
-      setErrorMsg('Please correct the highlighted errors before creating the lease.');
+      toast.error('Please correct the highlighted errors before creating the lease.');
       return;
     }
 
@@ -265,6 +265,7 @@ export default function LeasesHub({ user }) {
       setLeases(prev => [...prev, res.data]);
       setSelectedLease(res.data);
       setShowCreateModal(false);
+      setPrefilledFromApp(false);
       setTenantEmail('');
       setRentAmount('');
       setDeposit('');
@@ -276,15 +277,14 @@ export default function LeasesHub({ user }) {
       setPetFee('0');
       setCoLandlordName('');
       setFormErrors({});
+      toast.success("Lease agreement created successfully!");
     } catch (err) {
-      setErrorMsg(err.response?.data?.detail || "Failed to create lease.");
+      toast.error(err.response?.data?.detail || "Failed to create lease.");
     }
   }
 
   async function handleSignLease(e) {
     e.preventDefault();
-    setErrorMsg('');
-    setSuccessMsg('');
     try {
       const res = await API.post(`/rental/leases/${selectedLease.lease_id}/sign`, {
         signature_text: signature,
@@ -293,9 +293,9 @@ export default function LeasesHub({ user }) {
       setLeases(prev => prev.map(l => l.lease_id === selectedLease.lease_id ? res.data : l));
       setSelectedLease(res.data);
       setSignature('');
-      setSuccessMsg('Agreement signed successfully!');
+      toast.success('Agreement signed successfully!');
     } catch (err) {
-      setErrorMsg(err.response?.data?.detail || "Failed to sign lease.");
+      toast.error(err.response?.data?.detail || "Failed to sign lease.");
     }
   }
 
@@ -308,9 +308,10 @@ export default function LeasesHub({ user }) {
       if (selectedLease?.lease_id === leaseId) {
         setSelectedLease(null);
       }
+      toast.success('Lease agreement deleted successfully.');
     } catch (err) {
       console.error("Error deleting lease:", err);
-      alert("Failed to delete lease agreement.");
+      toast.error("Failed to delete lease agreement.");
     }
   }
 
@@ -364,11 +365,14 @@ export default function LeasesHub({ user }) {
         </div>
 
         {(() => {
-          const filteredLeases = leases.filter(l => 
-            l.tenant_email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            l.status?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            (l.unit?.unit_number && String(l.unit.unit_number).toLowerCase().includes(searchQuery.toLowerCase()))
-          );
+          const filteredLeases = leases.filter(l => {
+            const matchesSearch = 
+              l.tenant_email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+              l.status?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+              (l.unit?.unit_number && String(l.unit.unit_number).toLowerCase().includes(searchQuery.toLowerCase()));
+            const matchesProperty = selectedPropertyFilterId === 'all' || String(l.unit?.property_id) === String(selectedPropertyFilterId);
+            return matchesSearch && matchesProperty;
+          });
 
           if (filteredLeases.length === 0) {
             return <div className="py-12 text-center text-slate-400 text-sm">No leases found matching your search.</div>;
@@ -593,8 +597,7 @@ export default function LeasesHub({ user }) {
                       </div>
                     )}
                   </div>
-                  {successMsg && <p className="text-xs text-green-600 bg-green-50 p-2.5 rounded-lg font-medium">{successMsg}</p>}
-                  {errorMsg && <p className="text-xs text-red-500 bg-red-50 p-2.5 rounded-lg font-medium">{errorMsg}</p>}
+
                   
                   <div className="space-y-2 text-left">
                     <label className="block text-xs font-bold text-gray-600 dark:text-gray-400 tracking-wider">TYPE YOUR LEGAL FULL NAME TO SIGN</label>
@@ -635,7 +638,7 @@ export default function LeasesHub({ user }) {
               <h3 className="text-lg font-bold text-gray-905 dark:text-white flex items-center gap-2">
                 <Sparkles className="w-5 h-5 text-blue-500" /> Build Lease Agreement
               </h3>
-              <button onClick={() => { setShowCreateModal(false); setFormErrors({}); setErrorMsg(''); }} className="text-gray-400 hover:text-gray-600 text-lg">×</button>
+              <button onClick={() => { setShowCreateModal(false); setPrefilledFromApp(false); setFormErrors({}); setErrorMsg(''); }} className="text-gray-400 hover:text-gray-600 text-lg">×</button>
             </div>
              {errorMsg && <p className="text-xs text-red-500 bg-red-50 p-2.5 rounded-lg">{errorMsg}</p>}
             {!hasVacantUnits && (
@@ -663,8 +666,18 @@ export default function LeasesHub({ user }) {
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs font-bold text-gray-600 tracking-wider mb-1">SELECT UNIT</label>
-                    <select required value={selectedUnitId} onChange={e=>setSelectedUnitId(e.target.value)} className={`w-full text-sm px-3 py-2 border rounded-lg bg-white dark:bg-black/20 text-gray-900 dark:text-white ${formErrors.selectedUnitId ? 'border-red-500' : 'border-gray-250 dark:border-white/10'}`}>
+                    <label className="block text-xs font-bold text-gray-605 dark:text-gray-400 tracking-wider mb-1">
+                      {prefilledFromApp ? 'SELECT UNIT (LOCKED)' : 'SELECT UNIT'}
+                    </label>
+                    <select 
+                      required 
+                      disabled={prefilledFromApp}
+                      value={selectedUnitId} 
+                      onChange={e=>setSelectedUnitId(e.target.value)} 
+                      className={`w-full text-sm px-3 py-2 border rounded-lg bg-white dark:bg-black/20 text-gray-905 dark:text-white ${
+                        prefilledFromApp ? 'bg-gray-100 dark:bg-slate-900 cursor-not-allowed opacity-80 border-gray-200 dark:border-white/5 text-gray-450 dark:text-gray-500' : 'border-gray-250 dark:border-white/10'
+                      } ${formErrors.selectedUnitId ? 'border-red-500' : ''}`}
+                    >
                       {units.map(u=>(
                         <option key={u.unit_id} value={u.unit_id}>
                           Unit {u.unit_number} (${u.rent_amount}) - {u.status || 'VACANT'}
@@ -674,8 +687,20 @@ export default function LeasesHub({ user }) {
                     {formErrors.selectedUnitId && <p className="text-[10px] text-red-500 mt-0.5">{formErrors.selectedUnitId}</p>}
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-gray-600 tracking-wider mb-1">TENANT EMAIL</label>
-                    <input required type="email" value={tenantEmail} onChange={e=>setTenantEmail(e.target.value)} className={`w-full text-sm px-3 py-2 border rounded-lg bg-white dark:bg-black/20 text-gray-900 dark:text-white ${formErrors.tenantEmail ? 'border-red-500 focus:ring-red-200' : 'border-gray-250 dark:border-white/10'}`} placeholder="tenant@example.com" />
+                    <label className="block text-xs font-bold text-gray-605 dark:text-gray-400 tracking-wider mb-1">
+                      {prefilledFromApp ? 'TENANT EMAIL (LOCKED)' : 'TENANT EMAIL'}
+                    </label>
+                    <input 
+                      required 
+                      disabled={prefilledFromApp}
+                      type="email" 
+                      value={tenantEmail} 
+                      onChange={e=>setTenantEmail(e.target.value)} 
+                      className={`w-full text-sm px-3 py-2 border rounded-lg bg-white dark:bg-black/20 text-gray-905 dark:text-white ${
+                        prefilledFromApp ? 'bg-gray-100 dark:bg-slate-900 cursor-not-allowed opacity-80 border-gray-200 dark:border-white/5 text-gray-450 dark:text-gray-500' : 'border-gray-250 dark:border-white/10'
+                      } ${formErrors.tenantEmail ? 'border-red-500 focus:ring-red-200' : ''}`} 
+                      placeholder="tenant@example.com" 
+                    />
                     {formErrors.tenantEmail && <p className="text-[10px] text-red-500 mt-0.5">{formErrors.tenantEmail}</p>}
                   </div>
                 </div>
@@ -768,8 +793,8 @@ export default function LeasesHub({ user }) {
                 <p className="text-[10px] text-gray-400 italic">Note: Placeholders like tenant name and unit are compiled dynamically as you type.</p>
                 
                 <div className="flex gap-3 justify-end pt-3 mt-auto">
-                  <button type="button" onClick={() => { setShowCreateModal(false); setFormErrors({}); setErrorMsg(''); }} className="px-4 py-2 border rounded-lg text-sm hover:bg-gray-50 text-gray-600 dark:text-gray-400 font-bold">Cancel</button>
-                  <button type="submit" disabled={!hasVacantUnits} className="px-5 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-bold hover:bg-blue-700 shadow-md disabled:opacity-50 disabled:cursor-not-allowed">Create & Invite Tenant</button>
+                  <button type="button" onClick={() => { setShowCreateModal(false); setPrefilledFromApp(false); setFormErrors({}); setErrorMsg(''); }} className="px-4 py-2 border rounded-lg text-sm hover:bg-gray-50 text-gray-600 dark:text-gray-400 font-bold">Cancel</button>
+                  <button type="submit" disabled={!hasVacantUnits && !prefilledFromApp} className="px-5 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-bold hover:bg-blue-700 shadow-md disabled:opacity-50 disabled:cursor-not-allowed">Create & Invite Tenant</button>
                 </div>
               </div>
             </form>

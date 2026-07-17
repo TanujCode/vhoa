@@ -4,6 +4,7 @@ import {
   Send, DollarSign, UserCheck, ShieldAlert, Sparkles, 
   Search, X, Edit, ChevronDown 
 } from 'lucide-react';
+import { toast } from 'react-hot-toast';
 import API from '../../services/api';
 
 // Standardized Badge components matching reference
@@ -36,7 +37,7 @@ const PriorityBadge = ({ priority }) => {
   );
 };
 
-export default function RentalMaintenanceDesk({ user }) {
+export default function RentalMaintenanceDesk({ user, selectedPropertyFilterId = 'all' }) {
   const isLandlord = user?.role === 'landlord' || user?.role_name === 'landlord' || user?.role_id === 1;
 
   const [requests, setRequests] = useState([]);
@@ -58,10 +59,6 @@ export default function RentalMaintenanceDesk({ user }) {
   const [assignVendorId, setAssignVendorId] = useState('');
   const [estCost, setEstCost] = useState('0');
   const [statusVal, setStatusVal] = useState('OPEN');
-
-  const [successMsg, setSuccessMsg] = useState('');
-  const [errorMsg, setErrorMsg] = useState('');
-
   // Payment states
   const [showPayModal, setShowPayModal] = useState(false);
   const [payMethod, setPayMethod] = useState('ACH');
@@ -103,10 +100,8 @@ export default function RentalMaintenanceDesk({ user }) {
 
   async function handleSubmitRequest(e) {
     e.preventDefault();
-    setErrorMsg('');
-    setSuccessMsg('');
     if (!selectedLeaseId) {
-      setErrorMsg("You must have an active lease to submit a maintenance request.");
+      toast.error("You must have an active lease to submit a maintenance request.");
       return;
     }
     try {
@@ -121,16 +116,14 @@ export default function RentalMaintenanceDesk({ user }) {
       setTitle('');
       setDescription('');
       setPriority('NORMAL');
-      setSuccessMsg("Maintenance request successfully filed! Landlord has been notified.");
+      toast.success("Maintenance request successfully filed! Landlord has been notified.");
     } catch (err) {
-      setErrorMsg(err.response?.data?.detail || "Failed to submit request.");
+      toast.error(err.response?.data?.detail || "Failed to submit request.");
     }
   }
 
   async function handleUpdateWorkOrder(e) {
     e.preventDefault();
-    setErrorMsg('');
-    setSuccessMsg('');
     try {
       const params = {};
       if (statusVal) params.status = statusVal;
@@ -142,16 +135,14 @@ export default function RentalMaintenanceDesk({ user }) {
       
       setRequests(prev => prev.map(r => r.request_id === selectedRequest.request_id ? res.data : r));
       setShowAssignModal(false);
-      setSuccessMsg(`Work order #${selectedRequest.request_id} successfully updated!`);
+      toast.success(`Work order #${selectedRequest.request_id} successfully updated!`);
     } catch (err) {
-      setErrorMsg(err.response?.data?.detail || "Failed to update work order.");
+      toast.error(err.response?.data?.detail || "Failed to update work order.");
     }
   }
 
   async function handlePayMaintenance(e) {
     e.preventDefault();
-    setErrorMsg('');
-    setSuccessMsg('');
     try {
       setPaying(true);
       const res = await API.post(`/rental/maintenance/${selectedRequest.request_id}/pay`, {
@@ -159,9 +150,9 @@ export default function RentalMaintenanceDesk({ user }) {
       });
       setRequests(prev => prev.map(r => r.request_id === selectedRequest.request_id ? res.data : r));
       setShowPayModal(false);
-      setSuccessMsg(`Repair cost of $${selectedRequest.estimated_cost} successfully paid via mock ${payMethod}!`);
+      toast.success(`Repair cost of $${selectedRequest.estimated_cost} successfully paid via mock ${payMethod}!`);
     } catch (err) {
-      setErrorMsg(err.response?.data?.detail || "Failed to submit payment.");
+      toast.error(err.response?.data?.detail || "Failed to submit payment.");
     } finally {
       setPaying(false);
     }
@@ -178,14 +169,19 @@ export default function RentalMaintenanceDesk({ user }) {
     );
   }
 
-  // Compute stats
-  const totalCount = requests.length;
-  const openCount = requests.filter(r => r.status === 'OPEN').length;
-  const inProgressCount = requests.filter(r => r.status === 'IN_PROGRESS' || r.status === 'VENDOR_ASSIGNED').length;
-  const completedCount = requests.filter(r => r.status === 'COMPLETED').length;
+  // Filter requests by property first
+  const propertyFilteredRequests = requests.filter(r => 
+    selectedPropertyFilterId === 'all' || String(r.property_id) === String(selectedPropertyFilterId)
+  );
 
-  // Filter requests
-  const filteredRequests = requests.filter(r => 
+  // Compute stats
+  const totalCount = propertyFilteredRequests.length;
+  const openCount = propertyFilteredRequests.filter(r => r.status === 'OPEN').length;
+  const inProgressCount = propertyFilteredRequests.filter(r => r.status === 'IN_PROGRESS' || r.status === 'VENDOR_ASSIGNED').length;
+  const completedCount = propertyFilteredRequests.filter(r => r.status === 'COMPLETED').length;
+
+  // Filter requests by search query next
+  const filteredRequests = propertyFilteredRequests.filter(r => 
     r.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     r.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     r.vendor_company_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -211,18 +207,7 @@ export default function RentalMaintenanceDesk({ user }) {
         )}
       </div>
 
-      {successMsg && (
-        <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-400 rounded-xl text-sm font-semibold flex items-center gap-2.5">
-          <CheckCircle2 className="w-5 h-5 text-emerald-505" />
-          <span>{successMsg}</span>
-        </div>
-      )}
-      {errorMsg && (
-        <div className="p-4 bg-rose-500/10 border border-rose-500/20 text-rose-700 dark:text-rose-400 rounded-xl text-sm font-semibold flex items-center gap-2.5">
-          <ShieldAlert className="w-5 h-5 text-rose-505" />
-          <span>{errorMsg}</span>
-        </div>
-      )}
+
 
       {/* Stats Cards Row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">

@@ -12,21 +12,6 @@ class PropertyCreate(BaseModel):
     zip_code: Optional[str] = None
 
 
-class PropertyOut(BaseModel):
-    property_id: int
-    name: str
-    address: str
-    city: Optional[str] = None
-    state: Optional[str] = None
-    zip_code: Optional[str] = None
-    landlord_id: int
-    active_status: bool
-    created_date: datetime
-
-    class Config:
-        from_attributes = True
-
-
 class UnitCreateNested(BaseModel):
     unit_number: str
     rent_amount: float
@@ -56,6 +41,22 @@ class UnitOut(BaseModel):
     rent_amount: float
     active_status: bool
     created_date: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class PropertyOut(BaseModel):
+    property_id: int
+    name: str
+    address: str
+    city: Optional[str] = None
+    state: Optional[str] = None
+    zip_code: Optional[str] = None
+    landlord_id: int
+    active_status: bool
+    created_date: datetime
+    units: List[UnitOut] = []
 
     class Config:
         from_attributes = True
@@ -103,6 +104,7 @@ class LeaseOut(BaseModel):
     pet_fee: float
     tenant_email: Optional[str] = None
     unit: Optional[UnitOut] = None
+    property_name: Optional[str] = None
 
     class Config:
         from_attributes = True
@@ -210,6 +212,7 @@ class RentalMaintenanceOut(BaseModel):
     
     # We can fetch company name inline dynamically
     vendor_company_name: Optional[str] = None
+    property_id: Optional[int] = None
 
     class Config:
         from_attributes = True

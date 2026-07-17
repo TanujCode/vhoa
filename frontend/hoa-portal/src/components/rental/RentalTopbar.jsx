@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { 
-  Sun, Moon, User, LogOut, ChevronDown, Menu, Building2, Bell, ArrowLeft, RefreshCw
+  Sun, Moon, User, LogOut, ChevronDown, Menu, Building2, Bell, ArrowLeft, RefreshCw, Search
 } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 import { getBaseUrl } from '../../services/api';
@@ -12,9 +12,14 @@ const RentalTopbar = ({
   canGoBack,
   onBack,
   unreadCount = 0,
-  toggleNotif
+  toggleNotif,
+  properties = [],
+  selectedPropertyFilterId = 'all',
+  setSelectedPropertyFilterId
 }) => {
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [dropdownSearch, setDropdownSearch] = useState('');
   const { theme, toggleTheme } = useTheme();
 
   const getProfileImage = (url) => {
@@ -56,24 +61,118 @@ const RentalTopbar = ({
         </button>
       )}
 
-      {/* Workspace Indicator */}
+      {/* Workspace Indicator / Property Dropdown */}
       <div className="relative flex-1 lg:flex-none min-w-0">
-        <div className="flex items-center gap-1.5 sm:gap-3 select-none">
-          <Building2 className="hidden sm:block text-[#6366F1] dark:text-[#818CF8] flex-shrink-0" size={18} />
-          <div className="min-w-0 text-left">
-            <p className="text-[9px] sm:text-[10px] text-slate-400 dark:text-gray-400 font-semibold uppercase tracking-widest leading-normal mb-0.5 truncate">
-              WORKSPACE MODE
-            </p>
-            <div className="flex items-center gap-2 min-w-0">
-              <span className="text-[14px] xs:text-[16px] sm:text-lg font-bold text-slate-900 dark:text-white leading-tight truncate">
-                {user?.role === 'landlord' ? 'Landlord Portfolio' : 'Tenant Rental Portal'}
-              </span>
-              <span className="hidden sm:inline-block text-[9px] sm:text-[10px] font-bold px-2 py-0.5 bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400 rounded-lg border border-blue-200 dark:border-blue-500/20 flex-shrink-0 ml-1 shadow-sm uppercase">
-                Rental
-              </span>
+        {user?.role === 'landlord' && properties.length > 0 ? (
+          <div 
+            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+            className="flex items-center gap-1.5 sm:gap-3 select-none cursor-pointer group"
+          >
+            <Building2 className="hidden sm:block text-[#6366F1] dark:text-[#818CF8] flex-shrink-0" size={18} />
+            <div className="min-w-0 text-left">
+              <p className="text-[9px] sm:text-[10px] text-slate-400 dark:text-gray-400 font-semibold uppercase tracking-widest leading-normal mb-0.5 truncate">
+                MANAGING
+              </p>
+              <div className="flex items-center gap-1.5 min-w-0">
+                <span className="text-[14px] xs:text-[16px] sm:text-lg font-black text-slate-900 dark:text-white leading-tight truncate group-hover:text-blue-600 dark:group-hover:text-[#5BA4F5] transition-colors">
+                  {selectedPropertyFilterId === 'all' 
+                    ? 'All Properties' 
+                    : (properties.find(p => String(p.property_id) === String(selectedPropertyFilterId))?.name || 'All Properties')
+                  }
+                </span>
+                <ChevronDown size={16} className={`text-slate-400 group-hover:text-blue-600 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} />
+              </div>
             </div>
           </div>
-        </div>
+        ) : (
+          <div className="flex items-center gap-1.5 sm:gap-3 select-none">
+            <Building2 className="hidden sm:block text-[#6366F1] dark:text-[#818CF8] flex-shrink-0" size={18} />
+            <div className="min-w-0 text-left">
+              <p className="text-[9px] sm:text-[10px] text-slate-400 dark:text-gray-400 font-semibold uppercase tracking-widest leading-normal mb-0.5 truncate">
+                {user?.property_name ? 'MY RESIDENCE' : 'WORKSPACE MODE'}
+              </p>
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="text-[14px] xs:text-[16px] sm:text-lg font-bold text-slate-900 dark:text-white leading-tight truncate">
+                  {user?.property_name || 'Tenant Rental Portal'}
+                </span>
+                {user?.unit_number ? (
+                  <span className="hidden sm:inline-block text-[9px] sm:text-[10px] font-bold px-2 py-0.5 bg-indigo-50 text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-400 rounded-lg border border-indigo-200 dark:border-indigo-500/20 flex-shrink-0 ml-1 shadow-sm uppercase">
+                    Unit {user.unit_number}
+                  </span>
+                ) : (
+                  <span className="hidden sm:inline-block text-[9px] sm:text-[10px] font-bold px-2 py-0.5 bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400 rounded-lg border border-blue-200 dark:border-blue-500/20 flex-shrink-0 ml-1 shadow-sm uppercase">
+                    Rental
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Dropdown Popover Menu */}
+        {isDropdownOpen && user?.role === 'landlord' && (
+          <>
+            <div className="fixed inset-0 z-40" onClick={() => setIsDropdownOpen(false)} />
+            <div className="absolute top-[calc(100%+12px)] left-0 w-72 bg-white dark:bg-[#1E3248] border border-slate-200 dark:border-white/20 rounded-3xl shadow-2xl z-50 p-3 space-y-2 animate-in fade-in slide-in-from-top-2 text-left">
+              {/* Search Bar inside popover */}
+              <div className="relative">
+                <Search className="absolute left-3.5 top-3.5 text-slate-400" size={14} />
+                <input
+                  type="text"
+                  placeholder="Search..."
+                  value={dropdownSearch}
+                  onChange={(e) => setDropdownSearch(e.target.value)}
+                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200/60 dark:border-white/10 rounded-2xl pl-9 pr-4 py-2 text-xs text-slate-900 dark:text-white outline-none focus:border-blue-500"
+                />
+              </div>
+
+              {/* Dropdown Options */}
+              <div className="max-h-60 overflow-y-auto space-y-1 custom-scrollbar pr-1">
+                {/* All Properties option */}
+                {('all'.includes(dropdownSearch.toLowerCase()) || 'all properties'.includes(dropdownSearch.toLowerCase())) && (
+                  <button
+                    onClick={() => {
+                      setSelectedPropertyFilterId('all');
+                      setIsDropdownOpen(false);
+                      setDropdownSearch('');
+                    }}
+                    className={`w-full px-4 py-2.5 text-xs font-bold rounded-2xl flex items-center gap-2.5 transition text-left cursor-pointer ${
+                      selectedPropertyFilterId === 'all'
+                        ? 'bg-blue-500/10 text-blue-600 dark:bg-blue-500/20 dark:text-[#5BA4F5]'
+                        : 'hover:bg-slate-100 dark:hover:bg-white/5 text-slate-700 dark:text-gray-300'
+                    }`}
+                  >
+                    <span className={`w-1.5 h-1.5 rounded-full ${selectedPropertyFilterId === 'all' ? 'bg-blue-500' : 'bg-transparent'}`} />
+                    🏢 All Properties
+                  </button>
+                )}
+
+                {/* Properties list */}
+                {properties
+                  .filter(p => p.name.toLowerCase().includes(dropdownSearch.toLowerCase()))
+                  .map(p => (
+                    <button
+                      key={p.property_id}
+                      onClick={() => {
+                        setSelectedPropertyFilterId(String(p.property_id));
+                        setIsDropdownOpen(false);
+                        setDropdownSearch('');
+                      }}
+                      className={`w-full px-4 py-2.5 text-xs font-bold rounded-2xl flex items-center gap-2.5 transition text-left cursor-pointer ${
+                        String(selectedPropertyFilterId) === String(p.property_id)
+                          ? 'bg-blue-500/10 text-blue-600 dark:bg-blue-500/20 dark:text-[#5BA4F5]'
+                          : 'hover:bg-slate-100 dark:hover:bg-white/5 text-slate-700 dark:text-gray-300'
+                      }`}
+                    >
+                      <span className={`w-1.5 h-1.5 rounded-full ${String(selectedPropertyFilterId) === String(p.property_id) ? 'bg-blue-500' : 'bg-transparent'}`} />
+                      🏠 {p.name}
+                    </button>
+                  ))
+                }
+              </div>
+            </div>
+          </>
+        )}
       </div>
 
       {/* Right Side Actions */}

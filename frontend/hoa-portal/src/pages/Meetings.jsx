@@ -419,6 +419,125 @@ const RenameSpeakerModal = ({ meetingId, oldLabel, members, onClose, onSuccess }
 };
 
 
+// ── View RSVP Modal ──────────────────────────────────
+const ViewRSVPModal = ({ meetingId, onClose }) => {
+  const [rsvps, setRsvps] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    const fetchRSVPs = async () => {
+      try {
+        setLoading(true);
+        const res = await API.get(`/meeting-survey/meetings/${meetingId}/rsvps`);
+        setRsvps(res.data);
+      } catch (err) {
+        setError(err.response?.data?.detail || err.message || 'Failed to fetch RSVPs');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchRSVPs();
+  }, [meetingId]);
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="bg-white dark:bg-[#1E2E42] w-full max-w-md rounded-3xl shadow-xl overflow-hidden border border-slate-200/80 dark:border-white/10 animate-in zoom-in-95 duration-200">
+        {/* Modal Header */}
+        <div className="p-5 border-b border-slate-100 dark:border-white/5 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-purple-500/10 text-purple-600 dark:text-purple-400 rounded-xl flex items-center justify-center">
+              <Users size={16} />
+            </div>
+            <div>
+              <h3 className="font-extrabold text-sm text-slate-800 dark:text-white">
+                👥 Meeting RSVPs
+              </h3>
+              <span className="text-[10px] text-slate-400 dark:text-gray-500 font-bold uppercase tracking-wider block mt-0.5">
+                Resident Responses Check
+              </span>
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            className="text-slate-400 hover:text-slate-900 dark:text-gray-400 dark:hover:text-white transition"
+          >
+            <X size={18} />
+          </button>
+        </div>
+
+        {/* Modal Body */}
+        <div className="p-5 max-h-[350px] overflow-y-auto custom-scrollbar">
+          {loading && (
+            <div className="flex flex-col items-center justify-center py-10 space-y-2">
+              <div className="w-6 h-6 border-2 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
+              <span className="text-xs text-slate-400 dark:text-gray-500 font-bold uppercase">Loading RSVPs...</span>
+            </div>
+          )}
+
+          {error && (
+            <div className="text-center py-6 text-red-500 text-xs font-semibold">
+              Error: {error}
+            </div>
+          )}
+
+          {!loading && !error && rsvps.length === 0 && (
+            <div className="text-center py-8 text-slate-400 dark:text-gray-500 italic text-xs font-medium">
+              No residents found in this community.
+            </div>
+          )}
+
+          {!loading && !error && rsvps.length > 0 && (
+            <div className="space-y-2">
+              {rsvps.map((r) => (
+                <div
+                  key={r.user_id}
+                  className="flex items-center justify-between p-3.5 bg-slate-50/50 dark:bg-white/[0.01] hover:bg-slate-100/50 dark:hover:bg-white/[0.02] border border-slate-200/50 dark:border-white/[0.03] rounded-2xl transition duration-150"
+                >
+                  <div className="min-w-0 flex-1">
+                    <span className="font-extrabold text-xs text-slate-800 dark:text-white block truncate">
+                      {r.user_name}
+                    </span>
+                    <span className="text-[10px] text-slate-400 dark:text-gray-500 font-semibold block truncate">
+                      {r.email}
+                    </span>
+                  </div>
+                  <div>
+                    <span
+                      className={`text-[9px] px-2.5 py-1 rounded-full font-black uppercase tracking-wider ${
+                        r.status === 'YES'
+                          ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                          : r.status === 'NO'
+                          ? 'bg-red-500/10 text-red-600 dark:text-red-400'
+                          : r.status === 'MAYBE'
+                          ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
+                          : 'bg-slate-500/10 text-slate-500 dark:text-gray-400'
+                      }`}
+                    >
+                      {r.status === 'YES' ? 'Going' : r.status === 'NO' ? 'Not Going' : r.status === 'MAYBE' ? 'Maybe' : 'No Vote'}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Modal Footer */}
+        <div className="p-4 bg-slate-50 dark:bg-black/10 border-t border-slate-100 dark:border-white/5 flex justify-end">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 bg-slate-200 hover:bg-slate-300 dark:bg-white/5 dark:hover:bg-white/10 text-slate-700 dark:text-gray-300 font-extrabold text-xs rounded-xl uppercase tracking-wider transition"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+
 // ── Meeting Recorder Modal ────────────────────────────
 const MeetingRecorderModal = ({ meeting, onClose, onSuccess }) => {
   const [status, setStatus] = useState('idle'); // idle, recording, paused, processing
@@ -857,6 +976,7 @@ const Meetings = ({ community, user }) => {
   const [showRenameSpeakerModal, setShowRenameSpeakerModal] = useState(false);
   const [renameSpeakerMeetingId, setRenameSpeakerMeetingId] = useState(null);
   const [renameSpeakerOldLabel, setRenameSpeakerOldLabel] = useState('');
+  const [showRsvpModalMeetingId, setShowRsvpModalMeetingId] = useState(null);
   const [members, setMembers] = useState([]);
   const [bookings, setBookings] = useState([]);
   const [personalNotes, setPersonalNotes] = useState([]);
@@ -1041,15 +1161,16 @@ const Meetings = ({ community, user }) => {
     };
 
     return (
-      <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-5 shadow-sm">
-        <div className="flex items-center justify-between mb-4">
-          <span className="text-xs font-extrabold text-slate-800 dark:text-white uppercase tracking-wider">{monthName}</span>
+      <div className="bg-slate-50/40 dark:bg-slate-900/40 backdrop-blur-sm border border-slate-200/50 dark:border-white/[0.04] rounded-3xl p-3 shadow-sm mb-5 w-full">
+        {/* Calendar Navigation Header */}
+        <div className="flex items-center justify-between mb-3 pb-2 border-b border-slate-200/50 dark:border-white/[0.04]">
+          <span className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider">{monthName}</span>
           <div className="flex gap-1.5">
             <button
               onClick={() => setCurrentMonth(new Date(year, month - 1, 1))}
-              className="p-1 hover:bg-slate-200 dark:hover:bg-white/10 rounded-lg text-slate-500 dark:text-gray-400"
+              className="p-1 hover:bg-slate-105 dark:hover:bg-white/10 rounded-lg text-slate-500 dark:text-gray-400 transition"
             >
-              <ChevronLeft size={14} />
+              <ChevronLeft size={13} />
             </button>
             <button
               onClick={() => {
@@ -1057,47 +1178,49 @@ const Meetings = ({ community, user }) => {
                 setCurrentMonth(today);
                 setSelectedDate(today);
               }}
-              className="px-2 py-0.5 bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 rounded text-[10px] font-bold"
+              className="px-2 py-0.5 bg-blue-500/10 hover:bg-blue-500/20 text-blue-606 dark:text-blue-400 rounded-md text-[9px] font-extrabold transition uppercase tracking-wider"
             >
               Today
             </button>
             <button
               onClick={() => setCurrentMonth(new Date(year, month + 1, 1))}
-              className="p-1 hover:bg-slate-200 dark:hover:bg-white/10 rounded-lg text-slate-500 dark:text-gray-400"
+              className="p-1 hover:bg-slate-105 dark:hover:bg-white/10 rounded-lg text-slate-500 dark:text-gray-400 transition"
             >
-              <ChevronRight size={14} />
+              <ChevronRight size={13} />
             </button>
           </div>
         </div>
         
-        <div className="grid grid-cols-7 gap-1 text-center text-[10px] font-bold text-slate-400 dark:text-gray-500 mb-2">
+        {/* Days of Week Headers */}
+        <div className="grid grid-cols-7 gap-1 text-center text-[10px] font-semibold text-slate-400 dark:text-gray-500 mb-2">
           {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d, i) => <div key={i}>{d}</div>)}
         </div>
         
+        {/* Days Grid */}
         <div className="grid grid-cols-7 gap-1">
           {totalSlots.map((day, idx) => {
-            const isToday = day && 
-              new Date().getDate() === day && 
+            if (!day) return <div key={idx} className="h-8"></div>;
+            
+            const isToday = new Date().getDate() === day && 
               new Date().getMonth() === month && 
               new Date().getFullYear() === year;
               
-            const isSelected = day &&
-              selectedDate.getDate() === day &&
+            const isSelected = selectedDate.getDate() === day &&
               selectedDate.getMonth() === month &&
               selectedDate.getFullYear() === year;
               
-            const showMeetingDot = day && selectedCalendars.meetings && meetings.some(m => {
+            const showMeetingDot = selectedCalendars.meetings && meetings.some(m => {
               const d = new Date(m.meeting_date);
               return d.getFullYear() === year && d.getMonth() === month && d.getDate() === day;
             });
             
-            const showBookingDot = day && selectedCalendars.bookings && bookings.some(b => {
+            const showBookingDot = selectedCalendars.bookings && bookings.some(b => {
               if (!b.booking_date) return false;
               const [yr, mo, dy] = b.booking_date.split('-').map(Number);
               return yr === year && (mo - 1) === month && dy === day;
             });
 
-            const showNoteDot = day && selectedCalendars.notes && personalNotes.some(n => {
+            const showNoteDot = selectedCalendars.notes && personalNotes.some(n => {
               if (!n.date) return false;
               const d = new Date(n.date);
               return d.getFullYear() === year && d.getMonth() === month && d.getDate() === day;
@@ -1106,25 +1229,25 @@ const Meetings = ({ community, user }) => {
             return (
               <button
                 key={idx}
-                disabled={!day}
-                onClick={() => day && setSelectedDate(new Date(year, month, day))}
-                className={`aspect-square flex flex-col items-center justify-center text-[10px] font-mono rounded-lg transition-all relative ${
-                  !day ? 'opacity-0' :
-                  isSelected ? 'bg-blue-600 text-white font-bold' :
-                  isToday ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400 font-bold border border-blue-500/20' :
-                  'hover:bg-slate-200 dark:hover:bg-white/5 text-slate-700 dark:text-gray-300'
+                onClick={() => setSelectedDate(new Date(year, month, day))}
+                className={`h-8 w-full flex flex-col items-center justify-center text-xs font-semibold rounded-xl transition-all relative ${
+                  isSelected
+                    ? 'bg-blue-600 text-white font-bold shadow-md shadow-blue-500/20'
+                    : isToday
+                      ? 'bg-blue-500/10 text-blue-650 dark:text-blue-400 font-bold border border-blue-500/25'
+                      : 'hover:bg-slate-100 dark:hover:bg-white/5 text-slate-700 dark:text-gray-300'
                 }`}
               >
-                <span>{day}</span>
+                <span className="relative z-10 leading-none">{day}</span>
                 <div className="flex gap-0.5 justify-center absolute bottom-1">
                   {showMeetingDot && (
-                    <span className={`w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-white' : 'bg-purple-500 dark:bg-purple-400'}`}></span>
+                    <span className={`w-1 h-1 rounded-full ${isSelected ? 'bg-white' : 'bg-purple-500'}`}></span>
                   )}
                   {showBookingDot && (
-                    <span className={`w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-white' : 'bg-blue-500 dark:bg-blue-450'}`}></span>
+                    <span className={`w-1 h-1 rounded-full ${isSelected ? 'bg-white' : 'bg-blue-500'}`}></span>
                   )}
                   {showNoteDot && (
-                    <span className={`w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-white' : 'bg-emerald-500 dark:bg-emerald-400'}`}></span>
+                    <span className={`w-1 h-1 rounded-full ${isSelected ? 'bg-white' : 'bg-emerald-500'}`}></span>
                   )}
                 </div>
               </button>
@@ -1137,8 +1260,8 @@ const Meetings = ({ community, user }) => {
 
   const renderCalendarsToggle = () => {
     return (
-      <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-5 shadow-sm mt-5">
-        <h4 className="text-[10px] font-bold text-slate-500 dark:text-gray-500 tracking-widest uppercase mb-4">Calendars</h4>
+      <div className="bg-white dark:bg-[#1E2E42] border border-slate-200/80 dark:border-white/10 rounded-3xl p-4 shadow-sm mt-4">
+        <h4 className="text-[10px] font-bold text-slate-500 dark:text-gray-500 tracking-widest uppercase mb-3">Calendars</h4>
         <div className="space-y-3.5">
           {[
             { key: 'meetings', label: 'Community Meetings', color: 'bg-purple-500' },
@@ -1186,8 +1309,8 @@ const Meetings = ({ community, user }) => {
     const totalSlots = [...blanks, ...days];
 
     return (
-      <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-2xl sm:rounded-3xl p-3 sm:p-6 shadow-sm overflow-hidden animate-in fade-in duration-300">
-        <div className="grid grid-cols-7 gap-1 sm:gap-2 text-center text-[10px] sm:text-xs font-black text-slate-700 dark:text-gray-300 mb-2 sm:mb-4 uppercase tracking-wider">
+      <div className="bg-white dark:bg-[#1E2E42] border border-slate-200/80 dark:border-white/10 rounded-3xl p-3 sm:p-5 shadow-sm overflow-hidden animate-in fade-in duration-300">
+        <div className="grid grid-cols-7 gap-1 sm:gap-1.5 text-center text-[10px] sm:text-xs font-bold text-slate-700 dark:text-gray-300 mb-2 sm:mb-3 uppercase tracking-wider">
           {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((d, i) => (
             <div key={i}>
               <span className="hidden sm:inline">{d}</span>
@@ -1195,9 +1318,9 @@ const Meetings = ({ community, user }) => {
             </div>
           ))}
         </div>
-        <div className="grid grid-cols-7 gap-1.5 sm:gap-2.5">
+        <div className="grid grid-cols-7 gap-1.5 sm:gap-2">
           {totalSlots.map((day, idx) => {
-            if (!day) return <div key={idx} className="aspect-square bg-slate-100/10 dark:bg-white/[0.005] rounded-xl sm:rounded-2xl border border-transparent"></div>;
+            if (!day) return <div key={idx} className="min-h-[38px] sm:min-h-[70px] md:min-h-[85px] bg-slate-50/50 dark:bg-white/[0.005] rounded-xl sm:rounded-2xl border border-transparent"></div>;
 
             const date = new Date(year, month, day);
             const isToday = new Date().toDateString() === date.toDateString();
@@ -1210,20 +1333,20 @@ const Meetings = ({ community, user }) => {
                 onClick={() => {
                   setSelectedDate(date);
                 }}
-                className={`min-h-[45px] sm:min-h-[90px] md:min-h-[110px] p-1 sm:p-2.5 rounded-xl sm:rounded-2xl flex flex-col justify-between text-left transition-all border ${
+                className={`min-h-[38px] sm:min-h-[70px] md:min-h-[85px] p-1.5 sm:p-2 rounded-xl sm:rounded-2xl flex flex-col justify-between text-left transition-all border ${
                   isSelected 
-                    ? 'bg-blue-500/10 border-blue-500 shadow-md shadow-blue-500/10 scale-[1.01]' 
+                    ? 'bg-blue-50/50 dark:bg-blue-950/15 border-blue-500 shadow-sm shadow-blue-500/5 scale-[1.01]' 
                     : isToday 
-                      ? 'bg-blue-500/5 border-blue-500/40' 
-                      : 'bg-white/40 dark:bg-white/[0.01] border-slate-200/50 dark:border-white/[0.03] hover:bg-white/85 dark:hover:bg-white/[0.03]'
+                      ? 'bg-slate-50 dark:bg-white/[0.02] border-blue-500/40' 
+                      : 'bg-white/45 dark:bg-white/[0.01] border-slate-200/55 dark:border-white/[0.04] hover:bg-white/80 dark:hover:bg-white/[0.03]'
                 }`}
               >
                 <div className="flex justify-between items-start w-full">
-                  <span className={`text-[10px] sm:text-xs font-mono font-bold w-4 h-4 sm:w-6 sm:h-6 flex items-center justify-center rounded-md sm:rounded-lg ${
+                  <span className={`text-[10px] sm:text-xs font-mono font-bold w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center rounded-md sm:rounded-lg ${
                     isToday 
-                      ? 'bg-blue-600 text-white' 
+                      ? 'bg-blue-600 text-white shadow-sm shadow-blue-500/20' 
                       : isSelected 
-                        ? 'text-blue-650 dark:text-blue-400 font-extrabold' 
+                        ? 'text-blue-600 dark:text-blue-400 font-bold bg-blue-500/10' 
                         : 'text-slate-800 dark:text-slate-200'
                   }`}>
                     {day}
@@ -1442,7 +1565,7 @@ const Meetings = ({ community, user }) => {
       setSelectedDate(nextYear);
     } else if (plannerView === 'month') {
       const nextMonth = new Date(currentMonth);
-      nextMonth.setMonth(currentMonth.getMonth() + step);
+nextMonth.setMonth(currentMonth.getMonth() + step);
       setCurrentMonth(nextMonth);
       setSelectedDate(nextMonth);
     } else if (plannerView === 'week') {
@@ -1472,13 +1595,13 @@ const Meetings = ({ community, user }) => {
           <h4 className="text-sm font-extrabold text-slate-800 dark:text-white tracking-wide uppercase">
             📅 {dateHeaderStr}
           </h4>
-          <span className="text-[10px] text-slate-400 dark:text-gray-500 font-bold uppercase tracking-wider font-mono">
+          <span className="text-[10px] text-slate-400 dark:text-gray-505 font-bold uppercase tracking-wider font-mono">
             {dayEvents.length} event{dayEvents.length !== 1 && 's'}
           </span>
         </div>
 
         {dayEvents.length === 0 ? (
-          <div className="text-center py-12 text-slate-400 dark:text-gray-500 italic font-medium">
+          <div className="text-center py-12 text-slate-405 dark:text-gray-505 italic font-medium">
             No events or tasks scheduled for this day.
           </div>
         ) : (
@@ -1487,239 +1610,74 @@ const Meetings = ({ community, user }) => {
               if (evt.type === 'meeting') {
                 const meeting = evt.raw;
                 const expired = isMeetingExpired(meeting.meeting_date);
+                const isUpcoming = isMeetingUpcoming(meeting.meeting_date);
                 return (
                   <div
                     key={evt.id}
-                    className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 p-5 bg-slate-50/50 dark:bg-white/[0.01] hover:bg-slate-100/50 dark:hover:bg-white/[0.02] border border-y-slate-200/50 border-r-slate-200/50 border-l-4 border-l-purple-500 dark:border-y-white/[0.03] dark:border-r-white/[0.03] rounded-r-2xl transition duration-150 shadow-sm"
+                    className="flex flex-col gap-4.5 p-5 bg-slate-50/50 dark:bg-white/[0.01] hover:bg-slate-100/50 dark:hover:bg-white/[0.02] border border-y-slate-200/50 border-r-slate-200/50 border-l-4 border-l-purple-500 dark:border-y-white/[0.03] dark:border-r-white/[0.03] rounded-r-2xl transition duration-150 shadow-sm"
                   >
-                    <div className="flex-1 space-y-2 min-w-0">
-                      {/* Badges row */}
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="px-2 py-0.5 rounded-md text-[9px] font-black tracking-wider uppercase bg-purple-500/10 text-purple-650 dark:text-purple-400">
-                          Meeting
-                        </span>
-                        {expired ? (
-                          <span className="px-2 py-0.5 rounded-md text-[9px] font-black tracking-wider uppercase bg-slate-500/10 text-slate-500">
-                            Past
+                    {/* Top Row: Title/Badges on left, Time/Edit/Delete on right */}
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 w-full pb-3.5 border-b border-slate-200/40 dark:border-white/5">
+                      {/* Left: Badges, Title, Description, and Record Trigger */}
+                      <div className="flex-1 space-y-1.5 min-w-0">
+                        {/* Badges row */}
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="px-2 py-0.5 rounded-md text-[9px] font-black tracking-wider uppercase bg-purple-500/10 text-purple-650 dark:text-purple-400">
+                            Meeting
                           </span>
-                        ) : (
-                          <span className="px-2 py-0.5 rounded-md text-[9px] font-black tracking-wider uppercase bg-emerald-500/10 text-emerald-650 dark:text-emerald-400 animate-pulse">
-                            Live
-                          </span>
-                        )}
-                        {meeting.location && (
-                          <span className="flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[9px] font-black tracking-wider uppercase bg-blue-500/10 text-blue-650 dark:text-blue-400">
-                            <MapPin size={10} className="text-blue-500" />
-                            {meeting.location}
-                          </span>
-                        )}
-                        {meeting.meeting_link && !expired && (
-                          <a
-                            href={meeting.meeting_link}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[9px] font-black tracking-wider uppercase bg-purple-500/10 text-purple-650 dark:text-purple-400 hover:underline"
-                          >
-                            <Video size={10} className="text-purple-500" />
-                            Join <ExternalLink size={8} />
-                          </a>
-                        )}
-                      </div>
-
-                      {/* Title & Description */}
-                      <div>
-                        <h4 className="font-extrabold text-sm text-slate-800 dark:text-white leading-snug">
-                          {meeting.title}
-                        </h4>
-                        {meeting.description && (
-                          <p className="text-slate-500 dark:text-gray-400 text-xs mt-1 leading-relaxed whitespace-pre-line max-w-2xl">
-                            {meeting.description}
-                          </p>
-                        )}
-                      </div>
-
-                      {/* Record Meeting Trigger */}
-                      {!meeting.transcript && !meeting.recording_url && isAdmin && (
-                        <div className="pt-1.5">
                           {expired ? (
-                            <span className="text-slate-400 dark:text-gray-500 text-xs italic flex items-center gap-1 font-mono">
-                              <Clock size={11} /> Meeting has ended.
+                            <span className="px-2 py-0.5 rounded-md text-[9px] font-black tracking-wider uppercase bg-slate-500/10 text-slate-500">
+                              Past
+                            </span>
+                          ) : isUpcoming ? (
+                            <span className="px-2 py-0.5 rounded-md text-[9px] font-black tracking-wider uppercase bg-blue-500/10 text-blue-650 dark:text-blue-400">
+                              Upcoming
                             </span>
                           ) : (
-                            <button
-                              onClick={() => {
-                                setRecordingMeeting(meeting);
-                                setShowRecorderModal(true);
-                              }}
-                              className="flex items-center gap-1 px-2.5 py-1.5 bg-blue-600/10 hover:bg-blue-600 text-blue-600 hover:text-white dark:text-blue-400 dark:hover:text-white text-[10px] font-black rounded-lg transition border border-blue-500/20 uppercase tracking-wider shadow-sm"
+                            <span className="px-2 py-0.5 rounded-md text-[9px] font-black tracking-wider uppercase bg-emerald-500/10 text-emerald-650 dark:text-emerald-400 animate-pulse">
+                              Live
+                            </span>
+                          )}
+                          {meeting.location && (
+                            <span className="flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[9px] font-black tracking-wider uppercase bg-blue-500/10 text-blue-650 dark:text-blue-400">
+                              <MapPin size={10} className="text-blue-500" />
+                              {meeting.location}
+                            </span>
+                          )}
+                          {meeting.meeting_link && !expired && (
+                            <a
+                              href={meeting.meeting_link}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[9px] font-black tracking-wider uppercase bg-purple-500/10 text-purple-650 dark:text-purple-400 hover:underline"
                             >
-                              <Mic size={11} /> Record & Process AI Transcript
-                            </button>
+                              <Video size={10} className="text-purple-500" />
+                              Join <ExternalLink size={8} />
+                            </a>
                           )}
                         </div>
-                      )}
 
-                      {/* Preserved Recording & Transcript Block */}
-                      {(meeting.recording_url || meeting.transcript || meeting.summary) && (
-                        <div className="mt-3 p-3.5 bg-slate-100/50 dark:bg-black/20 rounded-xl border border-slate-200/50 dark:border-white/5 space-y-2.5">
-                          {meeting.recording_url && (
-                            <div className="flex items-center gap-3">
-                              <Volume2 size={14} className="text-blue-605 dark:text-blue-400 flex-shrink-0" />
-                              <audio 
-                                src={getBaseUrl(meeting.recording_url)} 
-                                controls 
-                                className="w-full max-w-sm h-6 text-xs accent-blue-600"
-                              />
-                            </div>
-                          )}
-                          {(meeting.summary || meeting.transcript) && (
-                            <div>
-                              <button
-                                onClick={() => setExpandedTranscriptMeetingId(expandedTranscriptMeetingId === meeting.meeting_id ? null : meeting.meeting_id)}
-                                className="flex items-center gap-1.5 text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline"
-                              >
-                                <MessageSquare size={13} />
-                                {expandedTranscriptMeetingId === meeting.meeting_id ? 'Hide AI Summary & Transcript' : 'View AI Summary & Transcript'}
-                              </button>
-                              
-                              {expandedTranscriptMeetingId === meeting.meeting_id && (
-                                <div className="mt-3 space-y-3">
-                                  <div className="flex gap-2 border-b border-slate-200/50 dark:border-white/5 pb-2">
-                                    <button
-                                      type="button"
-                                      onClick={() => setActiveMeetingTab({ ...activeMeetingTab, [meeting.meeting_id]: 'summary' })}
-                                      className={`px-3 py-1 rounded-lg text-xs font-bold transition ${
-                                        (activeMeetingTab[meeting.meeting_id] || 'summary') === 'summary'
-                                          ? 'bg-blue-600/10 text-blue-600 dark:text-blue-400 shadow-sm'
-                                          : 'text-slate-500 hover:text-slate-800 dark:text-gray-400 dark:hover:text-white'
-                                      }`}
-                                    >
-                                      📝 AI Summary
-                                    </button>
-                                    {meeting.transcript && (
-                                      <button
-                                        type="button"
-                                        onClick={() => setActiveMeetingTab({ ...activeMeetingTab, [meeting.meeting_id]: 'transcript' })}
-                                        className={`px-3 py-1 rounded-lg text-xs font-bold transition ${
-                                          activeMeetingTab[meeting.meeting_id] === 'transcript'
-                                            ? 'bg-blue-600/10 text-blue-600 dark:text-blue-400 shadow-sm'
-                                            : 'text-slate-500 hover:text-slate-800 dark:text-gray-400 dark:hover:text-white'
-                                        }`}
-                                      >
-                                        🗣️ AI Transcript
-                                      </button>
-                                    )}
-                                  </div>
-
-                                  {(activeMeetingTab[meeting.meeting_id] || 'summary') === 'summary' ? (
-                                    <div className="bg-white dark:bg-[#0D1B2A] rounded-xl p-4 border border-slate-200/60 dark:border-white/5 text-xs leading-relaxed space-y-2 max-h-60 overflow-y-auto custom-scrollbar text-slate-700 dark:text-gray-300 font-medium">
-                                      {meeting.summary ? (
-                                        meeting.summary.split('\n').map((line, sIdx) => {
-                                          if (!line.trim()) return null;
-                                          if (line.startsWith('•') || line.startsWith('*')) {
-                                            const cleanLine = line.replace(/^[•*\s]+/, '');
-                                            const boldRegex = /\*\*(.*?)\*\*/g;
-                                            const parts = [];
-                                            let lastIndex = 0;
-                                            let match;
-                                            while ((match = boldRegex.exec(cleanLine)) !== null) {
-                                              const textBefore = cleanLine.substring(lastIndex, match.index);
-                                              if (textBefore) parts.push(textBefore);
-                                              parts.push(<strong key={match.index} className="text-blue-600 dark:text-blue-400 font-bold">{match[1]}</strong>);
-                                              lastIndex = boldRegex.lastIndex;
-                                            }
-                                            const textAfter = cleanLine.substring(lastIndex);
-                                            if (textAfter) parts.push(textAfter);
-                                            return (
-                                              <div key={sIdx} className="flex gap-2 items-start pl-1">
-                                                <span className="text-blue-500 flex-shrink-0 mt-0.5 font-bold">✓</span>
-                                                <span>{parts.length > 0 ? parts : cleanLine}</span>
-                                              </div>
-                                            );
-                                          }
-                                          return <p key={sIdx}>{line}</p>;
-                                        })
-                                      ) : (
-                                        <p className="italic text-slate-400">No AI summary generated.</p>
-                                      )}
-                                    </div>
-                                  ) : (
-                                    <div className="bg-white dark:bg-[#0D1B2A] rounded-xl p-4 border border-slate-200/60 dark:border-white/5 text-xs leading-relaxed max-h-60 overflow-y-auto custom-scrollbar space-y-2">
-                                      {/* 🎤 Transcript Header Info */}
-                                      <div className="flex justify-between items-center bg-slate-50 dark:bg-black/30 p-2 rounded-lg mb-2">
-                                        <span className="font-semibold text-slate-600 dark:text-gray-400">Audio Transcription</span>
-                                        <div className="flex gap-1.5">
-                                          <button 
-                                            onClick={() => diarizeMeetingAudio(meeting.meeting_id)}
-                                            className="px-2 py-0.5 bg-purple-600 hover:bg-purple-500 text-white rounded text-[10px] font-bold transition flex items-center gap-1"
-                                          >
-                                            <Mic size={9} /> Process Speakers
-                                          </button>
-                                        </div>
-                                      </div>
-                                      
-                                      {/* Speakers / Lines */}
-                                      {meeting.transcript ? (
-                                        meeting.transcript.split('\n').map((line, tIdx) => {
-                                          if (!line.trim()) return null;
-                                          
-                                          const diarizationMatch = line.match(/^([^:]+):\s*(.*)$/);
-                                          if (diarizationMatch) {
-                                            const speakerName = diarizationMatch[1].trim();
-                                            const speechText = diarizationMatch[2].trim();
-                                            
-                                            return (
-                                              <div key={tIdx} className="border-l-2 border-slate-200 dark:border-white/10 pl-3 py-1 hover:bg-slate-50/50 dark:hover:bg-white/[0.01] transition-all group relative">
-                                                <div className="flex items-center gap-1.5 mb-0.5">
-                                                  <span className="font-extrabold text-[10px] text-purple-600 dark:text-purple-400 uppercase tracking-wide">
-                                                    {speakerName}
-                                                  </span>
-                                                  <button
-                                                    onClick={() => {
-                                                      setRenameSpeakerMeetingId(meeting.meeting_id);
-                                                      setRenameSpeakerOldLabel(speakerName);
-                                                      setShowRenameSpeakerModal(true);
-                                                    }}
-                                                    className="opacity-0 group-hover:opacity-100 transition p-0.5 hover:bg-slate-200 dark:hover:bg-white/10 rounded text-slate-400 hover:text-slate-600 dark:hover:text-white"
-                                                    title="Rename Speaker"
-                                                  >
-                                                    <Edit2 size={9} />
-                                                  </button>
-                                                </div>
-                                                <p className="text-slate-700 dark:text-gray-300 font-medium text-xs leading-relaxed">{speechText}</p>
-                                              </div>
-                                            );
-                                          }
-                                          
-                                          return (
-                                            <p key={tIdx} className="text-slate-600 dark:text-gray-400 font-medium">{line}</p>
-                                          );
-                                        })
-                                      ) : (
-                                        <p className="italic text-slate-400">No transcript text loaded.</p>
-                                      )}
-                                    </div>
-                                  )}
-                                </div>
-                              )}
-                            </div>
+                        {/* Title & Description */}
+                        <div>
+                          <h4 className="font-extrabold text-sm text-slate-800 dark:text-white leading-snug">
+                            {meeting.title}
+                          </h4>
+                          {meeting.description && (
+                            <p className="text-slate-500 dark:text-gray-400 text-xs mt-1 leading-relaxed whitespace-pre-line max-w-2xl">
+                              {meeting.description}
+                            </p>
                           )}
                         </div>
-                      )}
-                    </div>
+                      </div>
 
-                    {/* Right Side Actions: RSVP, Edit, Delete, Time */}
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between sm:justify-end gap-3 w-full sm:w-auto border-t sm:border-t-0 border-slate-100 dark:border-white/5 pt-3 sm:pt-0">
-                      {/* Left side of actions row (Time & Edit/Delete on mobile, Time only on desktop) */}
-                      <div className="flex items-center justify-between w-full sm:w-auto gap-3">
+                      {/* Right: Time, Edit/Delete Action Buttons */}
+                      <div className="flex items-center gap-3 flex-shrink-0 self-start sm:self-center">
                         <span className="text-xs font-mono font-bold text-slate-500 dark:text-gray-400 flex items-center gap-1">
                           <Clock size={12} />
                           {evt.time}
                         </span>
-                        
-                        {/* Edit / Delete actions on mobile */}
                         {isAdmin && (
-                          <div className="flex sm:hidden items-center gap-0.5">
+                          <div className="flex items-center gap-0.5">
                             <button
                               disabled={expired}
                               onClick={() => setEditingMeeting(meeting)}
@@ -1738,35 +1696,19 @@ const Meetings = ({ community, user }) => {
                           </div>
                         )}
                       </div>
-                      
-                      <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
-                        {/* Edit / Delete actions on desktop */}
-                        {isAdmin && (
-                          <div className="hidden sm:flex items-center gap-0.5">
-                            <button
-                              disabled={expired}
-                              onClick={() => setEditingMeeting(meeting)}
-                              className="p-1.5 hover:bg-slate-200 dark:hover:bg-white/10 rounded-lg text-slate-500 hover:text-slate-800 dark:text-gray-400 dark:hover:text-white transition disabled:opacity-30"
-                              title="Edit"
-                            >
-                              <Edit2 size={13} />
-                            </button>
-                            <button
-                              onClick={() => handleDeleteMeeting(meeting.meeting_id)}
-                              className="p-1.5 hover:bg-red-500/10 rounded-lg text-slate-400 hover:text-red-500 transition"
-                              title="Delete"
-                            >
-                              <Trash2 size={13} />
-                            </button>
-                          </div>
-                        )}
+                    </div>
 
-                        {/* RSVP buttons */}
-                        <div className="flex items-center gap-1.5 w-full sm:w-auto">
+                    {/* Middle Row: RSVP Controls & Check RSVPs */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3.5 w-full py-1">
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                        <span className="text-[10px] font-black uppercase tracking-wider text-slate-405 dark:text-gray-500">
+                          {expired ? "RSVP Closed" : "Are you attending?"}
+                        </span>
+                        <div className="flex items-center gap-1.5 flex-wrap">
                           <button
                             disabled={expired}
                             onClick={() => handleRsvp(meeting.meeting_id, 'YES')}
-                            className={`flex-1 sm:flex-initial px-3.5 py-1.5 rounded-xl text-[10px] font-extrabold transition uppercase tracking-wider text-center ${
+                            className={`px-3.5 py-1.5 rounded-xl text-[10px] font-extrabold transition uppercase tracking-wider text-center disabled:opacity-40 disabled:pointer-events-none ${
                               meeting.user_rsvp === 'YES'
                                 ? 'bg-emerald-600 text-white shadow-sm'
                                 : 'bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-700 dark:text-gray-300'
@@ -1777,7 +1719,7 @@ const Meetings = ({ community, user }) => {
                           <button
                             disabled={expired}
                             onClick={() => handleRsvp(meeting.meeting_id, 'NO')}
-                            className={`flex-1 sm:flex-initial px-3.5 py-1.5 rounded-xl text-[10px] font-extrabold transition uppercase tracking-wider text-center ${
+                            className={`px-3.5 py-1.5 rounded-xl text-[10px] font-extrabold transition uppercase tracking-wider text-center disabled:opacity-40 disabled:pointer-events-none ${
                               meeting.user_rsvp === 'NO'
                                 ? 'bg-red-600 text-white shadow-sm'
                                 : 'bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-700 dark:text-gray-300'
@@ -1788,7 +1730,7 @@ const Meetings = ({ community, user }) => {
                           <button
                             disabled={expired}
                             onClick={() => handleRsvp(meeting.meeting_id, 'MAYBE')}
-                            className={`flex-1 sm:flex-initial px-3.5 py-1.5 rounded-xl text-[10px] font-extrabold transition uppercase tracking-wider text-center ${
+                            className={`px-3.5 py-1.5 rounded-xl text-[10px] font-extrabold transition uppercase tracking-wider text-center disabled:opacity-40 disabled:pointer-events-none ${
                               meeting.user_rsvp === 'MAYBE'
                                 ? 'bg-amber-500 text-white shadow-sm'
                                 : 'bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-700 dark:text-gray-300'
@@ -1798,7 +1740,175 @@ const Meetings = ({ community, user }) => {
                           </button>
                         </div>
                       </div>
+
+                      <div className="flex gap-2 items-center">
+                        {/* Record Meeting Trigger */}
+                        {!meeting.transcript && !meeting.recording_url && isAdmin && (
+                          expired ? (
+                            <span className="text-slate-400 dark:text-gray-500 text-xs italic flex items-center gap-1 font-mono">
+                              <Clock size={11} /> Meeting ended.
+                            </span>
+                          ) : (
+                            <button
+                              onClick={() => {
+                                setRecordingMeeting(meeting);
+                                setShowRecorderModal(true);
+                              }}
+                              className="flex items-center gap-1 px-2.5 py-1.5 bg-blue-650/10 hover:bg-blue-600 text-blue-600 hover:text-white dark:text-blue-400 dark:hover:text-white text-[10px] font-black rounded-lg transition border border-blue-500/20 uppercase tracking-wider shadow-sm"
+                            >
+                              <Mic size={11} /> Record
+                            </button>
+                          )
+                        )}
+                        {isAdmin && (
+                          <button
+                            onClick={() => setShowRsvpModalMeetingId(meeting.meeting_id)}
+                            className="px-3.5 py-1.5 bg-purple-500/10 hover:bg-purple-600 text-purple-650 dark:text-purple-400 hover:text-white dark:hover:text-white rounded-xl text-[10px] font-black transition uppercase tracking-wider text-center flex items-center justify-center gap-1 border border-purple-500/20 shadow-sm"
+                            title="Check RSVPs"
+                          >
+                            👥 Check RSVPs
+                          </button>
+                        )}
+                      </div>
                     </div>
+                    {(meeting.recording_url || meeting.transcript || meeting.summary) && (
+                      <div className="mt-1 p-3.5 bg-slate-100/50 dark:bg-black/20 rounded-xl border border-slate-200/50 dark:border-white/5 space-y-2.5 w-full">
+                        {meeting.recording_url && (
+                          <div className="flex items-center gap-3">
+                            <Volume2 size={14} className="text-blue-605 dark:text-blue-400 flex-shrink-0" />
+                            <audio 
+                              src={getBaseUrl(meeting.recording_url)} 
+                              controls 
+                              className="w-full max-w-sm h-6 text-xs accent-blue-600"
+                            />
+                          </div>
+                        )}
+                        {(meeting.summary || meeting.transcript) && (
+                          <div>
+                            <button
+                              onClick={() => setExpandedTranscriptMeetingId(expandedTranscriptMeetingId === meeting.meeting_id ? null : meeting.meeting_id)}
+                              className="flex items-center gap-1.5 text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline"
+                            >
+                              <MessageSquare size={13} />
+                              {expandedTranscriptMeetingId === meeting.meeting_id ? 'Hide AI Summary & Transcript' : 'View AI Summary & Transcript'}
+                            </button>
+                            {expandedTranscriptMeetingId === meeting.meeting_id && (
+                              <div className="mt-3 space-y-3">
+                                <div className="flex gap-2 border-b border-slate-200/50 dark:border-white/5 pb-2">
+                                  <button
+                                    type="button"
+                                    onClick={() => setActiveMeetingTab({ ...activeMeetingTab, [meeting.meeting_id]: 'summary' })}
+                                    className={`px-3 py-1 rounded-lg text-xs font-bold transition ${
+                                      (activeMeetingTab[meeting.meeting_id] || 'summary') === 'summary'
+                                        ? 'bg-blue-600/10 text-blue-600 dark:text-blue-400 shadow-sm'
+                                        : 'text-slate-500 hover:text-slate-800 dark:text-gray-400 dark:hover:text-white'
+                                    }`}
+                                  >
+                                    📝 AI Summary
+                                  </button>
+                                  {meeting.transcript && (
+                                    <button
+                                      type="button"
+                                      onClick={() => setActiveMeetingTab({ ...activeMeetingTab, [meeting.meeting_id]: 'transcript' })}
+                                      className={`px-3 py-1 rounded-lg text-xs font-bold transition ${
+                                        activeMeetingTab[meeting.meeting_id] === 'transcript'
+                                          ? 'bg-blue-600/10 text-blue-600 dark:text-blue-400 shadow-sm'
+                                          : 'text-slate-500 hover:text-slate-800 dark:text-gray-400 dark:hover:text-white'
+                                      }`}
+                                    >
+                                      🗣️ AI Transcript
+                                    </button>
+                                  )}
+                                </div>
+                                {(activeMeetingTab[meeting.meeting_id] || 'summary') === 'summary' ? (
+                                  <div className="bg-white dark:bg-[#0D1B2A] rounded-xl p-4 border border-slate-200/60 dark:border-white/5 text-xs leading-relaxed space-y-2 max-h-60 overflow-y-auto custom-scrollbar text-slate-700 dark:text-gray-300 font-medium">
+                                    {meeting.summary ? (
+                                      meeting.summary.split('\n').map((line, sIdx) => {
+                                        if (!line.trim()) return null;
+                                        if (line.startsWith('•') || line.startsWith('*')) {
+                                          const cleanLine = line.replace(/^[•*\s]+/, '');
+                                          const boldRegex = /\*\*(.*?)\*\*/g;
+                                          const parts = [];
+                                          let lastIndex = 0;
+                                          let match;
+                                          while ((match = boldRegex.exec(cleanLine)) !== null) {
+                                            const textBefore = cleanLine.substring(lastIndex, match.index);
+                                            if (textBefore) parts.push(textBefore);
+                                            parts.push(<strong key={match.index} className="text-blue-600 dark:text-blue-400 font-bold">{match[1]}</strong>);
+                                            lastIndex = boldRegex.lastIndex;
+                                          }
+                                          const textAfter = cleanLine.substring(lastIndex);
+                                          if (textAfter) parts.push(textAfter);
+                                          return (
+                                            <div key={sIdx} className="flex gap-2 items-start pl-1">
+                                              <span className="text-blue-500 flex-shrink-0 mt-0.5 font-bold">✓</span>
+                                              <span>{parts.length > 0 ? parts : cleanLine}</span>
+                                            </div>
+                                          );
+                                        }
+                                        return <p key={sIdx}>{line}</p>;
+                                      })
+                                    ) : (
+                                      <p className="italic text-slate-400">No AI summary generated.</p>
+                                    )}
+                                  </div>
+                                ) : (
+                                  <div className="bg-white dark:bg-[#0D1B2A] rounded-xl p-4 border border-slate-200/60 dark:border-white/5 text-xs leading-relaxed max-h-60 overflow-y-auto custom-scrollbar space-y-2">
+                                    <div className="flex justify-between items-center bg-slate-50 dark:bg-black/30 p-2 rounded-lg mb-2">
+                                      <span className="font-semibold text-slate-600 dark:text-gray-400">Audio Transcription</span>
+                                      <div className="flex gap-1.5">
+                                        <button 
+                                          onClick={() => diarizeMeetingAudio(meeting.meeting_id)}
+                                          className="px-2 py-0.5 bg-purple-600 hover:bg-purple-500 text-white rounded text-[10px] font-bold transition flex items-center gap-1"
+                                        >
+                                          <Mic size={9} /> Process Speakers
+                                        </button>
+                                      </div>
+                                    </div>
+                                    {meeting.transcript ? (
+                                      meeting.transcript.split('\n').map((line, tIdx) => {
+                                        if (!line.trim()) return null;
+                                        const diarizationMatch = line.match(/^([^:]+):\s*(.*)$/);
+                                        if (diarizationMatch) {
+                                          const speakerName = diarizationMatch[1].trim();
+                                          const speechText = diarizationMatch[2].trim();
+                                          return (
+                                            <div key={tIdx} className="border-l-2 border-slate-200 dark:border-white/10 pl-3 py-1 hover:bg-slate-50/50 dark:hover:bg-white/[0.01] transition-all group relative">
+                                              <div className="flex items-center gap-1.5 mb-0.5">
+                                                <span className="font-extrabold text-[10px] text-purple-600 dark:text-purple-400 uppercase tracking-wide">
+                                                  {speakerName}
+                                                </span>
+                                                <button
+                                                  onClick={() => {
+                                                    setRenameSpeakerMeetingId(meeting.meeting_id);
+                                                    setRenameSpeakerOldLabel(speakerName);
+                                                    setShowRenameSpeakerModal(true);
+                                                  }}
+                                                  className="opacity-0 group-hover:opacity-100 transition p-0.5 hover:bg-slate-200 dark:hover:bg-white/10 rounded text-slate-400 hover:text-slate-600 dark:hover:text-white"
+                                                  title="Rename Speaker"
+                                                >
+                                                  <Edit2 size={9} />
+                                                </button>
+                                              </div>
+                                              <p className="text-slate-700 dark:text-gray-300 font-medium text-xs leading-relaxed">{speechText}</p>
+                                            </div>
+                                          );
+                                        }
+                                        return (
+                                          <p key={tIdx} className="text-slate-600 dark:text-gray-400 font-medium">{line}</p>
+                                        );
+                                      })
+                                    ) : (
+                                      <p className="italic text-slate-400">No transcript text loaded.</p>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 );
               } else if (evt.type === 'booking') {
@@ -1995,7 +2105,18 @@ const Meetings = ({ community, user }) => {
 
   const isMeetingExpired = (meetingDateStr) => {
     if (!meetingDateStr) return true;
-    return new Date() > new Date(meetingDateStr);
+    const normalized = String(meetingDateStr).replace(' ', 'T');
+    const start = new Date(normalized);
+    if (isNaN(start.getTime())) return true;
+    return new Date() > start;
+  };
+
+  const isMeetingUpcoming = (meetingDateStr) => {
+    if (!meetingDateStr) return false;
+    const normalized = String(meetingDateStr).replace(' ', 'T');
+    const start = new Date(normalized);
+    if (isNaN(start.getTime())) return false;
+    return new Date() < start;
   };
 
   const renderEventDetailsModal = () => {
@@ -2009,6 +2130,7 @@ const Meetings = ({ community, user }) => {
     const booking = isBooking ? selectedEvent.raw : null;
     const note = isNote ? selectedEvent.raw : null;
     const expired = meeting ? isMeetingExpired(meeting.meeting_date) : false;
+    const isUpcoming = meeting ? isMeetingUpcoming(meeting.meeting_date) : false;
 
     return (
       <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
@@ -2017,18 +2139,22 @@ const Meetings = ({ community, user }) => {
             <div className="flex items-center gap-2">
               <span className={`px-2.5 py-0.5 rounded-md text-[9px] font-black tracking-wider uppercase ${
                 isMeeting 
-                  ? 'bg-purple-500/10 text-purple-600 dark:text-purple-400' 
+                  ? 'bg-purple-500/10 text-purple-650 dark:text-purple-400' 
                   : isBooking 
                     ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400' 
-                    : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-450'
+                    : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-455'
               }`}>
                 {isMeeting ? 'Public Meeting' : isBooking ? 'Amenity Booking' : 'Private Note'}
               </span>
               {isMeeting && (
                 <span className={`px-2.5 py-0.5 rounded-md text-[9px] font-black tracking-wider uppercase ${
-                  expired ? 'bg-slate-500/10 text-slate-500' : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                  expired 
+                    ? 'bg-slate-500/10 text-slate-500' 
+                    : isUpcoming 
+                      ? 'bg-blue-500/10 text-blue-650 dark:text-blue-400' 
+                      : 'bg-emerald-500/10 text-emerald-650 dark:text-emerald-400 animate-pulse'
                 }`}>
-                  {expired ? 'Past' : 'Live'}
+                  {expired ? 'Past' : isUpcoming ? 'Upcoming' : 'Live'}
                 </span>
               )}
             </div>
@@ -2079,6 +2205,23 @@ const Meetings = ({ community, user }) => {
                     </div>
                   )}
                 </div>
+
+                {isAdmin && (
+                  <div className="p-4 bg-slate-50 dark:bg-black/20 rounded-2xl border border-slate-200/50 dark:border-white/[0.02] flex items-center justify-between">
+                    <div className="space-y-1">
+                      <span className="text-[10px] font-bold text-slate-400 dark:text-gray-500 uppercase block">👥 RSVP Tracking</span>
+                      <span className="text-xs font-semibold text-slate-800 dark:text-white block">
+                        Check resident attendance responses
+                      </span>
+                    </div>
+                    <button
+                      onClick={() => setShowRsvpModalMeetingId(meeting.meeting_id)}
+                      className="px-4 py-2 bg-purple-605 hover:bg-purple-500 text-white rounded-xl text-xs font-extrabold uppercase tracking-wider transition shadow-sm"
+                    >
+                      Check RSVPs
+                    </button>
+                  </div>
+                )}
 
                 {!expired && (
                   <div className="p-4 bg-slate-50 dark:bg-black/20 rounded-2xl border border-slate-200/50 dark:border-white/[0.02]">
@@ -2242,10 +2385,10 @@ const Meetings = ({ community, user }) => {
           </div>
 
           {/* Right Column: Planner Center Area */}
-          <div className="lg:col-span-8 space-y-6">
+          <div className="lg:col-span-8 space-y-4">
             
             {/* Planner Header Console */}
-            <div className="flex flex-col sm:flex-row justify-between items-center gap-4 bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-5 shadow-sm">
+            <div className="flex flex-col sm:flex-row justify-between items-center gap-4 bg-white dark:bg-[#1E2E42] border border-slate-200/80 dark:border-white/10 rounded-3xl p-4 shadow-sm">
               <div className="flex items-center gap-4">
                 <h3 className="font-extrabold text-base text-slate-900 dark:text-white uppercase tracking-wider">
                   {plannerView === 'year' 
@@ -2583,6 +2726,12 @@ const Meetings = ({ community, user }) => {
           members={members}
           onClose={() => { setShowRenameSpeakerModal(false); setRenameSpeakerMeetingId(null); setRenameSpeakerOldLabel(''); }}
           onSuccess={fetchData}
+        />
+      )}
+      {showRsvpModalMeetingId && (
+        <ViewRSVPModal
+          meetingId={showRsvpModalMeetingId}
+          onClose={() => setShowRsvpModalMeetingId(null)}
         />
       )}
       {selectedEvent && renderEventDetailsModal()}

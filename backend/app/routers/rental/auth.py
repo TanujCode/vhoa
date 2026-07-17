@@ -118,6 +118,17 @@ class GoogleLoginRequest(BaseModel):
     flow: str = "login"
 
 
+@router.get("/auth/check-email")
+def check_email_exists(
+    email: str,
+    db: Session = Depends(get_rental_db)
+):
+    if not email:
+        raise HTTPException(status_code=400, detail="Email is required")
+    user = db.query(RentalUser).filter(RentalUser.email_id == email.lower().strip()).first()
+    return {"exists": user is not None}
+
+
 @router.post("/auth/register", status_code=201)
 def rental_register(
     body: RentalRegisterRequest,
@@ -219,8 +230,25 @@ def rental_login(
 
 @router.get("/auth/me")
 def rental_get_me(
+    db: Session = Depends(get_rental_db),
     current_user: RentalUser = Depends(get_current_rental_user)
 ):
+    property_name = None
+    unit_number = None
+    role_name = current_user.role.role_name if current_user.role else None
+
+    if role_name == "tenant":
+        from app.models.rental.lease import Lease
+        from sqlalchemy import func
+        active_lease = db.query(Lease).filter(
+            (Lease.tenant_id == current_user.user_id) | (func.lower(Lease.tenant_email) == func.lower(current_user.email_id.strip()))
+        ).filter(Lease.status.in_(["ACTIVE", "PENDING_SIGNATURE"])).first()
+
+        if active_lease and active_lease.unit:
+            unit_number = active_lease.unit.unit_number
+            if active_lease.unit.property:
+                property_name = active_lease.unit.property.name
+
     return {
         "user_id": current_user.user_id,
         "user_code": current_user.user_code,
@@ -237,7 +265,9 @@ def rental_get_me(
         "account_status": current_user.account_status or "PENDING_VERIFICATION",
         "time_zone": current_user.time_zone or "America/New_York",
         "role_id": current_user.role_id,
-        "role_name": current_user.role.role_name if current_user.role else None,
+        "role_name": role_name,
+        "property_name": property_name,
+        "unit_number": unit_number,
         "user_profile_url": current_user.user_profile_url,
         "created_date": current_user.created_date,
         "last_login": current_user.last_login

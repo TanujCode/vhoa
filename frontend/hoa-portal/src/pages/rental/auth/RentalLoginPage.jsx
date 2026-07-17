@@ -1,16 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { Mail, Lock, Eye, EyeOff, RefreshCw } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import AuthLayout from '../../../components/layout/AuthLayout';
 import API from '../../../services/api';
 import { useGoogleLogin } from '@react-oauth/google';
 import { validateEmail } from '../../../utils/emailValidation';
 
 export default function RentalLoginPage() {
+  const [searchParams] = useSearchParams();
+  const emailFromUrl = searchParams.get('email') || '';
+  const msgFromUrl = searchParams.get('msg') || '';
+
   const [showPassword, setShowPassword] = useState(false);
   const [errorMsg, setErrorMsg]         = useState('');
   const [successMsg, setSuccessMsg]     = useState('');
+  const [infoMsg, setInfoMsg]           = useState('');
   
   const generateLocalCaptcha = () => {
     const num1 = Math.floor(Math.random() * 9) + 1;
@@ -57,6 +62,15 @@ export default function RentalLoginPage() {
     watch,
     formState: { errors, isSubmitting },
   } = useForm({ mode: 'onTouched' });
+
+  useEffect(() => {
+    if (emailFromUrl) {
+      setValue('email', emailFromUrl);
+    }
+    if (msgFromUrl === 'already_registered') {
+      setInfoMsg("You are already registered! Please log in to your account to view and complete your new application.");
+    }
+  }, [emailFromUrl, msgFromUrl, setValue]);
 
   const onSubmit = async (data) => {
     try {
@@ -188,6 +202,15 @@ export default function RentalLoginPage() {
           Access your Landlord Portfolio or Tenant Portal
         </p>
       </div>
+
+      {infoMsg && (
+        <div className="mb-4 p-3 bg-blue-50 border border-blue-200 text-blue-700 text-sm rounded-lg flex items-center gap-2">
+          <svg className="w-5 h-5 text-blue-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span>{infoMsg}</span>
+        </div>
+      )}
 
       {errorMsg && (
         <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg">

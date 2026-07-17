@@ -263,11 +263,69 @@ def generate_initial_invoice(lease: Lease, db: Session) -> RentalLedger:
 
 
 # --- RENTAL APPLICATION & SCREENING ---
+def _calculate_mock_fico_score(
+    unit_rent: float,
+    income: float,
+    employment_status: str,
+    pet_details: str,
+    simulation_mode: str = "CLEAN"
+) -> int:
+    base_score = 620
+    
+    # Income to Rent ratio
+    rent_val = unit_rent if unit_rent > 0 else 1000.0
+    income_val = income or 0.0
+    ratio = income_val / rent_val if rent_val > 0 else 1.0
+    
+    if ratio >= 4.0:
+        base_score += 120
+    elif ratio >= 3.0:
+        base_score += 80
+    elif ratio >= 2.0:
+        base_score += 40
+    else:
+        base_score -= 80
+
+    # Employment Status
+    status = (employment_status or "Employed").lower()
+    if status == "employed":
+        base_score += 60
+    elif status == "self-employed":
+        base_score += 40
+    elif status == "student":
+        base_score += 10
+    else: # unemployed
+        base_score -= 80
+
+    # Pet risk
+    pets = (pet_details or "").lower()
+    if "none" in pets or not pets:
+        base_score += 20
+    else:
+        base_score -= 10
+
+    # Adjust based on simulation mode
+    mode = (simulation_mode or "CLEAN").upper()
+    if mode == "CRIMINAL":
+        base_score = min(base_score, 640)
+    elif mode == "EVICTION":
+        base_score = min(base_score, 580)
+
+    # Cap FICO score between 300 and 850
+    return max(300, min(850, int(base_score)))
+
+
 def submit_rental_application(data: RentalApplicationCreate, db: Session) -> RentalApplication:
-    # Simulating background screening score pulls (mocked)
-    import random
-    credit_scores = [620, 680, 710, 740, 780, 810]
-    credit_score = random.choice(credit_scores)
+    unit = db.query(Unit).filter(Unit.unit_id == data.unit_id).first()
+    rent_amount = unit.rent_amount if unit else 1000.0
+    
+    credit_score = _calculate_mock_fico_score(
+        unit_rent=rent_amount,
+        income=data.monthly_income,
+        employment_status=data.employment_status,
+        pet_details=data.pet_details,
+        simulation_mode="CLEAN"
+    )
     
     new_app = RentalApplication(
         unit_id=data.unit_id,
@@ -324,13 +382,13 @@ def invite_tenant_screening(data: RentalApplicationInvite, landlord_id: int, db:
     if not unit:
         raise ValueError("Unit not found.")
 
-    # Check if there is already an active or pending lease for this unit or this email
+    # Check if there is already an active or pending lease for this unit
     existing_lease = db.query(Lease).filter(
-        (Lease.unit_id == data.unit_id) | (Lease.tenant_email == data.tenant_email.lower().strip()),
+        Lease.unit_id == data.unit_id,
         Lease.status.in_(["ACTIVE", "PENDING_SIGNATURE"])
     ).first()
     if existing_lease:
-        raise ValueError("A lease already exists for this unit or tenant email. Screening is not required.")
+        raise ValueError("A lease already exists for this unit. Screening is not required.")
 
     # 2. Create the application in INVITED status
     new_app = RentalApplication(
@@ -372,15 +430,19 @@ def complete_rental_application(application_id: int, data: RentalApplicationComp
     if not app:
         raise ValueError("Application not found.")
 
-    # Simulating background screening score pulls (mocked)
-    import random
-    credit_scores = [620, 680, 710, 740, 780, 810]
-    credit_score = random.choice(credit_scores)
+    mode = (data.simulation_mode or "CLEAN").upper()
+    rent_amount = app.unit.rent_amount if app.unit else 1000.0
+    
+    credit_score = _calculate_mock_fico_score(
+        unit_rent=rent_amount,
+        income=data.monthly_income,
+        employment_status=data.employment_status,
+        pet_details=data.pet_details,
+        simulation_mode=mode
+    )
 
     # Set mock background check results based on simulation mode
-    mode = (data.simulation_mode or "CLEAN").upper()
     if mode == "CRIMINAL":
-        credit_score = 640
         criminal_history = (
             f"MATCH FOUND: Federal Criminal Registry. Name: {app.full_name}, "
             "Offense: Petit Larceny (Theft), Case ID: FED-8912-T, Date: 2024-03-15, "
@@ -390,7 +452,6 @@ def complete_rental_application(application_id: int, data: RentalApplicationComp
         )
         eviction_history = "No eviction records found."
     elif mode == "EVICTION":
-        credit_score = 580
         criminal_history = "No criminal records found."
         eviction_history = (
             f"EVICTION DETECTED: Cook County Civil Court. Eviction filing by Landlord Oakwood Properties, "
