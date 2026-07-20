@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { 
-  Bell, Sun, Moon, User, LogOut, Search, ChevronDown, Plus, Menu, Building2, ArrowLeft, RefreshCw
+  Bell, Sun, Moon, User, LogOut, Search, ChevronDown, Plus, Menu, Building2, ArrowLeft, RefreshCw, ArrowLeftRight
 } from 'lucide-react';
 import AddCommunityModal from './AddCommunityModal';
 import { useTheme } from '../context/ThemeContext';
@@ -29,6 +29,7 @@ const Topbar = ({
   const { theme, toggleTheme } = useTheme();
 
   const isResident = user?.role === 'resident';
+  const isSuperAdmin = user?.role === 'super_admin' || user?.role_name === 'super_admin';
   const isBoardMember = ['board_member', 'board', 'president', 'director'].includes(user?.role?.toLowerCase());
 
   const getProfileImage = (url) => {
@@ -175,6 +176,33 @@ const Topbar = ({
             {viewAsResident 
               ? (isBoardMember ? "Switch to Board View" : "Switch to Admin View") 
               : "Switch to Resident View"}
+          </button>
+        )}
+
+        {isSuperAdmin && (
+          <button
+            onClick={() => {
+              const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+              const sessionToken = localStorage.getItem('session_token') || sessionStorage.getItem('session_token');
+              const userObj = localStorage.getItem('user') || sessionStorage.getItem('user');
+
+              if (token) localStorage.setItem('rental_token', token);
+              if (sessionToken) localStorage.setItem('rental_session_token', sessionToken);
+              if (userObj) {
+                const parsed = JSON.parse(userObj);
+                localStorage.setItem('rental_user', JSON.stringify({
+                  ...parsed,
+                  role: 'super_admin',
+                  role_name: 'super_admin'
+                }));
+              }
+              window.location.href = '/rental/dashboard';
+            }}
+            className="flex px-3 py-2 bg-indigo-500/10 dark:bg-indigo-500/25 border-2 border-indigo-500/30 hover:border-indigo-500 hover:bg-indigo-500 hover:text-white text-indigo-700 dark:text-indigo-400 dark:hover:text-white dark:hover:bg-indigo-500 rounded-2xl text-xs font-bold transition-all duration-200 items-center gap-1.5 shadow-sm active:scale-95"
+            title="Switch to Rental Portal"
+          >
+            <ArrowLeftRight size={14} />
+            <span className="hidden md:inline">Switch to Rental Portal</span>
           </button>
         )}
         

@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List
 from app.database import get_rental_db
-from app.models.hoa.user import User
+from app.models.rental.rental_user import RentalUser
 from app.schemas.rental import RentalApplicationCreate, RentalApplicationOut, RentalApplicationInvite, RentalApplicationComplete
 from app.services.rental import rental_service
 from app.services.rental.audit_service import log_rental_action
@@ -14,7 +14,7 @@ router = APIRouter(prefix="/rental", tags=["Rental - Tenant Screening"])
 def invite_tenant(
     body: RentalApplicationInvite,
     db: Session = Depends(get_rental_db),
-    current_user: User = Depends(require_rental_role("super_admin", "landlord"))
+    current_user: RentalUser = Depends(require_rental_role("super_admin", "landlord"))
 ):
     try:
         app = rental_service.invite_tenant_screening(body, current_user.user_id, db)
@@ -53,15 +53,17 @@ def submit_application(
 @router.get("/applications", response_model=List[RentalApplicationOut])
 def list_applications(
     db: Session = Depends(get_rental_db),
-    current_user: User = Depends(require_rental_role("super_admin", "landlord"))
+    current_user: RentalUser = Depends(require_rental_role("super_admin", "landlord"))
 ):
-    return rental_service.get_applications_by_landlord(current_user.user_id, db)
+    rental_role = current_user.role.role_name if current_user.role else ""
+    is_super_admin = (rental_role == "super_admin")
+    return rental_service.get_applications_by_landlord(current_user.user_id, db, is_super_admin=is_super_admin)
 
 
 @router.get("/applications/my", response_model=List[RentalApplicationOut])
 def get_my_applications(
     db: Session = Depends(get_rental_db),
-    current_user: User = Depends(get_verified_rental_user)
+    current_user: RentalUser = Depends(get_verified_rental_user)
 ):
     from app.models.rental.rental_application import RentalApplication
     return db.query(RentalApplication).filter(
@@ -74,7 +76,7 @@ def review_application(
     application_id: int,
     status_str: str,  # "APPROVED" or "REJECTED"
     db: Session = Depends(get_rental_db),
-    current_user: User = Depends(require_rental_role("super_admin", "landlord"))
+    current_user: RentalUser = Depends(require_rental_role("super_admin", "landlord"))
 ):
     try:
         app = rental_service.review_application(application_id, status_str, db)
@@ -88,7 +90,7 @@ def review_application(
 def delete_application(
     application_id: int,
     db: Session = Depends(get_rental_db),
-    current_user: User = Depends(require_rental_role("super_admin", "landlord"))
+    current_user: RentalUser = Depends(require_rental_role("super_admin", "landlord"))
 ):
     try:
         rental_service.delete_application(application_id, db)

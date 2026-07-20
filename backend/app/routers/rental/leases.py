@@ -29,11 +29,12 @@ def list_leases(
     db: Session = Depends(get_rental_db),
     current_user: RentalUser = Depends(get_verified_rental_user)
 ):
-    role_name = current_user.role.role_name if current_user.role else ""
+    role_name = (current_user.role.role_name if current_user.role else "").lower()
     leases = []
     if role_name in ["super_admin", "landlord"]:
-        leases = rental_service.get_leases_by_landlord(current_user.user_id, db)
-    elif role_name == "tenant":
+        is_super_admin = (role_name == "super_admin")
+        leases = rental_service.get_leases_by_landlord(current_user.user_id, db, is_super_admin=is_super_admin)
+    else:
         leases = rental_service.get_leases_by_tenant(current_user.user_id, db)
     
     # Populate property_name

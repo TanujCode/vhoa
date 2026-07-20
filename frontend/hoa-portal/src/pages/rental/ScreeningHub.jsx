@@ -504,7 +504,7 @@ export default function ScreeningHub({ user, setActivePage, selectedPropertyFilt
                 a.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 a.tenant_email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 (a.unit?.unit_number && String(a.unit.unit_number).includes(searchQuery));
-              const matchesProperty = selectedPropertyFilterId === 'all' || String(a.unit?.property_id) === String(selectedPropertyFilterId);
+              const matchesProperty = selectedPropertyFilterId === 'all' || !a.unit?.property_id || String(a.unit?.property_id) === String(selectedPropertyFilterId);
               return matchesSearch && matchesProperty;
             });
 

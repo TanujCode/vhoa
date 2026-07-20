@@ -137,6 +137,12 @@ def run_db_upgrades():
         "user_communities.role_id"
     )
 
+    # ── rental_maintenance_requests table ─────────────────────────
+    _safe_execute(
+        "ALTER TABLE rental_maintenance_requests ADD COLUMN IF NOT EXISTS tenant_notes TEXT;",
+        "rental_maintenance_requests.tenant_notes"
+    )
+
     # ── rental_vendors table ─────────────────────────────────────
     for col_name, col_type in [
         ("zip_code", "VARCHAR(20)"),
@@ -144,6 +150,7 @@ def run_db_upgrades():
         ("license_expiry", "DATE"),
         ("insurance_number", "VARCHAR(100)"),
         ("insurance_expiry", "DATE"),
+        ("active_status", "BOOLEAN DEFAULT TRUE"),
     ]:
         _safe_execute(
             f"ALTER TABLE rental_vendors ADD COLUMN IF NOT EXISTS {col_name} {col_type};",

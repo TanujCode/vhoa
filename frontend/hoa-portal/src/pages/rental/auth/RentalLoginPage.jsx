@@ -12,6 +12,14 @@ export default function RentalLoginPage() {
   const emailFromUrl = searchParams.get('email') || '';
   const msgFromUrl = searchParams.get('msg') || '';
 
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    watch,
+    formState: { errors, isSubmitting },
+  } = useForm({ mode: 'onTouched' });
+
   const [showPassword, setShowPassword] = useState(false);
   const [errorMsg, setErrorMsg]         = useState('');
   const [successMsg, setSuccessMsg]     = useState('');
@@ -54,14 +62,6 @@ export default function RentalLoginPage() {
   useEffect(() => {
     API.get('/auth/captcha', { timeout: 2000 }).catch(() => {});
   }, []);
-
-  const {
-    register,
-    handleSubmit,
-    setValue,
-    watch,
-    formState: { errors, isSubmitting },
-  } = useForm({ mode: 'onTouched' });
 
   useEffect(() => {
     if (emailFromUrl) {

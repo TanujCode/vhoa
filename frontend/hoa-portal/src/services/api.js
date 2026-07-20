@@ -44,10 +44,38 @@ API.interceptors.request.use((config) => {
   return config;
 }, (error) => Promise.reject(error));
 
+// Helper to sanitize raw SQL / system exceptions into user-friendly messages
+export const getCleanErrorMessage = (err, fallbackMessage = "An unexpected error occurred. Please try again.") => {
+  const rawDetail = err?.response?.data?.detail || err?.response?.data?.message || err?.message;
+  if (!rawDetail) return fallbackMessage;
+  if (typeof rawDetail !== 'string') return fallbackMessage;
+  
+  const dLower = rawDetail.toLowerCase();
+  if (
+    dLower.includes('psycopg2') ||
+    dLower.includes('undefinedcolumn') ||
+    dLower.includes('syntax error') ||
+    dLower.includes('sql:') ||
+    dLower.includes('internal server error') ||
+    dLower.includes('traceback') ||
+    dLower.includes('sqlalchemy') ||
+    dLower.includes('relation') ||
+    dLower.includes('table') && dLower.includes('column')
+  ) {
+    return "A temporary database error occurred. Please try again or contact support.";
+  }
+  return rawDetail;
+};
+
 // ── Response interceptor ──
 API.interceptors.response.use(
   (response) => response,
   async (error) => {
+    // Sanitize raw DB error strings in response data
+    if (error.response?.data?.detail && typeof error.response.data.detail === 'string') {
+      error.response.data.detail = getCleanErrorMessage(error);
+    }
+
     const original = error.config;
 
     if (error.response?.status === 401 && !original._retry && !original.url.includes('/auth/login') && !original.url.includes('/auth/google')) {

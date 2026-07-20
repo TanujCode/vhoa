@@ -9,6 +9,7 @@ import RentalTopbar from '../../components/rental/RentalTopbar';
 
 // Page Components
 import LandlordDashboard from './LandlordDashboard';
+import SuperAdminDashboard from './SuperAdminDashboard';
 import TenantDashboard from './TenantDashboard';
 import PropertiesHub from './PropertiesHub';
 import ScreeningHub from './ScreeningHub';
@@ -85,7 +86,7 @@ const RentalAdminPortal = () => {
     if (!user) return;
     try {
       let res;
-      if (user.role === 'landlord') {
+      if (user.role === 'landlord' || user.role === 'super_admin') {
         res = await API.get('/rental/audit?limit=20');
       } else {
         res = await API.get('/rental/audit/my?limit=20');
@@ -182,10 +183,15 @@ const RentalAdminPortal = () => {
 
       const meData = await getRentalMe();
       const roleStr = (meData.role_name || meData.role || '').toLowerCase();
-      let defaultRoleId = roleStr === 'landlord' ? 7 : 8;
+      let defaultRoleId = 8;
+      if (roleStr === 'landlord') defaultRoleId = 7;
+      else if (roleStr === 'super_admin') defaultRoleId = 1;
 
       const userRoleId = Number(meData.role_id || defaultRoleId);
-      let mappedRole = roleStr === 'landlord' ? 'landlord' : 'tenant';
+      let mappedRole = roleStr;
+      if (roleStr !== 'landlord' && roleStr !== 'super_admin' && roleStr !== 'tenant') {
+        mappedRole = 'tenant';
+      }
 
       const freshUser = {
         ...meData,
@@ -202,7 +208,7 @@ const RentalAdminPortal = () => {
         localStorage.setItem('rental_user', JSON.stringify(freshUser));
       } catch (_) {}
 
-      if (freshUser.role === 'landlord') {
+      if (freshUser.role === 'landlord' || freshUser.role === 'super_admin') {
         try {
           const propRes = await API.get('/rental/properties');
           setProperties(propRes.data);
@@ -245,6 +251,7 @@ const RentalAdminPortal = () => {
 
     switch (activePage) {
       case 'dashboard':
+        if (role === 'super_admin') return <SuperAdminDashboard user={user} setActivePage={setActivePage} />;
         if (role === 'landlord') return <LandlordDashboard user={user} setActivePage={setActivePage} selectedPropertyFilterId={selectedPropertyFilterId} setSelectedPropertyFilterId={setSelectedPropertyFilterId} properties={properties} />;
         return <TenantDashboard user={user} setActivePage={setActivePage} />;
 
@@ -276,6 +283,7 @@ const RentalAdminPortal = () => {
         return <RentalAuditHistory user={user} />;
 
       default:
+        if (role === 'super_admin') return <SuperAdminDashboard user={user} setActivePage={setActivePage} />;
         if (role === 'landlord') return <LandlordDashboard user={user} setActivePage={setActivePage} selectedPropertyFilterId={selectedPropertyFilterId} setSelectedPropertyFilterId={setSelectedPropertyFilterId} properties={properties} />;
         return <TenantDashboard user={user} setActivePage={setActivePage} />;
     }

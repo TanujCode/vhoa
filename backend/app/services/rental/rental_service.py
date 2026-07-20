@@ -9,7 +9,6 @@ from app.models.rental.rental_ledger import RentalLedger
 from app.models.rental.rental_maintenance import RentalMaintenanceRequest
 from app.models.rental.rental_vendor import RentalVendor
 from app.models.rental.rental_user import RentalUser
-from app.models.hoa.user import Role
 from app.schemas.rental import PropertyCreate, UnitCreate, LeaseCreate, RentalApplicationCreate, RentalMaintenanceCreate, RentalVendorCreate, RentalApplicationInvite, RentalApplicationComplete
 from app.services.hoa.email_service import send_email, _wrap_in_responsive_layout
 
@@ -31,7 +30,9 @@ def create_property(landlord_id: int, data: PropertyCreate, db: Session) -> Prop
     return new_prop
 
 
-def get_properties(landlord_id: int, db: Session) -> List[Property]:
+def get_properties(landlord_id: int, db: Session, is_super_admin: bool = False) -> List[Property]:
+    if is_super_admin:
+        return db.query(Property).filter(Property.active_status == True).all()
     return db.query(Property).filter(
         Property.landlord_id == landlord_id,
         Property.active_status == True
@@ -41,12 +42,14 @@ def get_properties(landlord_id: int, db: Session) -> List[Property]:
 
 
 
-def update_property(property_id: int, landlord_id: int, data: PropertyCreate, db: Session) -> Property:
-    prop = db.query(Property).filter(
+def update_property(property_id: int, landlord_id: int, data: PropertyCreate, db: Session, is_super_admin: bool = False) -> Property:
+    query = db.query(Property).filter(
         Property.property_id == property_id,
-        Property.landlord_id == landlord_id,
         Property.active_status == True
-    ).first()
+    )
+    if not is_super_admin:
+        query = query.filter(Property.landlord_id == landlord_id)
+    prop = query.first()
     if not prop:
         raise ValueError("Property not found or access denied.")
     prop.name = data.name
@@ -59,12 +62,14 @@ def update_property(property_id: int, landlord_id: int, data: PropertyCreate, db
     return prop
 
 
-def delete_property(property_id: int, landlord_id: int, db: Session) -> None:
-    prop = db.query(Property).filter(
+def delete_property(property_id: int, landlord_id: int, db: Session, is_super_admin: bool = False) -> None:
+    query = db.query(Property).filter(
         Property.property_id == property_id,
-        Property.landlord_id == landlord_id,
         Property.active_status == True
-    ).first()
+    )
+    if not is_super_admin:
+        query = query.filter(Property.landlord_id == landlord_id)
+    prop = query.first()
     if not prop:
         raise ValueError("Property not found or access denied.")
     prop.active_status = False
@@ -96,24 +101,28 @@ def get_units_by_property(property_id: int, db: Session) -> List[Unit]:
 
 
 
-def delete_unit(unit_id: int, landlord_id: int, db: Session) -> None:
-    unit = db.query(Unit).join(Property).filter(
+def delete_unit(unit_id: int, landlord_id: int, db: Session, is_super_admin: bool = False) -> None:
+    query = db.query(Unit).join(Property).filter(
         Unit.unit_id == unit_id,
-        Property.landlord_id == landlord_id,
         Unit.active_status == True
-    ).first()
+    )
+    if not is_super_admin:
+        query = query.filter(Property.landlord_id == landlord_id)
+    unit = query.first()
     if not unit:
         raise ValueError("Unit not found or access denied.")
     unit.active_status = False
     db.commit()
 
 
-def update_unit(unit_id: int, landlord_id: int, data: UnitCreate, db: Session) -> Unit:
-    unit = db.query(Unit).join(Property).filter(
+def update_unit(unit_id: int, landlord_id: int, data: UnitCreate, db: Session, is_super_admin: bool = False) -> Unit:
+    query = db.query(Unit).join(Property).filter(
         Unit.unit_id == unit_id,
-        Property.landlord_id == landlord_id,
         Unit.active_status == True
-    ).first()
+    )
+    if not is_super_admin:
+        query = query.filter(Property.landlord_id == landlord_id)
+    unit = query.first()
     if not unit:
         raise ValueError("Unit not found or access denied.")
     unit.unit_number = data.unit_number
@@ -187,12 +196,31 @@ def create_lease_and_invite(landlord_id: int, data: LeaseCreate, db: Session) ->
     return new_lease
 
 
-def get_leases_by_landlord(landlord_id: int, db: Session) -> List[Lease]:
+def get_leases_by_landlord(landlord_id: int, db: Session, is_super_admin: bool = False) -> List[Lease]:
+    if is_super_admin:
+        return db.query(Lease).all()
     return db.query(Lease).filter(Lease.landlord_id == landlord_id).all()
 
 
 def get_leases_by_tenant(tenant_id: int, db: Session) -> List[Lease]:
-    return db.query(Lease).filter(Lease.tenant_id == tenant_id).all()
+    tenant_user = db.query(RentalUser).filter(RentalUser.user_id == tenant_id).first()
+    email_clean = tenant_user.email_id.strip().lower() if (tenant_user and tenant_user.email_id) else None
+
+    from sqlalchemy import func
+    if email_clean:
+        leases = db.query(Lease).filter(
+            (Lease.tenant_id == tenant_id) | (func.lower(func.trim(Lease.tenant_email)) == email_clean)
+        ).all()
+    else:
+        leases = db.query(Lease).filter(Lease.tenant_id == tenant_id).all()
+
+    # Auto-link tenant_id if missing
+    for l in leases:
+        if not l.tenant_id and tenant_id:
+            l.tenant_id = tenant_id
+            db.commit()
+
+    return leases
 
 
 def sign_lease(lease_id: int, user_id: int, signature: str, signing_as: str, db: Session) -> Lease:
@@ -317,7 +345,9 @@ def _calculate_mock_fico_score(
 
 def submit_rental_application(data: RentalApplicationCreate, db: Session) -> RentalApplication:
     unit = db.query(Unit).filter(Unit.unit_id == data.unit_id).first()
-    rent_amount = unit.rent_amount if unit else 1000.0
+    if not unit:
+        raise ValueError("Selected rental unit does not exist or is no longer available.")
+    rent_amount = unit.rent_amount if unit.rent_amount else 1000.0
     
     credit_score = _calculate_mock_fico_score(
         unit_rent=rent_amount,
@@ -347,7 +377,9 @@ def submit_rental_application(data: RentalApplicationCreate, db: Session) -> Ren
     return new_app
 
 
-def get_applications_by_landlord(landlord_id: int, db: Session) -> List[RentalApplication]:
+def get_applications_by_landlord(landlord_id: int, db: Session, is_super_admin: bool = False) -> List[RentalApplication]:
+    if is_super_admin:
+        return db.query(RentalApplication).all()
     return db.query(RentalApplication).join(Unit).join(Property).filter(
         Property.landlord_id == landlord_id
     ).all()
@@ -585,7 +617,9 @@ def get_maintenance_requests_by_lease(lease_id: int, db: Session) -> List[Rental
     return db.query(RentalMaintenanceRequest).filter(RentalMaintenanceRequest.lease_id == lease_id).all()
 
 
-def get_maintenance_requests_by_landlord(landlord_id: int, db: Session) -> List[RentalMaintenanceRequest]:
+def get_maintenance_requests_by_landlord(landlord_id: int, db: Session, is_super_admin: bool = False) -> List[RentalMaintenanceRequest]:
+    if is_super_admin:
+        return db.query(RentalMaintenanceRequest).all()
     return db.query(RentalMaintenanceRequest).join(Lease).filter(Lease.landlord_id == landlord_id).all()
 
 
@@ -614,6 +648,53 @@ def update_maintenance_request(request_id: int, status: str, vendor_id: Optional
     db.commit()
     db.refresh(requestObj)
     return requestObj
+
+
+def tenant_update_maintenance_request(request_id: int, user_id: int, title: str, description: str, priority: str, db: Session) -> RentalMaintenanceRequest:
+    req = db.query(RentalMaintenanceRequest).filter(RentalMaintenanceRequest.request_id == request_id).first()
+    if not req:
+        raise ValueError("Maintenance request not found.")
+    
+    if (req.status or "").upper() != "OPEN":
+        raise ValueError("This request is already in progress, assigned to a vendor, or approved. You cannot update it directly. Please send a note to your landlord.")
+    
+    req.title = title
+    req.description = description
+    req.priority = priority
+    db.commit()
+    db.refresh(req)
+    return req
+
+
+def cancel_maintenance_request(request_id: int, user_id: int, db: Session) -> RentalMaintenanceRequest:
+    req = db.query(RentalMaintenanceRequest).filter(RentalMaintenanceRequest.request_id == request_id).first()
+    if not req:
+        raise ValueError("Maintenance request not found.")
+    
+    if (req.status or "").upper() in ["COMPLETED", "CANCELLED"]:
+        raise ValueError(f"Cannot cancel a request that is already {req.status}.")
+    
+    req.status = "CANCELLED"
+    db.commit()
+    db.refresh(req)
+    return req
+
+
+def add_tenant_note_to_maintenance(request_id: int, note_text: str, user_id: int, db: Session) -> RentalMaintenanceRequest:
+    req = db.query(RentalMaintenanceRequest).filter(RentalMaintenanceRequest.request_id == request_id).first()
+    if not req:
+        raise ValueError("Maintenance request not found.")
+    
+    timestamp = datetime.now().strftime("%b %d, %Y %I:%M %p")
+    new_note = f"[{timestamp}] {note_text.strip()}"
+    if req.tenant_notes:
+        req.tenant_notes = f"{req.tenant_notes}\n{new_note}"
+    else:
+        req.tenant_notes = new_note
+    
+    db.commit()
+    db.refresh(req)
+    return req
 
 
 def pay_maintenance_request(request_id: int, payment_method: str, db: Session) -> RentalMaintenanceRequest:
@@ -679,15 +760,17 @@ def create_rental_vendor(landlord_id: int, data: RentalVendorCreate, db: Session
     return new_vendor
 
 
-def get_rental_vendors(landlord_id: int, db: Session) -> List[RentalVendor]:
+def get_rental_vendors(landlord_id: int, db: Session, is_super_admin: bool = False) -> List[RentalVendor]:
+    if is_super_admin:
+        return db.query(RentalVendor).all()
     return db.query(RentalVendor).filter(RentalVendor.landlord_id == landlord_id).all()
 
 
-def delete_rental_vendor(vendor_id: int, landlord_id: int, db: Session):
-    vendor = db.query(RentalVendor).filter(
-        RentalVendor.vendor_id == vendor_id,
-        RentalVendor.landlord_id == landlord_id
-    ).first()
+def delete_rental_vendor(vendor_id: int, landlord_id: int, db: Session, is_super_admin: bool = False):
+    query = db.query(RentalVendor).filter(RentalVendor.vendor_id == vendor_id)
+    if not is_super_admin:
+        query = query.filter(RentalVendor.landlord_id == landlord_id)
+    vendor = query.first()
     if not vendor:
         raise ValueError("Vendor not found.")
     db.delete(vendor)

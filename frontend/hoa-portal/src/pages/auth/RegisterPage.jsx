@@ -12,7 +12,20 @@ import { formatPhoneAsYouType } from '../../utils/phoneFormatter';
 export default function RegisterPage() {
   const [searchParams] = useSearchParams();
   const roleFromUrl = searchParams.get('role') || 'resident';
-  
+
+  const {
+    register,
+    handleSubmit,
+    watch,
+    setValue,
+    formState: { errors, isSubmitting },
+  } = useForm({
+    mode: 'onTouched',
+    defaultValues: {
+      mobileNumberOnly: ''
+    }
+  });
+
   const [selectedRole, setSelectedRole] = useState(roleFromUrl);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -56,19 +69,6 @@ export default function RegisterPage() {
   useEffect(() => {
     API.get('/auth/captcha', { timeout: 2000 }).catch(() => {});
   }, []);
-
-  const {
-    register,
-    handleSubmit,
-    watch,
-    setValue,
-    formState: { errors, isSubmitting },
-  } = useForm({
-    mode: 'onTouched',
-    defaultValues: {
-      mobileNumberOnly: ''
-    }
-  });
 
   // Password value track karne ke liye for confirm password match
   const password = watch('password');

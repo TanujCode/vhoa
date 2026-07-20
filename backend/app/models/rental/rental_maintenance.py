@@ -18,6 +18,7 @@ class RentalMaintenanceRequest(Base):
     payment_status = Column(String(30), default="N/A")  # N/A, UNPAID, PAID
     payment_method = Column(String(50), nullable=True)
     transaction_id = Column(String(255), nullable=True)
+    tenant_notes = Column(Text, nullable=True)
     created_date = Column(DateTime(timezone=True), server_default=func.now())
 
     # Relationships

@@ -21,7 +21,7 @@ const RentalAuditHistory = ({ user }) => {
   const [viewMode, setViewMode]       = useState('all');
 
   const role    = (user?.role_name || user?.role || '').toLowerCase();
-  const isAdmin = role === 'landlord';
+  const isAdmin = role === 'landlord' || role === 'super_admin';
 
   useEffect(() => {
     fetchLogs();

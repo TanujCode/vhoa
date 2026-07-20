@@ -24,39 +24,91 @@ def get_tenants(
     current_user: RentalUser = Depends(require_rental_role("super_admin", "landlord"))
 ):
     from app.models.rental.lease import Lease
-    # Join on Role using RentalUser.role_id
-    tenants = db.query(RentalUser).join(Role, RentalUser.role_id == Role.role_id).filter(Role.role_name == "tenant").all()
-    res = []
-    for t in tenants:
-        from sqlalchemy import func
-        active_lease = db.query(Lease).filter(
-            (Lease.tenant_id == t.user_id) | (func.lower(Lease.tenant_email) == func.lower(t.email_id.strip()))
-        ).filter(Lease.status.in_(["ACTIVE", "PENDING_SIGNATURE"])).first()
-        
-        unit_number = None
-        property_id = None
-        if active_lease and active_lease.unit:
-            unit_number = active_lease.unit.unit_number
-            property_id = active_lease.unit.property_id
-        elif hasattr(t, 'unit_no') and t.unit_no:
-            unit_number = t.unit_no
+    from app.services.rental import rental_service
 
-        res.append({
-            "user_id": t.user_id,
-            "user_code": t.user_code or f"USR{t.user_id:04d}",
-            "first_name": t.first_name,
-            "middle_name": t.middle_name,
-            "last_name": t.last_name,
-            "full_name": t.full_name,
-            "email_id": t.email_id,
-            "mobile_number": t.mobile_number,
-            "active_status": t.active_status,
-            "account_status": t.account_status,
-            "unit_no": unit_number,
-            "property_id": property_id,
-            "created_date": t.created_date.isoformat() if t.created_date else None
-        })
-    return res
+    is_super = current_user.role and current_user.role.role_name == "super_admin"
+
+    # 1. Get all leases for this landlord
+    leases = rental_service.get_leases_by_landlord(current_user.user_id, db, is_super_admin=is_super)
+
+    # 2. Get all registered users to link profile info
+    registered_users = db.query(RentalUser).all()
+    user_by_email = {u.email_id.strip().lower(): u for u in registered_users if u.email_id}
+    user_by_id = {u.user_id: u for u in registered_users}
+
+    tenant_map = {}
+
+    # A. Process all leases first so every lease tenant gets exact unit_no and property_id
+    for l in leases:
+        if not l.tenant_email and not l.tenant_id:
+            continue
+
+        email_clean = l.tenant_email.strip().lower() if l.tenant_email else None
+        linked_user = user_by_id.get(l.tenant_id) or (user_by_email.get(email_clean) if email_clean else None)
+
+        unit_number = l.unit.unit_number if l.unit else None
+        property_id = l.unit.property_id if l.unit else None
+
+        key = email_clean or (f"id_{l.tenant_id}" if l.tenant_id else f"lease_{l.lease_id}")
+
+        if linked_user:
+            tenant_map[key] = {
+                "user_id": linked_user.user_id,
+                "user_code": linked_user.user_code or f"USR{linked_user.user_id:04d}",
+                "first_name": linked_user.first_name,
+                "middle_name": linked_user.middle_name,
+                "last_name": linked_user.last_name,
+                "full_name": linked_user.full_name,
+                "email_id": linked_user.email_id,
+                "mobile_number": linked_user.mobile_number,
+                "active_status": linked_user.active_status,
+                "account_status": linked_user.account_status,
+                "unit_no": unit_number,
+                "property_id": property_id,
+                "created_date": linked_user.created_date.isoformat() if linked_user.created_date else None
+            }
+        else:
+            name_part = email_clean.split('@')[0] if email_clean else "Tenant"
+            tenant_map[key] = {
+                "user_id": f"lease_{l.lease_id}",
+                "user_code": f"TNT-{l.lease_id:04d}",
+                "first_name": name_part.capitalize(),
+                "middle_name": None,
+                "last_name": "",
+                "full_name": name_part.capitalize(),
+                "email_id": l.tenant_email,
+                "mobile_number": None,
+                "active_status": (l.status or "").upper() == "ACTIVE",
+                "account_status": l.status,
+                "unit_no": unit_number,
+                "property_id": property_id,
+                "created_date": l.created_date.isoformat() if l.created_date else None
+            }
+
+    # B. Also include any registered users with role "tenant" who don't have a lease yet
+    for t in registered_users:
+        role_name = t.role.role_name if t.role else ""
+        if role_name == "tenant":
+            e_clean = t.email_id.strip().lower() if t.email_id else ""
+            key_check = e_clean or f"id_{t.user_id}"
+            if key_check not in tenant_map:
+                tenant_map[key_check] = {
+                    "user_id": t.user_id,
+                    "user_code": t.user_code or f"USR{t.user_id:04d}",
+                    "first_name": t.first_name,
+                    "middle_name": t.middle_name,
+                    "last_name": t.last_name,
+                    "full_name": t.full_name,
+                    "email_id": t.email_id,
+                    "mobile_number": t.mobile_number,
+                    "active_status": t.active_status,
+                    "account_status": t.account_status,
+                    "unit_no": getattr(t, 'unit_no', None),
+                    "property_id": None,
+                    "created_date": t.created_date.isoformat() if t.created_date else None
+                }
+
+    return list(tenant_map.values())
 
 
 @router.put("/tenants/{tenant_id}/status")

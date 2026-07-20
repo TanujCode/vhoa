@@ -183,7 +183,7 @@ def rental_register(
             "token_type": "bearer",
             "role": body.role,
             "user_id": user.user_id,
-            "full_name": f"{user.first_name} {user.last_name}"
+            "full_name": f"{user.first_name or ''} {user.last_name or ''}".strip()
         }
     except Exception as e:
         if isinstance(e, HTTPException):
@@ -201,11 +201,31 @@ def rental_login(
         _verify_captcha(body.captcha_token, body.captcha_answer)
         user = db.query(RentalUser).filter(RentalUser.email_id == body.email_id.lower().strip()).first()
         if not user:
+            # Check if they exist in HOA users table as super_admin
+            from app.models.hoa.user import User
+            hoa_user = db.query(User).filter(User.email_id == body.email_id.lower().strip()).first()
+            if hoa_user and hoa_user.role and hoa_user.role.role_name == "super_admin":
+                user = RentalUser(
+                    first_name=hoa_user.first_name,
+                    middle_name=hoa_user.middle_name,
+                    last_name=hoa_user.last_name,
+                    email_id=hoa_user.email_id,
+                    email_id_is_verified=True,
+                    password=hoa_user.password,  # Copy same password hash
+                    role_id=1,  # super_admin
+                    account_status="ACTIVE",
+                    active_status=True
+                )
+                db.add(user)
+                db.commit()
+                db.refresh(user)
+
+        if not user:
             raise HTTPException(status_code=401, detail="Invalid email or password")
 
         # Check role_id on RentalUser
         rental_role_name = user.role.role_name if user.role else ""
-        if rental_role_name not in ["landlord", "tenant"]:
+        if rental_role_name not in ["landlord", "tenant", "super_admin"]:
             raise HTTPException(status_code=401, detail="This login page is for Rental users. Please use the HOA portal login or register for a rental account first.")
 
         result = login_rental_user(body.email_id, body.password, db)
@@ -218,7 +238,7 @@ def rental_login(
             "token_type": "bearer",
             "role": rental_role_name,
             "user_id": user.user_id,
-            "full_name": f"{user.first_name} {user.last_name}"
+            "full_name": f"{user.first_name or ''} {user.last_name or ''}".strip()
         }
     except Exception as e:
         if isinstance(e, HTTPException):
@@ -318,6 +338,25 @@ def rental_google_auth(
 
         email = email.lower().strip()
         user = db.query(RentalUser).filter(RentalUser.email_id == email).first()
+        if not user:
+            # Check if they exist in HOA users table as super_admin
+            from app.models.hoa.user import User
+            hoa_user = db.query(User).filter(User.email_id == email).first()
+            if hoa_user and hoa_user.role and hoa_user.role.role_name == "super_admin":
+                user = RentalUser(
+                    first_name=hoa_user.first_name,
+                    middle_name=hoa_user.middle_name,
+                    last_name=hoa_user.last_name,
+                    email_id=hoa_user.email_id,
+                    email_id_is_verified=True,
+                    password=hoa_user.password,  # Copy same password hash
+                    role_id=1,  # super_admin
+                    account_status="ACTIVE",
+                    active_status=True
+                )
+                db.add(user)
+                db.commit()
+                db.refresh(user)
         
         if user:
             if body.flow == "register":
@@ -327,7 +366,7 @@ def rental_google_auth(
                 if not user.active_status or user.account_status == "INACTIVE":
                     raise HTTPException(status_code=403, detail="Your account is inactive. Please contact support or your landlord.")
                 rental_role_name = user.role.role_name if user.role else ""
-                if rental_role_name not in ["landlord", "tenant"]:
+                if rental_role_name not in ["landlord", "tenant", "super_admin"]:
                     raise HTTPException(status_code=400, detail="This Google account does not have a rental account. Please register for the rental portal first.")
         else:
             if body.flow == "login":
@@ -375,7 +414,7 @@ def rental_google_auth(
             "token_type": "bearer",
             "role": rental_role_name,
             "user_id": user.user_id,
-            "full_name": f"{user.first_name} {user.last_name}"
+            "full_name": f"{user.first_name or ''} {user.last_name or ''}".strip()
         }
     except Exception as outer_err:
         traceback.print_exc()

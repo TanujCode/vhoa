@@ -115,8 +115,14 @@ export default function TenantsHub({ selectedPropertyFilterId = 'all' }) {
     }
   }
 
-  // Filter & Search logic
-  const filteredTenants = tenants.filter(t => {
+  // Filter by property first (for counts and stats)
+  const propertyFilteredTenants = tenants.filter(t => {
+    if (selectedPropertyFilterId === 'all') return true;
+    return String(t.property_id) === String(selectedPropertyFilterId);
+  });
+
+  // Filter & Search logic for table display
+  const filteredTenants = propertyFilteredTenants.filter(t => {
     const matchesSearch = 
       t.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       t.email_id?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -128,13 +134,11 @@ export default function TenantsHub({ selectedPropertyFilterId = 'all' }) {
       (statusFilter === 'ACTIVE' && t.active_status === true) ||
       (statusFilter === 'INACTIVE' && t.active_status === false);
 
-    const matchesProperty = selectedPropertyFilterId === 'all' || String(t.property_id) === String(selectedPropertyFilterId);
-
-    return matchesSearch && matchesStatus && matchesProperty;
+    return matchesSearch && matchesStatus;
   });
 
-  const totalCount = tenants.length;
-  const activeCount = tenants.filter(t => t.active_status).length;
+  const totalCount = propertyFilteredTenants.length;
+  const activeCount = propertyFilteredTenants.filter(t => t.active_status).length;
   const inactiveCount = totalCount - activeCount;
 
   if (loading) {

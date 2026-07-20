@@ -24,9 +24,21 @@ const RentalSidebar = ({ activePage, setActivePage, isOpen, setIsOpen, user }) =
     return name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
   };
 
+  // Super Admin Menu
+  const superAdminNavItems = [
+    { id: 'dashboard', label: 'Dashboard', icon: Layout },
+    { id: 'properties_hub', label: 'All Properties & Units', icon: Globe },
+    { id: 'screening_hub', label: 'Tenant Screening', icon: Users },
+    { id: 'leases_hub', label: 'Lease Agreements', icon: FileText },
+    { id: 'tenants_hub', label: 'Tenants Directory', icon: Users },
+    { id: 'rent_ledger', label: 'Payments Ledger', icon: CreditCard },
+    { id: 'servicereq', label: 'Maintenance Desk', icon: Wrench },
+    { id: 'vendors_hub', label: 'Contractors / Vendors', icon: Truck },
+  ];
+
   // Landlord Menu
   const landlordNavItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: Layout },
+    { id: 'dashboard', label: 'Landlord Dashboard', icon: Layout },
     { id: 'properties_hub', label: 'Properties & Units', icon: Globe },
     { id: 'screening_hub', label: 'Tenant Screening', icon: Users },
     { id: 'leases_hub', label: 'Lease Agreements', icon: FileText },
@@ -44,7 +56,12 @@ const RentalSidebar = ({ activePage, setActivePage, isOpen, setIsOpen, user }) =
     { id: 'servicereq', label: 'Maintenance Request', icon: Wrench },
   ];
 
-  const navItems = userRole === 'landlord' ? landlordNavItems : tenantNavItems;
+  let navItems = tenantNavItems;
+  if (userRole === 'super_admin') {
+    navItems = superAdminNavItems;
+  } else if (userRole === 'landlord') {
+    navItems = landlordNavItems;
+  }
 
   const getNavItemClass = (itemId) => {
     const isActive = activePage === itemId;
@@ -100,7 +117,7 @@ const RentalSidebar = ({ activePage, setActivePage, isOpen, setIsOpen, user }) =
                 <User size={18} /> My Profile
               </div>
 
-              {userRole === 'landlord' && (
+              {(userRole === 'landlord' || userRole === 'super_admin') && (
                 <div
                   onClick={() => { setActivePage('audit'); setIsOpen(false); }}
                   className={getNavItemClass('audit')}

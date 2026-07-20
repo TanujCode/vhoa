@@ -196,6 +196,16 @@ class RentalMaintenanceCreate(BaseModel):
     priority: str = "NORMAL"  # LOW, NORMAL, HIGH, URGENT
 
 
+class RentalMaintenanceTenantUpdate(BaseModel):
+    title: str
+    description: str
+    priority: str = "NORMAL"
+
+
+class RentalMaintenanceNoteRequest(BaseModel):
+    note: str
+
+
 class RentalMaintenanceOut(BaseModel):
     request_id: int
     lease_id: int
@@ -208,11 +218,14 @@ class RentalMaintenanceOut(BaseModel):
     payment_status: str
     payment_method: Optional[str] = None
     transaction_id: Optional[str] = None
+    tenant_notes: Optional[str] = None
     created_date: datetime
     
     # We can fetch company name inline dynamically
     vendor_company_name: Optional[str] = None
     property_id: Optional[int] = None
+    property_name: Optional[str] = None
+    submitted_by_name: Optional[str] = None
 
     class Config:
         from_attributes = True

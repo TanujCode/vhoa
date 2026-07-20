@@ -41,7 +41,7 @@ def rental_update_profile(
     db.commit()
     db.refresh(current_user)
     
-    return rental_get_me(current_user)
+    return rental_get_me(db=db, current_user=current_user)
 
 
 @router.post("/user/profile/picture")

@@ -22,7 +22,7 @@ LOCK_DURATION_MINUTES = 30
 def split_full_name(full_name: str) -> tuple[str, str | None, str]:
     parts = full_name.strip().split()
     if len(parts) == 1:
-        return parts[0], None, parts[0]
+        return parts[0], None, ""
     elif len(parts) == 2:
         return parts[0], None, parts[1]
     else:

@@ -20,8 +20,36 @@ def get_current_rental_user(
             detail="Rental session token may be invalid or expired.",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    user_id = int(payload.get("sub"))
-    user = db.query(RentalUser).filter(RentalUser.user_id == user_id).first()
+    email = payload.get("email")
+    role_name = payload.get("role")
+    user = None
+
+    if role_name == "super_admin" and email:
+        user = db.query(RentalUser).filter(RentalUser.email_id == email.lower().strip()).first()
+        if not user:
+            # Sync from users (HOA table)
+            from app.models.hoa.user import User
+            hoa_user = db.query(User).filter(User.email_id == email.lower().strip()).first()
+            if hoa_user:
+                user = RentalUser(
+                    first_name=hoa_user.first_name,
+                    middle_name=hoa_user.middle_name,
+                    last_name=hoa_user.last_name,
+                    email_id=hoa_user.email_id,
+                    email_id_is_verified=True,
+                    password=hoa_user.password,
+                    role_id=1, # super_admin
+                    account_status="ACTIVE",
+                    active_status=True
+                )
+                db.add(user)
+                db.commit()
+                db.refresh(user)
+
+    if not user:
+        user_id = int(payload.get("sub"))
+        user = db.query(RentalUser).filter(RentalUser.user_id == user_id).first()
+
     if not user:
         raise HTTPException(status_code=404, detail="User not found.")
     return user

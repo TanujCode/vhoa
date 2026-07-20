@@ -64,7 +64,8 @@ def list_properties(
     if rental_role == "tenant":
         from app.models.rental.property import Property
         return db.query(Property).filter(Property.active_status == True).all()
-    return rental_service.get_properties(current_user.user_id, db)
+    is_super_admin = (rental_role == "super_admin")
+    return rental_service.get_properties(current_user.user_id, db, is_super_admin=is_super_admin)
 
 
 @router.post("/units", response_model=UnitOut, status_code=201)
@@ -97,8 +98,10 @@ def update_property(
     db: Session = Depends(get_rental_db),
     current_user: RentalUser = Depends(require_rental_role("super_admin", "landlord"))
 ):
+    rental_role = current_user.role.role_name if current_user.role else ""
+    is_super_admin = (rental_role == "super_admin")
     try:
-        prop = rental_service.update_property(property_id, current_user.user_id, body, db)
+        prop = rental_service.update_property(property_id, current_user.user_id, body, db, is_super_admin=is_super_admin)
         log_rental_action(db, "UPDATE_PROPERTY", "rental", f"Property '{prop.name}' updated.", current_user.user_id)
         return prop
     except ValueError as e:
@@ -113,8 +116,10 @@ def delete_property(
     db: Session = Depends(get_rental_db),
     current_user: RentalUser = Depends(require_rental_role("super_admin", "landlord"))
 ):
+    rental_role = current_user.role.role_name if current_user.role else ""
+    is_super_admin = (rental_role == "super_admin")
     try:
-        rental_service.delete_property(property_id, current_user.user_id, db)
+        rental_service.delete_property(property_id, current_user.user_id, db, is_super_admin=is_super_admin)
         log_rental_action(db, "DELETE_PROPERTY", "rental", f"Property {property_id} soft deleted.", current_user.user_id)
         return {"detail": "Property deleted successfully"}
     except ValueError as e:
@@ -129,8 +134,10 @@ def delete_unit(
     db: Session = Depends(get_rental_db),
     current_user: RentalUser = Depends(require_rental_role("super_admin", "landlord"))
 ):
+    rental_role = current_user.role.role_name if current_user.role else ""
+    is_super_admin = (rental_role == "super_admin")
     try:
-        rental_service.delete_unit(unit_id, current_user.user_id, db)
+        rental_service.delete_unit(unit_id, current_user.user_id, db, is_super_admin=is_super_admin)
         log_rental_action(db, "DELETE_UNIT", "rental", f"Unit {unit_id} soft deleted.", current_user.user_id)
         return {"detail": "Unit deleted successfully"}
     except ValueError as e:
@@ -146,8 +153,10 @@ def update_unit(
     db: Session = Depends(get_rental_db),
     current_user: RentalUser = Depends(require_rental_role("super_admin", "landlord"))
 ):
+    rental_role = current_user.role.role_name if current_user.role else ""
+    is_super_admin = (rental_role == "super_admin")
     try:
-        unit = rental_service.update_unit(unit_id, current_user.user_id, body, db)
+        unit = rental_service.update_unit(unit_id, current_user.user_id, body, db, is_super_admin=is_super_admin)
         log_rental_action(db, "UPDATE_UNIT", "rental", f"Unit '{unit.unit_number}' updated.", current_user.user_id)
         return unit
     except ValueError as e:

@@ -33,7 +33,8 @@ def list_vendors_for_rental(
 ):
     rental_role = current_user.role.role_name if current_user.role else ""
     if rental_role in ["super_admin", "landlord"]:
-        return rental_service.get_rental_vendors(current_user.user_id, db)
+        is_super_admin = (rental_role == "super_admin")
+        return rental_service.get_rental_vendors(current_user.user_id, db, is_super_admin=is_super_admin)
     return []
 
 
@@ -43,8 +44,10 @@ def delete_rental_vendor(
     db: Session = Depends(get_rental_db),
     current_user: RentalUser = Depends(require_rental_role("super_admin", "landlord"))
 ):
+    rental_role = current_user.role.role_name if current_user.role else ""
+    is_super_admin = (rental_role == "super_admin")
     try:
-        rental_service.delete_rental_vendor(vendor_id, current_user.user_id, db)
+        rental_service.delete_rental_vendor(vendor_id, current_user.user_id, db, is_super_admin=is_super_admin)
         log_rental_action(db, "DELETE_RENTAL_VENDOR", "rental", f"Rental vendor {vendor_id} deleted.", current_user.user_id)
         return {"message": "Vendor deleted successfully."}
     except ValueError as e:

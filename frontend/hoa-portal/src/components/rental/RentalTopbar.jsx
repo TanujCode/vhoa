@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { 
-  Sun, Moon, User, LogOut, ChevronDown, Menu, Building2, Bell, ArrowLeft, RefreshCw, Search
+  Sun, Moon, User, LogOut, ChevronDown, Menu, Building2, Bell, ArrowLeft, RefreshCw, Search, ArrowLeftRight
 } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 import { getBaseUrl } from '../../services/api';
@@ -63,7 +63,7 @@ const RentalTopbar = ({
 
       {/* Workspace Indicator / Property Dropdown */}
       <div className="relative flex-1 lg:flex-none min-w-0">
-        {user?.role === 'landlord' && properties.length > 0 ? (
+        {(user?.role === 'landlord' || user?.role === 'super_admin') && properties.length > 0 ? (
           <div 
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
             className="flex items-center gap-1.5 sm:gap-3 select-none cursor-pointer group"
@@ -110,7 +110,7 @@ const RentalTopbar = ({
         )}
 
         {/* Dropdown Popover Menu */}
-        {isDropdownOpen && user?.role === 'landlord' && (
+        {isDropdownOpen && (user?.role === 'landlord' || user?.role === 'super_admin') && (
           <>
             <div className="fixed inset-0 z-40" onClick={() => setIsDropdownOpen(false)} />
             <div className="absolute top-[calc(100%+12px)] left-0 w-72 bg-white dark:bg-[#1E3248] border border-slate-200 dark:border-white/20 rounded-3xl shadow-2xl z-50 p-3 space-y-2 animate-in fade-in slide-in-from-top-2 text-left">
@@ -177,6 +177,32 @@ const RentalTopbar = ({
 
       {/* Right Side Actions */}
       <div className="ml-auto flex items-center gap-1 sm:gap-2 lg:gap-4 flex-shrink-0">
+        {user?.role === 'super_admin' && (
+          <button
+            onClick={() => {
+              const token = localStorage.getItem('rental_token') || sessionStorage.getItem('rental_token');
+              const sessionToken = localStorage.getItem('rental_session_token') || sessionStorage.getItem('rental_session_token');
+              const userObj = localStorage.getItem('rental_user') || sessionStorage.getItem('rental_user');
+
+              if (token) localStorage.setItem('token', token);
+              if (sessionToken) localStorage.setItem('session_token', sessionToken);
+              if (userObj) {
+                const parsed = JSON.parse(userObj);
+                localStorage.setItem('user', JSON.stringify({
+                  ...parsed,
+                  role: 'super_admin',
+                  role_name: 'super_admin'
+                }));
+              }
+              window.location.href = '/dashboard';
+            }}
+            className="flex px-3 py-2 bg-indigo-500/10 dark:bg-indigo-500/25 border-2 border-indigo-500/30 hover:border-indigo-500 hover:bg-indigo-500 hover:text-white text-indigo-700 dark:text-indigo-400 dark:hover:text-white dark:hover:bg-indigo-500 rounded-2xl text-xs font-bold transition-all duration-200 items-center gap-1.5 shadow-sm active:scale-95"
+            title="Switch to HOA Portal"
+          >
+            <ArrowLeftRight size={14} />
+            <span className="hidden md:inline">Switch to HOA Portal</span>
+          </button>
+        )}
         
         <button
           onClick={() => window.location.reload()}

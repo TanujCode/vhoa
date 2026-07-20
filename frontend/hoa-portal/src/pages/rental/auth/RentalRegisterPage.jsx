@@ -13,6 +13,20 @@ export default function RentalRegisterPage() {
   const [searchParams] = useSearchParams();
   const roleFromUrl = searchParams.get('role') || 'landlord';
   const emailFromUrl = searchParams.get('email') || '';
+
+  const {
+    register,
+    handleSubmit,
+    watch,
+    setValue,
+    formState: { errors, isSubmitting },
+  } = useForm({
+    mode: 'onTouched',
+    defaultValues: {
+      email: emailFromUrl,
+      mobileNumberOnly: ''
+    }
+  });
   
   const [selectedRole, setSelectedRole] = useState(roleFromUrl);
   const [showPassword, setShowPassword] = useState(false);
@@ -72,19 +86,6 @@ export default function RentalRegisterPage() {
         });
     }
   }, [emailFromUrl, setValue, navigate]);
-
-  const {
-    register,
-    handleSubmit,
-    watch,
-    setValue,
-    formState: { errors, isSubmitting },
-  } = useForm({
-    mode: 'onTouched',
-    defaultValues: {
-      mobileNumberOnly: ''
-    }
-  });
 
   const password = watch('password');
 

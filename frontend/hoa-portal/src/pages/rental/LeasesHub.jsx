@@ -65,6 +65,7 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all' }) {
 
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [formErrors, setFormErrors] = useState({});
+  const [errorMsg, setErrorMsg] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const canSignAsPrimary = selectedLease && isLandlord && !selectedLease.landlord_signature;
   const isUserPrimaryLandlord = selectedLease && selectedLease.landlord_signature && 
@@ -176,6 +177,16 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all' }) {
   }, [selectedTemplate, rentAmount, deposit, startDate, endDate, gracePeriod, feeAmount, tenantEmail, selectedUnitId, showCreateModal, units, utilFee, parkingFee, petFee]);
 
   useEffect(() => {
+    if (selectedUnitId && units.length > 0) {
+      const u = units.find(item => item.unit_id === parseInt(selectedUnitId));
+      if (u && u.rent_amount) {
+        setRentAmount(u.rent_amount.toString());
+        setDeposit(u.rent_amount.toString());
+      }
+    }
+  }, [selectedUnitId, units]);
+
+  useEffect(() => {
     if (selectedLease) {
       if (selectedLease.landlord_signature && !selectedLease.co_landlord_signature) {
         setSigningAsRole('co_landlord');
@@ -279,7 +290,9 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all' }) {
       setFormErrors({});
       toast.success("Lease agreement created successfully!");
     } catch (err) {
-      toast.error(err.response?.data?.detail || "Failed to create lease.");
+      const msg = err.response?.data?.detail || "Failed to create lease.";
+      setErrorMsg(msg);
+      toast.error(msg);
     }
   }
 
