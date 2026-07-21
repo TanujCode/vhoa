@@ -61,7 +61,7 @@ const DocumentModal = ({ communityId, onClose, onSuccess }) => {
           )}
 
           <div>
-            <label className="block text-xs font-bold text-slate-500 dark:text-gray-400 uppercase tracking-wider mb-2">Document Name *</label>
+            <label className="block text-xs font-bold text-slate-500 dark:text-gray-400 uppercase tracking-wider mb-2">Document Name <span className="text-red-500">*</span></label>
             <input
               type="text"
               required
@@ -73,7 +73,7 @@ const DocumentModal = ({ communityId, onClose, onSuccess }) => {
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-slate-500 dark:text-gray-400 uppercase tracking-wider mb-2">Document Type *</label>
+            <label className="block text-xs font-bold text-slate-500 dark:text-gray-400 uppercase tracking-wider mb-2">Document Type <span className="text-red-500">*</span></label>
             <div className="relative">
               <select
                 value={form.document_type}
@@ -89,7 +89,7 @@ const DocumentModal = ({ communityId, onClose, onSuccess }) => {
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-slate-500 dark:text-gray-400 uppercase tracking-wider mb-2">Select File *</label>
+            <label className="block text-xs font-bold text-slate-500 dark:text-gray-400 uppercase tracking-wider mb-2">Select File <span className="text-red-500">*</span></label>
             <div className="border-2 border-dashed border-slate-200 dark:border-white/10 rounded-2xl p-6 text-center hover:bg-slate-50 dark:hover:bg-white/5 transition relative cursor-pointer group">
               <input
                 type="file"

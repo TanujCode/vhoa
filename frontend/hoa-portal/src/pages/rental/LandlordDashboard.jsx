@@ -231,28 +231,24 @@ export default function LandlordDashboard({
     }
   });
 
-  // Fallback / Simulated history if portfolio has zero transactions to ensure stunning visualization.
-  // ONLY populates if the selected property has units (if total units is 0, we show absolute 0.00 everywhere).
-  const totalIncomeGenerated = cashflowMonths.reduce((s, m) => s + m.income, 0);
-  const totalExpensesGenerated = cashflowMonths.reduce((s, m) => s + m.expenses, 0);
-  
-  if (totalIncomeGenerated === 0 && totalExpensesGenerated === 0) {
-    const mult = totalUnitsCount; // Scale directly by the number of units in the filtered scope
-    if (mult > 0) {
-      cashflowMonths[0].income = 3200 * mult; cashflowMonths[0].expenses = 820 * mult;
-      cashflowMonths[1].income = 4800 * mult; cashflowMonths[1].expenses = 1450 * mult;
-      cashflowMonths[2].income = 4100 * mult; cashflowMonths[2].expenses = 600 * mult;
-      cashflowMonths[3].income = 5900 * mult; cashflowMonths[3].expenses = 2100 * mult;
-      cashflowMonths[4].income = 5100 * mult; cashflowMonths[4].expenses = 980 * mult;
-      cashflowMonths[5].income = 6876 * mult; cashflowMonths[5].expenses = 140.87 * mult;
-    }
-  }
+  // --- Calculate Real Portfolio Financial Metrics ---
+  const totalMonthlyRent = filteredUnits.reduce((sum, u) => sum + (Number(u.rent_amount) || 0), 0);
+  const annualGrossRent = totalMonthlyRent * 12;
 
-  // Calculate portfolio asset values
-  const simulatedPortfolioValuation = totalUnitsCount * 280000;
-  const simulatedPortfolioPurchase = totalUnitsCount * 220000;
-  const simulatedPortfolioGain = simulatedPortfolioValuation - simulatedPortfolioPurchase;
-  const simulatedGainPercent = simulatedPortfolioPurchase > 0 ? ((simulatedPortfolioGain / simulatedPortfolioPurchase) * 100).toFixed(1) : "0.0";
+  const activeLeases = leases.filter(l => propertyFilter(l) && l.status === 'ACTIVE');
+  const activeLeasesAnnualRent = activeLeases.reduce((sum, l) => sum + ((Number(l.rent_amount) || 0) * 12), 0);
+  const totalSecurityDeposits = activeLeases.reduce((sum, l) => sum + (Number(l.security_deposit) || 0), 0);
+
+  const totalRevenueCollected = ledgers
+    .filter(l => propertyFilter(l) && l.status === 'PAID')
+    .reduce((sum, l) => sum + (Number(l.amount) || 0), 0);
+
+  const totalMaintenanceExpenses = maintRequests
+    .filter(m => propertyFilter(m) && (m.status === 'COMPLETED' || m.payment_status === 'PAID'))
+    .reduce((sum, m) => sum + (Number(m.estimated_cost) || 0), 0);
+
+  const contractedYieldPercent = annualGrossRent > 0 ? ((activeLeasesAnnualRent / annualGrossRent) * 100).toFixed(1) : "0.0";
+
 
   // --- SVG Chart Calculations ---
   // Find max value in cashflow to scale bars
@@ -849,23 +845,25 @@ export default function LandlordDashboard({
           </div>
         </div>
 
-        {/* Analytics 3: Valuation / Net Worth Portfolio Card */}
+        {/* Analytics 3: Real Portfolio Valuation & Revenue Card */}
         <div className="p-6 rounded-3xl bg-white dark:bg-slate-900/60 dark:backdrop-blur-md border border-slate-200/60 dark:border-white/[0.05] shadow-sm flex flex-col justify-between">
           <div>
             <div className="flex justify-between items-start">
               <div>
-                <h3 className="text-base font-black text-gray-900 dark:text-white mb-1">Net Worth / Portfolio</h3>
-                <p className="text-[11px] text-gray-500 dark:text-gray-400">Asset values based on local estimates</p>
+                <h3 className="text-base font-black text-gray-900 dark:text-white mb-1">Portfolio Valuation</h3>
+                <p className="text-[11px] text-gray-500 dark:text-gray-400">Based on active units & rental contracts</p>
               </div>
               <span className="bg-emerald-500/10 text-emerald-500 text-[10px] font-black px-2 py-0.5 rounded-md flex items-center gap-0.5">
-                <TrendingUp className="w-3.5 h-3.5" /> +{simulatedGainPercent}%
+                <TrendingUp className="w-3.5 h-3.5" /> +{contractedYieldPercent}% Leased
               </span>
             </div>
 
             <div className="mt-5">
-              <span className="text-3xl font-black text-slate-950 dark:text-white font-mono">${simulatedPortfolioValuation.toLocaleString()}</span>
+              <span className="text-3xl font-black text-slate-950 dark:text-white font-mono">
+                ${annualGrossRent.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </span>
               <span className="text-[10px] font-bold text-emerald-500 block mt-1">
-                +${simulatedPortfolioGain.toLocaleString()} net gain since purchase
+                +${totalRevenueCollected.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} rent collected to date
               </span>
             </div>
           </div>
@@ -873,15 +871,20 @@ export default function LandlordDashboard({
           <div className="mt-5 space-y-3.5">
             <div>
               <div className="flex justify-between items-center text-[10px] font-bold text-gray-400 mb-1">
-                <span>Purchase Price / Valuation ratio</span>
-                <span>${simulatedPortfolioPurchase.toLocaleString()} of ${simulatedPortfolioValuation.toLocaleString()}</span>
+                <span>Contracted Rent vs Potential</span>
+                <span>${activeLeasesAnnualRent.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} of ${annualGrossRent.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
               </div>
               <div className="w-full bg-slate-100 dark:bg-white/5 h-2 rounded-full overflow-hidden">
                 <div 
-                  className="bg-blue-600 h-full rounded-full" 
-                  style={{ width: `${simulatedPortfolioPurchase > 0 ? (simulatedPortfolioPurchase / simulatedPortfolioValuation) * 100 : 0}%` }}
+                  className="bg-blue-600 h-full rounded-full transition-all duration-700" 
+                  style={{ width: `${annualGrossRent > 0 ? Math.min(100, (activeLeasesAnnualRent / annualGrossRent) * 100) : 0}%` }}
                 ></div>
               </div>
+            </div>
+
+            <div className="pt-2 border-t border-slate-100 dark:border-white/[0.04] flex justify-between items-center text-[10px] font-bold text-gray-500 dark:text-gray-400">
+              <span>Deposits: <strong className="text-slate-800 dark:text-white">${totalSecurityDeposits.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong></span>
+              <span>Expenses: <strong className="text-rose-500">${totalMaintenanceExpenses.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong></span>
             </div>
           </div>
         </div>

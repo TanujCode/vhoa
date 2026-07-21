@@ -25,6 +25,7 @@ const Topbar = ({
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   const { theme, toggleTheme } = useTheme();
 
@@ -48,7 +49,7 @@ const Topbar = ({
   );
 
   const handleLogout = () => {
-    const keys = ['token', 'session_token', 'access_token', 'user'];
+    const keys = ['token', 'session_token', 'access_token', 'user', 'view_as_resident'];
     keys.forEach(k => {
       localStorage.removeItem(k);
       sessionStorage.removeItem(k);
@@ -307,7 +308,10 @@ const Topbar = ({
                 </button>
 
                 <button 
-                  onClick={handleLogout}
+                  onClick={() => {
+                    setIsUserDropdownOpen(false);
+                    setShowLogoutConfirm(true);
+                  }}
                   className="w-full px-4 py-2.5 hover:bg-red-500/10 rounded-2xl flex items-center gap-3 text-sm text-red-500 transition-colors mt-1"
                 >
                   <LogOut size={16} /> Logout
@@ -324,6 +328,37 @@ const Topbar = ({
           onClose={() => setShowAddModal(false)} 
           onSuccess={() => window.location.reload()} 
         />
+      )}
+
+      {/* Confirmation Modal before Logging out */}
+      {showLogoutConfirm && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[200] flex items-center justify-center p-4 animate-in fade-in zoom-in-95 duration-200">
+          <div className="bg-white dark:bg-gradient-to-br dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 w-full max-w-sm text-center shadow-2xl text-slate-900 dark:text-white">
+            <div className="w-14 h-14 bg-red-500/10 dark:bg-red-500/20 text-red-600 dark:text-red-400 rounded-full flex items-center justify-center mx-auto mb-4 border border-red-500/20">
+              <LogOut size={28} />
+            </div>
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">Confirm Logout</h3>
+            <p className="text-xs text-slate-500 dark:text-gray-400 mb-6 leading-relaxed">
+              Are you sure you want to log out of your session? You will need to sign back in to access your portal.
+            </p>
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => setShowLogoutConfirm(false)}
+                className="flex-1 py-3 px-4 rounded-2xl text-xs font-bold bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 text-slate-700 dark:text-gray-200 transition cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="flex-1 py-3 px-4 rounded-2xl text-xs font-bold bg-red-600 hover:bg-red-500 text-white shadow-lg shadow-red-500/25 transition cursor-pointer"
+              >
+                Yes, Logout
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </header>
   );

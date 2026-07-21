@@ -785,7 +785,7 @@ const Members = ({ community }) => {
             <div className="p-6 space-y-4 overflow-y-auto custom-scrollbar flex-1">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs text-slate-500 dark:text-gray-400 mb-1">First Name *</label>
+                  <label className="block text-xs text-slate-500 dark:text-gray-400 mb-1">First Name <span className="text-red-500">*</span></label>
                   <input
                     type="text"
                     value={editForm.firstName}
@@ -801,7 +801,7 @@ const Members = ({ community }) => {
                   {editErrors.firstName && <p className="text-red-500 text-xs mt-1">{editErrors.firstName}</p>}
                 </div>
                 <div>
-                  <label className="block text-xs text-slate-500 dark:text-gray-400 mb-1">Last Name *</label>
+                  <label className="block text-xs text-slate-500 dark:text-gray-400 mb-1">Last Name <span className="text-red-500">*</span></label>
                   <input
                     type="text"
                     value={editForm.lastName}
@@ -819,7 +819,7 @@ const Members = ({ community }) => {
               </div>
 
               <div>
-                <label className="block text-xs text-slate-500 dark:text-gray-400 mb-1">Email Address *</label>
+                <label className="block text-xs text-slate-500 dark:text-gray-400 mb-1">Email Address <span className="text-red-500">*</span></label>
                 <input
                   type="email"
                   value={editForm.email}

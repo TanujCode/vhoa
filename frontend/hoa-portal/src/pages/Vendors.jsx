@@ -604,7 +604,7 @@ const Vendors = ({ communityId, userRole, user }) => {
               
               <form onSubmit={handleOnboard} className="space-y-4">
                 <div>
-                  <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Company Name *</label>
+                  <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Company Name <span className="text-red-500">*</span></label>
                   <input 
                     required 
                     className={`w-full bg-slate-50 dark:bg-[#111c2a] border ${errors.company_name ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/10 focus:border-blue-500'} rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none`} 
@@ -620,7 +620,7 @@ const Vendors = ({ communityId, userRole, user }) => {
                 </div>
 
                 <div>
-                  <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Contact Person *</label>
+                  <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Contact Person <span className="text-red-500">*</span></label>
                   <input 
                     required 
                     className={`w-full bg-slate-50 dark:bg-[#111c2a] border ${errors.contact_person ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/10 focus:border-blue-500'} rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none`} 
@@ -636,7 +636,7 @@ const Vendors = ({ communityId, userRole, user }) => {
                 </div>
 
                 <div>
-                  <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Phone *</label>
+                  <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Phone <span className="text-red-500">*</span></label>
                   <input
                     required
                     type="text"
@@ -657,7 +657,7 @@ const Vendors = ({ communityId, userRole, user }) => {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Service Type *</label>
+                    <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Service Type <span className="text-red-500">*</span></label>
                     <select className="w-full bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:border-blue-500 outline-none" value={formData.service_type} onChange={(e) => setFormData({...formData, service_type: e.target.value})}>
                       <option value="PLUMBING" className="bg-white dark:bg-[#111c2a] text-slate-900 dark:text-white">Plumbing</option>
                       <option value="ELECTRICAL" className="bg-white dark:bg-[#111c2a] text-slate-900 dark:text-white">Electrical</option>
@@ -668,7 +668,7 @@ const Vendors = ({ communityId, userRole, user }) => {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Email *</label>
+                    <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Email <span className="text-red-500">*</span></label>
                     <input 
                       type="email" 
                       required 
@@ -688,7 +688,7 @@ const Vendors = ({ communityId, userRole, user }) => {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">License Number *</label>
+                    <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">License Number <span className="text-red-500">*</span></label>
                     <input required className="w-full bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:border-blue-500 outline-none" value={formData.license_number} onChange={(e) => setFormData({...formData, license_number: e.target.value})} />
                   </div>
                   <div>
@@ -698,7 +698,7 @@ const Vendors = ({ communityId, userRole, user }) => {
                 </div>
 
                 <div>
-                  <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Insurance Number *</label>
+                  <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Insurance Number <span className="text-red-500">*</span></label>
                   <input 
                     required
                     className="w-full bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:border-blue-500 outline-none" 

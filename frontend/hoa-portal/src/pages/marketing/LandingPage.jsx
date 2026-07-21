@@ -596,7 +596,7 @@ function MeetingsOperationsConsole() {
   const isDark = theme === 'dark';
 
   return (
-    <div className={`w-full rounded-3xl overflow-hidden shadow-2xl border transition-all ${isDark ? 'shadow-violet-900/30 border-white/[0.08]' : 'shadow-slate-200/80 border-slate-200'} relative h-[482px] flex flex-col justify-between`} style={{ background: isDark ? 'linear-gradient(145deg, #0a0618 0%, #0d1030 50%, #080e1a 100%)' : 'linear-gradient(145deg, #f8fafc 0%, #f1f5f9 50%, #e2e8f0 100%)' }}>
+    <div className={`w-full rounded-3xl overflow-hidden shadow-2xl border transition-all ${isDark ? 'shadow-violet-900/30 border-white/[0.08]' : 'shadow-slate-200/80 border-slate-200'} relative h-[460px] flex flex-col justify-between`} style={{ background: isDark ? 'linear-gradient(145deg, #0a0618 0%, #0d1030 50%, #080e1a 100%)' : 'linear-gradient(145deg, #f8fafc 0%, #f1f5f9 50%, #e2e8f0 100%)' }}>
 
       {/* Ambient glow orbs inside the card */}
       {isDark && (
@@ -606,8 +606,8 @@ function MeetingsOperationsConsole() {
         </>
       )}
 
-      {/* Header — glassmorphic / responsive */}
-      <div className={`relative px-5 pt-5 pb-4 flex items-center justify-between border-b shrink-0 ${isDark ? 'bg-white/[0.03] border-white/[0.06]' : 'bg-slate-50/50 border-slate-200'}`}>
+      {/* Header */}
+      <div className={`relative px-5 py-3.5 flex items-center justify-between border-b shrink-0 h-[64px] ${isDark ? 'bg-white/[0.03] border-white/[0.06]' : 'bg-slate-50/50 border-slate-200'}`}>
         <div className="flex items-center gap-3">
           <div className="relative">
             <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-violet-500/30">
@@ -619,36 +619,32 @@ function MeetingsOperationsConsole() {
             <p className="text-[10px] text-slate-400 mt-0.5">E-voting, RSVP and audio logs</p>
           </div>
         </div>
-        {/* Status pills */}
         <div className="flex items-center gap-2">
-          <span className="flex items-center gap-1.5 text-[10px] font-bold text-violet-600 dark:text-violet-305 bg-violet-500/10 border border-violet-250/20 dark:border-violet-500/20 px-2.5 py-1 rounded-full">
+          <span className="flex items-center gap-1.5 text-[10px] font-bold text-violet-600 dark:text-violet-350 bg-violet-500/10 border border-violet-500/20 px-2.5 py-1 rounded-full">
             Active Resol.
           </span>
         </div>
       </div>
 
-      {/* Metrics Row */}
-      <div className={`grid grid-cols-3 border-b shrink-0 ${isDark ? 'divide-white/[0.05] bg-white/[0.02] border-white/[0.05]' : 'divide-slate-200/80 bg-slate-50 border-slate-200'}`}>
-        {[
-          { label: 'RSVP Rate', val: '92.5%', desc: 'High attendance', color: 'text-violet-650 dark:text-violet-400', glow: isDark ? 'from-violet-500/20 to-transparent' : 'from-violet-500/10 to-transparent' },
-          { label: 'Transcribed', val: '14 Meetings', desc: 'Diarized speakers', color: 'text-emerald-600 dark:text-emerald-400', glow: isDark ? 'from-emerald-500/20 to-transparent' : 'from-emerald-500/10 to-transparent' },
-          { label: 'Quorum Met', val: '100%', desc: 'Valid resolutions', color: 'text-amber-600 dark:text-amber-400', glow: isDark ? 'from-amber-500/20 to-transparent' : 'from-amber-500/10 to-transparent' }
-        ].map((m, i) => (
-          <div key={i} className="relative p-3 text-center overflow-hidden">
-            <div className={`absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r ${m.glow}`} />
-            <div className={`text-base font-black ${m.color} tracking-tight`}>{m.val}</div>
-            <div className={`text-[9px] font-bold mt-0.5 ${isDark ? 'text-white/80' : 'text-slate-700'}`}>{m.label}</div>
-            <div className="text-[8px] text-slate-500 mt-0.5">{m.desc}</div>
-          </div>
-        ))}
-      </div>
-
-      {/* Conversation Feed / Logs */}
-      <div className="p-4 space-y-2.5 overflow-y-auto flex-1 custom-scrollbar">
+      {/* Main Content Body */}
+      <div className="p-4 flex-1 flex flex-col justify-center space-y-2 text-left overflow-hidden h-[336px]">
+        {/* Integrated Metrics Row */}
+        <div className={`grid grid-cols-3 rounded-xl border ${isDark ? 'divide-x divide-white/[0.05] bg-white/[0.02] border-white/[0.05]' : 'divide-x divide-slate-200/80 bg-white border-slate-200/80'} shadow-sm`}>
+          {[
+            { label: 'RSVP Rate', val: '92.5%', color: 'text-violet-600 dark:text-violet-400' },
+            { label: 'Transcribed', val: '14 Meetings', color: 'text-emerald-600 dark:text-emerald-400' },
+            { label: 'Quorum Met', val: '100%', color: 'text-amber-600 dark:text-amber-400' }
+          ].map((m, i) => (
+            <div key={i} className="p-1.5 text-center">
+              <div className={`text-xs font-black ${m.color} tracking-tight`}>{m.val}</div>
+              <div className={`text-[8px] font-bold mt-0.5 ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>{m.label}</div>
+            </div>
+          ))}
+        </div>
 
         {/* E-Voting Log */}
-        <div className={`rounded-2xl overflow-hidden border ${isDark ? 'bg-white/[0.03] border-white/[0.06]' : 'bg-white border-slate-200'}`}>
-          <div className={`flex items-center justify-between px-3.5 py-2 border-b ${isDark ? 'border-white/[0.04]' : 'border-slate-100'}`}>
+        <div className={`rounded-xl overflow-hidden border ${isDark ? 'bg-white/[0.03] border-white/[0.06]' : 'bg-white border-slate-200'}`}>
+          <div className={`flex items-center justify-between px-3 py-1.5 border-b ${isDark ? 'border-white/[0.04]' : 'border-slate-100'}`}>
             <div className="flex items-center gap-2">
               <span className="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Active Survey</span>
               <span className="w-1.5 h-1.5 rounded-full bg-slate-400 dark:bg-slate-600" />
@@ -656,8 +652,8 @@ function MeetingsOperationsConsole() {
             </div>
             <span className="text-[8px] font-extrabold text-emerald-600 dark:text-emerald-300 bg-emerald-500/15 border border-emerald-500/25 px-2 py-0.5 rounded-full uppercase tracking-wide">✓ Quorum Reached</span>
           </div>
-          <div className="px-3.5 py-2 space-y-1.5 text-left text-xs">
-            <div className="flex justify-between items-center text-[11px] text-slate-600 dark:text-slate-450 font-bold">
+          <div className="px-3 py-1.5 space-y-1 text-left text-xs">
+            <div className="flex justify-between items-center text-[10px] text-slate-600 dark:text-slate-300 font-bold">
               <span>Option A (Approve Budget)</span>
               <span className="text-emerald-600">82.4%</span>
             </div>
@@ -668,32 +664,32 @@ function MeetingsOperationsConsole() {
         </div>
 
         {/* Audio Diarization Log */}
-        <div className={`rounded-2xl overflow-hidden border ${isDark ? 'bg-white/[0.03] border-indigo-500/25' : 'bg-white border-indigo-200'}`}>
-          <div className={`flex items-center justify-between px-3.5 py-2 border-b ${isDark ? 'border-white/[0.04]' : 'border-slate-100'}`}>
+        <div className={`rounded-xl overflow-hidden border ${isDark ? 'bg-white/[0.03] border-indigo-500/25' : 'bg-white border-indigo-200'}`}>
+          <div className={`flex items-center justify-between px-3 py-1.5 border-b ${isDark ? 'border-white/[0.04]' : 'border-slate-100'}`}>
             <div className="flex items-center gap-2">
-              <span className="text-[9px] font-bold text-indigo-605 dark:text-indigo-400 uppercase tracking-widest">Meeting Audio Transcript</span>
+              <span className="text-[9px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-widest">Audio Transcript</span>
               <span className="w-1.5 h-1.5 rounded-full bg-slate-400 dark:bg-slate-600" />
               <span className="text-[9px] text-slate-400 dark:text-slate-500 font-mono font-bold">Auto-Diarized</span>
             </div>
             <span className="text-[8px] font-extrabold text-indigo-600 dark:text-indigo-300 bg-indigo-500/15 border border-indigo-500/25 px-2 py-0.5 rounded-full uppercase tracking-wide">🎙️ Processed</span>
           </div>
-          <div className="px-3.5 py-2 space-y-1.5 text-left">
+          <div className="px-3 py-1.5 space-y-1 text-left">
             <div className="flex items-start gap-2">
-              <div className="w-4 h-4 rounded-full bg-violet-500/10 dark:bg-violet-500/20 border border-violet-500/20 dark:border-violet-500/30 flex items-center justify-center text-[9px] shrink-0 mt-0.5">👤</div>
-              <p className="text-[11px] text-slate-700 dark:text-slate-300 leading-normal"><span className="font-bold text-slate-900 dark:text-white">Speaker 1 (President):</span> "We will now begin voting on the clubhouse fencing project."</p>
+              <div className="w-3.5 h-3.5 rounded-full bg-violet-500/10 dark:bg-violet-500/20 border border-violet-500/20 dark:border-violet-500/30 flex items-center justify-center text-[8px] shrink-0 mt-0.5">👤</div>
+              <p className="text-[10px] text-slate-700 dark:text-slate-300 leading-tight"><span className="font-bold text-slate-900 dark:text-white">Speaker 1:</span> "Voting begins on the clubhouse fencing project."</p>
             </div>
             <div className="flex items-start gap-2">
-              <div className="w-4 h-4 rounded-full bg-violet-500/10 dark:bg-violet-500/20 border border-violet-500/20 dark:border-violet-500/30 flex items-center justify-center text-[9px] shrink-0 mt-0.5">👤</div>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-normal"><span className="font-bold text-slate-800 dark:text-slate-200">Speaker 2 (Auditor):</span> "The quotes from both fence builders are within our Q3 reserves."</p>
+              <div className="w-3.5 h-3.5 rounded-full bg-violet-500/10 dark:bg-violet-500/20 border border-violet-500/20 dark:border-violet-500/30 flex items-center justify-center text-[8px] shrink-0 mt-0.5">👤</div>
+              <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-tight"><span className="font-bold text-slate-800 dark:text-slate-200">Speaker 2:</span> "Both fence builder quotes are within Q3 reserves."</p>
             </div>
           </div>
         </div>
       </div>
 
       {/* Footer bar */}
-      <div className={`px-5 py-2.5 flex items-center justify-between border-t shrink-0 ${isDark ? 'border-white/[0.05] bg-white/[0.02]' : 'border-slate-200 bg-slate-50'}`}>
+      <div className={`px-5 py-3 flex items-center justify-between border-t shrink-0 h-[60px] ${isDark ? 'border-white/[0.05] bg-white/[0.02]' : 'border-slate-200 bg-slate-50'}`}>
         <span className="text-[10px] text-slate-500 dark:text-slate-400">Secure SHA-256 voting records</span>
-        <span className="flex items-center gap-1.5 text-[10px] text-violet-650 dark:text-violet-400 font-semibold">
+        <span className="flex items-center gap-1.5 text-[10px] text-violet-600 dark:text-violet-400 font-semibold">
           <span className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-pulse" />
           Verified Assemblies
         </span>
@@ -707,13 +703,13 @@ function CalendarOperationsConsole() {
   const isDark = theme === 'dark';
 
   return (
-    <div className={`w-full rounded-3xl overflow-hidden shadow-2xl border transition-all ${isDark ? 'shadow-blue-900/30 border-white/[0.08]' : 'shadow-slate-200/80 border-slate-200'} relative h-[482px] flex flex-col justify-between`} style={{ background: isDark ? 'linear-gradient(145deg, #07162c 0%, #0b1a36 50%, #050d18 100%)' : 'linear-gradient(145deg, #f8fafc 0%, #f0f7ff 50%, #e2e8f0 100%)' }}>
+    <div className={`w-full rounded-3xl overflow-hidden shadow-2xl border transition-all ${isDark ? 'shadow-blue-900/30 border-white/[0.08]' : 'shadow-slate-200/80 border-slate-200'} relative h-[460px] flex flex-col justify-between`} style={{ background: isDark ? 'linear-gradient(145deg, #07162c 0%, #0b1a36 50%, #050d18 100%)' : 'linear-gradient(145deg, #f8fafc 0%, #f0f7ff 50%, #e2e8f0 100%)' }}>
       {isDark && (
         <div className="absolute top-0 right-1/4 w-64 h-64 bg-blue-600/10 rounded-full blur-[80px] pointer-events-none" />
       )}
 
       {/* Header */}
-      <div className={`relative px-5 pt-5 pb-4 flex items-center justify-between border-b shrink-0 ${isDark ? 'bg-white/[0.03] border-white/[0.06]' : 'bg-slate-50/50 border-slate-200'}`}>
+      <div className={`relative px-5 py-3.5 flex items-center justify-between border-b shrink-0 h-[64px] ${isDark ? 'bg-white/[0.03] border-white/[0.06]' : 'bg-slate-50/50 border-slate-200'}`}>
         <div className="flex items-center gap-3 text-left">
           <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-500/30">
             <CalendarRange size={18} className="text-white" />
@@ -723,19 +719,19 @@ function CalendarOperationsConsole() {
             <p className="text-[10px] text-slate-400 mt-0.5">Real-time facility reservations</p>
           </div>
         </div>
-        <span className="flex items-center gap-1.5 text-[10px] font-bold text-blue-650 dark:text-blue-400 bg-blue-500/10 border border-blue-500/20 px-2.5 py-1 rounded-full">
+        <span className="flex items-center gap-1.5 text-[10px] font-bold text-blue-600 dark:text-blue-400 bg-blue-500/10 border border-blue-500/20 px-2.5 py-1 rounded-full">
           July 2026
         </span>
       </div>
 
       {/* Calendar Grid Preview */}
-      <div className="p-4 flex-1 flex flex-col justify-center">
+      <div className="p-4 flex-1 flex flex-col justify-center text-left overflow-hidden h-[336px]">
         <div className="grid grid-cols-7 gap-1 text-center text-[9px] font-black text-slate-400 dark:text-gray-500 mb-1.5 uppercase tracking-wider">
           {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d, i) => <div key={i}>{d}</div>)}
         </div>
         <div className="grid grid-cols-7 gap-1.5">
           {Array.from({ length: 35 }).map((_, idx) => {
-            const dayNum = idx - 2; // Offset to start 1st of July on Wednesday
+            const dayNum = idx - 2;
             const isDay = dayNum > 0 && dayNum <= 31;
             const isToday = dayNum === 3;
             const isSelected = dayNum === 10;
@@ -743,11 +739,11 @@ function CalendarOperationsConsole() {
             return (
               <div
                 key={idx}
-                className={`h-10 rounded-xl flex flex-col items-center justify-between p-1.5 border transition-all ${
+                className={`h-9 rounded-xl flex flex-col items-center justify-between p-1 border transition-all ${
                   !isDay ? 'opacity-0 border-transparent' :
                   isSelected ? 'bg-blue-600 border-blue-600 text-white font-bold shadow-md shadow-blue-500/20' :
                   isToday ? 'bg-blue-500/10 border-blue-500/35 text-blue-600 dark:text-blue-400 font-bold' :
-                  'bg-white/40 dark:bg-white/[0.01] border-slate-200/50 dark:border-white/[0.03] text-slate-850 dark:text-slate-200'
+                  'bg-white/40 dark:bg-white/[0.01] border-slate-200/50 dark:border-white/[0.03] text-slate-800 dark:text-slate-200'
                 }`}
               >
                 <span className="text-[10px] font-mono leading-none">{isDay ? dayNum : ''}</span>
@@ -760,19 +756,13 @@ function CalendarOperationsConsole() {
         </div>
       </div>
 
-      {/* Footer list */}
-      <div className={`px-5 py-3.5 space-y-2 border-t shrink-0 ${isDark ? 'border-white/[0.05] bg-white/[0.02]' : 'border-slate-200 bg-slate-50'}`}>
-        <div className="flex items-center justify-between text-[9px] font-black text-slate-455 uppercase tracking-widest text-left">
-          <span>Upcoming Bookings</span>
-          <span className="text-blue-605 hover:underline cursor-pointer">Open Scheduler →</span>
+      {/* Footer bar */}
+      <div className={`px-5 py-3 flex items-center justify-between border-t shrink-0 h-[60px] ${isDark ? 'border-white/[0.05] bg-white/[0.02]' : 'border-slate-200 bg-slate-50'}`}>
+        <div className="min-w-0 flex-1 text-left">
+          <h4 className={`text-[11px] font-bold truncate ${isDark ? 'text-white' : 'text-slate-800'}`}>Clubhouse Party Reservation</h4>
+          <p className="text-[9px] text-slate-400 mt-0.5">July 3, 2026 • Unit 104</p>
         </div>
-        <div className="flex items-center justify-between gap-3 text-left">
-          <div className="min-w-0 flex-1">
-            <h4 className={`text-[11px] font-black truncate ${isDark ? 'text-white' : 'text-slate-800'}`}>Clubhouse Party Reservation</h4>
-            <p className="text-[9px] text-slate-400 mt-0.5">July 3, 2026, 04:00 PM • Unit 104</p>
-          </div>
-          <span className="bg-purple-100 dark:bg-purple-500/10 text-purple-650 dark:text-purple-455 text-[8px] font-black px-2 py-0.5 rounded border border-purple-200/30 uppercase shrink-0">APPROVED</span>
-        </div>
+        <span className="bg-purple-100 dark:bg-purple-500/10 text-purple-600 dark:text-purple-400 text-[8px] font-black px-2 py-0.5 rounded border border-purple-200/30 uppercase shrink-0">APPROVED</span>
       </div>
     </div>
   );
@@ -784,15 +774,15 @@ function MaintenanceOperationsConsole() {
   const isDark = theme === 'dark';
 
   return (
-    <div className={`w-full rounded-3xl overflow-hidden shadow-2xl border transition-all ${isDark ? 'shadow-emerald-900/30 border-white/[0.08]' : 'shadow-slate-200/80 border-slate-200'} relative h-[482px] flex flex-col justify-between`} style={{ background: isDark ? 'linear-gradient(145deg, #051a10 0%, #0a2418 50%, #030f0a 100%)' : 'linear-gradient(145deg, #f8fafc 0%, #f0fdf4 50%, #e2e8f0 100%)' }}>
+    <div className={`w-full rounded-3xl overflow-hidden shadow-2xl border transition-all ${isDark ? 'shadow-emerald-900/30 border-white/[0.08]' : 'shadow-slate-200/80 border-slate-200'} relative h-[460px] flex flex-col justify-between`} style={{ background: isDark ? 'linear-gradient(145deg, #051a10 0%, #0a2418 50%, #030f0a 100%)' : 'linear-gradient(145deg, #f8fafc 0%, #f0fdf4 50%, #e2e8f0 100%)' }}>
       {isDark && (
         <div className="absolute top-0 right-1/4 w-64 h-64 bg-emerald-600/10 rounded-full blur-[80px] pointer-events-none" />
       )}
 
       {/* Header */}
-      <div className={`relative px-5 pt-5 pb-4 flex items-center justify-between border-b shrink-0 ${isDark ? 'bg-white/[0.03] border-white/[0.06]' : 'bg-slate-50/50 border-slate-200'}`}>
+      <div className={`relative px-5 py-3.5 flex items-center justify-between border-b shrink-0 h-[64px] ${isDark ? 'bg-white/[0.03] border-white/[0.06]' : 'bg-slate-50/50 border-slate-200'}`}>
         <div className="flex items-center gap-3 text-left">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-650 flex items-center justify-center shadow-lg shadow-emerald-500/30">
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg shadow-emerald-500/30">
             <Wrench size={18} className="text-white" />
           </div>
           <div>
@@ -806,14 +796,14 @@ function MaintenanceOperationsConsole() {
       </div>
 
       {/* Work Orders */}
-      <div className="p-4 flex-1 space-y-2.5 flex flex-col justify-center text-left">
+      <div className="p-4 flex-1 space-y-2 flex flex-col justify-center text-left overflow-hidden h-[336px]">
         {[
           { text: "Repair leaking main valve in Courtyard B", done: false, badge: "In Progress" },
           { text: "Inspect clubhouse elevator safety certificate", done: true, badge: "Completed" },
           { text: "Replace broken lights in North Parking Lot", done: false, badge: "Open" },
           { text: "Repair damaged lock on courtyard main gate", done: true, badge: "Completed" }
         ].map((item, i) => (
-          <div key={i} className={`p-3 rounded-2xl border flex items-center justify-between gap-4 transition-all ${
+          <div key={i} className={`p-2.5 rounded-2xl border flex items-center justify-between gap-4 transition-all ${
             item.done 
               ? 'bg-slate-500/5 dark:bg-white/[0.02] border-slate-200/40 dark:border-white/5 opacity-75' 
               : isDark ? 'bg-white/[0.02] border-emerald-500/20 shadow-sm' : 'bg-white border-slate-200 shadow-sm'
@@ -822,23 +812,23 @@ function MaintenanceOperationsConsole() {
               <span className={`w-4 h-4 rounded-full flex items-center justify-center border text-[8px] shrink-0 font-bold ${
                 item.done 
                   ? 'bg-emerald-500 border-emerald-500 text-white' 
-                  : isDark ? 'border-white/30 text-transparent' : 'border-slate-350 text-transparent'
+                  : isDark ? 'border-white/30 text-transparent' : 'border-slate-300 text-transparent'
               }`}>✓</span>
-              <span className={`text-[11px] font-semibold truncate ${item.done ? 'line-through text-slate-450 dark:text-slate-400' : 'text-slate-800 dark:text-slate-100'}`}>{item.text}</span>
+              <span className={`text-[11px] font-semibold truncate ${item.done ? 'line-through text-slate-400 dark:text-slate-400' : 'text-slate-800 dark:text-slate-100'}`}>{item.text}</span>
             </div>
             <span className={`text-[8px] font-extrabold px-2 py-0.5 rounded border uppercase shrink-0 ${
               item.done 
                 ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20' 
                 : item.badge === 'In Progress'
                   ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20'
-                  : 'bg-blue-500/10 text-blue-605 dark:text-blue-450 border-blue-500/20'
+                  : 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20'
             }`}>{item.badge}</span>
           </div>
         ))}
       </div>
 
       {/* Footer bar */}
-      <div className={`px-5 py-2.5 flex items-center justify-between border-t shrink-0 ${isDark ? 'border-white/[0.05] bg-white/[0.02]' : 'border-slate-200 bg-slate-50'}`}>
+      <div className={`px-5 py-3 flex items-center justify-between border-t shrink-0 h-[60px] ${isDark ? 'border-white/[0.05] bg-white/[0.02]' : 'border-slate-200 bg-slate-50'}`}>
         <span className="text-[10px] text-slate-500 dark:text-slate-400">2 active work orders · 2 completed</span>
         <span className="flex items-center gap-1 text-[10px] text-emerald-600 dark:text-emerald-400 font-bold cursor-pointer hover:underline text-left">
           Manage Dispatch →
@@ -853,13 +843,13 @@ function PaymentsOperationsConsole() {
   const isDark = theme === 'dark';
 
   return (
-    <div className={`w-full rounded-3xl overflow-hidden shadow-2xl border transition-all ${isDark ? 'shadow-teal-900/30 border-white/[0.08]' : 'shadow-slate-200/80 border-slate-200'} relative h-[482px] flex flex-col justify-between`} style={{ background: isDark ? 'linear-gradient(145deg, #031818 0%, #062828 50%, #020e0e 100%)' : 'linear-gradient(145deg, #f8fafc 0%, #f0fdfa 50%, #e2e8f0 100%)' }}>
+    <div className={`w-full rounded-3xl overflow-hidden shadow-2xl border transition-all ${isDark ? 'shadow-teal-900/30 border-white/[0.08]' : 'shadow-slate-200/80 border-slate-200'} relative h-[460px] flex flex-col justify-between`} style={{ background: isDark ? 'linear-gradient(145deg, #031818 0%, #062828 50%, #020e0e 100%)' : 'linear-gradient(145deg, #f8fafc 0%, #f0fdfa 50%, #e2e8f0 100%)' }}>
       {isDark && (
         <div className="absolute top-0 right-1/4 w-64 h-64 bg-teal-600/10 rounded-full blur-[80px] pointer-events-none" />
       )}
 
       {/* Header */}
-      <div className={`relative px-5 pt-5 pb-4 flex items-center justify-between border-b shrink-0 ${isDark ? 'bg-white/[0.03] border-white/[0.06]' : 'bg-slate-50/50 border-slate-200'}`}>
+      <div className={`relative px-5 py-3.5 flex items-center justify-between border-b shrink-0 h-[64px] ${isDark ? 'bg-white/[0.03] border-white/[0.06]' : 'bg-slate-50/50 border-slate-200'}`}>
         <div className="flex items-center gap-3 text-left">
           <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-teal-500 to-emerald-600 flex items-center justify-center shadow-lg shadow-teal-500/30">
             <Wallet size={18} className="text-white" />
@@ -869,42 +859,42 @@ function PaymentsOperationsConsole() {
             <p className="text-[10px] text-slate-400 mt-0.5">Automated accounting & invoice tracking</p>
           </div>
         </div>
-        <span className="flex items-center gap-1.5 text-[10px] font-bold text-teal-650 dark:text-teal-400 bg-teal-500/10 border border-teal-500/20 px-2.5 py-1 rounded-full">
+        <span className="flex items-center gap-1.5 text-[10px] font-bold text-teal-600 dark:text-teal-400 bg-teal-500/10 border border-teal-500/20 px-2.5 py-1 rounded-full">
           Q3 Billing Active
         </span>
       </div>
 
       {/* Metrics & Ledger Preview */}
-      <div className="p-4 flex-1 flex flex-col justify-center space-y-4 text-left">
-        <div className="flex items-center gap-5">
-          <div className="relative w-14 h-14 shrink-0">
-            <svg viewBox="0 0 36 36" className="w-14 h-14 -rotate-90">
+      <div className="p-4 flex-1 flex flex-col justify-center space-y-2.5 text-left overflow-hidden h-[336px]">
+        <div className="flex items-center gap-4 p-2.5 rounded-2xl border border-slate-200/60 dark:border-white/5 bg-white/50 dark:bg-white/[0.01]">
+          <div className="relative w-11 h-11 shrink-0">
+            <svg viewBox="0 0 36 36" className="w-11 h-11 -rotate-90">
               <circle cx="18" cy="18" r="14.5" fill="none" stroke={isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.04)"} strokeWidth="3.5" />
               <circle cx="18" cy="18" r="14.5" fill="none" stroke="#14B8A6" strokeWidth="3.5" strokeDasharray="78 100" strokeLinecap="round" />
             </svg>
             <div className={`absolute inset-0 flex items-center justify-center text-[10px] font-black ${isDark ? 'text-white' : 'text-slate-800'}`}>78%</div>
           </div>
           <div>
-            <p className={`text-base font-black leading-none ${isDark ? 'text-white' : 'text-slate-800'}`}>$19,227.00 Collected</p>
-            <p className="text-[10px] text-slate-400 mt-1">$3,800.00 Pending • $1,623.00 Overdue</p>
+            <p className={`text-sm font-black leading-none ${isDark ? 'text-white' : 'text-slate-800'}`}>$19,227.00 Collected</p>
+            <p className="text-[9px] text-slate-400 mt-0.5">$3,800.00 Pending • $1,623.00 Overdue</p>
           </div>
         </div>
 
-        <div className="space-y-1.5">
+        <div className="space-y-1 text-left">
           <p className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest">Recent Invoices</p>
           {[
             { title: "Unit 104 Q3 Maintenance Dues", desc: "Digital bank transfer payment", amt: "+$150.00", status: "Paid" },
             { title: "Unit 305 Late Payment Fine", desc: "Overdue fee notice generated", amt: "+$25.00 Fine", status: "Overdue" }
           ].map((item, idx) => (
-            <div key={idx} className={`p-2.5 rounded-xl border flex items-center justify-between text-[11px] ${
+            <div key={idx} className={`p-2 rounded-xl border flex items-center justify-between text-[10px] ${
               isDark ? 'bg-white/[0.01] border-white/5' : 'bg-slate-50 border-slate-200'
             }`}>
               <div>
                 <h4 className={`font-bold ${isDark ? 'text-white' : 'text-slate-800'}`}>{item.title}</h4>
-                <p className="text-[9px] text-slate-400 mt-0.5">{item.desc}</p>
+                <p className="text-[8.5px] text-slate-400 mt-0.5">{item.desc}</p>
               </div>
               <div className="text-right shrink-0">
-                <span className="font-extrabold text-teal-650 dark:text-teal-400 block">{item.amt}</span>
+                <span className="font-extrabold text-teal-600 dark:text-teal-400 block">{item.amt}</span>
                 <span className="text-[8px] font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400">{item.status}</span>
               </div>
             </div>
@@ -913,8 +903,8 @@ function PaymentsOperationsConsole() {
       </div>
 
       {/* Footer bar */}
-      <div className={`px-5 py-2.5 flex items-center justify-between border-t shrink-0 ${isDark ? 'border-white/[0.05] bg-white/[0.02]' : 'border-slate-200 bg-slate-50'}`}>
-        <span className="text-[10px] text-slate-550 dark:text-slate-500">Verified Ledger Registry</span>
+      <div className={`px-5 py-3 flex items-center justify-between border-t shrink-0 h-[60px] ${isDark ? 'border-white/[0.05] bg-white/[0.02]' : 'border-slate-200 bg-slate-50'}`}>
+        <span className="text-[10px] text-slate-500 dark:text-slate-400">Verified Ledger Registry</span>
         <span className="flex items-center gap-1.5 text-[9px] font-extrabold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/25 px-2 py-0.5 rounded uppercase tracking-wider shrink-0">
           Audited
         </span>
@@ -948,6 +938,7 @@ export default function LandingPage() {
       linkTo: "/features",
       badgeColor: "bg-emerald-500/10 border-emerald-500/25 text-emerald-650 dark:text-emerald-400",
       btnColor: "bg-gradient-to-r from-emerald-600 to-teal-650 hover:from-emerald-700 hover:to-teal-700 shadow-emerald-500/20",
+      image: featureMaintenance,
       component: <MaintenanceOperationsConsole />
     },
     {
@@ -966,6 +957,7 @@ export default function LandingPage() {
       linkTo: "/features",
       badgeColor: "bg-blue-500/10 border-blue-500/25 text-blue-600 dark:text-blue-400",
       btnColor: "bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-blue-500/20",
+      image: featureCopilot,
       component: <CalendarOperationsConsole />
     },
     {
@@ -984,6 +976,7 @@ export default function LandingPage() {
       linkTo: "/features",
       badgeColor: "bg-violet-500/10 border-violet-500/25 text-violet-650 dark:text-violet-400",
       btnColor: "bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 shadow-violet-500/20",
+      image: featureSecurity,
       component: <MeetingsOperationsConsole />
     },
     {
@@ -1002,6 +995,7 @@ export default function LandingPage() {
       linkTo: "/features",
       badgeColor: "bg-teal-500/10 border-teal-500/25 text-teal-650 dark:text-teal-400",
       btnColor: "bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 shadow-teal-500/20",
+      image: featureFinance,
       component: <PaymentsOperationsConsole />
     }
   ];
@@ -2015,38 +2009,38 @@ export default function LandingPage() {
         <div className="absolute bottom-0 right-1/4 w-72 h-72 bg-indigo-400/[0.05] dark:bg-indigo-500/[0.07] rounded-full blur-3xl pointer-events-none" />
 
         <div className="relative z-10 max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 items-center">
+          {/* Slide selector tab pills — full width above two-column grid */}
+          <div className="flex flex-wrap gap-2.5 pb-6">
+            {automationSlides.map((slide, idx) => {
+              const isActive = activeSlide === idx;
+              let activeColors = "";
+              if (idx === 0) activeColors = "bg-emerald-500/10 border-emerald-500/40 text-emerald-750 dark:text-emerald-300";
+              if (idx === 1) activeColors = "bg-blue-500/10 border-blue-500/40 text-blue-700 dark:text-blue-300";
+              if (idx === 2) activeColors = "bg-violet-500/10 border-violet-500/40 text-violet-750 dark:text-violet-300";
+              if (idx === 3) activeColors = "bg-teal-500/10 border-teal-500/40 text-teal-650 dark:text-teal-450";
+              return (
+                <button
+                  key={idx}
+                  onClick={() => {
+                    setActiveSlide(idx);
+                    setIsAutoPlaying(false);
+                  }}
+                  className={`px-3.5 py-2 rounded-xl border text-[11px] font-bold transition-all duration-300 ${
+                    isActive 
+                      ? activeColors 
+                      : "border-slate-200 dark:border-white/5 hover:border-slate-300 dark:hover:border-white/10 text-slate-500 dark:text-slate-400 bg-white/40 dark:bg-white/[0.01]"
+                  }`}
+                >
+                  {slide.tabLabel}
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 items-start">
 
             {/* Left: Text content */}
             <div className="lg:col-span-5 space-y-6 text-left">
-              {/* Slide selector tab pills */}
-              <div className="flex flex-wrap gap-2.5 pb-2">
-                {automationSlides.map((slide, idx) => {
-                  const isActive = activeSlide === idx;
-                  let activeColors = "";
-                  if (idx === 0) activeColors = "bg-emerald-500/10 border-emerald-500/40 text-emerald-750 dark:text-emerald-300";
-                  if (idx === 1) activeColors = "bg-blue-500/10 border-blue-500/40 text-blue-700 dark:text-blue-300";
-                  if (idx === 2) activeColors = "bg-violet-500/10 border-violet-500/40 text-violet-750 dark:text-violet-300";
-                  if (idx === 3) activeColors = "bg-teal-500/10 border-teal-500/40 text-teal-650 dark:text-teal-450";
-                  return (
-                    <button
-                      key={idx}
-                      onClick={() => {
-                        setActiveSlide(idx);
-                        setIsAutoPlaying(false);
-                      }}
-                      className={`px-3 py-1.5 rounded-xl border text-[11px] font-bold transition-all duration-300 ${
-                        isActive 
-                          ? activeColors 
-                          : "border-slate-200 dark:border-white/5 hover:border-slate-300 dark:hover:border-white/10 text-slate-500 dark:text-slate-400 bg-white/40 dark:bg-white/[0.01]"
-                      }`}
-                    >
-                      {slide.tabLabel}
-                    </button>
-                  );
-                })}
-              </div>
-
               <div className="space-y-6 transition-all duration-500">
                 <div className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest transition-all ${automationSlides[activeSlide].badgeColor}`}>
                   <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
@@ -2074,7 +2068,7 @@ export default function LandingPage() {
               </div>
             </div>
 
-            {/* Right: Console with Card-Like Slider Wrapper */}
+            {/* Right: Console Slider Wrapper */}
             <div 
               className="lg:col-span-7 relative group cursor-pointer"
               onMouseEnter={() => setIsAutoPlaying(false)}

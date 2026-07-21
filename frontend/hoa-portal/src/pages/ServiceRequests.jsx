@@ -124,7 +124,7 @@ const SubmitModal = ({ communityId, onClose, onSuccess }) => {
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label className="text-xs text-slate-500 dark:text-gray-400 mb-1.5 block">Request Type</label>
+            <label className="text-xs text-slate-500 dark:text-gray-400 mb-1.5 block">Request Type <span className="text-red-500">*</span></label>
             <div className="relative">
               <select 
                 required 
@@ -144,7 +144,7 @@ const SubmitModal = ({ communityId, onClose, onSuccess }) => {
           </div>
 
           <div>
-            <label className="text-xs text-slate-500 dark:text-gray-400 mb-1.5 block">Title</label>
+            <label className="text-xs text-slate-500 dark:text-gray-400 mb-1.5 block">Title <span className="text-red-500">*</span></label>
             <input 
               required 
               type="text" 
@@ -156,7 +156,7 @@ const SubmitModal = ({ communityId, onClose, onSuccess }) => {
           </div>
 
           <div>
-            <label className="text-xs text-slate-500 dark:text-gray-400 mb-1.5 block">Detailed Description</label>
+            <label className="text-xs text-slate-500 dark:text-gray-400 mb-1.5 block">Detailed Description <span className="text-red-500">*</span></label>
             <textarea 
               required 
               rows={4} 

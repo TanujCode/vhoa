@@ -69,16 +69,17 @@ def process_payment(
 @router.get("/history/{community_id}", response_model=list[PaymentOut])
 def get_payments_history(
     community_id: int,
+    view_as_resident: bool = False,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """
-    Get payment history for a community. Residents can only see their own payments.
+    Get payment history for a community. Residents or users viewing as resident can only see their own payments.
     """
     check_community_access(current_user, community_id, db)
 
-    role = current_user.role.role_name if current_user.role else "resident"
-    is_admin = role in ["super_admin", "property_manager", "board_member"]
+    role = (current_user.role.role_name if current_user.role else "resident").lower()
+    is_admin = (role in ["super_admin", "property_manager", "board_member", "admin"]) and not view_as_resident
 
     user_filter_id = None if is_admin else current_user.user_id
     return payment_service.get_payment_history(db, community_id, user_filter_id)

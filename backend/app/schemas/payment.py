@@ -33,6 +33,9 @@ class PaymentOut(BaseModel):
     recurring_interval: str | None
     status:             str
     active_status:      bool
+    payer_name:         str | None = None
+    payer_role:         str | None = None
+    item_title:         str | None = None
 
     model_config = {"from_attributes": True}
 

@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { AlertTriangle, Plus, RefreshCw, ChevronDown, X, Search, ArrowUpRight, Download, Filter } from 'lucide-react';
 import API, { getBaseUrl } from '../services/api';
 import { onlyDecimalKeyPress, onlyDigitsKeyPress } from '../utils/fieldValidators';
+import CustomSelect from '../components/CustomSelect';
 
 // ── Status Badge ──────────────────────────────
 const StatusBadge = ({ status }) => {
@@ -18,6 +19,84 @@ const StatusBadge = ({ status }) => {
     <span className={`px-3 py-1 rounded-full text-xs font-medium ${map[status] || 'bg-gray-500/20 text-gray-400'}`}>
       {status}
     </span>
+  );
+};
+
+// ── Custom File Upload Component ──────────────
+const FileUploadField = ({ file, onFileChange, label = "Attachment (Optional)" }) => {
+  const fileInputRef = useRef(null);
+  const [previewUrl, setPreviewUrl] = useState(null);
+
+  useEffect(() => {
+    if (file && file.type?.startsWith('image/')) {
+      const url = URL.createObjectURL(file);
+      setPreviewUrl(url);
+      return () => URL.revokeObjectURL(url);
+    } else {
+      setPreviewUrl(null);
+    }
+  }, [file]);
+
+  const handleRemove = (e) => {
+    e.stopPropagation();
+    onFileChange(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  return (
+    <div>
+      <label className="text-xs text-slate-500 dark:text-gray-400 mb-1.5 block font-medium">{label}</label>
+      
+      <input
+        ref={fileInputRef}
+        type="file"
+        onChange={(e) => onFileChange(e.target.files[0] || null)}
+        className="hidden"
+      />
+
+      {/* File Placeholder Area */}
+      <div 
+        onClick={() => fileInputRef.current?.click()}
+        className={`w-full rounded-2xl border border-dashed transition-all duration-200 p-3.5 flex flex-col items-center justify-center cursor-pointer ${
+          file 
+            ? 'bg-blue-50/60 dark:bg-blue-500/10 border-blue-400 dark:border-blue-500/40' 
+            : 'bg-slate-50/70 dark:bg-[#0D1B2A]/60 border-slate-200 dark:border-white/15 hover:border-blue-400 dark:hover:border-blue-500/40 hover:bg-slate-100/50 dark:hover:bg-[#0D1B2A]'
+        }`}
+      >
+        {file ? (
+          <div className="flex flex-col items-center gap-1.5 w-full">
+            {previewUrl ? (
+              <img src={previewUrl} alt="Preview" className="w-14 h-14 object-cover rounded-xl shadow border border-slate-200 dark:border-white/10" />
+            ) : (
+              <div className="w-10 h-10 rounded-xl bg-blue-500/15 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold text-lg">
+                📄
+              </div>
+            )}
+            <div className="text-center max-w-[95%]">
+              <p className="text-xs font-bold text-slate-800 dark:text-slate-100 truncate">{file.name}</p>
+              <p className="text-[10px] text-slate-400 font-mono mt-0.5">{(file.size / 1024).toFixed(1)} KB</p>
+            </div>
+            <button
+              type="button"
+              onClick={handleRemove}
+              className="text-[10px] text-red-500 hover:text-red-600 font-semibold px-2 py-0.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 transition-all flex items-center gap-1 mt-0.5"
+            >
+              <X size={11} /> Remove
+            </button>
+          </div>
+        ) : (
+          <div className="flex items-center gap-3 py-1 px-2">
+            <div className="w-9 h-9 rounded-xl bg-slate-200/60 dark:bg-white/5 border border-slate-300/40 dark:border-white/10 flex items-center justify-center text-slate-400 dark:text-slate-500 text-base shrink-0">
+              📁
+            </div>
+            <div className="flex flex-col text-left">
+              <span className="text-xs font-medium text-slate-600 dark:text-gray-300">No file selected</span>
+              <span className="text-[10px] text-slate-400 dark:text-gray-500">Click to browse attachment</span>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
   );
 };
 
@@ -118,23 +197,16 @@ const SubmitModal = ({ communityId, onClose, onSuccess }) => {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="text-xs text-slate-500 dark:text-gray-400 mb-1 block">Violation Type <span className="text-red-500">*</span></label>
-            <select
-              required
+            <CustomSelect
               value={form.violation_type_id}
-              onChange={e => setForm({...form, violation_type_id: e.target.value})}
-              className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-blue-500"
-            >
-              <option value="" className="text-slate-900 dark:text-white">Select type...</option>
-              {types.map(t => (
-                <option key={t.violation_type_id} value={t.violation_type_id} className="text-slate-900 dark:text-white">
-                  {t.name} — ${t.amount}
-                </option>
-              ))}
-            </select>
+              onChange={val => setForm({...form, violation_type_id: val})}
+              options={types.map(t => ({ value: t.violation_type_id, label: `${t.name} — $${t.amount}` }))}
+              placeholder="Select type..."
+            />
           </div>
 
           <div ref={selectRef} className="relative">
-            <label className="text-xs text-slate-500 dark:text-gray-400 mb-1 block">Select Resident *</label>
+            <label className="text-xs text-slate-500 dark:text-gray-400 mb-1 block">Select Resident <span className="text-red-500">*</span></label>
             <div className="relative">
               <input
                 type="text"
@@ -242,14 +314,11 @@ const SubmitModal = ({ communityId, onClose, onSuccess }) => {
             {errors.amount && <p className="text-red-500 text-xs mt-1">{errors.amount}</p>}
           </div>
 
-          <div>
-            <label className="text-xs text-slate-500 dark:text-gray-400 mb-1 block">Attachment (Optional)</label>
-            <input
-              type="file"
-              onChange={e => setFile(e.target.files[0])}
-              className="w-full text-sm text-slate-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-blue-600/10 file:text-blue-600 dark:file:text-blue-400 hover:file:bg-blue-600/20"
-            />
-          </div>
+          <FileUploadField 
+            file={file} 
+            onFileChange={setFile} 
+            label="Attachment (Optional)" 
+          />
 
           <div>
             <label className="text-xs text-slate-500 dark:text-gray-400 mb-1 block">Remarks</label>
@@ -490,14 +559,11 @@ const DisputeModal = ({ communityId, violationId, onClose, onSuccess }) => {
               className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-teal-500 resize-none"
             />
           </div>
-          <div>
-            <label className="text-xs text-slate-500 dark:text-gray-400 mb-1 block">Attachment Proof (Optional)</label>
-            <input
-              type="file"
-              onChange={e => setFile(e.target.files[0])}
-              className="w-full text-sm text-slate-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-blue-600/10 file:text-blue-600 dark:file:text-blue-400 hover:file:bg-blue-600/20"
-            />
-          </div>
+          <FileUploadField 
+            file={file} 
+            onFileChange={setFile} 
+            label="Attachment Proof (Optional)" 
+          />
           <div className="flex gap-3 pt-2">
             <button type="button" onClick={onClose} className="flex-1 py-2.5 border border-blue-600 text-blue-600 bg-transparent hover:bg-blue-600 hover:text-white hover:border-blue-600 dark:border-blue-500 dark:text-blue-500 dark:hover:bg-blue-600 dark:hover:text-white dark:hover:border-blue-600 rounded-xl text-sm font-medium transition-colors">Cancel</button>
             <button type="submit" disabled={loading} className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-500 rounded-xl text-sm font-medium text-white disabled:opacity-50">
@@ -560,18 +626,15 @@ const ResolveDisputeModal = ({ violationId, statuses, onClose, onSuccess }) => {
           </div>
           <div>
             <label className="text-xs text-slate-500 dark:text-gray-400 mb-1 block">New Status (Optional)</label>
-            <select
+            <CustomSelect
               value={statusId}
-              onChange={e => setStatusId(e.target.value)}
-              className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-blue-500"
-            >
-              <option value="">Keep appealed status</option>
-              {statuses.filter(s => s.violation_status !== 'APPEALED').map(s => (
-                <option key={s.violation_status_id} value={s.violation_status_id}>
-                  {s.violation_status}
-                </option>
-              ))}
-            </select>
+              onChange={setStatusId}
+              options={[
+                { value: "", label: "Keep appealed status" },
+                ...statuses.filter(s => s.violation_status !== 'APPEALED').map(s => ({ value: s.violation_status_id, label: s.violation_status }))
+              ]}
+              placeholder="Keep appealed status"
+            />
           </div>
           <div className="flex gap-3 pt-2">
             <button type="button" onClick={onClose} className="flex-1 py-2.5 border border-blue-600 text-blue-600 bg-transparent hover:bg-blue-600 hover:text-white hover:border-blue-600 dark:border-blue-500 dark:text-blue-500 dark:hover:bg-blue-600 dark:hover:text-white dark:hover:border-blue-600 rounded-xl text-sm font-medium transition-colors">Cancel</button>
@@ -742,24 +805,18 @@ const ViolationDetailModal = ({ violation, isResident, statuses, onClose, onDisp
           {!isResident && !['CLOSED', 'RESOLVED', 'CANCELLED'].includes(violation.violation_status) && (
             <div className="flex flex-1 items-center gap-3 justify-between md:justify-start">
               <div className="flex items-center gap-2">
-                <div className="relative">
-                  <select
-                    value={selectedStatusId}
-                    onChange={e => setSelectedStatusId(e.target.value)}
-                    className="bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200/10 dark:border-white/10 rounded-xl pl-4 pr-10 py-2 text-sm text-slate-900 dark:text-white focus:border-blue-500 focus:outline-none appearance-none cursor-pointer"
-                  >
-                    {statuses.map(s => (
-                      <option key={s.violation_status_id} value={s.violation_status_id} className="text-slate-900 dark:text-white">
-                        {s.violation_status}
-                      </option>
-                    ))}
-                  </select>
-                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-gray-500 pointer-events-none" size={16} />
-                </div>
+                <CustomSelect
+                  value={selectedStatusId}
+                  onChange={setSelectedStatusId}
+                  options={statuses.map(s => ({ value: s.violation_status_id, label: s.violation_status }))}
+                  placeholder="Select Status"
+                  direction="up"
+                  className="w-32"
+                />
                 <button
                   onClick={handleStatusChangeSubmit}
                   disabled={updatingStatus}
-                  className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-sm font-medium transition disabled:opacity-50"
+                  className="px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl text-xs font-bold transition disabled:opacity-50 whitespace-nowrap shadow-md shadow-blue-500/25"
                 >
                   {updatingStatus ? "Updating..." : "Update Status"}
                 </button>

@@ -64,13 +64,18 @@ export default function RentalLoginPage() {
   }, []);
 
   useEffect(() => {
+    const token = localStorage.getItem('rental_token') || sessionStorage.getItem('rental_token');
+    if (token) {
+      navigate('/rental/dashboard', { replace: true });
+      return;
+    }
     if (emailFromUrl) {
       setValue('email', emailFromUrl);
     }
     if (msgFromUrl === 'already_registered') {
       setInfoMsg("You are already registered! Please log in to your account to view and complete your new application.");
     }
-  }, [emailFromUrl, msgFromUrl, setValue]);
+  }, [emailFromUrl, msgFromUrl, setValue, navigate]);
 
   const onSubmit = async (data) => {
     try {
@@ -101,7 +106,7 @@ export default function RentalLoginPage() {
         const role = response.data.role || 'User';
         const capitalizedRole = role.charAt(0).toUpperCase() + role.slice(1);
         setSuccessMsg(`${capitalizedRole} Login successful!`);
-        setTimeout(() => navigate('/rental/dashboard'), 1000);
+        setTimeout(() => navigate('/rental/dashboard', { replace: true }), 1000);
       }
     } catch (err) {
       console.error("Login Error Details:", err);
@@ -159,7 +164,7 @@ export default function RentalLoginPage() {
           const role = response.data.role || 'User';
           const capitalizedRole = role.charAt(0).toUpperCase() + role.slice(1);
           setSuccessMsg(`Google ${capitalizedRole} Login successful!`);
-          setTimeout(() => navigate('/rental/dashboard'), 1000);
+          setTimeout(() => navigate('/rental/dashboard', { replace: true }), 1000);
         }
       } catch (err) {
         console.error('Google Auth Error:', err);

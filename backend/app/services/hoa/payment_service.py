@@ -168,9 +168,81 @@ def get_payment_history(db: Session, community_id: int, user_id: int | None = No
         Payment.active_status == True
     )
     if user_id is not None:
-        query = query.filter(Payment.user_id == user_id)
+        from sqlalchemy import or_, and_
+        res_booking_ids = [b.booking_id for b in db.query(AmenityBooking.booking_id).filter(AmenityBooking.user_id == user_id).all()]
+        res_violation_ids = [v.violation_id for v in db.query(Violation.violation_id).filter(Violation.resident_user_id == user_id).all()]
+
+        filters = [Payment.user_id == user_id]
+        if res_booking_ids:
+            filters.append(and_(Payment.reason == "AMENITY_BOOKING", Payment.reference_id.in_(res_booking_ids)))
+        if res_violation_ids:
+            filters.append(and_(Payment.reason == "VIOLATION", Payment.reference_id.in_(res_violation_ids)))
+
+        query = query.filter(or_(*filters))
     
-    return query.order_by(Payment.payment_date.desc()).all()
+    payments = query.order_by(Payment.payment_date.desc()).all()
+
+    # Pre-fetch user names, roles, and specific item titles
+    for p in payments:
+        # Payer info lookup
+        payer_user = None
+        if p.user_id:
+            payer_user = db.query(User).filter(User.user_id == p.user_id).first()
+        
+        # Fallback to AmenityBooking or Violation if user_id was NULL on Payment
+        if not payer_user and p.reason == "AMENITY_BOOKING" and p.reference_id:
+            booking = db.query(AmenityBooking).filter(AmenityBooking.booking_id == p.reference_id).first()
+            if booking and getattr(booking, 'user_id', None):
+                payer_user = db.query(User).filter(User.user_id == booking.user_id).first()
+        
+        if not payer_user and p.reason == "VIOLATION" and p.reference_id:
+            v = db.query(Violation).filter(Violation.violation_id == p.reference_id).first()
+            if v and getattr(v, 'resident_user_id', None):
+                payer_user = db.query(User).filter(User.user_id == v.resident_user_id).first()
+
+        if payer_user:
+            full = f"{payer_user.first_name or ''} {payer_user.last_name or ''}".strip()
+            p.payer_name = full if full else (payer_user.full_name or payer_user.username or payer_user.email_id)
+            p.payer_role = payer_user.role.role_name.replace('_', ' ').title() if payer_user.role else "Resident"
+        else:
+            p.payer_name = f"Resident (ID #{p.user_id})" if p.user_id else "Resident"
+            p.payer_role = "Resident"
+
+        # Item title info
+        if p.reason == "AMENITY_BOOKING" and p.reference_id:
+            booking = db.query(AmenityBooking).filter(AmenityBooking.booking_id == p.reference_id).first()
+            if booking:
+                amenity = db.query(Amenity).filter(Amenity.amenity_id == booking.amenity_id).first()
+                amenity_name = amenity.name if amenity else "Amenity"
+                b_date = booking.booking_date.strftime('%b %d, %Y') if hasattr(booking.booking_date, 'strftime') else str(booking.booking_date)
+                p.item_title = f"Amenity Booking: {amenity_name} ({b_date})"
+            else:
+                p.item_title = f"Amenity Booking (Ref #{p.reference_id})"
+        elif p.reason == "VIOLATION" and p.reference_id:
+            v = db.query(Violation).filter(Violation.violation_id == p.reference_id).first()
+            if v:
+                v_title = getattr(v, 'violation_title', None) or getattr(v, 'title', None) or "Violation Fine"
+                p.item_title = f"Violation Fine: {v_title}"
+            else:
+                p.item_title = f"Violation Fine (Ref #{p.reference_id})"
+        elif p.reason == "VENDOR_PAYMENT" and p.reference_id:
+            va = db.query(VendorAssignment).filter(VendorAssignment.assignment_id == p.reference_id).first()
+            if va:
+                vendor = db.query(Vendor).filter(Vendor.vendor_id == va.vendor_id).first()
+                v_name = vendor.company_name if vendor else "Vendor"
+                p.item_title = f"Vendor Payout: {v_name}"
+            else:
+                p.item_title = f"Vendor Payout (Ref #{p.reference_id})"
+        elif p.reason == "HOA_FEE":
+            p.item_title = "Monthly HOA Assessment Fee"
+        elif p.reason in ["NESTBLOQ_SETUP_FEE", "VHOA_SETUP_FEE"]:
+            p.item_title = "NestBloq Platform Setup Fee"
+        elif p.reason in ["NESTBLOQ_MONTHLY_FEE", "VHOA_MONTHLY_FEE"]:
+            p.item_title = "NestBloq Monthly Subscription"
+        else:
+            p.item_title = p.reason.replace('_', ' ').title()
+
+    return payments
 
 
 def get_dues(db: Session, user_id: int, community_id: int) -> list[OutstandingDueOut]:

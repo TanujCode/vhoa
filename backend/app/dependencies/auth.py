@@ -38,8 +38,35 @@ def get_current_user(
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    user_id = int(payload.get("sub"))
-    user    = db.query(User).filter(User.user_id == user_id).first()
+    email = payload.get("email")
+    role_name = payload.get("role")
+    user = None
+
+    if role_name == "super_admin" and email:
+        user = db.query(User).filter(User.email_id == email.lower().strip()).first()
+        if not user:
+            # Sync from rental_users
+            from app.models.rental.rental_user import RentalUser
+            rental_user = db.query(RentalUser).filter(RentalUser.email_id == email.lower().strip()).first()
+            if rental_user:
+                user = User(
+                    first_name=rental_user.first_name,
+                    middle_name=rental_user.middle_name,
+                    last_name=rental_user.last_name,
+                    email_id=rental_user.email_id,
+                    email_id_is_verified=True,
+                    password=rental_user.password,
+                    role_id=1, # super_admin
+                    account_status="ACTIVE",
+                    active_status=True
+                )
+                db.add(user)
+                db.commit()
+                db.refresh(user)
+
+    if not user:
+        user_id = int(payload.get("sub"))
+        user = db.query(User).filter(User.user_id == user_id).first()
 
     if not user:
         raise HTTPException(status_code=404, detail="User not found.")

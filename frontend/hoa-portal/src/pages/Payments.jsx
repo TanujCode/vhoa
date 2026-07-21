@@ -2,11 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { 
   DollarSign, CreditCard, Calendar, History, CheckCircle, 
   AlertCircle, ArrowRight, Lock, Shield, X, Loader, 
-  FileText, ArrowDownLeft, ArrowUpRight, Zap
+  FileText, ArrowDownLeft, ArrowUpRight, Zap,
+  User as UserIcon, Dumbbell, AlertTriangle, Wrench, Building2
 } from 'lucide-react';
 import API from '../services/api';
 
-const Payments = ({ community, user, paymentState, setPaymentState }) => {
+const Payments = ({ community, user, paymentState, setPaymentState, viewAsResident }) => {
   const [activeTab, setActiveTab] = useState('pay');
   const [dues, setDues] = useState([]);
   const [history, setHistory] = useState([]);
@@ -33,13 +34,14 @@ const Payments = ({ community, user, paymentState, setPaymentState }) => {
     receipt: null
   });
 
-  const isBoardOrAdmin = [1, 2, 3].includes(user?.role_id) || ['super_admin', 'property_manager', 'board_member'].includes(user?.role) || ['super_admin', 'property_manager', 'board_member'].includes(user?.role_name);
+  const isResidentMode = viewAsResident || localStorage.getItem('view_as_resident') === 'true' || user?.role === 'resident' || user?.role_name === 'resident';
+  const isBoardOrAdmin = !isResidentMode && ([1, 2, 3].includes(user?.role_id) || ['super_admin', 'property_manager', 'board_member'].includes(user?.role) || ['super_admin', 'property_manager', 'board_member'].includes(user?.role_name));
 
   useEffect(() => {
     if (community?.community_id) {
       fetchData();
     }
-  }, [community, activeTab]);
+  }, [community, activeTab, viewAsResident]);
 
   useEffect(() => {
     if (paymentState && paymentState.dueItem) {
@@ -57,7 +59,8 @@ const Payments = ({ community, user, paymentState, setPaymentState }) => {
         const res = await API.get(`/payment/due/${community.community_id}`);
         setDues(res.data);
       } else if (activeTab === 'history') {
-        const res = await API.get(`/payment/history/${community.community_id}`);
+        const url = `/payment/history/${community.community_id}${isResidentMode ? '?view_as_resident=true' : ''}`;
+        const res = await API.get(url);
         setHistory(res.data);
       } else if (activeTab === 'recurring') {
         try {
@@ -427,7 +430,8 @@ const Payments = ({ community, user, paymentState, setPaymentState }) => {
                 <thead>
                   <tr className="bg-slate-50 dark:bg-[#1E3248] text-xs text-slate-500 dark:text-gray-400 font-medium uppercase border-b border-slate-200 dark:border-white/5">
                     <th className="px-3 py-4 whitespace-nowrap">Transaction ID</th>
-                    <th className="px-3 py-4">Reason</th>
+                    <th className="px-3 py-4 whitespace-nowrap">Paid By</th>
+                    <th className="px-3 py-4">Purpose / Item</th>
                     <th className="px-3 py-4 whitespace-nowrap">Payment Date</th>
                     <th className="px-3 py-4 whitespace-nowrap">Method</th>
                     <th className="px-3 py-4 text-right whitespace-nowrap">Amount</th>
@@ -440,9 +444,31 @@ const Payments = ({ community, user, paymentState, setPaymentState }) => {
                       <td className="px-3 py-4 font-mono text-xs text-blue-600 dark:text-blue-400 whitespace-nowrap">
                         {h.gateway_token || `TXN_${h.payment_id}`}
                       </td>
+                      <td className="px-3 py-4 whitespace-nowrap">
+                        <div className="font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+                          <UserIcon size={16} className="text-blue-500 shrink-0" />
+                          <span>{h.payer_name || 'Resident'}</span>
+                        </div>
+                        <div className="text-[10px] text-blue-600 dark:text-blue-400 font-mono font-medium pl-6">
+                          {h.payer_role || 'Resident'}
+                        </div>
+                      </td>
                       <td className="px-3 py-4">
-                        <div className="font-semibold text-slate-900 dark:text-white">{h.reason.replace('_', ' ').toUpperCase()}</div>
-                        <div className="text-xs text-slate-400 dark:text-gray-500">Ref ID: {h.reference_id || 'N/A'}</div>
+                        <div className="font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+                          {h.reason === 'AMENITY_BOOKING' ? (
+                            <Dumbbell size={16} className="text-blue-500 shrink-0" />
+                          ) : h.reason === 'VIOLATION' ? (
+                            <AlertTriangle size={16} className="text-amber-500 shrink-0" />
+                          ) : h.reason === 'VENDOR_PAYMENT' ? (
+                            <Wrench size={16} className="text-indigo-500 shrink-0" />
+                          ) : (
+                            <Building2 size={16} className="text-emerald-500 shrink-0" />
+                          )}
+                          <span>{h.item_title || h.reason?.replace('_', ' ')}</span>
+                        </div>
+                        <div className="text-xs text-slate-400 dark:text-gray-500 font-mono mt-0.5 pl-6">
+                          Ref ID: #{h.reference_id || h.payment_id}
+                        </div>
                       </td>
                       <td className="px-3 py-4 text-xs text-slate-500 dark:text-gray-400 whitespace-nowrap">
                         {new Date(h.payment_date).toLocaleString()}

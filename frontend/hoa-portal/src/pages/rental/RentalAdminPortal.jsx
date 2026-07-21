@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../../context/ThemeContext';
+import { LogOut } from 'lucide-react';
 import API from '../../services/api';
 
 // Layout Components
@@ -34,6 +35,7 @@ const RentalAdminPortal = () => {
 
   const [activePage, _setActivePage] = useState('dashboard');
   const [pageHistory, setPageHistory] = useState(['dashboard']);
+  const [showExitConfirm, setShowExitConfirm] = useState(false);
   
   // Notification states
   const [isNotifOpen, setIsNotifOpen] = useState(false);
@@ -56,6 +58,24 @@ const RentalAdminPortal = () => {
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(null);
 
+  // Intercept Chrome browser back button when on main dashboard page to ask confirmation before exiting
+  useEffect(() => {
+    window.history.pushState({ isPortalGuard: true }, '', window.location.href);
+
+    const handlePopState = (e) => {
+      const currentQueryTab = new URLSearchParams(window.location.search).get('tab');
+      if (!currentQueryTab || currentQueryTab === 'dashboard') {
+        setShowExitConfirm(true);
+        window.history.pushState({ isPortalGuard: true }, '', window.location.href);
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, []);
+
   const setActivePage = (newPage) => {
     if (newPage === activePage) return;
     if (newPage === 'dashboard') {
@@ -70,16 +90,29 @@ const RentalAdminPortal = () => {
   };
 
   const handleBack = () => {
-    if (pageHistory.length > 1) {
-      const newHistory = [...pageHistory];
-      newHistory.pop();
-      const prevPage = newHistory[newHistory.length - 1];
-      setPageHistory(newHistory);
-      _setActivePage(prevPage);
+    if (activePage !== 'dashboard') {
+      if (pageHistory.length > 1) {
+        const newHistory = [...pageHistory];
+        newHistory.pop();
+        const prevPage = newHistory[newHistory.length - 1] || 'dashboard';
+        setPageHistory(newHistory.length > 0 ? newHistory : ['dashboard']);
+        _setActivePage(prevPage);
+      } else {
+        setPageHistory(['dashboard']);
+        _setActivePage('dashboard');
+      }
     } else {
-      _setActivePage('dashboard');
-      setPageHistory(['dashboard']);
+      setShowExitConfirm(true);
     }
+  };
+
+  const handleConfirmExitLogout = () => {
+    const keys = ['rental_token', 'rental_session_token', 'rental_user'];
+    keys.forEach(k => {
+      localStorage.removeItem(k);
+      sessionStorage.removeItem(k);
+    });
+    window.location.href = '/rental/login';
   };
 
   const fetchNotifications = async () => {
@@ -315,7 +348,7 @@ const RentalAdminPortal = () => {
           toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
           user={user}
           setActivePage={setActivePage}
-          canGoBack={pageHistory.length > 1}
+          canGoBack={true}
           onBack={handleBack}
           properties={properties}
           selectedPropertyFilterId={selectedPropertyFilterId}
@@ -340,6 +373,37 @@ const RentalAdminPortal = () => {
         readNotificationIds={readNotificationIds}
         onNotifClick={handleNotifClick}
       />
+
+      {/* Confirmation Modal when exiting portal via Back navigation */}
+      {showExitConfirm && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[200] flex items-center justify-center p-4 animate-in fade-in zoom-in-95 duration-200">
+          <div className="bg-white dark:bg-gradient-to-br dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 w-full max-w-sm text-center shadow-2xl text-slate-900 dark:text-white">
+            <div className="w-14 h-14 bg-red-500/10 dark:bg-red-500/20 text-red-600 dark:text-red-400 rounded-full flex items-center justify-center mx-auto mb-4 border border-red-500/20">
+              <LogOut size={28} />
+            </div>
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">Confirm Exit & Logout</h3>
+            <p className="text-xs text-slate-500 dark:text-gray-400 mb-6 leading-relaxed">
+              Are you sure you want to log out and return to the main website / sign in page?
+            </p>
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => setShowExitConfirm(false)}
+                className="flex-1 py-3 px-4 rounded-2xl text-xs font-bold bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 text-slate-700 dark:text-gray-200 transition cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmExitLogout}
+                className="flex-1 py-3 px-4 rounded-2xl text-xs font-bold bg-red-600 hover:bg-red-500 text-white shadow-lg shadow-red-500/25 transition cursor-pointer"
+              >
+                Yes, Logout & Exit
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -37,8 +37,9 @@ const StatusBadge = ({ booking }) => {
   return <span className={`px-3 py-1 rounded-full text-xs font-semibold ${badgeClass}`}>{displayStatus}</span>;
 };
 
-const BookModal = ({ amenity, communityId, onClose, onSuccess }) => {
+const BookModal = ({ amenity, communityId, onClose, onSuccess, setActivePage, setPaymentState }) => {
   const [loading, setLoading] = useState(false);
+  const [loadingSlots, setLoadingSlots] = useState(false);
   const [availability, setAvailability] = useState(null);
   const [confirmTick, setConfirmTick] = useState(false);
   
@@ -55,28 +56,52 @@ const BookModal = ({ amenity, communityId, onClose, onSuccess }) => {
   }, [form.booking_date]);
 
   const checkAvailability = async () => {
+    setLoadingSlots(true);
     try {
       const res = await API.get(`/amenity/${amenity.amenity_id}/availability?booking_date=${form.booking_date}`);
       setAvailability(res.data);
-    } catch { }
+    } catch {
+      setAvailability({
+        slot_1_available: true,
+        slot_1_time: '06:00 AM - 12:00 PM',
+        slot_2_available: true,
+        slot_2_time: '04:00 PM - 09:00 PM'
+      });
+    } finally {
+      setLoadingSlots(false);
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     try {
-      await API.post('/amenity/booking', {
+      const res = await API.post('/amenity/booking', {
         amenity_id: amenity.amenity_id,
         community_id: communityId,
         booking_date: form.booking_date,
         slot_number: parseInt(form.slot_number),
       });
+      const createdBooking = res.data;
+      onSuccess();
+      onClose();
+
       if (amenity.fee_enabled && amenity.booking_fee > 0) {
-        alert("The Amenity will be booked only if the Payment is made");
+        if (setPaymentState && setActivePage) {
+          setPaymentState({
+            dueItem: {
+              amount: amenity.booking_fee,
+              reason: 'AMENITY_BOOKING',
+              reference_id: createdBooking?.booking_id,
+              title: `Amenity Booking: ${amenity.name} (${form.booking_date})`,
+              id: createdBooking?.booking_id
+            }
+          });
+          setActivePage('payments');
+        }
       } else {
         alert("Amenity booked successfully!");
       }
-      onSuccess(); onClose();
     } catch (err) {
       alert(err.response?.data?.detail || 'Booking failed');
     } finally { setLoading(false); }
@@ -94,7 +119,7 @@ const BookModal = ({ amenity, communityId, onClose, onSuccess }) => {
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="text-xs text-slate-500 dark:text-gray-400 mb-1 block">Booking Date</label>
+            <label className="text-xs text-slate-500 dark:text-gray-400 mb-1 block">Booking Date <span className="text-red-500">*</span></label>
             <input
               type="date"
               required
@@ -109,22 +134,33 @@ const BookModal = ({ amenity, communityId, onClose, onSuccess }) => {
             />
           </div>
 
-          {availability && (
-            <div>
-              <label className="text-xs text-slate-500 dark:text-gray-400 mb-2 block">Select Time Slot</label>
+          <div>
+            <label className="text-xs text-slate-500 dark:text-gray-400 mb-2 block">Select Time Slot <span className="text-red-500">*</span></label>
+            {loadingSlots || !availability ? (
+              <div className="space-y-2">
+                <div className="w-full p-4 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 animate-pulse flex justify-between items-center">
+                  <span className="h-4 w-36 bg-slate-200 dark:bg-white/10 rounded"></span>
+                  <span className="h-4 w-16 bg-slate-200 dark:bg-white/10 rounded-full"></span>
+                </div>
+                <div className="w-full p-4 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 animate-pulse flex justify-between items-center">
+                  <span className="h-4 w-36 bg-slate-200 dark:bg-white/10 rounded"></span>
+                  <span className="h-4 w-16 bg-slate-200 dark:bg-white/10 rounded-full"></span>
+                </div>
+              </div>
+            ) : (
               <div className="space-y-2">
                 <button type="button"
                   disabled={!availability.slot_1_available}
                   onClick={() => setForm({ ...form, slot_number: '1' })}
                   className={`w-full p-3 rounded-xl border text-sm text-left transition ${form.slot_number === '1'
-                    ? 'border-blue-500 bg-blue-500/10 text-blue-600 dark:text-blue-400'
+                    ? 'border-blue-500 bg-blue-500/10 text-blue-600 dark:text-blue-400 font-bold'
                     : availability.slot_1_available
                       ? 'border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-900 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10 dark:text-white'
                       : 'border-slate-100 bg-slate-100 text-slate-400 dark:border-white/5 dark:bg-white/5 dark:text-gray-600 cursor-not-allowed'
                     }`}>
                   <div className="flex items-center justify-between">
                     <span>🌅 Slot 1 — {availability.slot_1_time}</span>
-                    <span className={`text-xs px-2 py-0.5 rounded-full ${availability.slot_1_available ? 'bg-blue-500/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400' : 'bg-red-500/10 text-red-600 dark:bg-red-500/20 dark:text-red-400'}`}>
+                    <span className={`text-xs px-2 py-0.5 rounded-full ${availability.slot_1_available ? 'bg-blue-500/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400 font-bold' : 'bg-red-500/10 text-red-600 dark:bg-red-500/20 dark:text-red-400'}`}>
                       {availability.slot_1_available ? 'Available' : 'Booked'}
                     </span>
                   </div>
@@ -133,35 +169,35 @@ const BookModal = ({ amenity, communityId, onClose, onSuccess }) => {
                   disabled={!availability.slot_2_available}
                   onClick={() => setForm({ ...form, slot_number: '2' })}
                   className={`w-full p-3 rounded-xl border text-sm text-left transition ${form.slot_number === '2'
-                    ? 'border-blue-500 bg-blue-500/10 text-blue-600 dark:text-blue-400'
+                    ? 'border-blue-500 bg-blue-500/10 text-blue-600 dark:text-blue-400 font-bold'
                     : availability.slot_2_available
                       ? 'border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-900 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10 dark:text-white'
                       : 'border-slate-100 bg-slate-100 text-slate-400 dark:border-white/5 dark:bg-white/5 dark:text-gray-600 cursor-not-allowed'
                     }`}>
                   <div className="flex items-center justify-between">
                     <span>🌆 Slot 2 — {availability.slot_2_time}</span>
-                    <span className={`text-xs px-2 py-0.5 rounded-full ${availability.slot_2_available ? 'bg-blue-500/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400' : 'bg-red-500/10 text-red-600 dark:bg-red-500/20 dark:text-red-400'}`}>
+                    <span className={`text-xs px-2 py-0.5 rounded-full ${availability.slot_2_available ? 'bg-blue-500/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400 font-bold' : 'bg-red-500/10 text-red-600 dark:bg-red-500/20 dark:text-red-400'}`}>
                       {availability.slot_2_available ? 'Available' : 'Booked'}
                     </span>
                   </div>
                 </button>
               </div>
+            )}
 
-              {/* Confirm Booking checkbox field */}
-              <div className="flex items-center gap-2 mt-4 bg-slate-50 dark:bg-[#0D1B2A]/30 p-3 rounded-xl border border-slate-200 dark:border-white/10">
-                <input
-                  type="checkbox"
-                  id="confirm-booking-tick"
-                  checked={confirmTick}
-                  onChange={(e) => setConfirmTick(e.target.checked)}
-                  className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-teal-500 cursor-pointer animate-pulse"
-                />
-                <label htmlFor="confirm-booking-tick" className="text-sm text-slate-700 dark:text-gray-300 font-medium cursor-pointer select-none">
-                  Confirm Booking
-                </label>
-              </div>
+            {/* Confirm Booking checkbox field */}
+            <div className="flex items-center gap-2 mt-4 bg-slate-50 dark:bg-[#0D1B2A]/30 p-3 rounded-xl border border-slate-200 dark:border-white/10">
+              <input
+                type="checkbox"
+                id="confirm-booking-tick"
+                checked={confirmTick}
+                onChange={(e) => setConfirmTick(e.target.checked)}
+                className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-teal-500 cursor-pointer"
+              />
+              <label htmlFor="confirm-booking-tick" className="text-sm text-slate-700 dark:text-gray-300 font-medium cursor-pointer select-none">
+                Confirm Booking
+              </label>
             </div>
-          )}
+          </div>
 
           <div className="flex gap-3 pt-2">
             <button type="button" onClick={onClose} className="flex-1 py-2.5 bg-slate-100 dark:bg-white/10 text-slate-700 dark:text-white rounded-xl text-sm font-medium transition cancel-button-red-hover">Cancel</button>
@@ -957,7 +993,8 @@ const Amenity = ({ community, user, setActivePage, setPaymentState }) => {
 
       {bookModal && (
         <BookModal amenity={bookModal} communityId={community?.community_id}
-          onClose={() => setBookModal(null)} onSuccess={() => { fetchBookings(); setActiveTab('bookings'); }} />
+          onClose={() => setBookModal(null)} onSuccess={() => { fetchBookings(); setActiveTab('bookings'); }}
+          setActivePage={setActivePage} setPaymentState={setPaymentState} />
       )}
 
       {editModal && (

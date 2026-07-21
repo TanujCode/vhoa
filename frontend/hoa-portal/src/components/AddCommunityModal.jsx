@@ -252,7 +252,7 @@ const AddCommunityModal = ({ isOpen, onClose, onSuccess }) => {
           
           {/* Contract Code Field */}
           <div>
-            <label className="block text-sm text-slate-500 dark:text-gray-400 mb-1">Contract Code *</label>
+            <label className="block text-sm text-slate-500 dark:text-gray-400 mb-1">Contract Code <span className="text-red-500">*</span></label>
             <div className="flex gap-2">
               <input 
                 name="contract_code" 
@@ -285,7 +285,7 @@ const AddCommunityModal = ({ isOpen, onClose, onSuccess }) => {
           {contractVerified && (
             <>
               <div>
-                <label className="block text-sm text-slate-500 dark:text-gray-400 mb-1">Community Name *</label>
+                <label className="block text-sm text-slate-500 dark:text-gray-400 mb-1">Community Name <span className="text-red-500">*</span></label>
                 <input 
                   name="name" 
                   value={formData.name} 
@@ -298,7 +298,7 @@ const AddCommunityModal = ({ isOpen, onClose, onSuccess }) => {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm text-slate-500 dark:text-gray-400 mb-1">Community Code *</label>
+                  <label className="block text-sm text-slate-500 dark:text-gray-400 mb-1">Community Code <span className="text-red-500">*</span></label>
                   <input 
                     name="community_code" 
                     value={formData.community_code} 
@@ -323,7 +323,7 @@ const AddCommunityModal = ({ isOpen, onClose, onSuccess }) => {
               {/* Dynamic Location Selectors */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs text-slate-500 dark:text-gray-400 mb-1">Country *</label>
+                  <label className="block text-xs text-slate-500 dark:text-gray-400 mb-1">Country <span className="text-red-500">*</span></label>
                   <select 
                     name="address.country_id"
                     value={formData.address.country_id}
@@ -338,7 +338,7 @@ const AddCommunityModal = ({ isOpen, onClose, onSuccess }) => {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs text-slate-500 dark:text-gray-400 mb-1">State *</label>
+                  <label className="block text-xs text-slate-500 dark:text-gray-400 mb-1">State <span className="text-red-500">*</span></label>
                   <select 
                     name="address.state_id"
                     value={formData.address.state_id}
@@ -355,7 +355,7 @@ const AddCommunityModal = ({ isOpen, onClose, onSuccess }) => {
               </div>
 
               <div>
-                <label className="block text-sm text-slate-500 dark:text-gray-400 mb-1">Address Line *</label>
+                <label className="block text-sm text-slate-500 dark:text-gray-400 mb-1">Address Line <span className="text-red-500">*</span></label>
                 <input 
                   name="address.address" 
                   value={formData.address.address} 
@@ -368,7 +368,7 @@ const AddCommunityModal = ({ isOpen, onClose, onSuccess }) => {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm text-slate-500 dark:text-gray-400 mb-1">City *</label>
+                  <label className="block text-sm text-slate-500 dark:text-gray-400 mb-1">City <span className="text-red-500">*</span></label>
                   <input 
                     name="address.city" 
                     value={formData.address.city} 
@@ -379,7 +379,7 @@ const AddCommunityModal = ({ isOpen, onClose, onSuccess }) => {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm text-slate-500 dark:text-gray-400 mb-1">Zip Code *</label>
+                  <label className="block text-sm text-slate-500 dark:text-gray-400 mb-1">Zip Code <span className="text-red-500">*</span></label>
                   <input 
                     name="address.zip_code" 
                     value={formData.address.zip_code} 

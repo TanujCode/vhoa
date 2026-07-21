@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom'; 
+import { useNavigate, useSearchParams } from 'react-router-dom'; 
 import { useTheme } from '../../context/ThemeContext'; 
+import { LogOut } from 'lucide-react';
 
 // Layout Components
 import Sidebar from '../../components/Sidebar';
@@ -38,15 +39,51 @@ import API from '../../services/api';
 const AdminPortal = () => {
   const { theme } = useTheme();
   const navigate = useNavigate(); 
+  const [searchParams, setSearchParams] = useSearchParams();
 
-  const [activePage, _setActivePage] = useState('dashboard');
-  const [pageHistory, setPageHistory] = useState(['dashboard']);
+  const currentTab = searchParams.get('tab') || 'dashboard';
+  const [activePage, _setActivePage] = useState(currentTab);
+  const [pageHistory, setPageHistory] = useState([currentTab]);
+  const [showExitConfirm, setShowExitConfirm] = useState(false);
+
+  // Sync tab with browser back/forward buttons
+  useEffect(() => {
+    if (currentTab !== activePage) {
+      _setActivePage(currentTab);
+      setPageHistory(prev => {
+        if (prev[prev.length - 1] === currentTab) return prev;
+        return [...prev, currentTab];
+      });
+    }
+  }, [currentTab]);
+
+  // Intercept browser back button when on main dashboard page to ask confirmation before exiting
+  useEffect(() => {
+    // Push dummy history entry so Chrome back button pops inside dashboard instead of leaving
+    window.history.pushState({ isPortalGuard: true }, '', window.location.href);
+
+    const handlePopState = (e) => {
+      const currentQueryTab = new URLSearchParams(window.location.search).get('tab');
+      if (!currentQueryTab || currentQueryTab === 'dashboard') {
+        setShowExitConfirm(true);
+        // Re-push history entry so dashboard stays protected
+        window.history.pushState({ isPortalGuard: true }, '', window.location.href);
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, []);
 
   const setActivePage = (newPage) => {
     if (newPage === activePage) return;
     if (newPage === 'dashboard') {
+      setSearchParams({});
       setPageHistory(['dashboard']);
     } else {
+      setSearchParams({ tab: newPage });
       setPageHistory(prev => {
         if (prev[prev.length - 1] === newPage) return prev;
         return [...prev, newPage];
@@ -56,16 +93,33 @@ const AdminPortal = () => {
   };
 
   const handleBack = () => {
-    if (pageHistory.length > 1) {
-      const newHistory = [...pageHistory];
-      newHistory.pop(); // Pop current page
-      const prevPage = newHistory[newHistory.length - 1];
-      setPageHistory(newHistory);
-      _setActivePage(prevPage);
+    if (activePage !== 'dashboard') {
+      if (pageHistory.length > 1) {
+        const newHistory = [...pageHistory];
+        newHistory.pop(); // Pop current page
+        const prevPage = newHistory[newHistory.length - 1] || 'dashboard';
+        setPageHistory(newHistory.length > 0 ? newHistory : ['dashboard']);
+        setSearchParams(prevPage === 'dashboard' ? {} : { tab: prevPage });
+        _setActivePage(prevPage);
+      } else {
+        // Fallback when user refreshed directly on a subpage
+        setPageHistory(['dashboard']);
+        setSearchParams({});
+        _setActivePage('dashboard');
+      }
     } else {
-      _setActivePage('dashboard');
-      setPageHistory(['dashboard']);
+      // User is on main Dashboard and clicking Back -> Ask confirmation before exiting to website/login
+      setShowExitConfirm(true);
     }
+  };
+
+  const handleConfirmExitLogout = () => {
+    const keys = ['token', 'session_token', 'access_token', 'user', 'view_as_resident'];
+    keys.forEach(k => {
+      localStorage.removeItem(k);
+      sessionStorage.removeItem(k);
+    });
+    window.location.href = '/login';
   };
 
   const [activeCommunity, setActiveCommunity] = useState(null);
@@ -76,7 +130,14 @@ const AdminPortal = () => {
   const [user, setUser] = useState(null);
   const [paymentState, setPaymentState] = useState(null);
   const [notifications, setNotifications] = useState([]);
-  const [viewAsResident, setViewAsResident] = useState(false);
+  const [viewAsResident, setViewAsResidentState] = useState(() => {
+    return localStorage.getItem('view_as_resident') === 'true';
+  });
+
+  const setViewAsResident = (val) => {
+    setViewAsResidentState(val);
+    localStorage.setItem('view_as_resident', String(val));
+  };
   const [lastReadTimestamp, setLastReadTimestamp] = useState(() => {
     return Number(localStorage.getItem('last_read_notifications') || 0);
   });
@@ -487,6 +548,7 @@ const AdminPortal = () => {
             user={effectiveUser} 
             paymentState={paymentState}
             setPaymentState={setPaymentState}
+            viewAsResident={viewAsResident}
           />
         );
 
@@ -545,7 +607,7 @@ const AdminPortal = () => {
             localStorage.removeItem(`vendors_unlocked_${activeCommunity?.community_id}`);
           }}
           canSwitchView={canSwitchView}
-          canGoBack={pageHistory.length > 1}
+          canGoBack={true}
           onBack={handleBack}
         />
 
@@ -582,6 +644,37 @@ const AdminPortal = () => {
       />
       {activeCommunity && user?.role !== 'sales_admin' && activeCommunity?.visible_tabs?.ai_assistant !== false && (
         <AiAssistant user={user} community={activeCommunity} />
+      )}
+
+      {/* Confirmation Modal when exiting portal via Back navigation */}
+      {showExitConfirm && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[200] flex items-center justify-center p-4 animate-in fade-in zoom-in-95 duration-200">
+          <div className="bg-white dark:bg-gradient-to-br dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 w-full max-w-sm text-center shadow-2xl text-slate-900 dark:text-white">
+            <div className="w-14 h-14 bg-red-500/10 dark:bg-red-500/20 text-red-600 dark:text-red-400 rounded-full flex items-center justify-center mx-auto mb-4 border border-red-500/20">
+              <LogOut size={28} />
+            </div>
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">Confirm Exit & Logout</h3>
+            <p className="text-xs text-slate-500 dark:text-gray-400 mb-6 leading-relaxed">
+              Are you sure you want to log out and return to the main website / sign in page?
+            </p>
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => setShowExitConfirm(false)}
+                className="flex-1 py-3 px-4 rounded-2xl text-xs font-bold bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 text-slate-700 dark:text-gray-200 transition cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmExitLogout}
+                className="flex-1 py-3 px-4 rounded-2xl text-xs font-bold bg-red-600 hover:bg-red-500 text-white shadow-lg shadow-red-500/25 transition cursor-pointer"
+              >
+                Yes, Logout & Exit
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
