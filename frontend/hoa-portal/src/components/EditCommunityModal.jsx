@@ -85,7 +85,7 @@ const EditCommunityModal = ({ isOpen, onClose, community, onSuccess }) => {
         <form onSubmit={handleSubmit} className="p-5 space-y-4">
           
           <div>
-            <label className="block text-sm text-slate-500 dark:text-gray-400 mb-1">Community Name *</label>
+            <label className="block text-sm text-slate-500 dark:text-gray-400 mb-1">Community Name <span className="text-red-500">*</span></label>
             <input 
               name="name" 
               value={formData.name} 
@@ -98,7 +98,7 @@ const EditCommunityModal = ({ isOpen, onClose, community, onSuccess }) => {
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm text-slate-500 dark:text-gray-400 mb-1">Total Units *</label>
+              <label className="block text-sm text-slate-500 dark:text-gray-400 mb-1">Total Units <span className="text-red-500">*</span></label>
               <input 
                 type="number"
                 name="community_size" 

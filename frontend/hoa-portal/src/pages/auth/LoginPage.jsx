@@ -8,6 +8,14 @@ import { useGoogleLogin } from '@react-oauth/google';
 import { validateEmail } from '../../utils/emailValidation';
 
 export default function LoginPage() {
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    watch,
+    formState: { errors, isSubmitting },
+  } = useForm({ mode: 'onTouched' });
+
   const [showPassword, setShowPassword] = useState(false);
   const [errorMsg, setErrorMsg]         = useState('');
   const [successMsg, setSuccessMsg]     = useState('');
@@ -49,17 +57,15 @@ export default function LoginPage() {
   };
 
   useEffect(() => {
+    // If user is already logged in, redirect to dashboard automatically
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token') || localStorage.getItem('access_token');
+    if (token) {
+      navigate('/dashboard', { replace: true });
+      return;
+    }
     // Ping backend in background on mount to wake it up from cold-start sleep
     API.get('/auth/captcha', { timeout: 2000 }).catch(() => {});
-  }, []);
-
-  const {
-    register,
-    handleSubmit,
-    setValue,
-    watch,
-    formState: { errors, isSubmitting },
-  } = useForm({ mode: 'onTouched' });
+  }, [navigate]);
 
   const onSubmit = async (data) => {
     try {
@@ -91,21 +97,21 @@ export default function LoginPage() {
 
         // 🔥 ROLE-BASED EXACT REDIRECTS
         if (role === 'super_admin' || role === 'property_manager' || role === 'board_member') {
-          navigate('/dashboard');
+          navigate('/dashboard', { replace: true });
         } 
         else if (role === 'resident') {
           if (!communityId || communityId === null || communityId === 0) {
             if (userData?.account_status === 'PENDING_APPROVAL') {
-              navigate('/waiting-approval');
+              navigate('/waiting-approval', { replace: true });
             } else {
-              navigate('/join-community'); 
+              navigate('/join-community', { replace: true }); 
             }
           } else {
-            navigate('/dashboard'); 
+            navigate('/dashboard', { replace: true }); 
           }
         } 
         else {
-          navigate('/dashboard');
+          navigate('/dashboard', { replace: true });
         }
       }
     } catch (err) {
@@ -168,12 +174,12 @@ export default function LoginPage() {
           setTimeout(() => {
             if (role === 'resident' && (!communityId || communityId === 0)) {
               if (userData?.account_status === 'PENDING_APPROVAL') {
-                navigate('/waiting-approval');
+                navigate('/waiting-approval', { replace: true });
               } else {
-                navigate('/join-community');
+                navigate('/join-community', { replace: true });
               }
             } else {
-              navigate('/dashboard');
+              navigate('/dashboard', { replace: true });
             }
           }, 1500);
         }
