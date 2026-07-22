@@ -70,6 +70,21 @@ export default function RegisterPage() {
     API.get('/auth/captcha', { timeout: 2000 }).catch(() => {});
   }, []);
 
+  useEffect(() => {
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token') || localStorage.getItem('access_token');
+    if (token) {
+      localStorage.removeItem('token');
+      localStorage.removeItem('session_token');
+      localStorage.removeItem('user');
+      localStorage.removeItem('access_token');
+      sessionStorage.removeItem('token');
+      sessionStorage.removeItem('session_token');
+      sessionStorage.removeItem('user');
+      sessionStorage.removeItem('access_token');
+      navigate('/login', { replace: true });
+    }
+  }, [navigate]);
+
   // Password value track karne ke liye for confirm password match
   const password = watch('password');
 

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Building2, Plus, DoorOpen, BadgeAlert, PlusCircle, CheckCircle, Edit3, Trash2, Home, Building, ArrowLeft, ArrowRight, ChevronDown, Check } from 'lucide-react';
 import API from '../../services/api';
+import ConfirmModal from '../../components/ConfirmModal';
 
 export default function PropertiesHub({ 
   user, 
@@ -13,7 +14,10 @@ export default function PropertiesHub({
   const [units, setUnits] = useState([]);
   const [loadingProps, setLoadingProps] = useState(true);
   const [loadingUnits, setLoadingUnits] = useState(false);
+  const [confirmConfig, setConfirmConfig] = useState({ isOpen: false, title: '', message: '', onConfirm: null });
   const [showPropDropdown, setShowPropDropdown] = useState(false);
+  const [activeCategoryFilter, setActiveCategoryFilter] = useState('all');
+  const [searchTerm, setSearchTerm] = useState('');
 
   // Helper to determine property type
   function getPropertyType(property) {
@@ -178,6 +182,8 @@ export default function PropertiesHub({
       if (match && (!selectedProperty || selectedProperty.property_id !== match.property_id)) {
         handleSelectProperty(match);
       }
+    } else if (selectedPropertyFilterId === 'all') {
+      setSelectedProperty(null);
     }
   }, [selectedPropertyFilterId, properties]);
 
@@ -186,8 +192,13 @@ export default function PropertiesHub({
       setLoadingProps(true);
       const res = await API.get('/rental/properties');
       setProperties(res.data);
-      if (res.data.length > 0 && !selectedProperty) {
-        handleSelectProperty(res.data[0]);
+      if (selectedPropertyFilterId && selectedPropertyFilterId !== 'all') {
+        const match = res.data.find(p => String(p.property_id) === String(selectedPropertyFilterId));
+        if (match) {
+          handleSelectProperty(match);
+        }
+      } else {
+        setSelectedProperty(null);
       }
     } catch (err) {
       console.error(err);
@@ -343,17 +354,23 @@ export default function PropertiesHub({
   }
 
   async function handleDeleteProperty(propertyId) {
-    if (!window.confirm("Are you sure you want to delete this property? This will also archive its units.")) return;
-    try {
-      await API.delete(`/rental/properties/${propertyId}`);
-      setProperties(prev => prev.filter(p => p.property_id !== propertyId));
-      if (selectedProperty?.property_id === propertyId) {
-        setSelectedProperty(null);
-        setUnits([]);
+    setConfirmConfig({
+      isOpen: true,
+      title: "Delete Property",
+      message: "Are you sure you want to delete this property? This will also archive its units.",
+      onConfirm: async () => {
+        try {
+          await API.delete(`/rental/properties/${propertyId}`);
+          setProperties(prev => prev.filter(p => p.property_id !== propertyId));
+          if (selectedProperty?.property_id === propertyId) {
+            setSelectedProperty(null);
+            setUnits([]);
+          }
+        } catch (err) {
+          alert(err.response?.data?.detail || "Failed to delete property.");
+        }
       }
-    } catch (err) {
-      alert(err.response?.data?.detail || "Failed to delete property.");
-    }
+    });
   }
 
   async function handleAddUnit(e) {
@@ -407,25 +424,111 @@ export default function PropertiesHub({
   }
 
   async function handleDeleteUnit(unitId) {
-    if (!window.confirm("Are you sure you want to delete this unit?")) return;
-    try {
-      await API.delete(`/rental/units/${unitId}`);
-      setUnits(prev => prev.filter(u => u.unit_id !== unitId));
-    } catch (err) {
-      alert(err.response?.data?.detail || "Failed to delete unit.");
-    }
+    setConfirmConfig({
+      isOpen: true,
+      title: "Delete Unit",
+      message: "Are you sure you want to delete this unit? This action cannot be undone.",
+      onConfirm: async () => {
+        try {
+          await API.delete(`/rental/units/${unitId}`);
+          setUnits(prev => prev.filter(u => u.unit_id !== unitId));
+        } catch (err) {
+          alert(err.response?.data?.detail || "Failed to delete unit.");
+        }
+      }
+    });
   }
+
+  const renderPropertyCard = (p) => {
+    const activeUnits = (p.units || []).filter(u => u.active_status !== false);
+    const occupiedCount = activeUnits.filter(u => u.status === 'OCCUPIED').length;
+    const vacantCount = activeUnits.filter(u => u.status === 'VACANT').length;
+    
+    return (
+      <div 
+        key={p.property_id}
+        onClick={() => handleSelectProperty(p)}
+        className="group p-5 rounded-2xl bg-white dark:bg-[#1E2E42] border border-slate-250/60 dark:border-white/10 hover:border-blue-500 dark:hover:border-blue-500 hover:shadow-lg dark:hover:shadow-blue-900/10 transition-all duration-300 cursor-pointer flex flex-col justify-between min-h-[140px] text-left relative overflow-hidden"
+      >
+        <div className="space-y-1 relative z-10">
+          <h4 className="text-base font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-[#5BA4F5] transition duration-200 truncate">
+            {p.name}
+          </h4>
+          <p className="text-xs text-slate-450 dark:text-slate-400 mt-1 font-medium truncate">
+            {p.address}, {p.city}
+          </p>
+        </div>
+
+        <div className="mt-4 pt-3 border-t border-slate-100 dark:border-white/5 flex items-center justify-between text-[11px] font-semibold text-slate-500 dark:text-slate-455 relative z-10">
+          <div className="flex items-center gap-3">
+            <span>
+              Total: <strong className="text-slate-800 dark:text-slate-200">{activeUnits.length}</strong>
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+              <strong className="text-emerald-600 dark:text-emerald-400">{occupiedCount}</strong>
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-orange-500" />
+              <strong className="text-orange-600 dark:text-orange-400">{vacantCount}</strong>
+            </span>
+          </div>
+          <span className="text-[10px] text-blue-600 dark:text-[#5BA4F5] font-bold flex items-center gap-1 opacity-0 group-hover:opacity-100 transform translate-x-1 group-hover:translate-x-0 transition-all duration-200">
+            Manage <ArrowRight className="w-3 h-3" />
+          </span>
+        </div>
+        
+        <div className="absolute inset-0 bg-gradient-to-r from-blue-500/0 via-blue-500/[0.01] to-blue-500/[0.03] opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none" />
+      </div>
+    );
+  };
+
+  const sfPropsCount = properties.filter(p => getPropertyType(p) === 'Single Family').length;
+  const condoPropsCount = properties.filter(p => getPropertyType(p) === 'Condo').length;
+  const multiPropsCount = properties.filter(p => getPropertyType(p) === 'Multi-Unit').length;
+
+  const filteredProps = properties.filter(p => {
+    const type = getPropertyType(p);
+    if (activeCategoryFilter === 'single' && type !== 'Single Family') return false;
+    if (activeCategoryFilter === 'condo' && type !== 'Condo') return false;
+    if (activeCategoryFilter === 'multi' && type !== 'Multi-Unit') return false;
+    
+    const matchesSearch = 
+      p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      p.address.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (p.city && p.city.toLowerCase().includes(searchTerm.toLowerCase()));
+      
+    return matchesSearch;
+  });
 
   return (
     <div className="space-y-6 text-left animate-fade-in">
+      {/* Header Row */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">Properties & Units Hub</h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Add rental portfolios and register distinct rooms/apartments.</p>
+          <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+            {selectedProperty ? `${selectedProperty.name} Details` : 'Properties & Units Hub'}
+          </h1>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+            {selectedProperty 
+              ? 'Manage individual units, edit property details, and check vacancy status.' 
+              : 'Add rental portfolios and register distinct rooms/apartments.'}
+          </p>
         </div>
         <div className="flex items-center gap-3 w-full sm:w-auto self-stretch sm:self-auto justify-end">
-
-
+          {selectedProperty && (
+            <button 
+              onClick={() => {
+                if (setSelectedPropertyFilterId) {
+                  setSelectedPropertyFilterId('all');
+                }
+                setSelectedProperty(null);
+              }}
+              className="border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-white/5 px-4 py-2.5 rounded-xl flex items-center gap-1.5 text-xs font-bold transition-all whitespace-nowrap cursor-pointer animate-fade-in"
+            >
+              <ArrowLeft className="w-4 h-4" /> All Properties
+            </button>
+          )}
           <button 
             onClick={() => { setErrorMsg(''); setShowPropModal(true); }}
             className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2.5 rounded-xl flex items-center gap-1.5 text-xs font-bold transition-all shadow-md shadow-blue-500/20 whitespace-nowrap cursor-pointer"
@@ -435,117 +538,219 @@ export default function PropertiesHub({
         </div>
       </div>
 
-      <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-xl overflow-hidden shadow-sm">
-        {properties.length === 0 ? (
+      {properties.length === 0 ? (
+        <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-xl overflow-hidden shadow-sm">
           <div className="py-32 text-center text-slate-450 dark:text-slate-400 text-sm">
             <Building2 className="w-12 h-12 mx-auto text-slate-350 dark:text-slate-650 mb-3 animate-pulse" />
             <p className="font-bold text-slate-700 dark:text-slate-300">No properties added yet.</p>
             <p className="text-xs text-slate-550 mt-1">Click the "Add Property" button above to register your first property.</p>
           </div>
-        ) : selectedProperty ? (
-          <>
-            <div className="p-5 border-b border-slate-200 dark:border-white/10 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-              <div>
-                <div className="flex items-center gap-2.5 flex-wrap">
-                  <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">{selectedProperty.name}</h2>
-                  <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded border ${
-                    getPropertyType(selectedProperty) === 'Single Family'
-                      ? 'bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-450 border border-emerald-500/20'
-                      : getPropertyType(selectedProperty) === 'Condo'
-                        ? 'bg-indigo-500/10 text-indigo-650 dark:bg-indigo-500/20 dark:text-indigo-400 border border-indigo-500/20'
-                        : 'bg-blue-500/10 text-blue-655 dark:bg-blue-500/20 dark:text-blue-400 border border-blue-500/20'
-                  }`}>
-                    {getPropertyType(selectedProperty)}
-                  </span>
-                </div>
-                <p className="text-xs text-slate-450 dark:text-slate-400 mt-1 font-medium">{selectedProperty.address}, {selectedProperty.city}, {selectedProperty.state} {selectedProperty.zip_code}</p>
+        </div>
+      ) : selectedProperty ? (
+        /* Detailed Property/Unit View */
+        <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-xl overflow-hidden shadow-sm">
+          <div className="p-5 border-b border-slate-200 dark:border-white/10 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div>
+              <div className="flex items-center gap-2.5 flex-wrap">
+                <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">{selectedProperty.name}</h2>
+                <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded border ${
+                  getPropertyType(selectedProperty) === 'Single Family'
+                    ? 'bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400 border border-emerald-500/20'
+                    : getPropertyType(selectedProperty) === 'Condo'
+                      ? 'bg-indigo-500/10 text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-400 border border-indigo-500/20'
+                      : 'bg-blue-500/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400 border border-blue-500/20'
+                }`}>
+                  {getPropertyType(selectedProperty)}
+                </span>
               </div>
-              <div className="flex items-center gap-2 self-stretch sm:self-auto">
-                <button
-                  onClick={() => openEditModal(selectedProperty)}
-                  className="flex-1 sm:flex-none px-3.5 py-1.5 border border-slate-200 dark:border-white/10 rounded-xl flex items-center justify-center gap-1.5 hover:bg-slate-50 dark:hover:bg-white/5 text-xs font-semibold text-slate-700 dark:text-slate-350 transition duration-200 cursor-pointer"
-                >
-                  <Edit3 className="w-4 h-4 text-slate-400" /> Edit
-                </button>
-                <button
-                  onClick={() => handleDeleteProperty(selectedProperty.property_id)}
-                  className="flex-1 sm:flex-none px-3.5 py-1.5 border border-red-100 hover:border-red-200 dark:border-red-500/20 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-xl flex items-center justify-center gap-1.5 text-xs font-semibold text-red-655 dark:text-red-400 transition duration-200 cursor-pointer"
-                >
-                  <Trash2 className="w-4 h-4" /> Delete
-                </button>
-                {!units.some(u => u.unit_number === 'Single Family' || u.unit_number === 'Condo Unit') && (
-                  <button
-                    onClick={() => { setErrorMsg(''); setShowUnitModal(true); }}
-                    className="flex-1 sm:flex-none px-4 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl flex items-center justify-center gap-1.5 text-xs font-bold transition duration-200 shadow-md shadow-blue-500/10 cursor-pointer"
-                  >
-                    <PlusCircle className="w-4.5 h-4.5" /> Add Unit
-                  </button>
-                )}
-              </div>
+              <p className="text-xs text-slate-450 dark:text-slate-400 mt-1 font-medium">{selectedProperty.address}, {selectedProperty.city}, {selectedProperty.state} {selectedProperty.zip_code}</p>
             </div>
-
-            <div className="p-5">
-              {loadingUnits ? (
-                <div className="py-24 text-center text-slate-400 text-sm animate-pulse">Loading units...</div>
-              ) : units.length === 0 ? (
-                <div className="py-24 text-center text-slate-400 text-sm">No units added in this property yet. Click "Add Unit" to get started.</div>
-              ) : (
-                <div className="flex flex-col gap-3">
-                  {units.map(u => (
-                    <div 
-                      key={u.unit_id}
-                      className="p-4 rounded-xl border border-slate-100 dark:border-white/[0.03] bg-slate-50/30 dark:bg-black/20 hover:border-slate-200 dark:hover:border-white/[0.06] transition duration-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"
-                    >
-                      <div className="flex items-center gap-4 w-full sm:w-auto">
-                        <div className="p-3 rounded-xl bg-blue-500/10 text-blue-500 flex-shrink-0">
-                          <DoorOpen className="w-5 h-5" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
-                            <h4 className="text-sm font-bold text-slate-900 dark:text-white truncate">Unit {u.unit_number}</h4>
-                            <span className={`text-[9px] font-bold px-2 py-0.5 rounded border flex-shrink-0 ${
-                              u.status === 'OCCUPIED'
-                                ? 'bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400 border-emerald-500/20'
-                                : u.status === 'VACANT'
-                                  ? 'bg-orange-500/10 text-orange-600 dark:bg-orange-500/20 dark:text-orange-400 border-orange-500/20'
-                                  : 'bg-red-500/10 text-red-650 dark:bg-red-500/20 dark:text-red-400 border-red-500/20'
-                            }`}>
-                              {u.status}
-                            </span>
-                          </div>
-                          <p className="text-xs text-slate-450 dark:text-slate-400 mt-1 font-semibold">
-                            Rent: <strong className="text-slate-800 dark:text-slate-200">${u.rent_amount}/mo</strong>
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2 w-full sm:w-auto justify-end sm:justify-start border-t sm:border-t-0 pt-3 sm:pt-0 border-slate-100 dark:border-white/5">
-                        <button 
-                          onClick={() => openEditUnitModal(u)}
-                          className="p-2 hover:bg-slate-100 dark:hover:bg-white/10 rounded-xl text-slate-400 hover:text-blue-500 transition duration-150 flex items-center gap-1.5 text-xs font-semibold cursor-pointer border border-transparent hover:border-blue-500/10"
-                          title="Edit Unit"
-                        >
-                          <Edit3 className="w-3.5 h-3.5" />
-                          <span className="sm:hidden lg:inline text-[10px]">Edit</span>
-                        </button>
-                        <button 
-                          onClick={() => handleDeleteUnit(u.unit_id)}
-                          className="p-2 hover:bg-red-500/10 rounded-xl text-slate-400 hover:text-red-550 dark:hover:text-red-450 transition duration-150 flex items-center gap-1.5 text-xs font-semibold cursor-pointer border border-transparent hover:border-red-500/10"
-                          title="Delete Unit"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                          <span className="sm:hidden lg:inline text-[10px]">Delete</span>
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+            <div className="flex items-center gap-2 self-stretch sm:self-auto">
+              <button
+                onClick={() => openEditModal(selectedProperty)}
+                className="flex-1 sm:flex-none px-3.5 py-1.5 border border-slate-200 dark:border-white/10 rounded-xl flex items-center justify-center gap-1.5 hover:bg-slate-50 dark:hover:bg-white/5 text-xs font-semibold text-slate-700 dark:text-slate-350 transition duration-200 cursor-pointer"
+              >
+                <Edit3 className="w-4 h-4 text-slate-400" /> Edit
+              </button>
+              <button
+                onClick={() => handleDeleteProperty(selectedProperty.property_id)}
+                className="flex-1 sm:flex-none px-3.5 py-1.5 border border-red-100 hover:border-red-200 dark:border-red-500/20 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-xl flex items-center justify-center gap-1.5 text-xs font-semibold text-red-655 dark:text-red-400 transition duration-200 cursor-pointer"
+              >
+                <Trash2 className="w-4 h-4" /> Delete
+              </button>
+              {!units.some(u => u.unit_number === 'Single Family' || u.unit_number === 'Condo Unit') && (
+                <button
+                  onClick={() => { setErrorMsg(''); setShowUnitModal(true); }}
+                  className="flex-1 sm:flex-none px-4 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl flex items-center justify-center gap-1.5 text-xs font-bold transition duration-200 shadow-md shadow-blue-500/10 cursor-pointer"
+                >
+                  <PlusCircle className="w-4.5 h-4.5" /> Add Unit
+                </button>
               )}
             </div>
-          </>
-        ) : (
-          <div className="py-32 text-center text-slate-400 text-sm">Please select or add a property from the dropdown above to manage units.</div>
-        )}
-      </div>
+          </div>
+
+          <div className="p-5">
+            {loadingUnits ? (
+              <div className="py-24 text-center text-slate-400 text-sm animate-pulse">Loading units...</div>
+            ) : units.length === 0 ? (
+              <div className="py-24 text-center text-slate-400 text-sm">No units added in this property yet. Click "Add Unit" to get started.</div>
+            ) : (
+              <div className="flex flex-col gap-3">
+                {units.map(u => (
+                  <div 
+                    key={u.unit_id}
+                    className="p-4 rounded-xl border border-slate-100 dark:border-white/[0.03] bg-slate-50/30 dark:bg-black/20 hover:border-slate-200 dark:hover:border-white/[0.06] transition duration-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"
+                  >
+                    <div className="flex items-center gap-4 w-full sm:w-auto">
+                      <div className="p-3 rounded-xl bg-blue-500/10 text-blue-500 flex-shrink-0">
+                        <DoorOpen className="w-5 h-5" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <h4 className="text-sm font-bold text-slate-900 dark:text-white truncate">Unit {u.unit_number}</h4>
+                          <span className={`text-[9px] font-bold px-2 py-0.5 rounded border flex-shrink-0 ${
+                            u.status === 'OCCUPIED'
+                              ? 'bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-450 border-emerald-500/20'
+                              : u.status === 'VACANT'
+                                ? 'bg-orange-500/10 text-orange-600 dark:bg-orange-500/20 dark:text-orange-400 border-orange-500/20'
+                                : 'bg-red-500/10 text-red-600 dark:bg-red-500/20 dark:text-red-400 border-red-500/20'
+                          }`}>
+                            {u.status}
+                          </span>
+                        </div>
+                        <p className="text-xs text-slate-450 dark:text-slate-400 mt-1 font-semibold">
+                          Rent: <strong className="text-slate-800 dark:text-slate-200">${u.rent_amount}/mo</strong>
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 w-full sm:w-auto justify-end sm:justify-start border-t sm:border-t-0 pt-3 sm:pt-0 border-slate-100 dark:border-white/5">
+                      <button 
+                        onClick={() => openEditUnitModal(u)}
+                        className="p-2 hover:bg-slate-100 dark:hover:bg-white/10 rounded-xl text-slate-400 hover:text-blue-500 transition duration-150 flex items-center gap-1.5 text-xs font-semibold cursor-pointer border border-transparent hover:border-blue-500/10"
+                        title="Edit Unit"
+                      >
+                        <Edit3 className="w-3.5 h-3.5" />
+                        <span className="sm:hidden lg:inline text-[10px]">Edit</span>
+                      </button>
+                      <button 
+                        onClick={() => handleDeleteUnit(u.unit_id)}
+                        className="p-2 hover:bg-red-500/10 rounded-xl text-slate-400 hover:text-red-555 dark:hover:text-red-450 transition duration-155 flex items-center gap-1.5 text-xs font-semibold cursor-pointer border border-transparent hover:border-red-500/10"
+                        title="Delete Unit"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        <span className="sm:hidden lg:inline text-[10px]">Delete</span>
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      ) : (
+        /* Premium Dashboard Portfolio View */
+        <div className="space-y-6">
+          {/* Stats Summary Cards Row */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="p-4 rounded-2xl bg-white dark:bg-[#1E2E42] border border-slate-200/80 dark:border-white/10 flex items-center gap-3 shadow-sm">
+              <div className="p-3 rounded-xl bg-blue-500/10 text-blue-500 shrink-0">
+                <Building2 className="w-5 h-5" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-[10px] text-slate-450 dark:text-slate-400 font-bold uppercase tracking-wider truncate">Total Portfolio</p>
+                <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white mt-0.5 truncate">{properties.length} Properties</h3>
+              </div>
+            </div>
+            <div className="p-4 rounded-2xl bg-white dark:bg-[#1E2E42] border border-slate-200/80 dark:border-white/10 flex items-center gap-3 shadow-sm">
+              <div className="p-3 rounded-xl bg-emerald-500/10 text-emerald-500 shrink-0">
+                <Home className="w-5 h-5" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-[10px] text-slate-450 dark:text-slate-400 font-bold uppercase tracking-wider truncate">Single Family</p>
+                <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white mt-0.5 truncate">{sfPropsCount} Homes</h3>
+              </div>
+            </div>
+            <div className="p-4 rounded-2xl bg-white dark:bg-[#1E2E42] border border-slate-200/80 dark:border-white/10 flex items-center gap-3 shadow-sm">
+              <div className="p-3 rounded-xl bg-indigo-500/10 text-indigo-500 shrink-0">
+                <Building className="w-5 h-5" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-[10px] text-slate-450 dark:text-slate-400 font-bold uppercase tracking-wider truncate">Condos & Apts</p>
+                <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white mt-0.5 truncate">{condoPropsCount} Units</h3>
+              </div>
+            </div>
+            <div className="p-4 rounded-2xl bg-white dark:bg-[#1E2E42] border border-slate-200/80 dark:border-white/10 flex items-center gap-3 shadow-sm">
+              <div className="p-3 rounded-xl bg-blue-500/10 text-blue-500 shrink-0">
+                <Building2 className="w-5 h-5" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-[10px] text-slate-450 dark:text-slate-400 font-bold uppercase tracking-wider truncate">Multi-Unit Complex</p>
+                <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white mt-0.5 truncate">{multiPropsCount} Buildings</h3>
+              </div>
+            </div>
+          </div>
+
+          {/* Interactive Filters & Search Row */}
+          <div className="flex flex-col md:flex-row justify-between items-stretch md:items-center gap-4 bg-slate-50 dark:bg-black/15 p-3 rounded-2xl border border-slate-200/60 dark:border-white/5 shadow-inner">
+            {/* Category Tabs */}
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0 custom-scrollbar shrink-0">
+              {[
+                { id: 'all', label: 'All Properties', count: properties.length },
+                { id: 'single', label: 'Single Family', count: sfPropsCount },
+                { id: 'condo', label: 'Condo & Apts', count: condoPropsCount },
+                { id: 'multi', label: 'Multi-Unit', count: multiPropsCount }
+              ].map(tab => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveCategoryFilter(tab.id)}
+                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer flex items-center gap-2 ${
+                    activeCategoryFilter === tab.id
+                      ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20'
+                      : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-100/80 dark:hover:bg-white/5'
+                  }`}
+                >
+                  {tab.label}
+                  <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold transition-colors ${
+                    activeCategoryFilter === tab.id
+                      ? 'bg-white/20 text-white'
+                      : 'bg-slate-200 dark:bg-white/10 text-slate-600 dark:text-slate-400'
+                  }`}>
+                    {tab.count}
+                  </span>
+                </button>
+              ))}
+            </div>
+
+            {/* Live Search Input */}
+            <div className="relative md:w-80">
+              <span className="absolute left-3.5 top-3 text-slate-400">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </span>
+              <input
+                type="text"
+                placeholder="Search property name or address..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl pl-9 pr-4 py-2 text-xs text-slate-900 dark:text-white outline-none focus:border-blue-500 shadow-sm"
+              />
+            </div>
+          </div>
+
+          {/* Cards Grid */}
+          {filteredProps.length === 0 ? (
+            <div className="py-20 text-center text-slate-400 border border-dashed border-slate-200 dark:border-white/10 rounded-2xl bg-white/40 dark:bg-[#1a2736]/10">
+              <p className="font-bold text-slate-600 dark:text-slate-300">No properties match your filter/search.</p>
+              <p className="text-xs text-slate-450 mt-1">Try modifying your search term or tab category.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredProps.map(p => renderPropertyCard(p))}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Property Creation Modal (Stepper Wizard) */}
       {showPropModal && (
@@ -953,6 +1158,16 @@ export default function PropertiesHub({
           </div>
         </div>
       )}
+      <ConfirmModal
+        isOpen={confirmConfig.isOpen}
+        title={confirmConfig.title}
+        message={confirmConfig.message}
+        onConfirm={() => {
+          confirmConfig.onConfirm?.();
+          setConfirmConfig(prev => ({ ...prev, isOpen: false }));
+        }}
+        onCancel={() => setConfirmConfig(prev => ({ ...prev, isOpen: false }))}
+      />
     </div>
   );
 }

@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import API from '../../services/api';
+import ConfirmModal from '../../components/ConfirmModal';
 
 // Standardized Badge components matching reference
 const StatusBadge = ({ status }) => {
@@ -102,6 +103,7 @@ export default function RentalMaintenanceDesk({ user, selectedPropertyFilterId =
   const [showPayModal, setShowPayModal] = useState(false);
   const [payMethod, setPayMethod] = useState('ACH');
   const [paying, setPaying] = useState(false);
+  const [confirmConfig, setConfirmConfig] = useState({ isOpen: false, title: '', message: '', onConfirm: null });
 
   useEffect(() => {
     fetchData();
@@ -201,14 +203,20 @@ export default function RentalMaintenanceDesk({ user, selectedPropertyFilterId =
   }
 
   async function handleTenantCancelRequest(req) {
-    if (!window.confirm(`Are you sure you want to cancel maintenance request #${req.request_id}?`)) return;
-    try {
-      const res = await API.post(`/rental/maintenance/${req.request_id}/cancel`);
-      setRequests(prev => prev.map(r => r.request_id === req.request_id ? res.data : r));
-      toast.success(`Request #${req.request_id} has been cancelled.`);
-    } catch (err) {
-      toast.error(err.response?.data?.detail || "Failed to cancel request.");
-    }
+    setConfirmConfig({
+      isOpen: true,
+      title: "Cancel Maintenance Request",
+      message: `Are you sure you want to cancel maintenance request #${req.request_id}?`,
+      onConfirm: async () => {
+        try {
+          const res = await API.post(`/rental/maintenance/${req.request_id}/cancel`);
+          setRequests(prev => prev.map(r => r.request_id === req.request_id ? res.data : r));
+          toast.success(`Request #${req.request_id} has been cancelled.`);
+        } catch (err) {
+          toast.error(err.response?.data?.detail || "Failed to cancel request.");
+        }
+      }
+    });
   }
 
   async function handleUpdateWorkOrder(e) {
@@ -862,6 +870,16 @@ export default function RentalMaintenanceDesk({ user, selectedPropertyFilterId =
           </div>
         </div>
       )}
+      <ConfirmModal
+        isOpen={confirmConfig.isOpen}
+        title={confirmConfig.title}
+        message={confirmConfig.message}
+        onConfirm={() => {
+          confirmConfig.onConfirm?.();
+          setConfirmConfig(prev => ({ ...prev, isOpen: false }));
+        }}
+        onCancel={() => setConfirmConfig(prev => ({ ...prev, isOpen: false }))}
+      />
     </div>
   );
 }

@@ -5,6 +5,7 @@ import {
   Sparkles, CheckCircle2, AlertCircle, X
 } from 'lucide-react';
 import API from '../../services/api';
+import ConfirmModal from '../../components/ConfirmModal';
 
 export default function TenantsHub({ selectedPropertyFilterId = 'all' }) {
   const [tenants, setTenants] = useState([]);
@@ -23,10 +24,11 @@ export default function TenantsHub({ selectedPropertyFilterId = 'all' }) {
   const [modalError, setModalError] = useState('');
   const [modalSuccess, setModalSuccess] = useState('');
   const [formErrors, setFormErrors] = useState({});
+  const [confirmConfig, setConfirmConfig] = useState({ isOpen: false, title: '', message: '', onConfirm: null });
 
   useEffect(() => {
     fetchTenants();
-  }, []);
+  }, [selectedPropertyFilterId]);
 
   async function fetchTenants() {
     try {
@@ -52,14 +54,20 @@ export default function TenantsHub({ selectedPropertyFilterId = 'all' }) {
   }
 
   async function handleDeleteTenant(tenantId) {
-    if (!window.confirm("Are you sure you want to delete this tenant user record? This action cannot be undone.")) return;
-    try {
-      await API.delete(`/rental/tenants/${tenantId}`);
-      setTenants(prev => prev.filter(t => t.user_id !== tenantId));
-    } catch (err) {
-      console.error("Error deleting tenant:", err);
-      alert("Failed to delete tenant user.");
-    }
+    setConfirmConfig({
+      isOpen: true,
+      title: "Delete Tenant User",
+      message: "Are you sure you want to delete this tenant user record? This action cannot be undone.",
+      onConfirm: async () => {
+        try {
+          await API.delete(`/rental/tenants/${tenantId}`);
+          setTenants(prev => prev.filter(t => t.user_id !== tenantId));
+        } catch (err) {
+          console.error("Error deleting tenant:", err);
+          alert("Failed to delete tenant user.");
+        }
+      }
+    });
   }
 
   function openEditModal(tenant) {
@@ -83,6 +91,17 @@ export default function TenantsHub({ selectedPropertyFilterId = 'all' }) {
       errs.email = 'Email address is required.';
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(editEmail.trim())) {
       errs.email = 'Invalid email format.';
+    }
+    if (editPhone.trim()) {
+      const digits = editPhone.replace(/\D/g, '');
+      if (digits.length < 7 || digits.length > 15) {
+        errs.phone = 'Phone number must be between 7 and 15 digits.';
+      }
+    }
+    if (!editUnit.trim()) {
+      errs.unit = 'Assigned unit number is required.';
+    } else if (!/^\d+$/.test(editUnit.trim())) {
+      errs.unit = 'Unit number must contain only numbers.';
     }
     return errs;
   };
@@ -373,20 +392,27 @@ export default function TenantsHub({ selectedPropertyFilterId = 'all' }) {
                     <input
                       type="text"
                       value={editPhone}
-                      onChange={e => setEditPhone(e.target.value)}
-                      className="w-full bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:border-blue-500 outline-none"
-                      placeholder="e.g. (555) 019-2834"
+                      onChange={e => {
+                        const val = e.target.value;
+                        if (val === '' || /^[+\d\s()-]*$/.test(val)) {
+                          setEditPhone(val);
+                        }
+                      }}
+                      className={`w-full bg-slate-50 dark:bg-[#111c2a] border ${formErrors.phone ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/10 focus:border-blue-500'} rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none`}
+                      placeholder="e.g. +1 (555) 019-2834"
                     />
+                    {formErrors.phone && <p className="text-[10px] text-red-550 mt-0.5">{formErrors.phone}</p>}
                   </div>
                   <div>
                     <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Assigned Unit No.</label>
                     <input
                       type="text"
                       value={editUnit}
-                      onChange={e => setEditUnit(e.target.value)}
-                      className="w-full bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:border-blue-500 outline-none"
+                      onChange={e => setEditUnit(e.target.value.replace(/\D/g, ''))}
+                      className={`w-full bg-slate-50 dark:bg-[#111c2a] border ${formErrors.unit ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/10 focus:border-blue-500'} rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none`}
                       placeholder="e.g. 102"
                     />
+                    {formErrors.unit && <p className="text-[10px] text-red-550 mt-0.5">{formErrors.unit}</p>}
                   </div>
                 </div>
 
@@ -401,6 +427,16 @@ export default function TenantsHub({ selectedPropertyFilterId = 'all' }) {
           </div>
         </div>
       )}
+      <ConfirmModal
+        isOpen={confirmConfig.isOpen}
+        title={confirmConfig.title}
+        message={confirmConfig.message}
+        onConfirm={() => {
+          confirmConfig.onConfirm?.();
+          setConfirmConfig(prev => ({ ...prev, isOpen: false }));
+        }}
+        onCancel={() => setConfirmConfig(prev => ({ ...prev, isOpen: false }))}
+      />
     </div>
   );
 }

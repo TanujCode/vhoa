@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, X, Truck, Search, Trash2 } from 'lucide-react';
 import API from "../../services/api";
+import ConfirmModal from "../../components/ConfirmModal";
 import { toast } from 'react-hot-toast';
 import { formatUsPhone, formatPhoneAsYouType } from '../../utils/phoneFormatter';
 
@@ -35,6 +36,7 @@ export default function RentalVendors() {
   });
 
   const [errors, setErrors] = useState({});
+  const [confirmConfig, setConfirmConfig] = useState({ isOpen: false, title: '', message: '', onConfirm: null });
 
   useEffect(() => {
     fetchVendors();
@@ -80,7 +82,13 @@ export default function RentalVendors() {
       tempErrors.company_name = value.trim() ? '' : 'Company name is required';
     }
     if (name === 'contact_person') {
-      tempErrors.contact_person = value.trim() ? '' : 'Contact person is required';
+      if (!value.trim()) {
+        tempErrors.contact_person = 'Contact person is required';
+      } else if (/[^a-zA-Z\s.\-']/.test(value)) {
+        tempErrors.contact_person = 'Contact person can only contain letters, spaces, dots, hyphens, and apostrophes';
+      } else {
+        tempErrors.contact_person = '';
+      }
     }
     if (name === 'phoneOnly') {
       tempErrors.phoneOnly = value.length === 14 ? '' : 'Phone number must be 10 digits';
@@ -89,19 +97,76 @@ export default function RentalVendors() {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       tempErrors.email = emailRegex.test(value) ? '' : 'Invalid email format';
     }
+    if (name === 'license_number') {
+      const trimmed = value.trim();
+      tempErrors.license_number = trimmed
+        ? (/^[a-zA-Z0-9-]{6,20}$/.test(trimmed) ? '' : 'License number must be 6-20 alphanumeric characters (or hyphens)')
+        : 'License number is required';
+    }
+    if (name === 'license_expiry') {
+      if (value) {
+        const selDate = new Date(value);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        tempErrors.license_expiry = selDate > today ? '' : 'License expiry date must be in the future';
+      } else {
+        tempErrors.license_expiry = '';
+      }
+    }
+    if (name === 'insurance_number') {
+      const trimmed = value.trim();
+      tempErrors.insurance_number = trimmed
+        ? (/^[a-zA-Z0-9-]{5,25}$/.test(trimmed) ? '' : 'Insurance policy number must be 5-25 alphanumeric characters (or hyphens)')
+        : 'Insurance number is required';
+    }
+    if (name === 'insurance_expiry') {
+      if (value) {
+        const selDate = new Date(value);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        tempErrors.insurance_expiry = selDate > today ? '' : 'Insurance expiry date must be in the future';
+      } else {
+        tempErrors.insurance_expiry = '';
+      }
+    }
     setErrors(tempErrors);
+    return tempErrors;
+  };
+
+  const validateAllFields = () => {
+    const tempErrors = {
+      company_name: formData.company_name.trim() ? '' : 'Company name is required',
+      contact_person: formData.contact_person.trim()
+        ? (/[^a-zA-Z\s.\-']/.test(formData.contact_person) ? 'Contact person can only contain letters, spaces, dots, hyphens, and apostrophes' : '')
+        : 'Contact person is required',
+      phoneOnly: phoneOnly.length === 14 ? '' : 'Phone number must be 10 digits',
+      email: (/^[^\s@]+@[^\s@]+\.[^\s@]+$/).test(formData.email) ? '' : 'Invalid email format',
+      license_number: formData.license_number.trim()
+        ? (/^[a-zA-Z0-9-]{6,20}$/.test(formData.license_number.trim()) ? '' : 'License number must be 6-20 alphanumeric characters (or hyphens)')
+        : 'License number is required',
+      license_expiry: formData.license_expiry
+        ? (new Date(formData.license_expiry) > new Date() ? '' : 'License expiry date must be in the future')
+        : '',
+      insurance_number: formData.insurance_number.trim()
+        ? (/^[a-zA-Z0-9-]{5,25}$/.test(formData.insurance_number.trim()) ? '' : 'Insurance policy number must be 5-25 alphanumeric characters (or hyphens)')
+        : 'Insurance number is required',
+      insurance_expiry: formData.insurance_expiry
+        ? (new Date(formData.insurance_expiry) > new Date() ? '' : 'Insurance expiry date must be in the future')
+        : ''
+    };
+    setErrors(tempErrors);
+    return tempErrors;
   };
 
   const handleOnboard = async (e) => {
     e.preventDefault();
     
-    // Final validations
-    if (!formData.company_name) return toast.error("Company Name is required.");
-    if (!formData.contact_person) return toast.error("Contact Person is required.");
-    if (phoneOnly.length !== 14) return toast.error("Please enter a valid 10-digit phone number.");
-    if (!formData.email) return toast.error("Email is required.");
-    if (!formData.license_number) return toast.error("License Number is required.");
-    if (!formData.insurance_number) return toast.error("Insurance Number is required.");
+    const tempErrors = validateAllFields();
+    const hasErrors = Object.values(tempErrors).some(err => err !== '');
+    if (hasErrors) {
+      toast.error("Please resolve the validation errors before submitting.");
+      return;
+    }
 
     try {
       setLoading(true);
@@ -131,15 +196,21 @@ export default function RentalVendors() {
   };
 
   const handleDelete = async (vendorId) => {
-    if (!window.confirm("Are you sure you want to delete this vendor?")) return;
-    try {
-      await API.delete(`/rental/vendors/${vendorId}`);
-      toast.success("Vendor deleted successfully!");
-      fetchVendors();
-    } catch (err) {
-      console.error("Delete vendor error:", err);
-      toast.error(err.response?.data?.detail || "Failed to delete vendor.");
-    }
+    setConfirmConfig({
+      isOpen: true,
+      title: "Delete Vendor",
+      message: "Are you sure you want to delete this vendor? This action cannot be undone.",
+      onConfirm: async () => {
+        try {
+          await API.delete(`/rental/vendors/${vendorId}`);
+          toast.success("Vendor deleted successfully!");
+          fetchVendors();
+        } catch (err) {
+          console.error("Delete vendor error:", err);
+          toast.error(err.response?.data?.detail || "Failed to delete vendor.");
+        }
+      }
+    });
   };
 
   const filteredVendors = vendors.filter(v => 
@@ -347,11 +418,33 @@ export default function RentalVendors() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">License Number *</label>
-                    <input required className="w-full bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:border-blue-500 outline-none" value={formData.license_number} onChange={(e) => setFormData({...formData, license_number: e.target.value})} />
+                    <input 
+                      required 
+                      className={`w-full bg-slate-50 dark:bg-[#111c2a] border ${errors.license_number ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/10 focus:border-blue-500'} rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none`} 
+                      value={formData.license_number} 
+                      onChange={(e) => {
+                        setFormData({...formData, license_number: e.target.value});
+                        validateField('license_number', e.target.value);
+                      }} 
+                    />
+                    {errors.license_number && (
+                      <p className="text-red-500 text-xs mt-1">{errors.license_number}</p>
+                    )}
                   </div>
                   <div>
                     <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Expiry</label>
-                    <input type="date" className="w-full bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:border-blue-500 outline-none" value={formData.license_expiry} onChange={(e) => setFormData({...formData, license_expiry: e.target.value})} />
+                    <input 
+                      type="date" 
+                      className={`w-full bg-slate-50 dark:bg-[#111c2a] border ${errors.license_expiry ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/10 focus:border-blue-500'} rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none`} 
+                      value={formData.license_expiry} 
+                      onChange={(e) => {
+                        setFormData({...formData, license_expiry: e.target.value});
+                        validateField('license_expiry', e.target.value);
+                      }} 
+                    />
+                    {errors.license_expiry && (
+                      <p className="text-red-500 text-xs mt-1">{errors.license_expiry}</p>
+                    )}
                   </div>
                 </div>
 
@@ -360,15 +453,32 @@ export default function RentalVendors() {
                     <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Insurance Number *</label>
                     <input 
                       required
-                      className="w-full bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:border-blue-500 outline-none" 
+                      className={`w-full bg-slate-50 dark:bg-[#111c2a] border ${errors.insurance_number ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/10 focus:border-blue-500'} rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none`} 
                       value={formData.insurance_number} 
-                      onChange={(e) => setFormData({...formData, insurance_number: e.target.value})} 
-                      placeholder="Enter insurance number or N/A"
+                      onChange={(e) => {
+                        setFormData({...formData, insurance_number: e.target.value});
+                        validateField('insurance_number', e.target.value);
+                      }} 
+                      placeholder="Enter insurance number"
                     />
+                    {errors.insurance_number && (
+                      <p className="text-red-500 text-xs mt-1">{errors.insurance_number}</p>
+                    )}
                   </div>
                   <div>
                     <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Insurance Expiry</label>
-                    <input type="date" className="w-full bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:border-blue-500 outline-none" value={formData.insurance_expiry} onChange={(e) => setFormData({...formData, insurance_expiry: e.target.value})} />
+                    <input 
+                      type="date" 
+                      className={`w-full bg-slate-50 dark:bg-[#111c2a] border ${errors.insurance_expiry ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/10 focus:border-blue-500'} rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none`} 
+                      value={formData.insurance_expiry} 
+                      onChange={(e) => {
+                        setFormData({...formData, insurance_expiry: e.target.value});
+                        validateField('insurance_expiry', e.target.value);
+                      }} 
+                    />
+                    {errors.insurance_expiry && (
+                      <p className="text-red-500 text-xs mt-1">{errors.insurance_expiry}</p>
+                    )}
                   </div>
                 </div>
 
@@ -383,6 +493,16 @@ export default function RentalVendors() {
           </div>
         </div>
       )}
+      <ConfirmModal
+        isOpen={confirmConfig.isOpen}
+        title={confirmConfig.title}
+        message={confirmConfig.message}
+        onConfirm={() => {
+          confirmConfig.onConfirm?.();
+          setConfirmConfig(prev => ({ ...prev, isOpen: false }));
+        }}
+        onCancel={() => setConfirmConfig(prev => ({ ...prev, isOpen: false }))}
+      />
     </div>
   );
 }

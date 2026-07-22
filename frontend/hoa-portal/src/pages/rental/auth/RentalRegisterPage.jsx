@@ -73,6 +73,19 @@ export default function RentalRegisterPage() {
   }, []);
 
   useEffect(() => {
+    const token = localStorage.getItem('rental_token') || sessionStorage.getItem('rental_token');
+    if (token) {
+      localStorage.removeItem('rental_token');
+      localStorage.removeItem('rental_session_token');
+      localStorage.removeItem('rental_user');
+      sessionStorage.removeItem('rental_token');
+      sessionStorage.removeItem('rental_session_token');
+      sessionStorage.removeItem('rental_user');
+      navigate('/rental/login', { replace: true });
+    }
+  }, [navigate]);
+
+  useEffect(() => {
     if (emailFromUrl) {
       setValue('email', emailFromUrl);
       API.get(`/rental/auth/check-email?email=${encodeURIComponent(emailFromUrl)}`)

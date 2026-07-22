@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { FileText, Plus, CheckCircle, Clock, Send, Lock, PenTool, Sparkles, Trash2, ShieldAlert, Search, X, Eye } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import API from '../../services/api';
+import ConfirmModal from '../../components/ConfirmModal';
 
 const LEASE_TEMPLATES = {
   standard: `STANDARD RESIDENTIAL LEASE AGREEMENT
@@ -38,6 +39,7 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all' }) {
   const [loading, setLoading] = useState(true);
   const [selectedLease, setSelectedLease] = useState(null);
   const [prefilledFromApp, setPrefilledFromApp] = useState(false);
+  const [confirmConfig, setConfirmConfig] = useState({ isOpen: false, title: '', message: '', onConfirm: null });
   const hasVacantUnits = units.length === 0 || units.some(u => u.status === 'VACANT');
 
   // Create Lease Form States
@@ -314,18 +316,24 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all' }) {
 
   async function handleDeleteLease(leaseId, e) {
     e.stopPropagation();
-    if (!window.confirm("Are you sure you want to delete this lease agreement? This will also remove any associated invoices.")) return;
-    try {
-      await API.delete(`/rental/leases/${leaseId}`);
-      setLeases(prev => prev.filter(l => l.lease_id !== leaseId));
-      if (selectedLease?.lease_id === leaseId) {
-        setSelectedLease(null);
+    setConfirmConfig({
+      isOpen: true,
+      title: "Delete Lease Agreement",
+      message: "Are you sure you want to delete this lease agreement? This will also remove any associated invoices.",
+      onConfirm: async () => {
+        try {
+          await API.delete(`/rental/leases/${leaseId}`);
+          setLeases(prev => prev.filter(l => l.lease_id !== leaseId));
+          if (selectedLease?.lease_id === leaseId) {
+            setSelectedLease(null);
+          }
+          toast.success('Lease agreement deleted successfully.');
+        } catch (err) {
+          console.error("Error deleting lease:", err);
+          toast.error("Failed to delete lease agreement.");
+        }
       }
-      toast.success('Lease agreement deleted successfully.');
-    } catch (err) {
-      console.error("Error deleting lease:", err);
-      toast.error("Failed to delete lease agreement.");
-    }
+    });
   }
 
   if (loading) {
@@ -814,6 +822,16 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all' }) {
           </div>
         </div>
       )}
+      <ConfirmModal
+        isOpen={confirmConfig.isOpen}
+        title={confirmConfig.title}
+        message={confirmConfig.message}
+        onConfirm={() => {
+          confirmConfig.onConfirm?.();
+          setConfirmConfig(prev => ({ ...prev, isOpen: false }));
+        }}
+        onCancel={() => setConfirmConfig(prev => ({ ...prev, isOpen: false }))}
+      />
     </div>
   );
 }

@@ -75,7 +75,7 @@ export default function RentalSolutionPage() {
                 NestBloq streamlines monthly collections, tracks roster vacancies, and auto-dispatches late notices with secure verification tracking.
               </p>
               <div className="flex flex-wrap gap-4">
-                <Link to="/register" className="btn-glow px-8 py-3.5 text-sm font-semibold text-white rounded-xl flex items-center gap-2">
+                <Link to="/rental/register" className="btn-glow px-8 py-3.5 text-sm font-semibold text-white rounded-xl flex items-center gap-2">
                   Start for Free
                   <ArrowRight className="w-4 h-4" />
                 </Link>
@@ -352,7 +352,7 @@ export default function RentalSolutionPage() {
               Get started for free today with a 14-day trial, or request an onboarding specialist to sync your tenant rolls.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link to="/register" className="btn-glow px-6 py-3 text-white font-bold text-xs rounded-xl shadow-md">
+              <Link to="/rental/register" className="btn-glow px-6 py-3 text-white font-bold text-xs rounded-xl shadow-md">
                 Start Free Trial
               </Link>
               <Link to="/contact" className="px-6 py-3 bg-white dark:bg-slate-800 text-slate-800 dark:text-white border border-slate-200 dark:border-slate-700 hover:border-blue-500 dark:hover:border-blue-500 font-bold text-xs rounded-xl transition-all flex items-center justify-center gap-1.5">

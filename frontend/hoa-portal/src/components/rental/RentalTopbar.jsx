@@ -81,7 +81,7 @@ const RentalTopbar = ({
                     : (properties.find(p => String(p.property_id) === String(selectedPropertyFilterId))?.name || 'All Properties')
                   }
                 </span>
-                <ChevronDown size={16} className={`text-slate-400 group-hover:text-blue-600 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} />
+                <ChevronDown size={16} className={`text-slate-800 dark:text-slate-200 group-hover:text-blue-600 dark:group-hover:text-[#5BA4F5] transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} />
               </div>
             </div>
           </div>

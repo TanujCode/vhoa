@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTheme } from '../../context/ThemeContext';
 import { LogOut } from 'lucide-react';
 import API from '../../services/api';
@@ -29,13 +29,26 @@ import { getRentalMe } from '../../services/authService';
 const RentalAdminPortal = () => {
   const { theme } = useTheme();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const [properties, setProperties] = useState([]);
   const [selectedPropertyFilterId, setSelectedPropertyFilterId] = useState('all');
 
-  const [activePage, _setActivePage] = useState('dashboard');
-  const [pageHistory, setPageHistory] = useState(['dashboard']);
+  const currentTab = searchParams.get('tab') || 'dashboard';
+  const [activePage, _setActivePage] = useState(currentTab);
+  const [pageHistory, setPageHistory] = useState([currentTab]);
   const [showExitConfirm, setShowExitConfirm] = useState(false);
+
+  // Sync tab with browser back/forward buttons
+  useEffect(() => {
+    if (currentTab !== activePage) {
+      _setActivePage(currentTab);
+      setPageHistory(prev => {
+        if (prev[prev.length - 1] === currentTab) return prev;
+        return [...prev, currentTab];
+      });
+    }
+  }, [currentTab]);
   
   // Notification states
   const [isNotifOpen, setIsNotifOpen] = useState(false);
@@ -79,8 +92,10 @@ const RentalAdminPortal = () => {
   const setActivePage = (newPage) => {
     if (newPage === activePage) return;
     if (newPage === 'dashboard') {
+      setSearchParams({});
       setPageHistory(['dashboard']);
     } else {
+      setSearchParams({ tab: newPage });
       setPageHistory(prev => {
         if (prev[prev.length - 1] === newPage) return prev;
         return [...prev, newPage];
@@ -96,9 +111,11 @@ const RentalAdminPortal = () => {
         newHistory.pop();
         const prevPage = newHistory[newHistory.length - 1] || 'dashboard';
         setPageHistory(newHistory.length > 0 ? newHistory : ['dashboard']);
+        setSearchParams(prevPage === 'dashboard' ? {} : { tab: prevPage });
         _setActivePage(prevPage);
       } else {
         setPageHistory(['dashboard']);
+        setSearchParams({});
         _setActivePage('dashboard');
       }
     } else {

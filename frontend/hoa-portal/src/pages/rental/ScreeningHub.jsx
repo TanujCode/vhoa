@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Users, FileText, CheckCircle2, ShieldAlert, Sparkles, User, Mail, DollarSign, Briefcase, Phone, ShieldCheck, Info, Trash2, Search, X, Eye } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import API from '../../services/api';
+import ConfirmModal from '../../components/ConfirmModal';
 
 export default function ScreeningHub({ user, setActivePage, selectedPropertyFilterId = 'all' }) {
   const isLandlord = user?.role === 'landlord' || user?.role_name === 'landlord' || user?.role_id === 1; // Super admin also landlord
@@ -17,6 +18,7 @@ export default function ScreeningHub({ user, setActivePage, selectedPropertyFilt
   const [inviteUnitId, setInviteUnitId] = useState('');
   const [inviteError, setInviteError] = useState('');
   const [inviteSuccess, setInviteSuccess] = useState('');
+  const [inviteErrors, setInviteErrors] = useState({});
 
   // Complete invited application states
   const [activeInviteAppId, setActiveInviteAppId] = useState(null);
@@ -43,6 +45,7 @@ export default function ScreeningHub({ user, setActivePage, selectedPropertyFilt
   const [myApplications, setMyApplications] = useState([]);
   const [reapply, setReapply] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [confirmConfig, setConfirmConfig] = useState({ isOpen: false, title: '', message: '', onConfirm: null });
 
   // Formatting helpers
   const formatPhoneNumber = (value) => {
@@ -126,6 +129,35 @@ export default function ScreeningHub({ user, setActivePage, selectedPropertyFilt
       return 'Pet details must be at least 2 characters.';
     }
     return '';
+  };
+
+  const handleInviteNameChange = (e) => {
+    const val = e.target.value;
+    if (val === '' || /^[a-zA-Z\s]*$/.test(val)) {
+      setInviteName(val);
+      let error = '';
+      if (!val.trim()) {
+        error = 'Full name is required.';
+      } else {
+        const parts = val.trim().split(/\s+/);
+        if (parts.length < 2 || parts[1] === '') {
+          error = 'Please enter both first and last name.';
+        }
+      }
+      setInviteErrors(prev => ({ ...prev, name: error }));
+    }
+  };
+
+  const handleInviteEmailChange = (e) => {
+    const val = e.target.value;
+    setInviteEmail(val);
+    let error = '';
+    if (!val.trim()) {
+      error = 'Email address is required.';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val.trim())) {
+      error = 'Please enter a valid email address.';
+    }
+    setInviteErrors(prev => ({ ...prev, email: error }));
   };
 
   // Field change handlers
@@ -259,9 +291,46 @@ export default function ScreeningHub({ user, setActivePage, selectedPropertyFilt
     setInviteError('');
     setInviteSuccess('');
     
-    if (!inviteName.trim()) return setInviteError("Applicant Full Name is required.");
-    if (!inviteEmail.trim()) return setInviteError("Applicant Email is required.");
-    if (!inviteUnitId) return setInviteError("Please select a unit.");
+    let errorsExist = false;
+    let newErrors = {};
+
+    const nameVal = inviteName.trim();
+    if (!nameVal) {
+      newErrors.name = "Applicant Full Name is required.";
+      errorsExist = true;
+    } else if (!/^[a-zA-Z\s]{2,50}$/.test(nameVal)) {
+      newErrors.name = "Applicant Name must contain only letters and spaces (2-50 characters).";
+      errorsExist = true;
+    } else {
+      const nameParts = nameVal.split(/\s+/);
+      if (nameParts.length < 2 || nameParts[1] === '') {
+        newErrors.name = "Applicant Name must contain both first name and last name.";
+        errorsExist = true;
+      }
+    }
+
+    const emailVal = inviteEmail.trim();
+    if (!emailVal) {
+      newErrors.email = "Applicant Email is required.";
+      errorsExist = true;
+    } else {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(emailVal)) {
+        newErrors.email = "Please enter a valid applicant email address.";
+        errorsExist = true;
+      }
+    }
+    
+    if (!inviteUnitId) {
+      setInviteError("Please select a unit.");
+      return;
+    }
+
+    if (errorsExist) {
+      setInviteErrors(newErrors);
+      setInviteError("Please resolve the validation errors before sending.");
+      return;
+    }
 
     try {
       await API.post('/rental/applications/invite', {
@@ -334,16 +403,22 @@ export default function ScreeningHub({ user, setActivePage, selectedPropertyFilt
 
   async function handleDeleteApplication(appId, e) {
     e.stopPropagation();
-    if (!window.confirm("Are you sure you want to delete this screening application?")) return;
-    try {
-      await API.delete(`/rental/applications/${appId}`);
-      setApplications(prev => prev.filter(a => a.application_id !== appId));
-      if (selectedApp?.application_id === appId) {
-        setSelectedApp(null);
+    setConfirmConfig({
+      isOpen: true,
+      title: "Delete Screening Application",
+      message: "Are you sure you want to delete this screening application? This action cannot be undone.",
+      onConfirm: async () => {
+        try {
+          await API.delete(`/rental/applications/${appId}`);
+          setApplications(prev => prev.filter(a => a.application_id !== appId));
+          if (selectedApp?.application_id === appId) {
+            setSelectedApp(null);
+          }
+        } catch (err) {
+          console.error("Error deleting application:", err);
+        }
       }
-    } catch (err) {
-      console.error("Error deleting application:", err);
-    }
+    });
   }
 
   async function handleApply(e) {
@@ -1292,7 +1367,6 @@ export default function ScreeningHub({ user, setActivePage, selectedPropertyFilt
                 {inviteSuccess}
               </p>
             )}
-
             <form onSubmit={handleSendInvite} className="space-y-4">
               <div>
                 <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Applicant Full Name</label>
@@ -1300,10 +1374,13 @@ export default function ScreeningHub({ user, setActivePage, selectedPropertyFilt
                   required 
                   type="text" 
                   value={inviteName} 
-                  onChange={e => setInviteName(e.target.value)} 
-                  className="w-full bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 focus:border-blue-500 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none" 
+                  onChange={handleInviteNameChange} 
+                  className={`w-full bg-slate-50 dark:bg-[#111c2a] border ${inviteErrors.name ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/10 focus:border-blue-500'} rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none`} 
                   placeholder="e.g. John Doe" 
                 />
+                {inviteErrors.name && (
+                  <p className="text-red-500 text-xs mt-1">{inviteErrors.name}</p>
+                )}
               </div>
               
               <div>
@@ -1312,10 +1389,13 @@ export default function ScreeningHub({ user, setActivePage, selectedPropertyFilt
                   required 
                   type="email" 
                   value={inviteEmail} 
-                  onChange={e => setInviteEmail(e.target.value)} 
-                  className="w-full bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 focus:border-blue-500 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none" 
+                  onChange={handleInviteEmailChange} 
+                  className={`w-full bg-slate-50 dark:bg-[#111c2a] border ${inviteErrors.email ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/10 focus:border-blue-500'} rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none`} 
                   placeholder="john.doe@example.com" 
                 />
+                {inviteErrors.email && (
+                  <p className="text-red-500 text-xs mt-1">{inviteErrors.email}</p>
+                )}
               </div>
 
               <div>
@@ -1357,6 +1437,16 @@ export default function ScreeningHub({ user, setActivePage, selectedPropertyFilt
           </div>
         </div>
       )}
+      <ConfirmModal
+        isOpen={confirmConfig.isOpen}
+        title={confirmConfig.title}
+        message={confirmConfig.message}
+        onConfirm={() => {
+          confirmConfig.onConfirm?.();
+          setConfirmConfig(prev => ({ ...prev, isOpen: false }));
+        }}
+        onCancel={() => setConfirmConfig(prev => ({ ...prev, isOpen: false }))}
+      />
     </div>
   );
 }

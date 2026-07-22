@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, X, Lock, Truck, Search, Copy, Check, Trash2 } from 'lucide-react';
 import API from "../services/api";
+import ConfirmModal from "../components/ConfirmModal";
 import { toast } from 'react-hot-toast';
 import { formatUsPhone, formatPhoneAsYouType } from '../utils/phoneFormatter';
 import { checkEmail } from '../utils/emailValidation';
@@ -24,6 +25,7 @@ const Vendors = ({ communityId, userRole, user }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [vendors, setVendors] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [confirmConfig, setConfirmConfig] = useState({ isOpen: false, title: '', message: '', onConfirm: null });
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [accessCode, setAccessCode] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
@@ -112,18 +114,24 @@ const Vendors = ({ communityId, userRole, user }) => {
   };
 
   const handleDelete = async (vendorId) => {
-    if (!window.confirm("Are you sure you want to delete this vendor?")) return;
-    try {
-      setLoading(true);
-      await API.delete(`/vendor/${vendorId}`);
-      toast.success("Vendor deleted successfully!");
-      fetchVendors();
-    } catch (err) {
-      console.error("Delete error:", err);
-      toast.error(err.response?.data?.detail || "Failed to delete vendor");
-    } finally {
-      setLoading(false);
-    }
+    setConfirmConfig({
+      isOpen: true,
+      title: "Delete Vendor",
+      message: "Are you sure you want to delete this vendor? This action cannot be undone.",
+      onConfirm: async () => {
+        try {
+          setLoading(true);
+          await API.delete(`/vendor/${vendorId}`);
+          toast.success("Vendor deleted successfully!");
+          fetchVendors();
+        } catch (err) {
+          console.error("Delete error:", err);
+          toast.error(err.response?.data?.detail || "Failed to delete vendor");
+        } finally {
+          setLoading(false);
+        }
+      }
+    });
   };
 
   const validateField = (name, value) => {
@@ -131,8 +139,6 @@ const Vendors = ({ communityId, userRole, user }) => {
     if (name === 'company_name') {
       if (!value.trim()) {
         errorMsg = 'Company name is required';
-      } else if (/\d/.test(value)) {
-        errorMsg = 'Company name cannot contain numbers';
       }
     } else if (name === 'contact_person') {
       if (!value.trim()) {
@@ -155,6 +161,27 @@ const Vendors = ({ communityId, userRole, user }) => {
         errorMsg = 'Phone number is required';
       } else if (digits.length !== 10) {
         errorMsg = 'Phone number must be exactly 10 digits';
+      }
+    } else if (name === 'license_number') {
+      if (!value.trim()) {
+        errorMsg = 'License number is required';
+      } else if (!/^[a-zA-Z0-9-]{6,20}$/.test(value.trim())) {
+        errorMsg = 'License number must be 6-20 alphanumeric characters (or hyphens)';
+      }
+    } else if (name === 'insurance') {
+      if (!value.trim()) {
+        errorMsg = 'Insurance policy number is required';
+      } else if (!/^[a-zA-Z0-9-]{5,25}$/.test(value.trim())) {
+        errorMsg = 'Insurance policy number must be 5-25 alphanumeric characters (or hyphens)';
+      }
+    } else if (name === 'expiry') {
+      if (value) {
+        const selDate = new Date(value);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        if (selDate <= today) {
+          errorMsg = 'License expiry date must be in the future';
+        }
       }
     }
     setErrors(prev => ({ ...prev, [name]: errorMsg }));
@@ -197,8 +224,11 @@ const Vendors = ({ communityId, userRole, user }) => {
     const contactErr = validateField('contact_person', formData.contact_person);
     const emailErr = validateField('email', formData.email);
     const phoneErr = validateField('phoneOnly', phoneOnly);
+    const licenseErr = validateField('license_number', formData.license_number);
+    const insuranceErr = validateField('insurance', formData.insurance);
+    const expiryErr = validateField('expiry', formData.expiry);
 
-    if (companyErr || contactErr || emailErr || phoneErr) {
+    if (companyErr || contactErr || emailErr || phoneErr || licenseErr || insuranceErr || expiryErr) {
       toast.error("Please resolve the validation errors before submitting.");
       return;
     }
@@ -459,11 +489,33 @@ const Vendors = ({ communityId, userRole, user }) => {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">License Number *</label>
-                      <input required className="w-full bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:border-blue-500 outline-none" value={formData.license_number} onChange={(e) => setFormData({...formData, license_number: e.target.value})} />
+                      <input 
+                        required 
+                        className={`w-full bg-slate-50 dark:bg-[#111c2a] border ${errors.license_number ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/10 focus:border-blue-500'} rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none`} 
+                        value={formData.license_number} 
+                        onChange={(e) => {
+                          setFormData({...formData, license_number: e.target.value});
+                          validateField('license_number', e.target.value);
+                        }} 
+                      />
+                      {errors.license_number && (
+                        <p className="text-red-500 text-xs mt-1">{errors.license_number}</p>
+                      )}
                     </div>
                     <div>
                       <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Expiry</label>
-                      <input type="date" className="w-full bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:border-blue-500 outline-none" value={formData.expiry} onChange={(e) => setFormData({...formData, expiry: e.target.value})} />
+                      <input 
+                        type="date" 
+                        className={`w-full bg-slate-50 dark:bg-[#111c2a] border ${errors.expiry ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/10 focus:border-blue-500'} rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none`} 
+                        value={formData.expiry} 
+                        onChange={(e) => {
+                          setFormData({...formData, expiry: e.target.value});
+                          validateField('expiry', e.target.value);
+                        }} 
+                      />
+                      {errors.expiry && (
+                        <p className="text-red-500 text-xs mt-1">{errors.expiry}</p>
+                      )}
                     </div>
                   </div>
 
@@ -471,11 +523,17 @@ const Vendors = ({ communityId, userRole, user }) => {
                     <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Insurance Number *</label>
                     <input 
                       required
-                      className="w-full bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:border-blue-500 outline-none" 
+                      className={`w-full bg-slate-50 dark:bg-[#111c2a] border ${errors.insurance ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/10 focus:border-blue-500'} rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none`} 
                       value={formData.insurance} 
-                      onChange={(e) => setFormData({...formData, insurance: e.target.value})} 
-                      placeholder="Enter insurance number or N/A"
+                      onChange={(e) => {
+                        setFormData({...formData, insurance: e.target.value});
+                        validateField('insurance', e.target.value);
+                      }} 
+                      placeholder="Enter insurance number"
                     />
+                    {errors.insurance && (
+                      <p className="text-red-500 text-xs mt-1">{errors.insurance}</p>
+                    )}
                   </div>
 
                   <div className="pt-4 flex gap-3">
@@ -689,11 +747,33 @@ const Vendors = ({ communityId, userRole, user }) => {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">License Number <span className="text-red-500">*</span></label>
-                    <input required className="w-full bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:border-blue-500 outline-none" value={formData.license_number} onChange={(e) => setFormData({...formData, license_number: e.target.value})} />
+                    <input 
+                      required 
+                      className={`w-full bg-slate-50 dark:bg-[#111c2a] border ${errors.license_number ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/10 focus:border-blue-500'} rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none`} 
+                      value={formData.license_number} 
+                      onChange={(e) => {
+                        setFormData({...formData, license_number: e.target.value});
+                        validateField('license_number', e.target.value);
+                      }} 
+                    />
+                    {errors.license_number && (
+                      <p className="text-red-500 text-xs mt-1">{errors.license_number}</p>
+                    )}
                   </div>
                   <div>
                     <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Expiry</label>
-                    <input type="date" className="w-full bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:border-blue-500 outline-none" value={formData.expiry} onChange={(e) => setFormData({...formData, expiry: e.target.value})} />
+                    <input 
+                      type="date" 
+                      className={`w-full bg-slate-50 dark:bg-[#111c2a] border ${errors.expiry ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/10 focus:border-blue-500'} rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none`} 
+                      value={formData.expiry} 
+                      onChange={(e) => {
+                        setFormData({...formData, expiry: e.target.value});
+                        validateField('expiry', e.target.value);
+                      }} 
+                    />
+                    {errors.expiry && (
+                      <p className="text-red-500 text-xs mt-1">{errors.expiry}</p>
+                    )}
                   </div>
                 </div>
 
@@ -701,11 +781,17 @@ const Vendors = ({ communityId, userRole, user }) => {
                   <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Insurance Number <span className="text-red-500">*</span></label>
                   <input 
                     required
-                    className="w-full bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:border-blue-500 outline-none" 
+                    className={`w-full bg-slate-50 dark:bg-[#111c2a] border ${errors.insurance ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/10 focus:border-blue-500'} rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none`} 
                     value={formData.insurance} 
-                    onChange={(e) => setFormData({...formData, insurance: e.target.value})} 
-                    placeholder="Enter insurance number or N/A"
+                    onChange={(e) => {
+                      setFormData({...formData, insurance: e.target.value});
+                      validateField('insurance', e.target.value);
+                    }} 
+                    placeholder="Enter insurance number"
                   />
+                  {errors.insurance && (
+                    <p className="text-red-500 text-xs mt-1">{errors.insurance}</p>
+                  )}
                 </div>
 
                 <div className="pt-4 flex gap-3">
@@ -719,6 +805,16 @@ const Vendors = ({ communityId, userRole, user }) => {
           </div>
         </div>
       )}
+      <ConfirmModal
+        isOpen={confirmConfig.isOpen}
+        title={confirmConfig.title}
+        message={confirmConfig.message}
+        onConfirm={() => {
+          confirmConfig.onConfirm?.();
+          setConfirmConfig(prev => ({ ...prev, isOpen: false }));
+        }}
+        onCancel={() => setConfirmConfig(prev => ({ ...prev, isOpen: false }))}
+      />
     </div>
   );
 };
