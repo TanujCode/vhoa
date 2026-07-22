@@ -64,18 +64,13 @@ export default function RentalLoginPage() {
   }, []);
 
   useEffect(() => {
-    const token = localStorage.getItem('rental_token') || sessionStorage.getItem('rental_token');
-    if (token) {
-      navigate('/rental/dashboard', { replace: true });
-      return;
-    }
     if (emailFromUrl) {
       setValue('email', emailFromUrl);
     }
     if (msgFromUrl === 'already_registered') {
       setInfoMsg("You are already registered! Please log in to your account to view and complete your new application.");
     }
-  }, [emailFromUrl, msgFromUrl, setValue, navigate]);
+  }, [emailFromUrl, msgFromUrl, setValue]);
 
   const onSubmit = async (data) => {
     try {

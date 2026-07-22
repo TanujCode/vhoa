@@ -57,15 +57,9 @@ export default function LoginPage() {
   };
 
   useEffect(() => {
-    // If user is already logged in, redirect to dashboard automatically
-    const token = localStorage.getItem('token') || sessionStorage.getItem('token') || localStorage.getItem('access_token');
-    if (token) {
-      navigate('/dashboard', { replace: true });
-      return;
-    }
     // Ping backend in background on mount to wake it up from cold-start sleep
     API.get('/auth/captcha', { timeout: 2000 }).catch(() => {});
-  }, [navigate]);
+  }, []);
 
   const onSubmit = async (data) => {
     try {
