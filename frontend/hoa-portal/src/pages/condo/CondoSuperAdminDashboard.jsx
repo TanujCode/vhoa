@@ -4,6 +4,7 @@ import {
   Search, RefreshCw, AlertCircle, Plus, ChevronRight, Check, X, ShieldAlert
 } from 'lucide-react';
 import API from '../../services/api';
+import ConfirmModal from '../../components/ConfirmModal';
 
 export default function CondoSuperAdminDashboard() {
   const [stats, setStats] = useState(null);
@@ -17,6 +18,30 @@ export default function CondoSuperAdminDashboard() {
   const [userSearch, setUserSearch] = useState('');
   const [togglingBuildingId, setTogglingBuildingId] = useState(null);
   const [togglingUserId, setTogglingUserId] = useState(null);
+
+  const [confirmConfig, setConfirmConfig] = useState({ 
+    isOpen: false, 
+    title: '', 
+    message: '', 
+    confirmText: 'OK', 
+    cancelText: 'Cancel', 
+    onConfirm: null, 
+    onCancel: null, 
+    type: 'info', 
+    singleButton: false 
+  });
+
+  const showAlert = (title, message, type = 'info') => {
+    setConfirmConfig({
+      isOpen: true,
+      title,
+      message,
+      confirmText: 'OK',
+      singleButton: true,
+      type,
+      onConfirm: () => setConfirmConfig(prev => ({ ...prev, isOpen: false }))
+    });
+  };
 
   // Add building modal state
   const [showAddModal, setShowAddModal] = useState(false);
@@ -61,7 +86,7 @@ export default function CondoSuperAdminDashboard() {
       setBuildings(prev => prev.map(b => b.community_id === building.community_id ? { ...b, active_status: newStatus } : b));
     } catch (err) {
       console.error("Failed to toggle building status:", err);
-      alert(err?.response?.data?.detail || "Failed to toggle building status.");
+      showAlert("Status Toggle Error", err?.response?.data?.detail || "Failed to toggle building status.", "danger");
     } finally {
       setTogglingBuildingId(null);
     }
@@ -73,9 +98,10 @@ export default function CondoSuperAdminDashboard() {
       const newStatus = !u.active_status;
       await API.put(`/condo/community/users/${u.user_id}/status`, { active_status: newStatus });
       setUsers(prev => prev.map(usr => usr.user_id === u.user_id ? { ...usr, active_status: newStatus } : usr));
+      showAlert("Success", `User status updated successfully!`, "success");
     } catch (err) {
       console.error("Failed to toggle user status:", err);
-      alert(err?.response?.data?.detail || "Failed to toggle user status.");
+      showAlert("Status Toggle Error", err?.response?.data?.detail || "Failed to toggle user status.", "danger");
     } finally {
       setTogglingUserId(null);
     }
@@ -84,7 +110,7 @@ export default function CondoSuperAdminDashboard() {
   const handleCreateBuilding = async (e) => {
     e.preventDefault();
     if (!newBuildingName.trim() || !newBuildingCode.trim()) {
-      alert("Building Name and Passcode are required.");
+      showAlert("Validation Error", "Building Name and Passcode are required.", "warning");
       return;
     }
 
@@ -99,7 +125,7 @@ export default function CondoSuperAdminDashboard() {
         description: `New building tower: ${newBuildingName}`
       });
 
-      alert("✅ Building registered successfully!");
+      showAlert("Success", "Building registered successfully!", "success");
       setBuildings(prev => [...prev, res.data]);
       
       // Reset form
@@ -115,7 +141,7 @@ export default function CondoSuperAdminDashboard() {
       setStats(statsRes.data);
     } catch (err) {
       console.error("Failed to register building:", err);
-      alert("❌ " + (err.response?.data?.detail || "Failed to register building. Name/Passcode might be taken."));
+      showAlert("Registration Failed", err.response?.data?.detail || "Failed to register building. Name/Passcode might be taken.", "danger");
     } finally {
       setSubmittingBuilding(false);
     }
@@ -546,6 +572,17 @@ export default function CondoSuperAdminDashboard() {
         </div>
       )}
 
+      <ConfirmModal
+        isOpen={confirmConfig.isOpen}
+        title={confirmConfig.title}
+        message={confirmConfig.message}
+        confirmText={confirmConfig.confirmText}
+        cancelText={confirmConfig.cancelText}
+        type={confirmConfig.type}
+        singleButton={confirmConfig.singleButton}
+        onConfirm={confirmConfig.onConfirm}
+        onCancel={() => setConfirmConfig(prev => ({ ...prev, isOpen: false }))}
+      />
     </div>
   );
 }

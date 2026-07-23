@@ -4,6 +4,7 @@ import {
   Plus, RefreshCw, Eye, EyeOff, ShieldCheck, Mail, Phone, Home, File
 } from 'lucide-react';
 import API, { getBaseUrl } from '../../services/api';
+import ConfirmModal from '../../components/ConfirmModal';
 
 export default function CondoPropertyManagerDashboard({ user, setActivePage }) {
   const [requests, setRequests] = useState([]);
@@ -18,6 +19,30 @@ export default function CondoPropertyManagerDashboard({ user, setActivePage }) {
   const [invitePhone, setInvitePhone] = useState('');
   const [inviteUnit, setInviteUnit] = useState('');
   const [inviting, setInviting] = useState(false);
+
+  const [confirmConfig, setConfirmConfig] = useState({ 
+    isOpen: false, 
+    title: '', 
+    message: '', 
+    confirmText: 'OK', 
+    cancelText: 'Cancel', 
+    onConfirm: null, 
+    onCancel: null, 
+    type: 'info', 
+    singleButton: false 
+  });
+
+  const showAlert = (title, message, type = 'info') => {
+    setConfirmConfig({
+      isOpen: true,
+      title,
+      message,
+      confirmText: 'OK',
+      singleButton: true,
+      type,
+      onConfirm: () => setConfirmConfig(prev => ({ ...prev, isOpen: false }))
+    });
+  };
 
   // Review request modal
   const [selectedReq, setSelectedReq] = useState(null);
@@ -55,13 +80,13 @@ export default function CondoPropertyManagerDashboard({ user, setActivePage }) {
         admin_note: adminNote
       });
 
-      alert(`✅ Request successfully ${action === 'APPROVE' ? 'approved' : 'rejected'}!`);
+      showAlert("Success", `Request successfully ${action === 'APPROVE' ? 'approved' : 'rejected'}!`, "success");
       setRequests(prev => prev.filter(r => r.request_id !== reqId));
       setSelectedReq(null);
       setAdminNote('');
     } catch (err) {
       console.error("Failed to process request:", err);
-      alert("❌ " + (err.response?.data?.detail || "Failed to process request."));
+      showAlert("Error", err.response?.data?.detail || "Failed to process request.", "danger");
     } finally {
       setProcessingId(null);
     }
@@ -70,7 +95,7 @@ export default function CondoPropertyManagerDashboard({ user, setActivePage }) {
   const handleInvite = async (e) => {
     e.preventDefault();
     if (!inviteFirst.trim() || !inviteLast.trim() || !inviteEmail.trim()) {
-      alert("First name, Last name, and Email are required.");
+      showAlert("Validation Error", "First name, Last name, and Email are required.", "warning");
       return;
     }
 
@@ -85,7 +110,7 @@ export default function CondoPropertyManagerDashboard({ user, setActivePage }) {
         community_id: commId
       });
 
-      alert("✅ Invitation sent successfully! Resident account created.");
+      showAlert("Success", "Invitation sent successfully! Resident account created.", "success");
       setInviteFirst('');
       setInviteLast('');
       setInviteEmail('');
@@ -94,7 +119,7 @@ export default function CondoPropertyManagerDashboard({ user, setActivePage }) {
       setShowInviteModal(false);
     } catch (err) {
       console.error("Invite Error:", err);
-      alert("❌ " + (err.response?.data?.detail || "Failed to send invitation."));
+      showAlert("Error", err.response?.data?.detail || "Failed to send invitation.", "danger");
     } finally {
       setInviting(false);
     }
@@ -404,6 +429,17 @@ export default function CondoPropertyManagerDashboard({ user, setActivePage }) {
         </div>
       )}
 
+      <ConfirmModal
+        isOpen={confirmConfig.isOpen}
+        title={confirmConfig.title}
+        message={confirmConfig.message}
+        confirmText={confirmConfig.confirmText}
+        cancelText={confirmConfig.cancelText}
+        type={confirmConfig.type}
+        singleButton={confirmConfig.singleButton}
+        onConfirm={confirmConfig.onConfirm}
+        onCancel={() => setConfirmConfig(prev => ({ ...prev, isOpen: false }))}
+      />
     </div>
   );
 }

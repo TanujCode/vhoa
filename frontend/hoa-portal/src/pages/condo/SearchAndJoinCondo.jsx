@@ -3,6 +3,7 @@ import { Search, ShieldCheck, Upload, Send, Info } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import API from '../../services/api';
 import { validateUnitNo } from '../../utils/fieldValidators';
+import ConfirmModal from '../../components/ConfirmModal';
 
 const SearchAndJoinCondo = () => {
     const navigate = useNavigate();
@@ -16,6 +17,33 @@ const SearchAndJoinCondo = () => {
     const [addressProof, setAddressProof] = useState(null);
     const [loading, setLoading] = useState(false);
     const [apiError, setApiError] = useState('');
+
+    const [confirmConfig, setConfirmConfig] = useState({ 
+        isOpen: false, 
+        title: '', 
+        message: '', 
+        confirmText: 'OK', 
+        cancelText: 'Cancel', 
+        onConfirm: null, 
+        onCancel: null, 
+        type: 'info', 
+        singleButton: false 
+    });
+
+    const showAlert = (title, message, type = 'info', onConfirm = null) => {
+        setConfirmConfig({
+            isOpen: true,
+            title,
+            message,
+            confirmText: 'OK',
+            singleButton: true,
+            type,
+            onConfirm: () => {
+                setConfirmConfig(prev => ({ ...prev, isOpen: false }));
+                if (onConfirm) onConfirm();
+            }
+        });
+    };
 
     useEffect(() => {
         const checkStatusAndFetchHOAs = async () => {
@@ -71,11 +99,11 @@ const SearchAndJoinCondo = () => {
         const check = validateUnitNo(unitNo);
         if (check !== true) {
             setUnitError(check);
-            alert(check);
+            showAlert("Validation Error", check, "warning");
             return;
         }
         if (!idProof || !addressProof) {
-            alert("Please upload both Identity and Address proofs.");
+            showAlert("Required Documents", "Please upload both Identity and Address proofs.", "warning");
             return;
         }
 
@@ -94,23 +122,23 @@ const SearchAndJoinCondo = () => {
                 }
             });
             
-            alert("✅ " + (res.data.message || "Request submitted successfully!"));
-            
-            setPassCode('');
-            setUnitNo('');
-            setIdProof(null);
-            setAddressProof(null);
-            setSelectedHOA(null);
-
-            navigate('/condo/waiting-approval');
+            showAlert("Success", res.data.message || "Request submitted successfully!", "success", () => {
+                setPassCode('');
+                setUnitNo('');
+                setIdProof(null);
+                setAddressProof(null);
+                setSelectedHOA(null);
+                navigate('/condo/waiting-approval');
+            });
 
         } catch (err) {
             console.error("Submission Error:", err);
             if (err.response?.status === 401) {
-                alert("Session expired. Please login again.");
-                navigate('/condo/login');
+                showAlert("Session Expired", "Session expired. Please login again.", "danger", () => {
+                    navigate('/condo/login');
+                });
             } else {
-                alert("❌ " + (err.response?.data?.detail || "Submission failed. Please try again."));
+                showAlert("Submission Failed", err.response?.data?.detail || "Submission failed. Please try again.", "danger");
             }
         } finally {
             setLoading(false);
@@ -251,6 +279,17 @@ const SearchAndJoinCondo = () => {
                     </form>
                 )}
             </div>
+            <ConfirmModal
+                isOpen={confirmConfig.isOpen}
+                title={confirmConfig.title}
+                message={confirmConfig.message}
+                confirmText={confirmConfig.confirmText}
+                cancelText={confirmConfig.cancelText}
+                type={confirmConfig.type}
+                singleButton={confirmConfig.singleButton}
+                onConfirm={confirmConfig.onConfirm}
+                onCancel={() => setConfirmConfig(prev => ({ ...prev, isOpen: false }))}
+            />
         </div>
     );
 };

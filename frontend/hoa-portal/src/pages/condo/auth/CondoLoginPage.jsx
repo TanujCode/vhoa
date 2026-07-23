@@ -6,6 +6,7 @@ import AuthLayout from '../../../components/layout/AuthLayout';
 import API from '../../../services/api';
 import { useGoogleLogin } from '@react-oauth/google';
 import { validateEmail } from '../../../utils/emailValidation';
+import ConfirmModal from '../../../components/ConfirmModal';
 
 export default function CondoLoginPage() {
   const [searchParams] = useSearchParams();
@@ -18,6 +19,30 @@ export default function CondoLoginPage() {
     watch,
     formState: { errors, isSubmitting },
   } = useForm({ mode: 'onTouched' });
+
+  const [confirmConfig, setConfirmConfig] = useState({ 
+    isOpen: false, 
+    title: '', 
+    message: '', 
+    confirmText: 'OK', 
+    cancelText: 'Cancel', 
+    onConfirm: null, 
+    onCancel: null, 
+    type: 'info', 
+    singleButton: false 
+  });
+
+  const showAlert = (title, message, type = 'info') => {
+    setConfirmConfig({
+      isOpen: true,
+      title,
+      message,
+      confirmText: 'OK',
+      singleButton: true,
+      type,
+      onConfirm: () => setConfirmConfig(prev => ({ ...prev, isOpen: false }))
+    });
+  };
 
   const [showPassword, setShowPassword] = useState(false);
   const [errorMsg, setErrorMsg]         = useState('');
@@ -125,7 +150,7 @@ export default function CondoLoginPage() {
         setTimeout(() => navigate('/condo/verify-otp', { state: { email: data.email } }), 2000);
       } else {
         setErrorMsg(detail);
-        alert(detail);
+        showAlert("Login Error", detail, "danger");
         fetchCaptcha();
       }
     }
@@ -379,6 +404,17 @@ export default function CondoLoginPage() {
           Register Building
         </Link>
       </div>
+      <ConfirmModal
+        isOpen={confirmConfig.isOpen}
+        title={confirmConfig.title}
+        message={confirmConfig.message}
+        confirmText={confirmConfig.confirmText}
+        cancelText={confirmConfig.cancelText}
+        type={confirmConfig.type}
+        singleButton={confirmConfig.singleButton}
+        onConfirm={confirmConfig.onConfirm}
+        onCancel={() => setConfirmConfig(prev => ({ ...prev, isOpen: false }))}
+      />
     </AuthLayout>
   );
 }
