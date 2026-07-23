@@ -101,6 +101,7 @@ def seed_roles():
         {"role_id": 6, "role_name": "sales_admin",      "description": "Sales and Contract Administrator"},
         {"role_id": 7, "role_name": "landlord",         "description": "Rental Property Owner/Landlord"},
         {"role_id": 8, "role_name": "tenant",           "description": "Rental Property Tenant/Renter"},
+        {"role_id": 9, "role_name": "condo_concierge",  "description": "Condo Front Desk Concierge / Security Guard"},
     ]
     db = SessionLocal()
     try:

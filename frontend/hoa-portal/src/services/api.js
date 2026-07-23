@@ -22,21 +22,32 @@ const API = axios.create({
 
 // ── Request interceptor ──
 API.interceptors.request.use((config) => {
-  if (config.url.includes('/auth/login') || config.url.includes('/auth/register')) {
-    return config;
-  }
+  const url = config.url || '';
 
-  const isRentalRequest = config.url.includes('/rental/');
-  const tokenKey = isRentalRequest ? 'rental_token' : 'token';
-  const token = localStorage.getItem(tokenKey) || sessionStorage.getItem(tokenKey) || localStorage.getItem('access_token') || sessionStorage.getItem('access_token'); 
-  
-  console.log("DEBUG API Request interceptor:", {
-    url: config.url,
-    isRentalRequest,
-    tokenKey,
-    tokenPresent: !!token,
-    tokenPrefix: token ? token.substring(0, 15) + "..." : "none"
-  });
+  // Skip auth token for all public auth endpoints
+  const isPublicAuthRoute =
+    url.includes('/auth/login') ||
+    url.includes('/auth/register') ||
+    url.includes('/auth/otp/') ||
+    url.includes('/auth/password/') ||
+    url.includes('/auth/captcha') ||
+    url.includes('/auth/google') ||
+    url.includes('/auth/forgot-password');
+
+  if (isPublicAuthRoute) return config;
+
+  const isRentalRequest = url.includes('/rental/');
+  const isCondoRequest  = url.includes('/condo/');
+
+  let tokenKey = 'token';
+  if (isRentalRequest) tokenKey = 'rental_token';
+  else if (isCondoRequest) tokenKey = 'condo_token';
+
+  const token =
+    localStorage.getItem(tokenKey) ||
+    sessionStorage.getItem(tokenKey) ||
+    localStorage.getItem('access_token') ||
+    sessionStorage.getItem('access_token');
 
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
@@ -82,9 +93,24 @@ API.interceptors.response.use(
       original._retry = true;
 
       const isRental = original.url.includes('/rental/');
-      const sessionKey = isRental ? 'rental_session_token' : 'session_token';
-      const tokenKey = isRental ? 'rental_token' : 'token';
-      const refreshUrl = isRental ? '/rental/auth/refresh' : '/auth/refresh';
+      const isCondo = original.url.includes('/condo/');
+
+      let sessionKey = 'session_token';
+      let tokenKey = 'token';
+      let refreshUrl = '/auth/refresh';
+      let loginRedirectUrl = '/login';
+
+      if (isRental) {
+        sessionKey = 'rental_session_token';
+        tokenKey = 'rental_token';
+        refreshUrl = '/rental/auth/refresh';
+        loginRedirectUrl = '/rental/login';
+      } else if (isCondo) {
+        sessionKey = 'condo_session_token';
+        tokenKey = 'condo_token';
+        refreshUrl = '/condo/auth/refresh';
+        loginRedirectUrl = '/condo/login';
+      }
 
       const sessionToken = localStorage.getItem(sessionKey) || sessionStorage.getItem(sessionKey);
       if (!sessionToken) {
@@ -96,6 +122,14 @@ API.interceptors.response.use(
           sessionStorage.removeItem('rental_user');
           sessionStorage.removeItem('rental_session_token');
           window.location.href = '/rental/login';
+        } else if (isCondo) {
+          localStorage.removeItem('condo_token');
+          localStorage.removeItem('condo_user');
+          localStorage.removeItem('condo_session_token');
+          sessionStorage.removeItem('condo_token');
+          sessionStorage.removeItem('condo_user');
+          sessionStorage.removeItem('condo_session_token');
+          window.location.href = '/condo/login';
         } else {
           localStorage.removeItem('token');
           localStorage.removeItem('user');
@@ -124,6 +158,8 @@ API.interceptors.response.use(
           sessionStorage.setItem(tokenKey, newToken);
         } else if (isRental) {
           localStorage.setItem('rental_token', newToken);
+        } else if (isCondo) {
+          localStorage.setItem('condo_token', newToken);
         } else if (localStorage.getItem('access_token')) {
           localStorage.setItem('access_token', newToken);
         } else {
@@ -141,6 +177,14 @@ API.interceptors.response.use(
           sessionStorage.removeItem('rental_user');
           sessionStorage.removeItem('rental_session_token');
           window.location.href = '/rental/login';
+        } else if (isCondo) {
+          localStorage.removeItem('condo_token');
+          localStorage.removeItem('condo_user');
+          localStorage.removeItem('condo_session_token');
+          sessionStorage.removeItem('condo_token');
+          sessionStorage.removeItem('condo_user');
+          sessionStorage.removeItem('condo_session_token');
+          window.location.href = '/condo/login';
         } else {
           localStorage.removeItem('token');
           localStorage.removeItem('user');

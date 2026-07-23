@@ -4,6 +4,7 @@ import {
 } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 import { getBaseUrl } from '../../services/api';
+import SystemSelectorDropdown from '../layout/SystemSelectorDropdown';
 
 const RentalTopbar = ({
   toggleSidebar,
@@ -44,7 +45,7 @@ const RentalTopbar = ({
   };
 
   return (
-    <header className="h-16 bg-white dark:bg-[#162535] border-b border-slate-200 dark:border-white/10 flex items-center px-3 sm:px-4 lg:px-6 z-30 sticky top-0">
+    <header className="h-16 bg-white dark:bg-[#162535] border-b border-slate-200 dark:border-white/10 flex items-center px-3 sm:px-4 lg:px-6 z-30 sticky top-0 shrink-0">
       
       {/* Mobile Sidebar Button */}
       <button onClick={toggleSidebar} className="lg:hidden p-2 mr-1 sm:mr-2 text-gray-500 dark:text-gray-400">
@@ -67,7 +68,7 @@ const RentalTopbar = ({
         {(user?.role === 'landlord' || user?.role === 'super_admin') && properties.length > 0 ? (
           <div 
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-            className="flex items-center gap-1.5 sm:gap-3 select-none cursor-pointer group"
+            className="flex items-center gap-1.5 sm:gap-3 max-w-[150px] xs:max-w-[200px] sm:max-w-[420px] lg:max-w-none select-none cursor-pointer group"
           >
             <Building2 className="hidden sm:block text-[#6366F1] dark:text-[#818CF8] flex-shrink-0" size={18} />
             <div className="min-w-0 text-left">
@@ -86,7 +87,7 @@ const RentalTopbar = ({
             </div>
           </div>
         ) : (
-          <div className="flex items-center gap-1.5 sm:gap-3 select-none">
+          <div className="flex items-center gap-1.5 sm:gap-3 max-w-[150px] xs:max-w-[200px] sm:max-w-[420px] lg:max-w-none select-none">
             <Building2 className="hidden sm:block text-[#6366F1] dark:text-[#818CF8] flex-shrink-0" size={18} />
             <div className="min-w-0 text-left">
               <p className="text-[9px] sm:text-[10px] text-slate-400 dark:text-gray-400 font-semibold uppercase tracking-widest leading-normal mb-0.5 truncate">
@@ -179,30 +180,7 @@ const RentalTopbar = ({
       {/* Right Side Actions */}
       <div className="ml-auto flex items-center gap-1 sm:gap-2 lg:gap-4 flex-shrink-0">
         {user?.role === 'super_admin' && (
-          <button
-            onClick={() => {
-              const token = localStorage.getItem('rental_token') || sessionStorage.getItem('rental_token');
-              const sessionToken = localStorage.getItem('rental_session_token') || sessionStorage.getItem('rental_session_token');
-              const userObj = localStorage.getItem('rental_user') || sessionStorage.getItem('rental_user');
-
-              if (token) localStorage.setItem('token', token);
-              if (sessionToken) localStorage.setItem('session_token', sessionToken);
-              if (userObj) {
-                const parsed = JSON.parse(userObj);
-                localStorage.setItem('user', JSON.stringify({
-                  ...parsed,
-                  role: 'super_admin',
-                  role_name: 'super_admin'
-                }));
-              }
-              window.location.href = '/dashboard';
-            }}
-            className="flex px-3 py-2 bg-indigo-500/10 dark:bg-indigo-500/25 border-2 border-indigo-500/30 hover:border-indigo-500 hover:bg-indigo-500 hover:text-white text-indigo-700 dark:text-indigo-400 dark:hover:text-white dark:hover:bg-indigo-500 rounded-2xl text-xs font-bold transition-all duration-200 items-center gap-1.5 shadow-sm active:scale-95"
-            title="Switch to HOA Portal"
-          >
-            <ArrowLeftRight size={14} />
-            <span className="hidden md:inline">Switch to HOA Portal</span>
-          </button>
+          <SystemSelectorDropdown currentSystem="rental" />
         )}
         
         <button

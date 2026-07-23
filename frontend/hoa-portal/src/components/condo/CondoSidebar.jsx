@@ -2,14 +2,14 @@ import React from 'react';
 import { 
   Globe, Layout, Users, Wrench, 
   CreditCard, Home, FileText, ClipboardList,
-  User, Settings, Truck
+  User, Settings, Truck, Shield, Building2, ParkingSquare, Key, Package, FileSpreadsheet
 } from 'lucide-react';
 import { getBaseUrl } from '../../services/api';
 import { useTheme } from '../../context/ThemeContext';
 import Logo from '../marketing/Logo';
 
-const RentalSidebar = ({ activePage, setActivePage, isOpen, setIsOpen, user }) => {
-  const userRole = (user?.role_name || user?.role || 'tenant').toLowerCase();
+const CondoSidebar = ({ activePage, setActivePage, isOpen, setIsOpen, user }) => {
+  const userRole = (user?.role_name || user?.role || 'resident').toLowerCase();
   const { theme } = useTheme();
   const isDark = theme === 'dark';
 
@@ -27,40 +27,38 @@ const RentalSidebar = ({ activePage, setActivePage, isOpen, setIsOpen, user }) =
   // Super Admin Menu
   const superAdminNavItems = [
     { id: 'dashboard', label: 'Dashboard', icon: Layout },
-    { id: 'properties_hub', label: 'All Properties & Units', icon: Globe },
-    { id: 'screening_hub', label: 'Tenant Screening', icon: Users },
-    { id: 'leases_hub', label: 'Lease Agreements', icon: FileText },
-    { id: 'tenants_hub', label: 'Tenants Directory', icon: Users },
-    { id: 'rent_ledger', label: 'Payments Ledger', icon: CreditCard },
-    { id: 'servicereq', label: 'Maintenance Desk', icon: Wrench },
-    { id: 'vendors_hub', label: 'Contractors / Vendors', icon: Truck },
+    { id: 'buildings', label: 'Condo Buildings', icon: Building2 },
+    { id: 'users', label: 'Platform Users', icon: Users },
   ];
 
-  // Landlord Menu
-  const landlordNavItems = [
-    { id: 'dashboard', label: 'Landlord Dashboard', icon: Layout },
-    { id: 'properties_hub', label: 'Properties & Units', icon: Globe },
-    { id: 'screening_hub', label: 'Tenant Screening', icon: Users },
-    { id: 'leases_hub', label: 'Lease Agreements', icon: FileText },
-    { id: 'tenants_hub', label: 'Tenants', icon: Users },
-    { id: 'rent_ledger', label: 'Payments Ledger', icon: CreditCard },
-    { id: 'servicereq', label: 'Maintenance Desk', icon: Wrench },
-    { id: 'vendors_hub', label: 'Contractors / Vendors', icon: Truck },
+  // Property Manager / Board Member Menu
+  const staffNavItems = [
+    { id: 'dashboard', label: 'Dashboard', icon: Layout },
+    { id: 'members', label: 'Residents Directory', icon: Users },
+    { id: 'documents', label: 'Documents Center', icon: FileText },
+    { id: 'maintenance', label: 'Maintenance Requests', icon: Wrench },
+    { id: 'payments', label: 'Payments Ledger', icon: CreditCard },
+    { id: 'parking', label: 'Parking Allocations', icon: ParkingSquare },
+    { id: 'visitors', label: 'Visitor Passes', icon: Key },
+    { id: 'parcels', label: 'Parcels Logs', icon: Package },
   ];
 
-  // Tenant Menu
-  const tenantNavItems = [
-    { id: 'dashboard', label: 'My Rental Portal', icon: Home },
-    { id: 'leases_hub', label: 'My Lease Agreement', icon: FileText },
-    { id: 'rent_ledger', label: 'Pay Rent Ledger', icon: CreditCard },
-    { id: 'servicereq', label: 'Maintenance Request', icon: Wrench },
+  // Resident Menu
+  const residentNavItems = [
+    { id: 'dashboard', label: 'Resident Home', icon: Home },
+    { id: 'documents', label: 'Building Documents', icon: FileText },
+    { id: 'maintenance', label: 'Maintenance Requests', icon: Wrench },
+    { id: 'payments', label: 'My Payments', icon: CreditCard },
+    { id: 'parking', label: 'My Parking Allocation', icon: ParkingSquare },
+    { id: 'visitors', label: 'Guest Visitor Passes', icon: Key },
+    { id: 'parcels', label: 'My Deliveries', icon: Package },
   ];
 
-  let navItems = tenantNavItems;
+  let navItems = residentNavItems;
   if (userRole === 'super_admin') {
     navItems = superAdminNavItems;
-  } else if (userRole === 'landlord') {
-    navItems = landlordNavItems;
+  } else if (userRole === 'property_manager' || userRole === 'board_member') {
+    navItems = staffNavItems;
   }
 
   const getNavItemClass = (itemId) => {
@@ -88,7 +86,7 @@ const RentalSidebar = ({ activePage, setActivePage, isOpen, setIsOpen, user }) =
         <nav className="flex-1 overflow-y-auto p-4 space-y-6 custom-scrollbar">
           <div>
             <div className="text-[10px] font-bold text-slate-500 dark:text-gray-500 tracking-widest px-3 mb-4 uppercase">
-              Main Menu
+              Condo Menu
             </div>
             <div className="space-y-1">
               {navItems.map(item => {
@@ -116,15 +114,6 @@ const RentalSidebar = ({ activePage, setActivePage, isOpen, setIsOpen, user }) =
               >
                 <User size={18} /> My Profile
               </div>
-
-              {(userRole === 'landlord' || userRole === 'super_admin') && (
-                <div
-                  onClick={() => { setActivePage('audit'); setIsOpen(false); }}
-                  className={getNavItemClass('audit')}
-                >
-                  <ClipboardList size={18} /> Audit History
-                </div>
-              )}
             </div>
           </div>
         </nav>
@@ -148,16 +137,19 @@ const RentalSidebar = ({ activePage, setActivePage, isOpen, setIsOpen, user }) =
               )}
             </div>
             <div className="overflow-hidden text-slate-900 dark:text-white">
-              <div className="text-sm font-medium truncate">{user?.full_name || user?.name || "User"}</div>
-              <div className="text-[10px] text-blue-600 dark:text-[#5BA4F5] font-mono uppercase tracking-tighter">
-                {userRole}
-              </div>
+              <p className="text-xs font-bold truncate leading-tight">
+                {user?.name || user?.full_name || 'Resident User'}
+              </p>
+              <p className="text-[10px] text-slate-500 dark:text-gray-400 capitalize truncate mt-0.5">
+                {userRole.replace('_', ' ')}
+              </p>
             </div>
           </div>
         </div>
+
       </aside>
     </>
   );
 };
 
-export default RentalSidebar;
+export default CondoSidebar;

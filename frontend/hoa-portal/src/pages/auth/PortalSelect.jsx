@@ -173,7 +173,7 @@ export default function PortalSelect() {
 
           {/* Card 3: Condo Management Portal */}
           <div 
-            onClick={() => navigate('/login')}
+            onClick={() => navigate('/condo/login')}
             className="rounded-2xl p-8 pb-8 flex flex-col justify-between min-h-[480px] h-auto relative overflow-hidden group cursor-pointer border border-slate-200 dark:border-white/10 bg-white dark:bg-[#111C2A] shadow-md hover:shadow-xl hover:border-amber-500 hover:-translate-y-1 transition-all duration-300"
           >
             {/* Soft Hover Glow inside card */}

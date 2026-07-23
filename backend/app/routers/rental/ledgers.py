@@ -50,3 +50,31 @@ def run_late_fee_simulation(
 ):
     fees_count = rental_service.apply_late_fees(db)
     return {"message": f"Late fee simulation complete. Applied late fees to {fees_count} overdue invoices."}
+
+
+@router.post("/ledgers/{invoice_id}/apply-late-fee", response_model=RentalLedgerOut)
+def apply_single_late_fee(
+    invoice_id: int,
+    db: Session = Depends(get_rental_db),
+    current_user: RentalUser = Depends(require_rental_role("super_admin", "landlord"))
+):
+    try:
+        ledger = rental_service.apply_late_fee_to_invoice(invoice_id, db)
+        log_rental_action(db, "APPLY_LATE_FEE", "rental", f"Applied late fee to invoice {invoice_id}.", current_user.user_id)
+        return ledger
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.post("/ledgers/{invoice_id}/revert-late-fee", response_model=RentalLedgerOut)
+def revert_single_late_fee(
+    invoice_id: int,
+    db: Session = Depends(get_rental_db),
+    current_user: RentalUser = Depends(require_rental_role("super_admin", "landlord"))
+):
+    try:
+        ledger = rental_service.revert_late_fee_from_invoice(invoice_id, db)
+        log_rental_action(db, "REVERT_LATE_FEE", "rental", f"Reverted late fee from invoice {invoice_id}.", current_user.user_id)
+        return ledger
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))

@@ -3,38 +3,43 @@ import {
   Wrench, Plus, Clock, CheckCircle2, AlertTriangle, 
   Send, DollarSign, UserCheck, ShieldAlert, Sparkles, 
   Search, X, Edit, ChevronDown, Droplets, Zap, Leaf, Shield, Bug, Wind,
-  MessageSquare, XCircle, FileText
+  MessageSquare, XCircle, FileText, Filter
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import API from '../../services/api';
 import ConfirmModal from '../../components/ConfirmModal';
+import { validateTicketTitle, validateTicketDescription } from '../../utils/fieldValidators';
 
 // Standardized Badge components matching reference
 const StatusBadge = ({ status }) => {
   const map = {
-    OPEN: 'text-blue-600 dark:text-blue-400 bg-blue-500/10 dark:bg-blue-500/20 border-blue-500/20',
-    IN_PROGRESS: 'text-amber-600 dark:text-amber-300 bg-amber-500/10 dark:bg-amber-500/20 border-amber-500/20',
-    VENDOR_ASSIGNED: 'text-purple-600 dark:text-purple-400 bg-purple-500/10 dark:bg-purple-500/20 border-purple-500/20',
-    COMPLETED: 'text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 dark:bg-emerald-500/20 border-emerald-500/20',
-    CANCELLED: 'text-rose-600 dark:text-rose-450 bg-rose-500/10 dark:bg-rose-500/20 border-rose-500/20',
+    OPEN: 'bg-blue-500/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400',
+    VENDOR_ASSIGNED: 'bg-purple-500/10 text-purple-600 dark:bg-purple-500/20 dark:text-purple-400',
+    IN_PROGRESS: 'bg-amber-500/10 text-amber-600 dark:bg-amber-500/20 dark:text-amber-300',
+    COMPLETED: 'bg-emerald-500/10 text-emerald-500 dark:bg-emerald-500/20 dark:text-emerald-450',
+    CANCELLED: 'bg-rose-500/10 text-rose-500 dark:bg-rose-500/20 dark:text-rose-450',
   };
   return (
-    <span className={`px-2 py-0.5 rounded text-[10px] font-bold border uppercase whitespace-nowrap ${map[status] || 'text-gray-500 border-gray-500/20 bg-gray-500/10'}`}>
+    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${map[status] || 'bg-gray-500/10 text-gray-600 dark:bg-gray-500/20 dark:text-gray-400'}`}>
       {status?.replace(/_/g, ' ')}
     </span>
   );
 };
 
 const PriorityBadge = ({ priority }) => {
-  const map = {
-    LOW: 'text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 dark:bg-emerald-500/20 border-emerald-500/20',
-    NORMAL: 'text-blue-600 dark:text-blue-450 bg-blue-500/10 dark:bg-blue-500/20 border-blue-500/20',
-    HIGH: 'text-amber-600 dark:text-amber-300 bg-amber-500/10 dark:bg-amber-500/20 border-amber-500/20',
-    URGENT: 'text-rose-600 dark:text-rose-400 bg-rose-500/10 dark:bg-rose-500/20 border-rose-500/20',
+  const config = {
+    LOW: { label: 'Low', color: 'bg-green-500 text-green-600 dark:text-green-400' },
+    NORMAL: { label: 'Medium', color: 'bg-yellow-500 text-yellow-600 dark:text-yellow-400 font-medium' },
+    HIGH: { label: 'High', color: 'bg-red-500 text-red-600 dark:text-red-400' },
+    URGENT: { label: 'Urgent', color: 'bg-red-500 text-red-600 dark:text-red-400' }
   };
+  const item = config[priority] || { label: priority, color: 'bg-gray-400 text-gray-500 dark:text-gray-400' };
+  const parts = item.color.split(' ');
+  const circleColor = parts[0];
+  const textColor = parts.slice(1).join(' ');
   return (
-    <span className={`px-2 py-0.5 rounded text-[10px] font-bold border uppercase whitespace-nowrap ${map[priority] || 'text-gray-500 border-gray-500/20 bg-gray-500/10'}`}>
-      {priority}
+    <span className={`inline-flex items-center gap-1.5 text-xs font-semibold ${textColor}`}>
+      {item.label} <span className={`w-2.5 h-2.5 rounded-full ${circleColor}`}></span>
     </span>
   );
 };
@@ -76,6 +81,9 @@ export default function RentalMaintenanceDesk({ user, selectedPropertyFilterId =
   const [vendors, setVendors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
+  const [priorityFilter, setPriorityFilter] = useState('');
+  const [sortBy, setSortBy] = useState('newest');
 
   // Tenant submit request states
   const [showSubmitModal, setShowSubmitModal] = useState(false);
@@ -103,7 +111,46 @@ export default function RentalMaintenanceDesk({ user, selectedPropertyFilterId =
   const [showPayModal, setShowPayModal] = useState(false);
   const [payMethod, setPayMethod] = useState('ACH');
   const [paying, setPaying] = useState(false);
-  const [confirmConfig, setConfirmConfig] = useState({ isOpen: false, title: '', message: '', onConfirm: null });
+  const [confirmConfig, setConfirmConfig] = useState({ 
+    isOpen: false, 
+    title: '', 
+    message: '', 
+    confirmText: 'OK', 
+    cancelText: 'Cancel', 
+    onConfirm: null, 
+    onCancel: null, 
+    type: 'info', 
+    singleButton: false 
+  });
+
+  const showAlert = (title, message, type = 'info') => {
+    setConfirmConfig({
+      isOpen: true,
+      title,
+      message,
+      confirmText: 'OK',
+      singleButton: true,
+      type,
+      onConfirm: () => setConfirmConfig(prev => ({ ...prev, isOpen: false }))
+    });
+  };
+
+  const showConfirm = (title, message, onConfirm, type = 'danger', confirmText = 'Yes, Proceed') => {
+    setConfirmConfig({
+      isOpen: true,
+      title,
+      message,
+      confirmText,
+      cancelText: 'Cancel',
+      singleButton: false,
+      type,
+      onConfirm: () => {
+        onConfirm();
+        setConfirmConfig(prev => ({ ...prev, isOpen: false }));
+      },
+      onCancel: () => setConfirmConfig(prev => ({ ...prev, isOpen: false }))
+    });
+  };
 
   useEffect(() => {
     fetchData();
@@ -141,6 +188,20 @@ export default function RentalMaintenanceDesk({ user, selectedPropertyFilterId =
 
   async function handleSubmitRequest(e) {
     e.preventDefault();
+    
+    // Front-end Validations
+    const titleErr = validateTicketTitle(title);
+    if (titleErr !== true) {
+      showAlert("Validation Error", titleErr, "warning");
+      return;
+    }
+
+    const descErr = validateTicketDescription(description);
+    if (descErr !== true) {
+      showAlert("Validation Error", descErr, "warning");
+      return;
+    }
+
     let leaseIdToUse = selectedLeaseId;
     if (!leaseIdToUse && leases.length > 0) {
       leaseIdToUse = leases[0].lease_id;
@@ -150,8 +211,8 @@ export default function RentalMaintenanceDesk({ user, selectedPropertyFilterId =
     try {
       const res = await API.post('/rental/maintenance', {
         lease_id: leaseIdToUse ? parseInt(leaseIdToUse) : 0,
-        title,
-        description,
+        title: title.trim(),
+        description: description.trim(),
         priority
       });
       setRequests(prev => [...prev, res.data]);
@@ -159,87 +220,137 @@ export default function RentalMaintenanceDesk({ user, selectedPropertyFilterId =
       setTitle('');
       setDescription('');
       setPriority('NORMAL');
-      toast.success("Maintenance request successfully filed! Landlord has been notified.");
+      showAlert("Success", "Maintenance request successfully filed! Landlord has been notified.", "success");
     } catch (err) {
-      toast.error(err.response?.data?.detail || "Failed to submit request.");
+      showAlert("Error", err.response?.data?.detail || "Failed to submit request.", "danger");
     }
   }
 
   async function handleTenantEditSubmit(e) {
     e.preventDefault();
     if (!selectedRequest) return;
+
+    // Front-end Validations
+    const titleErr = validateTicketTitle(tenantEditTitle);
+    if (titleErr !== true) {
+      showAlert("Validation Error", titleErr, "warning");
+      return;
+    }
+
+    const descErr = validateTicketDescription(tenantEditDesc);
+    if (descErr !== true) {
+      showAlert("Validation Error", descErr, "warning");
+      return;
+    }
+
     try {
       const res = await API.put(`/rental/maintenance/${selectedRequest.request_id}/tenant-update`, {
-        title: tenantEditTitle,
-        description: tenantEditDesc,
+        title: tenantEditTitle.trim(),
+        description: tenantEditDesc.trim(),
         priority: tenantEditPriority
       });
       setRequests(prev => prev.map(r => r.request_id === selectedRequest.request_id ? res.data : r));
       setShowTenantEditModal(false);
-      toast.success("Maintenance request updated successfully!");
+      showAlert("Success", "Maintenance request updated successfully!", "success");
     } catch (err) {
-      toast.error(err.response?.data?.detail || "Failed to update request.");
+      showAlert("Error", err.response?.data?.detail || "Failed to update request.", "danger");
     }
   }
 
   async function handleTenantNoteSubmit(e) {
     e.preventDefault();
     if (!selectedRequest) return;
-    if (!tenantNoteText.trim()) {
-      toast.error("Please enter a note.");
+    
+    // Front-end Validations
+    if (!tenantNoteText || !tenantNoteText.trim()) {
+      showAlert("Validation Error", "Note is required.", "warning");
       return;
     }
+    if (tenantNoteText.trim().length < 5) {
+      showAlert("Validation Error", "Note must be at least 5 characters long.", "warning");
+      return;
+    }
+    if (tenantNoteText.trim().length > 500) {
+      showAlert("Validation Error", "Note cannot exceed 500 characters.", "warning");
+      return;
+    }
+
     try {
       const res = await API.post(`/rental/maintenance/${selectedRequest.request_id}/note`, {
-        note: tenantNoteText
+        note: tenantNoteText.trim()
       });
       setRequests(prev => prev.map(r => r.request_id === selectedRequest.request_id ? res.data : r));
       setShowTenantNoteModal(false);
       setTenantNoteText('');
-      toast.success("Note sent to landlord successfully!");
+      showAlert("Success", "Note sent to landlord successfully!", "success");
     } catch (err) {
-      toast.error(err.response?.data?.detail || "Failed to send note.");
+      showAlert("Error", err.response?.data?.detail || "Failed to send note.", "danger");
     }
   }
 
   async function handleTenantCancelRequest(req) {
-    setConfirmConfig({
-      isOpen: true,
-      title: "Cancel Maintenance Request",
-      message: `Are you sure you want to cancel maintenance request #${req.request_id}?`,
-      onConfirm: async () => {
+    showConfirm(
+      "Cancel Maintenance Request",
+      `Are you sure you want to cancel maintenance request #${req.request_id}?`,
+      async () => {
         try {
           const res = await API.post(`/rental/maintenance/${req.request_id}/cancel`);
           setRequests(prev => prev.map(r => r.request_id === req.request_id ? res.data : r));
-          toast.success(`Request #${req.request_id} has been cancelled.`);
+          showAlert("Success", `Request #${req.request_id} has been cancelled.`, "success");
         } catch (err) {
-          toast.error(err.response?.data?.detail || "Failed to cancel request.");
+          showAlert("Error", err.response?.data?.detail || "Failed to cancel request.", "danger");
         }
-      }
-    });
+      },
+      "danger",
+      "Yes, Cancel"
+    );
   }
 
   async function handleUpdateWorkOrder(e) {
     e.preventDefault();
+
+    // Front-end Validations
+    if (statusVal === 'VENDOR_ASSIGNED' && !assignVendorId) {
+      showAlert("Validation Error", "Please select a vendor to assign.", "warning");
+      return;
+    }
+
+    const parsedCost = parseFloat(estCost);
+    if (statusVal === 'VENDOR_ASSIGNED' && (isNaN(parsedCost) || parsedCost < 0)) {
+      showAlert("Validation Error", "Estimated cost must be 0 or a positive number.", "warning");
+      return;
+    }
+
     try {
       const params = {};
       if (statusVal) params.status = statusVal;
-      if (assignVendorId) params.vendor_id = parseInt(assignVendorId);
-      if (estCost) params.estimated_cost = parseFloat(estCost);
+      
+      // Only set vendor_id and estimated_cost if assigning a vendor
+      if (statusVal === 'VENDOR_ASSIGNED') {
+        if (assignVendorId) params.vendor_id = parseInt(assignVendorId);
+        params.estimated_cost = parsedCost;
+      }
 
       const queryParams = new URLSearchParams(params).toString();
       const res = await API.post(`/rental/maintenance/${selectedRequest.request_id}?${queryParams}`);
       
       setRequests(prev => prev.map(r => r.request_id === selectedRequest.request_id ? res.data : r));
       setShowAssignModal(false);
-      toast.success(`Work order #${selectedRequest.request_id} successfully updated!`);
+      showAlert("Success", `Work order #${selectedRequest.request_id} successfully updated!`, "success");
     } catch (err) {
-      toast.error(err.response?.data?.detail || "Failed to update work order.");
+      showAlert("Error", err.response?.data?.detail || "Failed to update work order.", "danger");
     }
   }
 
   async function handlePayMaintenance(e) {
     e.preventDefault();
+
+    // Front-end Validations
+    if (payMethod !== 'ACH' && payMethod !== 'CREDIT_CARD') {
+      showAlert("Validation Error", "Please select a valid payment method.", "warning");
+      return;
+    }
+
     try {
       setPaying(true);
       const res = await API.post(`/rental/maintenance/${selectedRequest.request_id}/pay`, {
@@ -247,9 +358,9 @@ export default function RentalMaintenanceDesk({ user, selectedPropertyFilterId =
       });
       setRequests(prev => prev.map(r => r.request_id === selectedRequest.request_id ? res.data : r));
       setShowPayModal(false);
-      toast.success(`Repair cost of $${selectedRequest.estimated_cost} successfully paid via mock ${payMethod}!`);
+      showAlert("Success", `Repair cost of $${selectedRequest.estimated_cost} successfully paid via mock ${payMethod}!`, "success");
     } catch (err) {
-      toast.error(err.response?.data?.detail || "Failed to submit payment.");
+      showAlert("Error", err.response?.data?.detail || "Failed to submit payment.", "danger");
     } finally {
       setPaying(false);
     }
@@ -277,20 +388,44 @@ export default function RentalMaintenanceDesk({ user, selectedPropertyFilterId =
   const inProgressCount = propertyFilteredRequests.filter(r => r.status === 'IN_PROGRESS' || r.status === 'VENDOR_ASSIGNED').length;
   const completedCount = propertyFilteredRequests.filter(r => r.status === 'COMPLETED').length;
 
-  // Filter requests by search query next
-  const filteredRequests = propertyFilteredRequests.filter(r => 
-    r.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    r.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    r.vendor_company_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    r.status?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    r.request_id?.toString().includes(searchQuery)
-  );
+  // Filter requests by search query, status and priority next
+  const filteredRequests = propertyFilteredRequests.filter(r => {
+    const query = searchQuery.toLowerCase().trim();
+    const matchesSearch = !query || 
+      r.title?.toLowerCase().includes(query) ||
+      r.description?.toLowerCase().includes(query) ||
+      r.vendor_company_name?.toLowerCase().includes(query) ||
+      r.status?.toLowerCase().includes(query) ||
+      r.request_id?.toString().includes(query);
+
+    const matchesStatus = !statusFilter || r.status === statusFilter;
+    const matchesPriority = !priorityFilter || r.priority === priorityFilter;
+
+    return matchesSearch && matchesStatus && matchesPriority;
+  });
+
+  const sortedRequests = [...filteredRequests].sort((a, b) => {
+    if (sortBy === 'newest') {
+      return new Date(b.created_date) - new Date(a.created_date);
+    }
+    if (sortBy === 'oldest') {
+      return new Date(a.created_date) - new Date(b.created_date);
+    }
+    if (sortBy === 'priority') {
+      const priorityMap = { HIGH: 3, NORMAL: 2, LOW: 1 };
+      const aVal = priorityMap[a.priority] || 0;
+      const bVal = priorityMap[b.priority] || 0;
+      if (bVal !== aVal) return bVal - aVal;
+      return new Date(b.created_date) - new Date(a.created_date);
+    }
+    return 0;
+  });
 
   return (
     <div className="space-y-8 text-left animate-fade-in font-sans">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-black text-slate-905 dark:text-white tracking-tight">Maintenance Desk</h1>
+          <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">Maintenance Desk</h1>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Submit, schedule, and track work orders and repairs.</p>
         </div>
 
@@ -303,8 +438,6 @@ export default function RentalMaintenanceDesk({ user, selectedPropertyFilterId =
           </button>
         )}
       </div>
-
-
 
       {/* Stats Cards Row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -353,44 +486,85 @@ export default function RentalMaintenanceDesk({ user, selectedPropertyFilterId =
       <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-xl overflow-hidden shadow-sm">
         
         {/* Header Section */}
-        <div className="p-5 border-b border-slate-200 dark:border-white/10 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div className="text-slate-800 dark:text-white font-medium text-sm flex items-center gap-2">
+        <div className="p-6 border-b border-slate-200 dark:border-white/10 flex flex-col lg:flex-row gap-4 lg:items-center justify-between">
+          <h2 className="font-bold text-slate-900 dark:text-white text-sm flex items-center gap-2">
             <Wrench size={16} /> Active Maintenance Tickets
-          </div>
+          </h2>
           
-          {/* Search Input */}
-          <div className="relative w-full sm:w-72">
-            <Search className="absolute left-3 top-3.5 text-slate-400" size={16} />
-            <input
-              type="text"
-              placeholder="Search by title, vendor or status..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-2xl pl-9 pr-9 py-2.5 text-sm text-slate-900 dark:text-white focus:border-blue-500 outline-none"
-            />
-            {searchQuery && (
-              <button
-                onClick={() => setSearchQuery('')}
-                className="absolute right-3 top-3.5 text-slate-400 hover:text-slate-650 dark:hover:text-white"
+          <div className="flex flex-col sm:flex-row flex-wrap items-center gap-3 w-full lg:w-auto lg:justify-end">
+            {/* Search Bar */}
+            <div className="relative w-full sm:w-60">
+              <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-gray-500 pointer-events-none" />
+              <input
+                type="text"
+                placeholder="Search requests..."
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                className="w-full bg-slate-100/60 dark:bg-[#1E3248] border border-slate-200/80 dark:border-white/10 rounded-2xl pl-10 pr-4 py-2.5 text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 focus:border-blue-500 focus:outline-none transition-all shadow-inner"
+              />
+            </div>
+
+            {/* Status Filter */}
+            <div className="relative w-full sm:w-auto">
+              <select 
+                value={statusFilter} 
+                onChange={e => setStatusFilter(e.target.value)}
+                className="w-full sm:w-auto bg-slate-100/60 dark:bg-[#1E3248] border border-slate-200/80 dark:border-white/10 rounded-2xl pl-4 pr-10 py-2.5 text-xs text-slate-900 dark:text-white focus:border-blue-500 focus:outline-none appearance-none cursor-pointer transition-colors"
               >
-                <X size={16} />
-              </button>
-            )}
+                <option value="" className="text-slate-900 dark:text-white">Status (All)</option>
+                <option value="OPEN" className="text-slate-900 dark:text-white">Open</option>
+                <option value="VENDOR_ASSIGNED" className="text-slate-900 dark:text-white">Vendor Assigned</option>
+                <option value="IN_PROGRESS" className="text-slate-900 dark:text-white">In Progress</option>
+                <option value="COMPLETED" className="text-slate-900 dark:text-white">Completed</option>
+                <option value="CANCELLED" className="text-slate-900 dark:text-white">Cancelled</option>
+              </select>
+              <Filter className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-gray-500 pointer-events-none" size={13} />
+            </div>
+
+            {/* Priority Filter */}
+            <div className="relative w-full sm:w-auto">
+              <select 
+                value={priorityFilter} 
+                onChange={e => setPriorityFilter(e.target.value)}
+                className="w-full sm:w-auto bg-slate-100/60 dark:bg-[#1E3248] border border-slate-200/80 dark:border-white/10 rounded-2xl pl-4 pr-10 py-2.5 text-xs text-slate-900 dark:text-white focus:border-blue-500 focus:outline-none appearance-none cursor-pointer transition-colors"
+              >
+                <option value="" className="text-slate-900 dark:text-white">Priority (All)</option>
+                <option value="LOW" className="text-slate-900 dark:text-white">Low</option>
+                <option value="NORMAL" className="text-slate-900 dark:text-white">Medium</option>
+                <option value="HIGH" className="text-slate-900 dark:text-white">High</option>
+              </select>
+              <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-gray-500 pointer-events-none" size={13} />
+            </div>
+
+            {/* Sort By */}
+            <div className="relative w-full sm:w-auto">
+              <select 
+                value={sortBy} 
+                onChange={e => setSortBy(e.target.value)}
+                className="w-full sm:w-auto bg-slate-100/60 dark:bg-[#1E3248] border border-slate-200/80 dark:border-white/10 rounded-2xl pl-4 pr-10 py-2.5 text-xs text-slate-900 dark:text-white focus:border-blue-500 focus:outline-none appearance-none cursor-pointer transition-colors"
+              >
+                <option value="newest" className="text-slate-900 dark:text-white">Newest First</option>
+                <option value="oldest" className="text-slate-900 dark:text-white">Oldest First</option>
+                <option value="priority" className="text-slate-900 dark:text-white">Highest Priority</option>
+              </select>
+              <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-gray-500 pointer-events-none" size={13} />
+            </div>
           </div>
         </div>
 
-        {filteredRequests.length === 0 ? (
-          <div className="py-12 text-center text-slate-400 text-sm">No maintenance requests found matching your search.</div>
+        {sortedRequests.length === 0 ? (
+          <div className="py-12 text-center text-slate-400 text-sm">No maintenance requests found matching your search and filter criteria.</div>
         ) : (
+
           <div className="divide-y divide-slate-100 dark:divide-white/5 bg-white/40 dark:bg-transparent">
-            {filteredRequests.map((req) => {
+            {sortedRequests.map((req) => {
               const details = getRequestIconDetails(req.title);
               const RequestIcon = details.Icon;
               
               return (
                 <div 
                   key={req.request_id}
-                  className="p-4 sm:p-6 hover:bg-slate-50/80 dark:hover:bg-white/[0.02] transition flex gap-4 text-left"
+                  className="p-4 sm:p-6 hover:bg-slate-50 dark:hover:bg-white/5 transition flex gap-3 text-left"
                 >
                   {/* Icon */}
                   <div className={`w-10 h-10 sm:w-12 sm:h-12 ${details.bg} rounded-2xl flex items-center justify-center flex-shrink-0 shadow-sm`}>
@@ -401,36 +575,26 @@ export default function RentalMaintenanceDesk({ user, selectedPropertyFilterId =
                     {/* Title + Status */}
                     <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-1 sm:gap-3">
                       <div className="min-w-0">
-                        <span className="text-[10px] text-gray-450 uppercase font-mono tracking-wider block mb-0.5">#{req.request_id}</span>
                         <h3 className="font-semibold text-slate-900 dark:text-white text-sm sm:text-base leading-tight break-words">
                           {req.title}
                         </h3>
-                        <p className="text-slate-500 dark:text-gray-400 text-xs sm:text-sm mt-1 leading-relaxed break-words" title={req.description}>
+                        <p className="text-slate-500 dark:text-gray-400 text-xs sm:text-sm mt-0.5 line-clamp-2 leading-relaxed" title={req.description}>
                           {req.description}
                         </p>
                       </div>
-                      <div className="flex-shrink-0 mt-1 sm:mt-0">
+                      <div className="flex-shrink-0">
                         <StatusBadge status={req.status} />
                       </div>
                     </div>
 
                     {/* Meta info */}
-                    <div className="flex flex-wrap gap-x-4 gap-y-1.5 mt-3 text-xs text-slate-500 dark:text-gray-400 items-center">
-                      <span>
-                        Property: <span className="text-slate-800 dark:text-gray-300 font-semibold">{req.property_name || 'Unknown Property'}</span>
-                      </span>
-                      <span>
-                        By: <span className="text-slate-800 dark:text-gray-300 font-semibold">{req.submitted_by_name || 'Unknown Tenant'}</span>
-                      </span>
-                      <span>
-                        Vendor: <span className="text-slate-800 dark:text-gray-300 font-medium">{req.vendor_company_name || 'Pending assignment'}</span>
-                      </span>
-                      <span>
-                        Cost: <span className="text-slate-800 dark:text-gray-300 font-semibold font-mono">{req.estimated_cost > 0 ? `$${req.estimated_cost.toFixed(2)}` : '$0.00'}</span>
-                      </span>
-
+                    <div className="flex flex-wrap gap-x-3 gap-y-1 mt-2 text-xs text-slate-500 dark:text-gray-400">
+                      <span>Type: <span className="text-slate-800 dark:text-gray-300 font-medium">{req.property_name || 'Unknown Property'}</span></span>
+                      <span>By: <span className="text-slate-800 dark:text-gray-300 font-medium">{req.submitted_by_name || 'Unknown Tenant'}</span></span>
+                      <span>Vendor: <span className={`font-medium ${req.vendor_company_name ? 'text-slate-800 dark:text-gray-300' : 'text-slate-400 dark:text-gray-500'}`}>{req.vendor_company_name || 'Pending assignment'}</span></span>
+                      <span>Cost: <span className="text-slate-800 dark:text-gray-300 font-semibold font-mono">{req.estimated_cost > 0 ? `$${req.estimated_cost.toFixed(2)}` : '$0.00'}</span></span>
                       {req.estimated_cost > 0 && (
-                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold border uppercase tracking-wider ${
+                        <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold border uppercase tracking-wider ${
                           req.payment_status === 'PAID' 
                             ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' 
                             : 'bg-rose-500/10 text-rose-500 border-rose-500/20'
@@ -438,15 +602,11 @@ export default function RentalMaintenanceDesk({ user, selectedPropertyFilterId =
                           {req.payment_status}
                         </span>
                       )}
-
-                      <span className="hidden sm:inline">
-                        Date: <span className="text-slate-800 dark:text-gray-300 font-medium">
-                          {new Date(req.created_date).toLocaleString('en-US', {
-                            month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit'
-                          })}
-                        </span>
-                      </span>
-                      
+                      <span className="hidden sm:inline">Date: <span className="text-slate-800 dark:text-gray-300 font-medium">
+                        {new Date(req.created_date).toLocaleString('en-US', {
+                          month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit'
+                        })}
+                      </span></span>
                       <PriorityBadge priority={req.priority} />
                     </div>
 
@@ -468,7 +628,7 @@ export default function RentalMaintenanceDesk({ user, selectedPropertyFilterId =
                         <button
                           disabled={req.status === 'COMPLETED' || req.status === 'CANCELLED'}
                           onClick={() => { setSelectedRequest(req); setStatusVal(req.status); setEstCost(req.estimated_cost.toString()); setAssignVendorId(req.vendor_id || ''); setShowAssignModal(true); }}
-                          className="bg-blue-600/10 hover:bg-blue-600 hover:text-white text-blue-600 dark:text-blue-400 px-3 py-1.5 rounded-lg text-xs font-bold transition disabled:opacity-50 disabled:bg-slate-100 dark:disabled:bg-white/5 disabled:text-slate-450 dark:disabled:text-gray-500 disabled:cursor-not-allowed cursor-pointer inline-flex items-center gap-1"
+                          className="px-3 py-1.5 bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 rounded-xl text-xs font-medium transition flex items-center gap-1 shadow-sm active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                         >
                           <Edit size={12} />
                           <span>Manage Request</span>
@@ -485,7 +645,7 @@ export default function RentalMaintenanceDesk({ user, selectedPropertyFilterId =
                                 setTenantEditPriority(req.priority);
                                 setShowTenantEditModal(true);
                               }}
-                              className="bg-blue-600/10 hover:bg-blue-600 hover:text-white text-blue-600 dark:text-blue-400 px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1 cursor-pointer"
+                              className="px-3 py-1.5 bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 rounded-xl text-xs font-medium transition flex items-center gap-1 shadow-sm active:scale-95 cursor-pointer"
                               title="Edit Request"
                             >
                               <Edit size={13} />
@@ -497,7 +657,7 @@ export default function RentalMaintenanceDesk({ user, selectedPropertyFilterId =
                                 onClick={() => {
                                   toast.error("This ticket is in progress or vendor assigned. Direct edit is locked. Please send a note to your landlord using 'Add Note / Request Update'.");
                                 }}
-                                className="bg-slate-100 dark:bg-white/5 text-slate-400 dark:text-gray-500 px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer flex items-center gap-1 opacity-80 hover:opacity-100"
+                                className="px-3 py-1.5 bg-slate-100 dark:bg-white/5 text-slate-400 dark:text-gray-500 rounded-xl text-xs font-medium cursor-pointer flex items-center gap-1 opacity-80 hover:opacity-100"
                                 title="Direct Edit Locked (In Progress/Vendor Assigned)"
                               >
                                 <Edit size={13} />
@@ -514,7 +674,7 @@ export default function RentalMaintenanceDesk({ user, selectedPropertyFilterId =
                                 setTenantNoteText('');
                                 setShowTenantNoteModal(true);
                               }}
-                              className="bg-purple-600/10 hover:bg-purple-600 hover:text-white text-purple-600 dark:text-purple-400 px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1 cursor-pointer"
+                              className="px-3 py-1.5 bg-purple-500/10 hover:bg-purple-500/20 text-purple-600 dark:text-purple-400 rounded-xl text-xs font-medium transition flex items-center gap-1 shadow-sm active:scale-95 cursor-pointer"
                               title="Add Note or Request Update from Landlord"
                             >
                               <MessageSquare size={13} />
@@ -526,17 +686,17 @@ export default function RentalMaintenanceDesk({ user, selectedPropertyFilterId =
                           {req.payment_status === 'UNPAID' && req.estimated_cost > 0 && (
                             <button
                               onClick={() => { setSelectedRequest(req); setPayMethod('ACH'); setShowPayModal(true); }}
-                              className="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1 shadow-sm cursor-pointer"
+                              className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-medium transition flex items-center justify-center gap-1 shadow-sm cursor-pointer"
                             >
                               <DollarSign className="w-3.5 h-3.5" /> Pay Cost
                             </button>
                           )}
 
                           {/* Cancel Request Button */}
-                          {req.status !== 'COMPLETED' && req.status !== 'CANCELLED' && (
+                          {req.status === 'OPEN' && (
                             <button
                               onClick={() => handleTenantCancelRequest(req)}
-                              className="bg-rose-600/10 hover:bg-rose-600 hover:text-white text-rose-600 dark:text-rose-400 px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1 cursor-pointer sm:ml-auto"
+                              className="px-3 py-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 rounded-xl text-xs font-medium transition flex items-center gap-1 shadow-sm active:scale-95 cursor-pointer sm:ml-auto"
                               title="Cancel Maintenance Request"
                             >
                               <XCircle size={13} />
@@ -669,37 +829,41 @@ export default function RentalMaintenanceDesk({ user, selectedPropertyFilterId =
                 </div>
               </div>
 
-              <div>
-                <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">ASSIGN APPROVED HOA VENDOR / CONTRACTOR</label>
-                <div className="relative">
-                  <select
-                    value={assignVendorId}
-                    onChange={e=>setAssignVendorId(e.target.value)}
-                    className="w-full bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 focus:border-blue-500 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none appearance-none cursor-pointer"
-                  >
-                    <option value="">-- Do Not Assign / Keep Pending --</option>
-                    {vendors.map(v => (
-                      <option key={v.vendor_id} value={v.vendor_id}>{v.company_name} ({v.category})</option>
-                    ))}
-                  </select>
-                  <ChevronDown className="absolute right-3 top-3.5 w-4 h-4 text-gray-450 pointer-events-none" />
-                </div>
-                <p className="text-[10px] text-slate-400 dark:text-gray-500 mt-1.5">Select from the community network of certified professionals.</p>
-              </div>
+              {statusVal === 'VENDOR_ASSIGNED' && (
+                <>
+                  <div>
+                    <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">ASSIGN APPROVED HOA VENDOR / CONTRACTOR</label>
+                    <div className="relative">
+                      <select
+                        value={assignVendorId}
+                        onChange={e=>setAssignVendorId(e.target.value)}
+                        className="w-full bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 focus:border-blue-500 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none appearance-none cursor-pointer"
+                      >
+                        <option value="">-- Do Not Assign / Keep Pending --</option>
+                        {vendors.map(v => (
+                          <option key={v.vendor_id} value={v.vendor_id}>{v.company_name} ({v.category})</option>
+                        ))}
+                      </select>
+                      <ChevronDown className="absolute right-3 top-3.5 w-4 h-4 text-gray-450 pointer-events-none" />
+                    </div>
+                    <p className="text-[10px] text-slate-400 dark:text-gray-500 mt-1.5">Select from the community network of certified professionals.</p>
+                  </div>
 
-              <div>
-                <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">ESTIMATED REPAIR COST ($)</label>
-                <div className="relative">
-                  <span className="absolute left-3 top-2.5 text-gray-450">$</span>
-                  <input
-                    type="number"
-                    value={estCost}
-                    onChange={e=>setEstCost(e.target.value)}
-                    className="w-full bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 focus:border-blue-500 rounded-lg pl-7 pr-3 py-2.5 text-sm text-slate-900 dark:text-white outline-none"
-                    placeholder="0.00"
-                  />
-                </div>
-              </div>
+                  <div>
+                    <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">ESTIMATED REPAIR COST ($)</label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-2.5 text-gray-450">$</span>
+                      <input
+                        type="number"
+                        value={estCost}
+                        onChange={e=>setEstCost(e.target.value)}
+                        className="w-full bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 focus:border-blue-500 rounded-lg pl-7 pr-3 py-2.5 text-sm text-slate-900 dark:text-white outline-none"
+                        placeholder="0.00"
+                      />
+                    </div>
+                  </div>
+                </>
+              )}
 
               <div className="pt-4 flex gap-3">
                 <button type="button" onClick={() => setShowAssignModal(false)} className="flex-1 py-2.5 rounded-xl text-sm font-semibold border border-slate-200 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors">Cancel</button>
@@ -874,11 +1038,20 @@ export default function RentalMaintenanceDesk({ user, selectedPropertyFilterId =
         isOpen={confirmConfig.isOpen}
         title={confirmConfig.title}
         message={confirmConfig.message}
+        confirmText={confirmConfig.confirmText}
+        cancelText={confirmConfig.cancelText}
+        type={confirmConfig.type}
+        singleButton={confirmConfig.singleButton}
         onConfirm={() => {
           confirmConfig.onConfirm?.();
           setConfirmConfig(prev => ({ ...prev, isOpen: false }));
         }}
-        onCancel={() => setConfirmConfig(prev => ({ ...prev, isOpen: false }))}
+        onCancel={() => {
+          if (confirmConfig.onCancel) {
+            confirmConfig.onCancel();
+          }
+          setConfirmConfig(prev => ({ ...prev, isOpen: false }));
+        }}
       />
     </div>
   );

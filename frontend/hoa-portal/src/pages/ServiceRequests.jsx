@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Wrench, Plus, RefreshCw, X, ChevronDown, MessageSquare, UserCheck, Edit, Clock, Landmark, User, DollarSign, Filter, Zap, Leaf, Shield, Sparkles, Paintbrush, Bug, Hammer, Wind, Droplets, Search } from 'lucide-react';
 import API from '../services/api';
-import { onlyDigitsKeyPress, onlyDecimalKeyPress } from '../utils/fieldValidators';
+import { onlyDigitsKeyPress, onlyDecimalKeyPress, validateTicketTitle, validateTicketDescription } from '../utils/fieldValidators';
+import ConfirmModal from '../components/ConfirmModal';
 
 const StatusBadge = ({ status }) => {
   const map = {
@@ -72,7 +73,7 @@ const getRequestIconDetails = (typeName) => {
 
 
 // ==================== SUBMIT MODAL ====================
-const SubmitModal = ({ communityId, onClose, onSuccess }) => {
+const SubmitModal = ({ communityId, onClose, onSuccess, showAlert, showConfirm }) => {
   const [types, setTypes] = useState([]);
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({ 
@@ -90,8 +91,16 @@ const SubmitModal = ({ communityId, onClose, onSuccess }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (form.title.trim().length < 5) {
-      alert('The title must be at least 5 characters long.');
+
+    const titleErr = validateTicketTitle(form.title);
+    if (titleErr !== true) {
+      showAlert("Validation Error", titleErr, "warning");
+      return;
+    }
+
+    const descErr = validateTicketDescription(form.description);
+    if (descErr !== true) {
+      showAlert("Validation Error", descErr, "warning");
       return;
     }
     setLoading(true);
@@ -106,7 +115,7 @@ const SubmitModal = ({ communityId, onClose, onSuccess }) => {
       onSuccess(); 
       onClose();
     } catch (err) { 
-      alert(err.response?.data?.detail || 'Error submitting request'); 
+      showAlert("Error", err.response?.data?.detail || 'Error submitting request', "danger"); 
     } finally { 
       setLoading(false); 
     }
@@ -218,7 +227,7 @@ const SubmitModal = ({ communityId, onClose, onSuccess }) => {
 };
 
 // ==================== STATUS UPDATE MODAL ====================
-const StatusModal = ({ request, statuses, userRole, onClose, onSuccess }) => {
+const StatusModal = ({ request, statuses, userRole, onClose, onSuccess, showAlert, showConfirm }) => {
   const [statusId, setStatusId] = useState('');
   const [note, setNote] = useState('');
   const [vendorId, setVendorId] = useState('');
@@ -282,7 +291,7 @@ const StatusModal = ({ request, statuses, userRole, onClose, onSuccess }) => {
       onSuccess();
       onClose();
     } catch (err) { 
-      alert(err.response?.data?.detail || 'Error updating status'); 
+      showAlert("Error", err.response?.data?.detail || 'Error updating status', "danger"); 
     } finally { 
       setLoading(false); 
     }
@@ -380,7 +389,7 @@ const StatusModal = ({ request, statuses, userRole, onClose, onSuccess }) => {
 };
 
 // ==================== EDIT REQUEST DETAILS MODAL ====================
-const EditModal = ({ request, communityId, isAdmin, userRole, onClose, onSuccess }) => {
+const EditModal = ({ request, communityId, isAdmin, userRole, onClose, onSuccess, showAlert, showConfirm }) => {
   const [form, setForm] = useState({
     title: request.title || '',
     description: request.description || '',
@@ -409,7 +418,7 @@ const EditModal = ({ request, communityId, isAdmin, userRole, onClose, onSuccess
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (form.title.trim().length < 5) {
-      alert('The title must be at least 5 characters long.');
+      showAlert("Validation Error", 'The title must be at least 5 characters long.', "warning");
       return;
     }
     setLoading(true);
@@ -428,7 +437,7 @@ const EditModal = ({ request, communityId, isAdmin, userRole, onClose, onSuccess
       onSuccess();
       onClose();
     } catch (err) {
-      alert(err.response?.data?.detail || 'Error updating request details');
+      showAlert("Error", err.response?.data?.detail || 'Error updating request details', "danger");
     } finally {
       setLoading(false);
     }
@@ -589,7 +598,9 @@ const DetailDrawer = ({
   onCancel,
   onRefresh, 
   formatDate,
-  onAcceptAndPayQuote
+  onAcceptAndPayQuote,
+  showAlert,
+  showConfirm
 }) => {
   const [newNote, setNewNote] = useState('');
   const [noteSubmitting, setNoteSubmitting] = useState(false);
@@ -655,9 +666,9 @@ const DetailDrawer = ({
     try {
       await API.post(`/vendor/${request.vendor_id}/access-code`);
       fetchVendorDetails();
-      alert("Vendor Access Code generated successfully!");
+      showAlert("Success", "Vendor Access Code generated successfully!", "success");
     } catch (e) {
-      alert(e.response?.data?.detail || "Failed to generate Access Code");
+      showAlert("Error", e.response?.data?.detail || "Failed to generate Access Code", "danger");
     } finally {
       setGeneratingVAC(false);
     }
@@ -668,9 +679,9 @@ const DetailDrawer = ({
     try {
       await API.post(`/vendor/${request.vendor_id}/contract-code`);
       fetchVendorDetails();
-      alert("Vendor Contract Code generated successfully!");
+      showAlert("Success", "Vendor Contract Code generated successfully!", "success");
     } catch (e) {
-      alert(e.response?.data?.detail || "Failed to generate Contract Code");
+      showAlert("Error", e.response?.data?.detail || "Failed to generate Contract Code", "danger");
     } finally {
       setGeneratingVCC(false);
     }
@@ -679,7 +690,7 @@ const DetailDrawer = ({
   const handleQuoteSubmit = async (e) => {
     e.preventDefault();
     if (!quoteAmount || isNaN(quoteAmount) || parseFloat(quoteAmount) <= 0) {
-      alert("Please enter a valid quote amount.");
+      showAlert("Validation Error", "Please enter a valid quote amount.", "warning");
       return;
     }
     setQuoteSubmitting(true);
@@ -702,14 +713,14 @@ const DetailDrawer = ({
         service_location: serviceLocation || null,
         status: "QUOTE_GIVEN"
       });
-      alert("Quote details submitted successfully!");
+      showAlert("Success", "Quote details submitted successfully!", "success");
       setQuoteAmount('');
       setReceiptNo('');
       setServiceLocation('');
       onRefresh(); // refresh parent requests list
       fetchAssignments();
     } catch (err) {
-      alert(err.response?.data?.detail || "Error submitting quote details");
+      showAlert("Error", err.response?.data?.detail || "Error submitting quote details", "danger");
     } finally {
       setQuoteSubmitting(false);
     }
@@ -718,61 +729,66 @@ const DetailDrawer = ({
   const handleVerifyVCC = (e) => {
     e.preventDefault();
     if (!vccInput.trim()) {
-      alert("Please enter the Contract Code (VCC).");
+      showAlert("Validation Error", "Please enter the Contract Code (VCC).", "warning");
       return;
     }
     const targetCode = vendorDetails?.contract_code;
     if (!targetCode) {
-      alert("Contract Code not found for this vendor.");
+      showAlert("Error", "Contract Code not found for this vendor.", "danger");
       return;
     }
     if (vccInput.trim().toUpperCase() === targetCode.toUpperCase()) {
       setVccVerified(true);
-      alert("Contract Code verified successfully! You can now disburse the payment.");
+      showAlert("Success", "Contract Code verified successfully! You can now disburse the payment.", "success");
     } else {
       setVccVerified(false);
-      alert("Invalid Contract Code. Please check the code and try again.");
+      showAlert("Error", "Invalid Contract Code. Please check the code and try again.", "danger");
     }
   };
 
   const handleDisbursePayout = async () => {
     if (!vccVerified) {
-      alert("Please verify the Contract Code (VCC) first.");
+      showAlert("Verification Needed", "Please verify the Contract Code (VCC) first.", "warning");
       return;
     }
     const activeAssignment = assignments[0];
     if (!activeAssignment) {
-      alert("No active vendor assignment found.");
+      showAlert("Error", "No active vendor assignment found.", "danger");
       return;
     }
-    if (!window.confirm(`Disburse payout of $${activeAssignment.quote_amount.toFixed(2)} to ${vendorDetails?.company_name || 'Vendor'}?`)) {
-      return;
-    }
-    setPayoutSubmitting(true);
-    try {
-      await API.post('/payment/pay', {
-        amount: activeAssignment.quote_amount,
-        reason: 'VENDOR_PAYMENT',
-        reference_id: activeAssignment.assignment_id,
-        payment_method: 'BANK_TRANSFER',
-        escrow_flag: false
-      });
-      alert("Payout disbursed successfully! The service request is now CLOSED.");
-      setVccInput('');
-      setVccVerified(false);
-      onRefresh(); // refresh parent requests list
-      fetchAssignments();
-    } catch (err) {
-      alert(err.response?.data?.detail || "Error disbursing payout");
-    } finally {
-      setPayoutSubmitting(false);
-    }
+    showConfirm(
+      "Confirm Payout",
+      `Disburse payout of $${activeAssignment.quote_amount.toFixed(2)} to ${vendorDetails?.company_name || 'Vendor'}?`,
+      async () => {
+        setPayoutSubmitting(true);
+        try {
+          await API.post('/payment/pay', {
+            amount: activeAssignment.quote_amount,
+            reason: 'VENDOR_PAYMENT',
+            reference_id: activeAssignment.assignment_id,
+            payment_method: 'BANK_TRANSFER',
+            escrow_flag: false
+          });
+          showAlert("Success", "Payout disbursed successfully! The service request is now CLOSED.", "success");
+          setVccInput('');
+          setVccVerified(false);
+          onRefresh(); // refresh parent requests list
+          fetchAssignments();
+        } catch (err) {
+          showAlert("Error", err.response?.data?.detail || "Error disbursing payout", "danger");
+        } finally {
+          setPayoutSubmitting(false);
+        }
+      },
+      "info",
+      "Yes, Disburse"
+    );
   };
 
   const handleAddNote = async (e) => {
     e.preventDefault();
     if (newNote.trim().length < 3) {
-      alert('Note must be at least 3 characters long.');
+      showAlert("Validation Error", 'Note must be at least 3 characters long.', "warning");
       return;
     }
     setNoteSubmitting(true);
@@ -783,7 +799,7 @@ const DetailDrawer = ({
       setNewNote('');
       onRefresh();
     } catch (err) {
-      alert(err.response?.data?.detail || 'Error adding note');
+      showAlert("Error", err.response?.data?.detail || 'Error adding note', "danger");
     } finally {
       setNoteSubmitting(false);
     }
@@ -1299,11 +1315,52 @@ const ServiceRequests = ({ community, user, setActivePage, setPaymentState }) =>
   const isAdmin  = ['super_admin', 'property_manager', 'board_member'].includes(role);
   const isResident = role === 'resident';
 
+  const [confirmConfig, setConfirmConfig] = useState({ 
+    isOpen: false, 
+    title: '', 
+    message: '', 
+    confirmText: 'OK', 
+    cancelText: 'Cancel', 
+    onConfirm: null, 
+    onCancel: null, 
+    type: 'info', 
+    singleButton: false 
+  });
+
+  const showAlert = (title, message, type = 'info') => {
+    setConfirmConfig({
+      isOpen: true,
+      title,
+      message,
+      confirmText: 'OK',
+      singleButton: true,
+      type,
+      onConfirm: () => setConfirmConfig(prev => ({ ...prev, isOpen: false }))
+    });
+  };
+
+  const showConfirm = (title, message, onConfirm, type = 'danger', confirmText = 'Yes, Proceed') => {
+    setConfirmConfig({
+      isOpen: true,
+      title,
+      message,
+      confirmText,
+      cancelText: 'Cancel',
+      singleButton: false,
+      type,
+      onConfirm: () => {
+        onConfirm();
+        setConfirmConfig(prev => ({ ...prev, isOpen: false }));
+      },
+      onCancel: () => setConfirmConfig(prev => ({ ...prev, isOpen: false }))
+    });
+  };
+
   const handleNewRequestClick = () => {
     if (role === 'super_admin') {
       const isMember = user?.associated_community_ids?.includes(community?.community_id);
       if (!isMember) {
-        alert("Platform administrators cannot create service requests unless they are registered as community members of this community.");
+        showAlert("Permission Denied", "Platform administrators cannot create service requests unless they are registered as community members of this community.", "warning");
         return;
       }
     }
@@ -1395,16 +1452,26 @@ const ServiceRequests = ({ community, user, setActivePage, setPaymentState }) =>
 
   const handleCancel = async (req) => {
     const cancelStatus = allStatuses.find(s => s.status_name === 'CANCELLED');
-    if (!cancelStatus || !window.confirm('Cancel this request?')) return;
-    try {
-      await API.put(`/service-request/${req.request_id}/status`, { 
-        status_id: cancelStatus.status_id, 
-        note: 'Cancelled by resident' 
-      });
-      handleRefreshAll();
-    } catch (err) { 
-      alert(err.response?.data?.detail || 'Error cancelling'); 
-    }
+    if (!cancelStatus) return;
+    showConfirm(
+      "Cancel Request",
+      "Are you sure you want to cancel this request?",
+      async () => {
+        try {
+          await API.put(`/service-request/${req.request_id}/status`, { 
+            status_id: cancelStatus.status_id, 
+            note: 'Cancelled by resident' 
+          });
+          setSelectedRequest(null);
+          handleRefreshAll();
+          showAlert("Success", "Request cancelled successfully.", "success");
+        } catch (err) { 
+          showAlert("Error", err.response?.data?.detail || 'Error cancelling', "danger");
+        }
+      },
+      "danger",
+      "Yes, Cancel"
+    );
   };
 
   const formatUserFriendlyDate = (dateString) => {
@@ -1721,11 +1788,21 @@ const ServiceRequests = ({ community, user, setActivePage, setPaymentState }) =>
             onRefresh={handleRefreshAll}
             formatDate={formatUserFriendlyDate}
             onAcceptAndPayQuote={handleAcceptAndPayQuote}
+            showAlert={showAlert}
+            showConfirm={showConfirm}
           />
         )}
       </div>
 
-      {showModal && <SubmitModal communityId={community?.community_id} onClose={() => setShowModal(false)} onSuccess={handleRefreshAll} />}
+      {showModal && (
+        <SubmitModal 
+          communityId={community?.community_id} 
+          onClose={() => setShowModal(false)} 
+          onSuccess={handleRefreshAll} 
+          showAlert={showAlert}
+          showConfirm={showConfirm}
+        />
+      )}
       
       {statusModal && (
         <StatusModal
@@ -1734,6 +1811,8 @@ const ServiceRequests = ({ community, user, setActivePage, setPaymentState }) =>
           userRole={role}
           onClose={() => setStatusModal(null)}
           onSuccess={handleRefreshAll}
+          showAlert={showAlert}
+          showConfirm={showConfirm}
         />
       )}
 
@@ -1745,8 +1824,29 @@ const ServiceRequests = ({ community, user, setActivePage, setPaymentState }) =>
           userRole={role}
           onClose={() => setEditingRequest(null)}
           onSuccess={handleRefreshAll}
+          showAlert={showAlert}
+          showConfirm={showConfirm}
         />
       )}
+      <ConfirmModal
+        isOpen={confirmConfig.isOpen}
+        title={confirmConfig.title}
+        message={confirmConfig.message}
+        confirmText={confirmConfig.confirmText}
+        cancelText={confirmConfig.cancelText}
+        type={confirmConfig.type}
+        singleButton={confirmConfig.singleButton}
+        onConfirm={() => {
+          confirmConfig.onConfirm?.();
+          setConfirmConfig(prev => ({ ...prev, isOpen: false }));
+        }}
+        onCancel={() => {
+          if (confirmConfig.onCancel) {
+            confirmConfig.onCancel();
+          }
+          setConfirmConfig(prev => ({ ...prev, isOpen: false }));
+        }}
+      />
     </div>
   );
 };

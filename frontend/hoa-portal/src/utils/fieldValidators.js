@@ -119,3 +119,41 @@ export const validatePassword = (value) => {
   if (!/[0-9]/.test(value)) return 'Password must contain at least one number.';
   return true;
 };
+
+// ─── Ticket / Request Text Fields ──────────────────────────────────────────────
+/** Validate maintenance ticket or request title */
+export const validateTicketTitle = (title) => {
+  if (!title || !title.trim()) return "Title is required.";
+  const val = title.trim();
+  if (val.length < 5) return "Title must be at least 5 characters long.";
+  if (val.length > 100) return "Title cannot exceed 100 characters.";
+  
+  // Must contain some alphabetic characters (letters)
+  const letters = val.replace(/[^a-zA-Z]/g, "");
+  if (letters.length < 3) {
+    return "Title must contain at least 3 letters (e.g. 'Leaky Pipe').";
+  }
+
+  // Should contain only safe descriptive characters (letters, numbers, spaces, common punctuation)
+  if (!/^[A-Za-z0-9\s.,'()\-#]+$/.test(val)) {
+    return "Title contains invalid characters. Use letters, numbers, spaces, or simple punctuation (.,'()#-).";
+  }
+
+  return true;
+};
+
+/** Validate ticket or request description */
+export const validateTicketDescription = (desc) => {
+  if (!desc || !desc.trim()) return "Description is required.";
+  const val = desc.trim();
+  if (val.length < 10) return "Description must be at least 10 characters long.";
+  if (val.length > 1000) return "Description cannot exceed 1000 characters.";
+
+  // Must contain some alphabetic characters (letters)
+  const letters = val.replace(/[^a-zA-Z]/g, "");
+  if (letters.length < 5) {
+    return "Description must contain some letters describing the issue.";
+  }
+
+  return true;
+};

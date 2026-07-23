@@ -596,6 +596,46 @@ def apply_late_fees(db: Session):
     return late_fees_applied
 
 
+def apply_late_fee_to_invoice(invoice_id: int, db: Session):
+    """Force apply late fee to a specific unpaid/overdue invoice."""
+    inv = db.query(RentalLedger).filter(RentalLedger.invoice_id == invoice_id).first()
+    if not inv:
+        raise ValueError("Invoice not found.")
+    if inv.status == "PAID":
+        raise ValueError("Cannot apply late fee to a paid invoice.")
+        
+    lease = inv.lease
+    if not lease:
+        raise ValueError("Associated lease not found.")
+        
+    inv.status = "OVERDUE"
+    
+    # Calculate fee
+    fee = lease.late_fee_amount
+    if lease.late_fee_type == "PERCENTAGE":
+        fee = inv.amount * (lease.late_fee_amount / 100.0)
+        
+    inv.late_fee_applied = fee
+    db.commit()
+    db.refresh(inv)
+    return inv
+
+
+def revert_late_fee_from_invoice(invoice_id: int, db: Session):
+    """Revert late fee from a specific overdue invoice and reset to UNPAID."""
+    inv = db.query(RentalLedger).filter(RentalLedger.invoice_id == invoice_id).first()
+    if not inv:
+        raise ValueError("Invoice not found.")
+    if inv.status == "PAID":
+        raise ValueError("Cannot revert late fee of a paid invoice.")
+        
+    inv.status = "UNPAID"
+    inv.late_fee_applied = 0.0
+    db.commit()
+    db.refresh(inv)
+    return inv
+
+
 # --- RENTAL MAINTENANCE SERVICE FUNCTIONS ---
 def submit_maintenance_request(data: RentalMaintenanceCreate, db: Session) -> RentalMaintenanceRequest:
     new_request = RentalMaintenanceRequest(

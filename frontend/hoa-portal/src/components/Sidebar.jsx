@@ -106,7 +106,7 @@ const Sidebar = ({ activePage, setActivePage, isOpen, setIsOpen, user, userRole:
         <div className="fixed inset-0 bg-black/70 z-40 lg:hidden" onClick={() => setIsOpen(false)} />
       )}
 
-      <aside className={`fixed lg:static inset-y-0 left-0 w-64 bg-[#E3F2FD] dark:bg-[#162535] border-r border-slate-200/60 dark:border-white/10 z-50 transform transition-transform duration-300 ${isOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 overflow-hidden flex flex-col`}>
+      <aside className={`fixed lg:static inset-y-0 left-0 w-64 bg-[#E3F2FD] dark:bg-[#162535] border-r border-slate-200/60 dark:border-white/10 z-50 transform transition-transform duration-300 ${isOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 overflow-hidden flex flex-col shrink-0`}>
         
         {/* Logo */}
         <div className="h-16 flex items-center px-4 border-b border-slate-200/60 dark:border-white/10">

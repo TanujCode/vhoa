@@ -5,6 +5,7 @@ import {
 import AddCommunityModal from './AddCommunityModal';
 import { useTheme } from '../context/ThemeContext';
 import { getBaseUrl } from '../services/api';
+import SystemSelectorDropdown from './layout/SystemSelectorDropdown';
 
 const Topbar = ({
   activeCommunity,
@@ -58,7 +59,7 @@ const Topbar = ({
   };
 
   return (
-    <header className="h-16 bg-white dark:bg-[#162535] border-b border-slate-200 dark:border-white/10 flex items-center px-3 sm:px-4 lg:px-6 z-30 sticky top-0">
+    <header className="h-16 bg-white dark:bg-[#162535] border-b border-slate-200 dark:border-white/10 flex items-center px-3 sm:px-4 lg:px-6 z-30 sticky top-0 shrink-0">
       
       {/* Mobile Sidebar Button */}
       <button onClick={toggleSidebar} className="lg:hidden p-2 mr-1 sm:mr-2 text-gray-500 dark:text-gray-400">
@@ -181,30 +182,7 @@ const Topbar = ({
         )}
 
         {isSuperAdmin && (
-          <button
-            onClick={() => {
-              const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-              const sessionToken = localStorage.getItem('session_token') || sessionStorage.getItem('session_token');
-              const userObj = localStorage.getItem('user') || sessionStorage.getItem('user');
-
-              if (token) localStorage.setItem('rental_token', token);
-              if (sessionToken) localStorage.setItem('rental_session_token', sessionToken);
-              if (userObj) {
-                const parsed = JSON.parse(userObj);
-                localStorage.setItem('rental_user', JSON.stringify({
-                  ...parsed,
-                  role: 'super_admin',
-                  role_name: 'super_admin'
-                }));
-              }
-              window.location.href = '/rental/dashboard';
-            }}
-            className="flex px-3 py-2 bg-indigo-500/10 dark:bg-indigo-500/25 border-2 border-indigo-500/30 hover:border-indigo-500 hover:bg-indigo-500 hover:text-white text-indigo-700 dark:text-indigo-400 dark:hover:text-white dark:hover:bg-indigo-500 rounded-2xl text-xs font-bold transition-all duration-200 items-center gap-1.5 shadow-sm active:scale-95"
-            title="Switch to Rental Portal"
-          >
-            <ArrowLeftRight size={14} />
-            <span className="hidden md:inline">Switch to Rental Portal</span>
-          </button>
+          <SystemSelectorDropdown currentSystem="hoa" />
         )}
         
         <button
@@ -266,58 +244,62 @@ const Topbar = ({
           </div>
 
           {isUserDropdownOpen && (
-            <div className="fixed sm:absolute top-16 sm:top-[calc(100%+12px)] left-4 right-4 sm:left-auto sm:right-0 w-auto sm:w-60 bg-white dark:bg-[#1E3248] border border-slate-200 dark:border-white/20 rounded-3xl shadow-2xl z-50 py-2 overflow-hidden animate-in fade-in slide-in-from-top-2">
-              <div className="px-4 py-4 border-b border-slate-100 dark:border-white/5 bg-slate-50/50 dark:bg-white/5">
-                <p className="font-bold text-gray-900 dark:text-white truncate">{user?.name || "User"}</p>
-                <p className="text-[10px] text-blue-500 font-mono uppercase font-black tracking-widest mt-0.5">
-                  {(viewAsResident && canSwitchView) ? "resident" : (user?.role || "resident").replace('_', ' ')}
-                </p>
-              </div>
+            <>
+              {/* Screen overlay to close dropdown */}
+              <div className="fixed inset-0 z-40" onClick={() => setIsUserDropdownOpen(false)} />
+              <div className="fixed sm:absolute top-16 sm:top-[calc(100%+12px)] left-4 right-4 sm:left-auto sm:right-0 w-auto sm:w-60 bg-white dark:bg-[#1E3248] border border-slate-200 dark:border-white/20 rounded-3xl shadow-2xl z-50 py-2 overflow-hidden animate-in fade-in slide-in-from-top-2">
+                <div className="px-4 py-4 border-b border-slate-100 dark:border-white/5 bg-slate-50/50 dark:bg-white/5">
+                  <p className="font-bold text-gray-900 dark:text-white truncate">{user?.name || "User"}</p>
+                  <p className="text-[10px] text-blue-500 font-mono uppercase font-black tracking-widest mt-0.5">
+                    {(viewAsResident && canSwitchView) ? "resident" : (user?.role || "resident").replace('_', ' ')}
+                  </p>
+                </div>
 
-              <div className="p-2">
-                {/* Mobile-only view switcher */}
-                {canSwitchView && (
+                <div className="p-2">
+                  {/* Mobile-only view switcher */}
+                  {canSwitchView && (
+                    <button 
+                      onClick={() => { 
+                        setIsUserDropdownOpen(false); 
+                        setViewAsResident(!viewAsResident); 
+                      }}
+                      className="md:hidden w-full px-4 py-2.5 hover:bg-slate-100 dark:hover:bg-white/10 rounded-2xl flex items-center gap-3 text-sm text-blue-600 dark:text-blue-400 font-bold transition-colors mb-1"
+                    >
+                      <Plus size={16} /> 
+                      {viewAsResident 
+                        ? (isBoardMember ? "Switch to Board View" : "Switch to Admin View") 
+                        : "Switch to Resident View"}
+                    </button>
+                  )}
+
+                  {/* Mobile-only Theme Toggle */}
                   <button 
-                    onClick={() => { 
-                      setIsUserDropdownOpen(false); 
-                      setViewAsResident(!viewAsResident); 
-                    }}
-                    className="md:hidden w-full px-4 py-2.5 hover:bg-slate-100 dark:hover:bg-white/10 rounded-2xl flex items-center gap-3 text-sm text-blue-600 dark:text-blue-400 font-bold transition-colors mb-1"
+                    onClick={() => { toggleTheme(); }}
+                    className="sm:hidden w-full px-4 py-2.5 hover:bg-slate-100 dark:hover:bg-white/10 rounded-2xl flex items-center gap-3 text-sm text-gray-600 dark:text-gray-300 transition-colors mb-1"
                   >
-                    <Plus size={16} /> 
-                    {viewAsResident 
-                      ? (isBoardMember ? "Switch to Board View" : "Switch to Admin View") 
-                      : "Switch to Resident View"}
+                    {theme === 'dark' ? <Sun size={16} className="text-blue-500" /> : <Moon size={16} className="text-blue-500" />}
+                    {theme === 'dark' ? "Light Mode" : "Dark Mode"}
                   </button>
-                )}
 
-                {/* Mobile-only Theme Toggle */}
-                <button 
-                  onClick={() => { toggleTheme(); }}
-                  className="sm:hidden w-full px-4 py-2.5 hover:bg-slate-100 dark:hover:bg-white/10 rounded-2xl flex items-center gap-3 text-sm text-gray-600 dark:text-gray-300 transition-colors mb-1"
-                >
-                  {theme === 'dark' ? <Sun size={16} className="text-blue-500" /> : <Moon size={16} className="text-blue-500" />}
-                  {theme === 'dark' ? "Light Mode" : "Dark Mode"}
-                </button>
+                  <button 
+                    onClick={() => { setIsUserDropdownOpen(false); setActivePage('profile'); }}
+                    className="w-full px-4 py-2.5 hover:bg-slate-100 dark:hover:bg-white/10 rounded-2xl flex items-center gap-3 text-sm text-gray-600 dark:text-gray-300 transition-colors"
+                  >
+                    <User size={16} className="text-blue-500" /> Profile Settings
+                  </button>
 
-                <button 
-                  onClick={() => { setIsUserDropdownOpen(false); setActivePage('profile'); }}
-                  className="w-full px-4 py-2.5 hover:bg-slate-100 dark:hover:bg-white/10 rounded-2xl flex items-center gap-3 text-sm text-gray-600 dark:text-gray-300 transition-colors"
-                >
-                  <User size={16} className="text-blue-500" /> Profile Settings
-                </button>
-
-                <button 
-                  onClick={() => {
-                    setIsUserDropdownOpen(false);
-                    setShowLogoutConfirm(true);
-                  }}
-                  className="w-full px-4 py-2.5 hover:bg-red-500/10 rounded-2xl flex items-center gap-3 text-sm text-red-500 transition-colors mt-1"
-                >
-                  <LogOut size={16} /> Logout
-                </button>
+                  <button 
+                    onClick={() => {
+                      setIsUserDropdownOpen(false);
+                      setShowLogoutConfirm(true);
+                    }}
+                    className="w-full px-4 py-2.5 hover:bg-red-500/10 rounded-2xl flex items-center gap-3 text-sm text-red-500 transition-colors mt-1"
+                  >
+                    <LogOut size={16} /> Logout
+                  </button>
+                </div>
               </div>
-            </div>
+            </>
           )}
         </div>
       </div>

@@ -34,17 +34,30 @@ import RentalSolutionPage from './pages/marketing/solutions/RentalSolutionPage';
 import CondoSolutionPage from './pages/marketing/solutions/CondoSolutionPage';
 import ApartmentSolutionPage from './pages/marketing/solutions/ApartmentSolutionPage';
 import HoaSolutionPage from './pages/marketing/solutions/HoaSolutionPage';
-
+import CondoLoginPage from './pages/condo/auth/CondoLoginPage';
+import CondoRegisterPage from './pages/condo/auth/CondoRegisterPage';
+import CondoVerifyOtpPage from './pages/condo/auth/CondoVerifyOtpPage';
+import SearchAndJoinCondo from './pages/condo/SearchAndJoinCondo';
+import CondoWaitingApproval from './pages/condo/CondoWaitingApproval';
+import CondoAdminPortal from './pages/condo/CondoAdminPortal';
 
 // Smart Protected Route with Security Check
 const ProtectedRoute = () => {
-  const isRentalPath = window.location.pathname.startsWith('/rental') || window.location.search.includes('role=tenant') || window.location.search.includes('role=landlord');
-  const tokenKey = isRentalPath ? 'rental_token' : 'token';
+  const path = window.location.pathname;
+  const isRentalPath = path.startsWith('/rental') || window.location.search.includes('role=tenant') || window.location.search.includes('role=landlord');
+  const isCondoPath = path.startsWith('/condo');
+  
+  let tokenKey = 'token';
+  if (isRentalPath) tokenKey = 'rental_token';
+  else if (isCondoPath) tokenKey = 'condo_token';
+  
   const token = localStorage.getItem(tokenKey) || sessionStorage.getItem(tokenKey) || localStorage.getItem('access_token') || sessionStorage.getItem('access_token');
   
   // Agar token nahi hai toh seedha corresponding login pe bhejo
   if (!token) {
-    return <Navigate to={isRentalPath ? "/rental/login" : "/login"} replace />;
+    if (isRentalPath) return <Navigate to="/rental/login" replace />;
+    if (isCondoPath) return <Navigate to="/condo/login" replace />;
+    return <Navigate to="/login" replace />;
   }
 
   return <Outlet />;
@@ -102,6 +115,11 @@ export default function App() {
         <Route path="/rental/forgot-password" element={<RentalForgotPassword />} />
         <Route path="/rental/verify-otp" element={<RentalVerifyOtpPage />} />
 
+        {/* --- Public Decoupled Condo Routes --- */}
+        <Route path="/condo/login" element={<CondoLoginPage />} />
+        <Route path="/condo/register" element={<CondoRegisterPage />} />
+        <Route path="/condo/verify-otp" element={<CondoVerifyOtpPage />} />
+
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/verify-otp" element={<VerifyOtpPage />} />
         <Route path="/onboarding" element={<ClientOnboarding />} />
@@ -110,13 +128,16 @@ export default function App() {
         <Route element={<ProtectedRoute />}>
           {/* 1. User register ke baad yahan aayenge community search karne */}
           <Route path="/join-community" element={<SearchAndJoinHOA />} />
+          <Route path="/condo/join-community" element={<SearchAndJoinCondo />} />
           
           {/* 2. 🔥 NEW ROUTE: Submit karne ke baad waiting lock standard map */}
           <Route path="/waiting-approval" element={<WaitingApproval />} />
+          <Route path="/condo/waiting-approval" element={<CondoWaitingApproval />} />
           
           {/* 3. Final Main Dashboard Portal view */}
           <Route path="/dashboard" element={<AdminPortal />} />
           <Route path="/rental/dashboard" element={<RentalAdminPortal />} />
+          <Route path="/condo/dashboard" element={<CondoAdminPortal />} />
         </Route>
 
         {/* --- Redirects & Fallbacks --- */}

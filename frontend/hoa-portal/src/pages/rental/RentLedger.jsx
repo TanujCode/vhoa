@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import API from '../../services/api';
+import ConfirmModal from '../../components/ConfirmModal';
 
 // Translucent Status Badge mapping
 const StatusBadge = ({ status }) => {
@@ -31,6 +32,47 @@ export default function RentLedger({ user, selectedPropertyFilterId = 'all' }) {
   const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [payMethod, setPayMethod] = useState('ACH');
   const [showPayModal, setShowPayModal] = useState(false);
+
+  const [confirmConfig, setConfirmConfig] = useState({ 
+    isOpen: false, 
+    title: '', 
+    message: '', 
+    confirmText: 'OK', 
+    cancelText: 'Cancel', 
+    onConfirm: null, 
+    onCancel: null, 
+    type: 'info', 
+    singleButton: false 
+  });
+
+  const showAlert = (title, message, type = 'info') => {
+    setConfirmConfig({
+      isOpen: true,
+      title,
+      message,
+      confirmText: 'OK',
+      singleButton: true,
+      type,
+      onConfirm: () => setConfirmConfig(prev => ({ ...prev, isOpen: false }))
+    });
+  };
+
+  const showConfirm = (title, message, onConfirm, type = 'danger', confirmText = 'Yes, Proceed') => {
+    setConfirmConfig({
+      isOpen: true,
+      title,
+      message,
+      confirmText,
+      cancelText: 'Cancel',
+      singleButton: false,
+      type,
+      onConfirm: () => {
+        onConfirm();
+        setConfirmConfig(prev => ({ ...prev, isOpen: false }));
+      },
+      onCancel: () => setConfirmConfig(prev => ({ ...prev, isOpen: false }))
+    });
+  };
 
   useEffect(() => {
     fetchData();
@@ -59,23 +101,75 @@ export default function RentLedger({ user, selectedPropertyFilterId = 'all' }) {
   }
 
   async function handleSimulateBilling() {
-    try {
-      const res = await API.post('/rental/simulate/monthly-billing');
-      toast.success(res.data.message || 'Billing simulation executed.');
-      fetchData();
-    } catch (err) {
-      toast.error('Failed to run billing simulation.');
-    }
+    showConfirm(
+      "Trigger Rent Rolls",
+      "Are you sure you want to trigger rent rolls? This will generate monthly rent invoice ledger records for all active tenant leases.",
+      async () => {
+        try {
+          const res = await API.post('/rental/simulate/monthly-billing');
+          showAlert("Success", res.data.message || 'Billing simulation executed.', "success");
+          fetchData();
+        } catch (err) {
+          showAlert("Error", "Failed to run billing simulation.", "danger");
+        }
+      },
+      "info",
+      "Yes, Trigger"
+    );
   }
 
   async function handleSimulateLateFees() {
-    try {
-      const res = await API.post('/rental/simulate/late-fees');
-      toast.success(res.data.message || 'Late fee simulation executed.');
-      fetchData();
-    } catch (err) {
-      toast.error('Failed to run late fee simulation.');
-    }
+    showConfirm(
+      "Apply Late Fees",
+      "Are you sure you want to run late fee calculations for all unpaid invoices? This will search and apply configured late fees to all overdue accounts.",
+      async () => {
+        try {
+          const res = await API.post('/rental/simulate/late-fees');
+          showAlert("Success", res.data.message || 'Late fee simulation executed.', "success");
+          fetchData();
+        } catch (err) {
+          showAlert("Error", "Failed to run late fee simulation.", "danger");
+        }
+      },
+      "warning",
+      "Yes, Run Simulation"
+    );
+  }
+
+  async function handleApplySingleLateFee(invoiceId) {
+    showConfirm(
+      "Apply Late Fee",
+      `Are you sure you want to apply the late penalty fee to invoice #${invoiceId}?`,
+      async () => {
+        try {
+          const res = await API.post(`/rental/ledgers/${invoiceId}/apply-late-fee`);
+          setInvoices(prev => prev.map(inv => inv.invoice_id === invoiceId ? { ...res.data, lease: inv.lease } : inv));
+          showAlert("Success", `Late fee penalty has been applied successfully to invoice #${invoiceId}!`, "success");
+        } catch (err) {
+          showAlert("Error", err.response?.data?.detail || "Failed to apply late fee.", "danger");
+        }
+      },
+      "warning",
+      "Yes, Apply Fee"
+    );
+  }
+
+  async function handleRevertSingleLateFee(invoiceId) {
+    showConfirm(
+      "Revert Late Fee",
+      `Are you sure you want to remove the late penalty fee from invoice #${invoiceId}?`,
+      async () => {
+        try {
+          const res = await API.post(`/rental/ledgers/${invoiceId}/revert-late-fee`);
+          setInvoices(prev => prev.map(inv => inv.invoice_id === invoiceId ? { ...res.data, lease: inv.lease } : inv));
+          showAlert("Success", `Late fee penalty has been reverted successfully for invoice #${invoiceId}!`, "success");
+        } catch (err) {
+          showAlert("Error", err.response?.data?.detail || "Failed to revert late fee.", "danger");
+        }
+      },
+      "danger",
+      "Yes, Revert Fee"
+    );
   }
 
   async function handlePayInvoice(e) {
@@ -86,9 +180,9 @@ export default function RentLedger({ user, selectedPropertyFilterId = 'all' }) {
       });
       setInvoices(prev => prev.map(inv => inv.invoice_id === selectedInvoice.invoice_id ? { ...res.data, lease: selectedInvoice.lease } : inv));
       setShowPayModal(false);
-      toast.success(`Invoice #${selectedInvoice.invoice_id} successfully paid via mock ${payMethod}!`);
+      showAlert("Success", `Invoice #${selectedInvoice.invoice_id} successfully paid via mock ${payMethod}!`, "success");
     } catch (err) {
-      toast.error(err.response?.data?.detail || "Failed to make payment.");
+      showAlert("Error", err.response?.data?.detail || "Failed to make payment.", "danger");
     }
   }
 
@@ -185,17 +279,42 @@ export default function RentLedger({ user, selectedPropertyFilterId = 'all' }) {
                       {inv.status !== 'PAID' && !isLandlord ? (
                         <button
                           onClick={() => { setSelectedInvoice(inv); setShowPayModal(true); }}
-                          className="bg-blue-600 hover:bg-blue-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer"
+                          className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-semibold transition active:scale-95 shadow-md shadow-blue-500/20 cursor-pointer"
                         >
                           Pay Invoice
                         </button>
                       ) : inv.status === 'PAID' ? (
                         <div className="flex flex-col items-end">
-                          <span className="text-xs text-slate-905 dark:text-gray-300 font-medium">Paid</span>
-                          <span className="text-[9px] text-gray-450 dark:text-gray-500 uppercase tracking-wide">via {inv.payment_method}</span>
+                           <span className="text-xs text-slate-900 dark:text-gray-300 font-semibold">Paid</span>
+                           <span className="text-[9px] text-slate-400 dark:text-gray-500 uppercase tracking-wide font-medium">via {inv.payment_method}</span>
+                        </div>
+                      ) : isLandlord ? (
+                        <div className="flex items-center justify-end gap-2">
+                          {inv.status === 'OVERDUE' || inv.late_fee_applied > 0 ? (
+                            <div className="flex items-center justify-end gap-2">
+                              <span className="px-2.5 py-1 bg-rose-500/10 text-rose-500 rounded-lg text-[10px] font-bold uppercase tracking-wider">
+                                Overdue (Fee Applied)
+                              </span>
+                              <button
+                                onClick={() => handleRevertSingleLateFee(inv.invoice_id)}
+                                className="px-2 py-1 bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-500 dark:text-gray-300 rounded-lg text-[10px] font-bold transition active:scale-95 cursor-pointer shadow-sm"
+                                title="Remove late fee"
+                              >
+                                Revert Fee
+                              </button>
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() => handleApplySingleLateFee(inv.invoice_id)}
+                              className="px-3 py-1.5 bg-yellow-500/10 hover:bg-yellow-500 hover:text-white text-yellow-600 dark:text-yellow-455 rounded-xl text-xs font-bold transition active:scale-95 cursor-pointer flex items-center gap-1"
+                            >
+                              <ShieldAlert className="w-3 h-3" />
+                              <span>Apply Late Fee</span>
+                            </button>
+                          )}
                         </div>
                       ) : (
-                        <span className="text-xs text-slate-400 dark:text-gray-500 italic">Awaiting payment</span>
+                        <span className="text-xs text-slate-400 dark:text-gray-500 italic font-medium">Awaiting payment</span>
                       )}
                     </td>
                   </tr>
@@ -302,6 +421,25 @@ export default function RentLedger({ user, selectedPropertyFilterId = 'all' }) {
           </div>
         </div>
       )}
+      <ConfirmModal
+        isOpen={confirmConfig.isOpen}
+        title={confirmConfig.title}
+        message={confirmConfig.message}
+        confirmText={confirmConfig.confirmText}
+        cancelText={confirmConfig.cancelText}
+        type={confirmConfig.type}
+        singleButton={confirmConfig.singleButton}
+        onConfirm={() => {
+          confirmConfig.onConfirm?.();
+          setConfirmConfig(prev => ({ ...prev, isOpen: false }));
+        }}
+        onCancel={() => {
+          if (confirmConfig.onCancel) {
+            confirmConfig.onCancel();
+          }
+          setConfirmConfig(prev => ({ ...prev, isOpen: false }));
+        }}
+      />
     </div>
   );
 }

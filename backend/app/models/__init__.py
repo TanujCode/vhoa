@@ -22,4 +22,10 @@ from app.models.rental.rental_ledger import RentalLedger                        
 from app.models.rental.rental_maintenance import RentalMaintenanceRequest                              # noqa
 from app.models.rental.rental_otp import RentalOtpToken                                                 # noqa
 from app.models.rental.rental_audit_log import RentalAuditLog                                           # noqa
-from app.models.rental.rental_user import RentalUser                                                 # noqa
+from app.models.rental.rental_user import RentalUser                                                 # noqa
+from app.models.condo import (                                                                       # noqa
+    CondoCommunity, CondoDocument, CondoJoinRequest, CondoUser, CondoOtpToken,
+    CondoVisitorPass, CondoParcelLog, CondoParkingAllocation,
+    CondoPayment, CondoMaintenanceRequest
+)
+

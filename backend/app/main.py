@@ -9,6 +9,7 @@ from app.database import Base, engine, SessionLocal
 from app.models import *  # noqa
 from app.routers.hoa import auth, community, violation, audit_log, location, service_request, amenity, news, vendor, contract, payment, meeting_survey, report
 from app.routers.rental import rental
+from app.routers.condo import router as condo_router
 from app.routers.hoa import user
 
 try:
@@ -251,6 +252,28 @@ def run_db_upgrades():
         if super_role:
             db.execute(text(f"UPDATE users SET role_id = {super_role.role_id}, community_id = NULL WHERE email_id = 'tanujtongse132@gmail.com';"))
         db.execute(text("DELETE FROM user_communities WHERE user_id = (SELECT user_id FROM users WHERE email_id = 'tanujtongse132@gmail.com');"))
+
+        # Condo Super Admin Seeding/Restoring
+        user_pwd_row = db.execute(text("SELECT password FROM users WHERE email_id = 'tanujtongse132@gmail.com';")).first()
+        pwd_hash = user_pwd_row[0] if user_pwd_row else None
+        
+        condo_user_row = db.execute(text("SELECT user_id FROM condo_users WHERE email_id = 'tanujtongse132@gmail.com';")).first()
+        if not condo_user_row:
+            u_code = "SA-TT-001"
+            db.execute(text(f"""
+                INSERT INTO condo_users 
+                (first_name, last_name, user_code, email_id, password, role_id, active_status, account_status, email_id_is_verified, mobile_is_verified, time_zone)
+                VALUES 
+                ('Tanuj', 'Tongse', '{u_code}', 'tanujtongse132@gmail.com', '{pwd_hash or ""}', 1, true, 'ACTIVE', true, false, 'America/New_York');
+            """))
+            print("[CONDO SEED] Created condo super admin for tanujtongse132@gmail.com")
+        else:
+            db.execute(text("""
+                UPDATE condo_users 
+                SET role_id = 1, community_id = NULL, active_status = true, account_status = 'ACTIVE'
+                WHERE email_id = 'tanujtongse132@gmail.com';
+            """))
+            print("[CONDO SEED] Restored super_admin role for tanujtongse132@gmail.com")
 
 
         db.commit()
@@ -618,6 +641,7 @@ app.include_router(payment.router,         prefix="/api")
 app.include_router(meeting_survey.router,  prefix="/api")
 app.include_router(report.router,          prefix="/api")
 app.include_router(rental.router,          prefix="/api")
+app.include_router(condo_router,           prefix="/api")
 
 
 @app.get("/", tags=["Health"])

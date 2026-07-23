@@ -24,7 +24,46 @@ export default function TenantsHub({ selectedPropertyFilterId = 'all' }) {
   const [modalError, setModalError] = useState('');
   const [modalSuccess, setModalSuccess] = useState('');
   const [formErrors, setFormErrors] = useState({});
-  const [confirmConfig, setConfirmConfig] = useState({ isOpen: false, title: '', message: '', onConfirm: null });
+  const [confirmConfig, setConfirmConfig] = useState({ 
+    isOpen: false, 
+    title: '', 
+    message: '', 
+    confirmText: 'OK', 
+    cancelText: 'Cancel', 
+    onConfirm: null, 
+    onCancel: null, 
+    type: 'info', 
+    singleButton: false 
+  });
+
+  const showAlert = (title, message, type = 'info') => {
+    setConfirmConfig({
+      isOpen: true,
+      title,
+      message,
+      confirmText: 'OK',
+      singleButton: true,
+      type,
+      onConfirm: () => setConfirmConfig(prev => ({ ...prev, isOpen: false }))
+    });
+  };
+
+  const showConfirm = (title, message, onConfirm, type = 'danger', confirmText = 'Yes, Proceed') => {
+    setConfirmConfig({
+      isOpen: true,
+      title,
+      message,
+      confirmText,
+      cancelText: 'Cancel',
+      singleButton: false,
+      type,
+      onConfirm: () => {
+        onConfirm();
+        setConfirmConfig(prev => ({ ...prev, isOpen: false }));
+      },
+      onCancel: () => setConfirmConfig(prev => ({ ...prev, isOpen: false }))
+    });
+  };
 
   useEffect(() => {
     fetchTenants();
@@ -47,27 +86,30 @@ export default function TenantsHub({ selectedPropertyFilterId = 'all' }) {
     try {
       await API.put(`/rental/tenants/${tenantId}/status?active_status=${nextStatus}`);
       setTenants(prev => prev.map(t => t.user_id === tenantId ? { ...t, active_status: nextStatus } : t));
+      showAlert("Success", "Tenant status updated successfully!", "success");
     } catch (err) {
       console.error("Error toggling tenant status:", err);
-      alert("Failed to update status.");
+      showAlert("Error", "Failed to update status.", "danger");
     }
   }
 
   async function handleDeleteTenant(tenantId) {
-    setConfirmConfig({
-      isOpen: true,
-      title: "Delete Tenant User",
-      message: "Are you sure you want to delete this tenant user record? This action cannot be undone.",
-      onConfirm: async () => {
+    showConfirm(
+      "Delete Tenant User",
+      "Are you sure you want to delete this tenant user record? This action cannot be undone.",
+      async () => {
         try {
           await API.delete(`/rental/tenants/${tenantId}`);
           setTenants(prev => prev.filter(t => t.user_id !== tenantId));
+          showAlert("Success", "Tenant record deleted successfully.", "success");
         } catch (err) {
           console.error("Error deleting tenant:", err);
-          alert("Failed to delete tenant user.");
+          showAlert("Error", "Failed to delete tenant user.", "danger");
         }
-      }
-    });
+      },
+      "danger",
+      "Yes, Delete"
+    );
   }
 
   function openEditModal(tenant) {
@@ -85,23 +127,53 @@ export default function TenantsHub({ selectedPropertyFilterId = 'all' }) {
 
   const validateEditForm = () => {
     const errs = {};
-    if (!editFirstName.trim()) errs.firstName = 'First name is required.';
-    if (!editLastName.trim()) errs.lastName = 'Last name is required.';
+    
+    // First Name
+    if (!editFirstName.trim()) {
+      errs.firstName = 'First name is required.';
+    } else {
+      const v = editFirstName.trim();
+      if (v.length < 2) {
+        errs.firstName = 'First name must be at least 2 characters.';
+      } else if (v.length > 60) {
+        errs.firstName = 'First name must be less than 60 characters.';
+      } else if (!/^[A-Za-z\s'\-]+$/.test(v)) {
+        errs.firstName = 'First name should contain only letters.';
+      }
+    }
+
+    // Last Name
+    if (!editLastName.trim()) {
+      errs.lastName = 'Last name is required.';
+    } else {
+      const v = editLastName.trim();
+      if (v.length < 2) {
+        errs.lastName = 'Last name must be at least 2 characters.';
+      } else if (v.length > 60) {
+        errs.lastName = 'Last name must be less than 60 characters.';
+      } else if (!/^[A-Za-z\s'\-]+$/.test(v)) {
+        errs.lastName = 'Last name should contain only letters.';
+      }
+    }
+
+    // Email
     if (!editEmail.trim()) {
       errs.email = 'Email address is required.';
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(editEmail.trim())) {
-      errs.email = 'Invalid email format.';
+    } else if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(editEmail.trim())) {
+      errs.email = 'Invalid email address format (e.g. name@domain.com).';
     }
+
     if (editPhone.trim()) {
       const digits = editPhone.replace(/\D/g, '');
       if (digits.length < 7 || digits.length > 15) {
         errs.phone = 'Phone number must be between 7 and 15 digits.';
       }
     }
+
     if (!editUnit.trim()) {
       errs.unit = 'Assigned unit number is required.';
-    } else if (!/^\d+$/.test(editUnit.trim())) {
-      errs.unit = 'Unit number must contain only numbers.';
+    } else if (!/^[A-Za-z0-9\s\-/#]+$/.test(editUnit.trim())) {
+      errs.unit = 'Unit number should contain only letters, numbers, spaces, -, / or #.';
     }
     return errs;
   };
@@ -113,24 +185,26 @@ export default function TenantsHub({ selectedPropertyFilterId = 'all' }) {
 
     const validationErrors = validateEditForm();
     setFormErrors(validationErrors);
-    if (Object.keys(validationErrors).length > 0) return;
+    if (Object.keys(validationErrors).length > 0) {
+      const firstErr = Object.values(validationErrors)[0];
+      showAlert("Validation Error", firstErr, "warning");
+      return;
+    }
 
     try {
       await API.put(`/rental/tenants/${editingTenant.user_id}`, {
-        first_name: editFirstName,
-        last_name: editLastName,
-        email_id: editEmail,
-        mobile_number: editPhone,
-        unit_no: editUnit
+        first_name: editFirstName.trim(),
+        last_name: editLastName.trim(),
+        email_id: editEmail.trim(),
+        mobile_number: editPhone.trim(),
+        unit_no: editUnit.trim()
       });
       
-      setModalSuccess("Tenant details updated successfully!");
-      setTimeout(() => {
-        setShowEditModal(false);
-        fetchTenants();
-      }, 1000);
+      setShowEditModal(false);
+      showAlert("Success", "Tenant details updated successfully!", "success");
+      fetchTenants();
     } catch (err) {
-      setModalError(err.response?.data?.detail || "Failed to update tenant details.");
+      showAlert("Error", err.response?.data?.detail || "Failed to update tenant details.", "danger");
     }
   }
 
@@ -356,7 +430,7 @@ export default function TenantsHub({ selectedPropertyFilterId = 'all' }) {
                       required
                       type="text"
                       value={editFirstName}
-                      onChange={e => setEditFirstName(e.target.value)}
+                      onChange={e => setEditFirstName(e.target.value.replace(/[^A-Za-z\s'\-]/g, ''))}
                       className={`w-full bg-slate-50 dark:bg-[#111c2a] border ${formErrors.firstName ? 'border-red-500' : 'border-slate-200 dark:border-white/10'} focus:border-blue-500 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none`}
                     />
                     {formErrors.firstName && <p className="text-[10px] text-red-550 mt-0.5">{formErrors.firstName}</p>}
@@ -367,7 +441,7 @@ export default function TenantsHub({ selectedPropertyFilterId = 'all' }) {
                       required
                       type="text"
                       value={editLastName}
-                      onChange={e => setEditLastName(e.target.value)}
+                      onChange={e => setEditLastName(e.target.value.replace(/[^A-Za-z\s'\-]/g, ''))}
                       className={`w-full bg-slate-50 dark:bg-[#111c2a] border ${formErrors.lastName ? 'border-red-500' : 'border-slate-200 dark:border-white/10'} focus:border-blue-500 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none`}
                     />
                     {formErrors.lastName && <p className="text-[10px] text-red-550 mt-0.5">{formErrors.lastName}</p>}
@@ -378,9 +452,9 @@ export default function TenantsHub({ selectedPropertyFilterId = 'all' }) {
                   <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Email Address *</label>
                   <input
                     required
-                    type="email"
+                    type="text"
                     value={editEmail}
-                    onChange={e => setEditEmail(e.target.value)}
+                    onChange={e => setEditEmail(e.target.value.replace(/[^\w.@+%-]/g, ''))}
                     className={`w-full bg-slate-50 dark:bg-[#111c2a] border ${formErrors.email ? 'border-red-500' : 'border-slate-200 dark:border-white/10'} focus:border-blue-500 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none`}
                   />
                   {formErrors.email && <p className="text-[10px] text-red-550 mt-0.5">{formErrors.email}</p>}
@@ -408,7 +482,7 @@ export default function TenantsHub({ selectedPropertyFilterId = 'all' }) {
                     <input
                       type="text"
                       value={editUnit}
-                      onChange={e => setEditUnit(e.target.value.replace(/\D/g, ''))}
+                      onChange={e => setEditUnit(e.target.value)}
                       className={`w-full bg-slate-50 dark:bg-[#111c2a] border ${formErrors.unit ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/10 focus:border-blue-500'} rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none`}
                       placeholder="e.g. 102"
                     />
@@ -431,11 +505,20 @@ export default function TenantsHub({ selectedPropertyFilterId = 'all' }) {
         isOpen={confirmConfig.isOpen}
         title={confirmConfig.title}
         message={confirmConfig.message}
+        confirmText={confirmConfig.confirmText}
+        cancelText={confirmConfig.cancelText}
+        type={confirmConfig.type}
+        singleButton={confirmConfig.singleButton}
         onConfirm={() => {
           confirmConfig.onConfirm?.();
           setConfirmConfig(prev => ({ ...prev, isOpen: false }));
         }}
-        onCancel={() => setConfirmConfig(prev => ({ ...prev, isOpen: false }))}
+        onCancel={() => {
+          if (confirmConfig.onCancel) {
+            confirmConfig.onCancel();
+          }
+          setConfirmConfig(prev => ({ ...prev, isOpen: false }));
+        }}
       />
     </div>
   );
