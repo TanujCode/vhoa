@@ -37,9 +37,12 @@ import HoaSolutionPage from './pages/marketing/solutions/HoaSolutionPage';
 import CondoLoginPage from './pages/condo/auth/CondoLoginPage';
 import CondoRegisterPage from './pages/condo/auth/CondoRegisterPage';
 import CondoVerifyOtpPage from './pages/condo/auth/CondoVerifyOtpPage';
+import CondoForgotPassword from './pages/condo/auth/CondoForgotPassword';
+import CondoOnboardingPage from './pages/condo/auth/CondoOnboardingPage';
 import SearchAndJoinCondo from './pages/condo/SearchAndJoinCondo';
 import CondoWaitingApproval from './pages/condo/CondoWaitingApproval';
 import CondoAdminPortal from './pages/condo/CondoAdminPortal';
+import CondoContracts from './pages/condo/CondoContracts';
 
 // Smart Protected Route with Security Check
 const ProtectedRoute = () => {
@@ -119,6 +122,8 @@ export default function App() {
         <Route path="/condo/login" element={<CondoLoginPage />} />
         <Route path="/condo/register" element={<CondoRegisterPage />} />
         <Route path="/condo/verify-otp" element={<CondoVerifyOtpPage />} />
+        <Route path="/condo/forgot-password" element={<CondoForgotPassword />} />
+        <Route path="/condo/onboard" element={<CondoOnboardingPage />} />
 
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/verify-otp" element={<VerifyOtpPage />} />
@@ -138,6 +143,7 @@ export default function App() {
           <Route path="/dashboard" element={<AdminPortal />} />
           <Route path="/rental/dashboard" element={<RentalAdminPortal />} />
           <Route path="/condo/dashboard" element={<CondoAdminPortal />} />
+          <Route path="/condo-contracts" element={<CondoContracts />} />
         </Route>
 
         {/* --- Redirects & Fallbacks --- */}

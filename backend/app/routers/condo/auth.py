@@ -2,21 +2,26 @@ import urllib.request
 import json
 import ssl
 import secrets
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status, UploadFile, File
 from jose import JWTError, jwt
 from sqlalchemy.orm import Session
 from datetime import datetime, timezone
+import re
+from pydantic import BaseModel
+from app.utils.file_service import save_document
 
 from app.config import settings
 from app.database import get_db
 from app.models.hoa.user import Role
 from app.models.condo.condo_community import CondoCommunity, CondoJoinRequest
 from app.models.condo.condo_user import CondoUser
+from app.models.condo.condo_contract import CondoContract
 from app.schemas.condo_auth import (
     CondoRegisterRequest, CondoLoginRequest, CondoVerifyOtpRequest,
     CondoOtpSendRequest, CondoForgotPasswordRequest, CondoResetPasswordRequest,
     CondoUserOut, CondoGoogleLoginRequest
 )
+from app.schemas.condo_onboard import CondoClientOnboardRequest
 from app.services.condo.auth_service import (
     register_condo_user, login_condo_user, generate_condo_otp,
     verify_condo_otp, send_condo_otp_for_password_reset, reset_condo_password
@@ -24,6 +29,8 @@ from app.services.condo.auth_service import (
 from app.services.hoa.email_service import send_otp_email
 from app.services.hoa.token_service import create_access_token, create_session_token, decode_session_token, hash_password
 from app.routers.condo.dependencies import get_current_condo_user
+import random
+import string
 
 router = APIRouter(prefix="/condo/auth", tags=["Condo - Auth"])
 
@@ -123,6 +130,11 @@ def _verify_captcha(captcha_token: str, captcha_answer: str):
 @router.post("/register", status_code=201)
 def register(request: Request, body: CondoRegisterRequest, db: Session = Depends(get_db)):
     try:
+        if body.role != "resident":
+            raise HTTPException(
+                status_code=400,
+                detail="Only resident role is allowed to register manually. Managers and Board Members must be onboarded via contract."
+            )
         _verify_captcha(body.captcha_token, body.captcha_answer)
 
         user = register_condo_user(body, db)
@@ -172,6 +184,33 @@ def login(request: Request, body: CondoLoginRequest, db: Session = Depends(get_d
     _verify_captcha(body.captcha_token, body.captcha_answer)
 
     try:
+        user = db.query(CondoUser).filter(CondoUser.email_id == body.email_id.lower().strip()).first()
+        if not user:
+            # Check if they exist in HOA users table as super_admin
+            from app.models.hoa.user import User
+            hoa_user = db.query(User).filter(User.email_id == body.email_id.lower().strip()).first()
+            if hoa_user and hoa_user.role and hoa_user.role.role_name == "super_admin":
+                from sqlalchemy import text
+                user = CondoUser(
+                    user_id=hoa_user.user_id,
+                    user_code=hoa_user.user_code,
+                    first_name=hoa_user.first_name,
+                    middle_name=hoa_user.middle_name,
+                    last_name=hoa_user.last_name,
+                    email_id=hoa_user.email_id,
+                    email_id_is_verified=True,
+                    password=hoa_user.password,
+                    role_id=1, # super_admin
+                    account_status="ACTIVE",
+                    active_status=True
+                )
+                db.add(user)
+                db.commit()
+                db.refresh(user)
+                # Update sequence to prevent conflicts
+                db.execute(text("SELECT setval('condo_users_user_id_seq', COALESCE((SELECT MAX(user_id) FROM condo_users), 1) + 1, false)"))
+                db.commit()
+
         result = login_condo_user(body.email_id, body.password, db)
         
         user = result["user"]
@@ -219,8 +258,33 @@ def condo_google_auth(request: Request, body: CondoGoogleLoginRequest, db: Sessi
     user = db.query(CondoUser).filter(CondoUser.email_id == email).first()
     
     if not user:
-        if body.flow == "login":
-            raise HTTPException(status_code=400, detail="Condo account not found. Please register first.")
+        # Check if they exist in HOA users table as super_admin
+        from app.models.hoa.user import User
+        hoa_user = db.query(User).filter(User.email_id == email).first()
+        if hoa_user and hoa_user.role and hoa_user.role.role_name == "super_admin":
+            from sqlalchemy import text
+            user = CondoUser(
+                user_id=hoa_user.user_id,
+                user_code=hoa_user.user_code,
+                first_name=hoa_user.first_name,
+                middle_name=hoa_user.middle_name,
+                last_name=hoa_user.last_name,
+                email_id=hoa_user.email_id,
+                email_id_is_verified=True,
+                password=hoa_user.password,
+                role_id=1, # super_admin
+                account_status="ACTIVE",
+                active_status=True
+            )
+            db.add(user)
+            db.commit()
+            db.refresh(user)
+            # Update sequence to prevent conflicts
+            db.execute(text("SELECT setval('condo_users_user_id_seq', COALESCE((SELECT MAX(user_id) FROM condo_users), 1) + 1, false)"))
+            db.commit()
+        else:
+            if body.flow == "login":
+                raise HTTPException(status_code=400, detail="Condo account not found. Please register first.")
             
         # Create a new resident condo user
         role = db.query(Role).filter(Role.role_name == "resident", Role.active_status == True).first()
@@ -298,8 +362,18 @@ def condo_google_auth(request: Request, body: CondoGoogleLoginRequest, db: Sessi
 @router.post("/otp/send")
 def send_otp(request: Request, body: CondoOtpSendRequest, db: Session = Depends(get_db)):
     try:
-        otp_code = generate_condo_otp(body.email_id, "REGISTER", db)
-        success = send_otp_email(body.email_id, otp_code, "email_verify")
+        purpose = "REGISTER"
+        otp_label = "email_verify"
+        
+        if body.otp_type == "password_reset":
+            purpose = "FORGOT_PASSWORD"
+            otp_label = "password_reset"
+        elif body.otp_type == "mobile_verify":
+            purpose = "mobile_verify"
+            otp_label = "mobile_verify"
+
+        otp_code = generate_condo_otp(body.email_id, purpose, db)
+        success = send_otp_email(body.email_id, otp_code, otp_label, "Condo Management System")
         if success:
             return {"message": "OTP sent successfully. Please check your email."}
         else:
@@ -314,6 +388,21 @@ def verify_otp_endpoint(request: Request, body: CondoVerifyOtpRequest, db: Sessi
     try:
         user = verify_condo_otp(body.email_id, body.otp_code, body.purpose, db)
         return condo_user_to_out(user, db)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.post("/forgot-password")
+def forgot_password_endpoint(request: Request, body: CondoForgotPasswordRequest, db: Session = Depends(get_db)):
+    try:
+        _verify_captcha(body.captcha_token, body.captcha_answer)
+        otp_code = send_condo_otp_for_password_reset(body.email_id, db)
+        success = send_otp_email(body.email_id, otp_code, "password_reset", "Condo Management System")
+        if success:
+            return {"message": "OTP sent successfully. Please check your email."}
+        else:
+            print(f"[SMTP ERROR] Failed to send forgot password OTP email to {body.email_id}. OTP is {otp_code}")
+            raise HTTPException(status_code=500, detail="Failed to send email.")
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
@@ -364,3 +453,215 @@ def get_me(current_user=Depends(get_current_condo_user), db: Session = Depends(g
 @router.post("/logout")
 def logout():
     return {"message": "Logged out successfully."}
+
+
+@router.post("/onboard-client", status_code=201)
+def onboard_condo_client(request: Request, body: CondoClientOnboardRequest, db: Session = Depends(get_db)):
+    # 1. Verify captcha
+    _verify_captcha(body.captcha_token, body.captcha_answer)
+
+    # 2. Verify contract
+    contract = db.query(CondoContract).filter(CondoContract.contract_code == body.contract_code.strip().upper()).first()
+    if not contract:
+        raise HTTPException(status_code=404, detail="Contract code not found.")
+    if contract.status != "ACTIVE":
+        raise HTTPException(
+            status_code=400,
+            detail=f"This contract code is currently in '{contract.status}' status and cannot be onboarded."
+        )
+
+    # 3. Check duplicate user email and mobile
+    existing_user = db.query(CondoUser).filter(CondoUser.email_id == body.email_id.lower().strip()).first()
+    if existing_user:
+        raise HTTPException(status_code=400, detail="This email is already registered.")
+
+    if body.mobile_number:
+        existing_mobile = db.query(CondoUser).filter(CondoUser.mobile_number == body.mobile_number).first()
+        if existing_mobile:
+            raise HTTPException(status_code=400, detail="This mobile number is already registered.")
+
+    # 4. Find Property Manager Role
+    role = db.query(Role).filter(Role.role_name == "property_manager").first()
+    if not role:
+        raise HTTPException(status_code=500, detail="Role 'property_manager' is not seeded in database.")
+
+    try:
+        # Generate community code
+        clean_name = "".join(filter(str.isalnum, body.condo_name)).upper()
+        prefix = clean_name[:3] if len(clean_name) >= 3 else "CND"
+        while True:
+            suffix = "".join(random.choices(string.digits, k=3))
+            comm_code = f"{prefix}{suffix}"
+            if not db.query(CondoCommunity).filter(CondoCommunity.community_code == comm_code).first():
+                break
+
+        # Create CondoCommunity
+        community = CondoCommunity(
+            name=body.condo_name.strip(),
+            community_code=comm_code,
+            address_line=body.condo_address.strip(),
+            city=body.condo_city.strip(),
+            state=body.condo_state.strip(),
+            zip_code=body.condo_zip_code.strip(),
+            total_units=contract.size_of_the_building or 0,
+            active_status=True,
+        )
+        db.add(community)
+        db.commit()
+        db.refresh(community)
+
+        # Generate unique user code
+        from app.utils.user_code import generate_user_code
+        u_code = generate_user_code(db, body.first_name, body.last_name, community.community_id, is_condo=True)
+
+        # Create CondoUser (Property Manager)
+        user = CondoUser(
+            first_name=body.first_name.strip(),
+            middle_name=body.middle_name.strip() if body.middle_name else None,
+            last_name=body.last_name.strip(),
+            email_id=body.email_id.lower().strip(),
+            password=hash_password(body.password),
+            mobile_number=body.mobile_number,
+            role_id=role.role_id,
+            community_id=community.community_id,
+            active_status=True,
+            account_status="PENDING_VERIFICATION",
+            email_id_is_verified=False,
+            mobile_is_verified=False,
+            user_code=u_code,
+        )
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+
+        # Link community manager_user_id
+        community.manager_user_id = user.user_id
+        db.commit()
+
+        # Update contract details
+        contract.status = "ONBOARDED"
+        contract.onboarded_community_id = community.community_id
+        contract.onboarded_user_id = user.user_id
+        db.commit()
+
+        # Generate OTP & Send Email
+        otp_code = generate_condo_otp(user.email_id, "REGISTER", db)
+        send_otp_email(user.email_id, otp_code, "email_verify")
+
+        return {
+            "message": "Onboarding completed! Please check your email for verification OTP before logging in.",
+            "user_id": user.user_id,
+            "email": user.email_id,
+            "community_id": community.community_id,
+            "community_code": community.community_code,
+            "next_step": "Verify email using OTP sent to your email address"
+        }
+
+    except Exception as e:
+        db.rollback()
+        import traceback
+        print(f"[CONDO ONBOARD ERROR]\n{traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+class CondoProfileUpdateRequest(BaseModel):
+    first_name: str | None = None
+    middle_name: str | None = None
+    last_name: str | None = None
+    mobile_number: str | None = None
+    time_zone: str | None = None
+    unit_no_2: str | None = None
+
+@router.put("/profile", response_model=CondoUserOut)
+def update_profile(
+    body: CondoProfileUpdateRequest,
+    current_user: CondoUser = Depends(get_current_condo_user),
+    db: Session = Depends(get_db)
+):
+    user = db.query(CondoUser).filter(CondoUser.user_id == current_user.user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+        
+    if body.first_name is not None:
+        user.first_name = body.first_name.strip()
+    if body.middle_name is not None:
+        user.middle_name = body.middle_name.strip() if body.middle_name else None
+    if body.last_name is not None:
+        user.last_name = body.last_name.strip()
+    if body.time_zone is not None:
+        user.time_zone = body.time_zone.strip()
+    if body.unit_no_2 is not None:
+        user.unit_no_2 = body.unit_no_2.strip() if body.unit_no_2 else None
+        
+    if body.mobile_number is not None:
+        mobile = body.mobile_number.strip() if body.mobile_number else None
+        if mobile:
+            # check duplicate mobile
+            dup = db.query(CondoUser).filter(
+                CondoUser.mobile_number == mobile,
+                CondoUser.user_id != user.user_id
+            ).first()
+            if dup:
+                raise HTTPException(status_code=400, detail="This mobile number is already registered.")
+            user.mobile_number = mobile
+        else:
+            user.mobile_number = None
+
+    db.commit()
+    db.refresh(user)
+    return condo_user_to_out(user, db)
+
+
+class CondoPasswordChangeRequest(BaseModel):
+    old_password: str
+    new_password: str
+
+@router.post("/password/change")
+def change_password(
+    body: CondoPasswordChangeRequest,
+    current_user: CondoUser = Depends(get_current_condo_user),
+    db: Session = Depends(get_db)
+):
+    from app.services.hoa.token_service import verify_password
+    user = db.query(CondoUser).filter(CondoUser.user_id == current_user.user_id).first()
+    if not user or not verify_password(body.old_password, user.password):
+        raise HTTPException(status_code=400, detail="Incorrect current password.")
+        
+    # password strength check
+    if len(body.new_password) < 8 or not re.search(r"[A-Z]", body.new_password) or not re.search(r"\d", body.new_password):
+        raise HTTPException(status_code=400, detail="Password must be at least 8 characters, with one uppercase letter and one number.")
+        
+    user.password = hash_password(body.new_password)
+    db.commit()
+    return {"message": "Password updated successfully."}
+
+
+@router.post("/profile/pic")
+async def upload_profile_pic(
+    file: UploadFile = File(...),
+    current_user: CondoUser = Depends(get_current_condo_user),
+    db: Session = Depends(get_db)
+):
+    user = db.query(CondoUser).filter(CondoUser.user_id == current_user.user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+        
+    url = await save_document(file, folder_name="profile_pics")
+    user.user_profile_url = url
+    db.commit()
+    db.refresh(user)
+    return {"message": "Profile picture updated successfully.", "user_profile_url": url}
+
+
+@router.delete("/profile/pic")
+def delete_profile_pic(
+    current_user: CondoUser = Depends(get_current_condo_user),
+    db: Session = Depends(get_db)
+):
+    user = db.query(CondoUser).filter(CondoUser.user_id == current_user.user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    user.user_profile_url = None
+    db.commit()
+    return {"message": "Profile picture removed."}
+

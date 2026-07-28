@@ -25,6 +25,7 @@ import ServiceRequests from '../ServiceRequests';
 import News from '../News';
 import Meetings from '../Meetings';
 import Contracts from '../Contracts';
+import CondoContracts from '../condo/CondoContracts';
 import Amenity from '../Amenity';
 import Payments from '../Payments';
 import AuditHistory from '../AuditHistory';
@@ -531,6 +532,9 @@ const AdminPortal = () => {
 
       case 'contracts':
         return <Contracts />;
+
+      case 'condo-contracts':
+        return <CondoContracts />;
 
       case 'documents':
         return <Documents community={activeCommunity} user={effectiveUser} />;

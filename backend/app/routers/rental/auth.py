@@ -205,7 +205,10 @@ def rental_login(
             from app.models.hoa.user import User
             hoa_user = db.query(User).filter(User.email_id == body.email_id.lower().strip()).first()
             if hoa_user and hoa_user.role and hoa_user.role.role_name == "super_admin":
+                from sqlalchemy import text
                 user = RentalUser(
+                    user_id=hoa_user.user_id,
+                    user_code=hoa_user.user_code,
                     first_name=hoa_user.first_name,
                     middle_name=hoa_user.middle_name,
                     last_name=hoa_user.last_name,
@@ -219,6 +222,9 @@ def rental_login(
                 db.add(user)
                 db.commit()
                 db.refresh(user)
+                # Update sequence to prevent conflicts
+                db.execute(text("SELECT setval('rental_users_user_id_seq', COALESCE((SELECT MAX(user_id) FROM rental_users), 1) + 1, false)"))
+                db.commit()
 
         if not user:
             raise HTTPException(status_code=401, detail="Invalid email or password")
@@ -343,7 +349,10 @@ def rental_google_auth(
             from app.models.hoa.user import User
             hoa_user = db.query(User).filter(User.email_id == email).first()
             if hoa_user and hoa_user.role and hoa_user.role.role_name == "super_admin":
+                from sqlalchemy import text
                 user = RentalUser(
+                    user_id=hoa_user.user_id,
+                    user_code=hoa_user.user_code,
                     first_name=hoa_user.first_name,
                     middle_name=hoa_user.middle_name,
                     last_name=hoa_user.last_name,
@@ -357,6 +366,9 @@ def rental_google_auth(
                 db.add(user)
                 db.commit()
                 db.refresh(user)
+                # Update sequence to prevent conflicts
+                db.execute(text("SELECT setval('rental_users_user_id_seq', COALESCE((SELECT MAX(user_id) FROM rental_users), 1) + 1, false)"))
+                db.commit()
         
         if user:
             if body.flow == "register":

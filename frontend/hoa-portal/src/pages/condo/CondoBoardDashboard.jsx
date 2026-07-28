@@ -34,7 +34,7 @@ export default function CondoBoardDashboard({ user, setActivePage }) {
   };
 
   return (
-    <div className="p-3 sm:p-5 space-y-6 max-w-7xl mx-auto text-slate-900 dark:text-white font-sans">
+    <div className="p-0 space-y-6 max-w-7xl mx-auto text-slate-900 dark:text-white font-sans">
       
       {/* Header Banner */}
       <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-blue-50/80 via-indigo-50/90 to-sky-50/80 dark:from-[#162535] dark:via-[#1A2E44] dark:to-[#162535] text-slate-900 dark:text-white p-4 sm:p-5 border border-indigo-100 dark:border-white/10 shadow-sm">

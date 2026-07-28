@@ -230,7 +230,7 @@ export default function CondoLoginPage() {
         <h2 className="text-3xl font-bold text-gray-900">
           Condo Login
         </h2>
-        <p className="text-gray-650 mt-1 text-sm">
+        <p className="text-slate-500 mt-1 text-sm">
           Access your high-rise building and community management dashboard.
         </p>
       </div>
@@ -398,7 +398,7 @@ export default function CondoLoginPage() {
         Sign in with Google
       </button>
 
-      <div className="text-center mt-6 text-sm text-gray-650">
+      <div className="text-center mt-6 text-sm text-slate-500">
         Looking to list your tower?{' '}
         <Link to="/condo/register" className="font-medium text-[#0F2D59] hover:underline">
           Register Building

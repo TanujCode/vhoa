@@ -67,6 +67,7 @@ const Sidebar = ({ activePage, setActivePage, isOpen, setIsOpen, user, userRole:
   const salesNavItems = [
     { id: 'dashboard', label: 'Dashboard', icon: Layout },
     { id: 'contracts', label: 'Manage Contracts', icon: FileText },
+    { id: 'condo-contracts', label: 'Condo Contracts', icon: FileText },
   ];
 
   const visibleTabs = activeCommunity?.visible_tabs || {};

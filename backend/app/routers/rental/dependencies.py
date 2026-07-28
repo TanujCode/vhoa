@@ -31,7 +31,10 @@ def get_current_rental_user(
             from app.models.hoa.user import User
             hoa_user = db.query(User).filter(User.email_id == email.lower().strip()).first()
             if hoa_user:
+                from sqlalchemy import text
                 user = RentalUser(
+                    user_id=hoa_user.user_id,
+                    user_code=hoa_user.user_code,
                     first_name=hoa_user.first_name,
                     middle_name=hoa_user.middle_name,
                     last_name=hoa_user.last_name,
@@ -45,6 +48,9 @@ def get_current_rental_user(
                 db.add(user)
                 db.commit()
                 db.refresh(user)
+                # Update sequence to prevent conflicts
+                db.execute(text("SELECT setval('rental_users_user_id_seq', COALESCE((SELECT MAX(user_id) FROM rental_users), 1) + 1, false)"))
+                db.commit()
 
     if not user:
         user_id = int(payload.get("sub"))

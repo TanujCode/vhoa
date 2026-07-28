@@ -455,7 +455,7 @@ export default function CondoRegisterPage() {
         Sign up with Google
       </button>
 
-      <div className="text-center mt-6 text-sm text-gray-650">
+      <div className="text-center mt-6 text-sm text-slate-500">
         Already registered?{' '}
         <Link to="/condo/login" className="font-medium text-[#0F2D59] hover:underline">
           Sign In

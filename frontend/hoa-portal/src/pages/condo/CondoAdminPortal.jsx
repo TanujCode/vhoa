@@ -10,6 +10,15 @@ import CondoSuperAdminDashboard from './CondoSuperAdminDashboard';
 import CondoPropertyManagerDashboard from './CondoPropertyManagerDashboard';
 import CondoBoardDashboard from './CondoBoardDashboard';
 import CondoResidentDashboard from './CondoResidentDashboard';
+import CondoContracts from './CondoContracts';
+import Profile from '../Profile';
+import CondoMembers from './CondoMembers';
+import CondoDocuments from './CondoDocuments';
+import CondoMaintenance from './CondoMaintenance';
+import CondoPayments from './CondoPayments';
+import CondoParking from './CondoParking';
+import CondoVisitors from './CondoVisitors';
+import CondoParcels from './CondoParcels';
 
 export default function CondoAdminPortal() {
   const navigate = useNavigate();
@@ -148,45 +157,82 @@ export default function CondoAdminPortal() {
 
     const role = user.role.toLowerCase();
 
+    // Resolve active community context
+    let activeCommunity = null;
+    if (role === 'super_admin') {
+      if (selectedCommunityId !== 'all') {
+        activeCommunity = communities.find(c => String(c.community_id) === String(selectedCommunityId));
+      }
+    } else {
+      activeCommunity = {
+        community_id: user.community_id,
+        name: user.community_name || 'My Residence'
+      };
+    }
+
+    const needsSpecificBuilding = ['members', 'documents', 'maintenance', 'payments', 'parking', 'visitors', 'parcels'].includes(activePage);
+
+    if (role === 'super_admin' && needsSpecificBuilding && !activeCommunity) {
+      return (
+        <div className="flex flex-col items-center justify-center p-8 sm:p-16 text-center text-slate-800 dark:text-white min-h-[50vh] bg-white dark:bg-[#162535] rounded-3xl border border-slate-200 dark:border-white/10 shadow-sm font-sans animate-in fade-in duration-200">
+          <div className="w-16 h-16 rounded-2xl bg-indigo-500/10 text-indigo-600 flex items-center justify-center mb-4 border border-indigo-500/20">
+            <Building2 size={32} />
+          </div>
+          <h2 className="text-xl font-bold mb-2">Select a Condo Building</h2>
+          <p className="text-sm text-slate-500 max-w-sm leading-relaxed">
+            Please select a specific building from the dropdown menu in the topbar (managing building switcher) to access this feature.
+          </p>
+        </div>
+      );
+    }
+
+    const handleEnterCommunity = (communityId) => {
+      setSelectedCommunityId(communityId);
+      setActivePage('dashboard');
+    };
+
     switch (activePage) {
       case 'dashboard':
-        if (role === 'super_admin') return <CondoSuperAdminDashboard />;
+        if (role === 'super_admin') return <CondoSuperAdminDashboard selectedCommunityId={selectedCommunityId} onEnterCommunity={handleEnterCommunity} />;
         if (role === 'property_manager') return <CondoPropertyManagerDashboard user={user} setActivePage={setActivePage} />;
         if (role === 'board_member') return <CondoBoardDashboard user={user} setActivePage={setActivePage} />;
         return <CondoResidentDashboard user={user} setActivePage={setActivePage} />;
 
+      case 'condo-contracts':
+        return <CondoContracts />;
+
       case 'buildings':
-        return renderPlaceholder("Condo Buildings", "Manage list of towers, units registry, and settings codes.", Building2);
+        return <CondoSuperAdminDashboard defaultSection="buildings" selectedCommunityId={selectedCommunityId} onEnterCommunity={handleEnterCommunity} />;
       
       case 'users':
-        return renderPlaceholder("Users Directory", "Block/unblock user profiles, assign roles and manage accounts.", Users);
+        return <CondoSuperAdminDashboard defaultSection="users" selectedCommunityId={selectedCommunityId} onEnterCommunity={handleEnterCommunity} />;
 
       case 'members':
-        return renderPlaceholder("Residents Directory", "Verify occupant details, unit parking slots and contact info.", Users);
+        return <CondoMembers community={activeCommunity} />;
 
       case 'documents':
-        return renderPlaceholder("Documents Center", "Access high-rise bylaws, fire drill guidelines and newsletters.", FileText);
+        return <CondoDocuments community={activeCommunity} user={user} />;
 
       case 'maintenance':
-        return renderPlaceholder("Maintenance requests", "File or review work logs for elevator issues, plumbing, or paint.", Wrench);
+        return <CondoMaintenance community={activeCommunity} user={user} />;
 
       case 'payments':
-        return renderPlaceholder("Payments Ledger", "Pay building HOA monthly dues, check ledger, or review invoices.", CreditCard);
+        return <CondoPayments community={activeCommunity} user={user} />;
 
       case 'parking':
-        return renderPlaceholder("Parking Allocations", "Manage assigned slots, guest parking tickets, and registry.", ParkingSquare);
+        return <CondoParking community={activeCommunity} user={user} />;
 
       case 'visitors':
-        return renderPlaceholder("Visitor Passes", "Generate numeric code passes for guests or parcel deliveries.", Key);
+        return <CondoVisitors community={activeCommunity} user={user} />;
 
       case 'parcels':
-        return renderPlaceholder("Parcels Logs", "Track package packages dropped at reception desk by mail carriers.", Package);
+        return <CondoParcels community={activeCommunity} user={user} />;
 
       case 'profile':
-        return renderPlaceholder("My Profile Settings", "Manage notification preferences, email, phone, and upload avatar.", User);
+        return <Profile user={user} setUser={setUser} viewRole={user?.role} />;
 
       default:
-        if (role === 'super_admin') return <CondoSuperAdminDashboard />;
+        if (role === 'super_admin') return <CondoSuperAdminDashboard selectedCommunityId={selectedCommunityId} onEnterCommunity={handleEnterCommunity} />;
         if (role === 'property_manager') return <CondoPropertyManagerDashboard user={user} setActivePage={setActivePage} />;
         return <CondoResidentDashboard user={user} setActivePage={setActivePage} />;
     }
@@ -204,7 +250,7 @@ export default function CondoAdminPortal() {
   }
 
   return (
-    <div className="flex h-screen bg-white dark:bg-[#0D1B2A] text-gray-900 dark:text-white overflow-hidden font-sans">
+    <div className="flex h-screen bg-white dark:bg-[#0D1B2A] text-gray-900 dark:text-white font-sans">
       
       {/* Condo Sidebar */}
       <CondoSidebar
@@ -215,7 +261,7 @@ export default function CondoAdminPortal() {
         user={user}
       />
 
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col overflow-hidden min-w-0">
         {/* Condo Topbar */}
         <CondoTopbar
           toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
@@ -228,7 +274,7 @@ export default function CondoAdminPortal() {
           setSelectedCommunityId={setSelectedCommunityId}
         />
 
-        <main className="flex-1 overflow-auto p-5 lg:p-7 bg-white dark:bg-[#0D1B2A] custom-scrollbar">
+        <main className="flex-1 overflow-auto pt-2 sm:pt-3 lg:pt-4 px-3 sm:px-4 lg:px-6 pb-6 bg-white dark:bg-[#0D1B2A] custom-scrollbar">
           <div className="max-w-[1600px] mx-auto">
             {renderPage()}
           </div>

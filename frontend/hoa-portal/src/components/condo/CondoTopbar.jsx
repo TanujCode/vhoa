@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { 
-  Sun, Moon, User, LogOut, ChevronDown, Menu, Building2, ArrowLeft, RefreshCw
+  Sun, Moon, User, LogOut, ChevronDown, Menu, Building2, ArrowLeft, RefreshCw, Bell
 } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 import { getBaseUrl } from '../../services/api';
@@ -171,56 +171,74 @@ const CondoTopbar = ({
           {theme === 'dark' ? <Sun size={18} className="sm:w-5 sm:h-5" /> : <Moon size={18} className="sm:w-5 sm:h-5" />}
         </button>
 
+        <button
+          className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center rounded-xl hover:bg-slate-100 dark:hover:bg-white/10 text-gray-500 dark:text-gray-400 relative transition-colors cursor-pointer"
+        >
+          <Bell size={18} className="sm:w-5 sm:h-5" />
+          <span className="absolute -top-0.5 -right-0.5 sm:-top-1 sm:-right-1 bg-red-500 text-white text-[8px] sm:text-[9px] font-bold font-mono px-1 sm:px-1.5 py-0.5 rounded-full flex items-center justify-center min-w-4 sm:min-w-5 h-4 sm:h-5 border border-white dark:border-[#162535] shadow-sm animate-pulse">
+            5
+          </span>
+        </button>
+
         {/* User Profile Menu */}
-        <div className="relative">
+        <div className="relative ml-1 sm:ml-2 flex items-center gap-2">
+          <div className="hidden sm:flex flex-col text-right select-none mr-1.5">
+            <span className="text-xs sm:text-sm font-bold text-slate-800 dark:text-white leading-tight tracking-tight">
+              {user?.name || user?.full_name || "User"}
+            </span>
+            <span className="text-[9px] sm:text-[10px] text-blue-600 dark:text-[#5BA4F5] font-bold uppercase tracking-wider leading-none mt-0.5">
+              {isSuperAdmin ? "SUPER ADMIN" : (user?.role || "resident").replace('_', ' ').toUpperCase()}
+            </span>
+          </div>
           <button 
             onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
-            className="flex items-center gap-2 hover:bg-slate-100 dark:hover:bg-white/5 p-1 px-2 rounded-xl transition duration-150 select-none cursor-pointer"
+            className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center font-bold text-white cursor-pointer hover:ring-2 ring-indigo-500/5 transition-all overflow-hidden border border-slate-200 dark:border-white/10 bg-gradient-to-br from-blue-500 to-blue-600 shadow-md flex-shrink-0"
           >
-            <div className="w-8 h-8 rounded-xl font-bold text-white transition-all overflow-hidden border border-slate-200 dark:border-white/10 bg-gradient-to-br from-blue-500 to-blue-600 shadow-sm flex items-center justify-center">
-              {user?.user_profile_url ? (
-                <img 
-                  src={getProfileImage(user.user_profile_url)} 
-                  alt="Avatar" 
-                  className="w-full h-full object-cover"
-                  onError={(e) => {
-                    e.target.style.display = 'none';
-                    e.target.parentElement.innerHTML = `<span class="text-xs">${getInitials(user?.name || user?.full_name)}</span>`;
-                  }}
-                />
-              ) : (
-                <span className="text-xs">{getInitials(user?.name || user?.full_name)}</span>
-              )}
-            </div>
-            <span className="hidden lg:block text-xs font-bold text-slate-800 dark:text-gray-200 max-w-[100px] truncate">
-              {user?.first_name || 'Profile'}
-            </span>
-            <ChevronDown size={14} className="text-slate-400 hidden lg:block" />
+            {user?.user_profile_url ? (
+              <img 
+                src={getProfileImage(user.user_profile_url)} 
+                alt="Avatar" 
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  e.target.style.display = 'none';
+                  e.target.parentElement.innerHTML = `<span class="text-xs sm:text-sm">${getInitials(user?.name || user?.full_name)}</span>`;
+                }}
+              />
+            ) : (
+              <span className="text-xs sm:text-sm tracking-tighter">{getInitials(user?.name || user?.full_name)}</span>
+            )}
           </button>
 
           {isUserDropdownOpen && (
             <>
               <div className="fixed inset-0 z-30" onClick={() => setIsUserDropdownOpen(false)} />
-              <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-[#162535] border border-slate-200 dark:border-white/10 rounded-2xl p-2 shadow-2xl z-40 animate-in fade-in slide-in-from-top-2 duration-150">
-                <button
-                  onClick={() => {
-                    setActivePage('profile');
-                    setIsUserDropdownOpen(false);
-                  }}
-                  className="w-full px-4 py-2.5 text-xs font-bold text-slate-700 dark:text-gray-300 rounded-xl hover:bg-slate-100 dark:hover:bg-white/5 text-left flex items-center gap-2 cursor-pointer"
-                >
-                  <User size={14} /> Profile Settings
-                </button>
-                <div className="h-px bg-slate-100 dark:bg-white/5 my-1.5" />
-                <button
-                  onClick={() => {
-                    setIsUserDropdownOpen(false);
-                    setShowLogoutConfirm(true);
-                  }}
-                  className="w-full px-4 py-2.5 text-xs font-bold text-red-500 rounded-xl hover:bg-red-500/10 text-left flex items-center gap-2 cursor-pointer"
-                >
-                  <LogOut size={14} /> Exit Portal
-                </button>
+              <div className="fixed sm:absolute top-16 sm:top-[calc(100%+12px)] left-4 right-4 sm:left-auto sm:right-0 w-auto sm:w-60 bg-white dark:bg-[#1E3248] border border-slate-200 dark:border-white/20 rounded-3xl shadow-2xl z-40 py-2 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150">
+                <div className="px-4 py-3 border-b border-slate-100 dark:border-white/5 bg-slate-50/50 dark:bg-white/5">
+                  <p className="font-bold text-gray-900 dark:text-white truncate text-xs sm:text-sm">{user?.name || user?.full_name || "User"}</p>
+                  <p className="text-[9px] sm:text-[10px] text-indigo-500 dark:text-indigo-400 font-mono uppercase font-black tracking-widest mt-0.5">
+                    {isSuperAdmin ? "super admin" : (user?.role || "resident").replace('_', ' ')}
+                  </p>
+                </div>
+                <div className="p-2 space-y-0.5">
+                  <button
+                    onClick={() => {
+                      setActivePage('profile');
+                      setIsUserDropdownOpen(false);
+                    }}
+                    className="w-full px-4 py-2.5 text-xs font-bold text-slate-700 dark:text-gray-300 rounded-2xl hover:bg-slate-100 dark:hover:bg-white/10 text-left flex items-center gap-2 cursor-pointer transition-colors"
+                  >
+                    <User size={14} className="text-indigo-500" /> Profile Settings
+                  </button>
+                  <button
+                    onClick={() => {
+                      setIsUserDropdownOpen(false);
+                      setShowLogoutConfirm(true);
+                    }}
+                    className="w-full px-4 py-2.5 text-xs font-bold text-red-500 rounded-2xl hover:bg-red-500/10 text-left flex items-center gap-2 cursor-pointer transition-colors"
+                  >
+                    <LogOut size={14} /> Exit Portal
+                  </button>
+                </div>
               </div>
             </>
           )}

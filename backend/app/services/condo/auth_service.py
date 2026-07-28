@@ -114,6 +114,8 @@ def verify_condo_otp(email_id: str, otp_code: str, purpose: str, db: Session) ->
     if purpose == "REGISTER":
         user.email_id_is_verified = True
         user.account_status = "ACTIVE"
+    elif purpose == "mobile_verify":
+        user.mobile_is_verified = True
     
     db.commit()
     db.refresh(user)

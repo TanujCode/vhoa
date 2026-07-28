@@ -25,10 +25,11 @@ const CondoSidebar = ({ activePage, setActivePage, isOpen, setIsOpen, user }) =>
   };
 
   // Super Admin Menu
-  const superAdminNavItems = [
+  const superAdminConsoleItems = [
     { id: 'dashboard', label: 'Dashboard', icon: Layout },
     { id: 'buildings', label: 'Condo Buildings', icon: Building2 },
     { id: 'users', label: 'Platform Users', icon: Users },
+    { id: 'condo-contracts', label: 'Manage Contracts', icon: FileText },
   ];
 
   // Property Manager / Board Member Menu
@@ -54,11 +55,32 @@ const CondoSidebar = ({ activePage, setActivePage, isOpen, setIsOpen, user }) =>
     { id: 'parcels', label: 'My Deliveries', icon: Package },
   ];
 
-  let navItems = residentNavItems;
+  let navSections = [];
   if (userRole === 'super_admin') {
-    navItems = superAdminNavItems;
+    navSections = [
+      {
+        title: "Platform Console",
+        items: superAdminConsoleItems
+      },
+      {
+        title: "Community Operations",
+        items: staffNavItems.filter(item => item.id !== 'dashboard')
+      }
+    ];
   } else if (userRole === 'property_manager' || userRole === 'board_member') {
-    navItems = staffNavItems;
+    navSections = [
+      {
+        title: "Condo Menu",
+        items: staffNavItems
+      }
+    ];
+  } else {
+    navSections = [
+      {
+        title: "Condo Menu",
+        items: residentNavItems
+      }
+    ];
   }
 
   const getNavItemClass = (itemId) => {
@@ -84,26 +106,28 @@ const CondoSidebar = ({ activePage, setActivePage, isOpen, setIsOpen, user }) =>
 
         {/* Navigation */}
         <nav className="flex-1 overflow-y-auto p-4 space-y-6 custom-scrollbar">
-          <div>
-            <div className="text-[10px] font-bold text-slate-500 dark:text-gray-500 tracking-widest px-3 mb-4 uppercase">
-              Condo Menu
+          {navSections.map((section, idx) => (
+            <div key={idx}>
+              <div className="text-[10px] font-bold text-slate-500 dark:text-gray-500 tracking-widest px-3 mb-4 uppercase">
+                {section.title}
+              </div>
+              <div className="space-y-1">
+                {section.items.map(item => {
+                  const Icon = item.icon;
+                  return (
+                    <div
+                      key={item.id}
+                      onClick={() => { setActivePage(item.id); setIsOpen(false); }}
+                      className={getNavItemClass(item.id)}
+                    >
+                      <Icon size={18} />
+                      <span>{item.label}</span>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
-            <div className="space-y-1">
-              {navItems.map(item => {
-                const Icon = item.icon;
-                return (
-                  <div
-                    key={item.id}
-                    onClick={() => { setActivePage(item.id); setIsOpen(false); }}
-                    className={getNavItemClass(item.id)}
-                  >
-                    <Icon size={18} />
-                    <span>{item.label}</span>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
+          ))}
 
           <div>
             <div className="text-[10px] font-bold text-slate-500 dark:text-gray-500 tracking-widest px-3 mb-4 uppercase">System</div>

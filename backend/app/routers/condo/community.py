@@ -8,6 +8,7 @@ from app.database import get_db
 from app.routers.condo.dependencies import get_current_condo_user, require_condo_role
 from app.models.condo.condo_user import CondoUser
 from app.models.condo.condo_community import CondoCommunity, CondoJoinRequest
+from app.models.condo.condo_contract import CondoContract
 from app.models.hoa.user import Role
 from app.schemas.condo_auth import (
     CondoJoinRequestOut, CondoRequestActionInput, CondoUserInviteRequest
@@ -19,13 +20,13 @@ from app.services.hoa.token_service import hash_password
 router = APIRouter(prefix="/condo/community", tags=["Condo - Community"])
 
 
-def send_condo_invite_email(to_email: str, full_name: str, temp_password: str, community_name: str):
+def send_condo_invite_email(to_email: str, full_name: str, temp_password: str, community_name: str, role_title: str = "Resident"):
     subject = f"Invitation to join {community_name} on Condo Portal"
     inner_html = f"""
       <div style="padding: 40px 30px;">
         <h2 style="margin: 0 0 16px; color: #ffffff;">Hello, {full_name}! 👋</h2>
         <p style="color: #9CA3AF; line-height: 1.6;">
-          You have been invited to join the community <strong>{community_name}</strong> as a <strong>Resident</strong> on the Condo Portal.
+          You have been invited to join the community <strong>{community_name}</strong> as a <strong>{role_title}</strong> on the Condo Portal.
         </p>
         <p style="color: #9CA3AF; line-height: 1.6;">
           Below are your temporary login credentials:
@@ -53,13 +54,13 @@ def send_condo_invite_email(to_email: str, full_name: str, temp_password: str, c
     return send_email(to_email, subject, html, from_name="NestBloq Condo Management")
 
 
-def send_condo_association_email(to_email: str, full_name: str, community_name: str):
+def send_condo_association_email(to_email: str, full_name: str, community_name: str, role_title: str = "Resident"):
     subject = f"You have been added to {community_name} on Condo Portal"
     inner_html = f"""
       <div style="padding: 40px 30px;">
         <h2 style="margin: 0 0 16px; color: #ffffff;">Hello, {full_name}! 👋</h2>
         <p style="color: #9CA3AF; line-height: 1.6;">
-          You have been added to the condo community <strong>{community_name}</strong> as a <strong>Resident</strong> on the Condo Portal.
+          You have been added to the condo community <strong>{community_name}</strong> as a <strong>{role_title}</strong> on the Condo Portal.
         </p>
         <p style="color: #9CA3AF; line-height: 1.6;">
           Since you already have a registered account on Condo Portal, you can log in using your existing credentials.
@@ -73,6 +74,7 @@ def send_condo_association_email(to_email: str, full_name: str, community_name: 
     """
     html = _wrap_in_responsive_layout(inner_html, subtitle="Condo Management System")
     return send_email(to_email, subject, html, from_name="NestBloq Condo Management")
+
 
 
 @router.get("")
@@ -246,6 +248,23 @@ def invite_resident(
     if not community_obj:
         raise HTTPException(status_code=404, detail="Target community not found")
 
+    # Determine requested role name
+    req_role = body.role_name.lower().strip() if body.role_name else "resident"
+    req_role = req_role.replace(" ", "_")
+
+    role = db.query(Role).filter(
+        Role.role_name == req_role,
+        Role.active_status == True
+    ).first()
+    if not role:
+        # Fallback to resident if not found
+        role = db.query(Role).filter(
+            Role.role_name == "resident",
+            Role.active_status == True
+        ).first()
+
+    role_title = role.role_name.replace("_", " ").title()
+
     if existing_user:
         # Check if already associated
         if existing_user.community_id == body.community_id:
@@ -253,22 +272,16 @@ def invite_resident(
             
         existing_user.community_id = body.community_id
         existing_user.unit_no = body.unit_no.strip() if body.unit_no else None
+        existing_user.role_id = role.role_id
         db.commit()
 
         send_condo_association_email(
             to_email=existing_user.email_id,
             full_name=existing_user.full_name,
-            community_name=community_obj.name
+            community_name=community_obj.name,
+            role_title=role_title
         )
-        return {"message": "Existing user linked to community and invitation sent."}
-
-    # Find Role
-    role = db.query(Role).filter(
-        Role.role_name == "resident",
-        Role.active_status == True
-    ).first()
-    if not role:
-        raise HTTPException(status_code=500, detail="Default role 'resident' not found in database.")
+        return {"message": f"Existing user linked to community and invitation sent as {role_title}."}
 
     # Create secure random password and hash it
     random_pass = secrets.token_urlsafe(12)
@@ -301,29 +314,37 @@ def invite_resident(
         to_email=new_user.email_id,
         full_name=new_user.full_name,
         temp_password=random_pass,
-        community_name=community_obj.name
+        community_name=community_obj.name,
+        role_title=role_title
     )
 
-    return {"message": "New user created and invitation email sent."}
+    return {"message": f"New user created and invitation email sent as {role_title}."}
+
 
 
 @router.get("/superadmin/stats")
 def get_superadmin_stats(
+    community_id: int | None = None,
     db: Session = Depends(get_db),
     current_user: CondoUser = Depends(require_condo_role("super_admin"))
 ):
-    total_buildings = db.query(CondoCommunity).count()
-    
     roles_list = db.query(Role).all()
     role_map = {r.role_name: r.role_id for r in roles_list}
     
     res_id = role_map.get("resident", 4)
     pm_id = role_map.get("property_manager", 2)
     bm_id = role_map.get("board_member", 3)
-    
-    total_residents = db.query(CondoUser).filter(CondoUser.role_id == res_id).count()
-    total_managers = db.query(CondoUser).filter(CondoUser.role_id.in_([pm_id, bm_id])).count()
-    total_pending_requests = db.query(CondoJoinRequest).filter(CondoJoinRequest.status == "PENDING").count()
+
+    if community_id:
+        total_buildings = 1
+        total_residents = db.query(CondoUser).filter(CondoUser.role_id == res_id, CondoUser.community_id == community_id).count()
+        total_managers = db.query(CondoUser).filter(CondoUser.role_id.in_([pm_id, bm_id]), CondoUser.community_id == community_id).count()
+        total_pending_requests = db.query(CondoJoinRequest).filter(CondoJoinRequest.status == "PENDING", CondoJoinRequest.community_id == community_id).count()
+    else:
+        total_buildings = db.query(CondoCommunity).count()
+        total_residents = db.query(CondoUser).filter(CondoUser.role_id == res_id).count()
+        total_managers = db.query(CondoUser).filter(CondoUser.role_id.in_([pm_id, bm_id])).count()
+        total_pending_requests = db.query(CondoJoinRequest).filter(CondoJoinRequest.status == "PENDING").count()
     
     return {
         "total_buildings": total_buildings,
@@ -341,6 +362,7 @@ def create_community(
 ):
     name = body.get("name")
     code = body.get("community_code")
+    contract_code = body.get("contract_code")
     address = body.get("address")
     state = body.get("state")
     city = body.get("city")
@@ -355,6 +377,14 @@ def create_community(
     ).first()
     if existing:
         raise HTTPException(status_code=400, detail="A building with this name or passcode already exists.")
+
+    # Check and update contract if contract_code provided
+    if contract_code:
+        contract = db.query(CondoContract).filter(
+            CondoContract.contract_code == contract_code.strip().upper()
+        ).first()
+        if contract:
+            contract.status = "ONBOARDED"
 
     new_comm = CondoCommunity(
         name=name,
@@ -410,6 +440,7 @@ def get_condo_users(
             "full_name": u.full_name,
             "email_id": u.email_id,
             "role_name": u.role.role_name if u.role else "N/A",
+            "community_id": u.community_id,
             "community_name": comm_name,
             "active_status": u.active_status,
             "account_status": u.account_status,
@@ -423,14 +454,185 @@ def toggle_user_status(
     user_id: int,
     body: dict,
     db: Session = Depends(get_db),
-    current_user: CondoUser = Depends(require_condo_role("super_admin"))
+    current_user: CondoUser = Depends(require_condo_role("super_admin", "property_manager", "board_member"))
 ):
     u = db.query(CondoUser).filter(CondoUser.user_id == user_id).first()
     if not u:
         raise HTTPException(status_code=404, detail="Condo user not found")
+        
+    role_name = current_user.role.role_name if current_user.role else ""
+    if role_name != "super_admin":
+        if u.community_id != current_user.community_id:
+            raise HTTPException(status_code=403, detail="You can only manage members of your own community.")
         
     active_status = body.get("active_status", True)
     u.active_status = active_status
     db.commit()
     db.refresh(u)
     return {"message": "User status updated successfully."}
+
+
+@router.put("/users/{user_id}")
+def update_community_member(
+    user_id: int,
+    body: dict,
+    db: Session = Depends(get_db),
+    current_user: CondoUser = Depends(require_condo_role("super_admin", "property_manager", "board_member"))
+):
+    u = db.query(CondoUser).filter(CondoUser.user_id == user_id).first()
+    if not u:
+        raise HTTPException(status_code=404, detail="Condo user not found")
+        
+    role_name = current_user.role.role_name if current_user.role else ""
+    if role_name != "super_admin":
+        if u.community_id != current_user.community_id:
+            raise HTTPException(status_code=403, detail="You can only edit members of your own community.")
+            
+    first_name = body.get("first_name")
+    last_name = body.get("last_name")
+    email_id = body.get("email_id")
+    mobile_number = body.get("mobile_number")
+    unit_no = body.get("unit_no")
+    
+    if first_name is not None:
+        u.first_name = first_name
+    if last_name is not None:
+        u.last_name = last_name
+    if email_id is not None:
+        u.email_id = email_id
+    if mobile_number is not None:
+        u.mobile_number = mobile_number
+    if unit_no is not None:
+        u.unit_no = unit_no
+        
+    db.commit()
+    db.refresh(u)
+    return {"message": "User details updated successfully."}
+
+
+@router.delete("/users/{user_id}")
+def delete_community_member(
+    user_id: int,
+    db: Session = Depends(get_db),
+    current_user: CondoUser = Depends(require_condo_role("super_admin", "property_manager", "board_member"))
+):
+    u = db.query(CondoUser).filter(CondoUser.user_id == user_id).first()
+    if not u:
+        raise HTTPException(status_code=404, detail="Condo user not found")
+        
+    role_name = current_user.role.role_name if current_user.role else ""
+    if role_name != "super_admin":
+        if u.community_id != current_user.community_id:
+            raise HTTPException(status_code=403, detail="You can only delete members of your own community.")
+            
+    # Clean up foreign key references in condo_join_requests
+    db.query(CondoJoinRequest).filter(CondoJoinRequest.processed_by == user_id).update({CondoJoinRequest.processed_by: None})
+    db.query(CondoJoinRequest).filter(CondoJoinRequest.user_id == user_id).delete()
+    
+    db.delete(u)
+    db.commit()
+    return {"message": "Member successfully deleted from community."}
+
+
+@router.get("/{community_id}/members")
+def get_community_members(
+    community_id: int,
+    db: Session = Depends(get_db),
+    current_user: CondoUser = Depends(require_condo_role("super_admin", "property_manager", "board_member"))
+):
+    role_name = current_user.role.role_name if current_user.role else ""
+    if role_name != "super_admin":
+        if current_user.community_id != community_id:
+            raise HTTPException(status_code=403, detail="You can only view members of your own community.")
+
+    users = db.query(CondoUser).filter(CondoUser.community_id == community_id).all()
+    out = []
+    for u in users:
+        # Resolve proofs
+        id_proof = None
+        address_proof = None
+        req = db.query(CondoJoinRequest).filter(
+            CondoJoinRequest.user_id == u.user_id
+        ).order_by(CondoJoinRequest.created_date.desc()).first()
+        if req:
+            id_proof = req.id_proof_url
+            address_proof = req.address_proof_url
+
+        out.append({
+            "user_id": u.user_id,
+            "full_name": u.full_name,
+            "email_id": u.email_id,
+            "mobile_number": u.mobile_number,
+            "role_name": u.role.role_name if u.role else "N/A",
+            "active_status": u.active_status,
+            "account_status": u.account_status,
+            "user_code": u.user_code,
+            "unit_no": u.unit_no,
+            "id_proof_url": id_proof,
+            "address_proof_url": address_proof
+        })
+    return out
+
+
+@router.put("/{community_id}")
+def update_community(
+    community_id: int,
+    body: dict,
+    db: Session = Depends(get_db),
+    current_user: CondoUser = Depends(require_condo_role("super_admin"))
+):
+    comm = db.query(CondoCommunity).filter(CondoCommunity.community_id == community_id).first()
+    if not comm:
+        raise HTTPException(status_code=404, detail="Condo community not found")
+        
+    name = body.get("name")
+    code = body.get("community_code")
+    address = body.get("address")
+    state = body.get("state")
+    city = body.get("city")
+    zip_code = body.get("zip_code")
+    desc = body.get("description")
+    
+    if name:
+        comm.name = name
+    if code:
+        existing = db.query(CondoCommunity).filter(
+            CondoCommunity.community_code == code,
+            CondoCommunity.community_id != community_id
+        ).first()
+        if existing:
+            raise HTTPException(status_code=400, detail="A building with this passcode already exists.")
+        comm.community_code = code
+    if address is not None:
+        comm.address = address
+    if state is not None:
+        comm.state = state
+    if city is not None:
+        comm.city = city
+    if zip_code is not None:
+        comm.zip_code = zip_code
+    if desc is not None:
+        comm.description = desc
+        
+    db.commit()
+    db.refresh(comm)
+    return comm
+
+
+@router.delete("/{community_id}")
+def delete_community(
+    community_id: int,
+    db: Session = Depends(get_db),
+    current_user: CondoUser = Depends(require_condo_role("super_admin"))
+):
+    comm = db.query(CondoCommunity).filter(CondoCommunity.community_id == community_id).first()
+    if not comm:
+        raise HTTPException(status_code=404, detail="Condo community not found")
+        
+    db.query(CondoJoinRequest).filter(CondoJoinRequest.community_id == community_id).delete()
+    db.query(CondoUser).filter(CondoUser.community_id == community_id).update({CondoUser.community_id: None})
+    
+    db.delete(comm)
+    db.commit()
+    return {"message": "Building successfully deleted."}
+

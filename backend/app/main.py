@@ -10,6 +10,7 @@ from app.models import *  # noqa
 from app.routers.hoa import auth, community, violation, audit_log, location, service_request, amenity, news, vendor, contract, payment, meeting_survey, report
 from app.routers.rental import rental
 from app.routers.condo import router as condo_router
+from app.routers.condo.contract import router as condo_contract_router
 from app.routers.hoa import user
 
 try:
@@ -524,7 +525,7 @@ def seed_custom_users():
         if super_admin_role:
             super_user = db.query(User).filter(User.email_id == super_admin_email).first()
             if not super_user:
-                u_code = generate_user_code(db, "Super", "Admin")
+                u_code = generate_user_code(db, "Super", "Admin", role_name="super_admin")
                 super_user = User(
                     first_name="Super",
                     last_name="Admin",
@@ -548,7 +549,7 @@ def seed_custom_users():
                 super_user.account_status = "ACTIVE"
                 super_user.email_id_is_verified = True
                 if not super_user.user_code:
-                    super_user.user_code = generate_user_code(db, "Super", "Admin")
+                    super_user.user_code = generate_user_code(db, "Super", "Admin", role_name="super_admin")
                 db.commit()
                 print("[SUCCESS] Super admin updated.")
 
@@ -642,6 +643,7 @@ app.include_router(meeting_survey.router,  prefix="/api")
 app.include_router(report.router,          prefix="/api")
 app.include_router(rental.router,          prefix="/api")
 app.include_router(condo_router,           prefix="/api")
+app.include_router(condo_contract_router,  prefix="/api")
 
 
 @app.get("/", tags=["Health"])

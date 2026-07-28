@@ -38,7 +38,9 @@ const parsePhoneNumber = (fullNumber) => {
 };
 
 const Profile = ({ user, setUser, viewRole }) => {
-  const apiPrefix = '';
+  const isCondo = window.location.pathname.includes('/condo');
+  const userKey = isCondo ? 'condo_user' : 'user';
+  const apiPrefix = isCondo ? '/condo' : '';
   // ── Form State ────────────────────────────
   const [form, setForm] = useState({
     first_name:    user?.first_name    || '',
@@ -240,17 +242,23 @@ const Profile = ({ user, setUser, viewRole }) => {
         mobile_number: phoneNumberOnly ? `+1${phoneNumberOnly.replace(/\D/g, '')}` : '',
         unit_no_2: finalUnits.join(', ')
       };
-      const res = await API.put('/user/profile', payload);
+      const res = await API.put(isCondo ? '/condo/auth/profile' : '/user/profile', payload);
       const updated = res.data;
 
-      setUser(prev => ({
-        ...prev,
-        ...updated,
-        initials: `${updated.first_name?.[0] || ''}${updated.last_name?.[0] || ''}`.toUpperCase(),
-        name:     updated.full_name,
-        email:    updated.email_id,
-        role:     updated.role_name,
-      }));
+      setUser(prev => {
+        const u = {
+          ...prev,
+          ...updated,
+          initials: `${updated.first_name?.[0] || ''}${updated.last_name?.[0] || ''}`.toUpperCase(),
+          name:     updated.full_name,
+          email:    updated.email_id,
+          role:     updated.role_name,
+        };
+        try {
+          localStorage.setItem(userKey, JSON.stringify(u));
+        } catch (_) {}
+        return u;
+      });
 
       showMsg('success', 'Profile updated successfully!');
       return true;
@@ -278,7 +286,7 @@ const Profile = ({ user, setUser, viewRole }) => {
 
     try {
       setUploading(true);
-      const res = await API.post('/user/profile/picture', formData, {
+      const res = await API.post(isCondo ? '/condo/auth/profile/pic' : '/user/profile/picture', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
       const newUrl = res.data.user_profile_url;
@@ -287,10 +295,10 @@ const Profile = ({ user, setUser, viewRole }) => {
         const updated = { ...prev, user_profile_url: newUrl };
         // Persist to localStorage so re-login shows the new picture
         try {
-          const stored = localStorage.getItem('user');
+          const stored = localStorage.getItem(userKey);
           if (stored) {
             const parsed = JSON.parse(stored);
-            localStorage.setItem('user', JSON.stringify({ ...parsed, user_profile_url: newUrl }));
+            localStorage.setItem(userKey, JSON.stringify({ ...parsed, user_profile_url: newUrl }));
           }
         } catch (_) {}
         return updated;
@@ -309,15 +317,15 @@ const Profile = ({ user, setUser, viewRole }) => {
     if (!window.confirm("Are you sure you want to remove this photo?")) return;
     try {
       setUploading(true);
-      await API.delete('/user/profile/picture'); 
+      await API.delete(isCondo ? '/condo/auth/profile/pic' : '/user/profile/picture'); 
       setUser(prev => {
         const updated = { ...prev, user_profile_url: null };
         // Persist removal to localStorage
         try {
-          const stored = localStorage.getItem('user');
+          const stored = localStorage.getItem(userKey);
           if (stored) {
             const parsed = JSON.parse(stored);
-            localStorage.setItem('user', JSON.stringify({ ...parsed, user_profile_url: null }));
+            localStorage.setItem(userKey, JSON.stringify({ ...parsed, user_profile_url: null }));
           }
         } catch (_) {}
         return updated;
@@ -432,10 +440,10 @@ const Profile = ({ user, setUser, viewRole }) => {
           mobile_is_verified: true,
         };
         try {
-          const stored = localStorage.getItem('user');
+          const stored = localStorage.getItem(userKey);
           if (stored) {
             const parsed = JSON.parse(stored);
-            localStorage.setItem('user', JSON.stringify({ ...parsed, mobile_is_verified: true }));
+            localStorage.setItem(userKey, JSON.stringify({ ...parsed, mobile_is_verified: true }));
           }
         } catch (_) {}
         return u;
@@ -459,11 +467,15 @@ const Profile = ({ user, setUser, viewRole }) => {
     }
     try {
       setSaving(true);
-      await API.post(`${apiPrefix}/auth/password/reset`, {
-        email_id:     user?.email_id || user?.email,
-        otp_code:     pwdForm.otp_code,
-        new_password: pwdForm.new_password,
-      });
+      const resetPayload = {
+        email_id:         user?.email_id || user?.email,
+        otp_code:         pwdForm.otp_code,
+        new_password:     pwdForm.new_password,
+      };
+      if (isCondo) {
+        resetPayload.confirm_password = pwdForm.confirm;
+      }
+      await API.post(`${apiPrefix}/auth/password/reset`, resetPayload);
       showMsg('success', 'Password changed! Please login again.');
       setPwdForm({ otp_code: '', new_password: '', confirm: '' });
       setOtpSent(false);

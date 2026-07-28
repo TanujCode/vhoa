@@ -51,9 +51,17 @@ class CondoRegisterRequest(BaseModel):
     @field_validator("mobile_number")
     @classmethod
     def mobile_valid(cls, v):
-        if v and not re.match(r"^\+?[\d\s\-]{7,15}$", v):
-            raise ValueError("The mobile number is in an incorrect format.")
-        return v
+        if v:
+            v_clean = v.strip()
+            if not v_clean:
+                return None
+            digits = re.sub(r"\D", "", v_clean)
+            if len(digits) == 11 and digits.startswith("1"):
+                digits = digits[1:]
+            if len(digits) != 10:
+                raise ValueError("US mobile number must be exactly 10 digits.")
+            return f"+1{digits}"
+        return None
 
     @field_validator("time_zone")
     @classmethod
@@ -84,6 +92,7 @@ class CondoVerifyOtpRequest(BaseModel):
 
 class CondoOtpSendRequest(BaseModel):
     email_id: EmailStr
+    otp_type: str | None = None
 
 
 class CondoForgotPasswordRequest(BaseModel):
@@ -175,5 +184,7 @@ class CondoUserInviteRequest(BaseModel):
     email_id: str
     mobile_number: str | None = None
     unit_no: str | None = None
+    role_name: str | None = "resident"
     community_id: int
+
 
