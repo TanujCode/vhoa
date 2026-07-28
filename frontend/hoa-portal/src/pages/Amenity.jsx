@@ -1,7 +1,62 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, Plus, RefreshCw, X, Clock, ChevronDown, Trash2 } from 'lucide-react';
+import { Calendar, Plus, RefreshCw, X, Clock, ChevronDown, Trash2, ShieldAlert } from 'lucide-react';
+import { toast } from 'react-hot-toast';
 import API from '../services/api';
 import { onlyDigitsKeyPress, onlyDecimalKeyPress } from '../utils/fieldValidators';
+
+const AlertModal = ({ isOpen, title, message, onClose }) => {
+  if (!isOpen) return null;
+  return (
+    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[100] p-4 animate-in fade-in duration-200">
+      <div className="bg-white dark:from-[#1E2E42] dark:to-[#162535] dark:bg-gradient-to-br rounded-3xl p-6 w-full max-w-sm border border-slate-200/80 dark:border-white/10 text-slate-900 dark:text-white shadow-2xl text-center">
+        <div className="w-14 h-14 bg-amber-500/10 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 rounded-full flex items-center justify-center mx-auto mb-4 border border-amber-500/20">
+          <ShieldAlert size={28} />
+        </div>
+        <h3 className="text-lg font-bold mb-2">{title || "Notice"}</h3>
+        <p className="text-xs text-slate-500 dark:text-gray-400 mb-6 leading-relaxed">
+          {message}
+        </p>
+        <button
+          onClick={onClose}
+          className="w-full py-3 px-4 rounded-2xl text-xs font-bold bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-500/20 transition cursor-pointer"
+        >
+          Okay
+        </button>
+      </div>
+    </div>
+  );
+};
+
+const ConfirmModal = ({ isOpen, title, message, onConfirm, onCancel, confirmText = "Confirm", cancelText = "Cancel", isDanger = false }) => {
+  if (!isOpen) return null;
+  return (
+    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[100] p-4 animate-in fade-in duration-200">
+      <div className="bg-white dark:from-[#1E2E42] dark:to-[#162535] dark:bg-gradient-to-br rounded-3xl p-6 w-full max-w-sm border border-slate-200/80 dark:border-white/10 text-slate-900 dark:text-white shadow-2xl text-center">
+        <div className={`w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4 border ${isDanger ? 'bg-red-500/10 dark:bg-red-500/20 text-red-600 dark:text-red-400 border-red-500/20' : 'bg-blue-500/10 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 border-blue-500/20'}`}>
+          {isDanger ? <Trash2 size={24} /> : <Clock size={24} />}
+        </div>
+        <h3 className="text-lg font-bold mb-2">{title || "Confirm Action"}</h3>
+        <p className="text-xs text-slate-500 dark:text-gray-400 mb-6 leading-relaxed">
+          {message}
+        </p>
+        <div className="flex gap-3">
+          <button
+            onClick={onCancel}
+            className="flex-1 py-3 px-4 rounded-2xl text-xs font-bold bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 text-slate-700 dark:text-gray-200 transition cursor-pointer"
+          >
+            {cancelText}
+          </button>
+          <button
+            onClick={onConfirm}
+            className={`flex-1 py-3 px-4 rounded-2xl text-xs font-bold text-white shadow-lg transition cursor-pointer ${isDanger ? 'bg-red-600 hover:bg-red-500 shadow-red-500/20' : 'bg-blue-600 hover:bg-blue-500 shadow-blue-500/20'}`}
+          >
+            {confirmText}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const StatusBadge = ({ booking }) => {
   const status = booking?.status;
@@ -100,10 +155,10 @@ const BookModal = ({ amenity, communityId, onClose, onSuccess, setActivePage, se
           setActivePage('payments');
         }
       } else {
-        alert("Amenity booked successfully!");
+        toast.success("Amenity booked successfully!");
       }
     } catch (err) {
-      alert(err.response?.data?.detail || 'Booking failed');
+      toast.error(err.response?.data?.detail || 'Booking failed');
     } finally { setLoading(false); }
   };
 
@@ -240,7 +295,7 @@ const CreateAmenityModal = ({ communityId, communityName, onClose, onSuccess }) 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (Object.keys(errors).length > 0) {
-      alert("Please fix the validation errors before saving.");
+      toast.error("Please fix the validation errors before saving.");
       return;
     }
     setLoading(true);
@@ -256,7 +311,7 @@ const CreateAmenityModal = ({ communityId, communityName, onClose, onSuccess }) 
       onSuccess();
       onClose();
     } catch (err) {
-      alert(err.response?.data?.detail || 'Failed to create amenity');
+      toast.error(err.response?.data?.detail || 'Failed to create amenity');
     } finally {
       setLoading(false);
     }
@@ -464,7 +519,7 @@ const EditAmenityModal = ({ amenity, communityName, onClose, onSuccess }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (Object.keys(errors).length > 0) {
-      alert("Please fix the validation errors before saving.");
+      toast.error("Please fix the validation errors before saving.");
       return;
     }
     setLoading(true);
@@ -478,7 +533,7 @@ const EditAmenityModal = ({ amenity, communityName, onClose, onSuccess }) => {
       onSuccess();
       onClose();
     } catch (err) {
-      alert(err.response?.data?.detail || 'Failed to update amenity');
+      toast.error(err.response?.data?.detail || 'Failed to update amenity');
     } finally {
       setLoading(false);
     }
@@ -661,6 +716,8 @@ const Amenity = ({ community, user, setActivePage, setPaymentState }) => {
   const [editModal, setEditModal] = useState(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [statusFilter, setStatusFilter] = useState('');
+  const [alertModal, setAlertModal] = useState(null);
+  const [confirmModal, setConfirmModal] = useState(null);
 
   const role = user?.role_name || user?.role || '';
   const isAdmin = ['super_admin', 'property_manager', 'board_member'].includes(role);
@@ -669,7 +726,10 @@ const Amenity = ({ community, user, setActivePage, setPaymentState }) => {
     if (role === 'super_admin') {
       const isMember = user?.associated_community_ids?.includes(community?.community_id);
       if (!isMember) {
-        alert("Platform administrators cannot create amenities unless they are registered as community members of this community.");
+        setAlertModal({
+          title: "Registration Required",
+          message: "Platform administrators cannot create amenities unless they are registered as community members of this community."
+        });
         return;
       }
     }
@@ -680,7 +740,10 @@ const Amenity = ({ community, user, setActivePage, setPaymentState }) => {
     if (role === 'super_admin') {
       const isMember = user?.associated_community_ids?.includes(community?.community_id);
       if (!isMember) {
-        alert("Platform administrators cannot book amenities unless they are registered as community members of this community.");
+        setAlertModal({
+          title: "Registration Required",
+          message: "Platform administrators cannot book amenities unless they are registered as community members of this community."
+        });
         return;
       }
     }
@@ -717,30 +780,48 @@ const Amenity = ({ community, user, setActivePage, setPaymentState }) => {
   const handleApprove = async (bookingId) => {
     try {
       await API.put(`/amenity/booking/${bookingId}/approve`);
+      toast.success("Booking approved successfully!");
       fetchBookings();
-    } catch (err) { alert(err.response?.data?.detail || 'Error approving'); }
-  };
-
-  const handleCancel = async (bookingId) => {
-    if (!window.confirm('Cancel this booking?')) return;
-    try {
-      await API.put(`/amenity/booking/${bookingId}/cancel`, { cancel_reason: 'Cancelled by user' });
-      fetchBookings();
-    } catch (err) { alert(err.response?.data?.detail || 'Error cancelling'); }
-  };
-
-  const handleDelete = async (amenityId, amenityName) => {
-    if (!window.confirm(`Are you sure you want to delete the amenity "${amenityName}"?`)) return;
-    try {
-      setLoading(true);
-      await API.put(`/amenity/${amenityId}`, { active_status: false });
-      alert("✅ Amenity Deleted Successfully!");
-      fetchAmenities();
     } catch (err) {
-      alert(err.response?.data?.detail || 'Error deleting amenity');
-    } finally {
-      setLoading(false);
+      toast.error(err.response?.data?.detail || 'Error approving');
     }
+  };
+
+  const handleCancel = (bookingId) => {
+    setConfirmModal({
+      title: "Cancel Booking",
+      message: "Are you sure you want to cancel this booking?",
+      isDanger: true,
+      onConfirm: async () => {
+        try {
+          await API.put(`/amenity/booking/${bookingId}/cancel`, { cancel_reason: 'Cancelled by user' });
+          toast.success("Booking cancelled successfully.");
+          fetchBookings();
+        } catch (err) {
+          toast.error(err.response?.data?.detail || 'Error cancelling');
+        }
+      }
+    });
+  };
+
+  const handleDelete = (amenityId, amenityName) => {
+    setConfirmModal({
+      title: "Delete Amenity",
+      message: `Are you sure you want to permanently delete the amenity "${amenityName}"?`,
+      isDanger: true,
+      onConfirm: async () => {
+        try {
+          setLoading(true);
+          await API.put(`/amenity/${amenityId}`, { active_status: false });
+          toast.success("Amenity Deleted Successfully!");
+          fetchAmenities();
+        } catch (err) {
+          toast.error(err.response?.data?.detail || 'Error deleting amenity');
+        } finally {
+          setLoading(false);
+        }
+      }
+    });
   };
 
   const handlePay = (booking) => {
@@ -869,6 +950,15 @@ const Amenity = ({ community, user, setActivePage, setPaymentState }) => {
                         >
                           Edit
                         </button>
+                        {role === 'super_admin' && user?.associated_community_ids?.includes(community?.community_id) && (
+                          <button
+                            onClick={() => handleBookAmenityClick(a)}
+                            disabled={!a.active_status || !a.pool_open}
+                            className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl text-sm font-medium transition disabled:opacity-50 disabled:cursor-not-allowed shadow-sm font-sans"
+                          >
+                            Book Now
+                          </button>
+                        )}
                         <button
                           onClick={() => handleDelete(a.amenity_id, a.name)}
                           className="flex-1 py-2.5 bg-red-500/10 hover:bg-red-600 text-red-600 hover:text-white dark:bg-red-500/20 dark:hover:bg-red-600 rounded-2xl transition border border-red-500/20 dark:border-red-500/30 text-sm font-medium flex items-center justify-center gap-1.5"
@@ -1006,6 +1096,25 @@ const Amenity = ({ community, user, setActivePage, setPaymentState }) => {
         <CreateAmenityModal communityId={community?.community_id} communityName={community?.name}
           onClose={() => setShowCreateModal(false)} onSuccess={() => { fetchAmenities(); }} />
       )}
+
+      <AlertModal
+        isOpen={!!alertModal}
+        title={alertModal?.title}
+        message={alertModal?.message}
+        onClose={() => setAlertModal(null)}
+      />
+
+      <ConfirmModal
+        isOpen={!!confirmModal}
+        title={confirmModal?.title}
+        message={confirmModal?.message}
+        onConfirm={() => {
+          confirmModal?.onConfirm();
+          setConfirmModal(null);
+        }}
+        onCancel={() => setConfirmModal(null)}
+        isDanger={confirmModal?.isDanger}
+      />
     </div>
   );
 };

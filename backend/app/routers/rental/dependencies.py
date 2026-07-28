@@ -25,12 +25,12 @@ def get_current_rental_user(
     user = None
 
     if role_name == "super_admin" and email:
+        from app.models.hoa.user import User
+        hoa_user = db.query(User).filter(User.email_id == email.lower().strip()).first()
+        
         user = db.query(RentalUser).filter(RentalUser.email_id == email.lower().strip()).first()
-        if not user:
-            # Sync from users (HOA table)
-            from app.models.hoa.user import User
-            hoa_user = db.query(User).filter(User.email_id == email.lower().strip()).first()
-            if hoa_user:
+        if hoa_user:
+            if not user:
                 from sqlalchemy import text
                 user = RentalUser(
                     user_id=hoa_user.user_id,
@@ -43,7 +43,8 @@ def get_current_rental_user(
                     password=hoa_user.password,
                     role_id=1, # super_admin
                     account_status="ACTIVE",
-                    active_status=True
+                    active_status=True,
+                    user_profile_url=hoa_user.user_profile_url
                 )
                 db.add(user)
                 db.commit()
@@ -51,6 +52,27 @@ def get_current_rental_user(
                 # Update sequence to prevent conflicts
                 db.execute(text("SELECT setval('rental_users_user_id_seq', COALESCE((SELECT MAX(user_id) FROM rental_users), 1) + 1, false)"))
                 db.commit()
+            else:
+                # Sync details from HOA user to RentalUser so they always match
+                dirty = False
+                if user.user_code != hoa_user.user_code:
+                    user.user_code = hoa_user.user_code
+                    dirty = True
+                if user.first_name != hoa_user.first_name:
+                    user.first_name = hoa_user.first_name
+                    dirty = True
+                if user.middle_name != hoa_user.middle_name:
+                    user.middle_name = hoa_user.middle_name
+                    dirty = True
+                if user.last_name != hoa_user.last_name:
+                    user.last_name = hoa_user.last_name
+                    dirty = True
+                if user.user_profile_url != hoa_user.user_profile_url:
+                    user.user_profile_url = hoa_user.user_profile_url
+                    dirty = True
+                if dirty:
+                    db.commit()
+                    db.refresh(user)
 
     if not user:
         user_id = int(payload.get("sub"))

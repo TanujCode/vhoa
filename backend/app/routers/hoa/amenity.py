@@ -81,8 +81,14 @@ def get_all(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_verified_user),
 ):
-    
-    amenities = get_amenities(community_id, db)
+    is_admin = current_user.role.role_name in ["super_admin", "property_manager", "board_member"]
+    if is_admin:
+        from app.models.hoa.amenity import Amenity
+        amenities = db.query(Amenity).filter(
+            Amenity.community_id == community_id
+        ).all()
+    else:
+        amenities = get_amenities(community_id, db)
     return [_to_out(a) for a in amenities]
 
 
@@ -94,7 +100,8 @@ def get_one(
 ):
     """Get details of a specific amenity"""
     try:
-        return _to_out(get_amenity_by_id(amenity_id, db))
+        is_admin = current_user.role.role_name in ["super_admin", "property_manager", "board_member"]
+        return _to_out(get_amenity_by_id(amenity_id, db, include_inactive=is_admin))
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
 

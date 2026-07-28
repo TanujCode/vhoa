@@ -88,6 +88,10 @@ def create_amenity(data: AmenityCreate, created_by_id: int, db: Session) -> Amen
     db.add(amenity)
     db.commit()
     db.refresh(amenity)
+    
+    if not amenity.pool_open:
+        _send_pool_status_notification(amenity, db)
+
     return amenity
 
 
@@ -98,11 +102,11 @@ def get_amenities(community_id: int, db: Session) -> list[Amenity]:
     ).all()
 
 
-def get_amenity_by_id(amenity_id: int, db: Session) -> Amenity:
-    a = db.query(Amenity).filter(
-        Amenity.amenity_id   == amenity_id,
-        Amenity.active_status == True,
-    ).first()
+def get_amenity_by_id(amenity_id: int, db: Session, include_inactive: bool = False) -> Amenity:
+    query = db.query(Amenity).filter(Amenity.amenity_id == amenity_id)
+    if not include_inactive:
+        query = query.filter(Amenity.active_status == True)
+    a = query.first()
     if not a:
         raise ValueError(f"Amenity {amenity_id} not found.")
     return a
@@ -112,7 +116,7 @@ def update_amenity(
     amenity_id: int, data: AmenityUpdate,
     modified_by_id: int, db: Session
 ) -> Amenity:
-    amenity = get_amenity_by_id(amenity_id, db)
+    amenity = get_amenity_by_id(amenity_id, db, include_inactive=True)
 
     # Track pool_open change for email notification
     pool_status_changed = False

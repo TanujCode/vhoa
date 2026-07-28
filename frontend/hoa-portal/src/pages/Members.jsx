@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, ChevronDown, UserPlus, Mail, Phone, X, Edit2, Trash2 } from 'lucide-react';
+import { Search, ChevronDown, UserPlus, Mail, Phone, X, Edit2, Trash2, AlertTriangle } from 'lucide-react';
 import API, { getBaseUrl } from '../services/api';
 import { checkEmail } from '../utils/emailValidation';
 import { validateName, validateUnitNo, onlyLettersKeyPress } from '../utils/fieldValidators';
@@ -36,7 +36,9 @@ const parsePhoneNumber = (fullNumber) => {
   };
 };
 
-const Members = ({ community }) => {
+const Members = ({ community, user }) => {
+  const userRole = user?.role_name || user?.role || 'resident';
+  const isResident = userRole === 'resident';
   const [members, setMembers]   = useState([]);
   const [loading, setLoading]   = useState(true);
   const [search, setSearch]     = useState('');
@@ -456,6 +458,20 @@ const Members = ({ community }) => {
       </div>
     );
   };
+
+  if (isResident) {
+    return (
+      <div className="flex flex-col items-center justify-center h-[60vh] text-center p-6 bg-slate-50 dark:bg-white/5 rounded-3xl border border-slate-200 dark:border-white/10 m-4">
+        <div className="w-14 h-14 bg-red-500/10 dark:bg-red-500/20 text-red-650 dark:text-red-400 rounded-2xl flex items-center justify-center mb-4 border border-red-500/20 shadow-md">
+          <AlertTriangle size={28} />
+        </div>
+        <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">Access Denied</h3>
+        <p className="text-xs text-slate-500 dark:text-gray-400 max-w-sm leading-relaxed">
+          You do not have permission to view or manage community members in Resident mode.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="text-slate-900 dark:text-white">

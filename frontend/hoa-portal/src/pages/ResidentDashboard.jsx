@@ -275,12 +275,20 @@ const ResidentDashboard = ({ community, user: initialUser, setActivePage }) => {
                 bookings.slice(0, 3).map(booking => {
                   const bookingDate = new Date(booking.booking_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
                   
-                  let statusBadgeClass = "bg-blue-500/10 text-blue-650 dark:text-blue-400 border border-blue-500/20";
-                  if (booking.status === "CONFIRMED") {
-                    statusBadgeClass = "bg-emerald-500/10 text-emerald-650 dark:text-emerald-400 border border-emerald-500/20";
-                  } else if (booking.status === "PENDING_PAYMENT") {
+                  let displayStatus = booking.status || "";
+                  let statusBadgeClass = "bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20";
+                  
+                  if (booking.status === "APPROVED" || booking.status === "CONFIRMED") {
+                    displayStatus = "CONFIRMED";
+                    statusBadgeClass = "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20";
+                  } else if (booking.status === "PENDING_PAYMENT" || (booking.status === "PENDING" && booking.fee_amount > 0 && !booking.is_paid)) {
+                    displayStatus = "PENDING PAYMENT";
+                    statusBadgeClass = "bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20";
+                  } else if (booking.status === "PENDING") {
+                    displayStatus = "PENDING";
                     statusBadgeClass = "bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20";
                   } else if (booking.status === "CANCELLED") {
+                    displayStatus = "CANCELLED";
                     statusBadgeClass = "bg-slate-500/10 text-slate-500 dark:text-slate-400 border border-slate-500/20";
                   }
 
@@ -296,7 +304,7 @@ const ResidentDashboard = ({ community, user: initialUser, setActivePage }) => {
                         </p>
                       </div>
                       <span className={`text-[8px] font-black px-2 py-0.5 rounded uppercase tracking-wider ${statusBadgeClass}`}>
-                        {booking.status.replace('_', ' ')}
+                        {displayStatus.replace('_', ' ')}
                       </span>
                     </div>
                   );

@@ -138,6 +138,7 @@ const AdminPortal = () => {
   const setViewAsResident = (val) => {
     setViewAsResidentState(val);
     localStorage.setItem('view_as_resident', String(val));
+    setActivePage('dashboard');
   };
   const [lastReadTimestamp, setLastReadTimestamp] = useState(() => {
     return Number(localStorage.getItem('last_read_notifications') || 0);
@@ -492,7 +493,7 @@ const AdminPortal = () => {
         return <Dashboard community={activeCommunity} user={effectiveUser} setActivePage={setActivePage} />;
 
       case 'members':    
-        return <Members community={activeCommunity} />;
+        return <Members community={activeCommunity} user={effectiveUser} />;
 
       case 'servicereq': 
         return (
