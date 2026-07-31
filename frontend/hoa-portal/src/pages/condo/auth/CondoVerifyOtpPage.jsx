@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { AlertTriangle, CheckCircle2 } from 'lucide-react';
 import API from "../../../services/api";
 
 const CondoVerifyOtpPage = () => {
@@ -74,14 +75,14 @@ const CondoVerifyOtpPage = () => {
         </div>
 
         {errorMsg && (
-          <div className="mb-6 p-4 bg-red-50 text-red-600 rounded-xl border border-red-100 text-sm flex items-center">
-            <span className="mr-2">⚠️</span> {errorMsg}
+          <div className="mb-6 p-4 bg-red-50 text-red-600 rounded-xl border border-red-100 text-sm flex items-center gap-2">
+            <AlertTriangle size={16} /> {errorMsg}
           </div>
         )}
 
         {successMsg && (
-          <div className="mb-6 p-4 bg-green-50 text-green-600 rounded-xl border border-green-100 text-sm flex items-center">
-            <span className="mr-2">✅</span> {successMsg}
+          <div className="mb-6 p-4 bg-green-50 text-green-600 rounded-xl border border-green-100 text-sm flex items-center gap-2">
+            <CheckCircle2 size={16} /> {successMsg}
           </div>
         )}
 

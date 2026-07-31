@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Download, RefreshCw, FileText, Wrench, CreditCard, Building2, Users } from 'lucide-react';
+import { Download, RefreshCw, FileText, Wrench, CreditCard, Building2, Users, AlertTriangle, Check } from 'lucide-react';
 import API from '../../services/api';
 
 const RentalReports = ({ user, selectedPropertyFilterId = 'all', setActivePage }) => {
@@ -115,7 +115,7 @@ const RentalReports = ({ user, selectedPropertyFilterId = 'all', setActivePage }
             ${stats.ledgers.total_collected.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
           </div>
           <div className="text-xs text-emerald-600 dark:text-emerald-400 mt-2 font-semibold">
-            ✓ {paidPaymentsCount} payments settled
+            <span className="flex items-center gap-1"><Check size={12} /> {paidPaymentsCount} payments settled</span>
           </div>
         </div>
 
@@ -134,7 +134,7 @@ const RentalReports = ({ user, selectedPropertyFilterId = 'all', setActivePage }
             ${stats.ledgers.total_overdue.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
           </div>
           <div className="text-xs text-rose-600 dark:text-rose-400 mt-2 font-semibold">
-            ⚠️ {overduePaymentsCount} invoices overdue
+            <span className="flex items-center gap-1 text-rose-500"><AlertTriangle size={12} /> {overduePaymentsCount} invoices overdue</span>
           </div>
         </div>
 
@@ -230,7 +230,7 @@ const RentalReports = ({ user, selectedPropertyFilterId = 'all', setActivePage }
             </div>
           </div>
           <div className="mt-6 border-t border-slate-200 dark:border-white/10 pt-4 text-xs text-slate-400 font-medium">
-            ✓ Includes Property names, address fields, total units count, and occupancy breakdowns.
+            <Check size={12} className="inline mr-1 text-emerald-500" /> Includes Property names, address fields, total units count, and occupancy breakdowns.
           </div>
         </div>
 
@@ -290,7 +290,7 @@ const RentalReports = ({ user, selectedPropertyFilterId = 'all', setActivePage }
             </div>
           </div>
           <div className="mt-6 border-t border-slate-200 dark:border-white/10 pt-4 text-xs text-slate-400 font-medium">
-            ✓ Includes Lease IDs, unit numbers, start/end timelines, monthly rent amounts, deposits, and status.
+            <Check size={12} className="inline mr-1 text-emerald-500" /> Includes Lease IDs, unit numbers, start/end timelines, monthly rent amounts, deposits, and status.
           </div>
         </div>
 
@@ -350,7 +350,7 @@ const RentalReports = ({ user, selectedPropertyFilterId = 'all', setActivePage }
             </div>
           </div>
           <div className="mt-6 border-t border-slate-200 dark:border-white/10 pt-4 text-xs text-slate-400 font-medium">
-            ✓ Captures tenant names, invoice dues, amount metrics, settlement dates, payment channels, and transaction IDs.
+            <Check size={12} className="inline mr-1 text-emerald-500" /> Captures tenant names, invoice dues, amount metrics, settlement dates, payment channels, and transaction IDs.
           </div>
         </div>
 
@@ -410,7 +410,7 @@ const RentalReports = ({ user, selectedPropertyFilterId = 'all', setActivePage }
             </div>
           </div>
           <div className="mt-6 border-t border-slate-200 dark:border-white/10 pt-4 text-xs text-slate-400 font-medium">
-            ✓ Includes request IDs, descriptions, priority levels, estimated job costs, payment statuses, and timelines.
+            <Check size={12} className="inline mr-1 text-emerald-500" /> Includes request IDs, descriptions, priority levels, estimated job costs, payment statuses, and timelines.
           </div>
         </div>
 
