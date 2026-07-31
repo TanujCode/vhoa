@@ -10,7 +10,9 @@ import { validateName, validateUnitNo, onlyLettersKeyPress } from '../../utils/f
 import { formatPhoneAsYouType, formatUsPhone } from '../../utils/phoneFormatter';
 import ConfirmModal from '../../components/ConfirmModal';
 
-export default function CondoMembers({ community }) {
+export default function CondoMembers({ community, user }) {
+  const currentUserRole = (user?.role_name || user?.role || '').toLowerCase();
+  const currentUserId = user?.user_id;
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -86,6 +88,7 @@ export default function CondoMembers({ community }) {
   const [editEmail, setEditEmail] = useState('');
   const [editPhone, setEditPhone] = useState('');
   const [editUnit, setEditUnit] = useState('');
+  const [editRole, setEditRole] = useState('');
   const [saving, setSaving] = useState(false);
 
   const commId = community?.community_id;
@@ -145,6 +148,8 @@ export default function CondoMembers({ community }) {
       mappedRole = 'property_manager';
     } else if (inviteForm.role === 'Resident') {
       mappedRole = 'resident';
+    } else if (inviteForm.role === 'Security Guard') {
+      mappedRole = 'security_guard';
     }
 
     try {
@@ -154,7 +159,7 @@ export default function CondoMembers({ community }) {
         last_name: inviteForm.lastName.trim(),
         email_id: inviteForm.email.trim().toLowerCase(),
         mobile_number: invitePhoneOnly ? `+1${invitePhoneOnly.replace(/\D/g, '')}` : null,
-        unit_no: inviteForm.unit.trim() || null,
+        unit_no: inviteForm.role === 'Security Guard' ? null : (inviteForm.unit.trim() || null),
         role_name: mappedRole,
         community_id: commId
       });
@@ -238,6 +243,7 @@ export default function CondoMembers({ community }) {
     }
     setEditPhone(formatPhoneAsYouType(rawPhone));
     setEditUnit(m.unit_no || '');
+    setEditRole(m.role_name || m.role || '');
     setShowEditModal(true);
   };
 
@@ -271,15 +277,23 @@ export default function CondoMembers({ community }) {
 
     try {
       setSaving(true);
-      await API.put(`/condo/community/users/${editingMember.user_id}`, {
+      const payload = {
         first_name: editFirst.trim(),
         last_name: editLast.trim(),
         email_id: editEmail.trim().toLowerCase(),
         mobile_number: cleanPhone ? `+1${cleanPhone}` : null,
         unit_no: editUnit.trim() || null
-      });
+      };
 
-      showAlert("Success", "Resident details updated successfully!", "success");
+      // Include role_name only if it changed and user has permission
+      const originalRole = editingMember?.role_name || editingMember?.role || '';
+      if (editRole && editRole !== originalRole && currentUserRole !== 'resident') {
+        payload.role_name = editRole;
+      }
+
+      await API.put(`/condo/community/users/${editingMember.user_id}`, payload);
+
+      showAlert("Success", "Member details updated successfully!", "success");
       setShowEditModal(false);
       fetchMembers();
     } catch (err) {
@@ -635,21 +649,23 @@ export default function CondoMembers({ community }) {
                   />
                 </div>
 
-                <div>
-                  <label className="block text-xs text-slate-500 dark:text-gray-400 mb-1">Unit / Address</label>
-                  <input
-                    type="text"
-                    value={inviteForm.unit}
-                    onChange={e => {
-                      setInviteForm({...inviteForm, unit: e.target.value});
-                      validateInviteField('unit', e.target.value);
-                    }}
-                    onBlur={e => validateInviteField('unit', e.target.value)}
-                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl p-2.5 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-blue-500 placeholder-slate-400 dark:placeholder-gray-500"
-                    placeholder="Unit 14A"
-                  />
-                  {inviteErrors.unit && <p className="text-red-500 text-[10px] mt-1">{inviteErrors.unit}</p>}
-                </div>
+                {inviteForm.role !== 'Security Guard' && (
+                  <div>
+                    <label className="block text-xs text-slate-500 dark:text-gray-400 mb-1">Unit / Address</label>
+                    <input
+                      type="text"
+                      value={inviteForm.unit}
+                      onChange={e => {
+                        setInviteForm({...inviteForm, unit: e.target.value});
+                        validateInviteField('unit', e.target.value);
+                      }}
+                      onBlur={e => validateInviteField('unit', e.target.value)}
+                      className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl p-2.5 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-blue-500 placeholder-slate-400 dark:placeholder-gray-500"
+                      placeholder="Unit 14A"
+                    />
+                    {inviteErrors.unit && <p className="text-red-500 text-[10px] mt-1">{inviteErrors.unit}</p>}
+                  </div>
+                )}
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
@@ -663,6 +679,7 @@ export default function CondoMembers({ community }) {
                         <option className="bg-white dark:bg-[#1E2E42] text-slate-900 dark:text-white">Resident</option>
                         <option className="bg-white dark:bg-[#1E2E42] text-slate-900 dark:text-white">Board Member</option>
                         <option className="bg-white dark:bg-[#1E2E42] text-slate-900 dark:text-white">Property Manager</option>
+                        <option className="bg-white dark:bg-[#1E2E42] text-slate-900 dark:text-white">Security Guard</option>
                       </select>
                       <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
                     </div>
@@ -776,16 +793,18 @@ export default function CondoMembers({ community }) {
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-[10px] font-bold text-slate-455 dark:text-gray-400 mb-2 uppercase">UNIT NO</label>
-                  <input
-                    type="text"
-                    value={editUnit}
-                    onChange={(e) => setEditUnit(e.target.value)}
-                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-2.5 text-xs outline-none focus:border-indigo-550 text-slate-955 dark:text-white font-mono"
-                  />
-                </div>
-                <div>
+                {editRole !== 'security_guard' && (
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-455 dark:text-gray-400 mb-2 uppercase">UNIT NO</label>
+                    <input
+                      type="text"
+                      value={editUnit}
+                      onChange={(e) => setEditUnit(e.target.value)}
+                      className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-2.5 text-xs outline-none focus:border-indigo-550 text-slate-955 dark:text-white font-mono"
+                    />
+                  </div>
+                )}
+                <div className={editRole === 'security_guard' ? 'col-span-2' : ''}>
                   <label className="block text-[10px] font-bold text-slate-455 dark:text-gray-400 mb-2 uppercase">PHONE NUMBER</label>
                   <div className="relative">
                     <span className="absolute left-3 top-2.5 text-xs text-slate-400 font-mono">+1</span>
@@ -800,6 +819,70 @@ export default function CondoMembers({ community }) {
                   </div>
                 </div>
               </div>
+
+              {/* Role Dropdown — computed based on who is editing */}
+              {(() => {
+                const isSelf = editingMember?.user_id === currentUserId;
+                const memberRole = editingMember?.role_name || editingMember?.role || '';
+
+                // All role options
+                const allRoles = [
+                  { value: 'resident',        label: 'Resident' },
+                  { value: 'board_member',     label: 'Board Member' },
+                  { value: 'property_manager', label: 'Property Manager' },
+                  { value: 'security_guard',   label: 'Security Guard' },
+                ];
+
+                let allowedRoles = [];
+                let roleDisabledReason = null;
+
+                if (currentUserRole === 'super_admin') {
+                  allowedRoles = allRoles;
+                } else if (currentUserRole === 'property_manager' || currentUserRole === 'board_member') {
+                  if (isSelf) {
+                    roleDisabledReason = 'You cannot change your own role.';
+                  } else {
+                    // PM/BM can only assign Resident or Security Guard
+                    allowedRoles = allRoles.filter(r => ['resident', 'security_guard'].includes(r.value));
+                  }
+                } else {
+                  // residents: no role editing
+                  return null;
+                }
+
+                return (
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-455 dark:text-gray-400 mb-2 uppercase flex items-center gap-1.5">
+                      ROLE
+                      {roleDisabledReason && (
+                        <span className="text-[9px] font-normal text-amber-500 normal-case tracking-normal">
+                          🔒 {roleDisabledReason}
+                        </span>
+                      )}
+                    </label>
+                    {roleDisabledReason ? (
+                      <div className="w-full bg-slate-100 dark:bg-slate-900/50 border border-slate-200 dark:border-white/5 rounded-xl px-4 py-2.5 text-xs text-slate-400 dark:text-slate-500 font-medium capitalize">
+                        {memberRole.replace(/_/g, ' ')}
+                      </div>
+                    ) : (
+                      <div className="relative">
+                        <select
+                          value={editRole}
+                          onChange={(e) => setEditRole(e.target.value)}
+                          className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-2.5 text-xs outline-none focus:border-indigo-500 text-slate-950 dark:text-white appearance-none cursor-pointer"
+                        >
+                          {allowedRoles.map(r => (
+                            <option key={r.value} value={r.value} className="bg-white dark:bg-[#1E2E42] text-slate-900 dark:text-white">
+                              {r.label}
+                            </option>
+                          ))}
+                        </select>
+                        <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
 
               <div className="flex gap-4 justify-end pt-4 border-t border-slate-100 dark:border-white/5">
                 <button

@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { RefreshCw, Search, Shield, ChevronDown, Clock, User, Globe } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { RefreshCw, Search, Shield, ChevronDown, Clock, User, Globe, Lock, Building2, AlertTriangle, Wrench, Megaphone, DollarSign, FileText } from 'lucide-react';
 import API from '../../services/api';
 
 const cleanDescription = (desc) => {
@@ -19,6 +19,18 @@ const RentalAuditHistory = ({ user }) => {
   const [search, setSearch]           = useState('');
   const [moduleFilter, setModuleFilter] = useState('');
   const [viewMode, setViewMode]       = useState('all');
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    const handleOutsideClick = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setIsDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleOutsideClick);
+    return () => document.removeEventListener('mousedown', handleOutsideClick);
+  }, []);
 
   const role    = (user?.role_name || user?.role || '').toLowerCase();
   const isAdmin = role === 'landlord' || role === 'super_admin';
@@ -58,12 +70,19 @@ const RentalAuditHistory = ({ user }) => {
   };
 
   const getModuleIcon = (module) => {
-    const map = {
-      auth: '🔐', community: '🏘️', violation: '⚠️',
-      service_request: '🔧', amenity: '🏊', vendor: '🛠️',
-      user: '👤', news: '📢', payment: '💰'
-    };
-    return map[module] || '📋';
+    const size = 13;
+    switch (module) {
+      case 'auth': return <Lock size={size} className="shrink-0 text-blue-500" />;
+      case 'community': return <Building2 size={size} className="shrink-0 text-blue-500" />;
+      case 'violation': return <AlertTriangle size={size} className="shrink-0 text-red-500" />;
+      case 'service_request': return <Wrench size={size} className="shrink-0 text-amber-500" />;
+      case 'amenity': return <Building2 size={size} className="shrink-0 text-indigo-500" />;
+      case 'vendor': return <Wrench size={size} className="shrink-0 text-violet-500" />;
+      case 'user': return <User size={size} className="shrink-0 text-sky-500" />;
+      case 'news': return <Megaphone size={size} className="shrink-0 text-fuchsia-500" />;
+      case 'payment': return <DollarSign size={size} className="shrink-0 text-emerald-500" />;
+      default: return <FileText size={size} className="shrink-0" />;
+    }
   };
 
   const getModuleBadgeColor = (module) => {
@@ -124,15 +143,16 @@ const RentalAuditHistory = ({ user }) => {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-5">
         <div className="flex gap-2">
           {[
-            { id: 'all', label: '📋 All Logs' },
-            { id: 'my',  label: '👤 My Activity' },
+            { id: 'all', label: 'All Logs', icon: <Shield size={14} /> },
+            { id: 'my',  label: 'My Activity', icon: <User size={14} /> },
           ].map(v => (
             <button key={v.id} onClick={() => setViewMode(v.id)}
-              className={`px-5 py-2.5 rounded-2xl text-sm font-medium transition ${
+              className={`px-5 py-2.5 rounded-2xl text-sm font-medium transition flex items-center gap-2 ${
                 viewMode === v.id
                   ? 'bg-blue-600 text-white shadow-sm shadow-blue-500/20'
                   : 'bg-slate-100 hover:bg-slate-200 dark:bg-white/10 text-slate-600 dark:text-gray-400 dark:hover:bg-white/20'
               }`}>
+              {v.icon}
               {v.label}
             </button>
           ))}
@@ -159,19 +179,50 @@ const RentalAuditHistory = ({ user }) => {
             className="w-full bg-white dark:bg-[#162535] border border-slate-200 dark:border-white/10 rounded-xl pl-9 pr-4 py-2.5 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 focus:outline-none focus:border-blue-500"
           />
         </div>
-        <div className="relative">
-          <select
-            value={moduleFilter}
-            onChange={e => setModuleFilter(e.target.value)}
-            className="bg-white dark:bg-[#162535] border border-slate-200 dark:border-white/10 rounded-xl pl-4 pr-10 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 appearance-none cursor-pointer"
+        <div className="relative" ref={dropdownRef}>
+          <button
+            type="button"
+            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+            className="bg-white dark:bg-[#162535] border border-slate-200 dark:border-white/10 rounded-xl pl-4 pr-10 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 flex items-center gap-2 cursor-pointer min-w-[150px] justify-between relative"
           >
-            {modules.map(m => (
-              <option key={m} value={m} className="text-slate-900 dark:text-white">
-                {m ? `${getModuleIcon(m)} ${m}` : 'All Modules'}
-              </option>
-            ))}
-          </select>
-          <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-gray-500 pointer-events-none" size={16} />
+            <span className="flex items-center gap-2 capitalize">
+              {moduleFilter ? (
+                <>
+                  {getModuleIcon(moduleFilter)}
+                  <span>{moduleFilter}</span>
+                </>
+              ) : (
+                <>
+                  <FileText size={14} className="text-slate-400" />
+                  <span>All Modules</span>
+                </>
+              )}
+            </span>
+            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-gray-500 pointer-events-none" size={16} />
+          </button>
+          
+          {isDropdownOpen && (
+            <div className="absolute right-0 mt-1 w-52 bg-white dark:bg-[#1E2E42] border border-slate-200 dark:border-white/10 rounded-xl shadow-xl z-50 overflow-hidden py-1 animate-in fade-in slide-in-from-top-1 duration-150">
+              {modules.map(m => (
+                <button
+                  key={m}
+                  type="button"
+                  onClick={() => {
+                    setModuleFilter(m);
+                    setIsDropdownOpen(false);
+                  }}
+                  className={`w-full text-left px-4 py-2.5 text-sm transition flex items-center gap-2.5 hover:bg-blue-500/10 ${
+                    moduleFilter === m 
+                      ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400 font-semibold' 
+                      : 'text-slate-700 dark:text-gray-250'
+                  }`}
+                >
+                  <span className="text-base leading-none">{getModuleIcon(m)}</span>
+                  <span className="capitalize">{m || 'All Modules'}</span>
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 

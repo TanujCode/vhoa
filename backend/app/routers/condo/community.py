@@ -378,13 +378,14 @@ def create_community(
     if existing:
         raise HTTPException(status_code=400, detail="A building with this name or passcode already exists.")
 
-    # Check and update contract if contract_code provided
+    total_units_val = 0
     if contract_code:
         contract = db.query(CondoContract).filter(
             CondoContract.contract_code == contract_code.strip().upper()
         ).first()
         if contract:
             contract.status = "ONBOARDED"
+            total_units_val = contract.size_of_the_building or 0
 
     new_comm = CondoCommunity(
         name=name,
@@ -394,11 +395,26 @@ def create_community(
         city=city,
         zip_code=zip_code,
         description=desc,
+        total_units=total_units_val,
         active_status=True
     )
     db.add(new_comm)
     db.commit()
     db.refresh(new_comm)
+    
+    if total_units_val > 0:
+        from app.models.condo.condo_parking import CondoParkingAllocation
+        for i in range(1, total_units_val + 1):
+            alloc = CondoParkingAllocation(
+                community_id=new_comm.community_id,
+                unit_no=f"{i}",
+                parking_spot_no=f"P-{i:03d}",
+                locker_no=f"L-{i:03d}",
+                has_ev_charger=False,
+                assigned_user_id=None
+            )
+            db.add(alloc)
+        db.commit()
     
     return new_comm
 
@@ -483,8 +499,8 @@ def update_community_member(
     if not u:
         raise HTTPException(status_code=404, detail="Condo user not found")
         
-    role_name = current_user.role.role_name if current_user.role else ""
-    if role_name != "super_admin":
+    editor_role = current_user.role.role_name if current_user.role else ""
+    if editor_role != "super_admin":
         if u.community_id != current_user.community_id:
             raise HTTPException(status_code=403, detail="You can only edit members of your own community.")
             
@@ -493,7 +509,8 @@ def update_community_member(
     email_id = body.get("email_id")
     mobile_number = body.get("mobile_number")
     unit_no = body.get("unit_no")
-    
+    new_role_name = body.get("role_name")
+
     if first_name is not None:
         u.first_name = first_name
     if last_name is not None:
@@ -504,6 +521,26 @@ def update_community_member(
         u.mobile_number = mobile_number
     if unit_no is not None:
         u.unit_no = unit_no
+
+    # Role change with permission rules
+    if new_role_name is not None:
+        new_role_name = new_role_name.strip().lower()
+
+        if editor_role == "resident":
+            raise HTTPException(status_code=403, detail="Residents are not allowed to change roles.")
+
+        if editor_role in ("property_manager", "board_member"):
+            # PM/BM cannot change their own role
+            if u.user_id == current_user.user_id:
+                raise HTTPException(status_code=403, detail="You cannot change your own role.")
+            # PM/BM cannot assign elevated roles
+            if new_role_name in ("property_manager", "board_member", "super_admin"):
+                raise HTTPException(status_code=403, detail="You do not have permission to assign this role.")
+
+        role_obj = db.query(Role).filter(Role.role_name == new_role_name, Role.active_status == True).first()
+        if not role_obj:
+            raise HTTPException(status_code=400, detail=f"Role '{new_role_name}' not found.")
+        u.role_id = role_obj.role_id
         
     db.commit()
     db.refresh(u)

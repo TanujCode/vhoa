@@ -30,7 +30,7 @@ const ChangeRequests = ({ user }) => {
   };
 
   const handleApprove = async (reqId) => {
-    if (!window.confirm("Are you sure you want to approve this request? It will automatically apply name/size updates and recalculate pricing tiers.")) return;
+    if (!await window.customConfirm("Are you sure you want to approve this request? It will automatically apply name/size updates and recalculate pricing tiers.")) return;
     
     try {
       setActionLoading(true);

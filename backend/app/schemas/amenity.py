@@ -1,5 +1,5 @@
 from datetime import date, datetime
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, field_validator, model_validator
 
 
 # ══════════════════════════════════════════════
@@ -47,6 +47,12 @@ class AmenityCreate(BaseModel):
             raise ValueError("The fee cannot be negative.")
         return v
 
+    @model_validator(mode="after")
+    def check_fee_enabled(self):
+        if self.fee_enabled and (self.booking_fee is None or self.booking_fee <= 0):
+            raise ValueError("Booking fee must be greater than 0 if booking fee is enabled.")
+        return self
+
 
 class AmenityUpdate(BaseModel):
     name:        str | None   = None
@@ -65,6 +71,14 @@ class AmenityUpdate(BaseModel):
     pool_open:           bool | None     = None
     tentative_open_date: datetime | None = None
     is_pool_reserved:    bool | None     = None
+
+    @model_validator(mode="after")
+    def check_fee_enabled(self):
+        if self.fee_enabled is True and (self.booking_fee is None or self.booking_fee <= 0):
+            raise ValueError("Booking fee must be greater than 0 if booking fee is enabled.")
+        if self.booking_fee is not None and self.booking_fee <= 0 and self.fee_enabled is not False:
+            raise ValueError("Booking fee must be greater than 0 if booking fee is enabled.")
+        return self
 
 
 class AmenityOut(BaseModel):

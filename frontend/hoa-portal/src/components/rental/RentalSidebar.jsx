@@ -2,7 +2,7 @@ import React from 'react';
 import { 
   Globe, Layout, Users, Wrench, 
   CreditCard, Home, FileText, ClipboardList,
-  User, Settings, Truck
+  User, Settings, Truck, BarChart2
 } from 'lucide-react';
 import { getBaseUrl } from '../../services/api';
 import { useTheme } from '../../context/ThemeContext';
@@ -34,6 +34,7 @@ const RentalSidebar = ({ activePage, setActivePage, isOpen, setIsOpen, user }) =
     { id: 'rent_ledger', label: 'Payments Ledger', icon: CreditCard },
     { id: 'servicereq', label: 'Maintenance Desk', icon: Wrench },
     { id: 'vendors_hub', label: 'Contractors / Vendors', icon: Truck },
+    { id: 'reports', label: 'Reports', icon: BarChart2 },
   ];
 
   // Landlord Menu
@@ -46,6 +47,7 @@ const RentalSidebar = ({ activePage, setActivePage, isOpen, setIsOpen, user }) =
     { id: 'rent_ledger', label: 'Payments Ledger', icon: CreditCard },
     { id: 'servicereq', label: 'Maintenance Desk', icon: Wrench },
     { id: 'vendors_hub', label: 'Contractors / Vendors', icon: Truck },
+    { id: 'reports', label: 'Reports', icon: BarChart2 },
   ];
 
   // Tenant Menu

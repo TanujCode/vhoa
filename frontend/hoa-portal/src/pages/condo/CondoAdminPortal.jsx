@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { LogOut, Building2, Users, FileText, Wrench, CreditCard, ParkingSquare, Key, Package, User } from 'lucide-react';
 import API from '../../services/api';
@@ -14,11 +14,13 @@ import CondoContracts from './CondoContracts';
 import Profile from '../Profile';
 import CondoMembers from './CondoMembers';
 import CondoDocuments from './CondoDocuments';
-import CondoMaintenance from './CondoMaintenance';
+import CondoServiceRequests from './CondoServiceRequests';
 import CondoPayments from './CondoPayments';
 import CondoParking from './CondoParking';
 import CondoVisitors from './CondoVisitors';
 import CondoParcels from './CondoParcels';
+import CondoVendors from './CondoVendors';
+import CondoSecurityDashboard from './CondoSecurityDashboard';
 
 export default function CondoAdminPortal() {
   const navigate = useNavigate();
@@ -26,7 +28,6 @@ export default function CondoAdminPortal() {
 
   const currentTab = searchParams.get('tab') || 'dashboard';
   const [activePage, _setActivePage] = useState(currentTab);
-  const [pageHistory, setPageHistory] = useState([currentTab]);
   const [showExitConfirm, setShowExitConfirm] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
@@ -35,15 +36,39 @@ export default function CondoAdminPortal() {
   const [communities, setCommunities] = useState([]);
   const [selectedCommunityId, setSelectedCommunityId] = useState('all');
 
+  // Sync tab with browser back/forward buttons
   useEffect(() => {
     if (currentTab !== activePage) {
       _setActivePage(currentTab);
-      setPageHistory(prev => {
-        if (prev[prev.length - 1] === currentTab) return prev;
-        return [...prev, currentTab];
-      });
     }
   }, [currentTab]);
+
+  const activePageRef = useRef(activePage);
+  useEffect(() => {
+    activePageRef.current = activePage;
+  }, [activePage]);
+
+  // Push guard state when on dashboard to prevent unmounting when navigating back
+  useEffect(() => {
+    if (activePage === 'dashboard' && !window.history.state?.isPortalGuard) {
+      window.history.pushState({ isPortalGuard: true }, '', '/condo/dashboard');
+    }
+  }, [activePage]);
+
+  // Intercept browser back button when on dashboard to show exit confirmation
+  useEffect(() => {
+    const handlePopState = (e) => {
+      if (activePageRef.current === 'dashboard') {
+        setShowExitConfirm(true);
+        window.history.pushState({ isPortalGuard: true }, '', '/condo/dashboard');
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, []);
 
   useEffect(() => {
     fetchInitialData();
@@ -61,6 +86,7 @@ export default function CondoAdminPortal() {
       if (roleStr === 'property_manager') defaultRoleId = 2;
       else if (roleStr === 'board_member') defaultRoleId = 3;
       else if (roleStr === 'super_admin') defaultRoleId = 1;
+      else if (roleStr === 'security_guard' || roleStr === 'front_desk_concierge') defaultRoleId = 9;
 
       const freshUser = {
         ...meData,
@@ -101,34 +127,14 @@ export default function CondoAdminPortal() {
     if (newPage === activePage) return;
     if (newPage === 'dashboard') {
       setSearchParams({});
-      setPageHistory(['dashboard']);
     } else {
       setSearchParams({ tab: newPage });
-      setPageHistory(prev => {
-        if (prev[prev.length - 1] === newPage) return prev;
-        return [...prev, newPage];
-      });
     }
     _setActivePage(newPage);
   };
 
   const handleBack = () => {
-    if (activePage !== 'dashboard') {
-      if (pageHistory.length > 1) {
-        const newHistory = [...pageHistory];
-        newHistory.pop();
-        const prevPage = newHistory[newHistory.length - 1] || 'dashboard';
-        setPageHistory(newHistory.length > 0 ? newHistory : ['dashboard']);
-        setSearchParams(prevPage === 'dashboard' ? {} : { tab: prevPage });
-        _setActivePage(prevPage);
-      } else {
-        setPageHistory(['dashboard']);
-        setSearchParams({});
-        _setActivePage('dashboard');
-      }
-    } else {
-      setShowExitConfirm(true);
-    }
+    window.history.back();
   };
 
   const handleConfirmExitLogout = () => {
@@ -170,7 +176,7 @@ export default function CondoAdminPortal() {
       };
     }
 
-    const needsSpecificBuilding = ['members', 'documents', 'maintenance', 'payments', 'parking', 'visitors', 'parcels'].includes(activePage);
+    const needsSpecificBuilding = ['members', 'documents', 'maintenance', 'payments', 'parking', 'visitors', 'parcels', 'vendors'].includes(activePage);
 
     if (role === 'super_admin' && needsSpecificBuilding && !activeCommunity) {
       return (
@@ -196,6 +202,7 @@ export default function CondoAdminPortal() {
         if (role === 'super_admin') return <CondoSuperAdminDashboard selectedCommunityId={selectedCommunityId} onEnterCommunity={handleEnterCommunity} />;
         if (role === 'property_manager') return <CondoPropertyManagerDashboard user={user} setActivePage={setActivePage} />;
         if (role === 'board_member') return <CondoBoardDashboard user={user} setActivePage={setActivePage} />;
+        if (role === 'security_guard' || role === 'front_desk_concierge') return <CondoSecurityDashboard user={user} setActivePage={setActivePage} />;
         return <CondoResidentDashboard user={user} setActivePage={setActivePage} />;
 
       case 'condo-contracts':
@@ -208,13 +215,13 @@ export default function CondoAdminPortal() {
         return <CondoSuperAdminDashboard defaultSection="users" selectedCommunityId={selectedCommunityId} onEnterCommunity={handleEnterCommunity} />;
 
       case 'members':
-        return <CondoMembers community={activeCommunity} />;
+        return <CondoMembers community={activeCommunity} user={user} />;
 
       case 'documents':
         return <CondoDocuments community={activeCommunity} user={user} />;
 
       case 'maintenance':
-        return <CondoMaintenance community={activeCommunity} user={user} />;
+        return <CondoServiceRequests community={activeCommunity} user={user} />;
 
       case 'payments':
         return <CondoPayments community={activeCommunity} user={user} />;
@@ -228,12 +235,17 @@ export default function CondoAdminPortal() {
       case 'parcels':
         return <CondoParcels community={activeCommunity} user={user} />;
 
+      case 'vendors':
+        return <CondoVendors communityId={activeCommunity?.community_id} userRole={user?.role} user={user} />;
+
       case 'profile':
         return <Profile user={user} setUser={setUser} viewRole={user?.role} />;
 
       default:
         if (role === 'super_admin') return <CondoSuperAdminDashboard selectedCommunityId={selectedCommunityId} onEnterCommunity={handleEnterCommunity} />;
         if (role === 'property_manager') return <CondoPropertyManagerDashboard user={user} setActivePage={setActivePage} />;
+        if (role === 'board_member') return <CondoBoardDashboard user={user} setActivePage={setActivePage} />;
+        if (role === 'security_guard' || role === 'front_desk_concierge') return <CondoSecurityDashboard user={user} setActivePage={setActivePage} />;
         return <CondoResidentDashboard user={user} setActivePage={setActivePage} />;
     }
   };

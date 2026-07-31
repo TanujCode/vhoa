@@ -11,6 +11,7 @@ from app.routers.hoa import auth, community, violation, audit_log, location, ser
 from app.routers.rental import rental
 from app.routers.condo import router as condo_router
 from app.routers.condo.contract import router as condo_contract_router
+from app.routers.condo.vendor import router as condo_vendor_router
 from app.routers.hoa import user
 
 try:
@@ -158,6 +159,29 @@ def run_db_upgrades():
             f"ALTER TABLE rental_vendors ADD COLUMN IF NOT EXISTS {col_name} {col_type};",
             f"rental_vendors.{col_name}"
         )
+
+    # ── condo_service_requests table ────────────────────────────
+    _safe_execute("ALTER TABLE condo_vendor_assignments DROP CONSTRAINT IF EXISTS condo_vendor_assignments_request_id_fkey;", "drop_old_vendor_assignment_fk")
+    _safe_execute("DROP TABLE IF EXISTS condo_maintenance_requests CASCADE;", "drop_old_condo_maintenance_table")
+    _safe_execute("ALTER TABLE condo_vendor_assignments ADD CONSTRAINT condo_vendor_assignments_request_id_fkey FOREIGN KEY (request_id) REFERENCES condo_service_requests(request_id) ON DELETE CASCADE;", "add_new_vendor_assignment_fk")
+
+    # Sync existing completed vendor assignments to CLOSED status
+    _safe_execute("""
+        UPDATE condo_service_requests
+        SET status_id = (SELECT status_id FROM condo_service_request_statuses WHERE status_name = 'CLOSED')
+        WHERE request_id IN (
+            SELECT request_id FROM condo_vendor_assignments WHERE status = 'COMPLETED'
+        ) AND status_id != (SELECT status_id FROM condo_service_request_statuses WHERE status_name = 'CLOSED');
+    """, "sync_existing_completed_condo_requests")
+
+    # Sync existing approved/funded vendor assignments to APPROVED status
+    _safe_execute("""
+        UPDATE condo_service_requests
+        SET status_id = (SELECT status_id FROM condo_service_request_statuses WHERE status_name = 'APPROVED')
+        WHERE request_id IN (
+            SELECT request_id FROM condo_vendor_assignments WHERE status = 'APPROVED'
+        ) AND status_id = (SELECT status_id FROM condo_service_request_statuses WHERE status_name = 'OPEN');
+    """, "sync_existing_approved_condo_requests")
 
     # ── meetings table columns (recording_url, transcript, and summary) ─────
     for col_name, col_type in [
@@ -479,6 +503,26 @@ def seed_default_service_types_for_all_communities():
         db.close()
 
 
+def seed_condo_sr_statuses():
+    from app.services.condo.condo_service_request_service import seed_condo_service_request_statuses as _seed
+    db = SessionLocal()
+    try:
+        _seed(db)
+        print("[SUCCESS] Condo Service Request statuses seeded.")
+    finally:
+        db.close()
+
+
+def seed_default_condo_service_types_for_all_communities():
+    from app.services.condo.condo_service_request_service import seed_default_condo_service_types_for_all_communities as _seed
+    db = SessionLocal()
+    try:
+        _seed(db)
+        print("[SUCCESS] Condo default service types seeded.")
+    finally:
+        db.close()
+
+
 def seed_default_violation_types_for_all_communities():
     from app.services.hoa.violation_service import seed_default_violation_types_for_all_communities as _seed
     db = SessionLocal()
@@ -602,6 +646,8 @@ seed_sr_statuses()
 seed_locations()
 seed_default_service_types_for_all_communities()   # Seed default service types for communities
 seed_default_violation_types_for_all_communities()
+seed_condo_sr_statuses()
+seed_default_condo_service_types_for_all_communities()
 seed_amenity_types()
 seed_custom_users()
 
@@ -644,6 +690,7 @@ app.include_router(report.router,          prefix="/api")
 app.include_router(rental.router,          prefix="/api")
 app.include_router(condo_router,           prefix="/api")
 app.include_router(condo_contract_router,  prefix="/api")
+app.include_router(condo_vendor_router,    prefix="/api")
 
 
 @app.get("/", tags=["Health"])

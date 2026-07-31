@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { AlertTriangle, Plus, RefreshCw, ChevronDown, X, Search, ArrowUpRight, Download, Filter } from 'lucide-react';
+import { AlertTriangle, Plus, RefreshCw, ChevronDown, X, Search, ArrowUpRight, Download, Filter, Calendar, FileText, FolderOpen, Clock, CheckCircle2 } from 'lucide-react';
 import API, { getBaseUrl } from '../services/api';
 import { onlyDecimalKeyPress, onlyDigitsKeyPress } from '../utils/fieldValidators';
 import CustomSelect from '../components/CustomSelect';
@@ -43,6 +43,20 @@ const FileUploadField = ({ file, onFileChange, label = "Attachment (Optional)" }
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
+  const handleFileChange = (e) => {
+    const selectedFile = e.target.files[0] || null;
+    if (selectedFile) {
+      const maxSizeBytes = 10 * 1024 * 1024; // 10 MB
+      if (selectedFile.size > maxSizeBytes) {
+        alert("File size exceeds the 10 MB limit. Please upload a smaller file.");
+        e.target.value = ""; // Clear input
+        onFileChange(null);
+        return;
+      }
+    }
+    onFileChange(selectedFile);
+  };
+
   return (
     <div>
       <label className="text-xs text-slate-500 dark:text-gray-400 mb-1.5 block font-medium">{label}</label>
@@ -50,7 +64,7 @@ const FileUploadField = ({ file, onFileChange, label = "Attachment (Optional)" }
       <input
         ref={fileInputRef}
         type="file"
-        onChange={(e) => onFileChange(e.target.files[0] || null)}
+        onChange={handleFileChange}
         className="hidden"
       />
 
@@ -68,8 +82,8 @@ const FileUploadField = ({ file, onFileChange, label = "Attachment (Optional)" }
             {previewUrl ? (
               <img src={previewUrl} alt="Preview" className="w-14 h-14 object-cover rounded-xl shadow border border-slate-200 dark:border-white/10" />
             ) : (
-              <div className="w-10 h-10 rounded-xl bg-blue-500/15 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold text-lg">
-                📄
+              <div className="w-10 h-10 rounded-xl bg-blue-500/15 text-blue-600 dark:text-blue-400 flex items-center justify-center">
+                <FileText size={20} />
               </div>
             )}
             <div className="text-center max-w-[95%]">
@@ -86,12 +100,12 @@ const FileUploadField = ({ file, onFileChange, label = "Attachment (Optional)" }
           </div>
         ) : (
           <div className="flex items-center gap-3 py-1 px-2">
-            <div className="w-9 h-9 rounded-xl bg-slate-200/60 dark:bg-white/5 border border-slate-300/40 dark:border-white/10 flex items-center justify-center text-slate-400 dark:text-slate-500 text-base shrink-0">
-              📁
+              <div className="w-9 h-9 rounded-xl bg-slate-200/60 dark:bg-white/5 border border-slate-300/40 dark:border-white/10 flex items-center justify-center text-slate-400 dark:text-slate-500 shrink-0">
+              <FolderOpen size={18} />
             </div>
             <div className="flex flex-col text-left">
               <span className="text-xs font-medium text-slate-600 dark:text-gray-300">No file selected</span>
-              <span className="text-[10px] text-slate-400 dark:text-gray-500">Click to browse attachment</span>
+              <span className="text-[10px] text-slate-400 dark:text-gray-500">Click to browse attachment (Max 10MB)</span>
             </div>
           </div>
         )}
@@ -277,13 +291,19 @@ const SubmitModal = ({ communityId, onClose, onSuccess }) => {
 
           <div>
             <label className="text-xs text-slate-500 dark:text-gray-400 mb-1 block">Violation Date <span className="text-red-500">*</span></label>
-            <input
-              type="date"
-              required
-              value={form.violation_date}
-              onChange={e => setForm({...form, violation_date: e.target.value})}
-              className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
-            />
+            <div className="relative">
+              <Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-gray-500 pointer-events-none" size={16} />
+              <input
+                type="date"
+                required
+                max={new Date().toISOString().split('T')[0]}
+                autoComplete="off"
+                onKeyDown={e => e.preventDefault()}
+                value={form.violation_date}
+                onChange={e => setForm({...form, violation_date: e.target.value})}
+                className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl pl-10 pr-4 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500 cursor-pointer"
+              />
+            </div>
           </div>
 
           <div>
@@ -359,13 +379,70 @@ const CreateTypeModal = ({ communityId, onClose, onSuccess }) => {
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
 
+  const validateField = (name, value) => {
+    let nextErrors = { ...errors };
+    if (name === 'name') {
+      if (!value.trim()) {
+        nextErrors.name = 'Violation type name is required';
+      } else if (value.trim().length < 3) {
+        nextErrors.name = 'Violation type name must be at least 3 characters';
+      } else if (value.trim().length > 50) {
+        nextErrors.name = 'Violation type name cannot exceed 50 characters';
+      } else if (!/^[a-zA-Z\s\-()]+$/.test(value)) {
+        nextErrors.name = 'Name can only contain letters, spaces, hyphens, and parentheses';
+      } else {
+        delete nextErrors.name;
+      }
+    }
+    if (name === 'description') {
+      if (!value.trim()) {
+        nextErrors.description = 'Description is required';
+      } else if (value.trim().length < 5) {
+        nextErrors.description = 'Description must be at least 5 characters';
+      } else if (value.trim().length > 250) {
+        nextErrors.description = 'Description cannot exceed 250 characters';
+      } else {
+        delete nextErrors.description;
+      }
+    }
+    setErrors(nextErrors);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    let nextErrors = { ...errors };
     if (!formData.name.trim()) {
-      alert("Name is required.");
-      return;
+      nextErrors.name = 'Violation type name is required';
+    } else if (formData.name.trim().length < 3) {
+      nextErrors.name = 'Violation type name must be at least 3 characters';
+    } else if (formData.name.trim().length > 50) {
+      nextErrors.name = 'Violation type name cannot exceed 50 characters';
+    } else if (!/^[a-zA-Z\s\-()]+$/.test(formData.name)) {
+      nextErrors.name = 'Name can only contain letters, spaces, hyphens, and parentheses';
     }
-    if (Object.keys(errors).length > 0) {
+
+    if (!formData.description.trim()) {
+      nextErrors.description = 'Description is required';
+    } else if (formData.description.trim().length < 5) {
+      nextErrors.description = 'Description must be at least 5 characters';
+    } else if (formData.description.trim().length > 250) {
+      nextErrors.description = 'Description cannot exceed 250 characters';
+    }
+
+    if (formData.amount === '' || isNaN(parseFloat(formData.amount)) || parseFloat(formData.amount) < 0) {
+      nextErrors.amount = 'Valid amount is required';
+    }
+    if (formData.late_charge === '' || isNaN(parseFloat(formData.late_charge)) || parseFloat(formData.late_charge) < 0) {
+      nextErrors.late_charge = 'Valid late charge is required';
+    }
+    if (formData.due_days === '' || isNaN(parseInt(formData.due_days, 10)) || parseInt(formData.due_days, 10) < 1) {
+      nextErrors.due_days = 'Due days must be at least 1';
+    }
+
+    setErrors(nextErrors);
+
+    if (Object.keys(nextErrors).length > 0) {
       alert("Please fix the validation errors before saving.");
       return;
     }
@@ -392,22 +469,32 @@ const CreateTypeModal = ({ communityId, onClose, onSuccess }) => {
         <h2 className="text-slate-900 dark:text-white text-lg mb-4 font-semibold">Create Violation Type</h2>
         
         <div className="mb-3">
+          <label className="text-[10px] text-slate-500 block mb-0.5">Violation Type Name *</label>
           <input 
-            className="w-full p-2 bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500" 
-            placeholder="Name" 
+            className={`w-full p-2 bg-slate-50 dark:bg-[#0D1B2A] border rounded-xl text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 ${errors.name ? 'border-red-500' : 'border-slate-200 dark:border-white/20'}`} 
+            placeholder="Name (e.g. Trash Disposal)" 
             value={formData.name}
-            onChange={e => setFormData({...formData, name: e.target.value})} 
+            onChange={e => {
+              setFormData({...formData, name: e.target.value});
+              validateField('name', e.target.value);
+            }} 
           />
+          {errors.name && <p className="text-xs mt-1 text-red-500">{errors.name}</p>}
         </div>
         
         <div className="mb-3">
+          <label className="text-[10px] text-slate-500 block mb-0.5">Description *</label>
           <textarea 
-            className="w-full p-2 bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 resize-none" 
-            placeholder="Description" 
+            className={`w-full p-2 bg-slate-50 dark:bg-[#0D1B2A] border rounded-xl text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 resize-none ${errors.description ? 'border-red-500' : 'border-slate-200 dark:border-white/20'}`} 
+            placeholder="Describe the violation details..." 
             rows={3}
             value={formData.description}
-            onChange={e => setFormData({...formData, description: e.target.value})} 
+            onChange={e => {
+              setFormData({...formData, description: e.target.value});
+              validateField('description', e.target.value);
+            }} 
           />
+          {errors.description && <p className="text-xs mt-1 text-red-500">{errors.description}</p>}
         </div>
         
         <div className="mb-3">
@@ -742,7 +829,7 @@ const ViolationDetailModal = ({ violation, isResident, statuses, onClose, onDisp
                       rel="noopener noreferrer"
                       className="text-xs text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1.5"
                     >
-                      📄 Violation Document #{idx + 1}
+                      <FileText size={12} /> Violation Document #{idx + 1}
                     </a>
                   ))}
                 </div>
@@ -778,7 +865,7 @@ const ViolationDetailModal = ({ violation, isResident, statuses, onClose, onDisp
                       rel="noopener noreferrer"
                       className="text-xs text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1.5"
                     >
-                      📄 Appeal Proof #{idx + 1}
+                      <FileText size={12} /> Appeal Proof #{idx + 1}
                     </a>
                   ))}
                 </div>
@@ -787,7 +874,7 @@ const ViolationDetailModal = ({ violation, isResident, statuses, onClose, onDisp
 
             <div className="border-t border-slate-200 dark:border-white/10 pt-3">
               <span className="text-xs text-slate-400 dark:text-gray-500">Resolution Status:</span>
-              <p className="text-sm font-medium">{violation.dispute_resolved ? "✓ Resolved By Board" : "⏳ Pending Board Action"}</p>
+              <p className="text-sm font-medium flex items-center gap-1">{violation.dispute_resolved ? <><CheckCircle2 size={13} className="text-green-500" /> Resolved By Board</> : <><Clock size={13} className="text-amber-500" /> Pending Board Action</>}</p>
             </div>
 
             {violation.dispute_resolved && (
@@ -1156,8 +1243,8 @@ const Violations = ({ community, user, setActivePage, setPaymentState }) => {
                     </td>
                     <td className="px-3 py-4 whitespace-nowrap">
                       {v.is_disputed ? (
-                        <span className="text-amber-600 dark:text-amber-400 text-xs font-medium">
-                          {v.dispute_resolved ? '✓ Resolved' : '⏳ Pending'}
+                        <span className="text-amber-600 dark:text-amber-400 text-xs font-medium flex items-center gap-1">
+                          {v.dispute_resolved ? <><CheckCircle2 size={11} /> Resolved</> : <><Clock size={11} /> Pending</>}
                         </span>
                       ) : (
                         <span className="text-slate-400 dark:text-gray-600 text-xs">—</span>

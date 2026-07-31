@@ -101,7 +101,7 @@ def seed_roles():
         {"role_id": 6, "role_name": "sales_admin",      "description": "Sales and Contract Administrator"},
         {"role_id": 7, "role_name": "landlord",         "description": "Rental Property Owner/Landlord"},
         {"role_id": 8, "role_name": "tenant",           "description": "Rental Property Tenant/Renter"},
-        {"role_id": 9, "role_name": "condo_concierge",  "description": "Condo Front Desk Concierge / Security Guard"},
+        {"role_id": 9, "role_name": "security_guard",   "description": "Condo Front Desk Concierge / Security Guard"},
     ]
     db = SessionLocal()
     try:
@@ -172,6 +172,26 @@ def seed_default_violation_types_for_all_communities():
         db.close()
 
 
+def seed_condo_sr_statuses():
+    from app.services.condo.condo_service_request_service import seed_condo_service_request_statuses as _seed
+    db = SessionLocal()
+    try:
+        _seed(db)
+        print("✅ Condo Service Request statuses seeded.")
+    finally:
+        db.close()
+
+
+def seed_default_condo_service_types_for_all_communities():
+    from app.services.condo.condo_service_request_service import seed_default_condo_service_types_for_all_communities as _seed
+    db = SessionLocal()
+    try:
+        _seed(db)
+        print("✅ Condo Default service types seeded.")
+    finally:
+        db.close()
+
+
 def init_database():
     print("Initializing database...")
     # Create tables defined in models if they don't exist
@@ -195,5 +215,7 @@ def init_database():
     seed_locations()
     seed_default_service_types_for_all_communities()
     seed_default_violation_types_for_all_communities()
+    seed_condo_sr_statuses()
+    seed_default_condo_service_types_for_all_communities()
 
     print("All database initialization and seeding completed successfully!")

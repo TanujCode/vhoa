@@ -1,4 +1,5 @@
 import React from 'react';
+import ReactDOM from 'react-dom';
 import { AlertTriangle, Trash2, X, CheckCircle, Info } from 'lucide-react';
 
 export default function ConfirmModal({
@@ -47,7 +48,7 @@ export default function ConfirmModal({
   const details = getIconDetails();
   const Icon = details.Icon;
 
-  return (
+  return ReactDOM.createPortal(
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/[0.08] w-full max-w-sm rounded-3xl p-6 shadow-2xl animate-scale-up text-center space-y-4">
         
@@ -100,6 +101,7 @@ export default function ConfirmModal({
         </div>
 
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

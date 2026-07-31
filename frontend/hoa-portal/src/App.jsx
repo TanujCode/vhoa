@@ -27,6 +27,7 @@ import AboutPage from './pages/marketing/AboutPage';
 import ContactPage from './pages/marketing/ContactPage';
 import SecurityPage from './pages/marketing/SecurityPage';
 import ScrollToTop from './components/ScrollToTop';
+import GlobalModal from './components/GlobalModal';
 
 
 // Solution subpages
@@ -82,17 +83,34 @@ export default function App() {
   return (
     <BrowserRouter>
       <Toaster 
-        position="top-right" 
+        position="top-center" 
         toastOptions={{
-          className: 'dark:bg-slate-800 dark:text-white',
+          className: 'dark:bg-slate-900 dark:text-white border border-slate-200 dark:border-white/10 shadow-2xl',
           style: {
-            borderRadius: '10px',
-            background: '#333',
-            color: '#fff',
-          }
+            borderRadius: '16px',
+            background: '#ffffff',
+            color: '#0f172a',
+            padding: '12px 24px',
+            fontSize: '14px',
+            fontWeight: '500',
+            boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)',
+          },
+          success: {
+            iconTheme: {
+              primary: '#10B981',
+              secondary: '#FFFFFF',
+            },
+          },
+          error: {
+            iconTheme: {
+              primary: '#EF4444',
+              secondary: '#FFFFFF',
+            },
+          },
         }} 
       />
       <ScrollToTop />
+      <GlobalModal />
       <Routes>
         {/* --- Marketing Routes --- */}
         <Route path="/" element={<LandingPage />} />

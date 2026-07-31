@@ -285,7 +285,7 @@ const Members = ({ community, user }) => {
   };
 
   const handleDeleteMember = async (userId, memberName) => {
-    if (window.confirm(`Are you sure you want to permanently delete/remove ${memberName} from the community?`)) {
+    if (await window.customConfirm(`Are you sure you want to permanently delete/remove ${memberName} from the community?`)) {
       try {
         await API.delete(`/user/${userId}`);
         alert("✅ Member successfully deleted.");

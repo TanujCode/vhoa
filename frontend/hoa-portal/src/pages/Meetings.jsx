@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Plus, X, Calendar, Video, MapPin, Users, CheckCircle, Clock, ExternalLink, Edit2, Trash2, Mic, Play, Pause, Square, MessageSquare, Volume2, ChevronDown, ChevronLeft, ChevronRight, Search, Building } from 'lucide-react';
+import { Plus, X, Calendar, Video, MapPin, Users, CheckCircle, Clock, ExternalLink, Edit2, Trash2, Mic, Play, Pause, Square, MessageSquare, Volume2, ChevronDown, ChevronLeft, ChevronRight, Search, Building, CalendarDays, Vote, User, Megaphone, Lock } from 'lucide-react';
 import {
   getMeetings,
   createMeeting,
@@ -20,35 +20,52 @@ import API, { getBaseUrl } from '../services/api';
 const ScheduleMeetingModal = ({ communityId, onClose, onSuccess, meeting }) => {
   const [loading, setLoading] = useState(false);
 
-  const formatToLocalDatetimeLocal = (isoString) => {
-    if (!isoString) return '';
+  const splitMeetingDatetime = (isoString) => {
+    if (!isoString) return { date: '', time: '' };
     const d = new Date(isoString);
-    const offset = d.getTimezoneOffset() * 60000;
-    const localTime = new Date(d.getTime() - offset);
-    return localTime.toISOString().slice(0, 16);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    const hours = String(d.getHours()).padStart(2, '0');
+    const minutes = String(d.getMinutes()).padStart(2, '0');
+    return {
+      date: `${year}-${month}-${day}`,
+      time: `${hours}:${minutes}`
+    };
   };
+
+  const initialMeetingSplit = splitMeetingDatetime(meeting ? meeting.meeting_date : '');
+  const [meetingDate, setMeetingDate] = useState(initialMeetingSplit.date);
+  const [meetingTime, setMeetingTime] = useState(initialMeetingSplit.time);
 
   const [form, setForm] = useState({
     title: meeting ? meeting.title : '',
     description: meeting ? meeting.description : '',
-    meeting_date: meeting ? formatToLocalDatetimeLocal(meeting.meeting_date) : '',
     location: meeting ? meeting.location || '' : '',
     meeting_link: meeting ? meeting.meeting_link || '' : ''
   });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.title.trim() || !form.description.trim() || !form.meeting_date) {
+    if (!form.title.trim() || !form.description.trim() || !meetingDate || !meetingTime) {
       alert('Please fill in all required fields.');
       return;
     }
+    const localDateTimeStr = `${meetingDate}T${meetingTime}`;
+    const meetingDatetimeObj = new Date(localDateTimeStr);
+    if (meetingDatetimeObj <= new Date()) {
+      alert('Meeting date and time must be in the future.');
+      return;
+    }
+    const meetingDateIso = meetingDatetimeObj.toISOString();
+
     setLoading(true);
     try {
       if (meeting && meeting.meeting_id) {
         await updateMeeting(meeting.meeting_id, {
           title: form.title.trim(),
           description: form.description.trim(),
-          meeting_date: new Date(form.meeting_date).toISOString(),
+          meeting_date: meetingDateIso,
           location: form.location.trim() || null,
           meeting_link: form.meeting_link.trim() || null
         });
@@ -57,7 +74,7 @@ const ScheduleMeetingModal = ({ communityId, onClose, onSuccess, meeting }) => {
           community_id: communityId,
           title: form.title.trim(),
           description: form.description.trim(),
-          meeting_date: new Date(form.meeting_date).toISOString(),
+          meeting_date: meetingDateIso,
           location: form.location.trim() || null,
           meeting_link: form.meeting_link.trim() || null
         });
@@ -108,16 +125,41 @@ const ScheduleMeetingModal = ({ communityId, onClose, onSuccess, meeting }) => {
               className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl px-4 py-2 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-teal-500/10 transition-all resize-none"
             />
           </div>
-          <div>
-            <label className="text-xs font-semibold text-slate-500 dark:text-gray-400 mb-1.5 block">Date & Time *</label>
-            <input
-              required
-              type="datetime-local"
-              value={form.meeting_date}
-              onChange={e => setForm({...form, meeting_date: e.target.value})}
-              className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl px-4 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-teal-500/10 transition-all"
-            />
+          
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="text-xs font-semibold text-slate-500 dark:text-gray-400 mb-1.5 block">Meeting Date *</label>
+              <div className="relative">
+                <Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-gray-500 pointer-events-none" size={16} />
+                <input
+                  required
+                  type="date"
+                  min={new Date().toISOString().split('T')[0]}
+                  autoComplete="off"
+                  value={meetingDate}
+                  onChange={e => setMeetingDate(e.target.value)}
+                  onKeyDown={e => e.preventDefault()}
+                  className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl pl-10 pr-4 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-teal-500/10 transition-all cursor-pointer"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-slate-500 dark:text-gray-400 mb-1.5 block">Meeting Time *</label>
+              <div className="relative">
+                <Clock className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-gray-500 pointer-events-none" size={16} />
+                <input
+                  required
+                  type="time"
+                  autoComplete="off"
+                  value={meetingTime}
+                  onChange={e => setMeetingTime(e.target.value)}
+                  onKeyDown={e => e.preventDefault()}
+                  className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl pl-10 pr-4 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-teal-500/10 transition-all cursor-pointer"
+                />
+              </div>
+            </div>
           </div>
+
           <div>
             <label className="text-xs font-semibold text-slate-500 dark:text-gray-400 mb-1.5 block">Physical Location (optional)</label>
             <input
@@ -154,18 +196,29 @@ const ScheduleMeetingModal = ({ communityId, onClose, onSuccess, meeting }) => {
 const CreateSurveyModal = ({ communityId, onClose, onSuccess, survey }) => {
   const [loading, setLoading] = useState(false);
 
-  const formatToLocalDatetimeLocal = (isoString) => {
-    if (!isoString) return '';
+  const splitExpiresAt = (isoString) => {
+    if (!isoString) return { date: '', time: '' };
     const d = new Date(isoString);
-    const offset = d.getTimezoneOffset() * 60000;
-    const localTime = new Date(d.getTime() - offset);
-    return localTime.toISOString().slice(0, 16);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    const hours = String(d.getHours()).padStart(2, '0');
+    const minutes = String(d.getMinutes()).padStart(2, '0');
+    return {
+      date: `${year}-${month}-${day}`,
+      time: `${hours}:${minutes}`
+    };
   };
+
+  const initialSplit = splitExpiresAt(survey ? survey.expires_at : '');
+  const [expiryDate, setExpiryDate] = useState(initialSplit.date);
+  const [expiryTime, setExpiryTime] = useState(initialSplit.time);
+  const [titleError, setTitleError] = useState('');
+  const [questionError, setQuestionError] = useState('');
 
   const [form, setForm] = useState({
     title: survey ? survey.title : '',
-    question: survey ? survey.question : '',
-    expires_at: survey ? formatToLocalDatetimeLocal(survey.expires_at) : ''
+    question: survey ? survey.question : ''
   });
   const [options, setOptions] = useState(['', '']);
 
@@ -184,19 +237,64 @@ const CreateSurveyModal = ({ communityId, onClose, onSuccess, survey }) => {
     setOptions(nextOpts);
   };
 
+  const handleTitleChange = (val) => {
+    if (val.length > 50) return;
+    
+    // Check for allowed characters (letters, numbers, spaces, hyphens, question marks, commas, periods, quotes)
+    const isValid = /^[a-zA-Z0-9\s?.,\-!'"()]*$/.test(val);
+    if (!isValid && val.length > 0) {
+      setTitleError('Title can only contain letters, numbers, spaces, and basic punctuation.');
+    } else if (val.trim().length < 3) {
+      setTitleError('Title must be at least 3 characters long.');
+    } else {
+      setTitleError('');
+    }
+    
+    setForm({ ...form, title: val });
+  };
+
+  const handleQuestionChange = (val) => {
+    if (val.length > 250) return;
+    
+    if (val.trim().length < 10) {
+      setQuestionError('Question / Topic must be at least 10 characters long.');
+    } else {
+      setQuestionError('');
+    }
+    
+    setForm({ ...form, question: val });
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!form.title.trim() || !form.question.trim() || !expiryDate || !expiryTime) {
+      alert('Please fill in all required fields.');
+      return;
+    }
+    if (form.title.trim().length < 3 || titleError) {
+      alert(titleError || 'Title must be at least 3 characters long.');
+      return;
+    }
+    if (form.question.trim().length < 10 || questionError) {
+      alert(questionError || 'Question must be at least 10 characters long.');
+      return;
+    }
+
+    const localDateTimeStr = `${expiryDate}T${expiryTime}`;
+    const expiresAtDate = new Date(localDateTimeStr);
+    if (expiresAtDate <= new Date()) {
+      alert('Voting deadline must be in the future.');
+      return;
+    }
+    const expiresAtIso = expiresAtDate.toISOString();
+
     if (survey) {
-      if (!form.title.trim() || !form.question.trim() || !form.expires_at) {
-        alert('Please fill in all required fields.');
-        return;
-      }
       setLoading(true);
       try {
         await updateSurvey(survey.survey_id, {
           title: form.title.trim(),
           question: form.question.trim(),
-          expires_at: new Date(form.expires_at).toISOString()
+          expires_at: expiresAtIso
         });
         onSuccess();
         onClose();
@@ -217,7 +315,7 @@ const CreateSurveyModal = ({ communityId, onClose, onSuccess, survey }) => {
           community_id: communityId,
           title: form.title.trim(),
           question: form.question.trim(),
-          expires_at: new Date(form.expires_at).toISOString(),
+          expires_at: expiresAtIso,
           options: cleanOptions
         });
         onSuccess();
@@ -241,36 +339,68 @@ const CreateSurveyModal = ({ communityId, onClose, onSuccess, survey }) => {
         </div>
         <form onSubmit={handleSubmit} className="space-y-4 overflow-y-auto custom-scrollbar flex-1 pr-1">
           <div>
-            <label className="text-xs font-semibold text-slate-500 dark:text-gray-400 mb-1 block">Survey Title *</label>
+            <div className="flex justify-between items-center mb-1">
+              <label className="text-xs font-semibold text-slate-500 dark:text-gray-400 block">Survey Title *</label>
+              <span className="text-[10px] text-slate-400 font-medium">{form.title.length} / 50</span>
+            </div>
             <input
               required
               type="text"
+              autoComplete="off"
               placeholder="e.g. Painting Color Choice"
               value={form.title}
-              onChange={e => setForm({...form, title: e.target.value})}
-              className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-teal-500"
+              onChange={e => handleTitleChange(e.target.value)}
+              className={`w-full bg-slate-50 dark:bg-[#0D1B2A] border ${titleError ? 'border-red-500 focus:ring-red-500' : 'border-slate-200 dark:border-white/10 focus:ring-teal-500'} rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2`}
             />
+            {titleError && <p className="text-red-500 text-xs mt-1">{titleError}</p>}
           </div>
           <div>
-            <label className="text-xs font-semibold text-slate-500 dark:text-gray-400 mb-1 block">Survey Question / Topic *</label>
+            <div className="flex justify-between items-center mb-1">
+              <label className="text-xs font-semibold text-slate-500 dark:text-gray-400 block">Survey Question / Topic *</label>
+              <span className="text-[10px] text-slate-400 font-medium">{form.question.length} / 250</span>
+            </div>
             <textarea
               required
               rows={3}
               placeholder="e.g. Which color should we choose for the exterior painting?"
               value={form.question}
-              onChange={e => setForm({...form, question: e.target.value})}
-              className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-teal-500 resize-none"
+              onChange={e => handleQuestionChange(e.target.value)}
+              className={`w-full bg-slate-50 dark:bg-[#0D1B2A] border ${questionError ? 'border-red-500 focus:ring-red-500' : 'border-slate-200 dark:border-white/10 focus:ring-teal-500'} rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 resize-none`}
             />
+            {questionError && <p className="text-red-500 text-xs mt-1">{questionError}</p>}
           </div>
-          <div>
-            <label className="text-xs font-semibold text-slate-500 dark:text-gray-400 mb-1 block">Voting Deadline *</label>
-            <input
-              required
-              type="datetime-local"
-              value={form.expires_at}
-              onChange={e => setForm({...form, expires_at: e.target.value})}
-              className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
-            />
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="text-xs font-semibold text-slate-500 dark:text-gray-400 mb-1 block">Deadline Date *</label>
+              <div className="relative">
+                <Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-gray-500 pointer-events-none" size={16} />
+                <input
+                  required
+                  type="date"
+                  min={new Date().toISOString().split('T')[0]}
+                  autoComplete="off"
+                  value={expiryDate}
+                  onChange={e => setExpiryDate(e.target.value)}
+                  onKeyDown={e => e.preventDefault()}
+                  className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500 cursor-pointer"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-slate-500 dark:text-gray-400 mb-1 block">Deadline Time *</label>
+              <div className="relative">
+                <Clock className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-gray-500 pointer-events-none" size={16} />
+                <input
+                  required
+                  type="time"
+                  autoComplete="off"
+                  value={expiryTime}
+                  onChange={e => setExpiryTime(e.target.value)}
+                  onKeyDown={e => e.preventDefault()}
+                  className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500 cursor-pointer"
+                />
+              </div>
+            </div>
           </div>
 
           {!survey && (
@@ -1593,7 +1723,7 @@ nextMonth.setMonth(currentMonth.getMonth() + step);
       <div className="space-y-4 p-6 bg-white dark:bg-[#1E2E42] border border-slate-200/80 dark:border-white/10 rounded-3xl shadow-sm animate-in fade-in duration-300">
         <div className="flex justify-between items-center pb-3.5 border-b border-slate-100 dark:border-white/5">
           <h4 className="text-sm font-extrabold text-slate-800 dark:text-white tracking-wide uppercase">
-            📅 {dateHeaderStr}
+            <CalendarDays size={14} className="inline mr-1" /> {dateHeaderStr}
           </h4>
           <span className="text-[10px] text-slate-400 dark:text-gray-505 font-bold uppercase tracking-wider font-mono">
             {dayEvents.length} event{dayEvents.length !== 1 && 's'}
@@ -1977,8 +2107,8 @@ nextMonth.setMonth(currentMonth.getMonth() + step);
                       </span>
                       <div className="flex items-center gap-1">
                         <button
-                          onClick={() => {
-                            if (window.confirm("Delete this personal note?")) {
+                          onClick={async () => {
+                            if (await window.customConfirm("Delete this personal note?")) {
                               setPersonalNotes(prev => prev.filter(n => n.note_id !== evt.raw.note_id));
                             }
                           }}
@@ -2065,7 +2195,7 @@ nextMonth.setMonth(currentMonth.getMonth() + step);
   };
 
   const handleDeleteMeeting = async (meetingId) => {
-    if (!window.confirm("Are you sure you want to permanently delete this meeting?")) return;
+    if (!await window.customConfirm("Are you sure you want to permanently delete this meeting?")) return;
     try {
       await deleteMeeting(meetingId);
       alert("✅ Meeting successfully deleted.");
@@ -2076,7 +2206,7 @@ nextMonth.setMonth(currentMonth.getMonth() + step);
   };
 
   const handleDeleteSurvey = async (surveyId) => {
-    if (!window.confirm("Are you sure you want to permanently delete this survey/poll?")) return;
+    if (!await window.customConfirm("Are you sure you want to permanently delete this survey/poll?")) return;
     try {
       await deleteSurvey(surveyId);
       alert("✅ Survey/Poll successfully deleted.");
@@ -2283,7 +2413,7 @@ nextMonth.setMonth(currentMonth.getMonth() + step);
                     <span className="text-sm font-bold text-slate-800 dark:text-white">{booking.amenity_name}</span>
                   </div>
                   <div className="p-3 bg-slate-50 dark:bg-black/10 rounded-2xl border border-slate-200/50 dark:border-white/[0.02]">
-                    <span className="text-[10px] font-bold text-slate-400 dark:text-gray-505 uppercase block mb-1">👤 Booked By</span>
+                    <span className="text-[10px] font-bold text-slate-400 dark:text-gray-505 uppercase block mb-1 flex items-center gap-1"><User size={10} /> Booked By</span>
                     <span className="text-sm font-bold text-slate-800 dark:text-white">{booking.resident_name || 'Resident'}</span>
                   </div>
                   <div className="p-3 bg-slate-50 dark:bg-black/10 rounded-2xl border border-slate-200/50 dark:border-white/[0.02]">
@@ -2306,8 +2436,8 @@ nextMonth.setMonth(currentMonth.getMonth() + step);
                     <span className="text-xs font-semibold text-slate-800 dark:text-white">Visible only to you</span>
                   </div>
                   <button
-                    onClick={() => {
-                      if (window.confirm("Delete this personal note?")) {
+                    onClick={async () => {
+                      if (await window.customConfirm("Delete this personal note?")) {
                         setPersonalNotes(prev => prev.filter(n => n.note_id !== note.note_id));
                         setSelectedEvent(null);
                       }
@@ -2365,7 +2495,7 @@ nextMonth.setMonth(currentMonth.getMonth() + step);
                 : 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-white/10 dark:text-gray-400 dark:hover:bg-white/20'
             }`}
           >
-            {tab === 'meetings' ? '📅 Community Meetings' : '🗳️ Surveys & Polls'}
+            {tab === 'meetings' ? <><CalendarDays size={14} className="inline mr-1" />Community Meetings</> : <><Vote size={14} className="inline mr-1" />Surveys & Polls</>}
           </button>
         ))}
       </div>
@@ -2466,8 +2596,8 @@ nextMonth.setMonth(currentMonth.getMonth() + step);
                     onChange={(e) => setQuickAddType(e.target.value)}
                     className="bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-2xl px-3.5 py-2.5 text-xs font-bold text-slate-700 dark:text-gray-300 focus:outline-none focus:border-blue-500 cursor-pointer"
                   >
-                    <option value="meeting">📢 Public Meeting</option>
-                    <option value="note">🔒 Private Note</option>
+                    <option value="meeting">Public Meeting</option>
+                    <option value="note">Private Note</option>
                   </select>
                 )}
                 

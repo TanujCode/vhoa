@@ -25,7 +25,9 @@ from app.models.rental.rental_audit_log import RentalAuditLog                   
 from app.models.rental.rental_user import RentalUser                                                 # noqa
 from app.models.condo import (                                                                       # noqa
     CondoCommunity, CondoDocument, CondoJoinRequest, CondoUser, CondoOtpToken,
-    CondoVisitorPass, CondoParcelLog, CondoParkingAllocation,
-    CondoPayment, CondoMaintenanceRequest
+    CondoVisitorPass, CondoParcelLog, CondoParkingAllocation, CondoParkingChangeRequest,
+    CondoPayment, CondoVendor, CondoVendorAssignment, CondoVendorFeedback,
+    CondoServiceRequestStatus, CondoServiceRequestType, CondoServiceRequest,
+    CondoServiceRequestNote, CondoAuditLog
 )
 

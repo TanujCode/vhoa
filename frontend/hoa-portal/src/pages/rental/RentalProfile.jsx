@@ -219,7 +219,7 @@ const RentalProfile = ({ user, setUser, viewRole }) => {
 
   //  Remove Profile Picture Logic ────────────────
   const handleRemovePicture = async () => {
-    if (!window.confirm("Are you sure you want to remove this photo?")) return;
+    if (!await window.customConfirm("Are you sure you want to remove this photo?")) return;
     try {
       setUploading(true);
       await API.delete('/rental/user/profile/picture'); 

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Bell, CheckCircle, AlertTriangle, Clock, Calendar } from 'lucide-react';
+import { Bell, CheckCircle, AlertTriangle, Clock, Calendar, FileText, Trash2 } from 'lucide-react';
 
 const NotifPanel = ({ isOpen, onClose, notifications = [], onMarkAllRead, lastReadTimestamp, readNotificationIds = [], onNotifClick }) => {
   const lastRead = lastReadTimestamp !== undefined ? lastReadTimestamp : Number(localStorage.getItem('last_read_notifications') || 0);
@@ -90,13 +90,23 @@ const NotifPanel = ({ isOpen, onClose, notifications = [], onMarkAllRead, lastRe
       else if (action.includes("APPROVE")) details.title = "Change Request Approved";
       else if (action.includes("REJECT")) details.title = "Change Request Rejected";
       else details.title = "Change Request Updated";
+    } else if (module === 'lease' || action.includes("LEASE")) {
+      details.icon = FileText;
+      details.color = "text-indigo-400";
+      if (action.includes("CREATE")) details.title = "Lease Agreement Created";
+      else if (action.includes("SIGN")) details.title = "Lease Signed";
+      else if (action.includes("DELETE")) details.title = "Lease Deleted";
+    } else if (action.includes("DELETE") || action.includes("CANCEL")) {
+      details.icon = Trash2;
+      details.color = "text-red-400";
+      details.title = action.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
     }
 
     return details;
   };
 
   return (
-    <div className={`fixed top-16 left-0 sm:left-auto right-0 h-[calc(100vh-4rem)] w-full sm:w-96 bg-white dark:bg-[#162535] border-l border-slate-200 dark:border-white/10 shadow-2xl transform transition-transform duration-300 z-50 ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+    <div className={`fixed top-16 left-0 sm:left-auto right-0 h-[calc(100vh-4rem)] w-full sm:w-96 bg-white dark:bg-[#162535] border-l border-slate-200 dark:border-white/10 shadow-2xl transform transition-transform duration-300 z-50 ${isOpen ? 'translate-x-0' : 'translate-x-full'} flex flex-col`}>
 
       {/* Header */}
       <div className="p-5 border-b border-slate-200 dark:border-white/10 flex items-center justify-between bg-white dark:bg-[#1E3248] sticky top-0">
@@ -118,7 +128,7 @@ const NotifPanel = ({ isOpen, onClose, notifications = [], onMarkAllRead, lastRe
       </div>
 
       {/* Notifications List */}
-      <div className="overflow-y-auto custom-scrollbar h-full pb-20">
+      <div className="flex-1 overflow-y-auto custom-scrollbar pb-4">
         {notifications.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center p-8">
             <Bell size={48} className="text-gray-300 dark:text-gray-600 mb-4" />
@@ -158,7 +168,7 @@ const NotifPanel = ({ isOpen, onClose, notifications = [], onMarkAllRead, lastRe
       </div>
 
       {/* Footer */}
-      <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-slate-200 dark:border-white/10 bg-white dark:bg-[#162535]">
+      <div className="p-4 border-t border-slate-200 dark:border-white/10 bg-white dark:bg-[#162535] shrink-0">
         <button 
           onClick={onMarkAllRead}
           className="w-full py-3 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-white/5 rounded-2xl text-sm font-medium transition"

@@ -16,7 +16,7 @@ class CondoMaintenanceRequest(Base):
     priority        = Column(String(20), default="MEDIUM") # "LOW", "MEDIUM", "HIGH", "URGENT"
     status          = Column(String(30), default="OPEN") # "OPEN", "IN_PROGRESS", "RESOLVED", "CLOSED"
 
-    assigned_vendor_id = Column(Integer, ForeignKey("roles.role_id"), nullable=True) # or separate vendor reference
+    assigned_vendor_id = Column(Integer, ForeignKey("condo_vendors.vendor_id", ondelete="SET NULL"), nullable=True)
     resolved_date   = Column(DateTime(timezone=True), nullable=True)
     created_date    = Column(DateTime(timezone=True), server_default=func.now())
     modified_date   = Column(DateTime(timezone=True), onupdate=func.now())

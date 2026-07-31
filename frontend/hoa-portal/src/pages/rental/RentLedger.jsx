@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   CreditCard, DollarSign, Activity, Settings2, 
-  ShieldAlert, Sparkles, CheckCircle2, X 
+  ShieldAlert, Sparkles, CheckCircle2, X, Landmark 
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import API from '../../services/api';
@@ -388,26 +388,26 @@ export default function RentLedger({ user, selectedPropertyFilterId = 'all' }) {
                   <button
                     type="button"
                     onClick={() => setPayMethod('ACH')}
-                    className={`py-3 px-4 rounded-xl border font-bold flex flex-col items-center justify-center gap-1 transition-all cursor-pointer ${
+                    className={`py-3 px-4 rounded-xl border font-bold flex flex-col items-center justify-center gap-2 transition-all cursor-pointer ${
                       payMethod === 'ACH'
                         ? 'bg-blue-650/10 border-blue-500 text-blue-600 dark:text-blue-400 shadow-sm'
                         : 'bg-slate-50 dark:bg-black/20 border-slate-200 dark:border-white/10 text-slate-700 dark:text-gray-300 hover:bg-slate-100 dark:hover:bg-white/5'
                     }`}
                   >
-                    🏦
+                    <Landmark size={20} className={payMethod === 'ACH' ? 'text-blue-600 dark:text-blue-450' : 'text-slate-400'} />
                     <span className="text-xs">ACH Transfer</span>
                   </button>
 
                   <button
                     type="button"
                     onClick={() => setPayMethod('CARD')}
-                    className={`py-3 px-4 rounded-xl border font-bold flex flex-col items-center justify-center gap-1 transition-all cursor-pointer ${
+                    className={`py-3 px-4 rounded-xl border font-bold flex flex-col items-center justify-center gap-2 transition-all cursor-pointer ${
                       payMethod === 'CARD'
                         ? 'bg-blue-650/10 border-blue-500 text-blue-600 dark:text-blue-400 shadow-sm'
                         : 'bg-slate-50 dark:bg-black/20 border-slate-200 dark:border-white/10 text-slate-700 dark:text-gray-300 hover:bg-slate-100 dark:hover:bg-white/5'
                     }`}
                   >
-                    💳
+                    <CreditCard size={20} className={payMethod === 'CARD' ? 'text-blue-600 dark:text-blue-450' : 'text-slate-400'} />
                     <span className="text-xs">Credit Card</span>
                   </button>
                 </div>

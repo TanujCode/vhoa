@@ -108,9 +108,22 @@ class SurveyCreate(BaseModel):
     @field_validator("title")
     @classmethod
     def title_valid(cls, v):
-        if len(v.strip()) < 3:
+        v_strip = v.strip()
+        if len(v_strip) < 3:
             raise ValueError("The title must be at least 3 characters long.")
-        return v.strip()
+        if len(v_strip) > 50:
+            raise ValueError("The title cannot exceed 50 characters.")
+        return v_strip
+
+    @field_validator("question")
+    @classmethod
+    def question_valid(cls, v):
+        v_strip = v.strip()
+        if len(v_strip) < 10:
+            raise ValueError("The question must be at least 10 characters long.")
+        if len(v_strip) > 250:
+            raise ValueError("The question cannot exceed 250 characters.")
+        return v_strip
 
     @field_validator("options")
     @classmethod
@@ -137,9 +150,14 @@ class MeetingUpdate(BaseModel):
     @field_validator("title")
     @classmethod
     def title_valid(cls, v):
-        if v is not None and len(v.strip()) < 3:
-            raise ValueError("The title must be at least 3 characters long.")
-        return v.strip() if v else v
+        if v is not None:
+            v_strip = v.strip()
+            if len(v_strip) < 3:
+                raise ValueError("The title must be at least 3 characters long.")
+            if len(v_strip) > 50:
+                raise ValueError("The title cannot exceed 50 characters.")
+            return v_strip
+        return v
 
 
 class SurveyUpdate(BaseModel):
@@ -150,9 +168,26 @@ class SurveyUpdate(BaseModel):
     @field_validator("title")
     @classmethod
     def title_valid(cls, v):
-        if v is not None and len(v.strip()) < 3:
-            raise ValueError("The title must be at least 3 characters long.")
-        return v.strip() if v else v
+        if v is not None:
+            v_strip = v.strip()
+            if len(v_strip) < 3:
+                raise ValueError("The title must be at least 3 characters long.")
+            if len(v_strip) > 50:
+                raise ValueError("The title cannot exceed 50 characters.")
+            return v_strip
+        return v
+
+    @field_validator("question")
+    @classmethod
+    def question_valid(cls, v):
+        if v is not None:
+            v_strip = v.strip()
+            if len(v_strip) < 10:
+                raise ValueError("The question must be at least 10 characters long.")
+            if len(v_strip) > 250:
+                raise ValueError("The question cannot exceed 250 characters.")
+            return v_strip
+        return v
 
 
 class SpeakerRenameRequest(BaseModel):

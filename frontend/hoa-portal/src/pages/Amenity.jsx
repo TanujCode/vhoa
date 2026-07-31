@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, Plus, RefreshCw, X, Clock, ChevronDown, Trash2, ShieldAlert } from 'lucide-react';
+import { Calendar, Plus, RefreshCw, X, Clock, ChevronDown, Trash2, ShieldAlert, Waves, CreditCard, Check } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import API from '../services/api';
 import { onlyDigitsKeyPress, onlyDecimalKeyPress } from '../utils/fieldValidators';
@@ -175,18 +175,23 @@ const BookModal = ({ amenity, communityId, onClose, onSuccess, setActivePage, se
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="text-xs text-slate-500 dark:text-gray-400 mb-1 block">Booking Date <span className="text-red-500">*</span></label>
-            <input
-              type="date"
-              required
-              value={form.booking_date}
-              min={localToday}
-              onChange={e => setForm({ ...form, booking_date: e.target.value })}
-              className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 
-               rounded-xl px-4 py-3 text-sm 
-               text-slate-900 dark:text-white 
-               focus:outline-none focus:ring-2 focus:ring-teal-500
-               dark:[color-scheme:dark]"
-            />
+            <div className="relative">
+              <Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-gray-500 pointer-events-none" size={16} />
+              <input
+                type="date"
+                required
+                autoComplete="off"
+                onKeyDown={e => e.preventDefault()}
+                value={form.booking_date}
+                min={localToday}
+                onChange={e => setForm({ ...form, booking_date: e.target.value })}
+                className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 
+                 rounded-xl pl-10 pr-4 py-3 text-sm 
+                 text-slate-900 dark:text-white 
+                 focus:outline-none focus:ring-2 focus:ring-teal-500
+                 dark:[color-scheme:dark] cursor-pointer"
+              />
+            </div>
           </div>
 
           <div>
@@ -292,12 +297,66 @@ const CreateAmenityModal = ({ communityId, communityName, onClose, onSuccess }) 
       .catch(console.error);
   }, []);
 
+  const handleNameChange = (val) => {
+    if (val.length > 50) return;
+    const isValid = /^[a-zA-Z\s\-]*$/.test(val);
+    if (!isValid && val.length > 0) {
+      setErrors(prev => ({ ...prev, name: 'Amenity name can only contain letters, spaces, and hyphens.' }));
+    } else if (val.trim().length < 3) {
+      setErrors(prev => ({ ...prev, name: 'Amenity name must be at least 3 characters long.' }));
+    } else {
+      setErrors(prev => {
+        const next = { ...prev };
+        delete next.name;
+        return next;
+      });
+    }
+    setForm(prev => ({ ...prev, name: val }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (Object.keys(errors).length > 0) {
-      toast.error("Please fix the validation errors before saving.");
+      toast.error(errors.name || "Please fix the validation errors before saving.");
       return;
     }
+
+    // Time Slot Validation
+    if (!form.slot1_start || !form.slot1_end) {
+      toast.error("Please enter start and end times for the slot.");
+      return;
+    }
+    const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
+    if (!timeRegex.test(form.slot1_start) || !timeRegex.test(form.slot1_end)) {
+      toast.error("Time slots must be in a valid HH:MM format.");
+      return;
+    }
+    if (form.slot1_start >= form.slot1_end) {
+      toast.error("Slot start time must be chronologically before the end time.");
+      return;
+    }
+
+    // Pool Closed Date Validation
+    if (!form.pool_open) {
+      if (!form.tentative_open_date) {
+        toast.error("Please enter a tentative open date & time since the amenity is closed.");
+        return;
+      }
+      if (new Date(form.tentative_open_date) <= new Date()) {
+        toast.error("Tentative open date & time must be in the future.");
+        return;
+      }
+    }
+
+    // Booking Fee validation (must be > 0 if enabled)
+    if (form.fee_enabled) {
+      const fee = parseFloat(form.booking_fee);
+      if (isNaN(fee) || fee <= 0) {
+        toast.error("Booking fee must be greater than $0 if booking fee is enabled.");
+        return;
+      }
+    }
+
     setLoading(true);
     try {
       await API.post('/amenity', {
@@ -329,8 +388,9 @@ const CreateAmenityModal = ({ communityId, communityName, onClose, onSuccess }) 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="text-xs text-slate-500 dark:text-gray-400 mb-1 block">Name</label>
-            <input type="text" required value={form.name} onChange={e => setForm({ ...form, name: e.target.value })}
-              className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500" />
+            <input type="text" required value={form.name} onChange={e => handleNameChange(e.target.value)}
+              className={`w-full bg-slate-50 dark:bg-[#0D1B2A] border ${errors.name ? 'border-red-500 focus:ring-red-500' : 'border-slate-200 dark:border-white/20 focus:ring-teal-500'} rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2`} />
+            {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
           </div>
           <div>
             <label className="text-xs text-slate-500 dark:text-gray-400 mb-1 block">Amenity Type</label>
@@ -415,13 +475,19 @@ const CreateAmenityModal = ({ communityId, communityName, onClose, onSuccess }) 
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="text-[10px] text-slate-500 dark:text-gray-400 mb-1 block">Slot Start Time</label>
-                <input type="text" placeholder="08:00" value={form.slot1_start} onChange={e => setForm({ ...form, slot1_start: e.target.value })}
-                  className="w-full bg-white dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl px-3 py-1.5 text-xs text-slate-900 dark:text-white text-center focus:outline-none" />
+                <div className="relative">
+                  <Clock className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-gray-500 pointer-events-none" size={13} />
+                  <input type="time" autoComplete="off" onKeyDown={e => e.preventDefault()} value={form.slot1_start} onChange={e => setForm({ ...form, slot1_start: e.target.value })}
+                    className="w-full bg-white dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl pl-7 pr-2 py-1.5 text-xs text-slate-900 dark:text-white text-center focus:outline-none cursor-pointer" />
+                </div>
               </div>
               <div>
                 <label className="text-[10px] text-slate-500 dark:text-gray-400 mb-1 block">Slot End Time</label>
-                <input type="text" placeholder="20:00" value={form.slot1_end} onChange={e => setForm({ ...form, slot1_end: e.target.value })}
-                  className="w-full bg-white dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl px-3 py-1.5 text-xs text-slate-900 dark:text-white text-center focus:outline-none" />
+                <div className="relative">
+                  <Clock className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-gray-500 pointer-events-none" size={13} />
+                  <input type="time" autoComplete="off" onKeyDown={e => e.preventDefault()} value={form.slot1_end} onChange={e => setForm({ ...form, slot1_end: e.target.value })}
+                    className="w-full bg-white dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl pl-7 pr-2 py-1.5 text-xs text-slate-900 dark:text-white text-center focus:outline-none cursor-pointer" />
+                </div>
               </div>
             </div>
             
@@ -450,12 +516,18 @@ const CreateAmenityModal = ({ communityId, communityName, onClose, onSuccess }) 
             {!form.pool_open && (
               <div>
                 <label className="text-xs text-slate-500 dark:text-gray-400 mb-1 block">Tentative Open Date & Time</label>
-                <input
-                  type="datetime-local"
-                  value={form.tentative_open_date}
-                  onChange={e => setForm({ ...form, tentative_open_date: e.target.value })}
-                  className="w-full bg-white dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500 dark:[color-scheme:dark]"
-                />
+                <div className="relative">
+                  <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-gray-500 pointer-events-none" size={16} />
+                  <input
+                    type="datetime-local"
+                    min={new Date().toISOString().slice(0, 16)}
+                    autoComplete="off"
+                    onKeyDown={e => e.preventDefault()}
+                    value={form.tentative_open_date}
+                    onChange={e => setForm({ ...form, tentative_open_date: e.target.value })}
+                    className="w-full bg-white dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl pl-9 pr-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500 dark:[color-scheme:dark] cursor-pointer"
+                  />
+                </div>
               </div>
             )}
 
@@ -516,12 +588,66 @@ const EditAmenityModal = ({ amenity, communityName, onClose, onSuccess }) => {
     is_pool_reserved: amenity.is_pool_reserved || false,
   });
 
+  const handleNameChange = (val) => {
+    if (val.length > 50) return;
+    const isValid = /^[a-zA-Z\s\-]*$/.test(val);
+    if (!isValid && val.length > 0) {
+      setErrors(prev => ({ ...prev, name: 'Amenity name can only contain letters, spaces, and hyphens.' }));
+    } else if (val.trim().length < 3) {
+      setErrors(prev => ({ ...prev, name: 'Amenity name must be at least 3 characters long.' }));
+    } else {
+      setErrors(prev => {
+        const next = { ...prev };
+        delete next.name;
+        return next;
+      });
+    }
+    setForm(prev => ({ ...prev, name: val }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (Object.keys(errors).length > 0) {
-      toast.error("Please fix the validation errors before saving.");
+      toast.error(errors.name || "Please fix the validation errors before saving.");
       return;
     }
+
+    // Time Slot Validation
+    if (!form.slot1_start || !form.slot1_end) {
+      toast.error("Please enter start and end times for the slot.");
+      return;
+    }
+    const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
+    if (!timeRegex.test(form.slot1_start) || !timeRegex.test(form.slot1_end)) {
+      toast.error("Time slots must be in a valid HH:MM format.");
+      return;
+    }
+    if (form.slot1_start >= form.slot1_end) {
+      toast.error("Slot start time must be chronologically before the end time.");
+      return;
+    }
+
+    // Pool Closed Date Validation
+    if (!form.pool_open) {
+      if (!form.tentative_open_date) {
+        toast.error("Please enter a tentative open date & time since the amenity is closed.");
+        return;
+      }
+      if (new Date(form.tentative_open_date) <= new Date()) {
+        toast.error("Tentative open date & time must be in the future.");
+        return;
+      }
+    }
+
+    // Booking Fee validation (must be > 0 if enabled)
+    if (form.fee_enabled) {
+      const fee = parseFloat(form.booking_fee);
+      if (isNaN(fee) || fee <= 0) {
+        toast.error("Booking fee must be greater than $0 if booking fee is enabled.");
+        return;
+      }
+    }
+
     setLoading(true);
     try {
       await API.put(`/amenity/${amenity.amenity_id}`, {
@@ -551,8 +677,9 @@ const EditAmenityModal = ({ amenity, communityName, onClose, onSuccess }) => {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="text-xs text-slate-500 dark:text-gray-400 mb-1 block">Name</label>
-            <input type="text" required value={form.name} onChange={e => setForm({ ...form, name: e.target.value })}
-              className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500" />
+            <input type="text" required value={form.name} onChange={e => handleNameChange(e.target.value)}
+              className={`w-full bg-slate-50 dark:bg-[#0D1B2A] border ${errors.name ? 'border-red-500 focus:ring-red-500' : 'border-slate-200 dark:border-white/20 focus:ring-teal-500'} rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2`} />
+            {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
           </div>
           <div>
             <label className="text-xs text-slate-500 dark:text-gray-400 mb-1 block">Community</label>
@@ -628,13 +755,19 @@ const EditAmenityModal = ({ amenity, communityName, onClose, onSuccess }) => {
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="text-[10px] text-slate-500 dark:text-gray-400 mb-1 block">Slot Start Time</label>
-                <input type="text" placeholder="08:00" value={form.slot1_start} onChange={e => setForm({ ...form, slot1_start: e.target.value })}
-                  className="w-full bg-white dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl px-3 py-1.5 text-xs text-slate-900 dark:text-white text-center focus:outline-none" />
+                <div className="relative">
+                  <Clock className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-gray-500 pointer-events-none" size={13} />
+                  <input type="time" autoComplete="off" onKeyDown={e => e.preventDefault()} value={form.slot1_start} onChange={e => setForm({ ...form, slot1_start: e.target.value })}
+                    className="w-full bg-white dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl pl-7 pr-2 py-1.5 text-xs text-slate-900 dark:text-white text-center focus:outline-none cursor-pointer" />
+                </div>
               </div>
               <div>
                 <label className="text-[10px] text-slate-500 dark:text-gray-400 mb-1 block">Slot End Time</label>
-                <input type="text" placeholder="20:00" value={form.slot1_end} onChange={e => setForm({ ...form, slot1_end: e.target.value })}
-                  className="w-full bg-white dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl px-3 py-1.5 text-xs text-slate-900 dark:text-white text-center focus:outline-none" />
+                <div className="relative">
+                  <Clock className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-gray-500 pointer-events-none" size={13} />
+                  <input type="time" autoComplete="off" onKeyDown={e => e.preventDefault()} value={form.slot1_end} onChange={e => setForm({ ...form, slot1_end: e.target.value })}
+                    className="w-full bg-white dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl pl-7 pr-2 py-1.5 text-xs text-slate-900 dark:text-white text-center focus:outline-none cursor-pointer" />
+                </div>
               </div>
             </div>
             
@@ -663,12 +796,18 @@ const EditAmenityModal = ({ amenity, communityName, onClose, onSuccess }) => {
             {!form.pool_open && (
               <div>
                 <label className="text-xs text-slate-500 dark:text-gray-400 mb-1 block">Tentative Open Date & Time</label>
-                <input
-                  type="datetime-local"
-                  value={form.tentative_open_date}
-                  onChange={e => setForm({ ...form, tentative_open_date: e.target.value })}
-                  className="w-full bg-white dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500 dark:[color-scheme:dark]"
-                />
+                <div className="relative">
+                  <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-gray-500 pointer-events-none" size={16} />
+                  <input
+                    type="datetime-local"
+                    min={new Date().toISOString().slice(0, 16)}
+                    autoComplete="off"
+                    onKeyDown={e => e.preventDefault()}
+                    value={form.tentative_open_date}
+                    onChange={e => setForm({ ...form, tentative_open_date: e.target.value })}
+                    className="w-full bg-white dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl pl-9 pr-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500 dark:[color-scheme:dark] cursor-pointer"
+                  />
+                </div>
               </div>
             )}
 
@@ -872,7 +1011,15 @@ const Amenity = ({ community, user, setActivePage, setPaymentState }) => {
           <button key={tab} onClick={() => setActiveTab(tab)}
             className={`px-6 py-2.5 rounded-2xl text-sm font-medium transition capitalize ${activeTab === tab ? 'bg-blue-600 hover:bg-blue-700 text-white hover:text-white shadow-sm' : 'bg-slate-100 hover:bg-slate-200 text-slate-600 dark:bg-white/10 dark:text-gray-400 dark:hover:bg-white/20'
               }`}>
-            {tab === 'amenities' ? '🏊 Amenities' : '📅 Bookings'}
+            {tab === 'amenities' ? (
+              <span className="flex items-center gap-1.5">
+                <Waves size={14} /> Amenities
+              </span>
+            ) : (
+              <span className="flex items-center gap-1.5">
+                <Calendar size={14} /> Bookings
+              </span>
+            )}
           </button>
         ))}
       </div>
@@ -1051,23 +1198,22 @@ const Amenity = ({ community, user, setActivePage, setPaymentState }) => {
 
                         {/* Action Buttons */}
                         <div className="flex flex-wrap gap-2 mt-2">
-                          {/* Pay Fee — show for all communities when fee > 0 and unpaid */}
                           {!b.is_paid && b.fee_amount > 0 && ['PENDING', 'APPROVED'].includes(b.status) && (
                             <button onClick={() => handlePay(b)}
                               className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-semibold transition shadow-sm flex items-center gap-1">
-                              💳 Pay Fee
+                              <CreditCard size={12} /> Pay Fee
                             </button>
                           )}
                           {isAdmin && b.status === 'PENDING' && (
                             <button onClick={() => handleApprove(b.booking_id)}
-                              className="px-3 py-1.5 bg-blue-500/10 dark:bg-blue-500/20 hover:bg-blue-500/20 dark:hover:bg-blue-500/30 text-blue-600 dark:text-blue-400 rounded-xl text-xs font-medium transition">
-                              ✓ Approve
+                              className="px-3 py-1.5 bg-blue-500/10 dark:bg-blue-500/20 hover:bg-blue-500/20 dark:hover:bg-blue-500/30 text-blue-600 dark:text-blue-400 rounded-xl text-xs font-medium transition flex items-center gap-1">
+                              <Check size={12} /> Approve
                             </button>
                           )}
                           {b.status === 'PENDING' && (
                             <button onClick={() => handleCancel(b.booking_id)}
-                              className="px-3 py-1.5 bg-red-500/10 dark:bg-red-500/20 hover:bg-red-500/20 dark:hover:bg-red-500/30 text-red-600 dark:text-red-400 rounded-xl text-xs font-medium transition">
-                              ✕ Cancel
+                              className="px-3 py-1.5 bg-red-500/10 dark:bg-red-500/20 hover:bg-red-500/20 dark:hover:bg-red-500/30 text-red-600 dark:text-red-400 rounded-xl text-xs font-medium transition flex items-center gap-1">
+                              <X size={12} /> Cancel
                             </button>
                           )}
                         </div>

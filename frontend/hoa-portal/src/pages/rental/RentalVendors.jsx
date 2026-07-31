@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, X, Truck, Search, Trash2 } from 'lucide-react';
+import { Plus, X, Truck, Search, Trash2, Calendar } from 'lucide-react';
 import API from "../../services/api";
 import ConfirmModal from "../../components/ConfirmModal";
 import { toast } from 'react-hot-toast';
@@ -110,7 +110,7 @@ export default function RentalVendors() {
         today.setHours(0, 0, 0, 0);
         tempErrors.license_expiry = selDate > today ? '' : 'License expiry date must be in the future';
       } else {
-        tempErrors.license_expiry = '';
+        tempErrors.license_expiry = 'License expiry date is required';
       }
     }
     if (name === 'insurance_number') {
@@ -126,7 +126,7 @@ export default function RentalVendors() {
         today.setHours(0, 0, 0, 0);
         tempErrors.insurance_expiry = selDate > today ? '' : 'Insurance expiry date must be in the future';
       } else {
-        tempErrors.insurance_expiry = '';
+        tempErrors.insurance_expiry = 'Insurance expiry date is required';
       }
     }
     setErrors(tempErrors);
@@ -146,13 +146,13 @@ export default function RentalVendors() {
         : 'License number is required',
       license_expiry: formData.license_expiry
         ? (new Date(formData.license_expiry) > new Date() ? '' : 'License expiry date must be in the future')
-        : '',
+        : 'License expiry date is required',
       insurance_number: formData.insurance_number.trim()
         ? (/^[a-zA-Z0-9-]{5,25}$/.test(formData.insurance_number.trim()) ? '' : 'Insurance policy number must be 5-25 alphanumeric characters (or hyphens)')
         : 'Insurance number is required',
       insurance_expiry: formData.insurance_expiry
         ? (new Date(formData.insurance_expiry) > new Date() ? '' : 'Insurance expiry date must be in the future')
-        : ''
+        : 'Insurance expiry date is required'
     };
     setErrors(tempErrors);
     return tempErrors;
@@ -164,7 +164,14 @@ export default function RentalVendors() {
     const tempErrors = validateAllFields();
     const hasErrors = Object.values(tempErrors).some(err => err !== '');
     if (hasErrors) {
-      toast.error("Please resolve the validation errors before submitting.");
+      setConfirmConfig({
+        isOpen: true,
+        title: "Validation Error",
+        message: "Please resolve the validation errors before submitting.",
+        type: "warning",
+        singleButton: true,
+        onConfirm: () => setConfirmConfig(prev => ({ ...prev, isOpen: false }))
+      });
       return;
     }
 
@@ -185,11 +192,25 @@ export default function RentalVendors() {
 
       const res = await API.post('/rental/vendors', payload);
       setVendors(prev => [...prev, res.data]);
-      toast.success("Vendor onboarded successfully!");
       closeModal();
+      setConfirmConfig({
+        isOpen: true,
+        title: "Vendor Onboarded!",
+        message: `${payload.company_name} has been successfully onboarded as a vendor.`,
+        type: "success",
+        singleButton: true,
+        onConfirm: () => setConfirmConfig(prev => ({ ...prev, isOpen: false }))
+      });
     } catch (err) {
       console.error(err);
-      toast.error(err.response?.data?.detail || "Failed to onboard vendor.");
+      setConfirmConfig({
+        isOpen: true,
+        title: "Onboarding Failed",
+        message: err.response?.data?.detail || "Failed to onboard vendor. Please try again.",
+        type: "warning",
+        singleButton: true,
+        onConfirm: () => setConfirmConfig(prev => ({ ...prev, isOpen: false }))
+      });
     } finally {
       setLoading(false);
     }
@@ -420,6 +441,7 @@ export default function RentalVendors() {
                     <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">License Number *</label>
                     <input 
                       required 
+                      maxLength={20}
                       className={`w-full bg-slate-50 dark:bg-[#111c2a] border ${errors.license_number ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/10 focus:border-blue-500'} rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none`} 
                       value={formData.license_number} 
                       onChange={(e) => {
@@ -432,16 +454,23 @@ export default function RentalVendors() {
                     )}
                   </div>
                   <div>
-                    <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Expiry</label>
-                    <input 
-                      type="date" 
-                      className={`w-full bg-slate-50 dark:bg-[#111c2a] border ${errors.license_expiry ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/10 focus:border-blue-500'} rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none`} 
-                      value={formData.license_expiry} 
-                      onChange={(e) => {
-                        setFormData({...formData, license_expiry: e.target.value});
-                        validateField('license_expiry', e.target.value);
-                      }} 
-                    />
+                    <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Expiry *</label>
+                    <div className="relative">
+                      <Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-gray-500 pointer-events-none" size={16} />
+                      <input 
+                        type="date" 
+                        required
+                        min={new Date().toISOString().split('T')[0]}
+                        autoComplete="off"
+                        onKeyDown={e => e.preventDefault()}
+                        className={`w-full bg-slate-50 dark:bg-[#111c2a] border ${errors.license_expiry ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/10 focus:border-blue-500'} rounded-lg pl-10 pr-3 py-2 text-sm text-slate-900 dark:text-white outline-none cursor-pointer`} 
+                        value={formData.license_expiry} 
+                        onChange={(e) => {
+                          setFormData({...formData, license_expiry: e.target.value});
+                          validateField('license_expiry', e.target.value);
+                        }} 
+                      />
+                    </div>
                     {errors.license_expiry && (
                       <p className="text-red-500 text-xs mt-1">{errors.license_expiry}</p>
                     )}
@@ -453,6 +482,7 @@ export default function RentalVendors() {
                     <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Insurance Number *</label>
                     <input 
                       required
+                      maxLength={25}
                       className={`w-full bg-slate-50 dark:bg-[#111c2a] border ${errors.insurance_number ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/10 focus:border-blue-500'} rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none`} 
                       value={formData.insurance_number} 
                       onChange={(e) => {
@@ -466,16 +496,23 @@ export default function RentalVendors() {
                     )}
                   </div>
                   <div>
-                    <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Insurance Expiry</label>
-                    <input 
-                      type="date" 
-                      className={`w-full bg-slate-50 dark:bg-[#111c2a] border ${errors.insurance_expiry ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/10 focus:border-blue-500'} rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none`} 
-                      value={formData.insurance_expiry} 
-                      onChange={(e) => {
-                        setFormData({...formData, insurance_expiry: e.target.value});
-                        validateField('insurance_expiry', e.target.value);
-                      }} 
-                    />
+                    <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Insurance Expiry *</label>
+                    <div className="relative">
+                      <Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-gray-500 pointer-events-none" size={16} />
+                      <input 
+                        type="date" 
+                        required
+                        min={new Date().toISOString().split('T')[0]}
+                        autoComplete="off"
+                        onKeyDown={e => e.preventDefault()}
+                        className={`w-full bg-slate-50 dark:bg-[#111c2a] border ${errors.insurance_expiry ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/10 focus:border-blue-500'} rounded-lg pl-10 pr-3 py-2 text-sm text-slate-900 dark:text-white outline-none cursor-pointer`} 
+                        value={formData.insurance_expiry} 
+                        onChange={(e) => {
+                          setFormData({...formData, insurance_expiry: e.target.value});
+                          validateField('insurance_expiry', e.target.value);
+                        }} 
+                      />
+                    </div>
                     {errors.insurance_expiry && (
                       <p className="text-red-500 text-xs mt-1">{errors.insurance_expiry}</p>
                     )}
@@ -497,11 +534,15 @@ export default function RentalVendors() {
         isOpen={confirmConfig.isOpen}
         title={confirmConfig.title}
         message={confirmConfig.message}
+        type={confirmConfig.type || 'danger'}
+        singleButton={confirmConfig.singleButton || false}
         onConfirm={() => {
           confirmConfig.onConfirm?.();
           setConfirmConfig(prev => ({ ...prev, isOpen: false }));
         }}
-        onCancel={() => setConfirmConfig(prev => ({ ...prev, isOpen: false }))}
+        onCancel={() => {
+          confirmConfig.onCancel?.() || setConfirmConfig(prev => ({ ...prev, isOpen: false }));
+        }}
       />
     </div>
   );

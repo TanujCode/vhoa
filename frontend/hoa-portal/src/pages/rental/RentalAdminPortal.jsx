@@ -1,8 +1,20 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTheme } from '../../context/ThemeContext';
-import { LogOut } from 'lucide-react';
+import { LogOut, FileText, Trash2, X } from 'lucide-react';
+import { toast } from 'react-hot-toast';
 import API from '../../services/api';
+
+const cleanDescription = (desc) => {
+  if (!desc) return "";
+  let clean = desc;
+  clean = clean.replace(/User:\s+([^(]+)\s+\(ID:[^)]+\)/gi, '$1');
+  clean = clean.replace(/User:\s+([^(]+)\s+\([^)]+\)/gi, '$1');
+  clean = clean.replace(/Service Request\s+(\d+)/gi, 'Service Request #$1');
+  clean = clean.replace(/\.?\s*Time\s*\(ET\):.*$/gi, '');
+  clean = clean.replace(/\s+->\s+/g, ' ➔ ');
+  return clean.trim();
+};
 
 // Layout Components
 import RentalSidebar from '../../components/rental/RentalSidebar';
@@ -21,6 +33,7 @@ import RentalVendors from './RentalVendors';
 import RentalProfile from './RentalProfile';
 import RentalAuditHistory from './RentalAuditHistory';
 import TenantsHub from './TenantsHub';
+import RentalReports from './RentalReports';
 import NotifPanel from '../../components/NotifPanel';
 
 // Services
@@ -36,19 +49,26 @@ const RentalAdminPortal = () => {
 
   const currentTab = searchParams.get('tab') || 'dashboard';
   const [activePage, _setActivePage] = useState(currentTab);
-  const [pageHistory, setPageHistory] = useState([currentTab]);
   const [showExitConfirm, setShowExitConfirm] = useState(false);
 
   // Sync tab with browser back/forward buttons
   useEffect(() => {
     if (currentTab !== activePage) {
       _setActivePage(currentTab);
-      setPageHistory(prev => {
-        if (prev[prev.length - 1] === currentTab) return prev;
-        return [...prev, currentTab];
-      });
     }
   }, [currentTab]);
+
+  const activePageRef = useRef(activePage);
+  useEffect(() => {
+    activePageRef.current = activePage;
+  }, [activePage]);
+
+  // Push guard state when on dashboard to prevent unmounting when navigating back
+  useEffect(() => {
+    if (activePage === 'dashboard' && !window.history.state?.isPortalGuard) {
+      window.history.pushState({ isPortalGuard: true }, '', '/rental/dashboard');
+    }
+  }, [activePage]);
   
   // Notification states
   const [isNotifOpen, setIsNotifOpen] = useState(false);
@@ -71,15 +91,12 @@ const RentalAdminPortal = () => {
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(null);
 
-  // Intercept Chrome browser back button when on main dashboard page to ask confirmation before exiting
+  // Intercept browser back button when on dashboard to show exit confirmation
   useEffect(() => {
-    window.history.pushState({ isPortalGuard: true }, '', window.location.href);
-
     const handlePopState = (e) => {
-      const currentQueryTab = new URLSearchParams(window.location.search).get('tab');
-      if (!currentQueryTab || currentQueryTab === 'dashboard') {
+      if (activePageRef.current === 'dashboard') {
         setShowExitConfirm(true);
-        window.history.pushState({ isPortalGuard: true }, '', window.location.href);
+        window.history.pushState({ isPortalGuard: true }, '', '/rental/dashboard');
       }
     };
 
@@ -93,34 +110,14 @@ const RentalAdminPortal = () => {
     if (newPage === activePage) return;
     if (newPage === 'dashboard') {
       setSearchParams({});
-      setPageHistory(['dashboard']);
     } else {
       setSearchParams({ tab: newPage });
-      setPageHistory(prev => {
-        if (prev[prev.length - 1] === newPage) return prev;
-        return [...prev, newPage];
-      });
     }
     _setActivePage(newPage);
   };
 
   const handleBack = () => {
-    if (activePage !== 'dashboard') {
-      if (pageHistory.length > 1) {
-        const newHistory = [...pageHistory];
-        newHistory.pop();
-        const prevPage = newHistory[newHistory.length - 1] || 'dashboard';
-        setPageHistory(newHistory.length > 0 ? newHistory : ['dashboard']);
-        setSearchParams(prevPage === 'dashboard' ? {} : { tab: prevPage });
-        _setActivePage(prevPage);
-      } else {
-        setPageHistory(['dashboard']);
-        setSearchParams({});
-        _setActivePage('dashboard');
-      }
-    } else {
-      setShowExitConfirm(true);
-    }
+    window.history.back();
   };
 
   const handleConfirmExitLogout = () => {
@@ -154,6 +151,57 @@ const RentalAdminPortal = () => {
       return () => clearInterval(interval);
     }
   }, [user]);
+
+  const prevNotificationsRef = useRef([]);
+  const isFirstFetchRef = useRef(true);
+
+  useEffect(() => {
+    if (notifications.length > 0) {
+      if (isFirstFetchRef.current) {
+        prevNotificationsRef.current = notifications;
+        isFirstFetchRef.current = false;
+        return;
+      }
+      
+      const prevIds = new Set(prevNotificationsRef.current.map(n => n.audit_id));
+      const newNotifs = notifications.filter(n => !prevIds.has(n.audit_id));
+      
+      newNotifs.forEach(n => {
+        const action = n.action || "";
+        const desc = n.description || "";
+        const isLease = action.includes("LEASE") || (n.module || "").toLowerCase() === "lease";
+        const isDelete = action.includes("DELETE") || action.includes("CANCEL");
+        
+        if (isLease || isDelete) {
+          const title = action.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+          toast.custom((t) => (
+            <div className={`${t.visible ? 'animate-enter' : 'animate-leave'} max-w-md w-full bg-white dark:bg-[#1E2E42] border border-slate-200 dark:border-white/10 shadow-lg rounded-2xl pointer-events-auto flex ring-1 ring-black ring-opacity-5 p-4`}>
+              <div className="flex-1 w-0 text-left">
+                <p className="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                  {isDelete ? <Trash2 size={16} className="text-red-400" /> : <FileText size={16} className="text-indigo-400" />}
+                  {title}
+                </p>
+                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                  {cleanDescription(desc)}
+                </p>
+              </div>
+              <div className="ml-4 flex-shrink-0 flex">
+                <button
+                  onClick={() => toast.dismiss(t.id)}
+                  className="bg-transparent rounded-md inline-flex text-gray-400 hover:text-gray-500 focus:outline-none"
+                >
+                  <span className="sr-only">Close</span>
+                  <X size={16} />
+                </button>
+              </div>
+            </div>
+          ), { duration: 6000 });
+        }
+      });
+      
+      prevNotificationsRef.current = notifications;
+    }
+  }, [notifications]);
 
   const unreadCount = notifications.filter(n => 
     new Date(n.created_at).getTime() > badgeClearedTimestamp &&
@@ -331,6 +379,9 @@ const RentalAdminPortal = () => {
 
       case 'audit':
         return <RentalAuditHistory user={user} />;
+
+      case 'reports':
+        return <RentalReports user={user} selectedPropertyFilterId={selectedPropertyFilterId} setActivePage={setActivePage} />;
 
       default:
         if (role === 'super_admin') return <SuperAdminDashboard user={user} setActivePage={setActivePage} />;

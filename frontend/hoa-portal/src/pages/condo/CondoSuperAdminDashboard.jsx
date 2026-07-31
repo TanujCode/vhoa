@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { 
   Building2, Users, FileText, ShieldCheck, 
   Search, RefreshCw, ChevronRight, Check, ShieldAlert,
@@ -13,6 +13,7 @@ import ConfirmModal from '../../components/ConfirmModal';
 
 export default function CondoSuperAdminDashboard({ defaultSection, selectedCommunityId, onEnterCommunity }) {
   const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
   const [stats, setStats] = useState(null);
   const [buildings, setBuildings] = useState([]);
   const [users, setUsers] = useState([]);
@@ -195,24 +196,9 @@ export default function CondoSuperAdminDashboard({ defaultSection, selectedCommu
       const res = await API.get(`/condo/contracts/code/${contractCodeInput.trim().toUpperCase()}`);
       const data = res.data;
 
-      const baseCode = (data.business_name || 'CND')
-        .replace(/[^A-Za-z0-9]/g, '')
-        .substring(0, 6)
-        .toUpperCase();
-      const generatedPasscode = `${baseCode}100`;
-
-      setNewBuilding(prev => ({
-        ...prev,
-        contract_code: data.contract_code,
-        name: data.business_name || prev.name,
-        community_code: generatedPasscode,
-        address: data.client_address || prev.address,
-        city: data.client_city || prev.city,
-        zip_code: data.client_zip_code || prev.zip_code
-      }));
-
-      setContractVerified(true);
-      setContractMsg("✅ Contract code verified successfully!");
+      // Close modal and navigate to the onboarding linking process page
+      setShowCreateBuildingModal(false);
+      navigate(`/condo/onboard?code=${contractCodeInput.trim().toUpperCase()}`);
     } catch (err) {
       setContractVerified(false);
       setContractMsg(`❌ ${err.response?.data?.detail || "Invalid or inactive contract code."}`);

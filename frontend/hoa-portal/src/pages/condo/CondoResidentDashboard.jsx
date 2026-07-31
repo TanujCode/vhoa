@@ -22,7 +22,7 @@ export default function CondoResidentDashboard({ user, setActivePage }) {
             Resident Hub - Unit {unitNo}
           </h1>
           <p className="text-slate-600 dark:text-slate-300/90 text-xs sm:text-sm max-w-2xl leading-normal">
-            Welcome to the digital portal of <span className="font-bold text-slate-900 dark:text-white">{commName}</span>. Manage guest logs, pay HOA dues, and request maintenance directly.
+            Welcome to the digital portal of <span className="font-bold text-slate-900 dark:text-white">{commName}</span>. Manage guest logs, pay building dues, and file service requests directly.
           </p>
         </div>
       </div>
@@ -82,10 +82,10 @@ export default function CondoResidentDashboard({ user, setActivePage }) {
               <ArrowRight size={16} className="text-slate-400 group-hover:translate-x-1 transition-transform" />
             </div>
             <h4 className="font-bold text-slate-900 dark:text-white group-hover:text-blue-600 transition-colors">
-              Maintenance Desk
+              Service Desk
             </h4>
             <p className="text-xs text-slate-500 mt-1">
-              File a request for repairs in your unit or common areas.
+              File a service request for repairs in your unit or common areas.
             </p>
           </div>
 

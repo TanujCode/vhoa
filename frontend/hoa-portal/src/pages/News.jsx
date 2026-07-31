@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, RefreshCw, X, Pin, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Plus, RefreshCw, X, Pin, ChevronLeft, ChevronRight, ChevronDown, Megaphone, HelpCircle, ExternalLink } from 'lucide-react';
 import API from '../services/api';
 
 // ── Category Badge ────────────────────────────
@@ -17,17 +17,27 @@ const CategoryBadge = ({ category }) => {
     </span>
   );
 };
-
-// ── Add News Modal ────────────────────────────
 const NewsModal = ({ communityId, onClose, onSuccess }) => {
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({ title: '', content: '', category: 'GENERAL', is_pinned: false });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!form.title.trim() || !form.content.trim()) {
+      alert('Title and Content cannot be empty or contain only whitespace.');
+      return;
+    }
+    if (form.title.trim().length < 5) {
+      alert('News title must be at least 5 characters long.');
+      return;
+    }
+    if (form.content.trim().length < 10) {
+      alert('News content must be at least 10 characters long.');
+      return;
+    }
     setLoading(true);
     try {
-      await API.post('/news', { ...form, community_id: communityId });
+      await API.post('/news', { ...form, title: form.title.trim(), content: form.content.trim(), community_id: communityId });
       onSuccess(); onClose();
     } catch (err) {
       alert(err.response?.data?.detail || 'Error posting news');
@@ -63,7 +73,7 @@ const NewsModal = ({ communityId, onClose, onSuccess }) => {
                 className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-teal-500"
               >
                 {['GENERAL','MEETING','MAINTENANCE','EMERGENCY','EVENT'].map(c => (
-                  <option key={c} value={c} className="bg-white dark:bg-[#0D1B2A] text-slate-900 dark:text-white">
+                   <option key={c} value={c} className="bg-white dark:bg-[#0D1B2A] text-slate-900 dark:text-white">
                     {c}
                   </option>
                 ))}
@@ -97,9 +107,27 @@ const FAQModal = ({ communityId, onClose, onSuccess }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!form.question.trim() || !form.answer.trim()) {
+      alert('Question and Answer cannot be empty or contain only whitespace.');
+      return;
+    }
+    if (form.question.trim().length < 5) {
+      alert('FAQ question must be at least 5 characters long.');
+      return;
+    }
+    if (form.answer.trim().length < 10) {
+      alert('FAQ answer must be at least 10 characters long.');
+      return;
+    }
     setLoading(true);
     try {
-      await API.post('/faq', { ...form, community_id: communityId, doc_url: form.doc_url || null });
+      await API.post('/faq', { 
+        ...form, 
+        question: form.question.trim(),
+        answer: form.answer.trim(),
+        community_id: communityId, 
+        doc_url: form.doc_url.trim() || null 
+      });
       onSuccess(); onClose();
     } catch (err) {
       alert(err.response?.data?.detail || 'Error adding FAQ');
@@ -189,7 +217,7 @@ const News = ({ community, user }) => {
   };
 
   const handleDeleteNews = async (newsId) => {
-    if (!window.confirm('Delete this news post?')) return;
+    if (!await window.customConfirm('Delete this news post?')) return;
     try {
       await API.delete(`/news/${newsId}`);
       fetchNews();
@@ -204,23 +232,42 @@ const News = ({ community, user }) => {
 
   return (
     <div className="text-slate-900 dark:text-white">
-      {/* Compact Page Header Row */}
-      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3 mb-5 pb-3 border-b border-slate-200/60 dark:border-white/5">
+      {/* Page Header Row */}
+      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2 mb-5 pb-3 border-b border-slate-200/60 dark:border-white/5">
         <h1 className="text-xl font-extrabold text-slate-900 dark:text-white tracking-tight">
           News & FAQ
         </h1>
-        {isAdmin && (
-          <div className="flex flex-wrap gap-2 w-full sm:w-auto">
-            <button onClick={() => setShowFaqModal(true)}
-              className="flex-1 sm:flex-initial px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 rounded-xl text-xs font-semibold text-slate-700 dark:text-white transition flex items-center justify-center gap-2">
-              <Plus size={14} /> Add FAQ
-            </button>
-            <button onClick={() => setShowNewsModal(true)}
-              className="flex-1 sm:flex-initial flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-xl text-xs font-semibold transition shadow-md shadow-blue-500/25">
-              <Plus size={14} /> Post News
-            </button>
-          </div>
-        )}
+        <div className="flex items-center gap-2 w-full sm:w-auto flex-wrap">
+          {/* Category filter dropdown — only relevant for news tab */}
+          {activeTab === 'news' && (
+            <div className="relative">
+              <select
+                value={categoryFilter}
+                onChange={e => setCategoryFilter(e.target.value)}
+                className="appearance-none bg-slate-100 dark:bg-white/10 border border-slate-200 dark:border-white/10 rounded-xl pl-3 pr-7 py-1.5 text-xs text-slate-800 dark:text-white font-medium focus:outline-none focus:border-blue-500 cursor-pointer"
+              >
+                {categories.map(c => (
+                  <option key={c} value={c} className="bg-white dark:bg-[#1E2E42]">
+                    {c || 'All Categories'}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown size={12} className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-slate-400" />
+            </div>
+          )}
+          {isAdmin && (
+            <>
+              <button onClick={() => setShowFaqModal(true)}
+                className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 rounded-xl text-xs font-semibold text-slate-700 dark:text-white transition flex items-center gap-1.5">
+                <Plus size={13} /> Add FAQ
+              </button>
+              <button onClick={() => setShowNewsModal(true)}
+                className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-500 text-white px-3 py-1.5 rounded-xl text-xs font-semibold transition shadow-md shadow-blue-500/25">
+                <Plus size={13} /> Post News
+              </button>
+            </>
+          )}
+        </div>
       </div>
 
       {/* Tabs */}
@@ -230,7 +277,7 @@ const News = ({ community, user }) => {
             className={`px-6 py-2.5 rounded-2xl text-sm font-medium transition capitalize ${
               activeTab === tab ? 'bg-blue-600 hover:bg-blue-700 text-white hover:text-white shadow-md shadow-blue-500/20' : 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-white/10 dark:text-gray-400 dark:hover:bg-white/20'
             }`}>
-            {tab === 'news' ? '📢 News & Updates' : '❓ FAQs'}
+            {tab === 'news' ? <><Megaphone size={14} className="inline mr-1" />News & Updates</> : <><HelpCircle size={14} className="inline mr-1" />FAQs</>}
           </button>
         ))}
       </div>
@@ -238,24 +285,12 @@ const News = ({ community, user }) => {
       {/* ── NEWS TAB ── */}
       {activeTab === 'news' && (
         <div>
-          {/* Category filter */}
-          <div className="flex gap-2 mb-6 flex-wrap">
-            {categories.map(c => (
-              <button key={c} onClick={() => setCategoryFilter(c)}
-                className={`px-4 py-1.5 rounded-xl text-xs font-medium transition ${
-                  categoryFilter === c ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-white/10 dark:text-gray-400 dark:hover:bg-white/20'
-                }`}>
-                {c || 'All'}
-              </button>
-            ))}
-          </div>
-
           {loading && news.length === 0 ? (
             <div className="text-center py-20 text-slate-500 dark:text-gray-400">
               <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
             </div>
           ) : news.length === 0 ? (
-            <div className="text-center py-20 text-slate-500 dark:text-gray-400">📢 No news posts yet.</div>
+            <div className="text-center py-20 text-slate-500 dark:text-gray-400"><Megaphone size={32} className="mx-auto mb-3 opacity-30" /><p>No news posts yet.</p></div>
           ) : (
             <div className="space-y-4">
               {news.map(n => (
@@ -299,7 +334,7 @@ const News = ({ community, user }) => {
               <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
             </div>
           ) : faqs.length === 0 ? (
-            <div className="text-center py-20 text-slate-500 dark:text-gray-400">❓ No FAQs yet.</div>
+            <div className="text-center py-20 text-slate-500 dark:text-gray-400"><HelpCircle size={32} className="mx-auto mb-3 opacity-30" /><p>No FAQs yet.</p></div>
           ) : (
             <div className="space-y-3">
               {faqs.map((faq, i) => (
@@ -321,7 +356,7 @@ const News = ({ community, user }) => {
                       {faq.doc_url && (
                         <a href={faq.doc_url} target="_blank" rel="noopener noreferrer"
                           className="mt-3 inline-flex items-center gap-1 text-blue-600 dark:text-blue-400 text-sm hover:underline">
-                          📄 View Document →
+                          <a href={faq.doc_url} target="_blank" rel="noreferrer" className="text-blue-500 hover:underline flex items-center gap-1 text-xs mt-2"><ExternalLink size={12} /> View Document</a>
                         </a>
                       )}
                     </div>

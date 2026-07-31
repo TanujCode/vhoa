@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FileText, Plus, CheckCircle, Clock, Send, Lock, PenTool, Sparkles, Trash2, ShieldAlert, Search, X, Eye } from 'lucide-react';
+import { FileText, Plus, CheckCircle, Clock, Send, Lock, PenTool, Sparkles, Trash2, ShieldAlert, Search, X, Eye, Calendar } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import API from '../../services/api';
 import ConfirmModal from '../../components/ConfirmModal';
@@ -82,6 +82,9 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all' }) {
 
   const validateLeaseForm = () => {
     const errs = {};
+    if (!selectedUnitId) {
+      errs.selectedUnitId = 'Please select a unit.';
+    }
     const selectedUnitObj = units.find(u => u.unit_id === parseInt(selectedUnitId));
     if (selectedUnitObj && selectedUnitObj.status === 'OCCUPIED') {
       errs.selectedUnitId = 'This unit is currently occupied. You cannot lease it out again.';
@@ -103,8 +106,11 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all' }) {
       errs.deposit = 'Security deposit must be 0 or a positive number.';
     }
 
+    const todayStr = new Date().toISOString().split('T')[0];
     if (!startDate) {
       errs.startDate = 'Start date is required.';
+    } else if (startDate < todayStr) {
+      errs.startDate = 'Start date cannot be in the past.';
     }
 
     if (!endDate) {
@@ -144,7 +150,7 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all' }) {
   const compileLeaseText = (templateKey, rent, dep, start, end, grace, fee, email, unitId, util, park, pet) => {
     const template = LEASE_TEMPLATES[templateKey] || '';
     const unitObj = units.find(u => u.unit_id === parseInt(unitId)) || {};
-    const unitNo = unitObj.unit_number || 'N/A';
+    const unitNo = unitObj.unit_number || '[Unit Number]';
     
     let compiled = template
       .replace(/\{\{START_DATE\}\}/g, start || '[Start Date]')
@@ -185,6 +191,9 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all' }) {
         setRentAmount(u.rent_amount.toString());
         setDeposit(u.rent_amount.toString());
       }
+    } else {
+      setRentAmount('');
+      setDeposit('');
     }
   }, [selectedUnitId, units]);
 
@@ -233,13 +242,8 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all' }) {
         }
         setPrefilledFromApp(true);
         setShowCreateModal(true);
-      } else if (allUnits.length > 0) {
-        const firstVacant = allUnits.find(u => u.status !== 'OCCUPIED');
-        if (firstVacant) {
-          setSelectedUnitId(firstVacant.unit_id);
-        } else {
-          setSelectedUnitId(allUnits[0].unit_id);
-        }
+      } else {
+        setSelectedUnitId('');
       }
     } catch (err) {
       console.error(err);
@@ -699,6 +703,7 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all' }) {
                         prefilledFromApp ? 'bg-gray-100 dark:bg-slate-900 cursor-not-allowed opacity-80 border-gray-200 dark:border-white/5 text-gray-450 dark:text-gray-500' : 'border-gray-250 dark:border-white/10'
                       } ${formErrors.selectedUnitId ? 'border-red-500' : ''}`}
                     >
+                      <option value="">-- Select a Unit --</option>
                       {units.map(u=>(
                         <option key={u.unit_id} value={u.unit_id}>
                           Unit {u.unit_number} (${u.rent_amount}) - {u.status || 'VACANT'}
@@ -760,12 +765,36 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all' }) {
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="block text-xs font-bold text-gray-600 tracking-wider mb-1">START DATE</label>
-                    <input required type="date" value={startDate} onChange={e=>setStartDate(e.target.value)} className={`w-full text-sm px-3 py-2 border rounded-lg bg-white dark:bg-black/20 text-gray-900 dark:text-white ${formErrors.startDate ? 'border-red-500' : 'border-gray-250 dark:border-white/10'}`} />
+                    <div className="relative">
+                      <Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-gray-500 pointer-events-none" size={16} />
+                      <input 
+                        required 
+                        type="date" 
+                        min={new Date().toISOString().split('T')[0]} 
+                        autoComplete="off"
+                        onKeyDown={e => e.preventDefault()}
+                        value={startDate} 
+                        onChange={e=>setStartDate(e.target.value)} 
+                        className={`w-full text-sm pl-10 pr-3 py-2 border rounded-lg bg-white dark:bg-black/20 text-gray-900 dark:text-white cursor-pointer ${formErrors.startDate ? 'border-red-500' : 'border-gray-250 dark:border-white/10'}`} 
+                      />
+                    </div>
                     {formErrors.startDate && <p className="text-[10px] text-red-500 mt-0.5">{formErrors.startDate}</p>}
                   </div>
                   <div>
                     <label className="block text-xs font-bold text-gray-600 tracking-wider mb-1">END DATE</label>
-                    <input required type="date" value={endDate} onChange={e=>setEndDate(e.target.value)} className={`w-full text-sm px-3 py-2 border rounded-lg bg-white dark:bg-black/20 text-gray-900 dark:text-white ${formErrors.endDate ? 'border-red-500' : 'border-gray-250 dark:border-white/10'}`} />
+                    <div className="relative">
+                      <Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-gray-500 pointer-events-none" size={16} />
+                      <input 
+                        required 
+                        type="date" 
+                        min={startDate || new Date().toISOString().split('T')[0]} 
+                        autoComplete="off"
+                        onKeyDown={e => e.preventDefault()}
+                        value={endDate} 
+                        onChange={e=>setEndDate(e.target.value)} 
+                        className={`w-full text-sm pl-10 pr-3 py-2 border rounded-lg bg-white dark:bg-black/20 text-gray-900 dark:text-white cursor-pointer ${formErrors.endDate ? 'border-red-500' : 'border-gray-250 dark:border-white/10'}`} 
+                      />
+                    </div>
                     {formErrors.endDate && <p className="text-[10px] text-red-500 mt-0.5">{formErrors.endDate}</p>}
                   </div>
                 </div>
@@ -807,11 +836,13 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all' }) {
 
               {/* Dynamic Contract Preview Sheet Column */}
               <div className="flex flex-col h-full space-y-2">
-                <label className="block text-xs font-bold text-blue-600 dark:text-blue-400 tracking-wider">LIVE LEASE CONTRACT PREVIEW</label>
-                <div className="flex-1 p-4 border border-blue-500/20 dark:border-white/10 rounded-xl bg-slate-50 dark:bg-black/20 text-xs font-mono text-gray-800 dark:text-gray-300 leading-relaxed whitespace-pre-wrap max-h-[320px] overflow-y-auto shadow-inner">
-                  {leaseText}
-                </div>
-                <p className="text-[10px] text-gray-400 italic">Note: Placeholders like tenant name and unit are compiled dynamically as you type.</p>
+                <label className="block text-xs font-bold text-blue-600 dark:text-blue-400 tracking-wider">LIVE LEASE CONTRACT EDIT / PREVIEW</label>
+                <textarea
+                  value={leaseText}
+                  onChange={(e) => setLeaseText(e.target.value)}
+                  className="flex-1 w-full p-4 border border-blue-500/20 dark:border-white/10 rounded-xl bg-slate-50 dark:bg-[#0D1B2A] text-xs font-mono text-gray-850 dark:text-gray-300 leading-relaxed h-80 max-h-[320px] overflow-y-auto shadow-inner focus:outline-none focus:border-blue-500 custom-scrollbar resize-none"
+                  placeholder="Draft lease agreement..."
+                />
                 
                 <div className="flex gap-3 justify-end pt-3 mt-auto">
                   <button type="button" onClick={() => { setShowCreateModal(false); setPrefilledFromApp(false); setFormErrors({}); setErrorMsg(''); }} className="px-4 py-2 border rounded-lg text-sm hover:bg-gray-50 text-gray-600 dark:text-gray-400 font-bold">Cancel</button>

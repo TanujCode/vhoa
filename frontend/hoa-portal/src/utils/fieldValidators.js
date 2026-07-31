@@ -128,6 +128,17 @@ export const validateTicketTitle = (title) => {
   if (val.length < 5) return "Title must be at least 5 characters long.";
   if (val.length > 100) return "Title cannot exceed 100 characters.";
   
+  // Prevent repeating characters (e.g. 'hhhhh' or 'ddddd')
+  if (/(.)\1{4,}/.test(val)) {
+    return "Title cannot contain long repeating character sequences.";
+  }
+
+  // Prevent low unique character count for gibberish (e.g. 'asdasdasd')
+  const uniqueChars = new Set(val.toLowerCase().replace(/[\s.,'()\-#]/g, "")).size;
+  if (val.length > 10 && uniqueChars < 3) {
+    return "Please enter a descriptive, meaningful title.";
+  }
+
   // Must contain some alphabetic characters (letters)
   const letters = val.replace(/[^a-zA-Z]/g, "");
   if (letters.length < 3) {
@@ -148,6 +159,17 @@ export const validateTicketDescription = (desc) => {
   const val = desc.trim();
   if (val.length < 10) return "Description must be at least 10 characters long.";
   if (val.length > 1000) return "Description cannot exceed 1000 characters.";
+
+  // Prevent repeating characters
+  if (/(.)\1{5,}/.test(val)) {
+    return "Description cannot contain long repeating character sequences.";
+  }
+
+  // Prevent low unique character count for gibberish
+  const uniqueChars = new Set(val.toLowerCase().replace(/[\s.,'()\-#]/g, "")).size;
+  if (val.length > 20 && uniqueChars < 4) {
+    return "Please enter a descriptive, meaningful description.";
+  }
 
   // Must contain some alphabetic characters (letters)
   const letters = val.replace(/[^a-zA-Z]/g, "");

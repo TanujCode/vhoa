@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { 
-  Sun, Moon, User, LogOut, ChevronDown, Menu, Building2, Bell, ArrowLeft, RefreshCw, Search, ArrowLeftRight
+  Sun, Moon, User, LogOut, ChevronDown, Menu, Building2, Bell, ArrowLeft, RefreshCw, Search, ArrowLeftRight, Home
 } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 import { getBaseUrl } from '../../services/api';
@@ -115,60 +115,60 @@ const RentalTopbar = ({
         {isDropdownOpen && (user?.role === 'landlord' || user?.role === 'super_admin') && (
           <>
             <div className="fixed inset-0 z-40" onClick={() => setIsDropdownOpen(false)} />
-            <div className="absolute top-[calc(100%+12px)] left-0 w-72 bg-white dark:bg-[#1E3248] border border-slate-200 dark:border-white/20 rounded-3xl shadow-2xl z-50 p-3 space-y-2 animate-in fade-in slide-in-from-top-2 text-left">
+            <div className="fixed sm:absolute top-16 sm:top-[calc(100%+12px)] left-4 right-4 sm:left-0 sm:right-auto w-auto sm:w-80 bg-white dark:bg-[#1E3248] border border-slate-200 dark:border-white/20 rounded-3xl shadow-2xl z-50 py-3 overflow-hidden animate-in fade-in zoom-in-95 text-left">
               {/* Search Bar inside popover */}
-              <div className="relative">
-                <Search className="absolute left-3.5 top-3.5 text-slate-400" size={14} />
+              <div className="px-3 relative">
+                <Search size={16} className="absolute left-7 top-1/2 -translate-y-1/2 text-gray-400" />
                 <input
                   type="text"
                   placeholder="Search..."
                   value={dropdownSearch}
                   onChange={(e) => setDropdownSearch(e.target.value)}
-                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200/60 dark:border-white/10 rounded-2xl pl-9 pr-4 py-2 text-xs text-slate-900 dark:text-white outline-none focus:border-blue-500"
+                  className="w-full bg-slate-100 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:border-blue-500 dark:text-white"
                 />
               </div>
 
               {/* Dropdown Options */}
-              <div className="max-h-60 overflow-y-auto space-y-1 custom-scrollbar pr-1">
+              <div className="max-h-64 overflow-y-auto px-2 mt-3 custom-scrollbar">
                 {/* All Properties option */}
                 {('all'.includes(dropdownSearch.toLowerCase()) || 'all properties'.includes(dropdownSearch.toLowerCase())) && (
-                  <button
+                  <div
                     onClick={() => {
                       setSelectedPropertyFilterId('all');
                       setIsDropdownOpen(false);
                       setDropdownSearch('');
                     }}
-                    className={`w-full px-4 py-2.5 text-xs font-bold rounded-2xl flex items-center gap-2.5 transition text-left cursor-pointer ${
+                    className={`flex items-center gap-3 px-4 py-3 rounded-2xl mx-1 cursor-pointer transition hover:bg-slate-100 dark:hover:bg-white/10 ${
                       selectedPropertyFilterId === 'all'
-                        ? 'bg-blue-500/10 text-blue-600 dark:bg-blue-500/20 dark:text-[#5BA4F5]'
-                        : 'hover:bg-slate-100 dark:hover:bg-white/5 text-slate-700 dark:text-gray-300'
+                        ? 'bg-blue-50 dark:bg-blue-500/10 border border-blue-500/20'
+                        : ''
                     }`}
                   >
-                    <span className={`w-1.5 h-1.5 rounded-full ${selectedPropertyFilterId === 'all' ? 'bg-blue-500' : 'bg-transparent'}`} />
-                    🏢 All Properties
-                  </button>
+                    <Building2 className="w-4 h-4 text-blue-500 flex-shrink-0" />
+                    <p className="font-semibold text-gray-900 dark:text-white truncate">All Properties</p>
+                  </div>
                 )}
 
                 {/* Properties list */}
                 {properties
                   .filter(p => p.name.toLowerCase().includes(dropdownSearch.toLowerCase()))
                   .map(p => (
-                    <button
+                    <div
                       key={p.property_id}
                       onClick={() => {
                         setSelectedPropertyFilterId(String(p.property_id));
                         setIsDropdownOpen(false);
                         setDropdownSearch('');
                       }}
-                      className={`w-full px-4 py-2.5 text-xs font-bold rounded-2xl flex items-center gap-2.5 transition text-left cursor-pointer ${
+                      className={`flex items-center gap-3 px-4 py-3 rounded-2xl mx-1 cursor-pointer transition hover:bg-slate-100 dark:hover:bg-white/10 ${
                         String(selectedPropertyFilterId) === String(p.property_id)
-                          ? 'bg-blue-500/10 text-blue-600 dark:bg-blue-500/20 dark:text-[#5BA4F5]'
-                          : 'hover:bg-slate-100 dark:hover:bg-white/5 text-slate-700 dark:text-gray-300'
+                          ? 'bg-blue-50 dark:bg-blue-500/10 border border-blue-500/20'
+                          : ''
                       }`}
                     >
-                      <span className={`w-1.5 h-1.5 rounded-full ${String(selectedPropertyFilterId) === String(p.property_id) ? 'bg-blue-500' : 'bg-transparent'}`} />
-                      🏠 {p.name}
-                    </button>
+                      <Home className="w-4 h-4 text-indigo-500 flex-shrink-0" />
+                      <p className="font-semibold text-gray-900 dark:text-white truncate">{p.name}</p>
+                    </div>
                   ))
                 }
               </div>

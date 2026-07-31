@@ -77,6 +77,40 @@ class CommunityCreate(BaseModel):
             raise ValueError(f"The license status must be one of the following.: {allowed}")
         return v
 
+    @field_validator("contact_person")
+    @classmethod
+    def contact_valid(cls, v):
+        if v is not None:
+            import re
+            if v.strip() and not re.match(r"^[a-zA-Z\s\-]*$", v):
+                raise ValueError("Contact person name can only contain letters, spaces, and hyphens.")
+        return v
+
+    @field_validator("bank_name")
+    @classmethod
+    def bank_name_valid(cls, v):
+        if v is not None:
+            import re
+            if v.strip() and not re.match(r"^[a-zA-Z\s.\-]*$", v):
+                raise ValueError("Bank name can only contain letters, spaces, dots, and hyphens.")
+        return v
+
+    @field_validator("bank_routing_no")
+    @classmethod
+    def bank_routing_valid(cls, v):
+        if v is not None and v.strip():
+            if not v.strip().isdigit() or len(v.strip()) != 9:
+                raise ValueError("Bank routing number must be exactly 9 digits.")
+        return v
+
+    @field_validator("bank_account_no")
+    @classmethod
+    def bank_account_valid(cls, v):
+        if v is not None and v.strip():
+            if not v.strip().isdigit() or not (5 <= len(v.strip()) <= 17):
+                raise ValueError("Bank account number must be between 5 and 17 digits.")
+        return v
+
 
 class CommunityUpdate(BaseModel):
     name:           str | None = None
@@ -104,6 +138,40 @@ class CommunityUpdate(BaseModel):
     bank_routing_no:    str | None = None
     bank_account_name:  str | None = None
     visible_tabs:       dict | None = None
+
+    @field_validator("contact_person")
+    @classmethod
+    def contact_valid(cls, v):
+        if v is not None:
+            import re
+            if v.strip() and not re.match(r"^[a-zA-Z\s\-]*$", v):
+                raise ValueError("Contact person name can only contain letters, spaces, and hyphens.")
+        return v
+
+    @field_validator("bank_name")
+    @classmethod
+    def bank_name_valid(cls, v):
+        if v is not None:
+            import re
+            if v.strip() and not re.match(r"^[a-zA-Z\s.\-]*$", v):
+                raise ValueError("Bank name can only contain letters, spaces, dots, and hyphens.")
+        return v
+
+    @field_validator("bank_routing_no")
+    @classmethod
+    def bank_routing_valid(cls, v):
+        if v is not None and v.strip():
+            if not v.strip().isdigit() or len(v.strip()) != 9:
+                raise ValueError("Bank routing number must be exactly 9 digits.")
+        return v
+
+    @field_validator("bank_account_no")
+    @classmethod
+    def bank_account_valid(cls, v):
+        if v is not None and v.strip():
+            if not v.strip().isdigit() or not (5 <= len(v.strip()) <= 17):
+                raise ValueError("Bank account number must be between 5 and 17 digits.")
+        return v
 
 
 class CommunityOut(BaseModel):

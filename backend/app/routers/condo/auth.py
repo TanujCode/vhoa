@@ -510,6 +510,21 @@ def onboard_condo_client(request: Request, body: CondoClientOnboardRequest, db: 
         db.commit()
         db.refresh(community)
 
+        # Pre-allocate sequential parking slots and lockers based on total units (building size)
+        from app.models.condo.condo_parking import CondoParkingAllocation
+        total_units = contract.size_of_the_building or 0
+        for i in range(1, total_units + 1):
+            alloc = CondoParkingAllocation(
+                community_id=community.community_id,
+                unit_no=f"{i}",
+                parking_spot_no=f"P-{i:03d}",
+                locker_no=f"L-{i:03d}",
+                has_ev_charger=False,
+                assigned_user_id=None
+            )
+            db.add(alloc)
+        db.commit()
+
         # Generate unique user code
         from app.utils.user_code import generate_user_code
         u_code = generate_user_code(db, body.first_name, body.last_name, community.community_id, is_condo=True)

@@ -314,7 +314,7 @@ const Profile = ({ user, setUser, viewRole }) => {
 
   //  Remove Profile Picture Logic ────────────────
   const handleRemovePicture = async () => {
-    if (!window.confirm("Are you sure you want to remove this photo?")) return;
+    if (!await window.customConfirm("Are you sure you want to remove this photo?")) return;
     try {
       setUploading(true);
       await API.delete(isCondo ? '/condo/auth/profile/pic' : '/user/profile/picture'); 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { RefreshCw, Search, Plus, Trash2, Download, FileText, Folder, File, ShieldAlert, ChevronDown, Eye } from 'lucide-react';
+import { RefreshCw, Search, Plus, Trash2, Download, FileText, Folder, File, ShieldAlert, ChevronDown, Eye, Scroll, Scale, ClipboardList, Coins, FolderOpen } from 'lucide-react';
 import API, { getBaseUrl } from '../services/api';
 
 const DocumentModal = ({ communityId, onClose, onSuccess }) => {
@@ -94,14 +94,33 @@ const DocumentModal = ({ communityId, onClose, onSuccess }) => {
               <input
                 type="file"
                 required
-                onChange={e => setFile(e.target.files[0])}
+                onChange={e => {
+                  const selectedFile = e.target.files[0];
+                  if (selectedFile) {
+                    const ext = selectedFile.name.split('.').pop().toLowerCase();
+                    const allowedExts = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'png', 'jpg', 'jpeg', 'webp'];
+                    if (!allowedExts.includes(ext)) {
+                      alert("Invalid file format! Only document files (.pdf, .doc, .docx, .xls, .xlsx, .ppt, .pptx, images) are allowed.");
+                      e.target.value = "";
+                      setFile(null);
+                      return;
+                    }
+                    if (selectedFile.size > 10 * 1024 * 1024) {
+                      alert("File size exceeds the 10 MB limit. Please select a smaller file.");
+                      e.target.value = "";
+                      setFile(null);
+                      return;
+                    }
+                    setFile(selectedFile);
+                  }
+                }}
                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
               />
               <FileText className="mx-auto text-slate-400 group-hover:text-blue-500 transition mb-2" size={32} />
               <p className="text-sm text-slate-600 dark:text-gray-300 font-medium">
                 {file ? file.name : "Drag & drop or click to choose"}
               </p>
-              <p className="text-xs text-slate-400 mt-1">Allowed: PDF, DOC, DOCX, Images (Max 10MB)</p>
+              <p className="text-xs text-slate-400 mt-1">Allowed: PDF, DOC, DOCX, XLS, XLSX, Images (Max 10MB)</p>
             </div>
           </div>
 
@@ -145,6 +164,37 @@ const Documents = ({ community, user }) => {
     }
   }, [community]);
 
+  const handleDownload = async (fileUrl, docName) => {
+    try {
+      const response = await fetch(fileUrl);
+      const blob = await response.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      const ext = fileUrl.split('.').pop().split('?')[0] || 'pdf';
+      const cleanName = docName.replace(/[^a-zA-Z0-9]/g, '_');
+      link.download = `${cleanName}.${ext}`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(blobUrl);
+    } catch (err) {
+      console.error("Secure fetch download failed, falling back to window.open:", err);
+      window.open(fileUrl, '_blank');
+    }
+  };
+
+  const handleView = (fileUrl, docName) => {
+    const ext = fileUrl.split('.').pop().split('?')[0].toLowerCase();
+    const isOfficeFile = ['doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx'].includes(ext);
+
+    if (isOfficeFile) {
+      window.open(`https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(fileUrl)}`, '_blank');
+    } else {
+      window.open(fileUrl, '_blank');
+    }
+  };
+
   const fetchDocuments = async () => {
     try {
       setLoading(true);
@@ -158,7 +208,7 @@ const Documents = ({ community, user }) => {
   };
 
   const handleDelete = async (docId) => {
-    if (!window.confirm("Are you sure you want to delete this document?")) return;
+    if (!await window.customConfirm("Are you sure you want to delete this document?")) return;
     try {
       await API.delete(`/community/documents/${docId}`);
       fetchDocuments();
@@ -176,14 +226,15 @@ const Documents = ({ community, user }) => {
     });
   };
 
-  const getDocTypeIcon = (type) => {
+  const getDocTypeIcon = (type, size = 16) => {
     switch (type) {
-      case 'CC&R': return '📜';
-      case 'BYLAWS': return '⚖️';
-      case 'RULES': return '📋';
-      case 'BUDGET': return '💰';
-      case 'MEETING_MINUTES': return '📝';
-      default: return '📁';
+      case 'ALL': return <FolderOpen size={size} className="text-blue-500" />;
+      case 'CC&R': return <Scroll size={size} className="text-amber-500" />;
+      case 'BYLAWS': return <Scale size={size} className="text-teal-500" />;
+      case 'RULES': return <ClipboardList size={size} className="text-blue-500" />;
+      case 'BUDGET': return <Coins size={size} className="text-emerald-500" />;
+      case 'MEETING_MINUTES': return <FileText size={size} className="text-indigo-500" />;
+      default: return <Folder size={size} className="text-slate-500" />;
     }
   };
 
@@ -196,48 +247,39 @@ const Documents = ({ community, user }) => {
 
   return (
     <div className="text-slate-900 dark:text-white">
-      {/* Compact Page Header Row */}
-      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3 mb-5 pb-3 border-b border-slate-200/60 dark:border-white/5">
+      {/* Page Header Row — title + dropdown + upload */}
+      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2 mb-5 pb-3 border-b border-slate-200/60 dark:border-white/5">
         <h1 className="text-xl font-extrabold text-slate-900 dark:text-white tracking-tight">
           HOA Documents
         </h1>
-        <div className="flex gap-2 w-full sm:w-auto">
-          {/* Refresh Button */}
-          <button
-            onClick={fetchDocuments}
-            disabled={loading}
-            className="flex-1 sm:flex-initial px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 text-slate-700 dark:text-white rounded-xl transition flex items-center justify-center gap-2 disabled:opacity-60 text-xs font-semibold whitespace-nowrap"
-            title="Refresh"
-          >
-            <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
-            Refresh
-          </button>
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          {/* Category Filter Dropdown */}
+          <div className="relative">
+            <div className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2">
+              {getDocTypeIcon(typeFilter, 13)}
+            </div>
+            <select
+              value={typeFilter}
+              onChange={e => setTypeFilter(e.target.value)}
+              className="appearance-none bg-slate-100 dark:bg-white/10 border border-slate-200 dark:border-white/10 rounded-xl pl-7 pr-7 py-1.5 text-xs text-slate-800 dark:text-white font-medium focus:outline-none focus:border-blue-500 cursor-pointer"
+            >
+              {docTypes.map(type => (
+                <option key={type} value={type} className="bg-white dark:bg-[#1E2E42]">
+                  {type === 'ALL' ? 'All Documents' : type.replace('_', ' ')}
+                </option>
+              ))}
+            </select>
+            <ChevronDown size={12} className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-slate-400" />
+          </div>
           {isManagement && (
             <button
               onClick={() => setShowUploadModal(true)}
-              className="flex-1 sm:flex-initial px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-semibold transition flex items-center justify-center gap-2 shadow-md shadow-blue-500/25 whitespace-nowrap"
+              className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-semibold transition flex items-center gap-1.5 shadow-md shadow-blue-500/25 whitespace-nowrap"
             >
-              <Plus size={14} /> Upload Document
+              <Plus size={13} /> Upload Document
             </button>
           )}
         </div>
-      </div>
-
-      {/* Tabs / Filters */}
-      <div className="flex gap-2 overflow-x-auto pb-1 max-w-full custom-scrollbar scrollbar-thin mb-6">
-        {docTypes.map(type => (
-          <button
-            key={type}
-            onClick={() => setTypeFilter(type)}
-            className={`px-5 py-2.5 rounded-2xl text-sm font-medium transition whitespace-nowrap ${
-              typeFilter === type
-                ? 'bg-blue-600 hover:bg-blue-700 text-white hover:text-white shadow-md shadow-blue-500/10'
-                : 'bg-slate-100 hover:bg-slate-200 dark:bg-white/10 text-slate-600 dark:text-gray-400 dark:hover:bg-white/20'
-            }`}
-          >
-            {type === 'ALL' ? '📂 All Documents' : `${getDocTypeIcon(type)} ${type.replace('_', ' ')}`}
-          </button>
-        ))}
       </div>
 
       {/* Search Filter */}
@@ -290,25 +332,25 @@ const Documents = ({ community, user }) => {
                   <tr key={doc.document_id} className="border-b border-slate-100 dark:border-white/5 hover:bg-slate-100/50 dark:hover:bg-white/5 transition-all">
                     <td className="px-3 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-blue-500/10 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 rounded-xl flex items-center justify-center text-lg font-bold flex-shrink-0">
-                          📄
+                        <div className="w-10 h-10 bg-blue-500/10 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 rounded-xl flex items-center justify-center flex-shrink-0">
+                          <File size={20} className="text-blue-500 dark:text-blue-400" />
                         </div>
                         <div className="min-w-0">
-                          <a
-                            href={getBaseUrl(doc.document_url)}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="font-medium text-slate-800 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 hover:underline transition-all block truncate max-w-xs sm:max-w-md"
+                          <button
+                            type="button"
+                            onClick={() => handleView(getBaseUrl(doc.document_url), doc.document_name)}
+                            className="font-medium text-slate-800 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 hover:underline transition-all block truncate max-w-xs sm:max-w-md text-left text-sm"
                           >
                             {doc.document_name}
-                          </a>
+                          </button>
                           <p className="text-xs text-slate-400 mt-0.5 truncate max-w-[200px] sm:max-w-xs">{doc.document_url.split('/').pop()}</p>
                         </div>
                       </div>
                     </td>
                     <td className="px-3 py-4 whitespace-nowrap">
-                      <span className="px-3 py-1 bg-slate-100 dark:bg-white/10 text-slate-700 dark:text-gray-300 rounded-full text-xs font-semibold uppercase tracking-wider">
-                        {getDocTypeIcon(doc.document_type)} {doc.document_type}
+                      <span className="px-3 py-1 bg-slate-100 dark:bg-white/10 text-slate-700 dark:text-gray-300 rounded-full text-xs font-semibold uppercase tracking-wider flex items-center gap-1.5 w-fit">
+                        {getDocTypeIcon(doc.document_type, 12)}
+                        {doc.document_type.replace('_', ' ')}
                       </span>
                     </td>
                     <td className="px-3 py-4 text-slate-500 dark:text-gray-400 text-xs whitespace-nowrap">
@@ -316,23 +358,22 @@ const Documents = ({ community, user }) => {
                     </td>
                     <td className="px-3 py-4 whitespace-nowrap">
                       <div className="flex justify-end gap-2">
-                        <a
-                          href={getBaseUrl(doc.document_url)}
-                          target="_blank"
-                          rel="noopener noreferrer"
+                        <button
+                          type="button"
+                          onClick={() => handleView(getBaseUrl(doc.document_url), doc.document_name)}
                           className="p-2 bg-blue-500/10 hover:bg-blue-500/20 dark:bg-blue-500/20 dark:hover:bg-blue-500/30 text-blue-600 dark:text-blue-400 rounded-xl transition-all"
                           title="View Document"
                         >
                           <Eye size={16} />
-                        </a>
-                        <a
-                          href={getBaseUrl(doc.document_url)}
-                          download
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDownload(getBaseUrl(doc.document_url), doc.document_name)}
                           className="p-2 bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 text-slate-600 dark:text-gray-300 rounded-xl transition-all"
                           title="Download Document"
                         >
                           <Download size={16} />
-                        </a>
+                        </button>
                         {isManagement && (
                           <button
                             onClick={() => handleDelete(doc.document_id)}

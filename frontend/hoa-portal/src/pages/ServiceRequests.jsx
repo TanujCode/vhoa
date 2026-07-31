@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Wrench, Plus, RefreshCw, X, ChevronDown, MessageSquare, UserCheck, Edit, Clock, Landmark, User, DollarSign, Filter, Zap, Leaf, Shield, Sparkles, Paintbrush, Bug, Hammer, Wind, Droplets, Search } from 'lucide-react';
+import { Wrench, Plus, RefreshCw, X, ChevronDown, MessageSquare, UserCheck, Edit, Clock, Landmark, User, DollarSign, Filter, Zap, Leaf, Shield, Sparkles, Paintbrush, Bug, Hammer, Wind, Droplets, Search, Calendar } from 'lucide-react';
 import API from '../services/api';
 import { onlyDigitsKeyPress, onlyDecimalKeyPress, validateTicketTitle, validateTicketDescription } from '../utils/fieldValidators';
 import ConfirmModal from '../components/ConfirmModal';
@@ -994,13 +994,19 @@ const DetailDrawer = ({
 
                       <div>
                         <label className="text-[11px] text-slate-500 dark:text-gray-400 block mb-1">Quote Date *</label>
-                        <input
-                          type="date"
-                          required
-                          value={quoteDate}
-                          onChange={(e) => setQuoteDate(e.target.value)}
-                          className="w-full bg-slate-100 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-white outline-none focus:border-blue-500"
-                        />
+                        <div className="relative">
+                          <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-gray-500 pointer-events-none" size={16} />
+                          <input
+                            type="date"
+                            required
+                            min={new Date().toISOString().split('T')[0]}
+                            autoComplete="off"
+                            onKeyDown={e => e.preventDefault()}
+                            value={quoteDate}
+                            onChange={(e) => setQuoteDate(e.target.value)}
+                            className="w-full bg-slate-100 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl pl-9 pr-3 py-2 text-sm text-slate-900 dark:text-white outline-none focus:border-blue-500 cursor-pointer"
+                          />
+                        </div>
                       </div>
 
                       <div>

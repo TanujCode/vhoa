@@ -275,65 +275,106 @@ export default function LandlordDashboard({
   return (
     <div className="space-y-8 animate-fade-in text-left pb-16 font-sans">
       
-      {/* --- Dashboard Top Header & Filters --- */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-2">
-        <div>
-          <h1 className="text-3xl font-black tracking-tight text-gray-900 dark:text-white flex items-center gap-2">
-            Hello, {user?.name?.split(' ')[0] || 'Landlord'} <Sparkles className="w-6 h-6 text-blue-500 animate-pulse" />
-          </h1>
-          <p className="text-gray-500 dark:text-gray-400 mt-1 text-sm font-medium">This is what we've compiled for your portfolio today.</p>
+      {/* ── Page Header & Unified Layout Card matching HOA ── */}
+      <div className="bg-white dark:bg-[#1E2E42] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 sm:p-8 text-slate-800 dark:text-white shadow-sm dark:shadow-none relative overflow-hidden flex flex-col lg:flex-row justify-between items-start lg:items-center gap-8 group">
+        {/* Subtle premium light blue glow */}
+        <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/[0.03] dark:bg-blue-500/[0.02] rounded-full blur-3xl pointer-events-none" />
+
+        {/* Left: Premium Welcome & Metadata */}
+        <div className="flex-1 min-w-0 relative z-10 space-y-4">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white leading-tight flex items-center gap-2">
+              Welcome back, {user?.name?.split(' ')[0] || 'Landlord'}! <Sparkles className="w-6 h-6 text-blue-500 animate-pulse shrink-0" />
+            </h1>
+            <p className="text-slate-500 dark:text-gray-450 text-xs mt-1 font-medium">
+              Rental Console • Real-Time Portfolio Summary
+            </p>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2 mt-2">
+            <span className="inline-flex items-center text-[10px] font-bold text-slate-600 dark:text-slate-350 bg-slate-100 dark:bg-white/5 px-2.5 py-1 rounded-xl border border-slate-200/50 dark:border-white/10 font-mono">
+              Properties: {properties.length}
+            </span>
+            <span className="inline-flex items-center text-[10px] font-black text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-xl border border-emerald-500/20">
+              ACTIVE
+            </span>
+          </div>
         </div>
 
-        {/* Filters and Actions Control Bar */}
-        <div className="flex flex-wrap items-center gap-3">
+        {/* Right side stats block matching HOA layout */}
+        <div className="relative z-10 w-full lg:w-auto mt-5 lg:mt-0 pt-5 lg:pt-0 border-t border-slate-200/60 dark:border-white/5 lg:border-t-0">
+          <div className="grid grid-cols-2 sm:flex sm:flex-row sm:items-center sm:justify-around lg:justify-end gap-5 sm:gap-8 lg:gap-11 w-full">
+            <div className="text-center flex flex-col items-center min-w-[65px]">
+              <p className="text-3xl sm:text-4xl font-black text-blue-600 dark:text-blue-400 font-mono tracking-tight">{properties.length}</p>
+              <p className="text-[9px] sm:text-[10px] font-bold text-slate-500 dark:text-gray-455 uppercase tracking-widest mt-1">Properties</p>
+            </div>
+            <div className="text-center flex flex-col items-center min-w-[65px]">
+              <p className="text-3xl sm:text-4xl font-black text-indigo-600 dark:text-indigo-400 font-mono tracking-tight">{totalUnitsCount}</p>
+              <p className="text-[9px] sm:text-[10px] font-bold text-slate-500 dark:text-gray-455 uppercase tracking-widest mt-1">Total Units</p>
+            </div>
+            <div className="text-center flex flex-col items-center min-w-[65px]">
+              <p className="text-3xl sm:text-4xl font-black text-blue-600 dark:text-blue-400 font-mono tracking-tight">{occupiedUnitsCount}</p>
+              <p className="text-[9px] sm:text-[10px] font-bold text-slate-500 dark:text-gray-455 uppercase tracking-widest mt-1">Tenants</p>
+            </div>
+            <div className="text-center flex flex-col items-center min-w-[65px]">
+              <p className="text-3xl sm:text-4xl font-black text-amber-600 dark:text-amber-500 font-mono tracking-tight">{upcomingExpensesCount}</p>
+              <p className="text-[9px] sm:text-[10px] font-bold text-slate-500 dark:text-gray-455 uppercase tracking-widest mt-1">Open Tickets</p>
+            </div>
+          </div>
+        </div>
+      </div>
 
+      {/* Filters and Actions Control Bar */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-50/50 dark:bg-white/[0.02] border border-slate-200/60 dark:border-white/[0.04] p-4 rounded-2xl">
+        <div className="flex flex-wrap items-center gap-3">
           {/* Time Period Filter */}
-          <div className="relative">
+          <div className="relative flex items-center">
+            <Calendar className="absolute left-3 w-4 h-4 text-slate-400 pointer-events-none" />
             <select
               value={selectedPeriod}
               onChange={(e) => setSelectedPeriod(e.target.value)}
-              className="appearance-none bg-white dark:bg-[#1E2E42] border border-slate-200 dark:border-white/10 text-slate-800 dark:text-slate-200 py-2.5 pl-4 pr-10 rounded-xl text-xs font-bold shadow-sm hover:border-blue-500 dark:hover:border-blue-500/50 transition focus:outline-none cursor-pointer"
+              className="appearance-none bg-white dark:bg-[#1E2E42] border border-slate-200 dark:border-white/10 text-slate-800 dark:text-slate-200 py-2 pl-9 pr-10 rounded-xl text-xs font-bold shadow-sm hover:border-blue-500 dark:hover:border-blue-500/50 transition focus:outline-none cursor-pointer"
             >
-              <option value="thismonth">📅 This Month</option>
-              <option value="3months">📅 Last 3 Months</option>
-              <option value="12months">📅 Last 12 Months</option>
-              <option value="alltime">📅 All Time</option>
+              <option value="thismonth">This Month</option>
+              <option value="3months">Last 3 Months</option>
+              <option value="12months">Last 12 Months</option>
+              <option value="alltime">All Time</option>
             </select>
-            <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" />
+            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" />
           </div>
+        </div>
 
-          {/* Create New Action Button */}
-          <div className="relative" onClick={(e) => e.stopPropagation()}>
-            <button
-              onClick={() => setShowCreateDropdown(!showCreateDropdown)}
-              className="bg-blue-600 hover:bg-blue-500 text-white py-2.5 px-4.5 rounded-xl text-xs font-bold shadow-md shadow-blue-500/10 transition active:scale-95 flex items-center gap-2 cursor-pointer"
-            >
-              <Plus className="w-4 h-4 stroke-[3]" /> Create new
-            </button>
+        {/* Create New Action Button */}
+        <div className="relative" onClick={(e) => e.stopPropagation()}>
+          <button
+            onClick={() => setShowCreateDropdown(!showCreateDropdown)}
+            className="bg-blue-600 hover:bg-blue-500 text-white py-2 px-4 rounded-xl text-xs font-bold shadow-md shadow-blue-500/10 transition active:scale-95 flex items-center gap-2 cursor-pointer"
+          >
+            <Plus className="w-4 h-4 stroke-[3]" /> Create new
+          </button>
 
-            {showCreateDropdown && (
-              <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-[#1A2635] border border-slate-100 dark:border-white/10 rounded-2xl shadow-xl z-30 py-2 text-slate-800 dark:text-slate-200 overflow-hidden animate-slide-up">
-                <button
-                  onClick={() => { setActivePage('properties_hub'); setShowCreateDropdown(false); }}
-                  className="w-full text-left px-4 py-2.5 text-xs font-bold hover:bg-slate-50 dark:hover:bg-white/5 transition flex items-center gap-2"
-                >
-                  <Building2 className="w-4 h-4 text-blue-500" /> Add Property
-                </button>
-                <button
-                  onClick={() => { setActivePage('leases_hub'); setShowCreateDropdown(false); }}
-                  className="w-full text-left px-4 py-2.5 text-xs font-bold hover:bg-slate-50 dark:hover:bg-white/5 transition flex items-center gap-2"
-                >
-                  <FileText className="w-4 h-4 text-purple-500" /> Draft Lease Agreement
-                </button>
-                <button
-                  onClick={() => { setActivePage('servicereq'); setShowCreateDropdown(false); }}
-                  className="w-full text-left px-4 py-2.5 text-xs font-bold hover:bg-slate-50 dark:hover:bg-white/5 transition flex items-center gap-2"
-                >
-                  <Wrench className="w-4 h-4 text-amber-500" /> Log Maintenance Ticket
-                </button>
-              </div>
-            )}
-          </div>
+          {showCreateDropdown && (
+            <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-[#1A2635] border border-slate-100 dark:border-white/10 rounded-2xl shadow-xl z-30 py-2 text-slate-800 dark:text-slate-200 overflow-hidden animate-slide-up">
+              <button
+                onClick={() => { setActivePage('properties_hub'); setShowCreateDropdown(false); }}
+                className="w-full text-left px-4 py-2.5 text-xs font-bold hover:bg-slate-50 dark:hover:bg-white/5 transition flex items-center gap-2"
+              >
+                <Building2 className="w-4 h-4 text-blue-500" /> Add Property
+              </button>
+              <button
+                onClick={() => { setActivePage('leases_hub'); setShowCreateDropdown(false); }}
+                className="w-full text-left px-4 py-2.5 text-xs font-bold hover:bg-slate-50 dark:hover:bg-white/5 transition flex items-center gap-2"
+              >
+                <FileText className="w-4 h-4 text-purple-500" /> Draft Lease Agreement
+              </button>
+              <button
+                onClick={() => { setActivePage('servicereq'); setShowCreateDropdown(false); }}
+                className="w-full text-left px-4 py-2.5 text-xs font-bold hover:bg-slate-50 dark:hover:bg-white/5 transition flex items-center gap-2"
+              >
+                <Wrench className="w-4 h-4 text-amber-500" /> Log Maintenance Ticket
+              </button>
+            </div>
+          )}
         </div>
       </div>
 

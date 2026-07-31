@@ -17,17 +17,17 @@ import {
   onlyLettersKeyPress, onlyZipKeyPress, onlyDigitsKeyPress, onlyDecimalKeyPress
 } from '../../utils/fieldValidators';
 import { formatPhoneAsYouType } from '../../utils/phoneFormatter';
+import ConfirmModal from '../../components/ConfirmModal';
 
 export default function CondoContracts() {
   const [contracts, setContracts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [errorMsg, setErrorMsg] = useState('');
-  const [successMsg, setSuccessMsg] = useState('');
   const [filterStatus, setFilterStatus] = useState('ALL');
   const [searchQuery, setSearchQuery] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [copiedCode, setCopiedCode] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+  const [confirmConfig, setConfirmConfig] = useState({ isOpen: false });
 
   const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm({
     mode: 'onTouched',
@@ -38,6 +38,7 @@ export default function CondoContracts() {
       client_last_name: '',
       client_address: '',
       client_city: '',
+      client_state: '',
       client_zip_code: '',
       client_country: 'USA',
       client_phone_number: '',
@@ -98,6 +99,7 @@ export default function CondoContracts() {
           if (data.places && data.places.length > 0) {
             const place = data.places[0];
             setValue('client_city', place['place name'].replace(/[^A-Za-z\s\-']/g, ''), { shouldValidate: true });
+            setValue('client_state', place['state abbreviation'].toUpperCase(), { shouldValidate: true });
           }
         }
       } catch (err) {
@@ -114,11 +116,17 @@ export default function CondoContracts() {
   const fetchContracts = async () => {
     try {
       setLoading(true);
-      setErrorMsg('');
       const data = await getCondoContracts();
       setContracts(data);
     } catch (err) {
-      setErrorMsg(err.response?.data?.detail || 'Failed to fetch condo contracts.');
+      setConfirmConfig({
+        isOpen: true,
+        title: 'Load Failed',
+        message: err.response?.data?.detail || 'Failed to fetch condo contracts.',
+        type: 'warning',
+        singleButton: true,
+        onConfirm: () => setConfirmConfig(prev => ({ ...prev, isOpen: false }))
+      });
     } finally {
       setLoading(false);
     }
@@ -137,15 +145,19 @@ export default function CondoContracts() {
   const handleCopyLink = (code) => {
     const link = `${window.location.origin}/condo/onboard?code=${code}`;
     navigator.clipboard.writeText(link);
-    setSuccessMsg('Condo onboarding link copied to clipboard!');
-    setTimeout(() => setSuccessMsg(''), 3000);
+    setConfirmConfig({
+      isOpen: true,
+      title: 'Link Copied!',
+      message: 'Condo onboarding link has been copied to your clipboard.',
+      type: 'success',
+      singleButton: true,
+      onConfirm: () => setConfirmConfig(prev => ({ ...prev, isOpen: false }))
+    });
   };
 
   const onSubmit = async (data) => {
     try {
       setSubmitting(true);
-      setErrorMsg('');
-      setSuccessMsg('');
       
       const payload = {
         status: data.status,
@@ -154,6 +166,7 @@ export default function CondoContracts() {
         client_last_name: data.client_last_name,
         client_address: data.client_address || null,
         client_city: data.client_city || null,
+        client_state: data.client_state || null,
         client_zip_code: data.client_zip_code || null,
         client_country: data.client_country || 'USA',
         client_phone_number: data.client_phone_only ? `+1${data.client_phone_only.replace(/\D/g, '')}` : null,
@@ -170,11 +183,25 @@ export default function CondoContracts() {
       };
 
       await createCondoContract(payload);
-      setSuccessMsg('Condo contract created successfully!');
       handleCloseModal();
       fetchContracts();
+      setConfirmConfig({
+        isOpen: true,
+        title: 'Contract Created!',
+        message: `Contract for ${payload.client_first_name} ${payload.client_last_name} has been created successfully.`,
+        type: 'success',
+        singleButton: true,
+        onConfirm: () => setConfirmConfig(prev => ({ ...prev, isOpen: false }))
+      });
     } catch (err) {
-      setErrorMsg(err.response?.data?.detail || 'Failed to create condo contract.');
+      setConfirmConfig({
+        isOpen: true,
+        title: 'Creation Failed',
+        message: err.response?.data?.detail || 'Failed to create condo contract.',
+        type: 'warning',
+        singleButton: true,
+        onConfirm: () => setConfirmConfig(prev => ({ ...prev, isOpen: false }))
+      });
     } finally {
       setSubmitting(false);
     }
@@ -184,26 +211,61 @@ export default function CondoContracts() {
     try {
       const newStatus = currentStatus === 'ACTIVE' ? 'DRAFT' : 'ACTIVE';
       await updateCondoContract(contractId, { status: newStatus });
-      setSuccessMsg(`Contract status updated to ${newStatus}`);
-      setTimeout(() => setSuccessMsg(''), 3000);
       fetchContracts();
+      setConfirmConfig({
+        isOpen: true,
+        title: 'Status Updated',
+        message: `Contract status has been updated to ${newStatus}.`,
+        type: 'success',
+        singleButton: true,
+        onConfirm: () => setConfirmConfig(prev => ({ ...prev, isOpen: false }))
+      });
     } catch (err) {
-      setErrorMsg(err.response?.data?.detail || 'Failed to update contract status.');
+      setConfirmConfig({
+        isOpen: true,
+        title: 'Update Failed',
+        message: err.response?.data?.detail || 'Failed to update contract status.',
+        type: 'warning',
+        singleButton: true,
+        onConfirm: () => setConfirmConfig(prev => ({ ...prev, isOpen: false }))
+      });
     }
   };
 
   const handleDeleteContract = async (contractId) => {
-    if (!window.confirm('Are you sure you want to delete this condo contract? This action cannot be undone.')) {
-      return;
-    }
-    try {
-      await deleteCondoContract(contractId);
-      setSuccessMsg('Contract deleted successfully');
-      setTimeout(() => setSuccessMsg(''), 3000);
-      fetchContracts();
-    } catch (err) {
-      setErrorMsg(err.response?.data?.detail || 'Failed to delete contract.');
-    }
+    setConfirmConfig({
+      isOpen: true,
+      title: 'Delete Contract',
+      message: 'Are you sure you want to delete this condo contract? This action cannot be undone.',
+      type: 'danger',
+      confirmText: 'Delete',
+      cancelText: 'Cancel',
+      onConfirm: async () => {
+        setConfirmConfig(prev => ({ ...prev, isOpen: false }));
+        try {
+          await deleteCondoContract(contractId);
+          fetchContracts();
+          setConfirmConfig({
+            isOpen: true,
+            title: 'Contract Deleted',
+            message: 'The contract has been permanently deleted.',
+            type: 'success',
+            singleButton: true,
+            onConfirm: () => setConfirmConfig(prev => ({ ...prev, isOpen: false }))
+          });
+        } catch (err) {
+          setConfirmConfig({
+            isOpen: true,
+            title: 'Delete Failed',
+            message: err.response?.data?.detail || 'Failed to delete contract.',
+            type: 'warning',
+            singleButton: true,
+            onConfirm: () => setConfirmConfig(prev => ({ ...prev, isOpen: false }))
+          });
+        }
+      },
+      onCancel: () => setConfirmConfig(prev => ({ ...prev, isOpen: false }))
+    });
   };
 
   const filteredContracts = contracts.filter(c => {
@@ -218,21 +280,7 @@ export default function CondoContracts() {
 
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-6">
-      {/* Messages */}
-      {successMsg && (
-        <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 rounded-xl text-sm font-medium flex items-center gap-2">
-          <CheckCircle className="w-4 h-4" />
-          {successMsg}
-        </div>
-      )}
-      {errorMsg && (
-        <div className="p-4 bg-rose-500/10 border border-rose-500/20 text-rose-600 rounded-xl text-sm font-medium flex items-center gap-2">
-          <AlertCircle className="w-4 h-4" />
-          {errorMsg}
-        </div>
-      )}
-
-      {/* HOA Style Metric Cards for Contracts */}
+      {/* Metric Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
           { label: 'Total Contracts', value: contracts.length, color: 'text-blue-600 dark:text-blue-400', border: 'border-slate-100 dark:border-white/5' },
@@ -288,114 +336,151 @@ export default function CondoContracts() {
         </div>
       </div>
 
-      {/* Contracts Table */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-white/5 rounded-2xl overflow-hidden shadow-sm">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-slate-50 dark:bg-slate-800/40 text-slate-500 dark:text-gray-400 text-xs font-semibold uppercase border-b border-slate-100 dark:border-white/5">
-                <th className="py-4 px-6">Contract Code</th>
-                <th className="py-4 px-6">Client Name</th>
-                <th className="py-4 px-6">Association / Building</th>
-                <th className="py-4 px-6">Dues & Size</th>
-                <th className="py-4 px-6">Status</th>
-                <th className="py-4 px-6 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-white/5 text-sm">
-              {loading ? (
-                <tr>
-                  <td colSpan="6" className="py-8 text-center text-slate-400 font-mono">
-                    <RefreshCw className="w-5 h-5 animate-spin mx-auto mb-2 text-indigo-500" />
-                    Loading condo contracts...
-                  </td>
-                </tr>
-              ) : filteredContracts.length === 0 ? (
-                <tr>
-                  <td colSpan="6" className="py-8 text-center text-slate-400">
-                    No contracts found.
-                  </td>
-                </tr>
-              ) : (
-                filteredContracts.map(c => {
-                  const clientName = `${c.client_first_name || ''} ${c.client_last_name || ''}`.trim() || 'N/A';
-                  return (
-                    <tr key={c.contract_id} className="hover:bg-slate-50/50 dark:hover:bg-white/[0.01]">
-                      <td className="py-4 px-6">
-                        <div className="flex items-center gap-2">
-                          <span className="font-mono font-bold text-slate-900 dark:text-white">
-                            {c.contract_code}
-                          </span>
-                          <button
-                            onClick={() => handleCopyCode(c.contract_code)}
-                            className="p-1 text-slate-400 hover:text-indigo-600 rounded-md hover:bg-slate-100 dark:hover:bg-white/5 transition"
-                            title="Copy code"
-                          >
-                            {copiedCode === c.contract_code ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
-                          </button>
-                        </div>
-                        <p className="text-[10px] text-slate-400 mt-0.5">Agent: {c.sales_agent_name}</p>
-                      </td>
-                      <td className="py-4 px-6">
-                        <div className="font-semibold text-slate-800 dark:text-gray-200">{clientName}</div>
-                        <div className="text-xs text-slate-400 flex items-center gap-1 mt-0.5">
-                          <Mail className="w-3 h-3" /> {c.client_email_address || 'N/A'}
-                        </div>
-                      </td>
-                      <td className="py-4 px-6">
-                        <div className="font-medium text-slate-800 dark:text-gray-200">{c.business_name || 'N/A'}</div>
-                        <div className="text-xs text-slate-400 flex items-center gap-1 mt-0.5">
-                          <MapPin className="w-3 h-3" /> {c.client_city ? `${c.client_city}, ${c.client_zip_code}` : 'N/A'}
-                        </div>
-                      </td>
-                      <td className="py-4 px-6">
-                        <div className="font-semibold text-slate-800 dark:text-gray-200">
-                          ${c.annual_renewal_fee ? parseFloat(c.annual_renewal_fee).toLocaleString() : '0'}/yr
-                        </div>
-                        <p className="text-xs text-slate-400 mt-0.5">{c.size_of_the_building || 0} Units ({c.plan_selected})</p>
-                      </td>
-                      <td className="py-4 px-6">
-                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
-                          c.status === 'ACTIVE' ? 'bg-indigo-500/10 text-indigo-500' :
-                          c.status === 'ONBOARDED' ? 'bg-emerald-500/10 text-emerald-500' :
-                          'bg-slate-100 text-slate-500 dark:bg-white/5 dark:text-gray-400'
-                        }`}>
-                          {c.status}
-                        </span>
-                      </td>
-                      <td className="py-4 px-6 text-right space-x-2">
-                        {c.status === 'ACTIVE' && (
-                          <button
-                            onClick={() => handleCopyLink(c.contract_code)}
-                            className="px-2.5 py-1 text-xs font-semibold bg-indigo-50 text-indigo-600 dark:bg-indigo-950/20 dark:text-indigo-400 hover:bg-indigo-100 rounded-lg border border-indigo-100 dark:border-indigo-900/50 cursor-pointer"
-                          >
-                            Copy Link
-                          </button>
-                        )}
-                        {c.status !== 'ONBOARDED' && (
-                          <button
-                            onClick={() => toggleStatus(c.contract_id, c.status)}
-                            className="px-2 py-1 text-xs font-medium text-slate-500 hover:text-slate-800 dark:text-gray-400 dark:hover:text-white rounded-lg border border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/5 cursor-pointer"
-                          >
-                            {c.status === 'ACTIVE' ? 'Pause' : 'Activate'}
-                          </button>
-                        )}
-                        <button
-                          onClick={() => handleDeleteContract(c.contract_id)}
-                          className="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/20 transition cursor-pointer"
-                          title="Delete Contract"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
+      {/* Contracts Card Grid */}
+      {loading && contracts.length === 0 ? (
+        <div className="text-center py-20 text-gray-400">
+          <div className="w-8 h-8 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+          Loading contracts...
         </div>
-      </div>
+      ) : filteredContracts.length === 0 ? (
+        <div className="text-center py-20 text-slate-500 dark:text-gray-400 bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl shadow-sm dark:shadow-none">
+          <FileText size={40} className="mx-auto mb-3 opacity-50 text-slate-400 dark:text-gray-500" />
+          No contracts found matching your filters.
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+          {filteredContracts.map((c) => {
+            const clientName = `${c.client_first_name || ''} ${c.client_last_name || ''}`.trim() || 'N/A';
+            return (
+              <div
+                key={c.contract_id}
+                className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-5 shadow-sm dark:shadow-none hover:shadow-md dark:hover:border-white/20 transition-all duration-200 flex flex-col gap-4"
+              >
+                {/* Top Row: Code + Status */}
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="font-mono font-bold text-indigo-600 dark:text-[#5BA4F5] bg-indigo-600/10 dark:bg-[#5BA4F5]/10 px-3 py-1 rounded-xl text-sm">
+                      {c.contract_code}
+                    </span>
+                    <button
+                      onClick={() => handleCopyCode(c.contract_code)}
+                      className="text-slate-400 hover:text-slate-700 dark:text-gray-500 dark:hover:text-white transition"
+                      title="Copy Code"
+                    >
+                      {copiedCode === c.contract_code ? (
+                        <Check size={15} className="text-emerald-500" />
+                      ) : (
+                        <Copy size={15} />
+                      )}
+                    </button>
+                  </div>
+
+                  <span className={`inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full font-semibold whitespace-nowrap flex-shrink-0 ${
+                    c.status === 'ACTIVE'
+                      ? 'bg-indigo-500/10 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400'
+                      : c.status === 'ONBOARDED'
+                      ? 'bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400'
+                      : 'bg-slate-200/60 dark:bg-gray-500/20 text-slate-600 dark:text-gray-400'
+                  }`}>
+                    {c.status === 'ACTIVE' && <CheckCircle size={11} />}
+                    {c.status === 'ONBOARDED' && <CheckCircle size={11} />}
+                    {c.status === 'DRAFT' && <Clock size={11} />}
+                    {c.status}
+                  </span>
+                </div>
+
+                {/* Client / Business */}
+                <div className="border-t border-slate-200/60 dark:border-white/5 pt-3">
+                  <div className="flex items-start gap-3">
+                    <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-blue-600 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+                      {(c.client_first_name?.[0] || '?').toUpperCase()}
+                    </div>
+                    <div className="min-w-0">
+                      <div className="font-semibold text-slate-900 dark:text-white text-sm truncate">
+                        {clientName}
+                      </div>
+                      <div className="text-xs text-slate-500 dark:text-gray-400 truncate">{c.client_email_address || 'N/A'}</div>
+                      {c.business_name && (
+                        <div className="text-xs font-medium text-slate-700 dark:text-gray-300 mt-0.5 flex items-center gap-1">
+                          <Building size={11} className="text-slate-400 flex-shrink-0" />
+                          <span className="truncate">{c.business_name}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Plan + Pricing row */}
+                <div className="grid grid-cols-2 gap-3 border-t border-slate-200/60 dark:border-white/5 pt-3">
+                  <div>
+                    <div className="text-[10px] text-slate-400 dark:text-gray-500 uppercase tracking-wider mb-1.5 font-semibold">Plan Info</div>
+                    <span className="text-xs font-semibold bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 px-2 py-0.5 rounded-lg border border-indigo-500/10">
+                      {c.plan_selected || 'Custom'}
+                    </span>
+                    <div className="text-xs text-slate-500 dark:text-gray-400 mt-1.5">
+                      Max Units: <span className="font-mono font-semibold text-slate-800 dark:text-white">{c.size_of_the_building || '0'}</span>
+                    </div>
+                    <div className="text-[10px] text-slate-400 dark:text-gray-500 uppercase tracking-tighter mt-0.5">
+                      Cycle: {c.renewal_cycle}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-[10px] text-slate-400 dark:text-gray-500 uppercase tracking-wider mb-1.5 font-semibold">Pricing</div>
+                    <div className="text-xs text-slate-500 dark:text-gray-400">
+                      Setup: <span className="font-bold text-slate-800 dark:text-white">${c.one_time_set_up || '0'}</span>
+                    </div>
+                    <div className="text-xs text-slate-500 dark:text-gray-400 mt-1">
+                      Renewal: <span className="font-bold text-indigo-600 dark:text-[#5BA4F5]">${c.annual_renewal_fee || '0'}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Sales Agent + Date */}
+                <div className="flex items-center justify-between border-t border-slate-200/60 dark:border-white/5 pt-3">
+                  <div className="text-xs">
+                    <div className="text-slate-700 dark:text-gray-300 font-medium">{c.sales_agent_name || 'System Admin'}</div>
+                    <div className="text-[10px] text-slate-400 dark:text-gray-500 font-mono mt-0.5">
+                      {c.created_date ? new Date(c.created_date).toLocaleDateString() : 'N/A'}
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex items-center gap-2">
+                    {c.status === 'ACTIVE' && (
+                      <button
+                        onClick={() => handleCopyLink(c.contract_code)}
+                        className="px-2.5 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 dark:bg-white/10 dark:hover:bg-white/20 dark:text-white rounded-lg text-xs font-medium transition cursor-pointer"
+                        title="Copy Onboarding link"
+                      >
+                        Copy Link
+                      </button>
+                    )}
+                    {c.status !== 'ONBOARDED' && (
+                      <button
+                        onClick={() => toggleStatus(c.contract_id, c.status)}
+                        className={`px-2.5 py-1 rounded-lg text-xs font-medium transition cursor-pointer ${
+                          c.status === 'ACTIVE'
+                            ? 'bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-400'
+                            : 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400'
+                        }`}
+                      >
+                        {c.status === 'ACTIVE' ? 'Set Draft' : 'Activate'}
+                      </button>
+                    )}
+                    <button
+                      onClick={() => handleDeleteContract(c.contract_id)}
+                      className="p-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-lg transition cursor-pointer"
+                      title="Delete Contract"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
 
       {/* Creation Modal */}
       {isModalOpen && ReactDOM.createPortal(
@@ -641,6 +726,22 @@ export default function CondoContracts() {
         </div>,
         document.body
       )}
+
+      <ConfirmModal
+        isOpen={confirmConfig.isOpen}
+        title={confirmConfig.title}
+        message={confirmConfig.message}
+        type={confirmConfig.type || 'danger'}
+        singleButton={confirmConfig.singleButton || false}
+        confirmText={confirmConfig.confirmText || 'OK'}
+        cancelText={confirmConfig.cancelText || 'Cancel'}
+        onConfirm={() => {
+          confirmConfig.onConfirm?.();
+        }}
+        onCancel={() => {
+          confirmConfig.onCancel?.() || setConfirmConfig(prev => ({ ...prev, isOpen: false }));
+        }}
+      />
     </div>
   );
 }

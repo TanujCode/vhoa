@@ -37,22 +37,30 @@ const CondoSidebar = ({ activePage, setActivePage, isOpen, setIsOpen, user }) =>
     { id: 'dashboard', label: 'Dashboard', icon: Layout },
     { id: 'members', label: 'Residents Directory', icon: Users },
     { id: 'documents', label: 'Documents Center', icon: FileText },
-    { id: 'maintenance', label: 'Maintenance Requests', icon: Wrench },
+    { id: 'maintenance', label: 'Service Requests', icon: Wrench },
     { id: 'payments', label: 'Payments Ledger', icon: CreditCard },
     { id: 'parking', label: 'Parking Allocations', icon: ParkingSquare },
     { id: 'visitors', label: 'Visitor Passes', icon: Key },
     { id: 'parcels', label: 'Parcels Logs', icon: Package },
+    { id: 'vendors', label: 'Vendors Directory', icon: Truck },
   ];
 
   // Resident Menu
   const residentNavItems = [
     { id: 'dashboard', label: 'Resident Home', icon: Home },
     { id: 'documents', label: 'Building Documents', icon: FileText },
-    { id: 'maintenance', label: 'Maintenance Requests', icon: Wrench },
+    { id: 'maintenance', label: 'Service Requests', icon: Wrench },
     { id: 'payments', label: 'My Payments', icon: CreditCard },
     { id: 'parking', label: 'My Parking Allocation', icon: ParkingSquare },
     { id: 'visitors', label: 'Guest Visitor Passes', icon: Key },
     { id: 'parcels', label: 'My Deliveries', icon: Package },
+    { id: 'vendors', label: 'Approved Vendors', icon: Truck },
+  ];
+
+  // Security Guard / Concierge Menu
+  const securityNavItems = [
+    { id: 'visitors', label: 'QR Visitor Check-In', icon: Shield },
+    { id: 'parcels', label: 'Parcel Logs', icon: Package },
   ];
 
   let navSections = [];
@@ -72,6 +80,13 @@ const CondoSidebar = ({ activePage, setActivePage, isOpen, setIsOpen, user }) =>
       {
         title: "Condo Menu",
         items: staffNavItems
+      }
+    ];
+  } else if (userRole === 'security_guard' || userRole === 'front_desk_concierge') {
+    navSections = [
+      {
+        title: "Security Console",
+        items: securityNavItems
       }
     ];
   } else {

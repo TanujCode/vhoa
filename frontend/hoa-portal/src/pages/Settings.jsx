@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Clock, Save, DollarSign, Eye, RefreshCw, ChevronDown } from 'lucide-react';
+import { Clock, Save, DollarSign, Eye, RefreshCw, ChevronDown, Globe, Settings2, Building2, ClipboardList } from 'lucide-react';
 import API from '../services/api';
 import { toast } from 'react-hot-toast';
 import RequestChangeModal from '../components/RequestChangeModal';
@@ -206,12 +206,14 @@ const Settings = ({ community, onCommunityUpdate }) => {
       {/* Timezone */}
       <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200 dark:border-white/10 rounded-3xl p-8 mb-6 shadow-sm">
         <h2 className="text-xl font-semibold mb-6 flex items-center gap-3 text-slate-900 dark:text-white">
-          🌐 Platform Timezone
+          <Globe size={16} className="inline mr-1" /> Platform Timezone
         </h2>
 
         <div className="bg-slate-50 dark:bg-[#1E3248] border border-slate-200 dark:border-0 rounded-2xl p-6">
           <div className="flex items-center gap-4 mb-6">
-            <div className="w-14 h-14 bg-blue-500/10 rounded-2xl flex items-center justify-center text-3xl">🕒</div>
+            <div className="w-14 h-14 bg-blue-500/10 rounded-2xl flex items-center justify-center text-blue-500">
+              <Clock size={28} />
+            </div>
             <div>
               <div className="text-xl font-mono font-bold text-slate-900 dark:text-white">
                 {timezones.find(t => t.value === form.time_zone)?.label || form.time_zone}
@@ -243,7 +245,7 @@ const Settings = ({ community, onCommunityUpdate }) => {
       </div>
 
       {/* Community Configuration */}
-      <h2 className="text-xl font-semibold mb-5 text-slate-900 dark:text-white">⚙️ Community Configuration</h2>
+      <h2 className="text-xl font-semibold mb-5 text-slate-900 dark:text-white flex items-center gap-2"><Settings2 size={20} /> Community Configuration</h2>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
@@ -322,7 +324,7 @@ const Settings = ({ community, onCommunityUpdate }) => {
 
             {/* HOA Escrow Bank Details */}
             <div className="bg-slate-50 dark:bg-[#1E3248] border border-slate-200 dark:border-0 rounded-2xl p-4 mt-4 space-y-3">
-              <h4 className="font-medium text-sm text-blue-600 dark:text-blue-400 border-b border-slate-200 dark:border-white/10 pb-2">🏦 HOA Escrow Bank Details</h4>
+              <h4 className="font-medium text-sm text-blue-600 dark:text-blue-400 border-b border-slate-200 dark:border-white/10 pb-2 flex items-center gap-2"><Building2 size={14} /> HOA Escrow Bank Details</h4>
               <div className="space-y-3">
                 <div>
                   <label className="block text-xs text-slate-500 dark:text-gray-400 mb-1">Bank Name</label>
@@ -431,7 +433,7 @@ const Settings = ({ community, onCommunityUpdate }) => {
       {/* Community Info */}
       <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200 dark:border-white/10 rounded-3xl p-6 mt-6 shadow-sm">
         <div className="flex justify-between items-center mb-4">
-          <h3 className="font-semibold text-lg text-slate-900 dark:text-white">📋 Community Info</h3>
+          <h3 className="font-semibold text-lg text-slate-900 dark:text-white flex items-center gap-2"><ClipboardList size={18} /> Community Info</h3>
           <button
             onClick={() => setIsChangeModalOpen(true)}
             className="text-xs bg-blue-500/10 dark:bg-blue-500/25 border-2 border-blue-500/30 hover:border-blue-500 hover:bg-blue-500 hover:text-white text-blue-700 dark:text-blue-400 dark:hover:text-white dark:hover:bg-blue-500 px-3.5 py-2 rounded-xl font-bold transition-all duration-200 active:scale-95 flex items-center gap-1.5 shadow-sm"

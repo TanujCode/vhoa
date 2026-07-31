@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CreditCard, Wrench, Bell, ArrowUpRight, Download, RefreshCw, Calendar } from 'lucide-react';
+import { CreditCard, Wrench, Bell, ArrowUpRight, Download, RefreshCw, Calendar, AlertTriangle } from 'lucide-react';
 import API from '../services/api';
 
 const ResidentStatCard = ({ label, value, icon: Icon, color, sub, actionLabel, onClick }) => (
@@ -164,7 +164,7 @@ const ResidentDashboard = ({ community, user: initialUser, setActivePage }) => {
       {violations.filter(v => ['OPEN', 'IN_PROGRESS', 'APPEALED'].includes(v.violation_status)).length > 0 && (
         <div className="bg-red-500/10 dark:bg-red-500/10 border border-red-500/35 rounded-3xl p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm animate-in slide-in-from-top duration-300">
           <div className="flex items-start gap-3">
-            <span className="text-xl mt-0.5 sm:mt-0">⚠️</span>
+            <span className="mt-0.5 sm:mt-0 text-red-500"><AlertTriangle size={20} /></span>
             <div>
               <h4 className="font-bold text-sm text-red-700 dark:text-red-400">
                 Active Violation Notice{violations.filter(v => ['OPEN', 'IN_PROGRESS', 'APPEALED'].includes(v.violation_status)).length > 1 ? 's' : ''}

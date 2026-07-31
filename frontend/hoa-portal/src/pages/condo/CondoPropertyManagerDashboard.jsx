@@ -103,7 +103,7 @@ export default function CondoPropertyManagerDashboard({ user, setActivePage }) {
       const [requestsRes, membersRes, maintenanceRes, parcelsRes, visitorsRes] = await Promise.all([
         API.get(`/condo/community/${commId}/join-requests/pending`),
         API.get(`/condo/community/${commId}/members`),
-        API.get(`/condo/operations/maintenance?community_id=${commId}`),
+        API.get(`/condo/operations/service-request/${commId}?limit=5000`),
         API.get(`/condo/operations/parcels?community_id=${commId}`),
         API.get(`/condo/operations/visitors?community_id=${commId}`)
       ]);
@@ -116,10 +116,10 @@ export default function CondoPropertyManagerDashboard({ user, setActivePage }) {
       setMembersCount(memList.length);
 
       const maintList = maintenanceRes.data || [];
-      const openM = maintList.filter(m => m.status === 'OPEN' || m.status === 'IN_PROGRESS').length;
+      const openM = maintList.filter(m => m.status_name === 'OPEN' || m.status_name === 'APPROVED' || m.status_name === 'IN_PROGRESS' || m.status_name === 'VENDOR_ASSIGNED').length;
       setOpenMaintenance(openM);
 
-      const resolvedM = maintList.filter(m => m.status === 'RESOLVED' || m.status === 'CLOSED').length;
+      const resolvedM = maintList.filter(m => m.status_name === 'CLOSED' || m.status_name === 'CANCELLED').length;
       const maintPercentage = maintList.length ? Math.round((resolvedM / maintList.length) * 100) : 100;
       setMaintRate(maintPercentage);
 
@@ -341,7 +341,7 @@ export default function CondoPropertyManagerDashboard({ user, setActivePage }) {
               {[
                 { label: 'Residents Directory', desc: 'Active members list', icon: <Users size={20} />, color: 'text-blue-500', bg: 'bg-blue-500/10 dark:bg-blue-500/15', action: () => setActivePage('members') },
                 { label: 'Documents Center', desc: 'Bylaws & record logs', icon: <FileText size={20} />, color: 'text-purple-500', bg: 'bg-purple-500/10 dark:bg-purple-500/15', action: () => setActivePage('documents') },
-                { label: 'Maintenance Requests', desc: 'Plumbing & repair logs', icon: <Wrench size={20} />, color: 'text-amber-500', bg: 'bg-amber-500/10 dark:bg-amber-500/15', badge: openMaintenance > 0 ? openMaintenance : null, action: () => setActivePage('maintenance') },
+                { label: 'Service Requests', desc: 'Plumbing & repair logs', icon: <Wrench size={20} />, color: 'text-amber-500', bg: 'bg-amber-500/10 dark:bg-amber-500/15', badge: openMaintenance > 0 ? openMaintenance : null, action: () => setActivePage('maintenance') },
                 { label: 'Payments Ledger', desc: 'Verify HOA billing', icon: <FileText size={20} />, color: 'text-indigo-500', bg: 'bg-indigo-500/10 dark:bg-indigo-500/15', action: () => setActivePage('payments') },
                 { label: 'Parking Allocations', desc: 'Assigned slots & EV', icon: <Home size={20} />, color: 'text-emerald-500', bg: 'bg-emerald-500/10 dark:bg-emerald-500/15', action: () => setActivePage('parking') },
                 { label: 'Visitor Passes', desc: 'Guest security codes', icon: <Zap size={20} />, color: 'text-rose-500', bg: 'bg-rose-500/10 dark:bg-rose-500/15', badge: activeVisitors > 0 ? activeVisitors : null, action: () => setActivePage('visitors') },
@@ -388,7 +388,7 @@ export default function CondoPropertyManagerDashboard({ user, setActivePage }) {
             {/* 1. Maintenance Requests Resolution Rate */}
             <div className="space-y-1.5">
               <div className="flex justify-between items-center text-[10px]">
-                <span className="font-bold text-slate-500 dark:text-gray-400 uppercase tracking-wider">Maintenance Clear Rate</span>
+                <span className="font-bold text-slate-500 dark:text-gray-400 uppercase tracking-wider">Service Clear Rate</span>
                 <span className="font-bold text-slate-900 dark:text-white">{loading ? '…' : `${maintRate}% Resolved`}</span>
               </div>
               <div className="w-full bg-slate-100 dark:bg-white/[0.05] h-2 rounded-full overflow-hidden border border-slate-200/20 dark:border-white/5">

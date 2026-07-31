@@ -1049,9 +1049,9 @@ export default function ScreeningHub({ user, setActivePage, selectedPropertyFilt
                             : 'bg-amber-500/5 border-amber-500/15 text-amber-650 dark:text-amber-450'
                         }`}>
                           {selectedUnit.status === 'VACANT' ? (
-                            <span className="flex items-center gap-1.5">✓ This unit is vacant and available for immediate lease.</span>
+                            <span className="flex items-center gap-1.5"><CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" /> This unit is vacant and available for immediate lease.</span>
                           ) : (
-                            <span className="flex items-center gap-1.5">⚠️ This unit is currently occupied. Submitting this application will place you on the pending waitlist.</span>
+                            <span className="flex items-center gap-1.5"><ShieldAlert className="w-4 h-4 text-amber-500 shrink-0" /> This unit is currently occupied. Submitting this application will place you on the pending waitlist.</span>
                           )}
                         </div>
                       )}
@@ -1269,7 +1269,7 @@ export default function ScreeningHub({ user, setActivePage, selectedPropertyFilt
             {/* Background Simulation Dropdown for Demo */}
             <div className="space-y-3 pt-2">
               <h3 className="text-xs font-bold text-amber-650 dark:text-amber-400 uppercase tracking-widest flex items-center gap-1">
-                <Sparkles className="w-3.5 h-3.5" /> ★ Demo Background Simulation Mode
+                <Sparkles className="w-3.5 h-3.5 text-amber-500 animate-pulse" /> Demo Background Simulation Mode
               </h3>
               <div className="p-4 rounded-2xl border border-amber-500/20 bg-amber-500/5 text-xs space-y-2">
                 <p className="text-slate-650 dark:text-slate-300 font-medium">Select a background check result to simulate for this demo:</p>

@@ -247,7 +247,7 @@ export default function Contracts() {
   };
 
   const handleDeleteContract = async (contractId) => {
-    if (!window.confirm('Are you sure you want to delete this contract? This action cannot be undone.')) {
+    if (!await window.customConfirm('Are you sure you want to delete this contract? This action cannot be undone.')) {
       return;
     }
     try {

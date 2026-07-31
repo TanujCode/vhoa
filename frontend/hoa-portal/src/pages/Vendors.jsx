@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, X, Lock, Truck, Search, Copy, Check, Trash2 } from 'lucide-react';
+import { Plus, X, Lock, Truck, Search, Copy, Check, Trash2, Calendar } from 'lucide-react';
 import API from "../services/api";
 import ConfirmModal from "../components/ConfirmModal";
 import { toast } from 'react-hot-toast';
@@ -407,6 +407,7 @@ const Vendors = ({ communityId, userRole, user }) => {
                     <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Company Name *</label>
                     <input 
                       required 
+                      maxLength={100}
                       className={`w-full bg-slate-50 dark:bg-[#111c2a] border ${errors.company_name ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/10 focus:border-blue-500'} rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none`} 
                       value={formData.company_name} 
                       onChange={(e) => {
@@ -423,6 +424,7 @@ const Vendors = ({ communityId, userRole, user }) => {
                     <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Contact Person *</label>
                     <input 
                       required 
+                      maxLength={50}
                       className={`w-full bg-slate-50 dark:bg-[#111c2a] border ${errors.contact_person ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/10 focus:border-blue-500'} rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none`} 
                       value={formData.contact_person} 
                       onChange={(e) => {
@@ -472,6 +474,7 @@ const Vendors = ({ communityId, userRole, user }) => {
                       <input 
                         type="email" 
                         required 
+                        maxLength={100}
                         placeholder="abc@gmail.com"
                         className={`w-full bg-slate-50 dark:bg-[#111c2a] border ${errors.email ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/10 focus:border-blue-500'} rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none`} 
                         value={formData.email} 
@@ -491,6 +494,7 @@ const Vendors = ({ communityId, userRole, user }) => {
                       <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">License Number *</label>
                       <input 
                         required 
+                        maxLength={20}
                         className={`w-full bg-slate-50 dark:bg-[#111c2a] border ${errors.license_number ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/10 focus:border-blue-500'} rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none`} 
                         value={formData.license_number} 
                         onChange={(e) => {
@@ -504,15 +508,21 @@ const Vendors = ({ communityId, userRole, user }) => {
                     </div>
                     <div>
                       <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Expiry</label>
-                      <input 
-                        type="date" 
-                        className={`w-full bg-slate-50 dark:bg-[#111c2a] border ${errors.expiry ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/10 focus:border-blue-500'} rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none`} 
-                        value={formData.expiry} 
-                        onChange={(e) => {
-                          setFormData({...formData, expiry: e.target.value});
-                          validateField('expiry', e.target.value);
-                        }} 
-                      />
+                      <div className="relative">
+                        <Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-gray-500 pointer-events-none" size={16} />
+                        <input 
+                          type="date" 
+                          min={new Date().toISOString().split('T')[0]}
+                          autoComplete="off"
+                          onKeyDown={e => e.preventDefault()}
+                          className={`w-full bg-slate-50 dark:bg-[#111c2a] border ${errors.expiry ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/10 focus:border-blue-500'} rounded-lg pl-10 pr-3 py-2 text-sm text-slate-900 dark:text-white outline-none cursor-pointer`} 
+                          value={formData.expiry} 
+                          onChange={(e) => {
+                            setFormData({...formData, expiry: e.target.value});
+                            validateField('expiry', e.target.value);
+                          }} 
+                        />
+                      </div>
                       {errors.expiry && (
                         <p className="text-red-500 text-xs mt-1">{errors.expiry}</p>
                       )}
@@ -523,6 +533,7 @@ const Vendors = ({ communityId, userRole, user }) => {
                     <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Insurance Number *</label>
                     <input 
                       required
+                      maxLength={25}
                       className={`w-full bg-slate-50 dark:bg-[#111c2a] border ${errors.insurance ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/10 focus:border-blue-500'} rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none`} 
                       value={formData.insurance} 
                       onChange={(e) => {
@@ -665,6 +676,7 @@ const Vendors = ({ communityId, userRole, user }) => {
                   <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Company Name <span className="text-red-500">*</span></label>
                   <input 
                     required 
+                    maxLength={100}
                     className={`w-full bg-slate-50 dark:bg-[#111c2a] border ${errors.company_name ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/10 focus:border-blue-500'} rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none`} 
                     value={formData.company_name} 
                     onChange={(e) => {
@@ -681,6 +693,7 @@ const Vendors = ({ communityId, userRole, user }) => {
                   <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Contact Person <span className="text-red-500">*</span></label>
                   <input 
                     required 
+                    maxLength={50}
                     className={`w-full bg-slate-50 dark:bg-[#111c2a] border ${errors.contact_person ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/10 focus:border-blue-500'} rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none`} 
                     value={formData.contact_person} 
                     onChange={(e) => {
@@ -730,6 +743,7 @@ const Vendors = ({ communityId, userRole, user }) => {
                     <input 
                       type="email" 
                       required 
+                      maxLength={100}
                       placeholder="abc@gmail.com"
                       className={`w-full bg-slate-50 dark:bg-[#111c2a] border ${errors.email ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/10 focus:border-blue-500'} rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none`} 
                       value={formData.email} 
@@ -749,6 +763,7 @@ const Vendors = ({ communityId, userRole, user }) => {
                     <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">License Number <span className="text-red-500">*</span></label>
                     <input 
                       required 
+                      maxLength={20}
                       className={`w-full bg-slate-50 dark:bg-[#111c2a] border ${errors.license_number ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/10 focus:border-blue-500'} rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none`} 
                       value={formData.license_number} 
                       onChange={(e) => {
@@ -762,15 +777,21 @@ const Vendors = ({ communityId, userRole, user }) => {
                   </div>
                   <div>
                     <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Expiry</label>
-                    <input 
-                      type="date" 
-                      className={`w-full bg-slate-50 dark:bg-[#111c2a] border ${errors.expiry ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/10 focus:border-blue-500'} rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none`} 
-                      value={formData.expiry} 
-                      onChange={(e) => {
-                        setFormData({...formData, expiry: e.target.value});
-                        validateField('expiry', e.target.value);
-                      }} 
-                    />
+                    <div className="relative">
+                      <Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-gray-500 pointer-events-none" size={16} />
+                      <input 
+                        type="date" 
+                        min={new Date().toISOString().split('T')[0]}
+                        autoComplete="off"
+                        onKeyDown={e => e.preventDefault()}
+                        className={`w-full bg-slate-50 dark:bg-[#111c2a] border ${errors.expiry ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/10 focus:border-blue-500'} rounded-lg pl-10 pr-3 py-2 text-sm text-slate-900 dark:text-white outline-none cursor-pointer`} 
+                        value={formData.expiry} 
+                        onChange={(e) => {
+                          setFormData({...formData, expiry: e.target.value});
+                          validateField('expiry', e.target.value);
+                        }} 
+                      />
+                    </div>
                     {errors.expiry && (
                       <p className="text-red-500 text-xs mt-1">{errors.expiry}</p>
                     )}

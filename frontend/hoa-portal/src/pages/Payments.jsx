@@ -3,7 +3,7 @@ import {
   DollarSign, CreditCard, Calendar, History, CheckCircle, 
   AlertCircle, ArrowRight, Lock, Shield, X, Loader, 
   FileText, ArrowDownLeft, ArrowUpRight, Zap,
-  User as UserIcon, Dumbbell, AlertTriangle, Wrench, Building2
+  User as UserIcon, Dumbbell, AlertTriangle, Wrench, Building2, PartyPopper
 } from 'lucide-react';
 import API from '../services/api';
 
@@ -168,7 +168,7 @@ const Payments = ({ community, user, paymentState, setPaymentState, viewAsReside
   };
 
   const handleDeactivateRecurring = async () => {
-    if (!window.confirm('Are you sure you want to turn off Auto-Pay?')) return;
+    if (!await window.customConfirm('Are you sure you want to turn off Auto-Pay?')) return;
     try {
       setLoading(true);
       await API.post(`/payment/deactivate-recurring/${community.community_id}`);
@@ -267,7 +267,9 @@ const Payments = ({ community, user, paymentState, setPaymentState, viewAsReside
         <div>
           {dues.length === 0 ? (
             <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-12 text-center shadow-sm">
-              <div className="w-16 h-16 bg-blue-500/10 rounded-2xl flex items-center justify-center text-blue-600 dark:text-blue-400 text-3xl mx-auto mb-4">🎉</div>
+              <div className="w-16 h-16 bg-blue-500/10 rounded-2xl flex items-center justify-center text-blue-600 dark:text-blue-400 mx-auto mb-4">
+                <PartyPopper size={30} />
+              </div>
               <h3 className="text-xl font-semibold mb-2 text-slate-900 dark:text-white">No Outstanding Dues</h3>
               <p className="text-slate-500 dark:text-gray-400 text-sm">You are fully paid up for all community services, amenities, and dues.</p>
             </div>
@@ -722,7 +724,9 @@ const Payments = ({ community, user, paymentState, setPaymentState, viewAsReside
                       }`}
                     >
                       <div className="flex items-center gap-3">
-                        <span className="w-10 h-10 bg-blue-500/10 dark:bg-blue-500/20 rounded-xl flex items-center justify-center text-blue-600 dark:text-blue-400 text-lg font-bold">🏦</span>
+                        <span className="w-10 h-10 bg-blue-500/10 dark:bg-blue-500/20 rounded-xl flex items-center justify-center text-blue-600 dark:text-blue-400">
+                          <Building2 size={18} />
+                        </span>
                         <div>
                           <div className="text-sm font-semibold">ACH Bank Transfer</div>
                           <div className="text-xs text-slate-500 dark:text-gray-400">Direct escrow bank wire routing</div>

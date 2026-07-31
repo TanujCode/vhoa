@@ -40,6 +40,43 @@ const EditCommunityModal = ({ isOpen, onClose, community, onSuccess }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // 1. Contact Person validation (letters, hyphens, and spaces only)
+    if (formData.contact_person.trim()) {
+      const contactValid = /^[a-zA-Z\s\-]*$/.test(formData.contact_person.trim());
+      if (!contactValid) {
+        setMessage("❌ Contact Person name can only contain letters and spaces.");
+        return;
+      }
+    }
+
+    // 2. Bank Name validation (letters, spaces, dots, and hyphens only)
+    if (formData.bank_name.trim()) {
+      const bankValid = /^[a-zA-Z\s.\-]*$/.test(formData.bank_name.trim());
+      if (!bankValid) {
+        setMessage("❌ Bank Name can only contain letters, spaces, dots, and hyphens.");
+        return;
+      }
+    }
+
+    // 3. Routing Number validation (exactly 9 digits)
+    if (formData.bank_routing_no.trim()) {
+      const routingValid = /^\d{9}$/.test(formData.bank_routing_no.trim());
+      if (!routingValid) {
+        setMessage("❌ Bank Routing Number must be exactly 9 digits.");
+        return;
+      }
+    }
+
+    // 4. Account Number validation (5 to 17 digits)
+    if (formData.bank_account_no.trim()) {
+      const accValid = /^\d{5,17}$/.test(formData.bank_account_no.trim());
+      if (!accValid) {
+        setMessage("❌ Bank Account Number must be between 5 and 17 digits.");
+        return;
+      }
+    }
+
     setLoading(true);
     setMessage("");
 

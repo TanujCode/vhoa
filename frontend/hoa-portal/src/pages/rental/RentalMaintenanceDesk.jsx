@@ -3,7 +3,7 @@ import {
   Wrench, Plus, Clock, CheckCircle2, AlertTriangle, 
   Send, DollarSign, UserCheck, ShieldAlert, Sparkles, 
   Search, X, Edit, ChevronDown, Droplets, Zap, Leaf, Shield, Bug, Wind,
-  MessageSquare, XCircle, FileText, Filter
+  MessageSquare, XCircle, FileText, Filter, CreditCard, Landmark, Lightbulb
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import API from '../../services/api';
@@ -903,24 +903,24 @@ export default function RentalMaintenanceDesk({ user, selectedPropertyFilterId =
                   <button
                     type="button"
                     onClick={() => setPayMethod('ACH')}
-                    className={`p-3 rounded-xl border text-center transition-all text-xs font-bold cursor-pointer ${
+                    className={`p-3 rounded-xl border text-center transition-all text-xs font-bold cursor-pointer flex items-center justify-center gap-2 ${
                       payMethod === 'ACH'
                         ? 'border-blue-500 bg-blue-500/5 text-blue-600 dark:text-blue-400'
                         : 'border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/5 text-slate-600 dark:text-gray-400'
                     }`}
                   >
-                    🏦 Bank ACH
+                    <Landmark size={14} className={payMethod === 'ACH' ? 'text-blue-500 dark:text-blue-400' : 'text-slate-400'} /> Bank ACH
                   </button>
                   <button
                     type="button"
                     onClick={() => setPayMethod('CARD')}
-                    className={`p-3 rounded-xl border text-center transition-all text-xs font-bold cursor-pointer ${
+                    className={`p-3 rounded-xl border text-center transition-all text-xs font-bold cursor-pointer flex items-center justify-center gap-2 ${
                       payMethod === 'CARD'
                         ? 'border-blue-500 bg-blue-500/5 text-blue-600 dark:text-blue-400'
                         : 'border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/5 text-slate-600 dark:text-gray-400'
                     }`}
                   >
-                    💳 Credit Card
+                    <CreditCard size={14} className={payMethod === 'CARD' ? 'text-blue-500 dark:text-blue-400' : 'text-slate-400'} /> Credit Card
                   </button>
                 </div>
               </div>
@@ -1009,8 +1009,11 @@ export default function RentalMaintenanceDesk({ user, selectedPropertyFilterId =
               <button onClick={() => setShowTenantNoteModal(false)} className="text-slate-400 hover:text-slate-900 dark:text-gray-500 dark:hover:text-white text-lg cursor-pointer"><X size={20} /></button>
             </div>
 
-            <div className="p-3 bg-purple-500/10 border border-purple-500/20 rounded-xl text-xs text-purple-900 dark:text-purple-300">
-              💡 <strong>Note to Landlord:</strong> Write your note or update request below. Your landlord will review this note and update the maintenance ticket details.
+            <div className="p-3 bg-purple-500/10 border border-purple-500/20 rounded-xl text-xs text-purple-950 dark:text-[#BF80FF] flex gap-2 items-start">
+              <Lightbulb size={16} className="text-purple-500 shrink-0 mt-0.5" />
+              <div>
+                <strong>Note to Landlord:</strong> Write your note or update request below. Your landlord will review this note and update the maintenance ticket details.
+              </div>
             </div>
 
             <form onSubmit={handleTenantNoteSubmit} className="space-y-4">

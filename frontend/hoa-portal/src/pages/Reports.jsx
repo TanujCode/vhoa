@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Download, RefreshCw, BarChart2, ShieldAlert, Wrench, CreditCard, Calendar, Users } from 'lucide-react';
+import { Download, RefreshCw, BarChart2, ShieldAlert, Wrench, CreditCard, Calendar, Users, ChevronDown, FileSpreadsheet, FileText, FileDown, AlertTriangle, DollarSign, User, Waves, CalendarDays, CheckCircle2 } from 'lucide-react';
 import API from '../services/api';
 
 const Reports = ({ community, user, setActivePage }) => {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(null);
+  const [openDropdown, setOpenDropdown] = useState(null); // 'violations'|'servicerequests'|'payments'|'bookings'
 
   useEffect(() => {
     if (community?.community_id) {
@@ -25,21 +26,26 @@ const Reports = ({ community, user, setActivePage }) => {
     }
   };
 
-  const handleExport = async (type) => {
+  const handleExport = async (type, format = 'csv') => {
     try {
       setExporting(type);
+      setOpenDropdown(null);
       const response = await API.get(`/report/${community.community_id}/export?type=${type}`, {
-        responseType: 'blob', // Important: response is binary CSV file
+        responseType: 'blob',
       });
-      
-      // Create a local URL for the downloadable blob
-      const url = window.URL.createObjectURL(new Blob([response.data]));
+
+      const mimeMap = { csv: 'text/csv', pdf: 'application/pdf', excel: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' };
+      const extMap  = { csv: 'csv',      pdf: 'pdf',            excel: 'xlsx' };
+
+      const blob = new Blob([response.data], { type: mimeMap[format] });
+      const url  = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', `report_${type}_${community.community_id}_${new Date().toISOString().slice(0,10)}.csv`);
+      link.href  = url;
+      link.setAttribute('download', `report_${type}_${community.community_id}_${new Date().toISOString().slice(0,10)}.${extMap[format]}`);
       document.body.appendChild(link);
       link.click();
       link.remove();
+      window.URL.revokeObjectURL(url);
     } catch (err) {
       console.error(`Export failed for type: ${type}`, err);
       alert('Failed to generate report export. Please try again.');
@@ -47,6 +53,45 @@ const Reports = ({ community, user, setActivePage }) => {
       setExporting(null);
     }
   };
+
+  // Close dropdown when clicking outside
+  const handleOutsideClick = () => setOpenDropdown(null);
+
+  const ExportDropdown = ({ reportType, colorClass, iconColorClass }) => (
+    <div className="relative" onClick={e => e.stopPropagation()}>
+      <button
+        onClick={() => setOpenDropdown(openDropdown === reportType ? null : reportType)}
+        disabled={exporting === reportType}
+        className={`flex items-center gap-1.5 ${colorClass} px-3 py-2 rounded-xl text-xs font-semibold transition`}
+      >
+        <Download size={13} />
+        {exporting === reportType ? 'Exporting...' : 'Export'}
+        <ChevronDown size={12} className={`transition-transform ${openDropdown === reportType ? 'rotate-180' : ''}`} />
+      </button>
+      {openDropdown === reportType && (
+        <div className="absolute right-0 top-full mt-1 bg-white dark:bg-[#1E2E42] border border-slate-200 dark:border-white/10 rounded-2xl shadow-xl z-50 min-w-[130px] overflow-hidden">
+          <button
+            onClick={() => handleExport(reportType, 'csv')}
+            className="w-full flex items-center gap-2 px-4 py-2.5 text-xs font-medium text-slate-700 dark:text-gray-300 hover:bg-slate-50 dark:hover:bg-white/5 transition"
+          >
+            <FileDown size={13} className="text-blue-500" /> CSV File
+          </button>
+          <button
+            onClick={() => handleExport(reportType, 'excel')}
+            className="w-full flex items-center gap-2 px-4 py-2.5 text-xs font-medium text-slate-700 dark:text-gray-300 hover:bg-slate-50 dark:hover:bg-white/5 transition"
+          >
+            <FileSpreadsheet size={13} className="text-emerald-500" /> Excel File
+          </button>
+          <button
+            onClick={() => handleExport(reportType, 'pdf')}
+            className="w-full flex items-center gap-2 px-4 py-2.5 text-xs font-medium text-slate-700 dark:text-gray-300 hover:bg-slate-50 dark:hover:bg-white/5 transition"
+          >
+            <FileText size={13} className="text-red-500" /> PDF File
+          </button>
+        </div>
+      )}
+    </div>
+  );
 
   if (loading && !stats) {
     return (
@@ -79,10 +124,12 @@ const Reports = ({ community, user, setActivePage }) => {
         >
           <div className="flex justify-between items-start mb-4">
             <div className="text-sm font-semibold text-slate-500 dark:text-gray-400">Total Fines Issued</div>
-            <div className="w-10 h-10 rounded-xl bg-red-500/10 dark:bg-red-500/20 text-red-500 flex items-center justify-center text-lg">⚠️</div>
+            <div className="w-10 h-10 rounded-xl bg-red-500/10 dark:bg-red-500/20 text-red-500 flex items-center justify-center">
+              <AlertTriangle size={20} />
+            </div>
           </div>
           <div className="text-3xl font-bold text-slate-900 dark:text-white">${stats.violations.fine_amount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
-          <div className="text-xs text-red-500 mt-2 font-medium">⚠️ {stats.violations.total} total violations issued</div>
+          <div className="text-xs text-red-500 mt-2 font-medium flex items-center gap-1"><AlertTriangle size={11} /> {stats.violations.total} total violations issued</div>
         </div>
 
         <div 
@@ -91,10 +138,12 @@ const Reports = ({ community, user, setActivePage }) => {
         >
           <div className="flex justify-between items-start mb-4">
             <div className="text-sm font-semibold text-slate-500 dark:text-gray-400">Revenue Collected</div>
-            <div className="w-10 h-10 rounded-xl bg-blue-500/10 dark:bg-blue-500/20 text-blue-500 flex items-center justify-center text-lg">💰</div>
+            <div className="w-10 h-10 rounded-xl bg-blue-500/10 dark:bg-blue-500/20 text-blue-500 flex items-center justify-center">
+              <DollarSign size={20} />
+            </div>
           </div>
           <div className="text-3xl font-bold text-slate-900 dark:text-white">${stats.payments.total_collected.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
-          <div className="text-xs text-blue-500 mt-2 font-medium">✓ {stats.payments.total_count} transactions completed</div>
+          <div className="text-xs text-blue-500 mt-2 font-medium flex items-center gap-1"><CheckCircle2 size={11} /> {stats.payments.total_count} transactions completed</div>
         </div>
 
         <div 
@@ -103,7 +152,9 @@ const Reports = ({ community, user, setActivePage }) => {
         >
           <div className="flex justify-between items-start mb-4">
             <div className="text-sm font-semibold text-slate-500 dark:text-gray-400">Active Service Requests</div>
-            <div className="w-10 h-10 rounded-xl bg-blue-500/10 dark:bg-blue-500/20 text-blue-500 flex items-center justify-center text-lg">🔧</div>
+            <div className="w-10 h-10 rounded-xl bg-blue-500/10 dark:bg-blue-500/20 text-blue-500 flex items-center justify-center">
+              <Wrench size={20} />
+            </div>
           </div>
           <div className="text-3xl font-bold text-slate-900 dark:text-white">
             {stats.service_requests.total}
@@ -119,7 +170,9 @@ const Reports = ({ community, user, setActivePage }) => {
         >
           <div className="flex justify-between items-start mb-4">
             <div className="text-sm font-semibold text-slate-500 dark:text-gray-400">Total Residents</div>
-            <div className="w-10 h-10 rounded-xl bg-indigo-500/10 dark:bg-indigo-500/20 text-indigo-500 flex items-center justify-center text-lg">👤</div>
+            <div className="w-10 h-10 rounded-xl bg-indigo-500/10 dark:bg-indigo-500/20 text-indigo-500 flex items-center justify-center">
+              <User size={20} />
+            </div>
           </div>
           <div className="text-3xl font-bold text-slate-900 dark:text-white">{stats.residents_count}</div>
           <div className="text-xs text-indigo-500 mt-2 font-medium">Active registered accounts</div>
@@ -127,7 +180,7 @@ const Reports = ({ community, user, setActivePage }) => {
       </div>
 
       {/* Reports Sections */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8" onClick={handleOutsideClick}>
         
         {/* Violations Report */}
         <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 p-6 rounded-3xl shadow-sm flex flex-col justify-between">
@@ -136,13 +189,7 @@ const Reports = ({ community, user, setActivePage }) => {
               <h3 className="font-semibold text-lg flex items-center gap-2">
                 <ShieldAlert className="text-red-500" size={20} /> Violations Report
               </h3>
-              <button
-                onClick={() => handleExport('violations')}
-                disabled={exporting === 'violations'}
-                className="flex items-center gap-2 bg-red-500/10 hover:bg-red-500/20 dark:bg-[#3B1C1C] dark:hover:bg-[#5C2323] text-red-600 dark:text-red-400 px-4 py-2 rounded-xl text-xs font-semibold transition"
-              >
-                <Download size={14} /> {exporting === 'violations' ? 'Exporting...' : 'Export CSV'}
-              </button>
+              <ExportDropdown reportType="violations" colorClass="bg-red-500/10 hover:bg-red-500/20 dark:bg-[#3B1C1C] dark:hover:bg-[#5C2323] text-red-600 dark:text-red-400" />
             </div>
             
             <div className="space-y-4">
@@ -198,13 +245,7 @@ const Reports = ({ community, user, setActivePage }) => {
               <h3 className="font-semibold text-lg flex items-center gap-2">
                 <Wrench className="text-blue-500" size={20} /> Service Requests Report
               </h3>
-              <button
-                onClick={() => handleExport('servicerequests')}
-                disabled={exporting === 'servicerequests'}
-                className="flex items-center gap-2 bg-blue-500/10 hover:bg-blue-500/20 dark:bg-[#1E3248] dark:hover:bg-white/5 text-blue-600 dark:text-blue-400 px-4 py-2 rounded-xl text-xs font-semibold transition"
-              >
-                <Download size={14} /> {exporting === 'servicerequests' ? 'Exporting...' : 'Export CSV'}
-              </button>
+              <ExportDropdown reportType="servicerequests" colorClass="bg-blue-500/10 hover:bg-blue-500/20 dark:bg-[#1E3248] dark:hover:bg-white/5 text-blue-600 dark:text-blue-400" />
             </div>
 
             <div className="space-y-4">
@@ -262,13 +303,7 @@ const Reports = ({ community, user, setActivePage }) => {
               <h3 className="font-semibold text-lg flex items-center gap-2">
                 <CreditCard className="text-blue-500" size={20} /> Payments & Financials
               </h3>
-              <button
-                onClick={() => handleExport('payments')}
-                disabled={exporting === 'payments'}
-                className="flex items-center gap-2 bg-blue-500/10 hover:bg-blue-500/20 dark:bg-blue-500/20 dark:hover:bg-blue-500/30 text-blue-600 dark:text-blue-400 px-4 py-2 rounded-xl text-xs font-semibold transition"
-              >
-                <Download size={14} /> {exporting === 'payments' ? 'Exporting...' : 'Export CSV'}
-              </button>
+              <ExportDropdown reportType="payments" colorClass="bg-blue-500/10 hover:bg-blue-500/20 dark:bg-blue-500/20 dark:hover:bg-blue-500/30 text-blue-600 dark:text-blue-400" />
             </div>
 
             <div className="space-y-3">
@@ -302,13 +337,7 @@ const Reports = ({ community, user, setActivePage }) => {
               <h3 className="font-semibold text-lg flex items-center gap-2">
                 <Calendar className="text-indigo-500" size={20} /> Amenity Bookings Report
               </h3>
-              <button
-                onClick={() => handleExport('bookings')}
-                disabled={exporting === 'bookings'}
-                className="flex items-center gap-2 bg-indigo-500/10 hover:bg-indigo-500/20 dark:bg-white/5 text-indigo-600 dark:text-indigo-400 px-4 py-2 rounded-xl text-xs font-semibold transition"
-              >
-                <Download size={14} /> {exporting === 'bookings' ? 'Exporting...' : 'Export CSV'}
-              </button>
+              <ExportDropdown reportType="bookings" colorClass="bg-indigo-500/10 hover:bg-indigo-500/20 dark:bg-white/5 text-indigo-600 dark:text-indigo-400" />
             </div>
 
             <div className="space-y-4">
@@ -317,7 +346,9 @@ const Reports = ({ community, user, setActivePage }) => {
                   <div className="text-sm font-semibold text-slate-900 dark:text-white">{stats.amenity_bookings.amenities_count}</div>
                   <div className="text-xs text-slate-500 dark:text-gray-400">Total Active Amenities</div>
                 </div>
-                <div className="text-3xl">🏊</div>
+                <div className="w-10 h-10 bg-blue-500/10 dark:bg-[#0D1B2A]/50 rounded-2xl flex items-center justify-center text-blue-500">
+                  <Waves size={22} />
+                </div>
               </div>
 
               <div className="bg-slate-50 dark:bg-[#0D1B2A]/50 p-4 rounded-2xl flex items-center justify-between border border-slate-100 dark:border-white/5">
@@ -325,7 +356,9 @@ const Reports = ({ community, user, setActivePage }) => {
                   <div className="text-sm font-semibold text-slate-900 dark:text-white">{stats.amenity_bookings.total}</div>
                   <div className="text-xs text-slate-500 dark:text-gray-400">Total Bookings Made</div>
                 </div>
-                <div className="text-3xl">📅</div>
+                <div className="w-10 h-10 bg-blue-500/10 dark:bg-[#0D1B2A]/50 rounded-2xl flex items-center justify-center text-blue-500">
+                  <CalendarDays size={22} />
+                </div>
               </div>
             </div>
           </div>

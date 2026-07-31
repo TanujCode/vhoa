@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   FileText, CheckCircle, Clock, Plus, DollarSign, 
-  TrendingUp, Users, Building, Copy, Check, RefreshCw, Sparkles
+  TrendingUp, Users, Building, Copy, Check, RefreshCw, Sparkles, Lightbulb
 } from 'lucide-react';
 import { getContracts } from '../services/contractService';
 
@@ -238,9 +238,9 @@ export default function SalesDashboard({ setActivePage }) {
                   </button>
                 </div>
               </div>
-              <div className="bg-slate-50 dark:bg-white/[0.02] border border-slate-100 dark:border-white/5 p-3 rounded-2xl text-[11px] text-slate-500 dark:text-gray-500 leading-snug mt-4">
-                💡 Tip: Copy the Onboarding Link for any Active contract code and email it directly to the property manager for quick self-onboarding.
-              </div>
+                <div className="bg-slate-50 dark:bg-white/[0.02] border border-slate-100 dark:border-white/5 p-3 rounded-2xl text-[11px] text-slate-500 dark:text-gray-500 leading-snug mt-4 flex items-start gap-2">
+                  <Lightbulb size={13} className="text-amber-500 shrink-0 mt-0.5" /> Tip: Copy the Onboarding Link for any Active contract code and email it directly to the property manager for quick self-onboarding.
+                </div>
             </div>
           </div>
 
