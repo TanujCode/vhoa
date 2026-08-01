@@ -257,7 +257,17 @@ const RentalProfile = ({ user, setUser, viewRole }) => {
       const res = await API.post('/rental/user/profile/id-proof', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
-      setUser(prev => ({ ...prev, id_proof_url: res.data.id_proof_url }));
+      setUser(prev => {
+        const updated = { ...prev, id_proof_url: res.data.id_proof_url };
+        try {
+          const stored = localStorage.getItem('rental_user');
+          if (stored) {
+            const parsed = JSON.parse(stored);
+            localStorage.setItem('rental_user', JSON.stringify({ ...parsed, id_proof_url: res.data.id_proof_url }));
+          }
+        } catch (_) {}
+        return updated;
+      });
       showMsg('success', 'ID Proof uploaded successfully!');
     } catch (err) {
       showMsg('error', 'Failed to upload ID proof.');
@@ -278,7 +288,17 @@ const RentalProfile = ({ user, setUser, viewRole }) => {
       const res = await API.post('/rental/user/profile/address-proof', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
-      setUser(prev => ({ ...prev, address_proof_url: res.data.address_proof_url }));
+      setUser(prev => {
+        const updated = { ...prev, address_proof_url: res.data.address_proof_url };
+        try {
+          const stored = localStorage.getItem('rental_user');
+          if (stored) {
+            const parsed = JSON.parse(stored);
+            localStorage.setItem('rental_user', JSON.stringify({ ...parsed, address_proof_url: res.data.address_proof_url }));
+          }
+        } catch (_) {}
+        return updated;
+      });
       showMsg('success', 'Address Proof uploaded successfully!');
     } catch (err) {
       showMsg('error', 'Failed to upload Address proof.');

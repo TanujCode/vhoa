@@ -38,3 +38,15 @@ class Lease(Base):
     tenant = relationship("RentalUser", foreign_keys=[tenant_id])
     unit = relationship("Unit", back_populates="leases")
     ledgers = relationship("RentalLedger", back_populates="lease", cascade="all, delete-orphan")
+
+    @property
+    def tenant_name(self) -> str | None:
+        if self.tenant:
+            return self.tenant.full_name
+        return None
+
+    @property
+    def tenant_phone(self) -> str | None:
+        if self.tenant:
+            return self.tenant.mobile_number
+        return None

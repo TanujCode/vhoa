@@ -80,3 +80,19 @@ class CondoClientOnboardRequest(BaseModel):
         if len(v) < 2:
             raise ValueError("City name must be at least 2 characters.")
         return v
+
+    @field_validator("condo_name")
+    @classmethod
+    def condo_name_valid(cls, v):
+        if v and v.strip():
+            if not re.match(r"^[a-zA-Z\s]+$", v.strip()):
+                raise ValueError("Condo name must contain only letters and spaces.")
+            return v.strip()
+        return v
+
+    @field_validator("condo_address")
+    @classmethod
+    def condo_address_valid(cls, v):
+        if v and v.strip() and not any(char.isalpha() for char in v):
+            raise ValueError("Condo address cannot consist only of numbers.")
+        return v.strip()

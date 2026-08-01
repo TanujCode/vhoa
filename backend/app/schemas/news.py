@@ -23,9 +23,15 @@ class NewsCreate(BaseModel):
     @field_validator("title")
     @classmethod
     def title_valid(cls, v):
-        if len(v.strip()) < 3:
-            raise ValueError("The title must be at least 3 characters long.")
-        return v.strip()
+        if v and v.strip():
+            import re
+            trimmed = v.strip()
+            if len(trimmed) < 3:
+                raise ValueError("The title must be at least 3 characters long.")
+            if not re.match(r"^[a-zA-Z\s]+$", trimmed):
+                raise ValueError("Title must contain only letters and spaces.")
+            return trimmed
+        return v
 
 
 class NewsUpdate(BaseModel):
@@ -34,6 +40,19 @@ class NewsUpdate(BaseModel):
     category:  str | None = None
     is_pinned: bool | None = None
     active_status: bool | None = None
+
+    @field_validator("title")
+    @classmethod
+    def title_valid(cls, v):
+        if v is not None and v.strip():
+            import re
+            trimmed = v.strip()
+            if len(trimmed) < 3:
+                raise ValueError("The title must be at least 3 characters long.")
+            if not re.match(r"^[a-zA-Z\s]+$", trimmed):
+                raise ValueError("Title must contain only letters and spaces.")
+            return trimmed
+        return v
 
 
 class NewsOut(BaseModel):

@@ -1,4 +1,5 @@
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 from datetime import date, datetime, timedelta
 from typing import List, Optional
 from app.models.rental.property import Property
@@ -15,12 +16,21 @@ from app.services.hoa.email_service import send_email, _wrap_in_responsive_layou
 
 # --- PROPERTY CRUD ---
 def create_property(landlord_id: int, data: PropertyCreate, db: Session) -> Property:
+    # Check for duplicate active properties (case-insensitive name and address)
+    existing = db.query(Property).filter(
+        func.lower(Property.name) == func.lower(data.name.strip()),
+        func.lower(Property.address) == func.lower(data.address.strip()),
+        Property.active_status == True
+    ).first()
+    if existing:
+        raise ValueError("A property with the same name and address already exists.")
+
     new_prop = Property(
-        name=data.name,
-        address=data.address,
-        city=data.city,
-        state=data.state,
-        zip_code=data.zip_code,
+        name=data.name.strip(),
+        address=data.address.strip(),
+        city=data.city.strip() if data.city else None,
+        state=data.state.strip() if data.state else None,
+        zip_code=data.zip_code.strip() if data.zip_code else None,
         landlord_id=landlord_id,
         active_status=True
     )
@@ -52,11 +62,22 @@ def update_property(property_id: int, landlord_id: int, data: PropertyCreate, db
     prop = query.first()
     if not prop:
         raise ValueError("Property not found or access denied.")
-    prop.name = data.name
-    prop.address = data.address
-    prop.city = data.city
-    prop.state = data.state
-    prop.zip_code = data.zip_code
+
+    # Check for duplicate active properties (excluding current ID)
+    existing = db.query(Property).filter(
+        func.lower(Property.name) == func.lower(data.name.strip()),
+        func.lower(Property.address) == func.lower(data.address.strip()),
+        Property.active_status == True,
+        Property.property_id != property_id
+    ).first()
+    if existing:
+        raise ValueError("A property with the same name and address already exists.")
+
+    prop.name = data.name.strip()
+    prop.address = data.address.strip()
+    prop.city = data.city.strip() if data.city else None
+    prop.state = data.state.strip() if data.state else None
+    prop.zip_code = data.zip_code.strip() if data.zip_code else None
     db.commit()
     db.refresh(prop)
     return prop

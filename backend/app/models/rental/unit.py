@@ -1,3 +1,4 @@
+import builtins
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, Double, ForeignKey
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
@@ -18,3 +19,19 @@ class Unit(Base):
     # Relationships
     property = relationship("Property", back_populates="units")
     leases = relationship("Lease", back_populates="unit", cascade="all, delete-orphan")
+
+    @builtins.property
+    def tenant_name(self) -> str | None:
+        for lease in self.leases:
+            if lease.status == "ACTIVE":
+                if lease.tenant:
+                    return lease.tenant.full_name
+                return lease.tenant_email
+        return None
+
+    @builtins.property
+    def tenant_email(self) -> str | None:
+        for lease in self.leases:
+            if lease.status == "ACTIVE":
+                return lease.tenant_email
+        return None

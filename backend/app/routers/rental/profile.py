@@ -7,6 +7,7 @@ from app.schemas.user import ProfileUpdateRequest
 from app.utils.file_service import delete_profile_picture, save_document
 from app.routers.rental.dependencies import get_current_rental_user
 from app.routers.rental.auth import rental_get_me
+from app.utils.profile_sync import sync_profile_update, sync_profile_picture_update
 
 router = APIRouter(prefix="/rental", tags=["Rental - Profile"])
 
@@ -37,6 +38,17 @@ def rental_update_profile(
         current_user.mobile_number = body.mobile_number
     if "time_zone" in body.model_fields_set:
         current_user.time_zone = body.time_zone
+
+    # Sync changes across all tables
+    sync_profile_update(
+        db=db,
+        email_id=current_user.email_id,
+        first_name=current_user.first_name,
+        middle_name=current_user.middle_name,
+        last_name=current_user.last_name,
+        mobile_number=current_user.mobile_number,
+        time_zone=current_user.time_zone
+    )
 
     db.commit()
     db.refresh(current_user)
@@ -81,6 +93,10 @@ async def rental_upload_profile_picture(
     url = f"data:{content_type};base64,{encoded}"
 
     current_user.user_profile_url = url
+
+    # Sync picture upload across all tables
+    sync_profile_picture_update(db=db, email_id=current_user.email_id, picture_url=url)
+
     db.commit()
     db.refresh(current_user)
 
@@ -97,6 +113,10 @@ def rental_delete_picture(
 
     delete_profile_picture(current_user.user_profile_url)
     current_user.user_profile_url = None
+
+    # Sync picture deletion across all tables
+    sync_profile_picture_update(db=db, email_id=current_user.email_id, picture_url=None)
+
     db.commit()
     return {"message": "Profile picture deleted."}
 

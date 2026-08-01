@@ -51,6 +51,10 @@ const ScheduleMeetingModal = ({ communityId, onClose, onSuccess, meeting }) => {
       alert('Please fill in all required fields.');
       return;
     }
+    if (!/^[a-zA-Z\s]+$/.test(form.title.trim())) {
+      alert('Meeting Title must contain only letters and spaces.');
+      return;
+    }
     const localDateTimeStr = `${meetingDate}T${meetingTime}`;
     const meetingDatetimeObj = new Date(localDateTimeStr);
     if (meetingDatetimeObj <= new Date()) {

@@ -10,6 +10,7 @@ from app.schemas.user import ProfileUpdateRequest, UserInviteRequest, UserStatus
 from app.utils.file_service import save_profile_picture, delete_profile_picture
 from app.services.hoa.token_service import hash_password
 from app.services.hoa.audit_service import log_action
+from app.utils.profile_sync import sync_profile_update, sync_profile_picture_update
 import secrets
 
 router = APIRouter(prefix="/user", tags=["User"])
@@ -100,6 +101,17 @@ Only the fields you send will be updated — the rest will remain unchanged.
                 )
                 db.add(assoc)
 
+    # Sync changes across all tables
+    sync_profile_update(
+        db=db,
+        email_id=current_user.email_id,
+        first_name=current_user.first_name,
+        middle_name=current_user.middle_name,
+        last_name=current_user.last_name,
+        mobile_number=current_user.mobile_number,
+        time_zone=current_user.time_zone
+    )
+
     db.commit()
     db.refresh(current_user)
     return _to_out(current_user, db)
@@ -159,6 +171,10 @@ async def upload_profile_picture(
 
     # DB mein URL update
     current_user.user_profile_url = url
+
+    # Sync picture upload across all tables
+    sync_profile_picture_update(db=db, email_id=current_user.email_id, picture_url=url)
+
     db.commit()
     db.refresh(current_user)
 
@@ -177,6 +193,10 @@ def delete_picture(
 
     delete_profile_picture(current_user.user_profile_url)
     current_user.user_profile_url = None
+
+    # Sync picture deletion across all tables
+    sync_profile_picture_update(db=db, email_id=current_user.email_id, picture_url=None)
+
     db.commit()
     db.refresh(current_user)
 

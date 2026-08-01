@@ -28,6 +28,26 @@ import ContactPage from './pages/marketing/ContactPage';
 import SecurityPage from './pages/marketing/SecurityPage';
 import ScrollToTop from './components/ScrollToTop';
 import GlobalModal from './components/GlobalModal';
+import { toast } from 'react-hot-toast';
+
+// Globally override react-hot-toast functions to show in the center modal (via window.alert)
+try {
+  const overrideToast = (msg) => {
+    if (msg) window.alert(msg);
+    return 'toast-id';
+  };
+  toast.success = overrideToast;
+  toast.error = overrideToast;
+  toast.loading = overrideToast;
+  toast.custom = (content) => {
+    if (typeof content === 'string') {
+      window.alert(content);
+    }
+    return 'toast-id';
+  };
+} catch (err) {
+  console.error("Failed to override toast:", err);
+}
 
 
 // Solution subpages

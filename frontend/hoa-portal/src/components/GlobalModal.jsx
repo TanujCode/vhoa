@@ -57,7 +57,17 @@ export default function GlobalModal() {
           {modalState.type === 'confirm' ? <HelpCircle size={28} /> : <AlertCircle size={28} />}
         </div>
         <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">
-          {modalState.type === 'confirm' ? 'Confirm Action' : 'Notice'}
+          {(() => {
+            if (modalState.type === 'confirm') return 'Confirm Action';
+            const msg = modalState.message.toLowerCase();
+            if (msg.includes('success') || msg.includes('successfully') || msg.includes('created') || msg.includes('updated') || msg.includes('deleted') || msg.includes('added')) {
+              return 'Success';
+            }
+            if (msg.includes('error') || msg.includes('failed') || msg.includes('required') || msg.includes('invalid') || msg.includes('must contain')) {
+              return 'Alert';
+            }
+            return 'Message';
+          })()}
         </h3>
         <p className="text-xs text-slate-500 dark:text-gray-400 mb-6 leading-relaxed whitespace-pre-line">
           {modalState.message}

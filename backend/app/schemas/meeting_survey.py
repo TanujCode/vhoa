@@ -16,9 +16,15 @@ class MeetingCreate(BaseModel):
     @field_validator("title")
     @classmethod
     def title_valid(cls, v):
-        if len(v.strip()) < 3:
-            raise ValueError("The title must be at least 3 characters long.")
-        return v.strip()
+        if v and v.strip():
+            import re
+            trimmed = v.strip()
+            if len(trimmed) < 3:
+                raise ValueError("The title must be at least 3 characters long.")
+            if not re.match(r"^[a-zA-Z\s]+$", trimmed):
+                raise ValueError("Title must contain only letters and spaces.")
+            return trimmed
+        return v
 
 
 class MeetingOut(BaseModel):
@@ -108,12 +114,17 @@ class SurveyCreate(BaseModel):
     @field_validator("title")
     @classmethod
     def title_valid(cls, v):
-        v_strip = v.strip()
-        if len(v_strip) < 3:
-            raise ValueError("The title must be at least 3 characters long.")
-        if len(v_strip) > 50:
-            raise ValueError("The title cannot exceed 50 characters.")
-        return v_strip
+        if v and v.strip():
+            import re
+            v_strip = v.strip()
+            if len(v_strip) < 3:
+                raise ValueError("The title must be at least 3 characters long.")
+            if len(v_strip) > 50:
+                raise ValueError("The title cannot exceed 50 characters.")
+            if not re.match(r"^[a-zA-Z\s]+$", v_strip):
+                raise ValueError("Title must contain only letters and spaces.")
+            return v_strip
+        return v
 
     @field_validator("question")
     @classmethod
@@ -150,12 +161,15 @@ class MeetingUpdate(BaseModel):
     @field_validator("title")
     @classmethod
     def title_valid(cls, v):
-        if v is not None:
+        if v is not None and v.strip():
+            import re
             v_strip = v.strip()
             if len(v_strip) < 3:
                 raise ValueError("The title must be at least 3 characters long.")
             if len(v_strip) > 50:
                 raise ValueError("The title cannot exceed 50 characters.")
+            if not re.match(r"^[a-zA-Z\s]+$", v_strip):
+                raise ValueError("Title must contain only letters and spaces.")
             return v_strip
         return v
 
@@ -168,12 +182,15 @@ class SurveyUpdate(BaseModel):
     @field_validator("title")
     @classmethod
     def title_valid(cls, v):
-        if v is not None:
+        if v is not None and v.strip():
+            import re
             v_strip = v.strip()
             if len(v_strip) < 3:
                 raise ValueError("The title must be at least 3 characters long.")
             if len(v_strip) > 50:
                 raise ValueError("The title cannot exceed 50 characters.")
+            if not re.match(r"^[a-zA-Z\s]+$", v_strip):
+                raise ValueError("Title must contain only letters and spaces.")
             return v_strip
         return v
 

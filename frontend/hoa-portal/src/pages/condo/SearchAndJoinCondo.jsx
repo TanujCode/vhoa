@@ -154,6 +154,7 @@ const SearchAndJoinCondo = () => {
                 </h1>
                 <p className="text-slate-500 mb-8 text-sm tracking-wide">Resident Registration & Verification</p>
 
+                {apiError && (
                     <div className="mb-6 p-4 bg-red-500/10 border border-red-500/30 text-red-700 text-xs rounded-xl font-mono">
                         <span className="font-bold text-red-500 flex items-center gap-1 mb-1"><AlertTriangle size={14} /> Connection Issue:</span>
                         {apiError}

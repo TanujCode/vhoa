@@ -137,8 +137,11 @@ const Vendors = ({ communityId, userRole, user }) => {
   const validateField = (name, value) => {
     let errorMsg = '';
     if (name === 'company_name') {
-      if (!value.trim()) {
+      const trimmed = value.trim();
+      if (!trimmed) {
         errorMsg = 'Company name is required';
+      } else if (!/^[a-zA-Z\s]+$/.test(trimmed)) {
+        errorMsg = 'Company name must contain only letters and spaces';
       }
     } else if (name === 'contact_person') {
       if (!value.trim()) {
@@ -163,16 +166,24 @@ const Vendors = ({ communityId, userRole, user }) => {
         errorMsg = 'Phone number must be exactly 10 digits';
       }
     } else if (name === 'license_number') {
-      if (!value.trim()) {
+      const trimmed = value.trim();
+      const hasMinDigits = (trimmed.replace(/\D/g, '').length >= 3);
+      const hasRepeatingChars = /(.)\1{3,}/.test(trimmed);
+      const hasConsecutiveLetters = /[a-zA-Z]{5,}/.test(trimmed);
+      if (!trimmed) {
         errorMsg = 'License number is required';
-      } else if (!/^[a-zA-Z0-9-]{6,20}$/.test(value.trim())) {
-        errorMsg = 'License number must be 6-20 alphanumeric characters (or hyphens)';
+      } else if (!/^[a-zA-Z0-9-]{6,20}$/.test(trimmed) || !hasMinDigits || hasRepeatingChars || hasConsecutiveLetters) {
+        errorMsg = 'License number must be 6-20 alphanumeric characters/hyphens, containing at least 3 digits, without long repeating characters or 5+ consecutive letters';
       }
     } else if (name === 'insurance') {
-      if (!value.trim()) {
+      const trimmed = value.trim();
+      const hasMinDigits = (trimmed.replace(/\D/g, '').length >= 3);
+      const hasRepeatingChars = /(.)\1{3,}/.test(trimmed);
+      const hasConsecutiveLetters = /[a-zA-Z]{5,}/.test(trimmed);
+      if (!trimmed) {
         errorMsg = 'Insurance policy number is required';
-      } else if (!/^[a-zA-Z0-9-]{5,25}$/.test(value.trim())) {
-        errorMsg = 'Insurance policy number must be 5-25 alphanumeric characters (or hyphens)';
+      } else if (!/^[a-zA-Z0-9-]{5,25}$/.test(trimmed) || !hasMinDigits || hasRepeatingChars || hasConsecutiveLetters) {
+        errorMsg = 'Insurance policy number must be 5-25 alphanumeric characters/hyphens, containing at least 3 digits, without long repeating characters or 5+ consecutive letters';
       }
     } else if (name === 'expiry') {
       if (value) {

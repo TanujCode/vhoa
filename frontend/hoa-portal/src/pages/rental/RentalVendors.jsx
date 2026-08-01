@@ -79,7 +79,14 @@ export default function RentalVendors() {
   const validateField = (name, value) => {
     let tempErrors = { ...errors };
     if (name === 'company_name') {
-      tempErrors.company_name = value.trim() ? '' : 'Company name is required';
+      const trimmed = value.trim();
+      if (!trimmed) {
+        tempErrors.company_name = 'Company name is required';
+      } else if (!/^[a-zA-Z\s]+$/.test(trimmed)) {
+        tempErrors.company_name = 'Company name must contain only letters and spaces';
+      } else {
+        tempErrors.company_name = '';
+      }
     }
     if (name === 'contact_person') {
       if (!value.trim()) {
@@ -99,8 +106,11 @@ export default function RentalVendors() {
     }
     if (name === 'license_number') {
       const trimmed = value.trim();
+      const hasMinDigits = (trimmed.replace(/\D/g, '').length >= 3);
+      const hasRepeatingChars = /(.)\1{3,}/.test(trimmed);
+      const hasConsecutiveLetters = /[a-zA-Z]{5,}/.test(trimmed);
       tempErrors.license_number = trimmed
-        ? (/^[a-zA-Z0-9-]{6,20}$/.test(trimmed) ? '' : 'License number must be 6-20 alphanumeric characters (or hyphens)')
+        ? ((/^[a-zA-Z0-9-]{6,20}$/.test(trimmed) && hasMinDigits && !hasRepeatingChars && !hasConsecutiveLetters) ? '' : 'License number must be 6-20 alphanumeric characters/hyphens, containing at least 3 digits, without long repeating characters or 5+ consecutive letters')
         : 'License number is required';
     }
     if (name === 'license_expiry') {
@@ -115,8 +125,11 @@ export default function RentalVendors() {
     }
     if (name === 'insurance_number') {
       const trimmed = value.trim();
+      const hasMinDigits = (trimmed.replace(/\D/g, '').length >= 3);
+      const hasRepeatingChars = /(.)\1{3,}/.test(trimmed);
+      const hasConsecutiveLetters = /[a-zA-Z]{5,}/.test(trimmed);
       tempErrors.insurance_number = trimmed
-        ? (/^[a-zA-Z0-9-]{5,25}$/.test(trimmed) ? '' : 'Insurance policy number must be 5-25 alphanumeric characters (or hyphens)')
+        ? ((/^[a-zA-Z0-9-]{5,25}$/.test(trimmed) && hasMinDigits && !hasRepeatingChars && !hasConsecutiveLetters) ? '' : 'Insurance policy number must be 5-25 alphanumeric characters/hyphens, containing at least 3 digits, without long repeating characters or 5+ consecutive letters')
         : 'Insurance number is required';
     }
     if (name === 'insurance_expiry') {
@@ -134,21 +147,33 @@ export default function RentalVendors() {
   };
 
   const validateAllFields = () => {
+    const lTrim = formData.license_number.trim();
+    const lDigits = lTrim.replace(/\D/g, '').length >= 3;
+    const lRep = /(.)\1{3,}/.test(lTrim);
+    const lCons = /[a-zA-Z]{5,}/.test(lTrim);
+
+    const iTrim = formData.insurance_number.trim();
+    const iDigits = iTrim.replace(/\D/g, '').length >= 3;
+    const iRep = /(.)\1{3,}/.test(iTrim);
+    const iCons = /[a-zA-Z]{5,}/.test(iTrim);
+
     const tempErrors = {
-      company_name: formData.company_name.trim() ? '' : 'Company name is required',
+      company_name: formData.company_name.trim() 
+        ? (/^[a-zA-Z\s]+$/.test(formData.company_name.trim()) ? '' : 'Company name must contain only letters and spaces')
+        : 'Company name is required',
       contact_person: formData.contact_person.trim()
         ? (/[^a-zA-Z\s.\-']/.test(formData.contact_person) ? 'Contact person can only contain letters, spaces, dots, hyphens, and apostrophes' : '')
         : 'Contact person is required',
       phoneOnly: phoneOnly.length === 14 ? '' : 'Phone number must be 10 digits',
       email: (/^[^\s@]+@[^\s@]+\.[^\s@]+$/).test(formData.email) ? '' : 'Invalid email format',
-      license_number: formData.license_number.trim()
-        ? (/^[a-zA-Z0-9-]{6,20}$/.test(formData.license_number.trim()) ? '' : 'License number must be 6-20 alphanumeric characters (or hyphens)')
+      license_number: lTrim
+        ? ((/^[a-zA-Z0-9-]{6,20}$/.test(lTrim) && lDigits && !lRep && !lCons) ? '' : 'License number must be 6-20 alphanumeric characters/hyphens, containing at least 3 digits, without long repeating characters or 5+ consecutive letters')
         : 'License number is required',
       license_expiry: formData.license_expiry
         ? (new Date(formData.license_expiry) > new Date() ? '' : 'License expiry date must be in the future')
         : 'License expiry date is required',
-      insurance_number: formData.insurance_number.trim()
-        ? (/^[a-zA-Z0-9-]{5,25}$/.test(formData.insurance_number.trim()) ? '' : 'Insurance policy number must be 5-25 alphanumeric characters (or hyphens)')
+      insurance_number: iTrim
+        ? ((/^[a-zA-Z0-9-]{5,25}$/.test(iTrim) && iDigits && !iRep && !iCons) ? '' : 'Insurance policy number must be 5-25 alphanumeric characters/hyphens, containing at least 3 digits, without long repeating characters or 5+ consecutive letters')
         : 'Insurance number is required',
       insurance_expiry: formData.insurance_expiry
         ? (new Date(formData.insurance_expiry) > new Date() ? '' : 'Insurance expiry date must be in the future')

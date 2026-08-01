@@ -1,11 +1,44 @@
 import React from 'react';
+import { ArrowLeft } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import Logo from '../marketing/Logo';
 
 export default function AuthLayout({ children }) {
+  React.useEffect(() => {
+    const path = window.location.pathname.replace(/\/$/, '');
+    const isLoginPage = path === '/login' || 
+                        path === '/rental/login' || 
+                        path === '/condo/login';
+
+    if (isLoginPage) {
+      // Push state to capture browser back button click
+      window.history.pushState(null, null, window.location.pathname);
+
+      const handlePopState = () => {
+        window.location.href = '/';
+      };
+
+      window.addEventListener('popstate', handlePopState);
+      return () => {
+        window.removeEventListener('popstate', handlePopState);
+      };
+    }
+  }, []);
+
   return (
     <div className="min-h-screen flex flex-col md:flex-row font-sans">
       {/* Left Form Container */}
-      <div className="w-full md:w-1/2 flex items-center justify-center p-8 bg-white">
+      <div className="w-full md:w-1/2 flex flex-col justify-center items-center p-8 bg-white relative">
+        {/* Back to website button */}
+        <div className="w-full max-w-md mb-8">
+          <Link
+            to="/"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-650 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 transition-all duration-300 shadow-sm border border-slate-200"
+          >
+            <ArrowLeft size={14} />
+            <span>Back to website</span>
+          </Link>
+        </div>
         <div className="w-full max-w-md">{children}</div>
       </div>
 
@@ -13,7 +46,9 @@ export default function AuthLayout({ children }) {
       <div className="hidden md:flex md:w-1/2 bg-[#0A2240] text-white flex-col justify-center items-center p-12 relative overflow-hidden">
         <div className="max-w-md text-center">
           <div className="flex justify-center mb-6">
-            <Logo variant="auth" className="h-24 w-auto" />
+            <Link to="/" title="Back to website">
+              <Logo variant="auth" className="h-24 w-auto cursor-pointer hover:opacity-90 transition-opacity" />
+            </Link>
           </div>
           <p className="text-blue-300 font-medium mb-6">Self-Service Property Management</p>
           <p className="text-gray-400 text-sm leading-relaxed max-w-sm mx-auto mb-10">

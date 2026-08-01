@@ -174,28 +174,7 @@ const RentalAdminPortal = () => {
         
         if (isLease || isDelete) {
           const title = action.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
-          toast.custom((t) => (
-            <div className={`${t.visible ? 'animate-enter' : 'animate-leave'} max-w-md w-full bg-white dark:bg-[#1E2E42] border border-slate-200 dark:border-white/10 shadow-lg rounded-2xl pointer-events-auto flex ring-1 ring-black ring-opacity-5 p-4`}>
-              <div className="flex-1 w-0 text-left">
-                <p className="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                  {isDelete ? <Trash2 size={16} className="text-red-400" /> : <FileText size={16} className="text-indigo-400" />}
-                  {title}
-                </p>
-                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                  {cleanDescription(desc)}
-                </p>
-              </div>
-              <div className="ml-4 flex-shrink-0 flex">
-                <button
-                  onClick={() => toast.dismiss(t.id)}
-                  className="bg-transparent rounded-md inline-flex text-gray-400 hover:text-gray-500 focus:outline-none"
-                >
-                  <span className="sr-only">Close</span>
-                  <X size={16} />
-                </button>
-              </div>
-            </div>
-          ), { duration: 6000 });
+          window.alert(`${title}\n\n${cleanDescription(desc)}`);
         }
       });
       
@@ -293,7 +272,7 @@ const RentalAdminPortal = () => {
 
       const freshUser = {
         ...meData,
-        user_profile_url: meData.user_profile_url || cachedUser?.user_profile_url || null,
+        user_profile_url: meData.user_profile_url || null,
         initials: `${meData.first_name?.[0] || 'U'}${meData.last_name?.[0] || 'R'}`.toUpperCase(),
         name: meData.full_name || `${meData.first_name} ${meData.last_name}`,
         email: meData.email_id,

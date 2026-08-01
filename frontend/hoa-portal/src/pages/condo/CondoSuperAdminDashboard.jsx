@@ -221,6 +221,16 @@ export default function CondoSuperAdminDashboard({ defaultSection, selectedCommu
       return;
     }
 
+    if (!/^[a-zA-Z\s]+$/.test(newBuilding.name)) {
+      showAlert("Validation Error", "Building Name must contain only letters and spaces.", "warning");
+      return;
+    }
+
+    if (newBuilding.address && !/[a-zA-Z]/.test(newBuilding.address)) {
+      showAlert("Validation Error", "Address must contain at least one letter.", "warning");
+      return;
+    }
+
     if (newBuilding.community_code.trim().length < 4 || !/^[A-Z0-9]+$/i.test(newBuilding.community_code.trim())) {
       setBuildingErrors({ community_code: 'Passcode must be at least 4 characters and alphanumeric' });
       return;
@@ -271,6 +281,16 @@ export default function CondoSuperAdminDashboard({ defaultSection, selectedCommu
 
     if (!editingBuilding.name.trim() || !editingBuilding.community_code.trim()) {
       showAlert("Validation Error", "Building Name and Passcode are required.", "warning");
+      return;
+    }
+
+    if (!/^[a-zA-Z\s]+$/.test(editingBuilding.name)) {
+      showAlert("Validation Error", "Building Name must contain only letters and spaces.", "warning");
+      return;
+    }
+
+    if (editingBuilding.address && !/[a-zA-Z]/.test(editingBuilding.address)) {
+      showAlert("Validation Error", "Address must contain at least one letter.", "warning");
       return;
     }
 

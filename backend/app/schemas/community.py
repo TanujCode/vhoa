@@ -10,6 +10,13 @@ class AddressCreate(BaseModel):
     country_id: int | None = None
     zip_code:   str | None = None
 
+    @field_validator("address")
+    @classmethod
+    def address_valid(cls, v):
+        if v and v.strip() and not any(char.isalpha() for char in v):
+            raise ValueError("Address cannot consist only of numbers.")
+        return v
+
     @field_validator("zip_code")
     @classmethod
     def zip_valid(cls, v):
@@ -61,6 +68,16 @@ class CommunityCreate(BaseModel):
     bank_routing_no:    str | None = None
     bank_account_name:  str | None = None
     visible_tabs:       dict | None = None
+
+    @field_validator("name")
+    @classmethod
+    def name_valid(cls, v):
+        if v and v.strip():
+            import re
+            if not re.match(r"^[a-zA-Z\s]+$", v.strip()):
+                raise ValueError("Community name must contain only letters and spaces.")
+            return v.strip()
+        return v
 
     @field_validator("community_code")
     @classmethod
@@ -138,6 +155,16 @@ class CommunityUpdate(BaseModel):
     bank_routing_no:    str | None = None
     bank_account_name:  str | None = None
     visible_tabs:       dict | None = None
+
+    @field_validator("name")
+    @classmethod
+    def name_valid(cls, v):
+        if v is not None and v.strip():
+            import re
+            if not re.match(r"^[a-zA-Z\s]+$", v.strip()):
+                raise ValueError("Community name must contain only letters and spaces.")
+            return v.strip()
+        return v
 
     @field_validator("contact_person")
     @classmethod

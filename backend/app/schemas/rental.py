@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, field_validator
 from datetime import date, datetime
 from typing import Optional, List
 
@@ -10,6 +10,53 @@ class PropertyCreate(BaseModel):
     city: Optional[str] = None
     state: Optional[str] = None
     zip_code: Optional[str] = None
+
+    @field_validator("name")
+    @classmethod
+    def validate_name_letters_only(cls, v: str) -> str:
+        if v and v.strip():
+            import re
+            if not re.match(r"^[a-zA-Z\s]+$", v.strip()):
+                raise ValueError("Property name must contain only letters and spaces.")
+            return v.strip()
+        return v
+
+    @field_validator("address")
+    @classmethod
+    def validate_address_not_purely_numeric(cls, v: str) -> str:
+        if v and v.strip() and not any(char.isalpha() for char in v):
+            raise ValueError("Address cannot consist only of numbers.")
+        return v
+
+    @field_validator("state")
+    @classmethod
+    def validate_us_state(cls, v: str) -> str:
+        if v and v.strip():
+            us_states = {
+                "alabama", "alaska", "arizona", "arkansas", "california", "colorado", "connecticut", "delaware", "florida", 
+                "georgia", "hawaii", "idaho", "illinois", "indiana", "iowa", "kansas", "kentucky", "louisiana", "maine", 
+                "maryland", "massachusetts", "michigan", "minnesota", "mississippi", "missouri", "montana", "nebraska", 
+                "nevada", "new hampshire", "new jersey", "new mexico", "new york", "north carolina", "north dakota", 
+                "ohio", "oklahoma", "oregon", "pennsylvania", "rhode island", "south carolina", "south dakota", 
+                "tennessee", "texas", "utah", "vermont", "virginia", "washington", "west virginia", "wisconsin", "wyoming",
+                "al", "ak", "az", "ar", "ca", "co", "ct", "de", "fl", "ga", "hi", "id", "il", "in", "ia", "ks", "ky", "la", 
+                "me", "md", "ma", "mi", "mn", "ms", "mo", "mt", "ne", "nv", "nh", "nj", "nm", "ny", "nc", "nd", "oh", "ok", 
+                "or", "pa", "ri", "sc", "sd", "tn", "tx", "ut", "vt", "va", "wa", "wv", "wi", "wy"
+            }
+            if v.strip().lower() not in us_states:
+                raise ValueError("Only US states are allowed.")
+            return v.strip()
+        return v
+
+    @field_validator("zip_code")
+    @classmethod
+    def validate_us_zip(cls, v: str) -> str:
+        if v and v.strip():
+            import re
+            if not re.match(r"^\d{5}(-\d{4})?$", v.strip()):
+                raise ValueError("ZIP code must be a valid 5-digit US ZIP code.")
+            return v.strip()
+        return v
 
 
 class UnitCreateNested(BaseModel):
@@ -24,6 +71,53 @@ class PropertyWithUnitsCreate(BaseModel):
     state: Optional[str] = None
     zip_code: Optional[str] = None
     units: List[UnitCreateNested] = []
+
+    @field_validator("name")
+    @classmethod
+    def validate_name_letters_only(cls, v: str) -> str:
+        if v and v.strip():
+            import re
+            if not re.match(r"^[a-zA-Z\s]+$", v.strip()):
+                raise ValueError("Property name must contain only letters and spaces.")
+            return v.strip()
+        return v
+
+    @field_validator("address")
+    @classmethod
+    def validate_address_not_purely_numeric(cls, v: str) -> str:
+        if v and v.strip() and not any(char.isalpha() for char in v):
+            raise ValueError("Address cannot consist only of numbers.")
+        return v
+
+    @field_validator("state")
+    @classmethod
+    def validate_us_state(cls, v: str) -> str:
+        if v and v.strip():
+            us_states = {
+                "alabama", "alaska", "arizona", "arkansas", "california", "colorado", "connecticut", "delaware", "florida", 
+                "georgia", "hawaii", "idaho", "illinois", "indiana", "iowa", "kansas", "kentucky", "louisiana", "maine", 
+                "maryland", "massachusetts", "michigan", "minnesota", "mississippi", "missouri", "montana", "nebraska", 
+                "nevada", "new hampshire", "new jersey", "new mexico", "new york", "north carolina", "north dakota", 
+                "ohio", "oklahoma", "oregon", "pennsylvania", "rhode island", "south carolina", "south dakota", 
+                "tennessee", "texas", "utah", "vermont", "virginia", "washington", "west virginia", "wisconsin", "wyoming",
+                "al", "ak", "az", "ar", "ca", "co", "ct", "de", "fl", "ga", "hi", "id", "il", "in", "ia", "ks", "ky", "la", 
+                "me", "md", "ma", "mi", "mn", "ms", "mo", "mt", "ne", "nv", "nh", "nj", "nm", "ny", "nc", "nd", "oh", "ok", 
+                "or", "pa", "ri", "sc", "sd", "tn", "tx", "ut", "vt", "va", "wa", "wv", "wi", "wy"
+            }
+            if v.strip().lower() not in us_states:
+                raise ValueError("Only US states are allowed.")
+            return v.strip()
+        return v
+
+    @field_validator("zip_code")
+    @classmethod
+    def validate_us_zip(cls, v: str) -> str:
+        if v and v.strip():
+            import re
+            if not re.match(r"^\d{5}(-\d{4})?$", v.strip()):
+                raise ValueError("ZIP code must be a valid 5-digit US ZIP code.")
+            return v.strip()
+        return v
 
 
 # --- UNIT SCHEMAS ---
@@ -41,6 +135,8 @@ class UnitOut(BaseModel):
     rent_amount: float
     active_status: bool
     created_date: datetime
+    tenant_name: Optional[str] = None
+    tenant_email: Optional[str] = None
 
     class Config:
         from_attributes = True
@@ -105,6 +201,8 @@ class LeaseOut(BaseModel):
     tenant_email: Optional[str] = None
     unit: Optional[UnitOut] = None
     property_name: Optional[str] = None
+    tenant_name: Optional[str] = None
+    tenant_phone: Optional[str] = None
 
     class Config:
         from_attributes = True
@@ -243,6 +341,47 @@ class RentalVendorCreate(BaseModel):
     license_expiry: Optional[date] = None
     insurance_number: Optional[str] = None
     insurance_expiry: Optional[date] = None
+
+    @field_validator("company_name")
+    @classmethod
+    def company_name_valid(cls, v):
+        if v and v.strip():
+            import re
+            trimmed = v.strip()
+            if not re.match(r"^[a-zA-Z\s]+$", trimmed):
+                raise ValueError("Company name must contain only letters and spaces.")
+            return trimmed
+        return v
+
+    @field_validator("license_number")
+    @classmethod
+    def license_valid(cls, v):
+        if v is not None and v.strip():
+            import re
+            trimmed = v.strip()
+            if (not (6 <= len(trimmed) <= 20) or 
+                not re.match(r"^[a-zA-Z0-9\-]+$", trimmed) or 
+                sum(c.isdigit() for c in trimmed) < 3 or 
+                re.search(r"(.)\1{3,}", trimmed) or 
+                re.search(r"[a-zA-Z]{5,}", trimmed)):
+                raise ValueError("License number must be 6-20 alphanumeric characters (or hyphens) containing at least 3 digits, without long repeating characters or 5+ consecutive letters.")
+            return trimmed
+        return v
+
+    @field_validator("insurance_number")
+    @classmethod
+    def insurance_valid(cls, v):
+        if v is not None and v.strip():
+            import re
+            trimmed = v.strip()
+            if (not (5 <= len(trimmed) <= 25) or 
+                not re.match(r"^[a-zA-Z0-9\-]+$", trimmed) or 
+                sum(c.isdigit() for c in trimmed) < 3 or 
+                re.search(r"(.)\1{3,}", trimmed) or 
+                re.search(r"[a-zA-Z]{5,}", trimmed)):
+                raise ValueError("Insurance policy number must be 5-25 alphanumeric characters (or hyphens) containing at least 3 digits, without long repeating characters or 5+ consecutive letters.")
+            return trimmed
+        return v
 
 
 class RentalVendorOut(BaseModel):

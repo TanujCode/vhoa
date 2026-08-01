@@ -15,6 +15,7 @@ import {
   validateCity, 
   validateZipCode, 
   validateBusinessName, 
+  validateAddress,
   onlyLettersKeyPress, 
   onlyZipKeyPress 
 } from '../../utils/fieldValidators';
@@ -105,7 +106,7 @@ export default function ClientOnboarding() {
   const contractCodeValue = watch('contract_code');
   const passwordValue = watch('password');
   const paymentMethod = watch('payment_method');
-  const hoaAddressRegister = register('hoa_address', { required: 'Required' });
+  const hoaAddressRegister = register('hoa_address', { required: 'Required', validate: validateAddress });
 
   const selectedStateId = watch('hoa_state_id');
   const selectedCountryId = watch('hoa_country_id');

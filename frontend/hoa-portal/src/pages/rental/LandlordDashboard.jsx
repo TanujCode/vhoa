@@ -276,7 +276,7 @@ export default function LandlordDashboard({
     <div className="space-y-8 animate-fade-in text-left pb-16 font-sans">
       
       {/* ── Page Header & Unified Layout Card matching HOA ── */}
-      <div className="bg-white dark:bg-[#1E2E42] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 sm:p-8 text-slate-800 dark:text-white shadow-sm dark:shadow-none relative overflow-hidden flex flex-col lg:flex-row justify-between items-start lg:items-center gap-8 group">
+      <div className="bg-white dark:bg-[#1E2E42] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 sm:p-8 text-slate-800 dark:text-white shadow-sm dark:shadow-none relative overflow-hidden flex flex-col lg:flex-row justify-between items-start lg:items-center gap-8 group animate-fade-in">
         {/* Subtle premium light blue glow */}
         <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/[0.03] dark:bg-blue-500/[0.02] rounded-full blur-3xl pointer-events-none" />
 
@@ -286,18 +286,70 @@ export default function LandlordDashboard({
             <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white leading-tight flex items-center gap-2">
               Welcome back, {user?.name?.split(' ')[0] || 'Landlord'}! <Sparkles className="w-6 h-6 text-blue-500 animate-pulse shrink-0" />
             </h1>
-            <p className="text-slate-500 dark:text-gray-450 text-xs mt-1 font-medium">
+            <p className="text-slate-500 dark:text-gray-455 text-xs mt-1 font-medium">
               Rental Console • Real-Time Portfolio Summary
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2 mt-2">
+          <div className="flex flex-wrap items-center gap-3">
             <span className="inline-flex items-center text-[10px] font-bold text-slate-600 dark:text-slate-350 bg-slate-100 dark:bg-white/5 px-2.5 py-1 rounded-xl border border-slate-200/50 dark:border-white/10 font-mono">
               Properties: {properties.length}
             </span>
             <span className="inline-flex items-center text-[10px] font-black text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-xl border border-emerald-500/20">
               ACTIVE
             </span>
+          </div>
+
+          {/* Inline Controls (Period Filter & Action Button) */}
+          <div className="flex flex-wrap items-center gap-3 pt-2">
+            {/* Time Period Filter */}
+            <div className="relative flex items-center">
+              <Calendar className="absolute left-3 w-4 h-4 text-slate-450 dark:text-slate-400 pointer-events-none" />
+              <select
+                value={selectedPeriod}
+                onChange={(e) => setSelectedPeriod(e.target.value)}
+                className="appearance-none bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-200 py-2 pl-9 pr-10 rounded-xl text-xs font-bold shadow-sm hover:border-blue-550 transition focus:outline-none cursor-pointer"
+              >
+                <option value="thismonth">This Month</option>
+                <option value="3months">Last 3 Months</option>
+                <option value="12months">Last 12 Months</option>
+                <option value="alltime">All Time</option>
+              </select>
+              <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-450 dark:text-slate-400 pointer-events-none" />
+            </div>
+
+            {/* Create New Action Button */}
+            <div className="relative" onClick={(e) => e.stopPropagation()}>
+              <button
+                onClick={() => setShowCreateDropdown(!showCreateDropdown)}
+                className="bg-blue-600 hover:bg-blue-500 text-white py-2 px-4 rounded-xl text-xs font-bold shadow-md shadow-blue-500/10 transition active:scale-95 flex items-center gap-2 cursor-pointer"
+              >
+                <Plus className="w-4 h-4 stroke-[3]" /> Create new
+              </button>
+
+              {showCreateDropdown && (
+                <div className="absolute left-0 mt-2 w-48 bg-white dark:bg-[#1A2635] border border-slate-100 dark:border-white/10 rounded-2xl shadow-2xl z-30 py-2 text-slate-800 dark:text-slate-200 overflow-hidden animate-slide-up">
+                  <button
+                    onClick={() => { setActivePage('properties_hub'); setShowCreateDropdown(false); }}
+                    className="w-full text-left px-4 py-2.5 text-xs font-bold hover:bg-slate-50 dark:hover:bg-white/5 transition flex items-center gap-2 cursor-pointer"
+                  >
+                    <Building2 className="w-4 h-4 text-blue-500" /> Add Property
+                  </button>
+                  <button
+                    onClick={() => { setActivePage('leases_hub'); setShowCreateDropdown(false); }}
+                    className="w-full text-left px-4 py-2.5 text-xs font-bold hover:bg-slate-50 dark:hover:bg-white/5 transition flex items-center gap-2 cursor-pointer"
+                  >
+                    <FileText className="w-4 h-4 text-purple-500" /> Draft Lease Agreement
+                  </button>
+                  <button
+                    onClick={() => { setActivePage('servicereq'); setShowCreateDropdown(false); }}
+                    className="w-full text-left px-4 py-2.5 text-xs font-bold hover:bg-slate-50 dark:hover:bg-white/5 transition flex items-center gap-2 cursor-pointer"
+                  >
+                    <Wrench className="w-4 h-4 text-amber-500" /> Log Maintenance Ticket
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
@@ -324,60 +376,6 @@ export default function LandlordDashboard({
         </div>
       </div>
 
-      {/* Filters and Actions Control Bar */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-50/50 dark:bg-white/[0.02] border border-slate-200/60 dark:border-white/[0.04] p-4 rounded-2xl">
-        <div className="flex flex-wrap items-center gap-3">
-          {/* Time Period Filter */}
-          <div className="relative flex items-center">
-            <Calendar className="absolute left-3 w-4 h-4 text-slate-400 pointer-events-none" />
-            <select
-              value={selectedPeriod}
-              onChange={(e) => setSelectedPeriod(e.target.value)}
-              className="appearance-none bg-white dark:bg-[#1E2E42] border border-slate-200 dark:border-white/10 text-slate-800 dark:text-slate-200 py-2 pl-9 pr-10 rounded-xl text-xs font-bold shadow-sm hover:border-blue-500 dark:hover:border-blue-500/50 transition focus:outline-none cursor-pointer"
-            >
-              <option value="thismonth">This Month</option>
-              <option value="3months">Last 3 Months</option>
-              <option value="12months">Last 12 Months</option>
-              <option value="alltime">All Time</option>
-            </select>
-            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" />
-          </div>
-        </div>
-
-        {/* Create New Action Button */}
-        <div className="relative" onClick={(e) => e.stopPropagation()}>
-          <button
-            onClick={() => setShowCreateDropdown(!showCreateDropdown)}
-            className="bg-blue-600 hover:bg-blue-500 text-white py-2 px-4 rounded-xl text-xs font-bold shadow-md shadow-blue-500/10 transition active:scale-95 flex items-center gap-2 cursor-pointer"
-          >
-            <Plus className="w-4 h-4 stroke-[3]" /> Create new
-          </button>
-
-          {showCreateDropdown && (
-            <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-[#1A2635] border border-slate-100 dark:border-white/10 rounded-2xl shadow-xl z-30 py-2 text-slate-800 dark:text-slate-200 overflow-hidden animate-slide-up">
-              <button
-                onClick={() => { setActivePage('properties_hub'); setShowCreateDropdown(false); }}
-                className="w-full text-left px-4 py-2.5 text-xs font-bold hover:bg-slate-50 dark:hover:bg-white/5 transition flex items-center gap-2"
-              >
-                <Building2 className="w-4 h-4 text-blue-500" /> Add Property
-              </button>
-              <button
-                onClick={() => { setActivePage('leases_hub'); setShowCreateDropdown(false); }}
-                className="w-full text-left px-4 py-2.5 text-xs font-bold hover:bg-slate-50 dark:hover:bg-white/5 transition flex items-center gap-2"
-              >
-                <FileText className="w-4 h-4 text-purple-500" /> Draft Lease Agreement
-              </button>
-              <button
-                onClick={() => { setActivePage('servicereq'); setShowCreateDropdown(false); }}
-                className="w-full text-left px-4 py-2.5 text-xs font-bold hover:bg-slate-50 dark:hover:bg-white/5 transition flex items-center gap-2"
-              >
-                <Wrench className="w-4 h-4 text-amber-500" /> Log Maintenance Ticket
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
-
       {/* --- Action Required Board --- */}
       {(() => {
         const pendingScreening = applications.filter(a => a.screening_status === 'SUBMITTED');
@@ -390,7 +388,24 @@ export default function LandlordDashboard({
         
         const hasActions = pendingScreening.length > 0 || approvedScreeningNoLease.length > 0 || pendingSignatures.length > 0 || openMaint.length > 0;
         
-        if (!hasActions) return null;
+        if (!hasActions) {
+          return (
+            <div className="p-6 rounded-3xl bg-gradient-to-r from-emerald-500/[0.03] to-teal-500/[0.03] dark:from-emerald-500/[0.02] dark:to-teal-500/[0.02] border border-emerald-500/10 dark:border-emerald-500/5 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm animate-fade-in">
+              <div className="flex items-center gap-3.5 text-left">
+                <div className="w-10 h-10 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center border border-emerald-500/20 shrink-0">
+                  <CheckCircle2 className="w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className="text-sm font-bold text-slate-800 dark:text-white">All Caught Up!</h4>
+                  <p className="text-xs text-slate-500 dark:text-gray-450 mt-0.5 font-medium">Your portfolio is running smoothly. No urgent actions require your attention right now.</p>
+                </div>
+              </div>
+              <span className="inline-flex items-center text-[10px] font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20 uppercase tracking-wider shrink-0">
+                System Healthy
+              </span>
+            </div>
+          );
+        }
         
         return (
           <div className="p-6 rounded-3xl bg-amber-500/[0.03] dark:bg-amber-500/[0.02] border border-amber-500/10 dark:border-amber-500/5 space-y-4">

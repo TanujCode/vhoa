@@ -12,6 +12,7 @@ import { verifyCondoContractCode, onboardCondoClient } from '../../../services/c
 import { validateEmail } from '../../../utils/emailValidation';
 import {
   validateName, validateCity, validateZipCode,
+  validateBusinessName, validateAddress,
   onlyLettersKeyPress, onlyZipKeyPress, onlyDigitsKeyPress
 } from '../../../utils/fieldValidators';
 import { formatPhoneAsYouType } from '../../../utils/phoneFormatter';
@@ -332,7 +333,7 @@ export default function CondoOnboardingPage() {
                       <label className={lbl}>Building Name *</label>
                       <div className="relative">
                         <Building className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" />
-                        <input type="text" {...register('condo_name', { required: 'Required' })} className={`${inp(!!errors.condo_name)} pl-9`} placeholder="e.g. Grand Towers" />
+                        <input type="text" {...register('condo_name', { required: 'Required', validate: validateBusinessName })} className={`${inp(!!errors.condo_name)} pl-9`} placeholder="e.g. Grand Towers" />
                       </div>
                       {errors.condo_name && <p className={err_cls}>{errors.condo_name.message}</p>}
                     </div>
@@ -340,7 +341,7 @@ export default function CondoOnboardingPage() {
                       <label className={lbl}>Street Address *</label>
                       <div className="relative">
                         <MapPin className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" />
-                        <input type="text" {...register('condo_address', { required: 'Required' })} className={`${inp(!!errors.condo_address)} pl-9`} placeholder="e.g. 500 Park Ave" />
+                        <input type="text" {...register('condo_address', { required: 'Required', validate: validateAddress })} className={`${inp(!!errors.condo_address)} pl-9`} placeholder="e.g. 500 Park Ave" />
                       </div>
                       {errors.condo_address && <p className={err_cls}>{errors.condo_address.message}</p>}
                     </div>

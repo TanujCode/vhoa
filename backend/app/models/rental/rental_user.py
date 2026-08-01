@@ -28,6 +28,8 @@ class RentalUser(Base):
     role                 = relationship("Role", foreign_keys=[role_id])
     active_status        = Column(Boolean, default=True)
     user_profile_url     = Column(Text, nullable=True)
+    id_proof_url         = Column(Text, nullable=True)
+    address_proof_url    = Column(Text, nullable=True)
     created_date         = Column(DateTime(timezone=True), server_default=func.now())
     modified_date        = Column(DateTime(timezone=True), onupdate=func.now())
     last_login           = Column(DateTime(timezone=True), nullable=True)

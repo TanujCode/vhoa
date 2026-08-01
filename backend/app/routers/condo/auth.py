@@ -9,6 +9,7 @@ from datetime import datetime, timezone
 import re
 from pydantic import BaseModel
 from app.utils.file_service import save_document
+from app.utils.profile_sync import sync_profile_update, sync_profile_picture_update
 
 from app.config import settings
 from app.database import get_db
@@ -622,6 +623,17 @@ def update_profile(
         else:
             user.mobile_number = None
 
+    # Sync changes across all tables
+    sync_profile_update(
+        db=db,
+        email_id=user.email_id,
+        first_name=user.first_name,
+        middle_name=user.middle_name,
+        last_name=user.last_name,
+        mobile_number=user.mobile_number,
+        time_zone=user.time_zone
+    )
+
     db.commit()
     db.refresh(user)
     return condo_user_to_out(user, db)
@@ -663,6 +675,10 @@ async def upload_profile_pic(
         
     url = await save_document(file, folder_name="profile_pics")
     user.user_profile_url = url
+
+    # Sync picture upload across all tables
+    sync_profile_picture_update(db=db, email_id=user.email_id, picture_url=url)
+
     db.commit()
     db.refresh(user)
     return {"message": "Profile picture updated successfully.", "user_profile_url": url}
@@ -677,6 +693,42 @@ def delete_profile_pic(
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     user.user_profile_url = None
+
+    # Sync picture deletion across all tables
+    sync_profile_picture_update(db=db, email_id=user.email_id, picture_url=None)
+
     db.commit()
     return {"message": "Profile picture removed."}
+
+
+@router.post("/profile/id-proof", response_model=CondoUserOut)
+async def condo_upload_my_id_proof(
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    current_user: CondoUser = Depends(get_current_condo_user),
+):
+    user = db.query(CondoUser).filter(CondoUser.user_id == current_user.user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    url = await save_document(file, folder_name="identity_proofs")
+    user.id_proof_url = url
+    db.commit()
+    db.refresh(user)
+    return condo_user_to_out(user, db)
+
+
+@router.post("/profile/address-proof", response_model=CondoUserOut)
+async def condo_upload_my_address_proof(
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    current_user: CondoUser = Depends(get_current_condo_user),
+):
+    user = db.query(CondoUser).filter(CondoUser.user_id == current_user.user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    url = await save_document(file, folder_name="address_proofs")
+    user.address_proof_url = url
+    db.commit()
+    db.refresh(user)
+    return condo_user_to_out(user, db)
 

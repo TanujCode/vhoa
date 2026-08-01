@@ -146,6 +146,11 @@ def run_db_upgrades():
         "rental_maintenance_requests.tenant_notes"
     )
 
+    # ── rental_users and condo_users id_proof and address_proof ──
+    for table_name in ["rental_users", "condo_users"]:
+        _safe_execute(f"ALTER TABLE {table_name} ADD COLUMN IF NOT EXISTS id_proof_url TEXT;", f"{table_name}.id_proof_url")
+        _safe_execute(f"ALTER TABLE {table_name} ADD COLUMN IF NOT EXISTS address_proof_url TEXT;", f"{table_name}.address_proof_url")
+
     # ── rental_vendors table ─────────────────────────────────────
     for col_name, col_type in [
         ("zip_code", "VARCHAR(20)"),

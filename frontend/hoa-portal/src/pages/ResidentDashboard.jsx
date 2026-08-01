@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CreditCard, Wrench, Bell, ArrowUpRight, Download, RefreshCw, Calendar, AlertTriangle } from 'lucide-react';
-import API from '../services/api';
+import { CreditCard, Wrench, Bell, ArrowUpRight, Download, RefreshCw, Calendar, AlertTriangle, Scroll } from 'lucide-react';
+import API, { getBaseUrl } from '../services/api';
 
 const ResidentStatCard = ({ label, value, icon: Icon, color, sub, actionLabel, onClick }) => (
   <div 
@@ -36,6 +36,7 @@ const ResidentDashboard = ({ community, user: initialUser, setActivePage }) => {
   const [news, setNews] = useState([]);
   const [bookings, setBookings] = useState([]);
   const [violations, setViolations] = useState([]);
+  const [documents, setDocuments] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
 
   const fetchDashboardData = async (userObj) => {
@@ -43,12 +44,13 @@ const ResidentDashboard = ({ community, user: initialUser, setActivePage }) => {
     if (!communityId) return;
 
     try {
-      const [duesRes, requestsRes, newsRes, bookingsRes, violationsRes] = await Promise.allSettled([
+      const [duesRes, requestsRes, newsRes, bookingsRes, violationsRes, docsRes] = await Promise.allSettled([
         API.get(`/payment/due/${communityId}`),
         API.get(`/service-request/${communityId}?limit=20`),
         API.get(`/news/${communityId}?limit=10`),
         API.get(`/amenity/booking/${communityId}?booked_by_id=${userObj.user_id}`),
-        API.get(`/violation/${communityId}`)
+        API.get(`/violation/${communityId}`),
+        API.get(`/community/${communityId}/documents`)
       ]);
 
       if (duesRes.status === 'fulfilled') setDues(duesRes.value.data || []);
@@ -56,6 +58,7 @@ const ResidentDashboard = ({ community, user: initialUser, setActivePage }) => {
       if (newsRes.status === 'fulfilled') setNews(newsRes.value.data || []);
       if (bookingsRes.status === 'fulfilled') setBookings(bookingsRes.value.data || []);
       if (violationsRes.status === 'fulfilled') setViolations(violationsRes.value.data || []);
+      if (docsRes.status === 'fulfilled') setDocuments(docsRes.value.data || []);
     } catch (err) {
       console.error("Error loading dashboard data", err);
     }
@@ -220,8 +223,14 @@ const ResidentDashboard = ({ community, user: initialUser, setActivePage }) => {
           </h3>
           <div className="space-y-4">
             {news.length === 0 ? (
-              <div className="text-center py-8 text-slate-500 dark:text-gray-400 text-sm">
-                No news updates in your community yet.
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <div className="w-16 h-16 rounded-full bg-amber-500/10 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center border border-amber-500/20 mb-4 animate-pulse">
+                  <Scroll size={28} />
+                </div>
+                <h4 className="text-sm font-bold text-slate-800 dark:text-white">All Quiet For Now</h4>
+                <p className="text-xs text-slate-500 dark:text-gray-400 mt-1.5 max-w-sm leading-relaxed">
+                  No announcements or updates have been published for your community yet. When news is posted, it will appear here.
+                </p>
               </div>
             ) : (
               news.slice(0, 3).map(item => (
@@ -315,13 +324,34 @@ const ResidentDashboard = ({ community, user: initialUser, setActivePage }) => {
 
           {/* Quick Links Widget */}
           <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 shadow-sm dark:shadow-none">
-            <h3 className="text-slate-900 dark:text-white font-semibold mb-4">Quick Links</h3>
-            <div className="space-y-2">
-              {['HOA Bylaws', 'Monthly Minutes', 'Parking Rules'].map(doc => (
-                <button key={doc} className="w-full text-left p-3 hover:bg-slate-100 dark:hover:bg-white/5 rounded-xl text-sm text-slate-700 dark:text-gray-300 flex justify-between items-center transition" onClick={() => setActivePage?.('documents')}>
-                  {doc} <Download size={14} className="text-gray-500" />
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-slate-900 dark:text-white font-semibold">Quick Links</h3>
+              {documents.length > 0 && (
+                <button onClick={() => setActivePage?.('documents')} className="text-xs text-blue-600 dark:text-blue-400 hover:underline cursor-pointer">
+                  View All
                 </button>
-              ))}
+              )}
+            </div>
+            <div className="space-y-2">
+              {documents.length === 0 ? (
+                <div className="text-center py-4">
+                  <p className="text-xs text-slate-500 dark:text-gray-400">No documents uploaded yet.</p>
+                </div>
+              ) : (
+                documents.slice(0, 3).map(doc => {
+                  const docUrl = getBaseUrl(doc.file_url);
+                  return (
+                    <button 
+                      key={doc.document_id} 
+                      className="w-full text-left p-3 hover:bg-slate-100 dark:hover:bg-white/5 rounded-xl text-sm text-slate-700 dark:text-gray-300 flex justify-between items-center transition cursor-pointer" 
+                      onClick={() => window.open(docUrl, '_blank')}
+                    >
+                      <span className="truncate max-w-[185px]">{doc.document_name}</span> 
+                      <Download size={14} className="text-gray-500 shrink-0 ml-2" />
+                    </button>
+                  );
+                })
+              )}
             </div>
           </div>
         </div>

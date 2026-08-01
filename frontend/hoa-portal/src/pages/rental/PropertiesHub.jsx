@@ -46,6 +46,7 @@ export default function PropertiesHub({
   const [editCity, setEditCity] = useState('');
   const [editState, setEditState] = useState('');
   const [editZip, setEditZip] = useState('');
+  const [editRent, setEditRent] = useState('');
 
   // Add Unit states
   const [showUnitModal, setShowUnitModal] = useState(false);
@@ -229,6 +230,14 @@ export default function PropertiesHub({
     setEditCity(prop.city || '');
     setEditState(prop.state || '');
     setEditZip(prop.zip_code || '');
+    
+    const activeUnits = (prop.units || []).filter(u => u.active_status !== false);
+    if (activeUnits.length > 0) {
+      setEditRent(activeUnits[0].rent_amount.toString());
+    } else {
+      setEditRent('');
+    }
+
     setErrorMsg('');
     setShowEditPropModal(true);
   }
@@ -251,20 +260,36 @@ export default function PropertiesHub({
     const state = propState.trim();
     const zip = propZip.trim();
 
-    if (!name) return setErrorMsg("Property Name is required.");
-    if (!address) return setErrorMsg("Street Address is required.");
-    if (!city) return setErrorMsg("City is required.");
-    if (!state) return setErrorMsg("State is required.");
-    if (!zip) return setErrorMsg("ZIP code is required.");
-    if (state.length < 2) return setErrorMsg("State name must be at least 2 characters.");
-    if (!/^\d{5}(-\d{4})?$/.test(zip)) return setErrorMsg("ZIP code must be a valid 5-digit number.");
+    if (!name) { alert("Property Name is required."); return; }
+    if (!/^[a-zA-Z\s]+$/.test(name)) { alert("Property Name must contain only letters and spaces."); return; }
+    if (!address) { alert("Street Address is required."); return; }
+    if (!/[a-zA-Z]/.test(address)) { alert("Street Address must contain at least one letter."); return; }
+    if (!city) { alert("City is required."); return; }
+    if (!state) { alert("State is required."); return; }
+    if (!zip) { alert("ZIP code is required."); return; }
+
+    // US State validation
+    const cleanState = state.trim().toLowerCase();
+    const isUSState = STATE_NAME_TO_ABBR.hasOwnProperty(cleanState) || 
+                      Object.values(STATE_NAME_TO_ABBR).map(abbr => abbr.toLowerCase()).includes(cleanState);
+    if (!isUSState) {
+      alert("Validation Error: Only US states are allowed.");
+      return;
+    }
+
+    // US Zip validation
+    if (!/^\d{5}(-\d{4})?$/.test(zip)) {
+      alert("Validation Error: ZIP code must be a valid 5-digit US ZIP code.");
+      return;
+    }
 
     // Validate and format units based on property type
     const formattedUnits = [];
     if (propertyType === 'single' || propertyType === 'condo') {
       const rentVal = parseFloat(wizardUnits[0]?.rent_amount);
       if (isNaN(rentVal) || rentVal <= 0) {
-        return setErrorMsg("Monthly rent must be a positive number.");
+        alert("Monthly rent must be a positive number.");
+        return;
       }
       formattedUnits.push({
         unit_number: propertyType === 'single' ? 'Single Family' : 'Condo Unit',
@@ -273,17 +298,20 @@ export default function PropertiesHub({
     } else {
       // Multi-unit validation
       if (wizardUnits.length === 0) {
-        return setErrorMsg("Please add at least one unit row.");
+        alert("Please add at least one unit row.");
+        return;
       }
       for (let i = 0; i < wizardUnits.length; i++) {
         const u = wizardUnits[i];
         const num = u.unit_number.trim();
         const rentVal = parseFloat(u.rent_amount);
         if (!num) {
-          return setErrorMsg(`Unit row ${i + 1} is missing a Unit Number.`);
+          alert(`Unit row ${i + 1} is missing a Unit Number.`);
+          return;
         }
         if (isNaN(rentVal) || rentVal <= 0) {
-          return setErrorMsg(`Unit "${num}" has an invalid rent amount.`);
+          alert(`Unit "${num}" has an invalid rent amount.`);
+          return;
         }
         formattedUnits.push({
           unit_number: num,
@@ -304,6 +332,7 @@ export default function PropertiesHub({
       setProperties(prev => [...prev, res.data]);
       handleSelectProperty(res.data);
       setShowPropModal(false);
+      alert("Property created successfully!");
       
       // Reset forms & wizard
       setPropName('');
@@ -315,7 +344,7 @@ export default function PropertiesHub({
       setPropertyType('single');
       setWizardUnits([{ unit_number: 'Single Family', rent_amount: '' }]);
     } catch (err) {
-      setErrorMsg(err.response?.data?.detail || "Failed to create property with units.");
+      alert(err.response?.data?.detail || "Failed to create property with units.");
     }
   }
 
@@ -329,13 +358,38 @@ export default function PropertiesHub({
     const state = editState.trim();
     const zip = editZip.trim();
 
-    if (!name) return setErrorMsg("Property Name is required.");
-    if (!address) return setErrorMsg("Street Address is required.");
-    if (!city) return setErrorMsg("City is required.");
-    if (!state) return setErrorMsg("State is required.");
-    if (!zip) return setErrorMsg("ZIP code is required.");
-    if (state.length < 2) return setErrorMsg("State name must be at least 2 characters.");
-    if (!/^\d{5}(-\d{4})?$/.test(zip)) return setErrorMsg("ZIP code must be a valid 5-digit number.");
+    if (!name) { alert("Property Name is required."); return; }
+    if (!/^[a-zA-Z\s]+$/.test(name)) { alert("Property Name must contain only letters and spaces."); return; }
+    if (!address) { alert("Street Address is required."); return; }
+    if (!/[a-zA-Z]/.test(address)) { alert("Street Address must contain at least one letter."); return; }
+    if (!city) { alert("City is required."); return; }
+    if (!state) { alert("State is required."); return; }
+    if (!zip) { alert("ZIP code is required."); return; }
+
+    // US State validation
+    const cleanState = state.trim().toLowerCase();
+    const isUSState = STATE_NAME_TO_ABBR.hasOwnProperty(cleanState) || 
+                      Object.values(STATE_NAME_TO_ABBR).map(abbr => abbr.toLowerCase()).includes(cleanState);
+    if (!isUSState) {
+      alert("Validation Error: Only US states are allowed.");
+      return;
+    }
+
+    // US Zip validation
+    if (!/^\d{5}(-\d{4})?$/.test(zip)) {
+      alert("Validation Error: ZIP code must be a valid 5-digit US ZIP code.");
+      return;
+    }
+
+    const isSingleOrCondo = getPropertyType(selectedProperty) === 'Single Family' || getPropertyType(selectedProperty) === 'Condo';
+    let rentVal = 0;
+    if (isSingleOrCondo) {
+      rentVal = parseFloat(editRent);
+      if (isNaN(rentVal) || rentVal <= 0) {
+        alert("Monthly Rent must be a positive number.");
+        return;
+      }
+    }
 
     try {
       const res = await API.put(`/rental/properties/${selectedProperty.property_id}`, {
@@ -345,11 +399,25 @@ export default function PropertiesHub({
         state,
         zip_code: zip
       });
-      setProperties(prev => prev.map(p => p.property_id === selectedProperty.property_id ? res.data : p));
-      setSelectedProperty(res.data);
+
+      if (isSingleOrCondo) {
+        const activeUnits = (selectedProperty.units || []).filter(u => u.active_status !== false);
+        if (activeUnits.length > 0) {
+          const singleUnit = activeUnits[0];
+          await API.put(`/rental/units/${singleUnit.unit_id}`, {
+            property_id: selectedProperty.property_id,
+            unit_number: singleUnit.unit_number,
+            rent_amount: rentVal
+          });
+          setUnits(prev => prev.map(u => u.unit_id === singleUnit.unit_id ? { ...u, rent_amount: rentVal } : u));
+        }
+      }
+
+      await fetchProperties();
       setShowEditPropModal(false);
+      alert("Property details updated successfully!");
     } catch (err) {
-      setErrorMsg(err.response?.data?.detail || "Failed to update property.");
+      alert(err.response?.data?.detail || "Failed to update property.");
     }
   }
 
@@ -366,6 +434,7 @@ export default function PropertiesHub({
             setSelectedProperty(null);
             setUnits([]);
           }
+          alert("Property deleted successfully!");
         } catch (err) {
           alert(err.response?.data?.detail || "Failed to delete property.");
         }
@@ -380,9 +449,9 @@ export default function PropertiesHub({
     const unit_number = unitNo.trim();
     const rent = unitRent.trim();
 
-    if (!unit_number) return setErrorMsg("Unit Number is required.");
-    if (!rent) return setErrorMsg("Monthly Rent is required.");
-    if (isNaN(parseFloat(rent)) || parseFloat(rent) <= 0) return setErrorMsg("Monthly Rent must be a positive number.");
+    if (!unit_number) { alert("Unit Number is required."); return; }
+    if (!rent) { alert("Monthly Rent is required."); return; }
+    if (isNaN(parseFloat(rent)) || parseFloat(rent) <= 0) { alert("Monthly Rent must be a positive number."); return; }
 
     try {
       const res = await API.post('/rental/units', {
@@ -394,8 +463,9 @@ export default function PropertiesHub({
       setShowUnitModal(false);
       setUnitNo('');
       setUnitRent('');
+      alert("Unit added successfully!");
     } catch (err) {
-      setErrorMsg(err.response?.data?.detail || "Failed to create unit.");
+      alert(err.response?.data?.detail || "Failed to create unit.");
     }
   }
 
@@ -406,9 +476,9 @@ export default function PropertiesHub({
     const unit_number = editUnitNo.trim();
     const rent = editUnitRent.trim();
 
-    if (!unit_number) return setErrorMsg("Unit Number is required.");
-    if (!rent) return setErrorMsg("Monthly Rent is required.");
-    if (isNaN(parseFloat(rent)) || parseFloat(rent) <= 0) return setErrorMsg("Monthly Rent must be a positive number.");
+    if (!unit_number) { alert("Unit Number is required."); return; }
+    if (!rent) { alert("Monthly Rent is required."); return; }
+    if (isNaN(parseFloat(rent)) || parseFloat(rent) <= 0) { alert("Monthly Rent must be a positive number."); return; }
 
     try {
       const res = await API.put(`/rental/units/${selectedUnit.unit_id}`, {
@@ -418,8 +488,9 @@ export default function PropertiesHub({
       });
       setUnits(prev => prev.map(u => u.unit_id === selectedUnit.unit_id ? res.data : u));
       setShowEditUnitModal(false);
+      alert("Unit updated successfully!");
     } catch (err) {
-      setErrorMsg(err.response?.data?.detail || "Failed to update unit.");
+      alert(err.response?.data?.detail || "Failed to update unit.");
     }
   }
 
@@ -432,6 +503,7 @@ export default function PropertiesHub({
         try {
           await API.delete(`/rental/units/${unitId}`);
           setUnits(prev => prev.filter(u => u.unit_id !== unitId));
+          alert("Unit deleted successfully!");
         } catch (err) {
           alert(err.response?.data?.detail || "Failed to delete unit.");
         }
@@ -620,27 +692,34 @@ export default function PropertiesHub({
                         </div>
                         <p className="text-xs text-slate-450 dark:text-slate-400 mt-1 font-semibold">
                           Rent: <strong className="text-slate-800 dark:text-slate-200">${u.rent_amount}/mo</strong>
+                          {u.status === 'OCCUPIED' && u.tenant_name && (
+                            <span className="ml-3 px-2 py-0.5 bg-slate-100 dark:bg-white/5 rounded text-[10px] text-slate-650 dark:text-slate-300 font-bold">
+                              Tenant: {u.tenant_name}
+                            </span>
+                          )}
                         </p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2 w-full sm:w-auto justify-end sm:justify-start border-t sm:border-t-0 pt-3 sm:pt-0 border-slate-100 dark:border-white/5">
-                      <button 
-                        onClick={() => openEditUnitModal(u)}
-                        className="p-2 hover:bg-slate-100 dark:hover:bg-white/10 rounded-xl text-slate-400 hover:text-blue-500 transition duration-150 flex items-center gap-1.5 text-xs font-semibold cursor-pointer border border-transparent hover:border-blue-500/10"
-                        title="Edit Unit"
-                      >
-                        <Edit3 className="w-3.5 h-3.5" />
-                        <span className="sm:hidden lg:inline text-[10px]">Edit</span>
-                      </button>
-                      <button 
-                        onClick={() => handleDeleteUnit(u.unit_id)}
-                        className="p-2 hover:bg-red-500/10 rounded-xl text-slate-400 hover:text-red-555 dark:hover:text-red-450 transition duration-155 flex items-center gap-1.5 text-xs font-semibold cursor-pointer border border-transparent hover:border-red-500/10"
-                        title="Delete Unit"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                        <span className="sm:hidden lg:inline text-[10px]">Delete</span>
-                      </button>
-                    </div>
+                    {getPropertyType(selectedProperty) !== 'Single Family' && getPropertyType(selectedProperty) !== 'Condo' && (
+                      <div className="flex items-center gap-2 w-full sm:w-auto justify-end sm:justify-start border-t sm:border-t-0 pt-3 sm:pt-0 border-slate-100 dark:border-white/5">
+                        <button 
+                          onClick={() => openEditUnitModal(u)}
+                          className="p-2 hover:bg-slate-100 dark:hover:bg-white/10 rounded-xl text-slate-400 hover:text-blue-500 transition duration-150 flex items-center gap-1.5 text-xs font-semibold cursor-pointer border border-transparent hover:border-blue-500/10"
+                          title="Edit Unit"
+                        >
+                          <Edit3 className="w-3.5 h-3.5" />
+                          <span className="sm:hidden lg:inline text-[10px]">Edit</span>
+                        </button>
+                        <button 
+                          onClick={() => handleDeleteUnit(u.unit_id)}
+                          className="p-2 hover:bg-red-500/10 rounded-xl text-slate-400 hover:text-red-555 dark:hover:text-red-450 transition duration-155 flex items-center gap-1.5 text-xs font-semibold cursor-pointer border border-transparent hover:border-red-500/10"
+                          title="Delete Unit"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                          <span className="sm:hidden lg:inline text-[10px]">Delete</span>
+                        </button>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
@@ -940,10 +1019,40 @@ export default function PropertiesHub({
                       <button 
                         type="button" 
                         onClick={() => {
-                          if (!propName || !propAddress || !propCity || !propState || !propZip) {
-                            setErrorMsg("All address details are required.");
+                          const name = propName.trim();
+                          const address = propAddress.trim();
+                          const city = propCity.trim();
+                          const state = propState.trim();
+                          const zip = propZip.trim();
+
+                          if (!name || !address || !city || !state || !zip) {
+                            alert("All address details are required.");
                             return;
                           }
+                          if (!/^[a-zA-Z\s]+$/.test(name)) {
+                            alert("Property Name must contain only letters and spaces.");
+                            return;
+                          }
+                          if (!/[a-zA-Z]/.test(address)) {
+                            alert("Street Address must contain at least one letter.");
+                            return;
+                          }
+
+                          // US State validation
+                          const cleanState = state.trim().toLowerCase();
+                          const isUSState = STATE_NAME_TO_ABBR.hasOwnProperty(cleanState) || 
+                                            Object.values(STATE_NAME_TO_ABBR).map(abbr => abbr.toLowerCase()).includes(cleanState);
+                          if (!isUSState) {
+                            alert("Validation Error: Only US states are allowed.");
+                            return;
+                          }
+
+                          // US Zip validation
+                          if (!/^\d{5}(-\d{4})?$/.test(zip)) {
+                            alert("Validation Error: ZIP code must be a valid 5-digit US ZIP code.");
+                            return;
+                          }
+
                           setErrorMsg('');
                           setWizardStep(3);
                         }} 
@@ -1091,6 +1200,12 @@ export default function PropertiesHub({
                   <input required type="text" value={editZip} onChange={e=>handleEditZipLookup(e.target.value)} className="w-full bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 focus:border-blue-500 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none" placeholder="10001" />
                 </div>
               </div>
+              {(getPropertyType(selectedProperty) === 'Single Family' || getPropertyType(selectedProperty) === 'Condo') && (
+                <div>
+                  <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Monthly Rent ($)</label>
+                  <input required type="number" value={editRent} onChange={e=>setEditRent(e.target.value)} className="w-full bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 focus:border-blue-500 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none" placeholder="e.g. 1500" />
+                </div>
+              )}
               <div className="pt-4 flex gap-3">
                 <button type="button" onClick={() => setShowEditPropModal(false)} className="flex-1 py-2.5 rounded-xl text-sm font-semibold border border-slate-200 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors">Cancel</button>
                 <button type="submit" className="flex-1 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-semibold hover:bg-blue-500 transition-all shadow-md shadow-blue-500/25">Save Changes</button>

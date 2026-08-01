@@ -256,7 +256,14 @@ export default function RentLedger({ user, selectedPropertyFilterId = 'all' }) {
                   <tr key={inv.invoice_id} className="hover:bg-slate-50 dark:hover:bg-white/5 transition-colors group">
                     <td className="px-4 py-4 font-mono text-xs font-bold text-indigo-650 dark:text-[#5BA4F5] whitespace-nowrap">#{inv.invoice_id}</td>
                     <td className="px-4 py-4 whitespace-nowrap">
-                      <span className="font-semibold text-slate-900 dark:text-white">Unit {inv.lease?.unit?.unit_number || 'N/A'}</span>
+                      <div className="flex flex-col">
+                        <span className="font-semibold text-slate-900 dark:text-white">Unit {inv.lease?.unit?.unit_number || 'N/A'}</span>
+                        {inv.lease?.tenant_name && (
+                          <span className="text-[10px] text-slate-500 dark:text-gray-400 font-medium">
+                            Tenant: {inv.lease.tenant_name}
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td className="px-4 py-4 text-xs text-slate-500 dark:text-gray-400 whitespace-nowrap">{inv.due_date}</td>
                     <td className="px-4 py-4">

@@ -31,6 +31,10 @@ const NewsModal = ({ communityId, onClose, onSuccess }) => {
       alert('News title must be at least 5 characters long.');
       return;
     }
+    if (!/^[a-zA-Z\s]+$/.test(form.title.trim())) {
+      alert('News title must contain only letters and spaces.');
+      return;
+    }
     if (form.content.trim().length < 10) {
       alert('News content must be at least 10 characters long.');
       return;

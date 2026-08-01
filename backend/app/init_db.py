@@ -80,7 +80,12 @@ def run_db_upgrades():
         ]
         for col_name, col_type in columns_to_add_co_landlord:
             db.execute(text(f"ALTER TABLE rental_leases ADD COLUMN IF NOT EXISTS {col_name} {col_type};"))
-        pass
+
+        # Add columns to rental_users and condo_users tables
+        db.execute(text("ALTER TABLE rental_users ADD COLUMN IF NOT EXISTS id_proof_url TEXT;"))
+        db.execute(text("ALTER TABLE rental_users ADD COLUMN IF NOT EXISTS address_proof_url TEXT;"))
+        db.execute(text("ALTER TABLE condo_users ADD COLUMN IF NOT EXISTS id_proof_url TEXT;"))
+        db.execute(text("ALTER TABLE condo_users ADD COLUMN IF NOT EXISTS address_proof_url TEXT;"))
         
         db.commit()
         print("✅ Database DDL upgrades completed.")

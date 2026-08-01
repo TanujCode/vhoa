@@ -270,8 +270,7 @@ const AdminPortal = () => {
 
       const freshUser = {
         ...meData,
-        // Preserve profile picture URL from cached data if API didn't return it
-        user_profile_url: meData.user_profile_url || cachedUser?.user_profile_url || null,
+        user_profile_url: meData.user_profile_url || null,
         initials: `${meData.first_name?.[0] || 'U'}${meData.last_name?.[0] || 'R'}`.toUpperCase(),
         name: meData.full_name || `${meData.first_name} ${meData.last_name}`,
         email: meData.email_id,

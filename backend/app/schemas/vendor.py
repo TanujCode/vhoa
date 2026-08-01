@@ -26,12 +26,53 @@ class VendorCreate(BaseModel):
             raise ValueError(f"The category must be one of these.: {allowed}")
         return v.upper()
 
-    @field_validator("company_name", "contact_person")
+    @field_validator("company_name")
     @classmethod
-    def not_empty(cls, v):
-        if not v.strip():
-            raise ValueError("The field cannot be empty.")
-        return v.strip()
+    def company_name_valid(cls, v):
+        if v and v.strip():
+            import re
+            trimmed = v.strip()
+            if not re.match(r"^[a-zA-Z\s]+$", trimmed):
+                raise ValueError("Company name must contain only letters and spaces.")
+            return trimmed
+        return v
+
+    @field_validator("contact_person")
+    @classmethod
+    def contact_person_valid(cls, v):
+        if v and v.strip():
+            return v.strip()
+        return v
+
+    @field_validator("license_number")
+    @classmethod
+    def license_valid(cls, v):
+        if v is not None and v.strip():
+            import re
+            trimmed = v.strip()
+            if (not (6 <= len(trimmed) <= 20) or 
+                not re.match(r"^[a-zA-Z0-9\-]+$", trimmed) or 
+                sum(c.isdigit() for c in trimmed) < 3 or 
+                re.search(r"(.)\1{3,}", trimmed) or 
+                re.search(r"[a-zA-Z]{5,}", trimmed)):
+                raise ValueError("License number must be 6-20 alphanumeric characters (or hyphens) containing at least 3 digits, without long repeating characters or 5+ consecutive letters.")
+            return trimmed
+        return v
+
+    @field_validator("insurance_number")
+    @classmethod
+    def insurance_valid(cls, v):
+        if v is not None and v.strip():
+            import re
+            trimmed = v.strip()
+            if (not (5 <= len(trimmed) <= 25) or 
+                not re.match(r"^[a-zA-Z0-9\-]+$", trimmed) or 
+                sum(c.isdigit() for c in trimmed) < 3 or 
+                re.search(r"(.)\1{3,}", trimmed) or 
+                re.search(r"[a-zA-Z]{5,}", trimmed)):
+                raise ValueError("Insurance policy number must be 5-25 alphanumeric characters (or hyphens) containing at least 3 digits, without long repeating characters or 5+ consecutive letters.")
+            return trimmed
+        return v
 
 
 class VendorUpdate(BaseModel):
@@ -40,12 +81,53 @@ class VendorUpdate(BaseModel):
     phone:            str | None = None
     zip_code:         str | None = None
     category:         str | None = None
+
+    @field_validator("company_name")
+    @classmethod
+    def company_name_valid(cls, v):
+        if v is not None and v.strip():
+            import re
+            trimmed = v.strip()
+            if not re.match(r"^[a-zA-Z\s]+$", trimmed):
+                raise ValueError("Company name must contain only letters and spaces.")
+            return trimmed
+        return v
     license_number:   str | None = None
     license_expiry:   date | None = None
     insurance_number: str | None = None
     insurance_expiry: date | None = None
     onboard_status:   str | None = None
     active_status:    bool | None = None
+
+    @field_validator("license_number")
+    @classmethod
+    def license_valid(cls, v):
+        if v is not None and v.strip():
+            import re
+            trimmed = v.strip()
+            if (not (6 <= len(trimmed) <= 20) or 
+                not re.match(r"^[a-zA-Z0-9\-]+$", trimmed) or 
+                sum(c.isdigit() for c in trimmed) < 3 or 
+                re.search(r"(.)\1{3,}", trimmed) or 
+                re.search(r"[a-zA-Z]{5,}", trimmed)):
+                raise ValueError("License number must be 6-20 alphanumeric characters (or hyphens) containing at least 3 digits, without long repeating characters or 5+ consecutive letters.")
+            return trimmed
+        return v
+
+    @field_validator("insurance_number")
+    @classmethod
+    def insurance_valid(cls, v):
+        if v is not None and v.strip():
+            import re
+            trimmed = v.strip()
+            if (not (5 <= len(trimmed) <= 25) or 
+                not re.match(r"^[a-zA-Z0-9\-]+$", trimmed) or 
+                sum(c.isdigit() for c in trimmed) < 3 or 
+                re.search(r"(.)\1{3,}", trimmed) or 
+                re.search(r"[a-zA-Z]{5,}", trimmed)):
+                raise ValueError("Insurance policy number must be 5-25 alphanumeric characters (or hyphens) containing at least 3 digits, without long repeating characters or 5+ consecutive letters.")
+            return trimmed
+        return v
 
 
 class VendorOut(BaseModel):

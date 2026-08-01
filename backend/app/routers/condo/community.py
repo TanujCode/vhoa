@@ -371,6 +371,13 @@ def create_community(
     
     if not name or not code:
         raise HTTPException(status_code=400, detail="Building Name and Passcode are required.")
+
+    if name:
+        import re
+        if not re.match(r"^[a-zA-Z\s]+$", name.strip()):
+            raise HTTPException(status_code=400, detail="Building Name must contain only letters and spaces.")
+    if address and not any(char.isalpha() for char in address):
+        raise HTTPException(status_code=400, detail="Address cannot consist only of numbers.")
         
     existing = db.query(CondoCommunity).filter(
         (CondoCommunity.name == name) | (CondoCommunity.community_code == code)
@@ -630,6 +637,13 @@ def update_community(
     zip_code = body.get("zip_code")
     desc = body.get("description")
     
+    if name is not None:
+        import re
+        if not re.match(r"^[a-zA-Z\s]+$", name.strip()):
+            raise HTTPException(status_code=400, detail="Building Name must contain only letters and spaces.")
+    if address is not None and not any(char.isalpha() for char in address):
+        raise HTTPException(status_code=400, detail="Address cannot consist only of numbers.")
+        
     if name:
         comm.name = name
     if code:

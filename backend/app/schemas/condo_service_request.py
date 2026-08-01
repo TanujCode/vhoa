@@ -15,6 +15,16 @@ class CondoServiceRequestTypeCreate(BaseModel):
     description:  str | None = None
     community_id: int
 
+    @field_validator("type_name")
+    @classmethod
+    def type_name_valid(cls, v):
+        if v and v.strip():
+            import re
+            if not re.match(r"^[a-zA-Z\s]+$", v.strip()):
+                raise ValueError("Type name must contain only letters and spaces.")
+            return v.strip()
+        return v
+
 
 class CondoServiceRequestTypeOut(BaseModel):
     type_id:      int
@@ -44,9 +54,15 @@ class CondoServiceRequestCreate(BaseModel):
     @field_validator("title")
     @classmethod
     def title_valid(cls, v):
-        if len(v.strip()) < 5:
-            raise ValueError("The title must be at least 5 characters long.")
-        return v.strip()
+        if v and v.strip():
+            import re
+            trimmed = v.strip()
+            if len(trimmed) < 5:
+                raise ValueError("The title must be at least 5 characters long.")
+            if not re.match(r"^[a-zA-Z\s]+$", trimmed):
+                raise ValueError("Title must contain only letters and spaces.")
+            return trimmed
+        return v
 
 
 class CondoStatusUpdateRequest(BaseModel):
@@ -107,3 +123,16 @@ class CondoServiceRequestUpdate(BaseModel):
     type_id:      int | None = None
     vendor_id:    int | None = None
     payment_id:   int | None = None
+
+    @field_validator("title")
+    @classmethod
+    def title_valid(cls, v):
+        if v is not None and v.strip():
+            import re
+            trimmed = v.strip()
+            if len(trimmed) < 5:
+                raise ValueError("The title must be at least 5 characters long.")
+            if not re.match(r"^[a-zA-Z\s]+$", trimmed):
+                raise ValueError("Title must contain only letters and spaces.")
+            return trimmed
+        return v

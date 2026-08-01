@@ -64,8 +64,17 @@ export const validateBusinessName = (value) => {
   const v = value.trim();
   if (v.length < 2) return 'Name must be at least 2 characters.';
   if (v.length > 100) return 'Name must be less than 100 characters.';
-  if (!/^[A-Za-z0-9\s.,'\-&()]+$/.test(v))
-    return 'Name contains invalid characters. Use letters, numbers, spaces, or . , & ( )';
+  if (!/^[A-Za-z\s]+$/.test(v))
+    return 'Name must contain only letters and spaces.';
+  return true;
+};
+
+/** Address – must contain at least one letter and cannot consist only of numbers */
+export const validateAddress = (value) => {
+  if (!value || !value.trim()) return true;
+  const v = value.trim();
+  if (v.length < 3) return 'Address must be at least 3 characters.';
+  if (!/[a-zA-Z]/.test(v)) return 'Address must contain at least one letter.';
   return true;
 };
 
@@ -120,36 +129,14 @@ export const validatePassword = (value) => {
   return true;
 };
 
-// ─── Ticket / Request Text Fields ──────────────────────────────────────────────
-/** Validate maintenance ticket or request title */
 export const validateTicketTitle = (title) => {
   if (!title || !title.trim()) return "Title is required.";
   const val = title.trim();
   if (val.length < 5) return "Title must be at least 5 characters long.";
   if (val.length > 100) return "Title cannot exceed 100 characters.";
-  
-  // Prevent repeating characters (e.g. 'hhhhh' or 'ddddd')
-  if (/(.)\1{4,}/.test(val)) {
-    return "Title cannot contain long repeating character sequences.";
+  if (!/^[A-Za-z\s]+$/.test(val)) {
+    return "Title must contain only letters and spaces.";
   }
-
-  // Prevent low unique character count for gibberish (e.g. 'asdasdasd')
-  const uniqueChars = new Set(val.toLowerCase().replace(/[\s.,'()\-#]/g, "")).size;
-  if (val.length > 10 && uniqueChars < 3) {
-    return "Please enter a descriptive, meaningful title.";
-  }
-
-  // Must contain some alphabetic characters (letters)
-  const letters = val.replace(/[^a-zA-Z]/g, "");
-  if (letters.length < 3) {
-    return "Title must contain at least 3 letters (e.g. 'Leaky Pipe').";
-  }
-
-  // Should contain only safe descriptive characters (letters, numbers, spaces, common punctuation)
-  if (!/^[A-Za-z0-9\s.,'()\-#]+$/.test(val)) {
-    return "Title contains invalid characters. Use letters, numbers, spaces, or simple punctuation (.,'()#-).";
-  }
-
   return true;
 };
 
