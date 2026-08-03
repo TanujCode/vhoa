@@ -280,13 +280,13 @@ export default function CondoSolutionPage() {
               </span>
               <ul className="space-y-4 text-xs text-slate-600 dark:text-slate-400 font-display">
                 <li className="flex items-start gap-2.5">
-                  <span className="text-violet-500 font-black">✕</span> <span>Constant double bookings on pools and community clubhouse spaces.</span>
+                  <span className="text-violet-500 font-black"></span> <span>Constant double bookings on pools and community clubhouse spaces.</span>
                 </li>
                 <li className="flex items-start gap-2.5">
-                  <span className="text-violet-500 font-black">✕</span> <span>Unverified guests accessing shared areas without tracking logs.</span>
+                  <span className="text-violet-500 font-black"></span> <span>Unverified guests accessing shared areas without tracking logs.</span>
                 </li>
                 <li className="flex items-start gap-2.5">
-                  <span className="text-violet-500 font-black">✕</span> <span>Chasing cash deposits for reservation cleanups.</span>
+                  <span className="text-violet-500 font-black"></span> <span>Chasing cash deposits for reservation cleanups.</span>
                 </li>
               </ul>
             </div>
@@ -297,13 +297,13 @@ export default function CondoSolutionPage() {
               </span>
               <ul className="space-y-4 text-xs text-slate-600 dark:text-slate-400 font-display">
                 <li className="flex items-start gap-2.5">
-                  <span className="text-indigo-400 font-black">✓</span> <span>Smart calendars with real-time double-booking blocks.</span>
+                  <span className="text-indigo-400 font-black"></span> <span>Smart calendars with real-time double-booking blocks.</span>
                 </li>
                 <li className="flex items-start gap-2.5">
-                  <span className="text-indigo-400 font-black">✓</span> <span>Automated temporary gate pass OTP dispatches.</span>
+                  <span className="text-indigo-400 font-black"></span> <span>Automated temporary gate pass OTP dispatches.</span>
                 </li>
                 <li className="flex items-start gap-2.5">
-                  <span className="text-indigo-400 font-black">✓</span> <span>Online deposit authorization holds via Stripe checkout.</span>
+                  <span className="text-indigo-400 font-black"></span> <span>Online deposit authorization holds via Stripe checkout.</span>
                 </li>
               </ul>
             </div>

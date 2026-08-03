@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Wrench, Plus, RefreshCw, X, ChevronDown, MessageSquare, UserCheck, Edit, Clock, Landmark, User, DollarSign, Filter, Zap, Leaf, Shield, Sparkles, Paintbrush, Bug, Hammer, Wind, Droplets, Search, Calendar } from 'lucide-react';
+import { Wrench, Plus, RefreshCw, X, ChevronDown, MessageSquare, UserCheck, Edit, Clock, Landmark, User, DollarSign, Filter, Zap, Leaf, Shield, Sparkles, Paintbrush, Bug, Hammer, Wind, Droplets, Search, Calendar, Info } from 'lucide-react';
 import API from '../services/api';
 import { onlyDigitsKeyPress, onlyDecimalKeyPress, validateTicketTitle, validateTicketDescription } from '../utils/fieldValidators';
 import ConfirmModal from '../components/ConfirmModal';
@@ -76,6 +76,7 @@ const getRequestIconDetails = (typeName) => {
 const SubmitModal = ({ communityId, onClose, onSuccess, showAlert, showConfirm }) => {
   const [types, setTypes] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState({});
   const [form, setForm] = useState({ 
     type_id: '', 
     title: '', 
@@ -91,18 +92,26 @@ const SubmitModal = ({ communityId, onClose, onSuccess, showAlert, showConfirm }
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const newErrors = {};
+    if (!form.type_id) {
+      newErrors.type_id = "Request Type is required.";
+    }
 
     const titleErr = validateTicketTitle(form.title);
     if (titleErr !== true) {
-      showAlert("Validation Error", titleErr, "warning");
-      return;
+      newErrors.title = titleErr;
     }
 
     const descErr = validateTicketDescription(form.description);
     if (descErr !== true) {
-      showAlert("Validation Error", descErr, "warning");
+      newErrors.description = descErr;
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
       return;
     }
+    setErrors({});
     setLoading(true);
     try {
       await API.post('/service-request', { 
@@ -138,8 +147,11 @@ const SubmitModal = ({ communityId, onClose, onSuccess, showAlert, showConfirm }
               <select 
                 required 
                 value={form.type_id} 
-                onChange={e => setForm({...form, type_id: e.target.value})}
-                className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl pl-4 pr-10 py-3 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-blue-500 appearance-none cursor-pointer"
+                onChange={e => {
+                  setForm({...form, type_id: e.target.value});
+                  if (errors.type_id) setErrors(prev => ({ ...prev, type_id: null }));
+                }}
+                className={`w-full bg-slate-50 dark:bg-[#0D1B2A] border ${errors.type_id ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/20'} rounded-2xl pl-4 pr-10 py-3 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-blue-500 appearance-none cursor-pointer`}
               >
                 <option value="" className="text-slate-900 dark:text-white">Select type...</option>
                 {types.map(t => (
@@ -150,6 +162,7 @@ const SubmitModal = ({ communityId, onClose, onSuccess, showAlert, showConfirm }
               </select>
               <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-gray-500 pointer-events-none" size={18} />
             </div>
+            {errors.type_id && <p className="text-red-550 text-red-500 text-[10px] mt-1 font-bold">{errors.type_id}</p>}
           </div>
 
           <div>
@@ -159,9 +172,13 @@ const SubmitModal = ({ communityId, onClose, onSuccess, showAlert, showConfirm }
               type="text" 
               placeholder="Brief title of the issue..." 
               value={form.title}
-              onChange={e => setForm({...form, title: e.target.value})}
-              className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl px-4 py-3 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 focus:outline-none focus:border-blue-500"
+              onChange={e => {
+                setForm({...form, title: e.target.value});
+                if (errors.title) setErrors(prev => ({ ...prev, title: null }));
+              }}
+              className={`w-full bg-slate-50 dark:bg-[#0D1B2A] border ${errors.title ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/20'} rounded-2xl px-4 py-3 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 focus:outline-none focus:border-blue-500`}
             />
+            {errors.title && <p className="text-red-550 text-red-500 text-[10px] mt-1 font-bold">{errors.title}</p>}
           </div>
 
           <div>
@@ -171,9 +188,13 @@ const SubmitModal = ({ communityId, onClose, onSuccess, showAlert, showConfirm }
               rows={4} 
               placeholder="Describe the problem in detail..." 
               value={form.description}
-              onChange={e => setForm({...form, description: e.target.value})}
-              className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl px-4 py-3 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 focus:outline-none focus:border-blue-500 resize-y"
+              onChange={e => {
+                setForm({...form, description: e.target.value});
+                if (errors.description) setErrors(prev => ({ ...prev, description: null }));
+              }}
+              className={`w-full bg-slate-50 dark:bg-[#0D1B2A] border ${errors.description ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/20'} rounded-2xl px-4 py-3 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 focus:outline-none focus:border-blue-500 resize-y`}
             />
+            {errors.description && <p className="text-red-555 text-red-500 text-[10px] mt-1 font-bold">{errors.description}</p>}
           </div>
 
           <div>
@@ -401,6 +422,7 @@ const EditModal = ({ request, communityId, isAdmin, userRole, onClose, onSuccess
   const [types, setTypes] = useState([]);
   const [vendors, setVendors] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState({});
 
   useEffect(() => {
     if (communityId) {
@@ -417,10 +439,26 @@ const EditModal = ({ request, communityId, isAdmin, userRole, onClose, onSuccess
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (form.title.trim().length < 5) {
-      showAlert("Validation Error", 'The title must be at least 5 characters long.', "warning");
+    const newErrors = {};
+    if (!form.type_id) {
+      newErrors.type_id = "Request Type is required.";
+    }
+
+    const titleErr = validateTicketTitle(form.title);
+    if (titleErr !== true) {
+      newErrors.title = titleErr;
+    }
+
+    const descErr = validateTicketDescription(form.description);
+    if (descErr !== true) {
+      newErrors.description = descErr;
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
       return;
     }
+    setErrors({});
     setLoading(true);
     try {
       const payload = {
@@ -460,8 +498,11 @@ const EditModal = ({ request, communityId, isAdmin, userRole, onClose, onSuccess
               <select 
                 required 
                 value={form.type_id} 
-                onChange={e => setForm({...form, type_id: e.target.value})}
-                className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl pl-4 pr-10 py-3 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-blue-500 appearance-none cursor-pointer"
+                onChange={e => {
+                  setForm({...form, type_id: e.target.value});
+                  if (errors.type_id) setErrors(prev => ({ ...prev, type_id: null }));
+                }}
+                className={`w-full bg-slate-50 dark:bg-[#0D1B2A] border ${errors.type_id ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/20'} rounded-2xl pl-4 pr-10 py-3 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-blue-500 appearance-none cursor-pointer`}
               >
                 <option value="" className="text-slate-900 dark:text-white">Select type...</option>
                 {types.map(t => (
@@ -472,6 +513,7 @@ const EditModal = ({ request, communityId, isAdmin, userRole, onClose, onSuccess
               </select>
               <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-gray-500 pointer-events-none" size={18} />
             </div>
+            {errors.type_id && <p className="text-red-550 text-red-500 text-[10px] mt-1 font-bold">{errors.type_id}</p>}
           </div>
 
           <div>
@@ -481,9 +523,13 @@ const EditModal = ({ request, communityId, isAdmin, userRole, onClose, onSuccess
               type="text" 
               placeholder="Brief title of the issue..." 
               value={form.title}
-              onChange={e => setForm({...form, title: e.target.value})}
-              className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl px-4 py-3 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 focus:outline-none focus:border-blue-500"
+              onChange={e => {
+                setForm({...form, title: e.target.value});
+                if (errors.title) setErrors(prev => ({ ...prev, title: null }));
+              }}
+              className={`w-full bg-slate-50 dark:bg-[#0D1B2A] border ${errors.title ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/20'} rounded-2xl px-4 py-3 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 focus:outline-none focus:border-blue-500`}
             />
+            {errors.title && <p className="text-red-550 text-red-500 text-[10px] mt-1 font-bold">{errors.title}</p>}
           </div>
 
           <div>
@@ -493,9 +539,13 @@ const EditModal = ({ request, communityId, isAdmin, userRole, onClose, onSuccess
               rows={4} 
               placeholder="Describe the problem in detail..." 
               value={form.description}
-              onChange={e => setForm({...form, description: e.target.value})}
-              className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl px-4 py-3 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 focus:outline-none focus:border-blue-500 resize-y"
+              onChange={e => {
+                setForm({...form, description: e.target.value});
+                if (errors.description) setErrors(prev => ({ ...prev, description: null }));
+              }}
+              className={`w-full bg-slate-50 dark:bg-[#0D1B2A] border ${errors.description ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/20'} rounded-2xl px-4 py-3 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 focus:outline-none focus:border-blue-500 resize-y`}
             />
+            {errors.description && <p className="text-red-555 text-red-500 text-[10px] mt-1 font-bold">{errors.description}</p>}
           </div>
 
           <div>
@@ -858,7 +908,7 @@ const DetailDrawer = ({
         {/* Helper message for residents if request is not OPEN */}
         {isResident && isOwner && request.status_name !== 'OPEN' && (
           <div className="p-4 bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-400 text-xs rounded-2xl font-medium leading-relaxed">
-            ℹ️ Approved/Processed requests cannot be edited directly by residents. To request changes, please submit a note in the **Note History** below for the management team.
+            <Info className="w-4 h-4 inline-block mr-1.5 align-text-bottom shrink-0" /> Approved/Processed requests cannot be edited directly by residents. To request changes, please submit a note in the **Note History** below for the management team.
           </div>
         )}
 

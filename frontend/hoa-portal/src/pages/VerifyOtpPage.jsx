@@ -31,7 +31,7 @@ const VerifyOtpPage = () => {
       const response = await API.post('/auth/otp/verify', {
         email_id: email,
         otp_code: otp,
-        otp_type: 'email_verify' // ✅ FIX: Match with backend template keys
+        otp_type: 'email_verify' //  FIX: Match with backend template keys
       });
 
       setSuccessMsg("Email Successfully Verified!");

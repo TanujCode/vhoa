@@ -65,7 +65,7 @@ const RequestChangeModal = ({ isOpen, onClose, community, onSuccess }) => {
       }
 
       await API.post(`/community/${community.community_id}/change-request`, payload);
-      setMessage("✅ Change request submitted to Super Admin!");
+      setMessage(" Change request submitted to Super Admin!");
       toast.success("Request submitted successfully!");
       setTimeout(() => {
         onSuccess?.();
@@ -74,7 +74,7 @@ const RequestChangeModal = ({ isOpen, onClose, community, onSuccess }) => {
     } catch (err) {
       console.error(err.response?.data);
       const errMsg = err.response?.data?.detail || err.message;
-      setMessage(`❌ ${errMsg}`);
+      setMessage(` ${errMsg}`);
       toast.error(errMsg);
     } finally {
       setLoading(false);
@@ -186,7 +186,7 @@ const RequestChangeModal = ({ isOpen, onClose, community, onSuccess }) => {
 
           {message && (
             <div className={`p-3 rounded-2xl text-center text-xs font-semibold mt-2 ${
-              message.includes('✅') ? 'bg-green-500/10 text-green-600 dark:text-green-400 border border-green-500/20' : 'bg-red-500/10 text-red-500 dark:text-red-400 border border-red-500/20'
+              message.includes('') ? 'bg-green-500/10 text-green-600 dark:text-green-400 border border-green-500/20' : 'bg-red-500/10 text-red-500 dark:text-red-400 border border-red-500/20'
             }`}>
               {message}
             </div>

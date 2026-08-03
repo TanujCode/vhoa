@@ -12,7 +12,7 @@ const cleanDescription = (desc) => {
   clean = clean.replace(/User:\s+([^(]+)\s+\([^)]+\)/gi, '$1');
   clean = clean.replace(/Service Request\s+(\d+)/gi, 'Service Request #$1');
   clean = clean.replace(/\.?\s*Time\s*\(ET\):.*$/gi, '');
-  clean = clean.replace(/\s+->\s+/g, ' ➔ ');
+  clean = clean.replace(/\s+->\s+/g, '  ');
   return clean.trim();
 };
 
@@ -90,6 +90,7 @@ const RentalAdminPortal = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(null);
+  const [leases, setLeases] = useState([]);
 
   // Intercept browser back button when on dashboard to show exit confirmation
   useEffect(() => {
@@ -295,7 +296,15 @@ const RentalAdminPortal = () => {
       } else if (freshUser.role === 'tenant') {
         try {
           const leaseRes = await API.get('/rental/leases');
-          const activeLease = leaseRes.data.find(l => l.status === 'ACTIVE') || leaseRes.data[0];
+          setLeases(leaseRes.data);
+          const savedLeaseId = localStorage.getItem('tenant_active_lease_id');
+          let activeLease = null;
+          if (savedLeaseId) {
+            activeLease = leaseRes.data.find(l => String(l.lease_id) === String(savedLeaseId));
+          }
+          if (!activeLease) {
+            activeLease = leaseRes.data.find(l => l.status === 'ACTIVE') || leaseRes.data[0];
+          }
           if (activeLease) {
             const updatedUser = {
               ...freshUser,
@@ -330,7 +339,7 @@ const RentalAdminPortal = () => {
       case 'dashboard':
         if (role === 'super_admin') return <SuperAdminDashboard user={user} setActivePage={setActivePage} />;
         if (role === 'landlord') return <LandlordDashboard user={user} setActivePage={setActivePage} selectedPropertyFilterId={selectedPropertyFilterId} setSelectedPropertyFilterId={setSelectedPropertyFilterId} properties={properties} />;
-        return <TenantDashboard user={user} setActivePage={setActivePage} />;
+        return <TenantDashboard user={user} setUser={setUser} setActivePage={setActivePage} />;
 
       case 'properties_hub':
         return <PropertiesHub user={user} selectedPropertyFilterId={selectedPropertyFilterId} setSelectedPropertyFilterId={setSelectedPropertyFilterId} properties={properties} />;
@@ -365,7 +374,7 @@ const RentalAdminPortal = () => {
       default:
         if (role === 'super_admin') return <SuperAdminDashboard user={user} setActivePage={setActivePage} />;
         if (role === 'landlord') return <LandlordDashboard user={user} setActivePage={setActivePage} selectedPropertyFilterId={selectedPropertyFilterId} setSelectedPropertyFilterId={setSelectedPropertyFilterId} properties={properties} />;
-        return <TenantDashboard user={user} setActivePage={setActivePage} />;
+        return <TenantDashboard user={user} setUser={setUser} setActivePage={setActivePage} />;
     }
   };
 
@@ -402,6 +411,24 @@ const RentalAdminPortal = () => {
           setSelectedPropertyFilterId={setSelectedPropertyFilterId}
           unreadCount={unreadCount}
           toggleNotif={handleToggleNotif}
+          leases={leases}
+          onTenantLeaseSwitch={(selectedId) => {
+            const selected = leases.find(l => l.lease_id === selectedId);
+            if (selected) {
+              localStorage.setItem('tenant_active_lease_id', String(selected.lease_id));
+              setUser(prevUser => {
+                const updatedUser = {
+                  ...prevUser,
+                  property_name: selected.property_name || (selected.unit && selected.unit.property ? selected.unit.property.name : selected.property?.name || null),
+                  unit_number: selected.unit ? selected.unit.unit_number : null
+                };
+                try {
+                  localStorage.setItem('rental_user', JSON.stringify(updatedUser));
+                } catch (_) {}
+                return updatedUser;
+              });
+            }
+          }}
         />
 
         <main className="flex-1 overflow-auto p-5 lg:p-7 bg-white dark:bg-[#0D1B2A] custom-scrollbar">

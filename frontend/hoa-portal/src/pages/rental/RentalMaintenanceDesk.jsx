@@ -10,6 +10,31 @@ import API from '../../services/api';
 import ConfirmModal from '../../components/ConfirmModal';
 import { validateTicketTitle, validateTicketDescription } from '../../utils/fieldValidators';
 
+const REQUEST_TYPES = [
+  "Plumbing Issue",
+  "Electrical Issue",
+  "Carpentry Work",
+  "Cleaning",
+  "Security Issue",
+  "Landscaping",
+  "Painting",
+  "Other"
+];
+
+const parseTitleAndType = (fullTitle) => {
+  const match = (fullTitle || '').match(/^\[(.*?)\]\s*(.*)$/);
+  if (match) {
+    return {
+      type: match[1],
+      title: match[2]
+    };
+  }
+  return {
+    type: 'Other',
+    title: fullTitle || ''
+  };
+};
+
 // Standardized Badge components matching reference
 const StatusBadge = ({ status }) => {
   const map = {
@@ -45,7 +70,33 @@ const PriorityBadge = ({ priority }) => {
 };
 
 const getRequestIconDetails = (title) => {
-  const name = (title || '').toLowerCase();
+  const parsed = parseTitleAndType(title);
+  const type = parsed.type.toLowerCase();
+  
+  if (type.includes('plumb') || type.includes('water') || type.includes('sink') || type.includes('leak') || type.includes('plumbing')) {
+    return { Icon: Droplets, bg: 'bg-sky-500/10 dark:bg-sky-500/20', text: 'text-sky-600 dark:text-sky-400' };
+  }
+  if (type.includes('elect') || type.includes('light') || type.includes('power') || type.includes('electrical')) {
+    return { Icon: Zap, bg: 'bg-amber-500/10 dark:bg-amber-500/20', text: 'text-amber-600 dark:text-amber-400' };
+  }
+  if (type.includes('paint') || type.includes('brush') || type.includes('painting')) {
+    return { Icon: Sparkles, bg: 'bg-rose-500/10 dark:bg-rose-500/20', text: 'text-rose-600 dark:text-rose-400' };
+  }
+  if (type.includes('landscap') || type.includes('garden') || type.includes('leaf') || type.includes('landscaping')) {
+    return { Icon: Leaf, bg: 'bg-emerald-500/10 dark:bg-emerald-500/20', text: 'text-emerald-600 dark:text-emerald-400' };
+  }
+  if (type.includes('secur') || type.includes('lock') || type.includes('key') || type.includes('security')) {
+    return { Icon: Shield, bg: 'bg-indigo-500/10 dark:bg-indigo-500/20', text: 'text-indigo-600 dark:text-indigo-400' };
+  }
+  if (type.includes('clean') || type.includes('swee') || type.includes('trash') || type.includes('garbage') || type.includes('cleaning')) {
+    return { Icon: Sparkles, bg: 'bg-blue-500/10 dark:bg-blue-500/20', text: 'text-blue-600 dark:text-blue-400' };
+  }
+  if (type.includes('carpentr') || type.includes('wood') || type.includes('furniture') || type.includes('carpentry')) {
+    return { Icon: Wrench, bg: 'bg-orange-500/10 dark:bg-orange-500/20', text: 'text-orange-600 dark:text-orange-400' };
+  }
+  
+  // Fallback checking on display title
+  const name = parsed.title.toLowerCase();
   if (name.includes('paint') || name.includes('color') || name.includes('wall') || name.includes('brush')) {
     return { Icon: Sparkles, bg: 'bg-rose-500/10 dark:bg-rose-500/20', text: 'text-rose-600 dark:text-rose-400' };
   }
@@ -91,6 +142,9 @@ export default function RentalMaintenanceDesk({ user, selectedPropertyFilterId =
   const [description, setDescription] = useState('');
   const [priority, setPriority] = useState('NORMAL');
   const [selectedLeaseId, setSelectedLeaseId] = useState('');
+  const [errors, setErrors] = useState({});
+  const [requestType, setRequestType] = useState('');
+  const [editRequestType, setEditRequestType] = useState('');
 
   // Tenant edit & note modal states
   const [showTenantEditModal, setShowTenantEditModal] = useState(false);
@@ -154,22 +208,44 @@ export default function RentalMaintenanceDesk({ user, selectedPropertyFilterId =
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [user?.property_name, user?.unit_number]);
 
   async function fetchData() {
     try {
       setLoading(true);
       
-      // Fetch maintenance requests
-      const reqRes = await API.get('/rental/maintenance');
-      setRequests(reqRes.data);
+      const activeId = localStorage.getItem('tenant_active_lease_id');
 
-      // If tenant, fetch leases to get a lease ID for the request form
+      // 1. Fetch leases first to validate activeId
       const leaseRes = await API.get('/rental/leases');
-      setLeases(leaseRes.data);
-      if (leaseRes.data.length > 0) {
-        setSelectedLeaseId(leaseRes.data[0].lease_id);
+      const allLeases = leaseRes.data;
+
+      let validatedActiveId = activeId;
+      if (!isLandlord && allLeases.length > 0) {
+        const leaseExists = allLeases.some(l => String(l.lease_id) === String(activeId));
+        if (!leaseExists) {
+          // Fallback to active/first lease
+          const primaryLease = allLeases.find(l => l.status === 'ACTIVE') || allLeases[0];
+          validatedActiveId = String(primaryLease.lease_id);
+          localStorage.setItem('tenant_active_lease_id', validatedActiveId);
+        }
       }
+
+      // 2. Filter leases by validatedActiveId
+      const tenantLeases = !isLandlord && validatedActiveId
+        ? allLeases.filter(l => String(l.lease_id) === String(validatedActiveId))
+        : allLeases;
+      setLeases(tenantLeases);
+      if (tenantLeases.length > 0) {
+        setSelectedLeaseId(tenantLeases[0].lease_id);
+      }
+
+      // 3. Fetch maintenance requests and filter by validatedActiveId
+      const reqRes = await API.get('/rental/maintenance');
+      const tenantReqs = !isLandlord && validatedActiveId
+        ? reqRes.data.filter(r => String(r.lease_id) === String(validatedActiveId))
+        : reqRes.data;
+      setRequests(tenantReqs);
 
       // If landlord, fetch vendors to allow assignment
       if (isLandlord) {
@@ -190,17 +266,26 @@ export default function RentalMaintenanceDesk({ user, selectedPropertyFilterId =
     e.preventDefault();
     
     // Front-end Validations
+    const newErrors = {};
+    if (!requestType) {
+      newErrors.requestType = "Request Type is required.";
+    }
+
     const titleErr = validateTicketTitle(title);
     if (titleErr !== true) {
-      showAlert("Validation Error", titleErr, "warning");
-      return;
+      newErrors.title = titleErr;
     }
 
     const descErr = validateTicketDescription(description);
     if (descErr !== true) {
-      showAlert("Validation Error", descErr, "warning");
+      newErrors.description = descErr;
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
       return;
     }
+    setErrors({});
 
     let leaseIdToUse = selectedLeaseId;
     if (!leaseIdToUse && leases.length > 0) {
@@ -208,10 +293,12 @@ export default function RentalMaintenanceDesk({ user, selectedPropertyFilterId =
       setSelectedLeaseId(leases[0].lease_id);
     }
 
+    const finalTitle = `[${requestType}] ${title.trim()}`;
+
     try {
       const res = await API.post('/rental/maintenance', {
         lease_id: leaseIdToUse ? parseInt(leaseIdToUse) : 0,
-        title: title.trim(),
+        title: finalTitle,
         description: description.trim(),
         priority
       });
@@ -220,6 +307,7 @@ export default function RentalMaintenanceDesk({ user, selectedPropertyFilterId =
       setTitle('');
       setDescription('');
       setPriority('NORMAL');
+      setRequestType('');
       showAlert("Success", "Maintenance request successfully filed! Landlord has been notified.", "success");
     } catch (err) {
       showAlert("Error", err.response?.data?.detail || "Failed to submit request.", "danger");
@@ -231,21 +319,32 @@ export default function RentalMaintenanceDesk({ user, selectedPropertyFilterId =
     if (!selectedRequest) return;
 
     // Front-end Validations
+    const newErrors = {};
+    if (!editRequestType) {
+      newErrors.requestType = "Request Type is required.";
+    }
+
     const titleErr = validateTicketTitle(tenantEditTitle);
     if (titleErr !== true) {
-      showAlert("Validation Error", titleErr, "warning");
-      return;
+      newErrors.title = titleErr;
     }
 
     const descErr = validateTicketDescription(tenantEditDesc);
     if (descErr !== true) {
-      showAlert("Validation Error", descErr, "warning");
+      newErrors.description = descErr;
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
       return;
     }
+    setErrors({});
+
+    const finalTitle = `[${editRequestType}] ${tenantEditTitle.trim()}`;
 
     try {
       const res = await API.put(`/rental/maintenance/${selectedRequest.request_id}/tenant-update`, {
-        title: tenantEditTitle.trim(),
+        title: finalTitle,
         description: tenantEditDesc.trim(),
         priority: tenantEditPriority
       });
@@ -262,18 +361,20 @@ export default function RentalMaintenanceDesk({ user, selectedPropertyFilterId =
     if (!selectedRequest) return;
     
     // Front-end Validations
+    const newErrors = {};
     if (!tenantNoteText || !tenantNoteText.trim()) {
-      showAlert("Validation Error", "Note is required.", "warning");
+      newErrors.note = "Note is required.";
+    } else if (tenantNoteText.trim().length < 5) {
+      newErrors.note = "Note must be at least 5 characters long.";
+    } else if (tenantNoteText.trim().length > 500) {
+      newErrors.note = "Note cannot exceed 500 characters.";
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
       return;
     }
-    if (tenantNoteText.trim().length < 5) {
-      showAlert("Validation Error", "Note must be at least 5 characters long.", "warning");
-      return;
-    }
-    if (tenantNoteText.trim().length > 500) {
-      showAlert("Validation Error", "Note cannot exceed 500 characters.", "warning");
-      return;
-    }
+    setErrors({});
 
     try {
       const res = await API.post(`/rental/maintenance/${selectedRequest.request_id}/note`, {
@@ -310,16 +411,21 @@ export default function RentalMaintenanceDesk({ user, selectedPropertyFilterId =
     e.preventDefault();
 
     // Front-end Validations
+    const newErrors = {};
     if (statusVal === 'VENDOR_ASSIGNED' && !assignVendorId) {
-      showAlert("Validation Error", "Please select a vendor to assign.", "warning");
-      return;
+      newErrors.vendor_id = "Please select a vendor to assign.";
     }
 
     const parsedCost = parseFloat(estCost);
     if (statusVal === 'VENDOR_ASSIGNED' && (isNaN(parsedCost) || parsedCost < 0)) {
-      showAlert("Validation Error", "Estimated cost must be 0 or a positive number.", "warning");
+      newErrors.est_cost = "Estimated cost must be 0 or a positive number.";
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
       return;
     }
+    setErrors({});
 
     try {
       const params = {};
@@ -431,7 +537,7 @@ export default function RentalMaintenanceDesk({ user, selectedPropertyFilterId =
 
         {!isLandlord && (
           <button
-            onClick={() => setShowSubmitModal(true)}
+            onClick={() => { setErrors({}); setRequestType(''); setTitle(''); setDescription(''); setPriority('NORMAL'); setShowSubmitModal(true); }}
             className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2.5 rounded-xl flex items-center gap-1.5 text-xs font-bold transition-all shadow-md shadow-blue-500/20 whitespace-nowrap cursor-pointer"
           >
             <Plus className="w-4 h-4" /> New Request
@@ -576,7 +682,7 @@ export default function RentalMaintenanceDesk({ user, selectedPropertyFilterId =
                     <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-1 sm:gap-3">
                       <div className="min-w-0">
                         <h3 className="font-semibold text-slate-900 dark:text-white text-sm sm:text-base leading-tight break-words">
-                          {req.title}
+                          {parseTitleAndType(req.title).title}
                         </h3>
                         <p className="text-slate-500 dark:text-gray-400 text-xs sm:text-sm mt-0.5 line-clamp-2 leading-relaxed" title={req.description}>
                           {req.description}
@@ -589,7 +695,8 @@ export default function RentalMaintenanceDesk({ user, selectedPropertyFilterId =
 
                     {/* Meta info */}
                     <div className="flex flex-wrap gap-x-3 gap-y-1 mt-2 text-xs text-slate-500 dark:text-gray-400">
-                      <span>Type: <span className="text-slate-800 dark:text-gray-300 font-medium">{req.property_name || 'Unknown Property'}</span></span>
+                      <span>Type: <span className="text-slate-800 dark:text-gray-300 font-medium">{parseTitleAndType(req.title).type}</span></span>
+                      <span>Property: <span className="text-slate-800 dark:text-gray-300 font-medium">{req.property_name || 'Unknown Property'}</span></span>
                       <span>By: <span className="text-slate-800 dark:text-gray-300 font-medium">{req.submitted_by_name || 'Unknown Tenant'}</span></span>
                       <span>Vendor: <span className={`font-medium ${req.vendor_company_name ? 'text-slate-800 dark:text-gray-300' : 'text-slate-400 dark:text-gray-500'}`}>{req.vendor_company_name || 'Pending assignment'}</span></span>
                       <span>Cost: <span className="text-slate-800 dark:text-gray-300 font-semibold font-mono">{req.estimated_cost > 0 ? `$${req.estimated_cost.toFixed(2)}` : '$0.00'}</span></span>
@@ -627,7 +734,7 @@ export default function RentalMaintenanceDesk({ user, selectedPropertyFilterId =
                       {isLandlord ? (
                         <button
                           disabled={req.status === 'COMPLETED' || req.status === 'CANCELLED'}
-                          onClick={() => { setSelectedRequest(req); setStatusVal(req.status); setEstCost(req.estimated_cost.toString()); setAssignVendorId(req.vendor_id || ''); setShowAssignModal(true); }}
+                          onClick={() => { setSelectedRequest(req); setErrors({}); setStatusVal(req.status); setEstCost(req.estimated_cost.toString()); setAssignVendorId(req.vendor_id || ''); setShowAssignModal(true); }}
                           className="px-3 py-1.5 bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 rounded-xl text-xs font-medium transition flex items-center gap-1 shadow-sm active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                         >
                           <Edit size={12} />
@@ -640,7 +747,10 @@ export default function RentalMaintenanceDesk({ user, selectedPropertyFilterId =
                             <button
                               onClick={() => {
                                 setSelectedRequest(req);
-                                setTenantEditTitle(req.title);
+                                setErrors({});
+                                const parsed = parseTitleAndType(req.title);
+                                setEditRequestType(parsed.type);
+                                setTenantEditTitle(parsed.title);
                                 setTenantEditDesc(req.description);
                                 setTenantEditPriority(req.priority);
                                 setShowTenantEditModal(true);
@@ -665,12 +775,13 @@ export default function RentalMaintenanceDesk({ user, selectedPropertyFilterId =
                               </button>
                             )
                           )}
-
+ 
                           {/* Add Note / Request Update Button */}
                           {req.status !== 'COMPLETED' && req.status !== 'CANCELLED' && (
                             <button
                               onClick={() => {
                                 setSelectedRequest(req);
+                                setErrors({});
                                 setTenantNoteText('');
                                 setShowTenantNoteModal(true);
                               }}
@@ -716,78 +827,132 @@ export default function RentalMaintenanceDesk({ user, selectedPropertyFilterId =
 
       {/* Tenant Submit Request Modal */}
       {showSubmitModal && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-[#1e2a3b] border border-slate-200 dark:border-white/10 w-full max-w-md rounded-2xl p-6 space-y-4 shadow-2xl animate-scale-up text-slate-900 dark:text-white text-left">
-            <div className="flex justify-between items-center border-b dark:border-white/5 pb-3">
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fadeIn">
+          <div className="bg-white dark:from-[#1E2E42] dark:to-[#162535] dark:bg-gradient-to-br rounded-3xl p-6 w-full max-w-md border border-slate-200/80 dark:border-white/10 max-h-[90vh] overflow-y-auto custom-scrollbar text-slate-900 dark:text-white shadow-2xl">
+            <div className="flex items-center justify-between mb-6">
               <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                <Wrench className="w-5 h-5 text-blue-500" /> Submit Maintenance Request
+                <Wrench className="w-5 h-5 text-blue-500" /> New Service Request
               </h3>
-              <button onClick={() => setShowSubmitModal(false)} className="text-slate-400 hover:text-slate-900 dark:text-gray-500 dark:hover:text-white text-lg cursor-pointer"><X size={20} /></button>
+              <button onClick={() => setShowSubmitModal(false)} className="text-slate-400 hover:text-slate-900 dark:text-gray-500 dark:hover:text-white transition-colors cursor-pointer">
+                <X size={20} />
+              </button>
             </div>
             
-            <form onSubmit={handleSubmitRequest} className="space-y-4">
+            <form onSubmit={handleSubmitRequest} className="space-y-5">
               {leases.length > 1 && (
                 <div>
-                  <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">SELECT LEASE UNIT *</label>
+                  <label className="text-xs text-slate-500 dark:text-gray-400 mb-1.5 block uppercase font-bold tracking-wider">Select Lease Unit *</label>
                   <div className="relative">
                     <select
                       value={selectedLeaseId}
-                      onChange={e=>setSelectedLeaseId(e.target.value)}
-                      className="w-full bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 focus:border-blue-500 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none appearance-none cursor-pointer"
+                      onChange={e => setSelectedLeaseId(e.target.value)}
+                      className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl pl-4 pr-10 py-3 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-blue-500 appearance-none cursor-pointer"
                     >
                       {leases.map(l => (
                         <option key={l.lease_id} value={l.lease_id}>Lease #{l.lease_id} (Unit {l.unit?.unit_number})</option>
                       ))}
                     </select>
-                    <ChevronDown className="absolute right-3 top-3 w-4 h-4 text-gray-450 pointer-events-none" />
+                    <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-gray-500 pointer-events-none" size={18} />
                   </div>
                 </div>
               )}
 
               <div>
-                <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">ISSUE TITLE / HEADING *</label>
+                <label className="text-xs text-slate-500 dark:text-gray-400 mb-1.5 block uppercase font-bold tracking-wider">Request Type *</label>
+                <div className="relative">
+                  <select
+                    value={requestType}
+                    onChange={e => {
+                      setRequestType(e.target.value);
+                      if (errors.requestType) setErrors(prev => ({ ...prev, requestType: null }));
+                    }}
+                    className={`w-full bg-slate-50 dark:bg-[#0D1B2A] border ${errors.requestType ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/20'} rounded-2xl pl-4 pr-10 py-3 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-blue-500 appearance-none cursor-pointer`}
+                  >
+                    <option value="">Select type...</option>
+                    {REQUEST_TYPES.map(opt => (
+                      <option key={opt} value={opt}>{opt}</option>
+                    ))}
+                  </select>
+                  <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-gray-500 pointer-events-none" size={18} />
+                </div>
+                {errors.requestType && <p className="text-red-500 text-[10px] mt-1 font-bold">{errors.requestType}</p>}
+              </div>
+
+              <div>
+                <label className="text-xs text-slate-500 dark:text-gray-400 mb-1.5 block uppercase font-bold tracking-wider">Title *</label>
                 <input
                   required
                   type="text"
                   value={title}
-                  onChange={e=>setTitle(e.target.value)}
-                  placeholder="e.g. Kitchen Sink Pipe Leakage"
-                  className="w-full bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 focus:border-blue-500 rounded-lg px-3 py-2.5 text-sm text-slate-900 dark:text-white outline-none"
+                  onChange={e => {
+                    setTitle(e.target.value);
+                    if (errors.title) setErrors(prev => ({ ...prev, title: null }));
+                  }}
+                  placeholder="Brief title of the issue..."
+                  className={`w-full bg-slate-50 dark:bg-[#0D1B2A] border ${errors.title ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/20'} rounded-2xl px-4 py-3 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-550 focus:outline-none focus:border-blue-500`}
                 />
+                {errors.title && <p className="text-red-500 text-[10px] mt-1 font-bold">{errors.title}</p>}
               </div>
 
               <div>
-                <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">DETAILED DESCRIPTION *</label>
+                <label className="text-xs text-slate-500 dark:text-gray-400 mb-1.5 block uppercase font-bold tracking-wider">Detailed Description *</label>
                 <textarea
                   required
                   rows={4}
                   value={description}
-                  onChange={e=>setDescription(e.target.value)}
-                  placeholder="Please describe the repair issue, when it started, and exact location inside the property..."
-                  className="w-full bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 focus:border-blue-500 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none"
-                ></textarea>
+                  onChange={e => {
+                    setDescription(e.target.value);
+                    if (errors.description) setErrors(prev => ({ ...prev, description: null }));
+                  }}
+                  placeholder="Describe the problem in detail..."
+                  className={`w-full bg-slate-50 dark:bg-[#0D1B2A] border ${errors.description ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/20'} rounded-2xl px-4 py-3 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 focus:outline-none focus:border-blue-500 resize-y`}
+                />
+                {errors.description && <p className="text-red-500 text-[10px] mt-1 font-bold">{errors.description}</p>}
               </div>
 
               <div>
-                <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">URGENCY PRIORITY *</label>
-                <div className="relative">
-                  <select
-                    value={priority}
-                    onChange={e=>setPriority(e.target.value)}
-                    className="w-full bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 focus:border-blue-500 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none appearance-none cursor-pointer"
-                  >
-                    <option value="LOW">Low (Cosmetic, non-urgent)</option>
-                    <option value="NORMAL">Medium (Normal standard repair)</option>
-                    <option value="HIGH">High (Impacts daily comfort)</option>
-                    <option value="URGENT">Urgent (Safety issue / flooding)</option>
-                  </select>
-                  <ChevronDown className="absolute right-3 top-3.5 w-4 h-4 text-gray-450 pointer-events-none" />
+                <label className="text-xs text-slate-500 dark:text-gray-400 mb-2 block uppercase font-bold tracking-wider">Priority</label>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  {[
+                    { value: 'LOW', label: 'Low', color: 'bg-green-500', activeClass: 'border-green-500 bg-green-500/10 text-green-700 dark:text-green-400' },
+                    { value: 'NORMAL', label: 'Medium', color: 'bg-yellow-500', activeClass: 'border-yellow-500 bg-yellow-500/10 text-yellow-700 dark:text-yellow-405' },
+                    { value: 'HIGH', label: 'High', color: 'bg-red-500', activeClass: 'border-red-500 bg-red-500/10 text-red-700 dark:text-red-400' },
+                    { value: 'URGENT', label: 'Urgent', color: 'bg-rose-500 animate-pulse', activeClass: 'border-rose-500 bg-rose-500/10 text-rose-700 dark:text-rose-400' },
+                  ].map((opt) => {
+                    const isActive = priority === opt.value;
+                    return (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() => setPriority(opt.value)}
+                        className={`flex items-center justify-between px-2.5 py-2.5 rounded-2xl border text-xs font-semibold transition cursor-pointer ${
+                          isActive
+                            ? `${opt.activeClass} border-2`
+                            : 'border-slate-200 dark:border-white/10 text-slate-650 dark:text-gray-400 hover:bg-slate-50 dark:hover:bg-white/5 bg-transparent'
+                        }`}
+                      >
+                        <span>{opt.label}</span>
+                        <span className={`w-2 h-2 rounded-full ${opt.color} flex-shrink-0 ml-1.5`}></span>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
-              <div className="pt-4 flex gap-3">
-                <button type="button" onClick={() => setShowSubmitModal(false)} className="flex-1 py-2.5 rounded-xl text-sm font-semibold border border-slate-200 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors">Cancel</button>
-                <button type="submit" className="flex-1 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-semibold hover:bg-blue-500 transition-all shadow-md shadow-blue-500/25">Submit Ticket</button>
+              <div className="flex gap-3 pt-4">
+                <button
+                  type="button"
+                  onClick={() => setShowSubmitModal(false)}
+                  className="flex-1 py-3 rounded-2xl text-sm font-semibold border border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors cursor-pointer text-slate-700 dark:text-slate-300"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl text-sm font-semibold transition-all shadow-md shadow-blue-500/25 cursor-pointer"
+                >
+                  Submit Request
+                </button>
               </div>
             </form>
           </div>
@@ -836,8 +1001,11 @@ export default function RentalMaintenanceDesk({ user, selectedPropertyFilterId =
                     <div className="relative">
                       <select
                         value={assignVendorId}
-                        onChange={e=>setAssignVendorId(e.target.value)}
-                        className="w-full bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 focus:border-blue-500 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none appearance-none cursor-pointer"
+                        onChange={e => {
+                          setAssignVendorId(e.target.value);
+                          if (errors.vendor_id) setErrors(prev => ({ ...prev, vendor_id: null }));
+                        }}
+                        className={`w-full bg-slate-50 dark:bg-[#111c2a] border ${errors.vendor_id ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/10'} focus:border-blue-500 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none appearance-none cursor-pointer`}
                       >
                         <option value="">-- Do Not Assign / Keep Pending --</option>
                         {vendors.map(v => (
@@ -846,6 +1014,7 @@ export default function RentalMaintenanceDesk({ user, selectedPropertyFilterId =
                       </select>
                       <ChevronDown className="absolute right-3 top-3.5 w-4 h-4 text-gray-450 pointer-events-none" />
                     </div>
+                    {errors.vendor_id && <p className="text-red-500 text-[10px] mt-1 font-bold">{errors.vendor_id}</p>}
                     <p className="text-[10px] text-slate-400 dark:text-gray-500 mt-1.5">Select from the community network of certified professionals.</p>
                   </div>
 
@@ -856,11 +1025,15 @@ export default function RentalMaintenanceDesk({ user, selectedPropertyFilterId =
                       <input
                         type="number"
                         value={estCost}
-                        onChange={e=>setEstCost(e.target.value)}
-                        className="w-full bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 focus:border-blue-500 rounded-lg pl-7 pr-3 py-2.5 text-sm text-slate-900 dark:text-white outline-none"
+                        onChange={e => {
+                          setEstCost(e.target.value);
+                          if (errors.est_cost) setErrors(prev => ({ ...prev, est_cost: null }));
+                        }}
+                        className={`w-full bg-slate-50 dark:bg-[#111c2a] border ${errors.est_cost ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/10'} focus:border-blue-500 rounded-lg pl-7 pr-3 py-2.5 text-sm text-slate-900 dark:text-white outline-none`}
                         placeholder="0.00"
                       />
                     </div>
+                    {errors.est_cost && <p className="text-red-500 text-[10px] mt-1 font-bold">{errors.est_cost}</p>}
                   </div>
                 </>
               )}
@@ -938,60 +1111,114 @@ export default function RentalMaintenanceDesk({ user, selectedPropertyFilterId =
 
       {/* Tenant Direct Edit Ticket Modal (Only when Status == OPEN) */}
       {showTenantEditModal && selectedRequest && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-[#1e2a3b] border border-slate-200 dark:border-white/10 w-full max-w-md rounded-2xl p-6 space-y-4 shadow-2xl animate-scale-up text-slate-900 dark:text-white text-left">
-            <div className="flex justify-between items-center border-b dark:border-white/5 pb-3">
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fadeIn">
+          <div className="bg-white dark:from-[#1E2E42] dark:to-[#162535] dark:bg-gradient-to-br rounded-3xl p-6 w-full max-w-md border border-slate-200/80 dark:border-white/10 max-h-[90vh] overflow-y-auto custom-scrollbar text-slate-900 dark:text-white shadow-2xl">
+            <div className="flex justify-between items-center mb-6">
               <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                <Edit className="w-5 h-5 text-blue-500" /> Edit Maintenance Ticket #{selectedRequest.request_id}
+                <Edit className="w-5 h-5 text-blue-500" /> Edit Ticket #{selectedRequest.request_id}
               </h3>
-              <button onClick={() => setShowTenantEditModal(false)} className="text-slate-400 hover:text-slate-900 dark:text-gray-500 dark:hover:text-white text-lg cursor-pointer"><X size={20} /></button>
+              <button onClick={() => setShowTenantEditModal(false)} className="text-slate-400 hover:text-slate-900 dark:text-gray-500 dark:hover:text-white transition-colors cursor-pointer">
+                <X size={20} />
+              </button>
             </div>
 
-            <form onSubmit={handleTenantEditSubmit} className="space-y-4">
+            <form onSubmit={handleTenantEditSubmit} className="space-y-5">
               <div>
-                <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">ISSUE TITLE *</label>
+                <label className="text-xs text-slate-500 dark:text-gray-400 mb-1.5 block uppercase font-bold tracking-wider">Request Type *</label>
+                <div className="relative">
+                  <select
+                    value={editRequestType}
+                    onChange={e => {
+                      setEditRequestType(e.target.value);
+                      if (errors.requestType) setErrors(prev => ({ ...prev, requestType: null }));
+                    }}
+                    className={`w-full bg-slate-50 dark:bg-[#0D1B2A] border ${errors.requestType ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/20'} rounded-2xl pl-4 pr-10 py-3 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-blue-500 appearance-none cursor-pointer`}
+                  >
+                    <option value="">Select type...</option>
+                    {REQUEST_TYPES.map(opt => (
+                      <option key={opt} value={opt}>{opt}</option>
+                    ))}
+                  </select>
+                  <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-gray-500 pointer-events-none" size={18} />
+                </div>
+                {errors.requestType && <p className="text-red-500 text-[10px] mt-1 font-bold">{errors.requestType}</p>}
+              </div>
+
+              <div>
+                <label className="text-xs text-slate-500 dark:text-gray-400 mb-1.5 block uppercase font-bold tracking-wider">Title *</label>
                 <input
                   required
                   type="text"
                   value={tenantEditTitle}
-                  onChange={e=>setTenantEditTitle(e.target.value)}
-                  className="w-full bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 focus:border-blue-500 rounded-lg px-3.5 py-2.5 text-sm text-slate-900 dark:text-white outline-none"
-                  placeholder="e.g. Plumbing Leak under sink"
+                  onChange={e => {
+                    setTenantEditTitle(e.target.value);
+                    if (errors.title) setErrors(prev => ({ ...prev, title: null }));
+                  }}
+                  className={`w-full bg-slate-50 dark:bg-[#0D1B2A] border ${errors.title ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/20'} rounded-2xl px-4 py-3 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 focus:outline-none focus:border-blue-500`}
+                  placeholder="Brief title of the issue..."
                 />
+                {errors.title && <p className="text-red-500 text-[10px] mt-1 font-bold">{errors.title}</p>}
               </div>
 
               <div>
-                <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">DETAILED DESCRIPTION *</label>
+                <label className="text-xs text-slate-500 dark:text-gray-400 mb-1.5 block uppercase font-bold tracking-wider">Detailed Description *</label>
                 <textarea
                   required
-                  rows={3}
+                  rows={4}
                   value={tenantEditDesc}
-                  onChange={e=>setTenantEditDesc(e.target.value)}
-                  className="w-full bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 focus:border-blue-500 rounded-lg px-3.5 py-2.5 text-sm text-slate-900 dark:text-white outline-none resize-none"
+                  onChange={e => {
+                    setTenantEditDesc(e.target.value);
+                    if (errors.description) setErrors(prev => ({ ...prev, description: null }));
+                  }}
+                  className={`w-full bg-slate-50 dark:bg-[#0D1B2A] border ${errors.description ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/20'} rounded-2xl px-4 py-3 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-550 focus:outline-none focus:border-blue-500 resize-y`}
                   placeholder="Describe the issue in detail..."
                 />
+                {errors.description && <p className="text-red-500 text-[10px] mt-1 font-bold">{errors.description}</p>}
               </div>
 
               <div>
-                <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">PRIORITY LEVEL</label>
-                <div className="relative">
-                  <select
-                    value={tenantEditPriority}
-                    onChange={e=>setTenantEditPriority(e.target.value)}
-                    className="w-full bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 focus:border-blue-500 rounded-lg px-3 py-2.5 text-sm text-slate-900 dark:text-white outline-none appearance-none cursor-pointer"
-                  >
-                    <option value="LOW">Low - Minor cosmetic issue</option>
-                    <option value="NORMAL">Normal - Standard maintenance</option>
-                    <option value="HIGH">High - Urgent repair needed</option>
-                    <option value="URGENT">Urgent - Emergency / Safety hazard</option>
-                  </select>
-                  <ChevronDown className="absolute right-3 top-3.5 w-4 h-4 text-gray-450 pointer-events-none" />
+                <label className="text-xs text-slate-500 dark:text-gray-400 mb-2 block uppercase font-bold tracking-wider">Priority Level</label>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  {[
+                    { value: 'LOW', label: 'Low', color: 'bg-green-500', activeClass: 'border-green-500 bg-green-500/10 text-green-700 dark:text-green-400' },
+                    { value: 'NORMAL', label: 'Medium', color: 'bg-yellow-500', activeClass: 'border-yellow-500 bg-yellow-500/10 text-yellow-700 dark:text-yellow-405' },
+                    { value: 'HIGH', label: 'High', color: 'bg-red-500', activeClass: 'border-red-500 bg-red-500/10 text-red-700 dark:text-red-400' },
+                    { value: 'URGENT', label: 'Urgent', color: 'bg-rose-500 animate-pulse', activeClass: 'border-rose-500 bg-rose-500/10 text-rose-700 dark:text-rose-400' },
+                  ].map((opt) => {
+                    const isActive = tenantEditPriority === opt.value;
+                    return (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() => setTenantEditPriority(opt.value)}
+                        className={`flex items-center justify-between px-2.5 py-2.5 rounded-2xl border text-xs font-semibold transition cursor-pointer ${
+                          isActive
+                            ? `${opt.activeClass} border-2`
+                            : 'border-slate-200 dark:border-white/10 text-slate-650 dark:text-gray-400 hover:bg-slate-55 dark:hover:bg-white/5 bg-transparent'
+                        }`}
+                      >
+                        <span>{opt.label}</span>
+                        <span className={`w-2 h-2 rounded-full ${opt.color} flex-shrink-0 ml-1.5`}></span>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
-              <div className="pt-4 flex gap-3">
-                <button type="button" onClick={() => setShowTenantEditModal(false)} className="flex-1 py-2.5 rounded-xl text-sm font-semibold border border-slate-200 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors">Cancel</button>
-                <button type="submit" className="flex-1 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-semibold hover:bg-blue-500 transition-all shadow-md shadow-blue-500/25">Save Changes</button>
+              <div className="flex gap-3 pt-4">
+                <button
+                  type="button"
+                  onClick={() => setShowTenantEditModal(false)}
+                  className="flex-1 py-3 rounded-2xl text-sm font-semibold border border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors cursor-pointer text-slate-700 dark:text-slate-300"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl text-sm font-semibold transition-all shadow-md shadow-blue-500/25 cursor-pointer"
+                >
+                  Save Changes
+                </button>
               </div>
             </form>
           </div>
@@ -1000,13 +1227,13 @@ export default function RentalMaintenanceDesk({ user, selectedPropertyFilterId =
 
       {/* Tenant Add Note / Request Update Modal */}
       {showTenantNoteModal && selectedRequest && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-[#1e2a3b] border border-slate-200 dark:border-white/10 w-full max-w-md rounded-2xl p-6 space-y-4 shadow-2xl animate-scale-up text-slate-900 dark:text-white text-left">
-            <div className="flex justify-between items-center border-b dark:border-white/5 pb-3">
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fadeIn">
+          <div className="bg-white dark:from-[#1E2E42] dark:to-[#162535] dark:bg-gradient-to-br rounded-3xl p-6 w-full max-w-md border border-slate-200/80 dark:border-white/10 max-h-[90vh] overflow-y-auto custom-scrollbar text-slate-900 dark:text-white shadow-2xl">
+            <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
                 <MessageSquare className="w-5 h-5 text-purple-500" /> Send Note / Request Update
               </h3>
-              <button onClick={() => setShowTenantNoteModal(false)} className="text-slate-400 hover:text-slate-900 dark:text-gray-500 dark:hover:text-white text-lg cursor-pointer"><X size={20} /></button>
+              <button onClick={() => setShowTenantNoteModal(false)} className="text-slate-400 hover:text-slate-900 dark:text-gray-500 dark:hover:text-white transition-colors cursor-pointer"><X size={20} /></button>
             </div>
 
             <div className="p-3 bg-purple-500/10 border border-purple-500/20 rounded-xl text-xs text-purple-950 dark:text-[#BF80FF] flex gap-2 items-start">
@@ -1023,15 +1250,19 @@ export default function RentalMaintenanceDesk({ user, selectedPropertyFilterId =
                   required
                   rows={4}
                   value={tenantNoteText}
-                  onChange={e=>setTenantNoteText(e.target.value)}
-                  className="w-full bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 focus:border-purple-500 rounded-lg px-3.5 py-2.5 text-sm text-slate-900 dark:text-white outline-none resize-none"
+                  onChange={e => {
+                    setTenantNoteText(e.target.value);
+                    if (errors.note) setErrors(prev => ({ ...prev, note: null }));
+                  }}
+                  className={`w-full bg-slate-50 dark:bg-[#111c2a] border ${errors.note ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/10'} rounded-lg px-3.5 py-2.5 text-sm text-slate-900 dark:text-white outline-none resize-none`}
                   placeholder="e.g., Please schedule vendor visit after 2 PM on Tuesday..."
                 />
+                {errors.note && <p className="text-red-500 text-[10px] mt-1 font-bold">{errors.note}</p>}
               </div>
 
               <div className="pt-2 flex gap-3">
-                <button type="button" onClick={() => setShowTenantNoteModal(false)} className="flex-1 py-2.5 rounded-xl text-sm font-semibold border border-slate-200 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors">Cancel</button>
-                <button type="submit" className="flex-1 py-2.5 bg-purple-600 text-white rounded-xl text-sm font-semibold hover:bg-purple-500 transition-all shadow-md shadow-purple-500/25">Send Note to Landlord</button>
+                <button type="button" onClick={() => setShowTenantNoteModal(false)} className="flex-1 py-2.5 rounded-xl text-sm font-semibold border border-slate-200 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors cursor-pointer text-slate-700 dark:text-slate-300">Cancel</button>
+                <button type="submit" className="flex-1 py-2.5 bg-purple-600 text-white rounded-xl text-sm font-semibold hover:bg-purple-500 transition-all shadow-md shadow-purple-500/25 cursor-pointer">Send Note to Landlord</button>
               </div>
             </form>
           </div>

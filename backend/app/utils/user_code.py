@@ -34,14 +34,16 @@ def generate_user_code(
         from app.models.hoa.user import User
         existing = db.query(User.user_code).filter(User.user_code.like(f"{prefix}%")).all()
 
-        max_seq = 0
+        used_seqs = set()
         for row in existing:
             code = row[0]
             if code and len(code) > len(prefix):
                 seq_part = code[len(prefix):]
                 if seq_part.isdigit():
-                    max_seq = max(max_seq, int(seq_part))
-        next_seq = max_seq + 1
+                    used_seqs.add(int(seq_part))
+        next_seq = 1
+        while next_seq in used_seqs:
+            next_seq += 1
         return f"{prefix}{next_seq:04d}"
 
     # 2. First 4 letters of the name (clean alphabetic characters)
@@ -72,15 +74,17 @@ def generate_user_code(
         from app.models.hoa.user import User
         existing = db.query(User.user_code).all()
 
-    max_seq = 0
+    used_seqs = set()
     for row in existing:
         code = row[0]
         if code and len(code) >= 4:
             seq_part = code[-4:]
             if seq_part.isdigit():
-                max_seq = max(max_seq, int(seq_part))
+                used_seqs.add(int(seq_part))
 
-    next_seq = max_seq + 1
+    next_seq = 1
+    while next_seq in used_seqs:
+        next_seq += 1
     seq_str = f"{next_seq:04d}"
 
     return f"{prefix}{seq_str}"

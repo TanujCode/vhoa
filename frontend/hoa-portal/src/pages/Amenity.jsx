@@ -219,7 +219,7 @@ const BookModal = ({ amenity, communityId, onClose, onSuccess, setActivePage, se
                       : 'border-slate-100 bg-slate-100 text-slate-400 dark:border-white/5 dark:bg-white/5 dark:text-gray-600 cursor-not-allowed'
                     }`}>
                   <div className="flex items-center justify-between">
-                    <span>🌅 Slot 1 — {availability.slot_1_time}</span>
+                    <span> Slot 1 — {availability.slot_1_time}</span>
                     <span className={`text-xs px-2 py-0.5 rounded-full ${availability.slot_1_available ? 'bg-blue-500/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400 font-bold' : 'bg-red-500/10 text-red-600 dark:bg-red-500/20 dark:text-red-400'}`}>
                       {availability.slot_1_available ? 'Available' : 'Booked'}
                     </span>
@@ -235,7 +235,7 @@ const BookModal = ({ amenity, communityId, onClose, onSuccess, setActivePage, se
                       : 'border-slate-100 bg-slate-100 text-slate-400 dark:border-white/5 dark:bg-white/5 dark:text-gray-600 cursor-not-allowed'
                     }`}>
                   <div className="flex items-center justify-between">
-                    <span>🌆 Slot 2 — {availability.slot_2_time}</span>
+                    <span> Slot 2 — {availability.slot_2_time}</span>
                     <span className={`text-xs px-2 py-0.5 rounded-full ${availability.slot_2_available ? 'bg-blue-500/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400 font-bold' : 'bg-red-500/10 text-red-600 dark:bg-red-500/20 dark:text-red-400'}`}>
                       {availability.slot_2_available ? 'Available' : 'Booked'}
                     </span>
@@ -1079,7 +1079,7 @@ const Amenity = ({ community, user, setActivePage, setPaymentState }) => {
 
                   <div className="bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-0 rounded-2xl p-3 mb-4 text-xs space-y-1">
                     <div className="flex justify-between text-slate-500 dark:text-gray-400">
-                      <span>🕐 Time Slot</span><span className="text-slate-800 dark:text-slate-200">{a.slot1_start} - {a.slot2_end || a.slot1_end}</span>
+                      <span> Time Slot</span><span className="text-slate-800 dark:text-slate-200">{a.slot1_start} - {a.slot2_end || a.slot1_end}</span>
                     </div>
                     {!a.pool_open && a.tentative_open_date && (
                       <div className="text-[10px] text-red-500 dark:text-red-400 font-medium pt-1 mt-1 border-t border-slate-200/50 dark:border-white/5">
@@ -1174,12 +1174,12 @@ const Amenity = ({ community, user, setActivePage, setPaymentState }) => {
 
                         {/* Meta info */}
                         <div className="flex flex-wrap gap-x-3 gap-y-1 mt-1.5 text-xs text-slate-500 dark:text-gray-400">
-                          <span>📅 {formatDate(b.booking_date)}</span>
-                          <span>🕐 {b.slot_start} - {b.slot_end}</span>
-                          {isAdmin && <span>👤 {b.booked_by_name}</span>}
+                          <span> {formatDate(b.booking_date)}</span>
+                          <span> {b.slot_start} - {b.slot_end}</span>
+                          {isAdmin && <span> {b.booked_by_name}</span>}
                           {b.fee_amount > 0 && (
                             <span className={b.is_paid ? 'text-blue-600 dark:text-blue-400 font-medium' : 'text-red-600 dark:text-red-400 font-medium'}>
-                              ${b.fee_amount} {b.is_paid ? '✓ Paid' : '⚠ Unpaid'}
+                              ${b.fee_amount} {b.is_paid ? ' Paid' : ' Unpaid'}
                             </span>
                           )}
                         </div>
@@ -1187,12 +1187,12 @@ const Amenity = ({ community, user, setActivePage, setPaymentState }) => {
                         {/* Warning banner */}
                         {b.fee_amount > 0 && !b.is_paid && ['PENDING', 'APPROVED'].includes(b.status) && (
                           <div className="mt-2 text-[10px] sm:text-xs text-amber-600 dark:text-amber-400 bg-amber-500/10 dark:bg-amber-500/20 border border-amber-500/20 dark:border-amber-500/30 px-2.5 py-1 rounded-xl inline-flex items-center gap-1.5 w-fit font-medium">
-                            <span>⚠ Payment required to confirm booking</span>
+                            <span> Payment required to confirm booking</span>
                           </div>
                         )}
                         {b.is_refunded && (
                           <div className="mt-2 text-xs text-blue-600 dark:text-blue-400 bg-blue-500/10 dark:bg-blue-500/20 border border-blue-500/20 dark:border-blue-500/30 px-3 py-1.5 rounded-xl inline-flex items-center gap-1.5 w-fit">
-                            <span>💵 Refunded: ${b.refund_amount} on {formatDate(b.refund_date)}</span>
+                            <span> Refunded: ${b.refund_amount} on {formatDate(b.refund_date)}</span>
                           </div>
                         )}
 

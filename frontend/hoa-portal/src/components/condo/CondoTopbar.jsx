@@ -123,7 +123,7 @@ const CondoTopbar = ({
                 }`}
               >
                 <span className={`w-1.5 h-1.5 rounded-full ${selectedCommunityId === 'all' ? 'bg-indigo-500' : 'bg-transparent'}`} />
-                🏢 All Condo Buildings
+                 All Condo Buildings
               </button>
               <div className="h-px bg-slate-100 dark:bg-white/5 my-1.5" />
               <div className="space-y-0.5">
@@ -141,7 +141,7 @@ const CondoTopbar = ({
                     }`}
                   >
                     <span className={`w-1.5 h-1.5 rounded-full ${String(selectedCommunityId) === String(c.community_id) ? 'bg-indigo-500' : 'bg-transparent'}`} />
-                    🏢 {c.name}
+                     {c.name}
                   </button>
                 ))}
               </div>

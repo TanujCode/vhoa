@@ -77,7 +77,7 @@ export default function InteractiveAssistant() {
   const [messages, setMessages] = useState([
     {
       sender: 'ai',
-      text: "Hello! 👋 I'm your NestBloq AI Assistant.\n\nAsk me anything about our plans, security, features, billing, or community management workflows!",
+      text: "Hello!  I'm your NestBloq AI Assistant.\n\nAsk me anything about our plans, security, features, billing, or community management workflows!",
       time: 'Just now'
     }
   ]);
@@ -87,19 +87,19 @@ export default function InteractiveAssistant() {
 
   const presetQuestions = [
     {
-      q: "💳 What are the pricing plans?",
-      a: "NestBloq offers three tiers:\n\n• **Basic** — $1.50/unit/month\n  Essential dues, roster & assembly tools\n• **Pro** — $3.00/unit/month\n  Adds Bylaws AI Copilot, Kanban boards & SMS alerts\n• **Enterprise** — Custom pricing\n  Dedicated server + SHA-256 voting audits\n\n✅ All plans: **14-day free trial**, no credit card needed!"
+      q: " What are the pricing plans?",
+      a: "NestBloq offers three tiers:\n\n• **Basic** — $1.50/unit/month\n  Essential dues, roster & assembly tools\n• **Pro** — $3.00/unit/month\n  Adds Bylaws AI Copilot, Kanban boards & SMS alerts\n• **Enterprise** — Custom pricing\n  Dedicated server + SHA-256 voting audits\n\n All plans: **14-day free trial**, no credit card needed!"
     },
     {
-      q: "🔒 Is my community data secure?",
-      a: "Absolutely! Security is our top priority:\n\n🔐 **Stripe & Plaid** — zero card data stored on our servers\n🔐 **Bank-grade SSL** encryption on all communications\n🔐 **SHA-256 audit logs** for every vote & resolution\n🔐 **GDPR & SOC 2** compliant infrastructure\n\nYour data is in safe hands!"
+      q: " Is my community data secure?",
+      a: "Absolutely! Security is our top priority:\n\n **Stripe & Plaid** — zero card data stored on our servers\n **Bank-grade SSL** encryption on all communications\n **SHA-256 audit logs** for every vote & resolution\n **GDPR & SOC 2** compliant infrastructure\n\nYour data is in safe hands!"
     },
     {
-      q: "🧠 How does the Bylaws AI work?",
+      q: " How does the Bylaws AI work?",
       a: "The Bylaws AI Copilot reads your community rulebook & documents. It:\n\n• Answers resident queries 24/7 (parking, pets, noise rules)\n• Auto-drafts meeting agendas\n• Reduces admin workload by up to **80%**\n• Available on **Pro** and **Enterprise** plans"
     },
     {
-      q: "🚀 How do I get started?",
+      q: " How do I get started?",
       a: "Super easy to get started!\n\n1️⃣ Click **'Get Started'** in the navbar\n2️⃣ Create your free account (no card needed)\n3️⃣ Explore with demo data\n4️⃣ Or **Book a Demo** for a live walkthrough\n\nOur team helps you go live in under 24 hours!"
     }
   ];
@@ -153,19 +153,19 @@ export default function InteractiveAssistant() {
       (q.includes('nestbloq') && (w('what', 'explain', 'about', 'is', 'platform', 'software', 'app', 'product'))) ||
       w('what is nestbloq', 'about nestbloq', 'nestbloq platform', 'nestbloq software', 'tell me about nestbloq', 'explain nestbloq')
     ) {
-      return `**NestBloq** is a modern all-in-one **community management platform**! 🏘️\n\nIt brings together everything a property community needs:\n\n🏠 **Dues Collection** — Automated billing via ACH & card\n🔧 **Maintenance Kanban** — Work orders & contractor dispatch\n🗳️ **E-Voting** — SHA-256 secure online voting & resolutions\n🤖 **Bylaws AI Copilot** — 24/7 automated resident Q&A\n📅 **Amenity Booking** — Real-time pool, gym & clubhouse booking\n📊 **Financial Ledger** — Auto accounting & reporting\n\n✅ Built for **HOAs, Apartments, Condos & Rental** communities.\n\nWant to know more about any feature?`;
+      return `**NestBloq** is a modern all-in-one **community management platform**! ️\n\nIt brings together everything a property community needs:\n\n **Dues Collection** — Automated billing via ACH & card\n **Maintenance Kanban** — Work orders & contractor dispatch\n️ **E-Voting** — SHA-256 secure online voting & resolutions\n **Bylaws AI Copilot** — 24/7 automated resident Q&A\n **Amenity Booking** — Real-time pool, gym & clubhouse booking\n **Financial Ledger** — Auto accounting & reporting\n\n Built for **HOAs, Apartments, Condos & Rental** communities.\n\nWant to know more about any feature?`;
     }
 
     if (w('subscription renew', 'credit renew', 'credits renew', 'credit also renew', 'subscription renewal', 'plan renew', 'auto renew', 'automatic renewal')) {
-      return `Yes, absolutely! 🎉\n\nWhen your **subscription renews**:\n\n✅ All **credits reset automatically** with the new cycle\n✅ Secure payment processed via Stripe\n✅ Invoice emailed to your registered address\n\nTrack everything at **Dashboard → Settings → Billing**.`;
+      return `Yes, absolutely! \n\nWhen your **subscription renews**:\n\n All **credits reset automatically** with the new cycle\n Secure payment processed via Stripe\n Invoice emailed to your registered address\n\nTrack everything at **Dashboard → Settings → Billing**.`;
     }
 
     if (w('subscription', 'billing', 'invoice', 'billing cycle') && !w('credit')) {
-      return `NestBloq subscriptions renew **monthly or annually**. 💳\n\nPlans:\n• **Basic**: $1.50/unit/month\n• **Pro**: $3.00/unit/month\n• **Enterprise**: Custom pricing\n\nCredits auto-refresh with every billing cycle renewal.\n\nManage at **Dashboard → Settings → Billing**.`;
+      return `NestBloq subscriptions renew **monthly or annually**. \n\nPlans:\n• **Basic**: $1.50/unit/month\n• **Pro**: $3.00/unit/month\n• **Enterprise**: Custom pricing\n\nCredits auto-refresh with every billing cycle renewal.\n\nManage at **Dashboard → Settings → Billing**.`;
     }
 
     if (w('credit', 'credits') && !w('credit card')) {
-      return `NestBloq **credits** power your platform usage — AI queries, SMS alerts, etc. 🔄\n\nThey **automatically reset** with every subscription renewal.\n\nRunning low? Top up anytime from your **Dashboard**.`;
+      return `NestBloq **credits** power your platform usage — AI queries, SMS alerts, etc. \n\nThey **automatically reset** with every subscription renewal.\n\nRunning low? Top up anytime from your **Dashboard**.`;
     }
 
     if (w('plan', 'price', 'pricing', 'cost', 'package', 'how much', 'charges', 'annual plan', 'free trial', 'rate', 'rates')) {
@@ -185,56 +185,56 @@ export default function InteractiveAssistant() {
     }
 
     if (w('maintenance', 'repair', 'leak', 'plumbing', 'work order', 'kanban', 'contractor', 'dispatch', 'complain', 'complaint', 'breakdown')) {
-      return `NestBloq has a smart **Kanban Maintenance Board**! 🔧\n\n• Residents submit issues with photos & notes\n• Managers dispatch contractors in one click\n• Residents get automatic SMS status updates\n• Real-time progress tracking\n\nAll from one dashboard — zero manual coordination!`;
+      return `NestBloq has a smart **Kanban Maintenance Board**! \n\n• Residents submit issues with photos & notes\n• Managers dispatch contractors in one click\n• Residents get automatic SMS status updates\n• Real-time progress tracking\n\nAll from one dashboard — zero manual coordination!`;
     }
 
     if (w('amenity', 'amenities', 'pool', 'gym', 'clubhouse', 'book amenity', 'facility booking', 'reserve facility', 'court booking', 'hall booking')) {
-      return `NestBloq lets residents **book amenities in real-time**! 🏊\n\n• Pool, gym, clubhouse, banquet halls — all online\n• Automatic double-booking prevention\n• Instant booking confirmation\n• Live availability calendar`;
+      return `NestBloq lets residents **book amenities in real-time**! \n\n• Pool, gym, clubhouse, banquet halls — all online\n• Automatic double-booking prevention\n• Instant booking confirmation\n• Live availability calendar`;
     }
 
     if (w('vote', 'voting', 'election', 'meeting', 'assembly', 'quorum', 'resolution', 'ballot')) {
-      return `NestBloq's **E-Voting system** is secure & fully auditable! 🗳️\n\n• Every vote has a **SHA-256 cryptographic audit trail**\n• Run online general assemblies easily\n• Automatic quorum tracking\n• Auto-generated meeting minutes\n• Legal-grade tamper-proof records`;
+      return `NestBloq's **E-Voting system** is secure & fully auditable! ️\n\n• Every vote has a **SHA-256 cryptographic audit trail**\n• Run online general assemblies easily\n• Automatic quorum tracking\n• Auto-generated meeting minutes\n• Legal-grade tamper-proof records`;
     }
 
     if (w('dues', 'payment', 'collect payment', 'ach payment', 'plaid', 'outstanding balance', 'ledger', 'pending payment', 'rent collection', 'hoa fee', 'maintenance fee')) {
-      return `NestBloq makes dues collection **100% automated**! 💳\n\n• Residents securely connect bank via **Plaid**\n• Pay by credit card or ACH bank transfer\n• Outstanding balances auto-tracked\n• Automatic late payment reminders\n• Digital ledger entries generated instantly`;
+      return `NestBloq makes dues collection **100% automated**! \n\n• Residents securely connect bank via **Plaid**\n• Pay by credit card or ACH bank transfer\n• Outstanding balances auto-tracked\n• Automatic late payment reminders\n• Digital ledger entries generated instantly`;
     }
 
     if (w('integration', 'integrate', 'zapier', 'quickbooks', 'twilio', 'open api', 'rest api', 'third party', 'connect with', 'api access')) {
-      return `NestBloq integrates with your favorite tools! 🔗\n\n• **Stripe & Plaid** — Secure payment processing\n• **Twilio** — SMS & WhatsApp notifications\n• **QuickBooks** — Accounting sync\n• **Zapier** — 5,000+ app connections\n• **Open REST API** — Custom integrations\n\nAll available on Pro & Enterprise plans.`;
+      return `NestBloq integrates with your favorite tools! \n\n• **Stripe & Plaid** — Secure payment processing\n• **Twilio** — SMS & WhatsApp notifications\n• **QuickBooks** — Accounting sync\n• **Zapier** — 5,000+ app connections\n• **Open REST API** — Custom integrations\n\nAll available on Pro & Enterprise plans.`;
     }
 
     if (w('hoa', 'homeowner association', 'apartment complex', 'condominium', 'condo association', 'rental property', 'community type', 'property type', 'residential community')) {
-      return `NestBloq is purpose-built for **all community types**! 🏘️\n\n• **HOA** — Homeowner Association management\n• **Apartments** — Multi-unit residential buildings\n• **Condos** — Condominium association tools\n• **Rentals** — Rental portfolio management\n\nEach module is tailored to the workflows of that community type!`;
+      return `NestBloq is purpose-built for **all community types**! ️\n\n• **HOA** — Homeowner Association management\n• **Apartments** — Multi-unit residential buildings\n• **Condos** — Condominium association tools\n• **Rentals** — Rental portfolio management\n\nEach module is tailored to the workflows of that community type!`;
     }
 
     if (w('who are you', 'what are you', 'your name', 'yourself') || (w('name') && q.split(' ').length <= 5)) {
-      return `I'm the **NestBloq AI Assistant** — your intelligent community management guide! 🤖✨\n\nI can help with:\n• NestBloq plans & pricing\n• Security & compliance\n• Bylaws AI, e-voting, maintenance\n• Billing, credits & subscriptions\n• General questions too!\n\nWhat would you like to know? 😊`;
+      return `I'm the **NestBloq AI Assistant** — your intelligent community management guide! \n\nI can help with:\n• NestBloq plans & pricing\n• Security & compliance\n• Bylaws AI, e-voting, maintenance\n• Billing, credits & subscriptions\n• General questions too!\n\nWhat would you like to know? `;
     }
 
     if (w('how are you', "how's it going", 'how is it going', 'doing') || q === 'sup' || q === 'wassup') {
-      return `I'm doing great, thank you for asking! 😊 How about you?\n\nFeel free to ask me anything — about NestBloq or just for a chat!`;
+      return `I'm doing great, thank you for asking!  How about you?\n\nFeel free to ask me anything — about NestBloq or just for a chat!`;
     }
 
     const greetPatterns = ['hi', 'hello', 'hey', 'yo', 'namaste', 'namaskar', 'hola', 'howdy', 'hii', 'hiii', 'hiiii', 'heyyy', 'hello there', 'hey there'];
     const isJustGreeting = greetPatterns.some(g => q === g || q.startsWith(g + ' ') || q.startsWith(g + ',') || q.startsWith(g + '!'));
     if (isJustGreeting) {
-      return `Hello there! 👋 I'm your NestBloq AI Assistant.\n\nAsk me anything — NestBloq plans, features, security, billing, or just have a chat! What's on your mind?`;
+      return `Hello there!  I'm your NestBloq AI Assistant.\n\nAsk me anything — NestBloq plans, features, security, billing, or just have a chat! What's on your mind?`;
     }
 
     if (w('what can you do', 'help me', 'capabilities', 'features', 'help')) {
-      return `Here's what I can help with! 🚀\n\n🏷️ **NestBloq Plans & Pricing**\n🔐 **Security & Privacy**\n🤖 **Bylaws AI Copilot**\n💳 **Billing & Credits**\n🔧 **Maintenance & Work Orders**\n📅 **Amenity Booking**\n🗳️ **E-Voting & Meetings**\n💬 **General chat too!**\n\nWhat would you like to explore?`;
+      return `Here's what I can help with! \n\n️ **NestBloq Plans & Pricing**\n **Security & Privacy**\n **Bylaws AI Copilot**\n **Billing & Credits**\n **Maintenance & Work Orders**\n **Amenity Booking**\n️ **E-Voting & Meetings**\n **General chat too!**\n\nWhat would you like to explore?`;
     }
 
     if (w('thank', 'thanks', 'tysm', 'helpful', 'great answer', 'good job')) {
-      return `You're very welcome! 😊 Happy to help!\n\nFeel free to ask anything else about NestBloq anytime!`;
+      return `You're very welcome!  Happy to help!\n\nFeel free to ask anything else about NestBloq anytime!`;
     }
 
     if (w('joke', 'funny', 'laugh', 'comedy', 'humor')) {
       const jokes = [
-        `Why did the property manager carry a ladder? 🪜\nBecause the **rent was going up!** 😄\n\nWith NestBloq, at least the management part is stress-free!`,
-        `Why do HOA managers love NestBloq?\nBecause it finally **fixes the "no response" bug** in community life! 😄`,
-        `Resident: "It has been 3 days since my maintenance request, no response!"\nNestBloq user: "Ours gets resolved within 2 hours!" 😂`
+        `Why did the property manager carry a ladder? 🪜\nBecause the **rent was going up!** \n\nWith NestBloq, at least the management part is stress-free!`,
+        `Why do HOA managers love NestBloq?\nBecause it finally **fixes the "no response" bug** in community life! `,
+        `Resident: "It has been 3 days since my maintenance request, no response!"\nNestBloq user: "Ours gets resolved within 2 hours!" `
       ];
       return jokes[Math.floor(Math.random() * jokes.length)];
     }
@@ -247,7 +247,7 @@ export default function InteractiveAssistant() {
     }
 
     if (w('weather', 'temperature', 'rain', 'sunny')) {
-      return `I don't have real-time weather data (I'm not connected to the internet). Check Google or weather.com! ☀️\n\nFun fact: NestBloq's amenity booking lets residents book outdoor spaces like pools & parks in real-time!`;
+      return `I don't have real-time weather data (I'm not connected to the internet). Check Google or weather.com! ️\n\nFun fact: NestBloq's amenity booking lets residents book outdoor spaces like pools & parks in real-time!`;
     }
 
     if (/\d+\s*[\+\-\*\/]\s*\d+/.test(q)) {
@@ -255,29 +255,29 @@ export default function InteractiveAssistant() {
         const sanitized = q.replace(/[^0-9+\-*/().\s]/g, '').trim();
         const result = Function(`"use strict"; return (${sanitized})`)();
         if (!isNaN(result) && isFinite(result)) {
-          return `**${text.trim()}** = **${result}** 🧮\n\nSpeaking of numbers — NestBloq's ROI Calculator shows how much time & money your community saves!`;
+          return `**${text.trim()}** = **${result}** \n\nSpeaking of numbers — NestBloq's ROI Calculator shows how much time & money your community saves!`;
         }
       } catch { /* fall through */ }
     }
 
     if (w('vs', 'versus', 'compare', 'better than', 'buildium', 'appfolio', 'yardi', 'propertyware', 'alternative to', 'other platform')) {
-      return `NestBloq vs the competition 🏆\n\n**vs Buildium / AppFolio / Yardi:**\n• ✅ More affordable — $1.50/unit vs $2–4/unit\n• ✅ Built-in **Bylaws AI Copilot** (unique to NestBloq)\n• ✅ **SHA-256 e-voting** audit trails\n• ✅ Go live in **under 24 hours**\n• ✅ Dedicated onboarding specialist\n\nWant a personalized demo to see the difference?`;
+      return `NestBloq vs the competition \n\n**vs Buildium / AppFolio / Yardi:**\n•  More affordable — $1.50/unit vs $2–4/unit\n•  Built-in **Bylaws AI Copilot** (unique to NestBloq)\n•  **SHA-256 e-voting** audit trails\n•  Go live in **under 24 hours**\n•  Dedicated onboarding specialist\n\nWant a personalized demo to see the difference?`;
     }
 
     if (w('support', 'contact', 'email support', 'phone support', 'help center', 'customer service', 'helpdesk', 'customer support')) {
-      return `NestBloq support is **available 24/7**! 📞\n\n• **Email**: support@nestbloq.com\n• **Live Chat**: In-dashboard support\n• **Phone**: Dedicated for Enterprise customers\n• **Docs**: docs.nestbloq.com\n\nWe're always here to help!`;
+      return `NestBloq support is **available 24/7**! \n\n• **Email**: support@nestbloq.com\n• **Live Chat**: In-dashboard support\n• **Phone**: Dedicated for Enterprise customers\n• **Docs**: docs.nestbloq.com\n\nWe're always here to help!`;
     }
 
     if (w('roi', 'savings', 'save money', 'save time', 'worth it', 'benefit')) {
-      return `Communities on NestBloq typically see:\n\n💰 **80% reduction** in admin time\n💰 **$500+/month saved** vs manual methods\n💰 **Near-zero late dues** with auto-reminders\n\nTry our **ROI Calculator** to see your projected savings! 📊`;
+      return `Communities on NestBloq typically see:\n\n **80% reduction** in admin time\n **$500+/month saved** vs manual methods\n **Near-zero late dues** with auto-reminders\n\nTry our **ROI Calculator** to see your projected savings! `;
     }
 
     if (w('cloud', 'saas', 'mobile app', 'android', 'ios app', 'web app', 'browser support', 'offline mode', 'technology')) {
-      return `NestBloq is a modern **cloud-based SaaS platform**! 📱💻\n\n• Works in any web browser\n• **Android & iOS** native apps\n• Real-time data sync\n• 99.9% uptime guarantee`;
+      return `NestBloq is a modern **cloud-based SaaS platform**! \n\n• Works in any web browser\n• **Android & iOS** native apps\n• Real-time data sync\n• 99.9% uptime guarantee`;
     }
 
     if (w('demo', 'free trial', 'try nestbloq', 'test nestbloq', 'trial period', 'evaluation')) {
-      return `NestBloq offers a **14-day free trial** — no credit card required! 🎉\n\nOr book a **live demo** where our team personally walks you through the platform.\n\n👉 Click **"Get Started"** or **"Book a Demo"** in the top navbar!`;
+      return `NestBloq offers a **14-day free trial** — no credit card required! \n\nOr book a **live demo** where our team personally walks you through the platform.\n\n Click **"Get Started"** or **"Book a Demo"** in the top navbar!`;
     }
 
     const cleanQuery = q.replace(/[?.,\/#!$%\^&\*;:{}=\-_`~()]/g, "").trim().toLowerCase();
@@ -292,7 +292,7 @@ export default function InteractiveAssistant() {
       },
       {
         keywords: ['pricing plan', 'pricing plans', 'nestbloq pricing', 'nestbloq cost', 'nestbloq price', 'nestbloq plans', 'subscription cost', 'subscription plan', 'basic plan', 'pro plan', 'enterprise plan'],
-        answer: `NestBloq offers three simple subscription tiers:\n\n• **Basic Plan** ($1.50/unit/month) — Core financial tools, digital ledger, rosters, and basic member invites.\n• **Pro Plan** ($3.00/unit/month) — Includes Bylaws AI Copilot, Kanban maintenance desk, SMS alerts, QuickBooks integration, and SHA-256 secure e-voting.\n• **Enterprise Plan** (Custom Pricing) — Dedicated server, custom REST API, custom integrations, and priority 24/7 phone support.\n\n🎁 **Free Trial**: Every account starts with a 14-day free trial (no credit card required!).`
+        answer: `NestBloq offers three simple subscription tiers:\n\n• **Basic Plan** ($1.50/unit/month) — Core financial tools, digital ledger, rosters, and basic member invites.\n• **Pro Plan** ($3.00/unit/month) — Includes Bylaws AI Copilot, Kanban maintenance desk, SMS alerts, QuickBooks integration, and SHA-256 secure e-voting.\n• **Enterprise Plan** (Custom Pricing) — Dedicated server, custom REST API, custom integrations, and priority 24/7 phone support.\n\n **Free Trial**: Every account starts with a 14-day free trial (no credit card required!).`
       },
       {
         keywords: ['pay dues', 'collect dues', 'hoa dues', 'hoa fees', 'nestbloq payment', 'stripe payment', 'plaid integration', 'ach transfer', 'automated dues', 'payment reminders'],
@@ -369,7 +369,7 @@ export default function InteractiveAssistant() {
       ? `I understand you are asking about **"${mainTopic}"**. While my core focus is property management workflows, I'm happy to guide you!\n\nFor general topics like this, you can check our documentation or start your 14-day free trial.`
       : `Great question! As the NestBloq AI Assistant, I'm here to help you automate community management.`;
 
-    return `${fallbackText}\n\nTo keep things focused, let me know if you would like details on:\n• 💳 **Plans & Pricing** ($1.50 - $3.00/unit/month)\n• 👥 **Role Isolation** (Manager, Board, Resident, Vendor)\n• 🔧 **Kanban Repairs & Dues Automation**\n• 🤖 **Bylaws AI Copilots**`;
+    return `${fallbackText}\n\nTo keep things focused, let me know if you would like details on:\n•  **Plans & Pricing** ($1.50 - $3.00/unit/month)\n•  **Role Isolation** (Manager, Board, Resident, Vendor)\n•  **Kanban Repairs & Dues Automation**\n•  **Bylaws AI Copilots**`;
   };
 
   const handleSend = (text) => {
@@ -399,7 +399,7 @@ export default function InteractiveAssistant() {
   const handleReset = () => {
     setMessages([{
       sender: 'ai',
-      text: "Hello! 👋 I'm your NestBloq AI Assistant.\n\nAsk me anything about our plans, security, features, billing, or community management workflows!",
+      text: "Hello!  I'm your NestBloq AI Assistant.\n\nAsk me anything about our plans, security, features, billing, or community management workflows!",
       time: 'Just now'
     }]);
     setIsTyping(false);
@@ -441,7 +441,7 @@ export default function InteractiveAssistant() {
             <Bot size={18} />
           </div>
           <div className="pr-3">
-            <h4 className="font-bold text-slate-900 dark:text-white text-xs">Welcome! 👋</h4>
+            <h4 className="font-bold text-slate-900 dark:text-white text-xs">Welcome! </h4>
             <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">Ask me anything about NestBloq!</p>
           </div>
         </div>

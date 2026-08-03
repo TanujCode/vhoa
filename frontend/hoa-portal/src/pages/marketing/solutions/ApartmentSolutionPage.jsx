@@ -280,13 +280,13 @@ export default function ApartmentSolutionPage() {
               </span>
               <ul className="space-y-4 text-xs text-slate-600 dark:text-slate-400 font-display">
                 <li className="flex items-start gap-2.5">
-                  <span className="text-violet-500 font-black">✕</span> <span>Days wasted calling contractors to resolve simple plumbing issues.</span>
+                  <span className="text-violet-500 font-black"></span> <span>Days wasted calling contractors to resolve simple plumbing issues.</span>
                 </li>
                 <li className="flex items-start gap-2.5">
-                  <span className="text-violet-500 font-black">✕</span> <span>Vague maintenance tracking with zero photo verification logs.</span>
+                  <span className="text-violet-500 font-black"></span> <span>Vague maintenance tracking with zero photo verification logs.</span>
                 </li>
                 <li className="flex items-start gap-2.5">
-                  <span className="text-violet-500 font-black">✕</span> <span>Manually writing visitor logs on paper clipboard files.</span>
+                  <span className="text-violet-500 font-black"></span> <span>Manually writing visitor logs on paper clipboard files.</span>
                 </li>
               </ul>
             </div>
@@ -297,13 +297,13 @@ export default function ApartmentSolutionPage() {
               </span>
               <ul className="space-y-4 text-xs text-slate-600 dark:text-slate-400 font-display">
                 <li className="flex items-start gap-2.5">
-                  <span className="text-indigo-400 font-black">✓</span> <span>Kanban tickets assigned automatically to nearby contractors.</span>
+                  <span className="text-indigo-400 font-black"></span> <span>Kanban tickets assigned automatically to nearby contractors.</span>
                 </li>
                 <li className="flex items-start gap-2.5">
-                  <span className="text-indigo-400 font-black">✓</span> <span>Clean digital audits showing exact vendor entry & completion times.</span>
+                  <span className="text-indigo-400 font-black"></span> <span>Clean digital audits showing exact vendor entry & completion times.</span>
                 </li>
                 <li className="flex items-start gap-2.5">
-                  <span className="text-indigo-400 font-black">✓</span> <span>Time-limited OTP visitor codes dispatched automatically.</span>
+                  <span className="text-indigo-400 font-black"></span> <span>Time-limited OTP visitor codes dispatched automatically.</span>
                 </li>
               </ul>
             </div>

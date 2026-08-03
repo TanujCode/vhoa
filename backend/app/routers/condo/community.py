@@ -24,7 +24,7 @@ def send_condo_invite_email(to_email: str, full_name: str, temp_password: str, c
     subject = f"Invitation to join {community_name} on Condo Portal"
     inner_html = f"""
       <div style="padding: 40px 30px;">
-        <h2 style="margin: 0 0 16px; color: #ffffff;">Hello, {full_name}! 👋</h2>
+        <h2 style="margin: 0 0 16px; color: #ffffff;">Hello, {full_name}! </h2>
         <p style="color: #9CA3AF; line-height: 1.6;">
           You have been invited to join the community <strong>{community_name}</strong> as a <strong>{role_title}</strong> on the Condo Portal.
         </p>
@@ -58,7 +58,7 @@ def send_condo_association_email(to_email: str, full_name: str, community_name: 
     subject = f"You have been added to {community_name} on Condo Portal"
     inner_html = f"""
       <div style="padding: 40px 30px;">
-        <h2 style="margin: 0 0 16px; color: #ffffff;">Hello, {full_name}! 👋</h2>
+        <h2 style="margin: 0 0 16px; color: #ffffff;">Hello, {full_name}! </h2>
         <p style="color: #9CA3AF; line-height: 1.6;">
           You have been added to the condo community <strong>{community_name}</strong> as a <strong>{role_title}</strong> on the Condo Portal.
         </p>

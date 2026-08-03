@@ -198,15 +198,23 @@ def create_lease_and_invite(landlord_id: int, data: LeaseCreate, db: Session) ->
 
     # 4. If tenant doesn't exist or is not registered, send an email invite
     from app.config import settings
-    invitation_url = f"{settings.FRONTEND_URL}/rental/register?email={data.tenant_email}&role=tenant"
+    if tenant_user:
+        invitation_url = f"{settings.FRONTEND_URL}/rental/login?email={data.tenant_email}"
+        email_action_text = "Log In & Sign Lease"
+        email_instruction = "Please click the button below to log in to your tenant account and sign the lease agreement:"
+    else:
+        invitation_url = f"{settings.FRONTEND_URL}/rental/register?email={data.tenant_email}&role=tenant"
+        email_action_text = "Register & Sign Lease"
+        email_instruction = "Please click the button below to register your tenant account and sign the lease agreement:"
+
     email_body = f"""
     <div style="padding: 30px; font-size: 16px; line-height: 1.6; color: #D1D5DB;">
       <h2 style="color: #3B82F6; margin-top: 0;">Lease Agreement Invitation</h2>
       <p>Hello,</p>
       <p>You have been invited to sign a lease agreement for <strong>Unit {unit.unit_number}</strong> at {unit.property.name}.</p>
-      <p>Please click the button below to register your tenant account and sign the lease agreement:</p>
+      <p>{email_instruction}</p>
       <div style="text-align: center; margin: 30px 0;">
-        <a href="{invitation_url}" style="background: #3B82F6; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold; display: inline-block;">Register & Sign Lease</a>
+        <a href="{invitation_url}" style="background: #3B82F6; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold; display: inline-block;">{email_action_text}</a>
       </div>
       <p style="font-size: 13px; color: #9CA3AF;">If you cannot click the button, copy and paste this URL into your browser:<br/>{invitation_url}</p>
     </div>
@@ -457,17 +465,27 @@ def invite_tenant_screening(data: RentalApplicationInvite, landlord_id: int, db:
     db.commit()
     db.refresh(new_app)
 
+    tenant_user = db.query(RentalUser).filter(RentalUser.email_id == data.tenant_email.lower().strip()).first()
+
     # 3. Send screening invitation email
     from app.config import settings
-    invitation_url = f"{settings.FRONTEND_URL}/rental/register?email={data.tenant_email}&role=tenant"
+    if tenant_user:
+        invitation_url = f"{settings.FRONTEND_URL}/rental/login?email={data.tenant_email}"
+        email_action_text = "Log In & Complete Application"
+        email_instruction = "Please click the button below to log in to your tenant account and complete your screening application details:"
+    else:
+        invitation_url = f"{settings.FRONTEND_URL}/rental/register?email={data.tenant_email}&role=tenant"
+        email_action_text = "Complete Application"
+        email_instruction = "Please click the button below to register/log in and submit your screening application details:"
+
     email_body = f"""
     <div style="padding: 30px; font-size: 16px; line-height: 1.6; color: #D1D5DB;">
       <h2 style="color: #3B82F6; margin-top: 0;">Tenant Screening Background Check Invitation</h2>
       <p>Hello {data.full_name},</p>
       <p>You have been invited by the landlord to complete a tenant screening application and background check for <strong>Unit {unit.unit_number}</strong> at {unit.property.name}.</p>
-      <p>Please click the button below to register/log in and submit your screening application details:</p>
+      <p>{email_instruction}</p>
       <div style="text-align: center; margin: 30px 0;">
-        <a href="{invitation_url}" style="background: #3B82F6; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold; display: inline-block;">Complete Application</a>
+        <a href="{invitation_url}" style="background: #3B82F6; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold; display: inline-block;">{email_action_text}</a>
       </div>
       <p style="font-size: 13px; color: #9CA3AF;">If you cannot click the button, copy and paste this URL into your browser:<br/>{invitation_url}</p>
     </div>

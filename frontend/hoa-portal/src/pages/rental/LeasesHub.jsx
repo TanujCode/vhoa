@@ -38,6 +38,16 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all' }) {
   const [units, setUnits] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedLease, setSelectedLease] = useState(null);
+
+  const getLeaseSeqNum = (lease) => {
+    const propId = lease.unit?.property_id;
+    if (!propId) return lease.lease_id;
+    const propLeases = leases
+      .filter(item => item.unit?.property_id === propId)
+      .sort((a, b) => a.lease_id - b.lease_id);
+    const idx = propLeases.findIndex(item => item.lease_id === lease.lease_id);
+    return idx !== -1 ? idx + 1 : lease.lease_id;
+  };
   const [prefilledFromApp, setPrefilledFromApp] = useState(false);
   const [confirmConfig, setConfirmConfig] = useState({ isOpen: false, title: '', message: '', onConfirm: null });
   const hasVacantUnits = units.length === 0 || units.some(u => u.status === 'VACANT');
@@ -176,7 +186,7 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all' }) {
     if (isLandlord) {
       fetchUnits();
     }
-  }, [isLandlord]);
+  }, [isLandlord, user?.property_name, user?.unit_number]);
 
   useEffect(() => {
     if (showCreateModal) {
@@ -211,7 +221,16 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all' }) {
     try {
       setLoading(true);
       const res = await API.get('/rental/leases');
-      setLeases(res.data);
+      if (!isLandlord) {
+        const activeId = localStorage.getItem('tenant_active_lease_id');
+        if (activeId) {
+          setLeases(res.data.filter(l => String(l.lease_id) === String(activeId)));
+        } else {
+          setLeases(res.data);
+        }
+      } else {
+        setLeases(res.data);
+      }
     } catch (err) {
       console.error(err);
     } finally {
@@ -423,7 +442,7 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all' }) {
                       key={l.lease_id} 
                       className="hover:bg-slate-50 dark:hover:bg-white/5 transition-colors group"
                     >
-                      <td className="px-4 py-4 font-mono text-xs font-bold text-indigo-650 dark:text-[#5BA4F5]">Lease #{l.lease_id}</td>
+                      <td className="px-4 py-4 font-mono text-xs font-bold text-indigo-650 dark:text-[#5BA4F5]">Lease #{getLeaseSeqNum(l)}</td>
                       <td className="px-4 py-4 text-slate-600 dark:text-gray-400">{l.tenant_email}</td>
                       <td className="px-4 py-4">
                         <span className="bg-blue-500/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400 px-2.5 py-0.5 rounded text-[10px] font-bold border border-blue-500/20 whitespace-nowrap">

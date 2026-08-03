@@ -7,7 +7,7 @@ import AdminPortal from './pages/auth/AdminPortal';
 import ForgotPassword from './pages/auth/ForgotPassword';
 import SearchAndJoinHOA from './pages/SearchAndJoinHOA';
 import VerifyOtpPage from './pages/VerifyOtpPage';
-import WaitingApproval from './pages/WaitingApproval'; // 🔥 Waiting page ko import kiya
+import WaitingApproval from './pages/WaitingApproval'; //  Waiting page ko import kiya
 import ClientOnboarding from './pages/auth/ClientOnboarding';
 import PortalSelect from './pages/auth/PortalSelect';
 
@@ -77,7 +77,7 @@ const ProtectedRoute = () => {
   
   const token = localStorage.getItem(tokenKey) || sessionStorage.getItem(tokenKey) || localStorage.getItem('access_token') || sessionStorage.getItem('access_token');
   
-  // Agar token nahi hai toh seedha corresponding login pe bhejo
+
   if (!token) {
     if (isRentalPath) return <Navigate to="/rental/login" replace />;
     if (isCondoPath) return <Navigate to="/condo/login" replace />;
@@ -173,7 +173,7 @@ export default function App() {
           <Route path="/join-community" element={<SearchAndJoinHOA />} />
           <Route path="/condo/join-community" element={<SearchAndJoinCondo />} />
           
-          {/* 2. 🔥 NEW ROUTE: Submit karne ke baad waiting lock standard map */}
+          {/* 2.  NEW ROUTE: Submit karne ke baad waiting lock standard map */}
           <Route path="/waiting-approval" element={<WaitingApproval />} />
           <Route path="/condo/waiting-approval" element={<CondoWaitingApproval />} />
           

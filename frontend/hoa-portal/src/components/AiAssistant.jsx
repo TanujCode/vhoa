@@ -63,18 +63,18 @@ const AiAssistant = ({ user, community }) => {
 
   // Define role-specific options
   const mainOptions = isResident ? [
-    { text: '💳 My Outstanding Dues', id: 'res_dues' },
-    { text: '⚠️ My Unit Violations', id: 'res_violations' },
-    { text: '🔧 My Service Requests', id: 'res_service' },
-    { text: '🏘️ My Community Details', id: 'res_details' },
-    { text: '📚 Resident Help Guides', id: 'guides_menu' }
+    { text: ' My Outstanding Dues', id: 'res_dues' },
+    { text: '️ My Unit Violations', id: 'res_violations' },
+    { text: ' My Service Requests', id: 'res_service' },
+    { text: '️ My Community Details', id: 'res_details' },
+    { text: ' Resident Help Guides', id: 'guides_menu' }
   ] : [
-    { text: '💳 Dues & Collections Overview', id: 'dues' },
-    { text: '⚠️ Open Violations Status', id: 'violations' },
-    { text: '🔧 Service Requests Status', id: 'service' },
-    { text: '📊 Occupancy & Residents Stats', id: 'occupancy' },
-    { text: '🏘️ Community Details & Code', id: 'details' },
-    { text: '📚 Operational How-To Guides', id: 'guides_menu' }
+    { text: ' Dues & Collections Overview', id: 'dues' },
+    { text: '️ Open Violations Status', id: 'violations' },
+    { text: ' Service Requests Status', id: 'service' },
+    { text: ' Occupancy & Residents Stats', id: 'occupancy' },
+    { text: '️ Community Details & Code', id: 'details' },
+    { text: ' Operational How-To Guides', id: 'guides_menu' }
   ];
 
   const guideOptions = isResident ? [
@@ -110,10 +110,10 @@ const AiAssistant = ({ user, community }) => {
       // --- Admin Intent Responses ---
       case 'dues':
         return `Based on real-time database records for **${commName}**:\n\n` +
-               `💰 **Dues Collected**: $${collected.toLocaleString(undefined, {minimumFractionDigits: 2})}\n` +
+               ` **Dues Collected**: $${collected.toLocaleString(undefined, {minimumFractionDigits: 2})}\n` +
                `⏳ **Pending Collections**: $${pending.toLocaleString(undefined, {minimumFractionDigits: 2})}\n` +
-               `⚠️ **Overdue Balance**: $${overdue.toLocaleString(undefined, {minimumFractionDigits: 2})}\n\n` +
-               `📊 *QuickBooks Integration Status*: **Synced**\n*Late fees & reminders*: Automatically processed on the 1st of each month.`;
+               `️ **Overdue Balance**: $${overdue.toLocaleString(undefined, {minimumFractionDigits: 2})}\n\n` +
+               ` *QuickBooks Integration Status*: **Synced**\n*Late fees & reminders*: Automatically processed on the 1st of each month.`;
 
       case 'violations':
         return `Currently, there are **${activeViolations} active violation record(s)** requiring compliance tracking for **${commName}**.\n\n` +
@@ -125,16 +125,16 @@ const AiAssistant = ({ user, community }) => {
 
       case 'occupancy':
         return `Community occupancy metrics for **${commName}**:\n\n` +
-               `👤 **Total Members/Owners**: ${totalResidents} registered\n` +
-               `🏠 **Occupied Units**: ${occupiedUnits} / ${commSize} units\n` +
-               `📈 **Occupancy Rate**: ${occupancyPercent}%\n\n` +
+               ` **Total Members/Owners**: ${totalResidents} registered\n` +
+               ` **Occupied Units**: ${occupiedUnits} / ${commSize} units\n` +
+               ` **Occupancy Rate**: ${occupancyPercent}%\n\n` +
                `*Remaining free slots*: ${Math.max(0, commSize - occupiedUnits)} units available.`;
 
       case 'details':
         return `Workspace Details for **${commName}**:\n\n` +
-               `🏘️ **Community Name**: ${commName}\n` +
-               `📍 **Address**: ${community?.address?.address || 'N/A'}, ${community?.address?.city || 'N/A'}\n` +
-               `🔑 **Community Pass Code**: **${commCode}**\n\n` +
+               `️ **Community Name**: ${commName}\n` +
+               ` **Address**: ${community?.address?.address || 'N/A'}, ${community?.address?.city || 'N/A'}\n` +
+               ` **Community Pass Code**: **${commCode}**\n\n` +
                `*Security Enforcement*: You are logged into **${commName}** (ID: ${community?.community_id || 'N/A'}). For security compliance, you can only request details or stats for this active community.`;
 
       // --- Common & Admin Guide Responses ---
@@ -242,7 +242,7 @@ const AiAssistant = ({ user, community }) => {
           botText = `You have no outstanding dues registered for **${commName}** in this cycle. Nice job! Keep it up.`;
         } else {
           botText = `Here is your outstanding dues breakdown for **${commName}**:\n\n` +
-                    `💰 **Total Outstanding**: $${totalDue.toLocaleString(undefined, {minimumFractionDigits: 2})}\n\n` +
+                    ` **Total Outstanding**: $${totalDue.toLocaleString(undefined, {minimumFractionDigits: 2})}\n\n` +
                     dues.map(d => `- **${d.reason.replace('_', ' ')}**: $${d.amount.toFixed(2)} (Due: ${new Date(d.due_date).toLocaleDateString()})`).join('\n') +
                     `\n\nYou can pay these dues securely online via Plaid ACH or credit card in the **My Payments** tab in your sidebar.`;
         }
@@ -272,8 +272,8 @@ const AiAssistant = ({ user, community }) => {
         }
       } else if (option.id === 'res_details') {
         botText = `Your Community details for **${commName}**:\n\n` +
-                  `🏘️ **Name**: ${commName}\n` +
-                  `📍 **Address**: ${community?.address?.address || 'N/A'}, ${community?.address?.city || 'N/A'}\n\n` +
+                  `️ **Name**: ${commName}\n` +
+                  ` **Address**: ${community?.address?.address || 'N/A'}, ${community?.address?.city || 'N/A'}\n\n` +
                   `*Note*: Access logs and community settings are securely restricted to your property manager.`;
       } else {
         botText = getBotResponse(option.id);
@@ -301,7 +301,7 @@ const AiAssistant = ({ user, community }) => {
     setLoading(true);
 
     setTimeout(() => {
-      const userText = lastCategory === 'guides' ? '📚 Back to Help Guides' : '⬅️ Back to Queries';
+      const userText = lastCategory === 'guides' ? ' Back to Help Guides' : '⬅️ Back to Queries';
       const botText = lastCategory === 'guides' 
         ? `Select a help guide below:` 
         : `Select a community query option below:`;
@@ -323,7 +323,7 @@ const AiAssistant = ({ user, community }) => {
     setTimeout(() => {
       setMessages(prev => [
         ...prev,
-        { id: Date.now(), sender: 'user', text: '🔄 Restart Assistant Menu', timestamp: new Date() },
+        { id: Date.now(), sender: 'user', text: ' Restart Assistant Menu', timestamp: new Date() },
         { id: Date.now() + 1, sender: 'bot', text: `Menu restarted. How can I help you manage **${commName}**?`, timestamp: new Date() }
       ]);
       setMenuState('main');
@@ -468,7 +468,7 @@ const AiAssistant = ({ user, community }) => {
                   onClick={handleBackToCategoryMenu}
                   className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-semibold transition active:scale-[0.98] shadow-md shadow-blue-600/10 disabled:opacity-50"
                 >
-                  {lastCategory === 'guides' ? '📚 View Other Guides' : '⬅️ Back to Queries'}
+                  {lastCategory === 'guides' ? ' View Other Guides' : '⬅️ Back to Queries'}
                 </button>
                 
                 {lastCategory === 'guides' && (

@@ -856,7 +856,7 @@ export default function CondoMembers({ community, user }) {
                       ROLE
                       {roleDisabledReason && (
                         <span className="text-[9px] font-normal text-amber-500 normal-case tracking-normal">
-                          🔒 {roleDisabledReason}
+                           {roleDisabledReason}
                         </span>
                       )}
                     </label>

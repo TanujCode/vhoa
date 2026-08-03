@@ -479,7 +479,7 @@ def send_otp(request: Request, body: SendOtpRequest, db: Session = Depends(get_d
 
     try:
         if body.otp_type == "password_reset":
-            # Yeh naya function email check karta hai
+
             otp_code, user = send_otp_for_password_reset(body.email_id, db)
         else:
             user = db.query(User).filter(User.email_id == body.email_id.lower()).first()

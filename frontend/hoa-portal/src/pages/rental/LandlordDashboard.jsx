@@ -34,6 +34,7 @@ export default function LandlordDashboard({
   // Interactive UI state
   const [hoveredBar, setHoveredBar] = useState(null);
   const [showCreateDropdown, setShowCreateDropdown] = useState(false);
+  const [activeSidebarTab, setActiveSidebarTab] = useState('actions');
 
   useEffect(() => {
     fetchDashboardData();
@@ -199,6 +200,16 @@ export default function LandlordDashboard({
   const maintenanceUnitsCount = filteredUnits.filter(u => u.status === 'MAINTENANCE').length;
   const occupancyPercent = totalUnitsCount > 0 ? Math.round((occupiedUnitsCount / totalUnitsCount) * 100) : 0;
 
+  // --- Action Required Items ---
+  const pendingScreening = applications.filter(a => a.screening_status === 'SUBMITTED');
+  const approvedScreeningNoLease = applications.filter(a => {
+    if (a.screening_status !== 'APPROVED') return false;
+    return !leases.some(l => l.unit_id === a.unit_id && l.tenant_email === a.tenant_email);
+  });
+  const pendingSignatures = leases.filter(l => l.status === 'PENDING_SIGNATURE');
+  const openMaint = maintRequests.filter(m => m.status === 'OPEN');
+  const totalActionsCount = pendingScreening.length + approvedScreeningNoLease.length + pendingSignatures.length + openMaint.length;
+
   // --- Dynamic Monthly Cashflow Generation (Historical 6-Month Timeline) ---
   const cashflowMonths = [];
   const now = new Date();
@@ -206,28 +217,43 @@ export default function LandlordDashboard({
     const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
     const label = d.toLocaleString('en-US', { month: 'short' });
     const monthKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-    cashflowMonths.push({ label, monthKey, income: 0, expenses: 0 });
+    cashflowMonths.push({ 
+      label, 
+      monthKey, 
+      income: 0, 
+      expenses: 0,
+      overdue: 0,
+      upcoming: 0
+    });
   }
 
   // Group chart ledgers (unfiltered by selected period) by month
   chartLedgers.forEach(l => {
-    if (l.status === 'PAID') {
-      const d = new Date(l.due_date);
-      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-      const monthObj = cashflowMonths.find(m => m.monthKey === key);
-      if (monthObj) {
+    const d = new Date(l.due_date);
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+    const monthObj = cashflowMonths.find(m => m.monthKey === key);
+    if (monthObj) {
+      if (l.status === 'PAID') {
         monthObj.income += l.amount;
+      } else if (l.status === 'OVERDUE' || (l.status === 'UNPAID' && new Date(l.due_date) < new Date())) {
+        monthObj.overdue += l.amount;
       }
     }
   });
 
-  // Group chart maintenance requests (unfiltered by selected period) as expenses by month
+  // Group chart maintenance requests (unfiltered by selected period) by month
   chartMaint.forEach(m => {
     const d = new Date(m.created_date);
     const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
     const monthObj = cashflowMonths.find(m => m.monthKey === key);
     if (monthObj) {
-      monthObj.expenses += m.estimated_cost || 0;
+      if (m.status === 'OPEN' || m.status === 'VENDOR_ASSIGNED') {
+        monthObj.upcoming += m.estimated_cost || 0;
+      } else if (m.status === 'COMPLETED' || m.payment_status === 'PAID') {
+        monthObj.expenses += m.estimated_cost || 0;
+      } else {
+        monthObj.expenses += m.estimated_cost || 0;
+      }
     }
   });
 
@@ -252,7 +278,7 @@ export default function LandlordDashboard({
 
   // --- SVG Chart Calculations ---
   // Find max value in cashflow to scale bars
-  const maxCashflowValue = Math.max(...cashflowMonths.map(m => Math.max(m.income, m.expenses)), 100);
+  const maxCashflowValue = Math.max(...cashflowMonths.map(m => Math.max(m.income, m.expenses, m.overdue, m.upcoming)), 100);
   const chartHeight = 180;
   const getBarHeight = (val) => (val / maxCashflowValue) * chartHeight;
 
@@ -276,9 +302,11 @@ export default function LandlordDashboard({
     <div className="space-y-8 animate-fade-in text-left pb-16 font-sans">
       
       {/* ── Page Header & Unified Layout Card matching HOA ── */}
-      <div className="bg-white dark:bg-[#1E2E42] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 sm:p-8 text-slate-800 dark:text-white shadow-sm dark:shadow-none relative overflow-hidden flex flex-col lg:flex-row justify-between items-start lg:items-center gap-8 group animate-fade-in">
-        {/* Subtle premium light blue glow */}
-        <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/[0.03] dark:bg-blue-500/[0.02] rounded-full blur-3xl pointer-events-none" />
+      <div className="bg-white dark:bg-[#1E2E42] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 sm:p-8 text-slate-800 dark:text-white shadow-sm dark:shadow-none relative overflow-visible flex flex-col lg:flex-row justify-between items-start lg:items-center gap-8 group animate-fade-in">
+        {/* Subtle premium light blue glow wrapper to prevent overflow clipping */}
+        <div className="absolute inset-0 rounded-3xl overflow-hidden pointer-events-none">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/[0.03] dark:bg-blue-500/[0.02] rounded-full blur-3xl" />
+        </div>
 
         {/* Left: Premium Welcome & Metadata */}
         <div className="flex-1 min-w-0 relative z-10 space-y-4">
@@ -376,117 +404,6 @@ export default function LandlordDashboard({
         </div>
       </div>
 
-      {/* --- Action Required Board --- */}
-      {(() => {
-        const pendingScreening = applications.filter(a => a.screening_status === 'SUBMITTED');
-        const approvedScreeningNoLease = applications.filter(a => {
-          if (a.screening_status !== 'APPROVED') return false;
-          return !leases.some(l => l.unit_id === a.unit_id && l.tenant_email === a.tenant_email);
-        });
-        const pendingSignatures = leases.filter(l => l.status === 'PENDING_SIGNATURE');
-        const openMaint = maintRequests.filter(m => m.status === 'OPEN');
-        
-        const hasActions = pendingScreening.length > 0 || approvedScreeningNoLease.length > 0 || pendingSignatures.length > 0 || openMaint.length > 0;
-        
-        if (!hasActions) {
-          return (
-            <div className="p-6 rounded-3xl bg-gradient-to-r from-emerald-500/[0.03] to-teal-500/[0.03] dark:from-emerald-500/[0.02] dark:to-teal-500/[0.02] border border-emerald-500/10 dark:border-emerald-500/5 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm animate-fade-in">
-              <div className="flex items-center gap-3.5 text-left">
-                <div className="w-10 h-10 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center border border-emerald-500/20 shrink-0">
-                  <CheckCircle2 className="w-5 h-5" />
-                </div>
-                <div>
-                  <h4 className="text-sm font-bold text-slate-800 dark:text-white">All Caught Up!</h4>
-                  <p className="text-xs text-slate-500 dark:text-gray-450 mt-0.5 font-medium">Your portfolio is running smoothly. No urgent actions require your attention right now.</p>
-                </div>
-              </div>
-              <span className="inline-flex items-center text-[10px] font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20 uppercase tracking-wider shrink-0">
-                System Healthy
-              </span>
-            </div>
-          );
-        }
-        
-        return (
-          <div className="p-6 rounded-3xl bg-amber-500/[0.03] dark:bg-amber-500/[0.02] border border-amber-500/10 dark:border-amber-500/5 space-y-4">
-            <div className="flex items-center gap-2">
-              <AlertCircle className="w-5 h-5 text-amber-500 shrink-0" />
-              <h2 className="text-base font-black text-gray-905 dark:text-white">Action Required ({pendingScreening.length + approvedScreeningNoLease.length + pendingSignatures.length + openMaint.length})</h2>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {pendingScreening.map(app => (
-                <div key={app.application_id} className="p-4 rounded-2xl bg-white dark:bg-slate-900/60 border border-slate-200/50 dark:border-white/[0.04] flex items-center justify-between gap-4 text-xs font-semibold shadow-sm hover:border-amber-500/30 transition">
-                  <div className="space-y-1">
-                    <span className="text-[10px] text-amber-600 dark:text-amber-400 font-bold uppercase tracking-wider block">New Screening Application</span>
-                    <p className="text-sm text-slate-800 dark:text-white font-bold">{app.full_name}</p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 font-normal">Submitted details for Unit {app.unit?.unit_number} (FICO: {app.credit_score})</p>
-                  </div>
-                  <button 
-                    onClick={() => setActivePage('screening_hub')}
-                    className="bg-amber-500 hover:bg-amber-600 text-white px-3.5 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap cursor-pointer"
-                  >
-                    Review Report
-                  </button>
-                </div>
-              ))}
-
-              {approvedScreeningNoLease.map(app => (
-                <div key={app.application_id} className="p-4 rounded-2xl bg-white dark:bg-slate-900/60 border border-slate-200/50 dark:border-white/[0.04] flex items-center justify-between gap-4 text-xs font-semibold shadow-sm hover:border-blue-500/30 transition">
-                  <div className="space-y-1">
-                    <span className="text-[10px] text-blue-600 dark:text-blue-400 font-bold uppercase tracking-wider block">Application Approved</span>
-                    <p className="text-sm text-slate-800 dark:text-white font-bold">{app.full_name}</p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 font-normal">Ready for lease agreement in Unit {app.unit?.unit_number}</p>
-                  </div>
-                  <button 
-                    onClick={() => {
-                      localStorage.setItem('prefill_lease_email', app.tenant_email);
-                      localStorage.setItem('prefill_lease_unit_id', app.unit_id.toString());
-                      setActivePage('leases_hub');
-                    }}
-                    className="bg-blue-600 hover:bg-blue-500 text-white px-3.5 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap cursor-pointer"
-                  >
-                    Draft Lease
-                  </button>
-                </div>
-              ))}
-
-              {pendingSignatures.map(lease => (
-                <div key={lease.lease_id} className="p-4 rounded-2xl bg-white dark:bg-slate-900/60 border border-slate-200/50 dark:border-white/[0.04] flex items-center justify-between gap-4 text-xs font-semibold shadow-sm hover:border-purple-500/30 transition">
-                  <div className="space-y-1">
-                    <span className="text-[10px] text-purple-600 dark:text-purple-400 font-bold uppercase tracking-wider block">Lease Out for Signature</span>
-                    <p className="text-sm text-slate-800 dark:text-white font-bold">Unit {lease.unit?.unit_number || 'N/A'}</p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 font-normal">Waiting for signature from {lease.tenant_email}</p>
-                  </div>
-                  <button 
-                    onClick={() => setActivePage('leases_hub')}
-                    className="bg-purple-600 hover:bg-purple-500 text-white px-3.5 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap cursor-pointer"
-                  >
-                    View Status
-                  </button>
-                </div>
-              ))}
-
-              {openMaint.map(req => (
-                <div key={req.request_id} className="p-4 rounded-2xl bg-white dark:bg-slate-900/60 border border-slate-200/50 dark:border-white/[0.04] flex items-center justify-between gap-4 text-xs font-semibold shadow-sm hover:border-rose-500/30 transition">
-                  <div className="space-y-1">
-                    <span className="text-[10px] text-rose-600 dark:text-rose-450 font-bold uppercase tracking-wider block">New Maintenance Request</span>
-                    <p className="text-sm text-slate-800 dark:text-white font-bold truncate max-w-[180px]">{req.title}</p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 font-normal">Unit {req.unit_number} • Priority: {req.priority}</p>
-                  </div>
-                  <button 
-                    onClick={() => setActivePage('servicereq')}
-                    className="bg-rose-500 hover:bg-rose-600 text-white px-3.5 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap cursor-pointer"
-                  >
-                    Assign Vendor
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
-        );
-      })()}
-
       {/* --- Main 4-Metrics Row --- */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         
@@ -573,23 +490,29 @@ export default function LandlordDashboard({
         </div>
       </div>
 
-      {/* --- Section: Cashflow & Tenant Requests (Grid 8/4) --- */}
+      {/* --- Section: Cashflow & Tabbed Requests (Grid 8/4) --- */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         
         {/* Left: Animated Custom Cashflow SVG Chart */}
         <div className="lg:col-span-8 p-6 rounded-3xl bg-white dark:bg-slate-900/60 dark:backdrop-blur-md border border-slate-200/60 dark:border-white/[0.05] relative shadow-sm">
-          <div className="flex justify-between items-center mb-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
             <div>
               <h2 className="text-lg font-black text-gray-900 dark:text-white">Cashflow Summary</h2>
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Real-time Income vs Expense comparison (6 Month Period)</p>
             </div>
             {/* Legend */}
-            <div className="flex items-center gap-4 text-xs font-bold">
+            <div className="flex flex-wrap sm:flex-nowrap items-center gap-x-4 gap-y-2 text-xs font-bold shrink-0 whitespace-nowrap">
               <span className="flex items-center gap-1.5 text-gray-600 dark:text-gray-300">
                 <span className="w-3 h-3 rounded bg-emerald-500 block"></span> Income
               </span>
               <span className="flex items-center gap-1.5 text-gray-600 dark:text-gray-300">
                 <span className="w-3 h-3 rounded bg-rose-500 block"></span> Expenses
+              </span>
+              <span className="flex items-center gap-1.5 text-gray-600 dark:text-gray-300">
+                <span className="w-3 h-3 rounded bg-amber-500 block"></span> Overdue Rent
+              </span>
+              <span className="flex items-center gap-1.5 text-gray-600 dark:text-gray-300">
+                <span className="w-3 h-3 rounded bg-blue-500 block"></span> Upcoming Exp
               </span>
             </div>
           </div>
@@ -605,6 +528,14 @@ export default function LandlordDashboard({
                 <linearGradient id="expenseGrad" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="0%" stopColor="#F43F5E" />
                   <stop offset="100%" stopColor="#E11D48" />
+                </linearGradient>
+                <linearGradient id="overdueGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#F59E0B" />
+                  <stop offset="100%" stopColor="#D97706" />
+                </linearGradient>
+                <linearGradient id="upcomingGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#3B82F6" />
+                  <stop offset="100%" stopColor="#2563EB" />
                 </linearGradient>
               </defs>
 
@@ -626,11 +557,16 @@ export default function LandlordDashboard({
                 const groupX = 65 + idx * 85;
                 const incHeight = getBarHeight(m.income);
                 const expHeight = getBarHeight(m.expenses);
+                const ovdHeight = getBarHeight(m.overdue);
+                const upcHeight = getBarHeight(m.upcoming);
 
                 const incY = 30 + chartHeight - incHeight;
                 const expY = 30 + chartHeight - expHeight;
+                const ovdY = 30 + chartHeight - ovdHeight;
+                const upcY = 30 + chartHeight - upcHeight;
 
-                const barWidth = 24;
+                const barWidth = 11;
+                const gap = 2;
 
                 return (
                   <g key={m.monthKey}>
@@ -641,13 +577,13 @@ export default function LandlordDashboard({
                       width={barWidth}
                       height={incHeight}
                       fill="url(#incomeGrad)"
-                      rx="4"
+                      rx="2"
                       className="transition-all duration-300 hover:opacity-85 cursor-pointer"
                       onMouseEnter={(e) => setHoveredBar({
                         month: m.label,
                         type: 'Income',
                         val: m.income,
-                        x: groupX + 12,
+                        x: groupX + barWidth / 2,
                         y: incY - 10
                       })}
                       onMouseLeave={() => setHoveredBar(null)}
@@ -655,26 +591,64 @@ export default function LandlordDashboard({
 
                     {/* Expense Bar */}
                     <rect
-                      x={groupX + barWidth + 6}
+                      x={groupX + barWidth + gap}
                       y={expY}
                       width={barWidth}
                       height={expHeight}
                       fill="url(#expenseGrad)"
-                      rx="4"
+                      rx="2"
                       className="transition-all duration-300 hover:opacity-85 cursor-pointer"
                       onMouseEnter={(e) => setHoveredBar({
                         month: m.label,
                         type: 'Expense',
                         val: m.expenses,
-                        x: groupX + barWidth + 18,
+                        x: groupX + barWidth + gap + barWidth / 2,
                         y: expY - 10
+                      })}
+                      onMouseLeave={() => setHoveredBar(null)}
+                    />
+
+                    {/* Overdue Rent Bar */}
+                    <rect
+                      x={groupX + 2 * (barWidth + gap)}
+                      y={ovdY}
+                      width={barWidth}
+                      height={ovdHeight}
+                      fill="url(#overdueGrad)"
+                      rx="2"
+                      className="transition-all duration-300 hover:opacity-85 cursor-pointer"
+                      onMouseEnter={(e) => setHoveredBar({
+                        month: m.label,
+                        type: 'Overdue Rent',
+                        val: m.overdue,
+                        x: groupX + 2 * (barWidth + gap) + barWidth / 2,
+                        y: ovdY - 10
+                      })}
+                      onMouseLeave={() => setHoveredBar(null)}
+                    />
+
+                    {/* Upcoming Expense Bar */}
+                    <rect
+                      x={groupX + 3 * (barWidth + gap)}
+                      y={upcY}
+                      width={barWidth}
+                      height={upcHeight}
+                      fill="url(#upcomingGrad)"
+                      rx="2"
+                      className="transition-all duration-300 hover:opacity-85 cursor-pointer"
+                      onMouseEnter={(e) => setHoveredBar({
+                        month: m.label,
+                        type: 'Upcoming Exp',
+                        val: m.upcoming,
+                        x: groupX + 3 * (barWidth + gap) + barWidth / 2,
+                        y: upcY - 10
                       })}
                       onMouseLeave={() => setHoveredBar(null)}
                     />
 
                     {/* X-axis Label */}
                     <text
-                      x={groupX + barWidth + 3}
+                      x={groupX + 2 * barWidth + 1.5 * gap}
                       y={235}
                       textAnchor="middle"
                       className="fill-slate-600 dark:fill-gray-400 text-[11px] font-extrabold"
@@ -706,70 +680,189 @@ export default function LandlordDashboard({
           </div>
         </div>
 
-        {/* Right: Tenant Requests (Active Tickets) */}
-        <div className="lg:col-span-4 p-6 rounded-3xl bg-white dark:bg-slate-900/60 dark:backdrop-blur-md border border-slate-200/60 dark:border-white/[0.05] shadow-sm flex flex-col justify-between">
+        {/* Right: Sidebar Panel (Tabs: Actions Required & Tenant Requests) */}
+        <div className="lg:col-span-4 p-6 rounded-3xl bg-white dark:bg-slate-900/60 dark:backdrop-blur-md border border-slate-200/60 dark:border-white/[0.05] shadow-sm flex flex-col justify-between min-h-[380px]">
           <div>
-            <div className="flex justify-between items-center mb-5">
-              <h2 className="text-lg font-black text-gray-900 dark:text-white">Tenant Requests</h2>
-              <button 
-                onClick={() => setActivePage('servicereq')}
-                className="text-xs font-bold text-blue-500 hover:underline"
+            {/* Tabs Header */}
+            <div className="flex border-b border-slate-100 dark:border-white/[0.06] mb-5">
+              <button
+                onClick={() => setActiveSidebarTab('actions')}
+                className={`pb-3 text-sm font-black transition relative flex items-center gap-2 cursor-pointer ${
+                  activeSidebarTab === 'actions'
+                    ? 'text-blue-500 dark:text-blue-400'
+                    : 'text-slate-400 dark:text-gray-500 hover:text-slate-650'
+                }`}
               >
-                View all
+                Action Required
+                {totalActionsCount > 0 && (
+                  <span className="bg-amber-500 text-white text-[9px] font-black px-1.5 py-0.5 rounded-full shrink-0 min-w-[16px] text-center">
+                    {totalActionsCount}
+                  </span>
+                )}
+                {activeSidebarTab === 'actions' && (
+                  <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-blue-500 dark:bg-blue-400 rounded-full" />
+                )}
+              </button>
+              
+              <button
+                onClick={() => setActiveSidebarTab('requests')}
+                className={`ml-6 pb-3 text-sm font-black transition relative flex items-center gap-2 cursor-pointer ${
+                  activeSidebarTab === 'requests'
+                    ? 'text-blue-500 dark:text-blue-400'
+                    : 'text-slate-400 dark:text-gray-500 hover:text-slate-650'
+                }`}
+              >
+                Tenant Requests
+                {filteredMaint.length > 0 && (
+                  <span className="bg-blue-500/10 text-blue-600 dark:text-blue-400 text-[9px] font-black px-1.5 py-0.5 rounded-full shrink-0 min-w-[16px] text-center">
+                    {filteredMaint.length}
+                  </span>
+                )}
+                {activeSidebarTab === 'requests' && (
+                  <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-blue-500 dark:bg-blue-400 rounded-full" />
+                )}
               </button>
             </div>
 
-            <div className="space-y-4">
-              {filteredMaint.length === 0 ? (
-                <div className="py-12 text-center text-gray-400 dark:text-gray-500 flex flex-col items-center">
-                  <CheckCircle2 className="w-10 h-10 mb-2 text-emerald-500/60" />
-                  <p className="text-xs font-bold">No active requests</p>
-                  <p className="text-[10px] text-gray-450 mt-1">Tenant tickets will show up here</p>
-                </div>
-              ) : (
-                filteredMaint.slice(0, 3).map((req, idx) => (
-                  <div 
-                    key={req.request_id || idx}
-                    className="p-3.5 rounded-2xl bg-slate-50/50 dark:bg-white/[0.02] border border-slate-100 dark:border-white/[0.04] flex flex-col gap-2.5 hover:border-blue-500/20 transition cursor-pointer"
-                    onClick={() => setActivePage('servicereq')}
-                  >
-                    <div className="flex justify-between items-start gap-2">
-                      <div className="min-w-0">
-                        <span className="text-xs font-black text-slate-800 dark:text-slate-200 block truncate">{req.title}</span>
-                        <span className="text-[10px] font-bold text-gray-450 block truncate mt-0.5">{req.property_name} • Unit {req.unit_number}</span>
-                      </div>
-                      <span className={`text-[9px] font-extrabold px-2 py-0.5 rounded-md uppercase tracking-wider ${
-                        req.priority === 'URGENT' || req.priority === 'HIGH'
-                          ? 'bg-rose-500/10 text-rose-500'
-                          : 'bg-slate-200 dark:bg-white/10 text-slate-700 dark:text-slate-400'
-                      }`}>
-                        {req.priority}
-                      </span>
-                    </div>
-
-                    <div className="flex justify-between items-center text-[10px] font-bold border-t border-slate-100 dark:border-white/[0.03] pt-2">
-                      <span className="text-slate-400 dark:text-gray-500">
-                        {new Date(req.created_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
-                      </span>
-                      <span className={`px-2 py-0.5 rounded-full text-[9px] uppercase tracking-wide font-black ${
-                        req.status === 'COMPLETED'
-                          ? 'bg-emerald-500/10 text-emerald-500'
-                          : req.status === 'IN_PROGRESS' || req.status === 'VENDOR_ASSIGNED'
-                          ? 'bg-amber-500/10 text-amber-500'
-                          : 'bg-blue-500/10 text-blue-500'
-                      }`}>
-                        {req.status?.replace('_', ' ')}
-                      </span>
-                    </div>
+            {/* Tab Body */}
+            {activeSidebarTab === 'actions' ? (
+              <div className="space-y-3.5 max-h-[300px] overflow-y-auto pr-1 scrollbar-thin">
+                {totalActionsCount === 0 ? (
+                  <div className="py-12 text-center text-gray-400 dark:text-gray-500 flex flex-col items-center">
+                    <CheckCircle2 className="w-10 h-10 mb-2 text-emerald-500/60" />
+                    <p className="text-xs font-bold">All Caught Up!</p>
+                    <p className="text-[10px] text-gray-450 mt-1">No urgent actions require attention</p>
                   </div>
-                ))
-              )}
-            </div>
+                ) : (
+                  <>
+                    {pendingScreening.map(app => (
+                      <div key={app.application_id} className="p-3.5 rounded-2xl bg-amber-500/[0.03] dark:bg-amber-500/[0.01] border border-amber-500/10 dark:border-amber-500/5 flex items-center justify-between gap-3 text-xs font-semibold shadow-sm hover:border-amber-500/30 transition text-left">
+                        <div className="min-w-0 space-y-0.5">
+                          <span className="text-[9px] text-amber-600 dark:text-amber-400 font-bold uppercase tracking-wider block">New Screening</span>
+                          <p className="text-xs text-slate-800 dark:text-white font-bold truncate">{app.full_name}</p>
+                          <p className="text-[10px] text-gray-500 dark:text-gray-400 font-normal truncate">Unit {app.unit?.unit_number} (FICO: {app.credit_score})</p>
+                        </div>
+                        <button 
+                          onClick={() => setActivePage('screening_hub')}
+                          className="bg-amber-500 hover:bg-amber-600 text-white px-2.5 py-1.5 rounded-lg text-[10px] font-bold transition whitespace-nowrap cursor-pointer shrink-0"
+                        >
+                          Review
+                        </button>
+                      </div>
+                    ))}
+
+                    {approvedScreeningNoLease.map(app => (
+                      <div key={app.application_id} className="p-3.5 rounded-2xl bg-blue-500/[0.03] dark:bg-blue-500/[0.01] border border-blue-500/10 dark:border-blue-500/5 flex items-center justify-between gap-3 text-xs font-semibold shadow-sm hover:border-blue-500/30 transition text-left">
+                        <div className="min-w-0 space-y-0.5">
+                          <span className="text-[9px] text-blue-600 dark:text-blue-400 font-bold uppercase tracking-wider block">Ready for Lease</span>
+                          <p className="text-xs text-slate-800 dark:text-white font-bold truncate">{app.full_name}</p>
+                          <p className="text-[10px] text-gray-500 dark:text-gray-400 font-normal truncate">Unit {app.unit?.unit_number}</p>
+                        </div>
+                        <button 
+                          onClick={() => {
+                            localStorage.setItem('prefill_lease_email', app.tenant_email);
+                            localStorage.setItem('prefill_lease_unit_id', app.unit_id.toString());
+                            setActivePage('leases_hub');
+                          }}
+                          className="bg-blue-600 hover:bg-blue-500 text-white px-2.5 py-1.5 rounded-lg text-[10px] font-bold transition whitespace-nowrap cursor-pointer shrink-0"
+                        >
+                          Draft
+                        </button>
+                      </div>
+                    ))}
+
+                    {pendingSignatures.map(lease => (
+                      <div key={lease.lease_id} className="p-3.5 rounded-2xl bg-purple-500/[0.03] dark:bg-purple-500/[0.01] border border-purple-500/10 dark:border-purple-500/5 flex items-center justify-between gap-3 text-xs font-semibold shadow-sm hover:border-purple-500/30 transition text-left">
+                        <div className="min-w-0 space-y-0.5">
+                          <span className="text-[9px] text-purple-600 dark:text-purple-400 font-bold uppercase tracking-wider block">Pending Sign</span>
+                          <p className="text-xs text-slate-800 dark:text-white font-bold truncate">Unit {lease.unit?.unit_number || 'N/A'}</p>
+                          <p className="text-[10px] text-gray-500 dark:text-gray-400 font-normal truncate">{lease.tenant_email}</p>
+                        </div>
+                        <button 
+                          onClick={() => setActivePage('leases_hub')}
+                          className="bg-purple-600 hover:bg-purple-500 text-white px-2.5 py-1.5 rounded-lg text-[10px] font-bold transition whitespace-nowrap cursor-pointer shrink-0"
+                        >
+                          Status
+                        </button>
+                      </div>
+                    ))}
+
+                    {openMaint.map(req => (
+                      <div key={req.request_id} className="p-3.5 rounded-2xl bg-rose-500/[0.03] dark:bg-rose-500/[0.01] border border-rose-500/10 dark:border-rose-500/5 flex items-center justify-between gap-3 text-xs font-semibold shadow-sm hover:border-rose-500/30 transition text-left">
+                        <div className="min-w-0 space-y-0.5">
+                          <span className="text-[9px] text-rose-600 dark:text-rose-500 font-bold uppercase tracking-wider block">New Ticket</span>
+                          <p className="text-xs text-slate-800 dark:text-white font-bold truncate">{req.title}</p>
+                          <p className="text-[10px] text-gray-500 dark:text-gray-400 font-normal truncate">Unit {req.unit_number} • Priority: {req.priority}</p>
+                        </div>
+                        <button 
+                          onClick={() => setActivePage('servicereq')}
+                          className="bg-rose-500 hover:bg-rose-600 text-white px-2.5 py-1.5 rounded-lg text-[10px] font-bold transition whitespace-nowrap cursor-pointer shrink-0"
+                        >
+                          Assign
+                        </button>
+                      </div>
+                    ))}
+                  </>
+                )}
+              </div>
+            ) : (
+              <div className="space-y-4 max-h-[300px] overflow-y-auto pr-1 scrollbar-thin">
+                {filteredMaint.length === 0 ? (
+                  <div className="py-12 text-center text-gray-400 dark:text-gray-500 flex flex-col items-center">
+                    <CheckCircle2 className="w-10 h-10 mb-2 text-emerald-500/60" />
+                    <p className="text-xs font-bold">No active requests</p>
+                    <p className="text-[10px] text-gray-450 mt-1">Tenant tickets will show up here</p>
+                  </div>
+                ) : (
+                  filteredMaint.slice(0, 4).map((req, idx) => (
+                    <div 
+                      key={req.request_id || idx}
+                      className="p-3.5 rounded-2xl bg-slate-50/50 dark:bg-white/[0.02] border border-slate-100 dark:border-white/[0.04] flex flex-col gap-2 hover:border-blue-500/20 transition cursor-pointer text-left"
+                      onClick={() => setActivePage('servicereq')}
+                    >
+                      <div className="flex justify-between items-start gap-2">
+                        <div className="min-w-0">
+                          <span className="text-xs font-black text-slate-800 dark:text-slate-200 block truncate">{req.title}</span>
+                          <span className="text-[10px] font-bold text-gray-455 block truncate mt-0.5">{req.property_name} • Unit {req.unit_number}</span>
+                        </div>
+                        <span className={`text-[9px] font-extrabold px-2 py-0.5 rounded-md uppercase tracking-wider shrink-0 ${
+                          req.priority === 'URGENT' || req.priority === 'HIGH'
+                            ? 'bg-rose-500/10 text-rose-500'
+                            : 'bg-slate-200 dark:bg-white/10 text-slate-700 dark:text-slate-400'
+                        }`}>
+                          {req.priority}
+                        </span>
+                      </div>
+
+                      <div className="flex justify-between items-center text-[10px] font-bold border-t border-slate-100 dark:border-white/[0.03] pt-2">
+                        <span className="text-slate-400 dark:text-gray-500">
+                          {new Date(req.created_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                        </span>
+                        <span className={`px-2 py-0.5 rounded-full text-[9px] uppercase tracking-wide font-black ${
+                          req.status === 'COMPLETED'
+                            ? 'bg-emerald-500/10 text-emerald-500'
+                            : req.status === 'IN_PROGRESS' || req.status === 'VENDOR_ASSIGNED'
+                            ? 'bg-amber-500/10 text-amber-500'
+                            : 'bg-blue-500/10 text-blue-500'
+                        }`}>
+                          {req.status?.replace('_', ' ')}
+                        </span>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            )}
           </div>
 
-          {filteredMaint.length > 3 && (
+          {activeSidebarTab === 'requests' && filteredMaint.length > 4 && (
             <div className="pt-4 border-t border-slate-100 dark:border-white/[0.04] text-center">
-              <span className="text-[10px] font-bold text-gray-400">+{filteredMaint.length - 3} more active requests</span>
+              <button 
+                onClick={() => setActivePage('servicereq')}
+                className="text-[10px] font-bold text-blue-500 hover:underline cursor-pointer font-sans"
+              >
+                +{filteredMaint.length - 4} more requests. View all
+              </button>
             </div>
           )}
         </div>

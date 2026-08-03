@@ -81,7 +81,7 @@ export default function CondoSecurityDashboard({ user, setActivePage }) {
         
         <div className="relative z-10">
           <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-teal-100 dark:bg-teal-500/20 border border-teal-200 dark:border-teal-400/30 text-teal-700 dark:text-teal-300 text-[10px] font-bold uppercase tracking-widest mb-2 shadow-xs">
-            🛡️ Security Desk Active
+            ️ Security Desk Active
           </div>
           <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-white mb-1">
             Gate & Lobby Control Desk

@@ -337,7 +337,7 @@ const BoardDashboard = ({ community, user, setActivePage }) => {
         <div className="flex-1 min-w-0 relative z-10 space-y-4">
           <div>
             <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white leading-tight">
-              Welcome back, {user?.first_name || 'Board Member'}! 👋
+              Welcome back, {user?.first_name || 'Board Member'}! 
             </h1>
             <p className="text-slate-500 dark:text-gray-400 text-xs mt-1 font-medium">
               Here is a summary of your community's active operations today.
@@ -584,7 +584,7 @@ const BoardDashboard = ({ community, user, setActivePage }) => {
             ) : requests.length === 0 ? (
               <div className="p-10 text-center text-slate-500 dark:text-gray-400 flex flex-col justify-center items-center py-16">
                 <p className="text-sm font-bold text-slate-800 dark:text-white">No pending resident requests found for this community.</p>
-                <p className="text-xs text-slate-400 dark:text-gray-500 mt-1.5 font-mono">Everything is cleared up! 👍</p>
+                <p className="text-xs text-slate-400 dark:text-gray-500 mt-1.5 font-mono">Everything is cleared up! </p>
               </div>
             ) : (
               <div className="p-5 grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[360px] overflow-y-auto custom-scrollbar">
@@ -730,7 +730,7 @@ const BoardDashboard = ({ community, user, setActivePage }) => {
             </div>
           </div>
           <p className="text-[10px] text-slate-400 dark:text-gray-500 mt-3.5 italic text-right">
-            ✓ Auto-saved locally
+             Auto-saved locally
           </p>
         </div>
 

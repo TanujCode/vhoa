@@ -45,7 +45,7 @@ const EditCommunityModal = ({ isOpen, onClose, community, onSuccess }) => {
     if (formData.contact_person.trim()) {
       const contactValid = /^[a-zA-Z\s\-]*$/.test(formData.contact_person.trim());
       if (!contactValid) {
-        setMessage("❌ Contact Person name can only contain letters and spaces.");
+        setMessage(" Contact Person name can only contain letters and spaces.");
         return;
       }
     }
@@ -54,7 +54,7 @@ const EditCommunityModal = ({ isOpen, onClose, community, onSuccess }) => {
     if (formData.bank_name.trim()) {
       const bankValid = /^[a-zA-Z\s.\-]*$/.test(formData.bank_name.trim());
       if (!bankValid) {
-        setMessage("❌ Bank Name can only contain letters, spaces, dots, and hyphens.");
+        setMessage(" Bank Name can only contain letters, spaces, dots, and hyphens.");
         return;
       }
     }
@@ -63,7 +63,7 @@ const EditCommunityModal = ({ isOpen, onClose, community, onSuccess }) => {
     if (formData.bank_routing_no.trim()) {
       const routingValid = /^\d{9}$/.test(formData.bank_routing_no.trim());
       if (!routingValid) {
-        setMessage("❌ Bank Routing Number must be exactly 9 digits.");
+        setMessage(" Bank Routing Number must be exactly 9 digits.");
         return;
       }
     }
@@ -72,7 +72,7 @@ const EditCommunityModal = ({ isOpen, onClose, community, onSuccess }) => {
     if (formData.bank_account_no.trim()) {
       const accValid = /^\d{5,17}$/.test(formData.bank_account_no.trim());
       if (!accValid) {
-        setMessage("❌ Bank Account Number must be between 5 and 17 digits.");
+        setMessage(" Bank Account Number must be between 5 and 17 digits.");
         return;
       }
     }
@@ -94,14 +94,14 @@ const EditCommunityModal = ({ isOpen, onClose, community, onSuccess }) => {
       };
 
       await API.put(`/community/${community.community_id}`, payload);
-      setMessage("✅ Community Updated Successfully!");
+      setMessage(" Community Updated Successfully!");
       setTimeout(() => {
         onSuccess?.();
         onClose();
       }, 1200);
     } catch (err) {
       console.error(err.response?.data);
-      setMessage(`❌ ${err.response?.data?.detail || err.message}`);
+      setMessage(` ${err.response?.data?.detail || err.message}`);
     } finally {
       setLoading(false);
     }
@@ -229,7 +229,7 @@ const EditCommunityModal = ({ isOpen, onClose, community, onSuccess }) => {
 
           {message && (
             <div className={`text-center p-3 rounded-2xl text-sm ${
-              message.includes('✅') ? 'bg-green-500/20 text-green-600 dark:text-green-400' : 'bg-red-500/20 text-red-600 dark:text-red-400'
+              message.includes('') ? 'bg-green-500/20 text-green-600 dark:text-green-400' : 'bg-red-500/20 text-red-600 dark:text-red-400'
             }`}>
               {message}
             </div>

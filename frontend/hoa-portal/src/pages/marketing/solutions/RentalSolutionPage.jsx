@@ -280,13 +280,13 @@ export default function RentalSolutionPage() {
               </span>
               <ul className="space-y-4 text-xs text-slate-600 dark:text-slate-400 font-display">
                 <li className="flex items-start gap-2.5">
-                  <span className="text-violet-500 font-black">✕</span> <span>Chasing rent checks and cash logs manually every month.</span>
+                  <span className="text-violet-500 font-black"></span> <span>Chasing rent checks and cash logs manually every month.</span>
                 </li>
                 <li className="flex items-start gap-2.5">
-                  <span className="text-violet-550 font-black">✕</span> <span>Slow late notices with zero compliance logging.</span>
+                  <span className="text-violet-550 font-black"></span> <span>Slow late notices with zero compliance logging.</span>
                 </li>
                 <li className="flex items-start gap-2.5">
-                  <span className="text-violet-550 font-black">✕</span> <span>Disorganized lease agreements and deposit balances.</span>
+                  <span className="text-violet-550 font-black"></span> <span>Disorganized lease agreements and deposit balances.</span>
                 </li>
               </ul>
             </div>
@@ -297,13 +297,13 @@ export default function RentalSolutionPage() {
               </span>
               <ul className="space-y-4 text-xs text-slate-600 dark:text-slate-400 font-display">
                 <li className="flex items-start gap-2.5">
-                  <span className="text-indigo-400 font-black">✓</span> <span>100% digital ledgers with automatic recurring billing.</span>
+                  <span className="text-indigo-400 font-black"></span> <span>100% digital ledgers with automatic recurring billing.</span>
                 </li>
                 <li className="flex items-start gap-2.5">
-                  <span className="text-indigo-455 font-black">✓</span> <span>Instantly dispatch late warnings via verified email and SMS logs.</span>
+                  <span className="text-indigo-455 font-black"></span> <span>Instantly dispatch late warnings via verified email and SMS logs.</span>
                 </li>
                 <li className="flex items-start gap-2.5">
-                  <span className="text-indigo-455 font-black">✓</span> <span>Isolated occupant directory for security deposits and lease logs.</span>
+                  <span className="text-indigo-455 font-black"></span> <span>Isolated occupant directory for security deposits and lease logs.</span>
                 </li>
               </ul>
             </div>

@@ -316,7 +316,7 @@ const Dashboard = ({ community, user, setActivePage }) => {
         <div className="flex-1 min-w-0 relative z-10 space-y-4">
           <div>
             <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white leading-tight">
-              Welcome back, {user?.first_name || 'Admin'}! 👋
+              Welcome back, {user?.first_name || 'Admin'}! 
             </h1>
             <p className="text-slate-500 dark:text-gray-450 text-xs mt-1 font-medium">
               System Console • Real-Time Workspace Summary
@@ -668,7 +668,7 @@ const Dashboard = ({ community, user, setActivePage }) => {
             </div>
           </div>
           <p className="text-[10px] text-slate-400 dark:text-gray-500 mt-3.5 italic text-right">
-            ✓ Auto-saved locally
+             Auto-saved locally
           </p>
         </div>
 

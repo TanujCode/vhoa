@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Plus, X, Calendar, Video, MapPin, Users, CheckCircle, Clock, ExternalLink, Edit2, Trash2, Mic, Play, Pause, Square, MessageSquare, Volume2, ChevronDown, ChevronLeft, ChevronRight, Search, Building, CalendarDays, Vote, User, Megaphone, Lock } from 'lucide-react';
+import { Plus, X, Calendar, Video, MapPin, Users, CheckCircle, Clock, ExternalLink, Edit2, Trash2, Mic, Play, Pause, Square, MessageSquare, Volume2, ChevronDown, ChevronLeft, ChevronRight, Search, Building, CalendarDays, Vote, User, Megaphone, Lock, FileText } from 'lucide-react';
 import {
   getMeetings,
   createMeeting,
@@ -585,7 +585,7 @@ const ViewRSVPModal = ({ meetingId, onClose }) => {
             </div>
             <div>
               <h3 className="font-extrabold text-sm text-slate-800 dark:text-white">
-                👥 Meeting RSVPs
+                 Meeting RSVPs
               </h3>
               <span className="text-[10px] text-slate-400 dark:text-gray-500 font-bold uppercase tracking-wider block mt-0.5">
                 Resident Responses Check
@@ -1063,7 +1063,7 @@ const MeetingRecorderModal = ({ meeting, onClose, onSuccess }) => {
               {steps.map((step, idx) => (
                 <div key={idx} className="flex items-center gap-2.5 text-xs">
                   {processingStep > idx ? (
-                    <span className="text-emerald-500 font-bold">✓</span>
+                    <span className="text-emerald-500 font-bold"></span>
                   ) : processingStep === idx ? (
                     <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-ping"></span>
                   ) : (
@@ -1252,7 +1252,7 @@ const Meetings = ({ community, user }) => {
         time: "All Day"
       };
       setPersonalNotes(prev => [...prev, newNote]);
-      alert("✅ Personal schedule note added successfully.");
+      alert(" Personal schedule note added successfully.");
     } else {
       setEditingMeeting({
         title: quickAddTaskText.trim(),
@@ -1900,7 +1900,7 @@ nextMonth.setMonth(currentMonth.getMonth() + step);
                             className="px-3.5 py-1.5 bg-purple-500/10 hover:bg-purple-600 text-purple-650 dark:text-purple-400 hover:text-white dark:hover:text-white rounded-xl text-[10px] font-black transition uppercase tracking-wider text-center flex items-center justify-center gap-1 border border-purple-500/20 shadow-sm"
                             title="Check RSVPs"
                           >
-                            👥 Check RSVPs
+                             Check RSVPs
                           </button>
                         )}
                       </div>
@@ -1938,19 +1938,19 @@ nextMonth.setMonth(currentMonth.getMonth() + step);
                                         : 'text-slate-500 hover:text-slate-800 dark:text-gray-400 dark:hover:text-white'
                                     }`}
                                   >
-                                    📝 AI Summary
+                                    <FileText size={12} className="inline mr-1 align-text-top shrink-0" /> AI Summary
                                   </button>
                                   {meeting.transcript && (
                                     <button
                                       type="button"
                                       onClick={() => setActiveMeetingTab({ ...activeMeetingTab, [meeting.meeting_id]: 'transcript' })}
-                                      className={`px-3 py-1 rounded-lg text-xs font-bold transition ${
+                                      className={`px-3 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1 ${
                                         activeMeetingTab[meeting.meeting_id] === 'transcript'
                                           ? 'bg-blue-600/10 text-blue-600 dark:text-blue-400 shadow-sm'
                                           : 'text-slate-500 hover:text-slate-800 dark:text-gray-400 dark:hover:text-white'
                                       }`}
                                     >
-                                      🗣️ AI Transcript
+                                      <Mic size={12} className="inline mr-1 align-text-top shrink-0" /> AI Transcript
                                     </button>
                                   )}
                                 </div>
@@ -1975,7 +1975,7 @@ nextMonth.setMonth(currentMonth.getMonth() + step);
                                           if (textAfter) parts.push(textAfter);
                                           return (
                                             <div key={sIdx} className="flex gap-2 items-start pl-1">
-                                              <span className="text-blue-500 flex-shrink-0 mt-0.5 font-bold">✓</span>
+                                              <span className="text-blue-500 flex-shrink-0 mt-0.5 font-bold"></span>
                                               <span>{parts.length > 0 ? parts : cleanLine}</span>
                                             </div>
                                           );
@@ -2202,7 +2202,7 @@ nextMonth.setMonth(currentMonth.getMonth() + step);
     if (!await window.customConfirm("Are you sure you want to permanently delete this meeting?")) return;
     try {
       await deleteMeeting(meetingId);
-      alert("✅ Meeting successfully deleted.");
+      alert(" Meeting successfully deleted.");
       fetchData();
     } catch (err) {
       alert(err.response?.data?.detail || "Failed to delete meeting");
@@ -2213,7 +2213,7 @@ nextMonth.setMonth(currentMonth.getMonth() + step);
     if (!await window.customConfirm("Are you sure you want to permanently delete this survey/poll?")) return;
     try {
       await deleteSurvey(surveyId);
-      alert("✅ Survey/Poll successfully deleted.");
+      alert(" Survey/Poll successfully deleted.");
       fetchData();
     } catch (err) {
       alert(err.response?.data?.detail || "Failed to delete survey");
@@ -2321,13 +2321,13 @@ nextMonth.setMonth(currentMonth.getMonth() + step);
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                   {meeting.location && (
                     <div className="p-3 bg-slate-50 dark:bg-black/10 rounded-2xl border border-slate-200/50 dark:border-white/[0.02]">
-                      <span className="text-[10px] font-bold text-slate-400 dark:text-gray-500 uppercase block mb-1">📍 Location</span>
+                      <span className="text-[10px] font-bold text-slate-400 dark:text-gray-500 uppercase block mb-1"> Location</span>
                       <span className="text-xs font-semibold text-slate-800 dark:text-white">{meeting.location}</span>
                     </div>
                   )}
                   {meeting.meeting_link && !expired && (
                     <div className="p-3 bg-slate-50 dark:bg-black/10 rounded-2xl border border-slate-200/50 dark:border-white/[0.02] flex flex-col justify-between">
-                      <span className="text-[10px] font-bold text-slate-400 dark:text-gray-500 uppercase block mb-1">🔗 Virtual Meeting Link</span>
+                      <span className="text-[10px] font-bold text-slate-400 dark:text-gray-500 uppercase block mb-1"> Virtual Meeting Link</span>
                       <a
                         href={meeting.meeting_link}
                         target="_blank"
@@ -2343,7 +2343,7 @@ nextMonth.setMonth(currentMonth.getMonth() + step);
                 {isAdmin && (
                   <div className="p-4 bg-slate-50 dark:bg-black/20 rounded-2xl border border-slate-200/50 dark:border-white/[0.02] flex items-center justify-between">
                     <div className="space-y-1">
-                      <span className="text-[10px] font-bold text-slate-400 dark:text-gray-500 uppercase block">👥 RSVP Tracking</span>
+                      <span className="text-[10px] font-bold text-slate-400 dark:text-gray-500 uppercase block"> RSVP Tracking</span>
                       <span className="text-xs font-semibold text-slate-800 dark:text-white block">
                         Check resident attendance responses
                       </span>
@@ -2390,7 +2390,9 @@ nextMonth.setMonth(currentMonth.getMonth() + step);
 
                 {(meeting.recording_url || meeting.transcript || meeting.summary) && (
                   <div className="p-4 bg-slate-150/50 dark:bg-black/30 rounded-2xl border border-slate-250/50 dark:border-white/[0.03] space-y-3">
-                    <span className="text-[10px] font-bold text-slate-400 dark:text-gray-500 uppercase block">🎙️ AI Audio & Transcription</span>
+                    <span className="text-[10px] font-bold text-slate-400 dark:text-gray-500 uppercase flex items-center gap-1.5 mb-1">
+                      <Volume2 size={12} className="text-slate-400 dark:text-gray-500 shrink-0" /> AI Audio & Transcription
+                    </span>
                     {meeting.recording_url && (
                       <audio 
                         src={getBaseUrl(meeting.recording_url)} 
@@ -2413,7 +2415,7 @@ nextMonth.setMonth(currentMonth.getMonth() + step);
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="p-3 bg-slate-50 dark:bg-black/10 rounded-2xl border border-slate-200/50 dark:border-white/[0.02]">
-                    <span className="text-[10px] font-bold text-slate-400 dark:text-gray-505 uppercase block mb-1">🏰 Amenity Booked</span>
+                    <span className="text-[10px] font-bold text-slate-400 dark:text-gray-505 uppercase block mb-1"> Amenity Booked</span>
                     <span className="text-sm font-bold text-slate-800 dark:text-white">{booking.amenity_name}</span>
                   </div>
                   <div className="p-3 bg-slate-50 dark:bg-black/10 rounded-2xl border border-slate-200/50 dark:border-white/[0.02]">
@@ -2421,11 +2423,11 @@ nextMonth.setMonth(currentMonth.getMonth() + step);
                     <span className="text-sm font-bold text-slate-800 dark:text-white">{booking.resident_name || 'Resident'}</span>
                   </div>
                   <div className="p-3 bg-slate-50 dark:bg-black/10 rounded-2xl border border-slate-200/50 dark:border-white/[0.02]">
-                    <span className="text-[10px] font-bold text-slate-400 dark:text-gray-550 uppercase block mb-1">🏢 Unit No.</span>
+                    <span className="text-[10px] font-bold text-slate-400 dark:text-gray-550 uppercase block mb-1"> Unit No.</span>
                     <span className="text-sm font-bold text-slate-800 dark:text-white">Unit {booking.unit_no}</span>
                   </div>
                   <div className="p-3 bg-slate-50 dark:bg-black/10 rounded-2xl border border-slate-200/50 dark:border-white/[0.02]">
-                    <span className="text-[10px] font-bold text-slate-400 dark:text-gray-550 uppercase block mb-1">💵 Booking Status</span>
+                    <span className="text-[10px] font-bold text-slate-400 dark:text-gray-550 uppercase block mb-1"> Booking Status</span>
                     <span className="text-sm font-bold text-emerald-600 dark:text-emerald-450">{booking.is_paid ? 'Paid' : 'Paid & Confirmed'}</span>
                   </div>
                 </div>
@@ -2436,7 +2438,7 @@ nextMonth.setMonth(currentMonth.getMonth() + step);
               <div className="space-y-4">
                 <div className="p-4 bg-slate-50 dark:bg-black/20 rounded-2xl border border-slate-200/50 dark:border-white/[0.02] flex justify-between items-center">
                   <div className="space-y-1">
-                    <span className="text-[10px] font-bold text-slate-400 dark:text-gray-550 uppercase block">🔒 Note Visibility</span>
+                    <span className="text-[10px] font-bold text-slate-400 dark:text-gray-550 uppercase block"> Note Visibility</span>
                     <span className="text-xs font-semibold text-slate-800 dark:text-white">Visible only to you</span>
                   </div>
                   <button
@@ -2626,7 +2628,7 @@ nextMonth.setMonth(currentMonth.getMonth() + step);
                     : 'bg-white dark:bg-white/5 text-slate-700 dark:text-gray-300 border-slate-200 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20'
                 }`}
               >
-                🌈 All
+                 All
               </button>
               
               <button
@@ -2682,7 +2684,7 @@ nextMonth.setMonth(currentMonth.getMonth() + step);
             {meetings.some(m => isMeetingExpired(m.meeting_date)) && (
               <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 shadow-sm mt-8">
                 <h3 className="font-extrabold text-sm text-slate-900 dark:text-white uppercase tracking-wider mb-4 pb-2 border-b border-slate-200/60 dark:border-white/[0.05]">
-                  📚 Past Meetings Archive & Transcripts
+                   Past Meetings Archive & Transcripts
                 </h3>
                 <div className="space-y-4 max-h-[300px] overflow-y-auto custom-scrollbar pr-1">
                   {meetings

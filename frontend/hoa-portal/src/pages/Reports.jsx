@@ -234,7 +234,7 @@ const Reports = ({ community, user, setActivePage }) => {
             </div>
           </div>
           <div className="mt-6 border-t border-slate-200 dark:border-white/10 pt-4 text-xs text-slate-400">
-            ✓ Captures fine amounts, dispute resolutions, and timestamps.
+             Captures fine amounts, dispute resolutions, and timestamps.
           </div>
         </div>
 
@@ -292,7 +292,7 @@ const Reports = ({ community, user, setActivePage }) => {
             </div>
           </div>
           <div className="mt-6 border-t border-slate-200 dark:border-white/10 pt-4 text-xs text-slate-400">
-            ✓ Captures resident details, vendor assignments, and dates.
+             Captures resident details, vendor assignments, and dates.
           </div>
         </div>
 
@@ -326,7 +326,7 @@ const Reports = ({ community, user, setActivePage }) => {
             </div>
           </div>
           <div className="mt-6 border-t border-slate-200 dark:border-white/10 pt-4 text-xs text-slate-400">
-            ✓ Captures escrow bank transactions, reasons, and reference IDs.
+             Captures escrow bank transactions, reasons, and reference IDs.
           </div>
         </div>
 
@@ -363,7 +363,7 @@ const Reports = ({ community, user, setActivePage }) => {
             </div>
           </div>
           <div className="mt-6 border-t border-slate-200 dark:border-white/10 pt-4 text-xs text-slate-400">
-            ✓ Captures booking dates, timeslots, fees, and status.
+             Captures booking dates, timeslots, fees, and status.
           </div>
         </div>
 

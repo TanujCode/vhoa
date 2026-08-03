@@ -126,7 +126,7 @@ const AddCommunityModal = ({ isOpen, onClose, onSuccess }) => {
   const handleVerifyContractCode = async () => {
     const code = formData.contract_code;
     if (!code || !code.trim()) {
-      setMessage("❌ Please enter a contract code.");
+      setMessage(" Please enter a contract code.");
       return;
     }
 
@@ -144,10 +144,10 @@ const AddCommunityModal = ({ isOpen, onClose, onSuccess }) => {
         plan_id: data.plan_selected === "Standard" ? 1 : data.plan_selected === "Premium" ? 2 : 3
       }));
       setContractVerified(true);
-      setMessage("✅ Contract verified successfully!");
+      setMessage(" Contract verified successfully!");
     } catch (err) {
       setContractVerified(false);
-      setMessage(`❌ ${err.response?.data?.detail || "Invalid or inactive contract code."}`);
+      setMessage(` ${err.response?.data?.detail || "Invalid or inactive contract code."}`);
     } finally {
       setLoadingCode(false);
     }
@@ -175,7 +175,7 @@ const AddCommunityModal = ({ isOpen, onClose, onSuccess }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!contractVerified) {
-      setMessage("❌ Please verify the contract code first.");
+      setMessage(" Please verify the contract code first.");
       return;
     }
     setLoading(true);
@@ -195,7 +195,7 @@ const AddCommunityModal = ({ isOpen, onClose, onSuccess }) => {
 
       await API.post('/community', payload);
 
-      setMessage("✅ Community Created Successfully!");
+      setMessage(" Community Created Successfully!");
 
       setTimeout(() => {
         onSuccess?.();
@@ -229,7 +229,7 @@ const AddCommunityModal = ({ isOpen, onClose, onSuccess }) => {
     } catch (err) {
       console.error(err.response?.data);
       setMessage(
-        `❌ ${err.response?.data?.detail || JSON.stringify(err.response?.data) || err.message}`
+        ` ${err.response?.data?.detail || JSON.stringify(err.response?.data) || err.message}`
       );
     } finally {
       setLoading(false);
@@ -269,14 +269,14 @@ const AddCommunityModal = ({ isOpen, onClose, onSuccess }) => {
                 disabled={loadingCode || contractVerified}
                 className="px-4 py-2 bg-blue-600 hover:bg-blue-500 disabled:bg-blue-800 text-white rounded-2xl text-xs font-semibold transition shadow-md shadow-blue-500/25"
               >
-                {loadingCode ? "Checking..." : contractVerified ? "Verified ✅" : "Verify Code"}
+                {loadingCode ? "Checking..." : contractVerified ? "Verified " : "Verify Code"}
               </button>
             </div>
           </div>
 
           {message && (
             <div className={`text-center p-3 rounded-2xl text-xs ${
-              message.includes('✅') ? 'bg-green-500/20 text-green-600 dark:text-green-400' : 'bg-red-500/20 text-red-600 dark:text-red-400'
+              message.includes('') ? 'bg-green-500/20 text-green-600 dark:text-green-400' : 'bg-red-500/20 text-red-600 dark:text-red-400'
             }`}>
               {message}
             </div>

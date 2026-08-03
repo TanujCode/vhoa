@@ -9,7 +9,7 @@ const cleanDescription = (desc) => {
   clean = clean.replace(/User:\s+([^(]+)\s+\([^)]+\)/gi, '$1');
   clean = clean.replace(/Service Request\s+(\d+)/gi, 'Service Request #$1');
   clean = clean.replace(/\.?\s*Time\s*\(ET\):.*$/gi, '');
-  clean = clean.replace(/\s+->\s+/g, ' ➔ ');
+  clean = clean.replace(/\s+->\s+/g, '  ');
   return clean.trim();
 };
 

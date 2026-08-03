@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { RefreshCw, Search, Shield, ChevronDown, Clock, User, Globe, Layers } from 'lucide-react';
+import { RefreshCw, Search, Shield, ChevronDown, Clock, User, Globe, Layers, Lock, Building2, AlertTriangle, Wrench, Calendar, Briefcase, Megaphone, CreditCard, FileText } from 'lucide-react';
 import API from '../services/api';
 
 const cleanDescription = (desc) => {
@@ -9,7 +9,7 @@ const cleanDescription = (desc) => {
   clean = clean.replace(/User:\s+([^(]+)\s+\([^)]+\)/gi, '$1');
   clean = clean.replace(/Service Request\s+(\d+)/gi, 'Service Request #$1');
   clean = clean.replace(/\.?\s*Time\s*\(ET\):.*$/gi, '');
-  clean = clean.replace(/\s+->\s+/g, ' ➔ ');
+  clean = clean.replace(/\s+->\s+/g, '  ');
   return clean.trim();
 };
 
@@ -58,13 +58,20 @@ const AuditHistory = ({ community, user }) => {
     return 'bg-slate-100 text-slate-600 dark:bg-white/5 dark:text-gray-400 border border-slate-200/30 dark:border-white/10';
   };
 
-  const getModuleIcon = (module) => {
+  const getModuleIcon = (module, size = 12) => {
+    const className = "shrink-0";
     const map = {
-      auth: '🔐', community: '🏘️', violation: '⚠️',
-      service_request: '🔧', amenity: '🏊', vendor: '🛠️',
-      user: '👤', news: '📢', payment: '💰'
+      auth: <Lock size={size} className={className} />,
+      community: <Building2 size={size} className={className} />,
+      violation: <AlertTriangle size={size} className={className} />,
+      service_request: <Wrench size={size} className={className} />,
+      amenity: <Calendar size={size} className={className} />,
+      vendor: <Briefcase size={size} className={className} />,
+      user: <User size={size} className={className} />,
+      news: <Megaphone size={size} className={className} />,
+      payment: <CreditCard size={size} className={className} />
     };
-    return map[module] || '📋';
+    return map[module] || <FileText size={size} className={className} />;
   };
 
   const getModuleBadgeColor = (module) => {
@@ -127,15 +134,16 @@ const AuditHistory = ({ community, user }) => {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-5">
         <div className="flex gap-2">
           {[
-            { id: 'all', label: '📋 All Logs' },
-            { id: 'my',  label: '👤 My Activity' },
+            { id: 'all', label: 'All Logs', icon: <Layers size={14} className="shrink-0" /> },
+            { id: 'my',  label: 'My Activity', icon: <User size={14} className="shrink-0" /> },
           ].map(v => (
             <button key={v.id} onClick={() => setViewMode(v.id)}
-              className={`px-5 py-2.5 rounded-2xl text-sm font-medium transition ${
+              className={`px-5 py-2.5 rounded-2xl text-sm font-medium transition flex items-center gap-2 ${
                 viewMode === v.id
                   ? 'bg-blue-600 text-white shadow-sm shadow-blue-500/20'
                   : 'bg-slate-100 hover:bg-slate-200 dark:bg-white/10 text-slate-600 dark:text-gray-400 dark:hover:bg-white/20'
               }`}>
+              {v.icon}
               {v.label}
             </button>
           ))}
@@ -171,7 +179,7 @@ const AuditHistory = ({ community, user }) => {
           >
             {modules.map(m => (
               <option key={m} value={m} className="text-slate-900 dark:text-white">
-                {m ? `${getModuleIcon(m)} ${m}` : 'All Modules'}
+                {m ? m.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ') : 'All Modules'}
               </option>
             ))}
           </select>

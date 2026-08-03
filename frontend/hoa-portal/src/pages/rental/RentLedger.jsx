@@ -27,6 +27,16 @@ export default function RentLedger({ user, selectedPropertyFilterId = 'all' }) {
   const [invoices, setInvoices] = useState([]);
   const [leases, setLeases] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  const getInvoiceSeqNum = (inv) => {
+    const propId = inv.lease?.unit?.property_id;
+    if (!propId) return inv.invoice_id;
+    const propInvoices = invoices
+      .filter(item => item.lease?.unit?.property_id === propId)
+      .sort((a, b) => a.invoice_id - b.invoice_id);
+    const idx = propInvoices.findIndex(item => item.invoice_id === inv.invoice_id);
+    return idx !== -1 ? idx + 1 : inv.invoice_id;
+  };
   
   // Payment states
   const [selectedInvoice, setSelectedInvoice] = useState(null);
@@ -76,7 +86,7 @@ export default function RentLedger({ user, selectedPropertyFilterId = 'all' }) {
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [user?.property_name, user?.unit_number]);
 
   async function fetchData() {
     try {
@@ -86,7 +96,12 @@ export default function RentLedger({ user, selectedPropertyFilterId = 'all' }) {
       setLeases(leaseRes.data);
       
       const allInvoices = [];
-      for (const lease of leaseRes.data) {
+      const activeId = localStorage.getItem('tenant_active_lease_id');
+      const tenantLeases = !isLandlord && activeId
+        ? leaseRes.data.filter(l => String(l.lease_id) === String(activeId))
+        : leaseRes.data;
+
+      for (const lease of tenantLeases) {
         const ledgerRes = await API.get(`/rental/leases/${lease.lease_id}/ledgers`);
         allInvoices.push(...ledgerRes.data.map(i => ({ ...i, lease })));
       }
@@ -254,7 +269,7 @@ export default function RentLedger({ user, selectedPropertyFilterId = 'all' }) {
                 <tbody className="divide-y divide-slate-100 dark:divide-white/5 text-slate-700 dark:text-gray-300">
                   {filteredInvoices.map(inv => (
                   <tr key={inv.invoice_id} className="hover:bg-slate-50 dark:hover:bg-white/5 transition-colors group">
-                    <td className="px-4 py-4 font-mono text-xs font-bold text-indigo-650 dark:text-[#5BA4F5] whitespace-nowrap">#{inv.invoice_id}</td>
+                    <td className="px-4 py-4 font-mono text-xs font-bold text-indigo-650 dark:text-[#5BA4F5] whitespace-nowrap">#{getInvoiceSeqNum(inv)}</td>
                     <td className="px-4 py-4 whitespace-nowrap">
                       <div className="flex flex-col">
                         <span className="font-semibold text-slate-900 dark:text-white">Unit {inv.lease?.unit?.unit_number || 'N/A'}</span>

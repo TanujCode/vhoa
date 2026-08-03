@@ -16,7 +16,7 @@ export default function CondoResidentDashboard({ user, setActivePage }) {
         
         <div className="relative z-10">
           <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-blue-100 dark:bg-indigo-500/20 border border-blue-200 dark:border-indigo-400/30 text-blue-700 dark:text-indigo-300 text-[10px] font-bold uppercase tracking-widest mb-2 shadow-xs">
-            👋 Welcome Back, {user?.name || 'Resident'}!
+             Welcome Back, {user?.name || 'Resident'}!
           </div>
           <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-white mb-1">
             Resident Hub - Unit {unitNo}

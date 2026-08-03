@@ -296,13 +296,13 @@ export default function CondoPayments({ community, user }) {
             
             <div className="p-6 border-b border-slate-100 dark:border-white/5 flex justify-between items-center bg-slate-50 dark:bg-slate-900/30">
               <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
-                <span>💳</span> Submit Condo Payment
+                <span></span> Submit Condo Payment
               </h3>
               <button 
                 onClick={() => { setShowPayModal(false); setErrorMsg(''); }}
                 className="text-slate-450 hover:text-slate-600 dark:hover:text-white bg-slate-100 dark:bg-white/5 hover:scale-105 transition-all w-7 h-7 rounded-lg flex items-center justify-center font-bold text-xs cursor-pointer"
               >
-                ✕
+                
               </button>
             </div>
 

@@ -215,7 +215,7 @@ export default function CondoVisitors({ community, user }) {
   };
 
   const copyPassInfo = (pass) => {
-    const text = `Hello ${pass.guest_name},\n\nHere is your Visitor Access Pass for Unit ${user?.unit_no || 'N/A'} at ${community?.name || 'Condo'}:\n🔑 Access Code: ${pass.otp_code}\n🚗 Vehicle Plate: ${pass.vehicle_no || 'None'}\n\nShow this code or scan the QR code at the gate/lobby security upon arrival.`;
+    const text = `Hello ${pass.guest_name},\n\nHere is your Visitor Access Pass for Unit ${user?.unit_no || 'N/A'} at ${community?.name || 'Condo'}:\n Access Code: ${pass.otp_code}\n Vehicle Plate: ${pass.vehicle_no || 'None'}\n\nShow this code or scan the QR code at the gate/lobby security upon arrival.`;
     navigator.clipboard.writeText(text);
     setCopiedPassId(pass.pass_id);
     setTimeout(() => setCopiedPassId(''), 2000);
@@ -475,13 +475,13 @@ export default function CondoVisitors({ community, user }) {
             
             <div className="p-6 border-b border-slate-200 dark:border-white/10 flex justify-between items-center bg-slate-50 dark:bg-[#162535]">
               <h3 className="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2">
-                <span>🔑</span> Generate Guest Entry Pass
+                <span></span> Generate Guest Entry Pass
               </h3>
               <button 
                 onClick={() => { setShowAddModal(false); }} 
                 className="text-slate-400 hover:text-slate-600 dark:hover:text-white font-semibold text-sm cursor-pointer"
               >
-                ✕
+                
               </button>
             </div>
 
@@ -562,7 +562,7 @@ export default function CondoVisitors({ community, user }) {
                 onClick={() => setSelectedPassForTicket(null)}
                 className="w-8 h-8 rounded-full bg-black/10 hover:bg-black/20 flex items-center justify-center font-bold text-sm cursor-pointer"
               >
-                ✕
+                
               </button>
             </div>
 

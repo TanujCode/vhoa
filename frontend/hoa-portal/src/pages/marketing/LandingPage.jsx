@@ -40,7 +40,7 @@ const slides = [
   {
     title: "Central Community Park",
     desc: "Vibrant green lawns, paved walking trails & serene seating corners.",
-    tag: "🌳 Society Park",
+    tag: " Society Park",
     light: heroParkLight,
     dark: heroParkDark,
     accent: "border-emerald-500/30 text-emerald-500 dark:text-emerald-400 bg-emerald-500/10"
@@ -48,7 +48,7 @@ const slides = [
   {
     title: "Botanical & Terrace Gardens",
     desc: "Exquisite seasonal flowers, curated shrubberies & peaceful walks.",
-    tag: "🌸 Botanical Gardens",
+    tag: " Botanical Gardens",
     light: heroGardenLight,
     dark: heroGardenDark,
     accent: "border-pink-500/30 text-pink-500 dark:text-pink-400 bg-pink-500/10"
@@ -56,7 +56,7 @@ const slides = [
   {
     title: "Premium Clubhouse & Pool",
     desc: "Luxury lounge spaces, glass architecture & a refreshing pool deck.",
-    tag: "🏊 Luxury Clubhouse",
+    tag: " Luxury Clubhouse",
     light: heroClubLight,
     dark: heroClubDark,
     accent: "border-sky-500/30 text-sky-500 dark:text-sky-400 bg-sky-500/10"
@@ -64,7 +64,7 @@ const slides = [
   {
     title: "Modern Facade & Towers",
     desc: "High-end contemporary architecture with lush balcony integrations.",
-    tag: "🏢 Modern Condominiums",
+    tag: " Modern Condominiums",
     light: heroCondoLight,
     dark: heroCondoDark,
     accent: "border-violet-500/30 text-violet-500 dark:text-violet-400 bg-violet-500/10"
@@ -650,7 +650,7 @@ function MeetingsOperationsConsole() {
               <span className="w-1.5 h-1.5 rounded-full bg-slate-400 dark:bg-slate-600" />
               <span className="text-[9px] text-slate-400 dark:text-slate-500 font-mono font-bold">Q3 Budget Proposal</span>
             </div>
-            <span className="text-[8px] font-extrabold text-emerald-600 dark:text-emerald-300 bg-emerald-500/15 border border-emerald-500/25 px-2 py-0.5 rounded-full uppercase tracking-wide">✓ Quorum Reached</span>
+            <span className="text-[8px] font-extrabold text-emerald-600 dark:text-emerald-300 bg-emerald-500/15 border border-emerald-500/25 px-2 py-0.5 rounded-full uppercase tracking-wide"> Quorum Reached</span>
           </div>
           <div className="px-3 py-1.5 space-y-1 text-left text-xs">
             <div className="flex justify-between items-center text-[10px] text-slate-600 dark:text-slate-300 font-bold">
@@ -671,15 +671,15 @@ function MeetingsOperationsConsole() {
               <span className="w-1.5 h-1.5 rounded-full bg-slate-400 dark:bg-slate-600" />
               <span className="text-[9px] text-slate-400 dark:text-slate-500 font-mono font-bold">Auto-Diarized</span>
             </div>
-            <span className="text-[8px] font-extrabold text-indigo-600 dark:text-indigo-300 bg-indigo-500/15 border border-indigo-500/25 px-2 py-0.5 rounded-full uppercase tracking-wide">🎙️ Processed</span>
+            <span className="text-[8px] font-extrabold text-indigo-600 dark:text-indigo-300 bg-indigo-500/15 border border-indigo-500/25 px-2 py-0.5 rounded-full uppercase tracking-wide">️ Processed</span>
           </div>
           <div className="px-3 py-1.5 space-y-1 text-left">
             <div className="flex items-start gap-2">
-              <div className="w-3.5 h-3.5 rounded-full bg-violet-500/10 dark:bg-violet-500/20 border border-violet-500/20 dark:border-violet-500/30 flex items-center justify-center text-[8px] shrink-0 mt-0.5">👤</div>
+              <div className="w-3.5 h-3.5 rounded-full bg-violet-500/10 dark:bg-violet-500/20 border border-violet-500/20 dark:border-violet-500/30 flex items-center justify-center text-[8px] shrink-0 mt-0.5"></div>
               <p className="text-[10px] text-slate-700 dark:text-slate-300 leading-tight"><span className="font-bold text-slate-900 dark:text-white">Speaker 1:</span> "Voting begins on the clubhouse fencing project."</p>
             </div>
             <div className="flex items-start gap-2">
-              <div className="w-3.5 h-3.5 rounded-full bg-violet-500/10 dark:bg-violet-500/20 border border-violet-500/20 dark:border-violet-500/30 flex items-center justify-center text-[8px] shrink-0 mt-0.5">👤</div>
+              <div className="w-3.5 h-3.5 rounded-full bg-violet-500/10 dark:bg-violet-500/20 border border-violet-500/20 dark:border-violet-500/30 flex items-center justify-center text-[8px] shrink-0 mt-0.5"></div>
               <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-tight"><span className="font-bold text-slate-800 dark:text-slate-200">Speaker 2:</span> "Both fence builder quotes are within Q3 reserves."</p>
             </div>
           </div>
@@ -813,7 +813,7 @@ function MaintenanceOperationsConsole() {
                 item.done 
                   ? 'bg-emerald-500 border-emerald-500 text-white' 
                   : isDark ? 'border-white/30 text-transparent' : 'border-slate-300 text-transparent'
-              }`}>✓</span>
+              }`}></span>
               <span className={`text-[11px] font-semibold truncate ${item.done ? 'line-through text-slate-400 dark:text-slate-400' : 'text-slate-800 dark:text-slate-100'}`}>{item.text}</span>
             </div>
             <span className={`text-[8px] font-extrabold px-2 py-0.5 rounded border uppercase shrink-0 ${
@@ -923,16 +923,16 @@ export default function LandingPage() {
 
   const automationSlides = [
     {
-      tabLabel: "🔧 Maintenance Kanban",
+      tabLabel: " Maintenance Kanban",
       badge: "Service Requests",
       title: "Visual Kanban Board",
       subtitle: "for maintenance dispatches.",
       desc: "Coordinate community repairs and work orders. Track issues in real-time, dispatch jobs to vendors, and manage task columns from a simple interactive board.",
       points: [
-        { icon: '📋', text: 'Drag-and-drop repair ticket workflow' },
-        { icon: '🛠️', text: 'Assign tasks to external community vendors' },
-        { icon: '📝', text: 'Log private manager notes and action steps' },
-        { icon: '🔔', text: 'Instantly update residents on repair status' }
+        { icon: '', text: 'Drag-and-drop repair ticket workflow' },
+        { icon: '️', text: 'Assign tasks to external community vendors' },
+        { icon: '', text: 'Log private manager notes and action steps' },
+        { icon: '', text: 'Instantly update residents on repair status' }
       ],
       linkText: "Explore Maintenance Features",
       linkTo: "/features",
@@ -942,16 +942,16 @@ export default function LandingPage() {
       component: <MaintenanceOperationsConsole />
     },
     {
-      tabLabel: "🏊 Amenity Booking",
+      tabLabel: " Amenity Booking",
       badge: "Facility Scheduler",
       title: "Sleek reservation",
       subtitle: "and booking approvals.",
       desc: "Enable residents to reserve clubhouses, pools, gyms, or tennis courts. Prevent double bookings, manage slot constraints, and handle board approvals.",
       points: [
-        { icon: '🏊', text: 'Double-booking protection for all time slots' },
-        { icon: '🔒', text: 'Customizable daily slot booking limits' },
-        { icon: '✔️', text: 'Seamless board approval and verification gates' },
-        { icon: '📅', text: 'Real-time visual slot availability calendar' }
+        { icon: '', text: 'Double-booking protection for all time slots' },
+        { icon: '', text: 'Customizable daily slot booking limits' },
+        { icon: '️', text: 'Seamless board approval and verification gates' },
+        { icon: '', text: 'Real-time visual slot availability calendar' }
       ],
       linkText: "Explore Bookings",
       linkTo: "/features",
@@ -961,16 +961,16 @@ export default function LandingPage() {
       component: <CalendarOperationsConsole />
     },
     {
-      tabLabel: "🗳️ Meetings & Surveys",
+      tabLabel: "️ Meetings & Surveys",
       badge: "E-Voting & Assemblies",
       title: "Community assemblies",
       subtitle: "and resident surveys.",
       desc: "Schedule and organize board meetings, general assemblies, and resident opinion polls. Enable secure voting on resolutions with absolute transparency.",
       points: [
-        { icon: '🗳️', text: 'Run online community voting on key resolutions' },
-        { icon: '🎙️', text: 'Meeting audio recording and speaker diarization' },
-        { icon: '👥', text: 'Collaborative RSVP tracker for board assemblies' },
-        { icon: '📊', text: 'Real-time survey response analysis and logs' }
+        { icon: '️', text: 'Run online community voting on key resolutions' },
+        { icon: '️', text: 'Meeting audio recording and speaker diarization' },
+        { icon: '', text: 'Collaborative RSVP tracker for board assemblies' },
+        { icon: '', text: 'Real-time survey response analysis and logs' }
       ],
       linkText: "Explore Meetings & Surveys",
       linkTo: "/features",
@@ -980,16 +980,16 @@ export default function LandingPage() {
       component: <MeetingsOperationsConsole />
     },
     {
-      tabLabel: "💳 Dues & Payments",
+      tabLabel: " Dues & Payments",
       badge: "Financial Ledger",
       title: "Seamless collections",
       subtitle: "and automated accounting.",
       desc: "Track outstanding HOA dues and resident payments on a centralized ledger. Log payments, issue invoices, and manage community financial accounts.",
       points: [
-        { icon: '💳', text: 'Keep clear record of paid, pending, and overdue invoices' },
-        { icon: '📊', text: 'Financial metrics showing total collected funds' },
-        { icon: '📝', text: 'Direct logging of manual checks and digital payments' },
-        { icon: '📖', text: 'Clear audit trails linked to units and owner files' }
+        { icon: '', text: 'Keep clear record of paid, pending, and overdue invoices' },
+        { icon: '', text: 'Financial metrics showing total collected funds' },
+        { icon: '', text: 'Direct logging of manual checks and digital payments' },
+        { icon: '', text: 'Clear audit trails linked to units and owner files' }
       ],
       linkText: "Explore Payments",
       linkTo: "/features",
@@ -1566,7 +1566,7 @@ export default function LandingPage() {
                       <div className="flex-1 min-w-0 space-y-3 text-left">
                         <div>
                           <h2 className={`text-base sm:text-lg font-black tracking-tight leading-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                            Welcome back, John! 👋
+                            Welcome back, John! 
                           </h2>
                           <p className={`text-[8px] mt-0.5 font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
                             Here is a summary of your community's active operations today.
@@ -1761,7 +1761,7 @@ export default function LandingPage() {
         <div className="max-w-5xl mx-auto mt-8 pb-16 border-t border-slate-100 dark:border-white/[0.06] pt-12">
           <div className="text-center max-w-2xl mx-auto mb-10 space-y-3">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-violet-500/10 border border-violet-500/20 text-xs font-semibold text-violet-600 dark:text-violet-400">
-              🌳 Society Spaces
+               Society Spaces
             </div>
             <h2 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight leading-tight">
               A Glimpse into Our Premium Communities

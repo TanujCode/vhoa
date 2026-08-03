@@ -77,7 +77,7 @@ const SearchAndJoinCondo = () => {
                 const data = Array.isArray(res.data) ? res.data : (res.data.communities || []);
                 setCommunities(data);
             } catch (err) {
-                console.error("🚨 Condo Fetch Error:", err);
+                console.error(" Condo Fetch Error:", err);
                 if (err.response) {
                     setApiError(`Backend Error: ${err.response.data?.detail || err.response.statusText}`);
                 } else if (err.request) {

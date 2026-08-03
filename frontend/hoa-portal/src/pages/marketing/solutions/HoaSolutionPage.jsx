@@ -280,13 +280,13 @@ export default function HoaSolutionPage() {
               </span>
               <ul className="space-y-4 text-xs text-slate-600 dark:text-slate-400 font-display">
                 <li className="flex items-start gap-2.5">
-                  <span className="text-violet-555 font-black">✕</span> <span>Weeks or months spent chasing residents to sign paper proxy votes and meet quorum.</span>
+                  <span className="text-violet-555 font-black"></span> <span>Weeks or months spent chasing residents to sign paper proxy votes and meet quorum.</span>
                 </li>
                 <li className="flex items-start gap-2.5">
-                  <span className="text-violet-555 font-black">✕</span> <span>Bylaws violations and dispute resolution delayed due to manual rule lookups.</span>
+                  <span className="text-violet-555 font-black"></span> <span>Bylaws violations and dispute resolution delayed due to manual rule lookups.</span>
                 </li>
                 <li className="flex items-start gap-2.5">
-                  <span className="text-violet-555 font-black">✕</span> <span>Lack of verifiable audit trails leading to contested ballots and board distrust.</span>
+                  <span className="text-violet-555 font-black"></span> <span>Lack of verifiable audit trails leading to contested ballots and board distrust.</span>
                 </li>
               </ul>
             </div>
@@ -297,13 +297,13 @@ export default function HoaSolutionPage() {
               </span>
               <ul className="space-y-4 text-xs text-slate-600 dark:text-slate-400 font-display">
                 <li className="flex items-start gap-2.5">
-                  <span className="text-indigo-400 font-black">✓</span> <span>Legal digital assemblies reaching quorum securely in less than 4 days.</span>
+                  <span className="text-indigo-400 font-black"></span> <span>Legal digital assemblies reaching quorum securely in less than 4 days.</span>
                 </li>
                 <li className="flex items-start gap-2.5">
-                  <span className="text-indigo-455 font-black">✓</span> <span>AI Bylaws Copilot resolving compliance and rule questions in seconds.</span>
+                  <span className="text-indigo-455 font-black"></span> <span>AI Bylaws Copilot resolving compliance and rule questions in seconds.</span>
                 </li>
                 <li className="flex items-start gap-2.5">
-                  <span className="text-indigo-455 font-black">✓</span> <span>SHA-256 vote auditing providing transparency and tamper-proof trust.</span>
+                  <span className="text-indigo-455 font-black"></span> <span>SHA-256 vote auditing providing transparency and tamper-proof trust.</span>
                 </li>
               </ul>
             </div>

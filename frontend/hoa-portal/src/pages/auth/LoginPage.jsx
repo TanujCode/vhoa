@@ -89,7 +89,7 @@ export default function LoginPage() {
         const role = (userData?.role_name || userData?.role || response.data?.role || '').toLowerCase();
         const communityId = userData?.community_id;
 
-        // 🔥 ROLE-BASED EXACT REDIRECTS
+        //  ROLE-BASED EXACT REDIRECTS
         if (role === 'super_admin' || role === 'property_manager' || role === 'board_member') {
           navigate('/dashboard', { replace: true });
         } 

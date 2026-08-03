@@ -16,13 +16,22 @@ const RentalTopbar = ({
   toggleNotif,
   properties = [],
   selectedPropertyFilterId = 'all',
-  setSelectedPropertyFilterId
+  setSelectedPropertyFilterId,
+  leases = [],
+  onTenantLeaseSwitch
 }) => {
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [dropdownSearch, setDropdownSearch] = useState('');
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const { theme, toggleTheme } = useTheme();
+
+  const filteredTenantLeases = user?.role === 'tenant'
+    ? leases.filter(l => {
+        const propName = l.property_name || (l.unit && l.unit.property ? l.unit.property.name : l.property?.name || 'Private Landlord');
+        return String(propName) === String(user?.property_name);
+      })
+    : [];
 
   const getProfileImage = (url) => {
     if (!url) return null;
@@ -86,6 +95,29 @@ const RentalTopbar = ({
               </div>
             </div>
           </div>
+        ) : user?.role === 'tenant' && filteredTenantLeases.length > 1 ? (
+          <div 
+            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+            className="flex items-center gap-1.5 sm:gap-3 max-w-[150px] xs:max-w-[200px] sm:max-w-[420px] lg:max-w-none select-none cursor-pointer group"
+          >
+            <Building2 className="hidden sm:block text-[#6366F1] dark:text-[#818CF8] flex-shrink-0" size={18} />
+            <div className="min-w-0 text-left">
+              <p className="text-[9px] sm:text-[10px] text-slate-400 dark:text-gray-400 font-semibold uppercase tracking-widest leading-normal mb-0.5 truncate">
+                MY RESIDENCE
+              </p>
+              <div className="flex items-center gap-1.5 min-w-0">
+                <span className="text-[14px] xs:text-[16px] sm:text-lg font-bold text-slate-900 dark:text-white leading-tight truncate group-hover:text-blue-600 dark:group-hover:text-[#5BA4F5] transition-colors">
+                  {user?.property_name || 'Tenant Rental Portal'}
+                </span>
+                {user?.unit_number && (
+                  <span className="hidden sm:inline-block text-[9px] sm:text-[10px] font-bold px-2 py-0.5 bg-indigo-50 text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-400 rounded-lg border border-indigo-200 dark:border-indigo-500/20 flex-shrink-0 shadow-sm uppercase ml-1">
+                    Unit {user.unit_number}
+                  </span>
+                )}
+                <ChevronDown size={16} className={`text-slate-800 dark:text-slate-200 group-hover:text-blue-600 dark:group-hover:text-[#5BA4F5] transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} />
+              </div>
+            </div>
+          </div>
         ) : (
           <div className="flex items-center gap-1.5 sm:gap-3 max-w-[150px] xs:max-w-[200px] sm:max-w-[420px] lg:max-w-none select-none">
             <Building2 className="hidden sm:block text-[#6366F1] dark:text-[#818CF8] flex-shrink-0" size={18} />
@@ -111,7 +143,7 @@ const RentalTopbar = ({
           </div>
         )}
 
-        {/* Dropdown Popover Menu */}
+        {/* Dropdown Popover Menu for Landlord */}
         {isDropdownOpen && (user?.role === 'landlord' || user?.role === 'super_admin') && (
           <>
             <div className="fixed inset-0 z-40" onClick={() => setIsDropdownOpen(false)} />
@@ -171,6 +203,61 @@ const RentalTopbar = ({
                     </div>
                   ))
                 }
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* Dropdown Popover Menu for Tenant */}
+        {isDropdownOpen && user?.role === 'tenant' && filteredTenantLeases.length > 1 && (
+          <>
+            <div className="fixed inset-0 z-40" onClick={() => setIsDropdownOpen(false)} />
+            <div className="fixed sm:absolute top-16 sm:top-[calc(100%+12px)] left-4 right-4 sm:left-0 sm:right-auto w-auto sm:w-80 bg-white dark:bg-[#1E3248] border border-slate-200 dark:border-white/20 rounded-3xl shadow-2xl z-50 py-3 overflow-hidden animate-in fade-in zoom-in-95 text-left">
+              <div className="px-4 py-2 border-b border-slate-100 dark:border-white/5">
+                <span className="text-[10px] font-bold text-slate-400 dark:text-gray-400 uppercase tracking-widest block">
+                  SWITCH RESIDENCE / UNIT
+                </span>
+              </div>
+              <div className="max-h-64 overflow-y-auto px-2 mt-2 custom-scrollbar">
+                {filteredTenantLeases.map((l) => {
+                  const propName = l.property_name || (l.unit && l.unit.property ? l.unit.property.name : l.property?.name || 'Private Landlord');
+                  const unitNo = l.unit ? l.unit.unit_number : 'N/A';
+                  const isSelected = String(propName) === String(user?.property_name) && String(unitNo) === String(user?.unit_number);
+                  
+                  return (
+                    <div
+                      key={l.lease_id}
+                      onClick={() => {
+                        if (onTenantLeaseSwitch) {
+                          onTenantLeaseSwitch(l.lease_id);
+                        }
+                        setIsDropdownOpen(false);
+                      }}
+                      className={`flex items-start gap-3 px-4 py-3 rounded-2xl mx-1 cursor-pointer transition hover:bg-slate-100 dark:hover:bg-white/10 ${
+                        isSelected
+                          ? 'bg-blue-50 dark:bg-blue-500/10 border border-blue-500/20'
+                          : ''
+                      }`}
+                    >
+                      <Home className="w-5 h-5 text-blue-500 shrink-0 mt-0.5" />
+                      <div className="min-w-0">
+                        <p className="font-bold text-gray-900 dark:text-white text-sm">
+                          Unit {unitNo}
+                        </p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                          {propName}
+                        </p>
+                        <span className={`inline-block text-[8px] font-bold px-1.5 py-0.5 rounded-md mt-1 uppercase ${
+                          l.status === 'ACTIVE'
+                            ? 'bg-emerald-500/10 text-emerald-500'
+                            : 'bg-yellow-500/10 text-yellow-500'
+                        }`}>
+                          {l.status}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </>

@@ -107,12 +107,12 @@ export default function CondoParcels({ community, user }) {
 
   const getCarrierBadge = (c) => {
     switch (c?.toLowerCase()) {
-      case 'amazon': return '📦 Amazon';
+      case 'amazon': return ' Amazon';
       case 'fedex': return '🟣 FedEx';
       case 'ups': return '🟤 UPS';
       case 'dhl': return '🟡 DHL';
-      case 'usps': return '🔵 USPS';
-      default: return '✉️ Courier';
+      case 'usps': return ' USPS';
+      default: return '️ Courier';
     }
   };
 
@@ -303,13 +303,13 @@ export default function CondoParcels({ community, user }) {
           <div className="bg-white dark:bg-[#162535] rounded-3xl border border-slate-200 dark:border-white/10 w-full max-w-md overflow-hidden shadow-2xl">
             <div className="p-6 border-b border-slate-100 dark:border-white/5 flex justify-between items-center bg-slate-50 dark:bg-slate-900/30">
               <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
-                <span>📦</span> Log Arrived Reception Package
+                <span></span> Log Arrived Reception Package
               </h3>
               <button 
                 onClick={() => { setShowAddModal(false); setErrorMsg(''); }} 
                 className="text-slate-450 hover:text-slate-600 dark:hover:text-white bg-slate-100 dark:bg-white/5 hover:scale-105 transition-all w-7 h-7 rounded-lg flex items-center justify-center font-bold text-xs cursor-pointer"
               >
-                ✕
+                
               </button>
             </div>
 

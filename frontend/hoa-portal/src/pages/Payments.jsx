@@ -526,7 +526,7 @@ const Payments = ({ community, user, paymentState, setPaymentState, viewAsReside
                   
                   {item.status === 'COMPLETED' ? (
                     <div className="w-full mt-6 bg-blue-500/10 text-blue-600 dark:text-blue-400 py-3 rounded-2xl font-semibold text-center text-sm border border-blue-500/20">
-                      ✓ Paid & Synchronized
+                       Paid & Synchronized
                     </div>
                   ) : (
                     <button
@@ -579,7 +579,7 @@ const Payments = ({ community, user, paymentState, setPaymentState, viewAsReside
 
                     {v.status === 'COMPLETED' ? (
                       <div className="w-full mt-6 bg-blue-500/10 text-blue-600 dark:text-blue-400 py-3 rounded-2xl font-semibold text-center text-sm border border-blue-500/20">
-                        ✓ Disbursed to Vendor
+                         Disbursed to Vendor
                       </div>
                     ) : (
                       <button
@@ -801,7 +801,7 @@ const Payments = ({ community, user, paymentState, setPaymentState, viewAsReside
               {wizard.currentStep === 4 && wizard.receipt && (
                 <div className="text-center">
                   <div className="w-16 h-16 bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-full flex items-center justify-center text-3xl mx-auto mb-4 animate-bounce">
-                    ✓
+                    
                   </div>
                   <h3 className="text-2xl font-bold mb-1">Payment Completed!</h3>
                   <p className="text-slate-500 dark:text-gray-400 text-sm">A receipt has been sent to your email.</p>

@@ -21,7 +21,7 @@ const NotifPanel = ({ isOpen, onClose, notifications = [], onMarkAllRead, lastRe
     clean = clean.replace(/\.?\s*Time\s*\(ET\):.*$/gi, '');
     
     // Nice arrow symbol transition
-    clean = clean.replace(/\s+->\s+/g, ' ➔ ');
+    clean = clean.replace(/\s+->\s+/g, '  ');
     
     return clean.trim();
   };
@@ -123,7 +123,7 @@ const NotifPanel = ({ isOpen, onClose, notifications = [], onMarkAllRead, lastRe
           onClick={onClose} 
           className="text-2xl text-gray-400 hover:text-gray-600 dark:hover:text-white transition"
         >
-          ✕
+          
         </button>
       </div>
 

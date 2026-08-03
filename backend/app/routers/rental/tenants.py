@@ -85,28 +85,44 @@ def get_tenants(
                 "created_date": l.created_date.isoformat() if l.created_date else None
             }
 
-    # B. Also include any registered users with role "tenant" who don't have a lease yet
+    # B. Also include any registered users with role "tenant" who don't have a lease yet but have applied
+    from app.models.rental.rental_application import RentalApplication
+    from app.models.rental.unit import Unit
+    from app.models.rental.property import Property
+
+    if is_super:
+        apps = db.query(RentalApplication).all()
+    else:
+        apps = db.query(RentalApplication).join(Unit, RentalApplication.unit_id == Unit.unit_id).join(Property, Unit.property_id == Property.property_id).filter(Property.landlord_id == current_user.user_id).all()
+    
+    app_tenant_emails = {a.tenant_email.strip().lower() for a in apps if a.tenant_email}
+
     for t in registered_users:
         role_name = t.role.role_name if t.role else ""
         if role_name == "tenant":
             e_clean = t.email_id.strip().lower() if t.email_id else ""
-            key_check = e_clean or f"id_{t.user_id}"
-            if key_check not in tenant_map:
-                tenant_map[key_check] = {
-                    "user_id": t.user_id,
-                    "user_code": t.user_code or f"USR{t.user_id:04d}",
-                    "first_name": t.first_name,
-                    "middle_name": t.middle_name,
-                    "last_name": t.last_name,
-                    "full_name": t.full_name,
-                    "email_id": t.email_id,
-                    "mobile_number": t.mobile_number,
-                    "active_status": t.active_status,
-                    "account_status": t.account_status,
-                    "unit_no": getattr(t, 'unit_no', None),
-                    "property_id": None,
-                    "created_date": t.created_date.isoformat() if t.created_date else None
-                }
+            if e_clean in app_tenant_emails:
+                key_check = e_clean or f"id_{t.user_id}"
+                if key_check not in tenant_map:
+                    app = next((a for a in apps if a.tenant_email.strip().lower() == e_clean), None)
+                    unit_no = app.unit.unit_number if (app and app.unit) else None
+                    prop_id = app.unit.property_id if (app and app.unit) else None
+
+                    tenant_map[key_check] = {
+                        "user_id": t.user_id,
+                        "user_code": t.user_code or f"USR{t.user_id:04d}",
+                        "first_name": t.first_name,
+                        "middle_name": t.middle_name,
+                        "last_name": t.last_name,
+                        "full_name": t.full_name,
+                        "email_id": t.email_id,
+                        "mobile_number": t.mobile_number,
+                        "active_status": t.active_status,
+                        "account_status": t.account_status,
+                        "unit_no": unit_no,
+                        "property_id": prop_id,
+                        "created_date": t.created_date.isoformat() if t.created_date else None
+                    }
 
     return list(tenant_map.values())
 

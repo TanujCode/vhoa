@@ -309,12 +309,12 @@ export default function CondoParking({ community, user }) {
         <div className="bg-gradient-to-br from-indigo-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] p-6 rounded-3xl border border-indigo-100 dark:border-white/10 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-2">
             <span className="px-2.5 py-0.5 rounded-full bg-indigo-500/10 text-indigo-600 dark:text-indigo-350 text-[10px] font-black uppercase tracking-wider">
-              🏠 My Suite Assets (Unit {user?.unit_no || 'N/A'})
+               My Suite Assets (Unit {user?.unit_no || 'N/A'})
             </span>
             <h2 className="text-xl font-black">My Parking & Storage</h2>
             <div className="flex flex-wrap gap-4 mt-3">
               <div className="flex items-center gap-2 bg-white dark:bg-slate-900/30 border border-slate-200 dark:border-white/5 px-4 py-2.5 rounded-2xl">
-                <span className="text-base">🚙</span>
+                <span className="text-base"></span>
                 <div>
                   <p className="text-[9px] text-slate-400 uppercase tracking-widest leading-none font-bold">Parking Spot</p>
                   <p className="text-xs font-black mt-1 text-slate-800 dark:text-slate-200">
@@ -556,7 +556,7 @@ export default function CondoParking({ community, user }) {
               {/* Slot ID and EV tag */}
               <div className="flex justify-between items-center">
                 <span className="text-xs font-black tracking-widest font-mono bg-slate-100 dark:bg-slate-900 px-3 py-1.5 rounded-xl border border-slate-200/50 dark:border-white/5">
-                  🚙 {alloc.parking_spot_no || 'NO BAY'}
+                   {alloc.parking_spot_no || 'NO BAY'}
                 </span>
                 {alloc.has_ev_charger ? (
                   <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-[#34D399] font-extrabold text-[9px] uppercase tracking-wider border border-emerald-500/20 animate-pulse">
@@ -595,7 +595,7 @@ export default function CondoParking({ community, user }) {
                       {alloc.assigned_user?.full_name || 'Unassigned / Available'}
                     </p>
                     <p className="text-[9px] text-slate-450 mt-0.5 flex items-center gap-1">
-                      <span>🏠</span> Unit {alloc.unit_no}
+                      <span></span> Unit {alloc.unit_no}
                     </p>
                   </div>
                 </div>
@@ -660,7 +660,7 @@ export default function CondoParking({ community, user }) {
                 onClick={() => { setShowAddModal(false); setSelectedMemberId(''); }} 
                 className="text-slate-400 hover:text-slate-600 dark:hover:text-white font-semibold text-sm cursor-pointer"
               >
-                ✕
+                
               </button>
             </div>
 
@@ -772,13 +772,13 @@ export default function CondoParking({ community, user }) {
             
             <div className="p-6 border-b border-slate-200 dark:border-white/10 flex justify-between items-center bg-slate-50 dark:bg-[#162535]">
               <h3 className="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2">
-                <span>🔄</span> Request Parking Change
+                <span></span> Request Parking Change
               </h3>
               <button 
                 onClick={() => { setShowRequestModal(false); }} 
                 className="text-slate-400 hover:text-slate-600 dark:hover:text-white font-semibold text-sm cursor-pointer"
               >
-                ✕
+                
               </button>
             </div>
 
@@ -841,7 +841,7 @@ export default function CondoParking({ community, user }) {
                 onClick={() => { setShowApproveModal(false); setSelectedReq(null); }} 
                 className="text-slate-400 hover:text-slate-600 dark:hover:text-white font-semibold text-sm cursor-pointer"
               >
-                ✕
+                
               </button>
             </div>
 
@@ -920,13 +920,13 @@ export default function CondoParking({ community, user }) {
             
             <div className="p-6 border-b border-slate-200 dark:border-white/10 flex justify-between items-center bg-slate-50 dark:bg-[#162535]">
               <h3 className="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2">
-                <span>🔴</span> Reject Change Request
+                <span></span> Reject Change Request
               </h3>
               <button 
                 onClick={() => { setShowRejectModal(false); setSelectedReq(null); }} 
                 className="text-slate-400 hover:text-slate-600 dark:hover:text-white font-semibold text-sm cursor-pointer"
               >
-                ✕
+                
               </button>
             </div>
 

@@ -251,7 +251,7 @@ const Overview = ({ communities = [], setActiveCommunity, setActivePage, user, r
                               if (await window.customConfirm(`Are you sure you want to deactivate ${comm.name}?`)) {
                                 try {
                                   await API.delete(`/community/${comm.community_id}`);
-                                  alert("✅ Community deactivated successfully!");
+                                  alert(" Community deactivated successfully!");
                                   if (refreshCommunities) {
                                     await refreshCommunities();
                                   } else {

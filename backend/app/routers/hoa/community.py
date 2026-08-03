@@ -278,7 +278,7 @@ def process_join_request(
         db.refresh(req)
         db.refresh(user)
 
-        print(f"✅ USER UPDATED: User ID {user.user_id} → Community ID {user.community_id}")  # Print in console
+        print(f" USER UPDATED: User ID {user.user_id} → Community ID {user.community_id}")  # Print in console
         return {"message": "Join request rejected."}
 
     raise HTTPException(status_code=400, detail="Invalid action")

@@ -495,7 +495,7 @@ const RentalProfile = ({ user, setUser, viewRole }) => {
                   <Mail size={13} /> Email
                 </span>
                 <span className={user?.email_id_is_verified ? 'text-blue-600 dark:text-blue-400' : 'text-red-600 dark:text-red-400'}>
-                  {user?.email_id_is_verified ? '✓ Verified' : '✗ Not verified'}
+                  {user?.email_id_is_verified ? ' Verified' : ' Not verified'}
                 </span>
               </div>
               <div className="flex items-center justify-between text-sm">
@@ -504,7 +504,7 @@ const RentalProfile = ({ user, setUser, viewRole }) => {
                 </span>
                 <div className="flex items-center gap-2">
                   <span className={user?.mobile_is_verified ? 'text-blue-600 dark:text-blue-400' : 'text-red-600 dark:text-red-400'}>
-                    {user?.mobile_is_verified ? '✓ Verified' : '✗ Not verified'}
+                    {user?.mobile_is_verified ? ' Verified' : ' Not verified'}
                   </span>
                   {!user?.mobile_is_verified && (
                     user?.mobile_number ? (

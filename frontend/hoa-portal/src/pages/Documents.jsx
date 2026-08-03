@@ -50,7 +50,7 @@ const DocumentModal = ({ communityId, onClose, onSuccess }) => {
           <h3 className="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2">
             <Plus size={18} className="text-blue-500" /> Upload HOA Document
           </h3>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 dark:hover:text-white font-semibold text-sm">✕</button>
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 dark:hover:text-white font-semibold text-sm"></button>
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4">

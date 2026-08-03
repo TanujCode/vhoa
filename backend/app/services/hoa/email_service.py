@@ -170,7 +170,7 @@ def send_welcome_email(to_email: str, full_name: str) -> bool:
     subject = "Welcome to VHOA Portal — HOA Management"
     inner_html = f"""
       <div style="padding: 40px 30px;">
-        <h2 style="margin: 0 0 16px; color: #ffffff;">Welcome, {full_name}! 👋</h2>
+        <h2 style="margin: 0 0 16px; color: #ffffff;">Welcome, {full_name}! </h2>
         <p style="color: #9CA3AF; line-height: 1.6;">
           Your account has been created successfully on VHOA HOA Management System.
         </p>
@@ -206,7 +206,7 @@ def send_violation_email(
     inner_html = f"""
       <div style="padding: 40px 30px;">
         <div style="background: #7F1D1D; border-radius: 12px; padding: 16px; margin-bottom: 24px; text-align: center; color: #ffffff; font-weight: bold;">
-          ⚠️ Violation Notice
+          ️ Violation Notice
         </div>
         <p>Dear <strong>{resident_name}</strong>,</p>
         <p style="color: #9CA3AF;">A violation has been issued for your property.</p>
@@ -253,12 +253,12 @@ def send_booking_created_email(
     if status_type == "CONFIRMED":
         status_label = "Confirmed"
         status_color = "#14B8A6"  # Teal
-        status_banner = "🎉 Booking Confirmed"
+        status_banner = " Booking Confirmed"
         detail_msg = "Your booking is confirmed! No further action is required."
     else:
         status_label = "Payment Due"
         status_color = "#F59E0B"  # Orange/yellow
-        status_banner = "⚠️ Payment Due"
+        status_banner = "️ Payment Due"
         detail_msg = f"Your booking is pending payment. Please make a payment of <strong>${fee_amount}</strong> by <strong>{payment_due_date}</strong> to confirm your slot."
 
     inner_html = f"""
@@ -312,7 +312,7 @@ def send_payment_received_email(
     inner_html = f"""
       <div style="padding: 40px 30px;">
         <div style="background: #14B8A6; border-radius: 12px; padding: 16px; margin-bottom: 24px; text-align: center; color: #000000; font-weight: bold; font-size: 18px;">
-          💳 Payment Received & Confirmed
+           Payment Received & Confirmed
         </div>
         <p>Hello,</p>
         <p style="color: #9CA3AF; line-height: 1.6;">
@@ -359,7 +359,7 @@ def send_general_payment_receipt_email(
     inner_html = f"""
       <div style="padding: 40px 30px;">
         <div style="background: #14B8A6; border-radius: 12px; padding: 16px; margin-bottom: 24px; text-align: center; color: #000000; font-weight: bold; font-size: 18px;">
-          💳 Payment Successful
+           Payment Successful
         </div>
         <p>Hello {payer_name},</p>
         <p style="color: #9CA3AF; line-height: 1.6;">
@@ -434,7 +434,7 @@ def send_invite_email(to_email: str, full_name: str, temp_password: str, communi
     role_label = role_name.replace('_', ' ').title()
     inner_html = f"""
       <div style="padding: 40px 30px;">
-        <h2 style="margin: 0 0 16px; color: #ffffff;">Hello, {full_name}! 👋</h2>
+        <h2 style="margin: 0 0 16px; color: #ffffff;">Hello, {full_name}! </h2>
         <p style="color: #9CA3AF; line-height: 1.6;">
           You have been invited to join the community <strong>{community_name}</strong> as a <strong>{role_label}</strong> on the VHOA Portal.
         </p>
@@ -470,7 +470,7 @@ def send_association_email(to_email: str, full_name: str, community_name: str, r
     role_label = role_name.replace('_', ' ').title()
     inner_html = f"""
       <div style="padding: 40px 30px;">
-        <h2 style="margin: 0 0 16px; color: #ffffff;">Hello, {full_name}! 👋</h2>
+        <h2 style="margin: 0 0 16px; color: #ffffff;">Hello, {full_name}! </h2>
         <p style="color: #9CA3AF; line-height: 1.6;">
           You have been added to the community <strong>{community_name}</strong> as a <strong>{role_label}</strong> on the VHOA Portal.
         </p>
@@ -502,11 +502,11 @@ def send_pool_status_email(
     subject = f"VHOA Portal — {amenity_name} Status Update in {community_name}"
     
     if pool_open:
-        status_banner = "🏊 Pool is NOW OPEN!"
+        status_banner = " Pool is NOW OPEN!"
         status_color = "#14B8A6"  # Teal
         status_details = f"Great news! The pool/amenity <strong>{amenity_name}</strong> is now open and available for bookings."
     else:
-        status_banner = "⚠️ Pool is TEMPORARILY CLOSED"
+        status_banner = "️ Pool is TEMPORARILY CLOSED"
         status_color = "#EF4444"  # Red
         if tentative_date:
             status_details = f"The pool/amenity <strong>{amenity_name}</strong> is temporarily closed. It is tentatively scheduled to reopen on <strong>{tentative_date}</strong>."
@@ -551,11 +551,11 @@ def send_service_request_created_email(
     """Send email confirmation/notification when a service request is created"""
     subject = f"VHOA Portal — New Service Request #{request_id}: {title}"
     if is_admin:
-        banner = "🛠️ New Service Request Submitted"
+        banner = "️ New Service Request Submitted"
         banner_color = "#3B82F6"  # Blue
         heading = "A new service request has been submitted in your community."
     else:
-        banner = "✅ Service Request Submitted"
+        banner = " Service Request Submitted"
         banner_color = "#14B8A6"  # Teal
         heading = "Your service request has been successfully submitted."
 
@@ -627,7 +627,7 @@ def send_service_request_status_update_email(
     inner_html = f"""
       <div style="padding: 40px 30px;">
         <div style="background: {banner_color}; border-radius: 12px; padding: 16px; margin-bottom: 24px; text-align: center; color: #ffffff; font-weight: bold; font-size: 18px;">
-          🛠️ Request Updated to {new_status.replace('_', ' ')}
+          ️ Request Updated to {new_status.replace('_', ' ')}
         </div>
         <p>Hello {recipient_name},</p>
         <p style="color: #9CA3AF; line-height: 1.6; font-size: 14px;">

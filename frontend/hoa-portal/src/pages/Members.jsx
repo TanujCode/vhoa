@@ -163,7 +163,7 @@ const Members = ({ community, user }) => {
         community_id: community.community_id
       });
 
-      alert("✅ Invitation Sent Successfully!");
+      alert(" Invitation Sent Successfully!");
       setShowInviteModal(false);
       setInviteForm({
         firstName: '',
@@ -276,7 +276,7 @@ const Members = ({ community, user }) => {
       await API.put(`/user/${userId}/status`, {
         account_status: newStatus
       });
-      alert(`✅ Account status successfully updated to ${newStatus === 'ACTIVE' ? 'Active' : 'Inactive'}!`);
+      alert(` Account status successfully updated to ${newStatus === 'ACTIVE' ? 'Active' : 'Inactive'}!`);
       fetchMembers();
     } catch (err) {
       console.error('Status update error:', err);
@@ -288,7 +288,7 @@ const Members = ({ community, user }) => {
     if (await window.customConfirm(`Are you sure you want to permanently delete/remove ${memberName} from the community?`)) {
       try {
         await API.delete(`/user/${userId}`);
-        alert("✅ Member successfully deleted.");
+        alert(" Member successfully deleted.");
         fetchMembers();
       } catch (err) {
         console.error("Delete member error:", err);
@@ -390,7 +390,7 @@ const Members = ({ community, user }) => {
         role_name: mappedRole
       });
 
-      alert("✅ Member details successfully updated!");
+      alert(" Member details successfully updated!");
       setShowEditModal(false);
       setEditingMember(null);
       setIdFile(null);

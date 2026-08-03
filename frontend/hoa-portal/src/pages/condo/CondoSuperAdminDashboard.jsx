@@ -186,7 +186,7 @@ export default function CondoSuperAdminDashboard({ defaultSection, selectedCommu
 
   const handleVerifyContractCode = async () => {
     if (!contractCodeInput || !contractCodeInput.trim()) {
-      setContractMsg("❌ Please enter a contract code.");
+      setContractMsg(" Please enter a contract code.");
       return;
     }
 
@@ -201,7 +201,7 @@ export default function CondoSuperAdminDashboard({ defaultSection, selectedCommu
       navigate(`/condo/onboard?code=${contractCodeInput.trim().toUpperCase()}`);
     } catch (err) {
       setContractVerified(false);
-      setContractMsg(`❌ ${err.response?.data?.detail || "Invalid or inactive contract code."}`);
+      setContractMsg(` ${err.response?.data?.detail || "Invalid or inactive contract code."}`);
     } finally {
       setVerifyingContractCode(false);
     }
@@ -212,7 +212,7 @@ export default function CondoSuperAdminDashboard({ defaultSection, selectedCommu
     setBuildingErrors({});
 
     if (!contractVerified) {
-      setContractMsg("❌ Please verify contract code first.");
+      setContractMsg(" Please verify contract code first.");
       return;
     }
     
@@ -774,7 +774,7 @@ export default function CondoSuperAdminDashboard({ defaultSection, selectedCommu
             <div className="flex-1 min-w-0 relative z-10 space-y-4">
               <div>
                 <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white leading-tight">
-                  Welcome back, {currentUser?.first_name || 'Admin'}! 👋
+                  Welcome back, {currentUser?.first_name || 'Admin'}! 
                 </h1>
                 <p className="text-slate-500 dark:text-gray-450 text-xs mt-1 font-medium">
                   System Console • Real-Time Workspace Summary
@@ -933,7 +933,7 @@ export default function CondoSuperAdminDashboard({ defaultSection, selectedCommu
                       <div className="mt-1 flex flex-col">
                         <span className="text-sm font-black text-slate-900 dark:text-white font-mono">{loading ? '…' : `${pendingRequests} Pending`}</span>
                         <span className={`text-[9px] mt-0.5 font-semibold ${pendingRequests > 0 ? 'text-amber-500' : 'text-emerald-500'}`}>
-                          {loading ? '…' : (pendingRequests > 0 ? '⚠️ Action Required' : '✓ Queue Clear')}
+                          {loading ? '…' : (pendingRequests > 0 ? '️ Action Required' : ' Queue Clear')}
                         </span>
                       </div>
                     </div>
@@ -1048,14 +1048,14 @@ export default function CondoSuperAdminDashboard({ defaultSection, selectedCommu
                       disabled={verifyingContractCode || contractVerified}
                       className="px-4 py-3 bg-blue-600 hover:bg-blue-500 disabled:bg-blue-800 text-white rounded-xl text-xs font-bold transition cursor-pointer shadow-md shadow-blue-500/25 whitespace-nowrap"
                     >
-                      {verifyingContractCode ? "Checking..." : contractVerified ? "Verified ✅" : "Verify Code"}
+                      {verifyingContractCode ? "Checking..." : contractVerified ? "Verified " : "Verify Code"}
                     </button>
                   </div>
                 </div>
 
                 {contractMsg && (
                   <div className={`p-3 rounded-xl text-xs font-medium ${
-                    contractMsg.includes('✅') 
+                    contractMsg.includes('') 
                       ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400' 
                       : 'bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400'
                   }`}>

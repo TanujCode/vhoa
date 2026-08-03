@@ -88,10 +88,10 @@ def run_db_upgrades():
         db.execute(text("ALTER TABLE condo_users ADD COLUMN IF NOT EXISTS address_proof_url TEXT;"))
         
         db.commit()
-        print("✅ Database DDL upgrades completed.")
+        print(" Database DDL upgrades completed.")
     except Exception as e:
         db.rollback()
-        print(f"❌ Database DDL upgrades failed: {e}")
+        print(f" Database DDL upgrades failed: {e}")
     finally:
         db.close()
 
@@ -125,7 +125,7 @@ def seed_roles():
         db.commit()
         db.execute(text("SELECT setval('roles_role_id_seq', COALESCE((SELECT MAX(role_id) FROM roles), 1) + 1, false);"))
         db.commit()
-        print("✅ Roles seeded.")
+        print(" Roles seeded.")
     finally:
         db.close()
 
@@ -145,7 +145,7 @@ def seed_sr_statuses():
     db = SessionLocal()
     try:
         _seed(db)
-        print("✅ Service Request statuses seeded.")
+        print(" Service Request statuses seeded.")
     finally:
         db.close()
 
@@ -182,7 +182,7 @@ def seed_condo_sr_statuses():
     db = SessionLocal()
     try:
         _seed(db)
-        print("✅ Condo Service Request statuses seeded.")
+        print(" Condo Service Request statuses seeded.")
     finally:
         db.close()
 
@@ -192,7 +192,7 @@ def seed_default_condo_service_types_for_all_communities():
     db = SessionLocal()
     try:
         _seed(db)
-        print("✅ Condo Default service types seeded.")
+        print(" Condo Default service types seeded.")
     finally:
         db.close()
 

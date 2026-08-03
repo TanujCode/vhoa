@@ -54,7 +54,7 @@ const SearchAndJoinHOA = () => {
                 const data = Array.isArray(res.data) ? res.data : (res.data.communities || []);
                 setCommunities(data);
             } catch (err) {
-                console.error("🚨 Full Axios Error Object:", err);
+                console.error(" Full Axios Error Object:", err);
                 if (err.response) {
                     setApiError(`Backend Error: ${err.response.data?.detail || err.response.statusText}`);
                 } else if (err.request) {
@@ -100,9 +100,9 @@ const SearchAndJoinHOA = () => {
             }
         });
         
-        alert("✅ " + (res.data.message || "Request submitted successfully!"));
+        alert(" " + (res.data.message || "Request submitted successfully!"));
         
-        // 🔥 FIXED THE TYPO HERE:
+        //  FIXED THE TYPO HERE:
         setPassCode('');
         setUnitNo('');
         setIdProof(null);
@@ -118,7 +118,7 @@ const SearchAndJoinHOA = () => {
             alert("Session expired. Please login again.");
             navigate('/login');
         } else {
-            alert("❌ " + (err.response?.data?.detail || "Submission failed. Please try again."));
+            alert(" " + (err.response?.data?.detail || "Submission failed. Please try again."));
         }
     } finally {
         setLoading(false);

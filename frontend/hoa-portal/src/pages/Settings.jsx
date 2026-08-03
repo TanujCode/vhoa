@@ -189,7 +189,7 @@ const Settings = ({ community, onCommunityUpdate }) => {
         <div className="flex items-center gap-3">
           {saved && (
             <span className="text-emerald-600 dark:text-emerald-400 text-xs font-semibold animate-pulse">
-              ✓ Settings saved!
+               Settings saved!
             </span>
           )}
           <button
@@ -239,7 +239,7 @@ const Settings = ({ community, onCommunityUpdate }) => {
           </div>
 
           <div className="mt-4 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-500/30 rounded-2xl p-4 text-sm text-blue-600 dark:text-blue-400">
-            ✓ Applies to: Dashboard, Audit History, Payment dates, Violation dates, Email notifications
+             Applies to: Dashboard, Audit History, Payment dates, Violation dates, Email notifications
           </div>
         </div>
       </div>

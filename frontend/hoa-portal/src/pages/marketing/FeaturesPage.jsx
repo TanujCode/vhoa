@@ -94,7 +94,7 @@ export default function FeaturesPage() {
   // 4. AI Chat state
   const chatMessages = [
     { sender: 'ai', text: "Hello! I'm the NestBloq AI. Ask me anything about rules, scheduling, or payments." },
-    { sender: 'user', text: "🗓️ Trash pickup schedule?" },
+    { sender: 'user', text: "️ Trash pickup schedule?" },
     { sender: 'ai', text: "Trash pickup is every Tuesday & Friday at 7:00 AM. Recyclables on Wednesdays." }
   ];
 
@@ -289,7 +289,7 @@ export default function FeaturesPage() {
           {chatMessages.map((msg, i) => (
             <div key={i} className={`flex gap-2 items-start text-[11px] ${msg.sender === 'user' ? 'justify-end' : ''}`}>
               {msg.sender === 'ai' && (
-                <div className="w-6 h-6 rounded-lg bg-violet-500/10 dark:bg-violet-500/20 border border-violet-250/20 dark:border-violet-500/30 flex items-center justify-center text-[10px] shrink-0">🤖</div>
+                <div className="w-6 h-6 rounded-lg bg-violet-500/10 dark:bg-violet-500/20 border border-violet-250/20 dark:border-violet-500/30 flex items-center justify-center text-[10px] shrink-0"></div>
               )}
               <div className={`px-3 py-2 rounded-xl max-w-[85%] leading-relaxed ${msg.sender === 'user' ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white rounded-tr-none' : 'bg-white dark:bg-white/[0.05] border border-slate-200 dark:border-white/[0.08] text-slate-800 dark:text-slate-200 rounded-tl-none shadow-[0_1px_3px_rgba(0,0,0,0.01)]'}`}>
                 {msg.text}
@@ -300,7 +300,7 @@ export default function FeaturesPage() {
         <div className="space-y-1.5">
           <p className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">Try asking:</p>
           <div className="flex flex-wrap gap-1.5">
-            {["🗓️ Trash schedule?", "💳 Pay dues?", "🏊 Pool rules?"].map((q, i) => (
+            {["️ Trash schedule?", " Pay dues?", " Pool rules?"].map((q, i) => (
               <span key={i} className="px-2.5 py-1 bg-violet-500/10 border border-violet-500/20 rounded-lg text-[9px] font-semibold text-violet-650 dark:text-violet-300 select-none cursor-pointer hover:border-violet-400/40">{q}</span>
             ))}
           </div>
@@ -326,7 +326,7 @@ export default function FeaturesPage() {
                 t.status === 'done' ? 'bg-blue-500/15 text-blue-600 dark:text-blue-405 border border-blue-500/20' :
                 t.status === 'progress' ? 'bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20' :
                 'bg-violet-500/15 text-violet-600 dark:text-violet-405 border border-violet-500/20'
-              }`}>{t.status === 'done' ? '✓ Resolved' : t.status === 'progress' ? '⏳ In Progress' : `${t.priority} Priority`}</span>
+              }`}>{t.status === 'done' ? ' Resolved' : t.status === 'progress' ? '⏳ In Progress' : `${t.priority} Priority`}</span>
               <span className="text-[8px] text-slate-500">{t.category}</span>
             </div>
             <p className="text-[10px] font-semibold text-slate-800 dark:text-slate-200 leading-snug">{t.title}</p>
@@ -389,7 +389,7 @@ export default function FeaturesPage() {
       </div>
       <div className="p-5 flex-1 space-y-3 overflow-auto">
         <div className="flex gap-1.5 p-1 bg-white/40 dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.06] rounded-xl shadow-[0_1px_3px_rgba(0,0,0,0.01)]">
-          {[{ id: 'board', label: '👑 Board' }, { id: 'manager', label: '💼 Manager' }, { id: 'resident', label: '🏠 Owner' }].map(role => (
+          {[{ id: 'board', label: ' Board' }, { id: 'manager', label: ' Manager' }, { id: 'resident', label: ' Owner' }].map(role => (
             <button key={role.id} onClick={() => setSelectedRole(role.id)}
               className={`flex-1 py-1.5 text-[9px] font-bold rounded-lg transition-all ${selectedRole === role.id ? 'bg-gradient-to-r from-violet-500 to-indigo-600 text-white shadow' : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'}`}>
               {role.label}
@@ -411,7 +411,7 @@ export default function FeaturesPage() {
             {['Audit Logs', 'Bylaw Repository', 'Vendor Contracts', 'Full Financials'].map((item, i) => (
               <div key={i} className="flex items-center justify-between px-3 py-2 bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.05] rounded-lg shadow-[0_1px_3px_rgba(0,0,0,0.01)]">
                 <span className="text-[10px] font-semibold text-slate-800 dark:text-slate-300">{item}</span>
-                <span className="text-[8px] px-1.5 py-0.5 bg-emerald-500/10 dark:bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 rounded font-bold">✓ Visible</span>
+                <span className="text-[8px] px-1.5 py-0.5 bg-emerald-500/10 dark:bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 rounded font-bold"> Visible</span>
               </div>
             ))}
           </div>
@@ -421,12 +421,12 @@ export default function FeaturesPage() {
             {['Work Orders', 'Resident Roster', 'Vendor Dispatch', 'Amenity Calendar'].map((item, i) => (
               <div key={i} className="flex items-center justify-between px-3 py-2 bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.05] rounded-lg shadow-[0_1px_3px_rgba(0,0,0,0.01)]">
                 <span className="text-[10px] font-semibold text-slate-800 dark:text-slate-300">{item}</span>
-                <span className="text-[8px] px-1.5 py-0.5 bg-emerald-500/10 dark:bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 rounded font-bold">✓ Visible</span>
+                <span className="text-[8px] px-1.5 py-0.5 bg-emerald-500/10 dark:bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 rounded font-bold"> Visible</span>
               </div>
             ))}
             <div className="flex items-center justify-between px-3 py-2 bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.05] rounded-lg shadow-[0_1px_3px_rgba(0,0,0,0.01)]">
               <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400">Reserve Funds</span>
-              <span className="text-[8px] px-1.5 py-0.5 bg-red-500/10 dark:bg-red-500/15 text-red-600 dark:text-red-450 border border-red-500/20 rounded font-bold">✗ Hidden</span>
+              <span className="text-[8px] px-1.5 py-0.5 bg-red-500/10 dark:bg-red-500/15 text-red-600 dark:text-red-450 border border-red-500/20 rounded font-bold"> Hidden</span>
             </div>
           </div>
         )}
@@ -435,12 +435,12 @@ export default function FeaturesPage() {
             {['My Payments', 'Amenity Bookings', 'Announcements', 'My Violations'].map((item, i) => (
               <div key={i} className="flex items-center justify-between px-3 py-2 bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.05] rounded-lg shadow-[0_1px_3px_rgba(0,0,0,0.01)]">
                 <span className="text-[10px] font-semibold text-slate-800 dark:text-slate-300">{item}</span>
-                <span className="text-[8px] px-1.5 py-0.5 bg-emerald-500/10 dark:bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 rounded font-bold">✓ Visible</span>
+                <span className="text-[8px] px-1.5 py-0.5 bg-emerald-500/10 dark:bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 rounded font-bold"> Visible</span>
               </div>
             ))}
             <div className="flex items-center justify-between px-3 py-2 bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.05] rounded-lg shadow-[0_1px_3px_rgba(0,0,0,0.01)]">
               <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400">Audit Logs</span>
-              <span className="text-[8px] px-1.5 py-0.5 bg-red-500/10 dark:bg-red-500/15 text-red-600 dark:text-red-450 border border-red-500/20 rounded font-bold">✗ Restricted</span>
+              <span className="text-[8px] px-1.5 py-0.5 bg-red-500/10 dark:bg-red-500/15 text-red-600 dark:text-red-450 border border-red-500/20 rounded font-bold"> Restricted</span>
             </div>
           </div>
         )}
@@ -518,7 +518,7 @@ export default function FeaturesPage() {
           <div className="space-y-2.5">
             <div>
               <div className="flex justify-between text-[9px] text-slate-500 dark:text-slate-400 font-semibold mb-1">
-                <span>✅ Approve (Yes)</span><span>{voteCounts.yes} votes ({yesPercent}%)</span>
+                <span> Approve (Yes)</span><span>{voteCounts.yes} votes ({yesPercent}%)</span>
               </div>
               <div className="h-2 bg-slate-200 dark:bg-white/5 rounded-full overflow-hidden">
                 <div className="bg-indigo-650 h-full rounded-full transition-all duration-700" style={{ width: `${yesPercent}%` }} />
@@ -526,7 +526,7 @@ export default function FeaturesPage() {
             </div>
             <div>
               <div className="flex justify-between text-[9px] text-slate-500 dark:text-slate-400 font-semibold mb-1">
-                <span>❌ Reject (No)</span><span>{voteCounts.no} votes ({noPercent}%)</span>
+                <span> Reject (No)</span><span>{voteCounts.no} votes ({noPercent}%)</span>
               </div>
               <div className="h-2 bg-slate-200 dark:bg-white/5 rounded-full overflow-hidden">
                 <div className="bg-violet-650 h-full rounded-full transition-all duration-700" style={{ width: `${noPercent}%` }} />

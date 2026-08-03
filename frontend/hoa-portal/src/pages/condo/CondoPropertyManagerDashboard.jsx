@@ -263,7 +263,7 @@ export default function CondoPropertyManagerDashboard({ user, setActivePage }) {
         <div className="flex-1 min-w-0 relative z-10 space-y-4">
           <div>
             <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white leading-tight">
-              Welcome back, {user?.first_name || 'Manager'}! 👋
+              Welcome back, {user?.first_name || 'Manager'}! 
             </h1>
             <p className="text-slate-500 dark:text-gray-455 text-xs mt-1 font-medium flex items-center gap-1">
               <ShieldCheck size={13} className="text-blue-500" /> Building Command Center · Operations Dashboard
@@ -422,7 +422,7 @@ export default function CondoPropertyManagerDashboard({ user, setActivePage }) {
                 <span className="text-xs font-extrabold text-slate-800 dark:text-white">{requests.length} resident requests awaiting review</span>
               </div>
               <span className={`px-2 py-0.5 rounded-lg text-[9px] font-black ${requests.length > 0 ? 'bg-amber-500/10 text-amber-600' : 'bg-emerald-500/10 text-emerald-500'}`}>
-                {requests.length > 0 ? '⚠️ Review Needed' : '✓ Clear'}
+                {requests.length > 0 ? '️ Review Needed' : ' Clear'}
               </span>
             </div>
           </div>
@@ -501,7 +501,7 @@ export default function CondoPropertyManagerDashboard({ user, setActivePage }) {
                               rel="noreferrer"
                               className="px-2 py-0.5 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-455 hover:underline font-bold text-[10px]"
                             >
-                              ID Proof 📄
+                              ID Proof 
                             </a>
                           )}
                           {r.address_proof_url && (
@@ -511,7 +511,7 @@ export default function CondoPropertyManagerDashboard({ user, setActivePage }) {
                               rel="noreferrer"
                               className="px-2 py-0.5 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-455 hover:underline font-bold text-[10px]"
                             >
-                              Addr Proof 📄
+                              Addr Proof 
                             </a>
                           )}
                         </td>
@@ -598,10 +598,10 @@ export default function CondoPropertyManagerDashboard({ user, setActivePage }) {
               </div>
               <div className="flex gap-4">
                 <a href={getDocUrl(selectedReq.id_proof_url)} target="_blank" rel="noreferrer" className="flex-1 p-2.5 bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl text-center hover:border-blue-500 transition font-bold text-xs text-blue-650 dark:text-blue-450 shadow-xs">
-                  Open ID Proof 📄
+                  Open ID Proof 
                 </a>
                 <a href={getDocUrl(selectedReq.address_proof_url)} target="_blank" rel="noreferrer" className="flex-1 p-2.5 bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl text-center hover:border-emerald-500 transition font-bold text-xs text-emerald-605 dark:text-emerald-450 shadow-xs">
-                  Open Address Proof 📄
+                  Open Address Proof 
                 </a>
               </div>
             </div>
@@ -652,11 +652,11 @@ export default function CondoPropertyManagerDashboard({ user, setActivePage }) {
               onClick={() => setShowInviteModal(false)}
               className="absolute right-4 top-4 p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-white/10 text-slate-400 hover:text-slate-600 cursor-pointer"
             >
-              ✕
+              
             </button>
             
             <h3 className="text-lg font-bold mb-1 flex items-center gap-2 uppercase tracking-wide">
-              <span>👤</span> Invite Resident
+              <span></span> Invite Resident
             </h3>
             <p className="text-xs text-slate-500 dark:text-gray-400 mb-5">
               Create a pre-verified resident account and mail their temporary password.

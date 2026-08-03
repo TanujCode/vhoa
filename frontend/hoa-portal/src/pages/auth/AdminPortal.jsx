@@ -11,7 +11,7 @@ const cleanDescription = (desc) => {
   clean = clean.replace(/User:\s+([^(]+)\s+\([^)]+\)/gi, '$1');
   clean = clean.replace(/Service Request\s+(\d+)/gi, 'Service Request #$1');
   clean = clean.replace(/\.?\s*Time\s*\(ET\):.*$/gi, '');
-  clean = clean.replace(/\s+->\s+/g, ' ➔ ');
+  clean = clean.replace(/\s+->\s+/g, '  ');
   return clean.trim();
 };
 
@@ -227,7 +227,7 @@ const AdminPortal = () => {
     try {
       setLoading(true);
 
-      // ⚡ INSTANT: Show cached user from localStorage first to avoid blank screen
+      //  INSTANT: Show cached user from localStorage first to avoid blank screen
       const rawUser = localStorage.getItem('user') || sessionStorage.getItem('user');
       let cachedUser = null;
       if (rawUser && rawUser !== 'undefined' && rawUser !== 'null') {
@@ -256,7 +256,7 @@ const AdminPortal = () => {
         }
       }
 
-      console.log("🚀 AdminPortal Synchronized -> Role ID:", userRoleId, "Community ID:", userCommunityId);
+      console.log(" AdminPortal Synchronized -> Role ID:", userRoleId, "Community ID:", userCommunityId);
 
       let mappedRole = 'resident';
       if (userRoleId === 1) mappedRole = 'super_admin';
@@ -290,10 +290,10 @@ const AdminPortal = () => {
 
       setCommunities(communitiesData || []);
 
-      // 🔥 ROUTE GUARD FOR UNASSIGNED RESIDENTS ONLY
-      // Ab board member yahan nahi fasega kyunki uski ID upar 7 set ho chuki hai
+      //  ROUTE GUARD FOR UNASSIGNED RESIDENTS ONLY
+
       if ((userRoleId === 4 || userRoleId === 3) && (!userCommunityId || userCommunityId === 0)) {
-        console.log(`⚠️ Redirecting unassigned profile to wizard layout...`);
+        console.log(`️ Redirecting unassigned profile to wizard layout...`);
         setLoading(false);
         if (freshUser.account_status === 'PENDING_APPROVAL') {
           navigate('/waiting-approval');

@@ -83,7 +83,7 @@ class ViolationStatusUpdate(BaseModel):
     remarks:             str | None = None
 
 
-# ── Dispute — Member karta hai ────────────────
+
 class DisputeCreate(BaseModel):
     """
     The Member shall file a dispute within 30 days.
@@ -99,7 +99,7 @@ class DisputeCreate(BaseModel):
         return v.strip()
 
 
-# ── Dispute Resolve — Board karta hai ─────────
+
 class DisputeResolve(BaseModel):
     """
     The Board shall resolve the dispute within 30 days.
@@ -107,7 +107,7 @@ Resolution is mandatory.
     """
     dispute_resolution: str
     new_status_id:      int | None = None
-    # Agar status change karna hai — e.g. CLOSED ya RESOLVED
+
 
     @field_validator("dispute_resolution")
     @classmethod

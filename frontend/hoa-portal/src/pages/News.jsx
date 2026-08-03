@@ -88,7 +88,7 @@ const NewsModal = ({ communityId, onClose, onSuccess }) => {
                 <input type="checkbox" checked={form.is_pinned}
                   onChange={e => setForm({...form, is_pinned: e.target.checked})}
                   className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-teal-500" />
-                <span className="text-sm text-slate-600 dark:text-gray-300">📌 Pin this post</span>
+                <span className="text-sm text-slate-600 dark:text-gray-300"> Pin this post</span>
               </label>
             </div>
           </div>

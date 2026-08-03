@@ -52,7 +52,7 @@ Resident / Board:
             )
 
     else:
-        # Resident → access nahi
+
         raise HTTPException(
             status_code=403,
             detail="You do not have permission to view audit logs."
