@@ -224,7 +224,7 @@ const Settings = ({ community, onCommunityUpdate }) => {
 
           <div>
             <label className="block text-sm text-slate-500 dark:text-gray-400 mb-2">Select Timezone</label>
-            <div className="relative">
+            <div className="relative max-w-md">
               <select
                 value={form.time_zone}
                 onChange={e => setForm({...form, time_zone: e.target.value})}

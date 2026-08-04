@@ -226,8 +226,15 @@ export default function ScreeningHub({ user, setActivePage, selectedPropertyFilt
     setErrors(prev => ({ ...prev, [field]: error }));
   };
 
-  const selectedUnit = units.find(u => String(u.unit_id) === String(selectedUnitId));
-  const isAllOccupied = units.length > 0 && units.every(u => u.status === 'OCCUPIED');
+  const filteredUnits = units.filter(u => 
+    selectedPropertyFilterId === 'all' || 
+    String(u.property_id) === String(selectedPropertyFilterId) ||
+    String(u.unit_id) === String(inviteUnitId) ||
+    String(u.unit_id) === String(selectedUnitId)
+  );
+
+  const selectedUnit = filteredUnits.find(u => String(u.unit_id) === String(selectedUnitId));
+  const isAllOccupied = filteredUnits.length > 0 && filteredUnits.every(u => u.status === 'OCCUPIED');
 
   useEffect(() => {
     if (isLandlord) {
@@ -236,6 +243,21 @@ export default function ScreeningHub({ user, setActivePage, selectedPropertyFilt
       fetchTenantScreeningData();
     }
   }, [isLandlord]);
+
+  useEffect(() => {
+    if (isLandlord && units.length > 0 && inviteModalOpen) {
+      const propUnits = units.filter(u => 
+        selectedPropertyFilterId === 'all' || String(u.property_id) === String(selectedPropertyFilterId)
+      );
+      if (propUnits.length > 0) {
+        if (!inviteUnitId || !propUnits.some(u => String(u.unit_id) === String(inviteUnitId))) {
+          setInviteUnitId(propUnits[0].unit_id.toString());
+        }
+      } else {
+        setInviteUnitId('');
+      }
+    }
+  }, [selectedPropertyFilterId, units, isLandlord, inviteModalOpen]);
 
   useEffect(() => {
     if (!isLandlord && user && !activeInviteAppId) {
@@ -1406,10 +1428,10 @@ export default function ScreeningHub({ user, setActivePage, selectedPropertyFilt
                   onChange={e => setInviteUnitId(e.target.value)} 
                   className="w-full bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 focus:border-blue-500 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none cursor-pointer"
                 >
-                  {units.length === 0 ? (
+                  {filteredUnits.length === 0 ? (
                     <option value="">No vacant units available</option>
                   ) : (
-                    units.map(u => (
+                    filteredUnits.map(u => (
                       <option key={u.unit_id} value={u.unit_id}>
                         Unit {u.unit_number} at {u.propertyName} (${u.rent_amount}/mo)
                       </option>

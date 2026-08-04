@@ -920,6 +920,95 @@ export default function LandingPage() {
   const [activeFeature, setActiveFeature] = useState(0);
   const [activeSlide, setActiveSlide] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
+  const [activeDashboard, setActiveDashboard] = useState(0);
+  const [dashboardFading, setDashboardFading] = useState(false);
+  // Auto-cycle dashboard portal every 5.0s
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setDashboardFading(true);
+      setTimeout(() => {
+        setActiveDashboard(prev => (prev + 1) % 3);
+        setDashboardFading(false);
+      }, 350);
+    }, 5000);
+    return () => clearInterval(timer);
+  }, []);
+  // Portal data configuration
+  const dashboardData = [
+    {
+      url: 'app.nestbloq.com/hoa/dashboard',
+      managerName: 'John Smith',
+      managerRole: 'PROPERTY MANAGER',
+      managerInitials: 'JS',
+      managerColor: 'bg-blue-500',
+      contextLabel: 'MY COMMUNITY',
+      communityName: 'Willow Creek Community',
+      communityCode: 'VIK774 ▾',
+      welcomeMsg: 'Welcome back, John! 🏘️',
+      subMsg: "Here is a summary of your community's active operations today.",
+      badge1: 'Code: VIK774', badge1color: isDark ? 'bg-white/5 text-slate-300 border-white/10' : 'bg-slate-100 text-slate-600 border-slate-200',
+      badge2: 'ACTIVE PM LICENSE', badge2color: 'text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 border-emerald-500/20',
+      address: '123 Willow Creek Way, Sunnyvale, CA 94086',
+      stats: [
+        { val: '3', label: 'Members', color: 'text-blue-600 dark:text-blue-400' },
+        { val: '2', label: 'Violations', color: 'text-amber-600 dark:text-amber-500' },
+        { val: '1', label: 'Service Req', color: 'text-blue-600 dark:text-blue-400' },
+        { val: '120', label: 'Total Units', color: 'text-indigo-600 dark:text-indigo-400' },
+      ],
+      leftPanelTitle: 'Quick Links',
+      rightPanelTitle: 'Calendar Schedule',
+      rightPanelSub: 'View Calendar',
+    },
+    {
+      url: 'app.nestbloq.com/rental/dashboard',
+      managerName: 'James Mitchell',
+      managerRole: 'LANDLORD',
+      managerInitials: 'JM',
+      managerColor: 'bg-teal-500',
+      contextLabel: 'MY PORTFOLIO',
+      communityName: 'All Properties',
+      communityCode: '3 Props ▾',
+      welcomeMsg: 'Welcome back, James! 🔑',
+      subMsg: 'Rental Portfolio Summary · Real-Time Property Overview',
+      badge1: 'Props Loan: 3', badge1color: isDark ? 'bg-white/5 text-slate-300 border-white/10' : 'bg-slate-100 text-slate-600 border-slate-200',
+      badge2: 'ACTIVE', badge2color: 'text-teal-700 dark:text-teal-400 bg-teal-500/10 border-teal-500/20',
+      address: '742 Evergreen Terrace, Portland, OR 97201',
+      stats: [
+        { val: '3', label: 'Properties', color: 'text-teal-600 dark:text-teal-400' },
+        { val: '6', label: 'Total Units', color: 'text-blue-600 dark:text-blue-400' },
+        { val: '4', label: 'Tenants', color: 'text-violet-600 dark:text-violet-400' },
+        { val: '2', label: 'Open Tickets', color: 'text-amber-600 dark:text-amber-400' },
+      ],
+      leftPanelTitle: 'Rent Overview',
+      rightPanelTitle: 'Action Required',
+      rightPanelSub: 'Tenant Requests ●4',
+    },
+    {
+      url: 'app.nestbloq.com/condo/dashboard',
+      managerName: 'Robert Hayes',
+      managerRole: 'CONDO MANAGER',
+      managerInitials: 'RH',
+      managerColor: 'bg-amber-500',
+      contextLabel: 'MY BUILDING',
+      communityName: 'The Meridian Tower',
+      communityCode: 'MDN-01 ▾',
+      welcomeMsg: 'Welcome back, Robert! 🏙️',
+      subMsg: 'Condo Operations Overview · Building & Unit Management',
+      badge1: 'Bldg: MDN-01', badge1color: isDark ? 'bg-white/5 text-slate-300 border-white/10' : 'bg-slate-100 text-slate-600 border-slate-200',
+      badge2: 'FULLY OCCUPIED', badge2color: 'text-amber-700 dark:text-amber-400 bg-amber-500/10 border-amber-500/20',
+      address: '1450 Harbor Blvd, San Diego, CA 92101',
+      stats: [
+        { val: '48', label: 'Total Units', color: 'text-amber-600 dark:text-amber-400' },
+        { val: '46', label: 'Occupied', color: 'text-emerald-600 dark:text-emerald-400' },
+        { val: '3', label: 'Maintenance', color: 'text-red-600 dark:text-red-400' },
+        { val: '12', label: 'Bookings', color: 'text-blue-600 dark:text-blue-400' },
+      ],
+      leftPanelTitle: 'Unit Status Board',
+      rightPanelTitle: 'Upcoming Bookings',
+      rightPanelSub: 'View All',
+    },
+  ];
+  const pd = dashboardData[activeDashboard];
 
   const automationSlides = [
     {
@@ -1398,10 +1487,41 @@ export default function LandingPage() {
             ))}
           </div>
 
-          {/* ── DASHBOARD BROWSER MOCKUP ── */}
+          {/* ── DASHBOARD BROWSER MOCKUP — AUTO-ROTATING 3 PORTALS ── */}
           <div className="relative mt-14 animate-fade-in-up-delay-2">
             {/* Glow beneath the browser */}
             <div className="absolute -inset-x-20 -bottom-10 h-40 bg-gradient-to-t from-violet-600/20 via-indigo-500/10 to-transparent blur-2xl pointer-events-none rounded-full" />
+
+            {/* Portal Tab Switcher */}
+            <div className="flex items-center justify-center gap-2 mb-4">
+              {[
+                { label: '🏘️ HOA Portal', color: 'violet' },
+                { label: '🔑 Rental Portal', color: 'teal' },
+                { label: '🏙️ Condo Portal', color: 'amber' }
+              ].map((tab, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => { setDashboardFading(true); setTimeout(() => { setActiveDashboard(idx); setDashboardFading(false); }, 200); }}
+                  className={`px-3 py-1.5 rounded-full text-[11px] font-bold border transition-all duration-300 ${
+                    activeDashboard === idx
+                      ? tab.color === 'violet' ? 'bg-violet-600 text-white border-violet-600 shadow-md shadow-violet-500/30'
+                        : tab.color === 'teal' ? 'bg-teal-600 text-white border-teal-600 shadow-md shadow-teal-500/30'
+                        : 'bg-amber-500 text-white border-amber-500 shadow-md shadow-amber-500/30'
+                      : isDark ? 'bg-white/5 text-slate-400 border-white/10 hover:bg-white/10' : 'bg-slate-100 text-slate-500 border-slate-200 hover:bg-slate-200'
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
+              {/* Auto-cycle indicator dots */}
+              <div className="flex items-center gap-1 ml-2">
+                {[0,1,2].map(i => (
+                  <div key={i} className={`rounded-full transition-all duration-300 ${
+                    activeDashboard === i ? 'w-4 h-1.5 bg-violet-500' : 'w-1.5 h-1.5 bg-slate-300 dark:bg-slate-600'
+                  }`} />
+                ))}
+              </div>
+            </div>
 
             {/* Browser chrome wrapper */}
             <div className="relative rounded-t-2xl overflow-hidden border border-slate-200/60 dark:border-white/[0.08] shadow-[0_32px_80px_rgba(0,0,0,0.12)] dark:shadow-[0_32px_80px_rgba(0,0,0,0.5)] bg-white dark:bg-[#0B1929]">
@@ -1416,28 +1536,28 @@ export default function LandingPage() {
                 <div className="flex-1 mx-4">
                   <div className="bg-white dark:bg-[#090F16] rounded-md px-3 py-1 text-[10px] text-slate-400 dark:text-slate-500 flex items-center gap-2 max-w-xs mx-auto border border-slate-200 dark:border-white/[0.06]">
                     <div className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
-                    app.nestbloq.com/dashboard
+                    {pd.url}
                   </div>
                 </div>
               </div>
 
-              {/* Dashboard Layout */}
-              <div className="flex h-[480px] overflow-hidden bg-slate-50 dark:bg-[#090F16]">
-
+              {/* Dashboard Layout — fades between portals */}
+              <div
+                className="flex h-[480px] overflow-hidden bg-slate-50 dark:bg-[#090F16] transition-opacity duration-300"
+                style={{ opacity: dashboardFading ? 0 : 1 }}
+              >
                 {/* ── Sidebar ── */}
                 <aside className={`hidden sm:flex w-44 shrink-0 border-r flex flex-col transition-colors duration-300 ${
                   isDark ? 'bg-[#0B132B] border-white/[0.06]' : 'bg-[#E8F1FC] border-slate-200/80'
                 }`}>
-                  {/* Logo */}
                   <div className={`p-4 border-b flex items-center shrink-0 ${isDark ? 'border-white/[0.06]' : 'border-slate-200/80'}`}>
                     <Logo className="h-5 w-auto" variant={isDark ? "white" : "default"} />
                   </div>
-                  {/* Nav items */}
                   <div className="p-2.5 shrink-0">
                     <span className={`text-[7px] font-extrabold uppercase tracking-widest ${isDark ? 'text-slate-500' : 'text-slate-600'}`}>MAIN MENU</span>
                   </div>
                   <nav className="flex-1 px-2 pb-2 space-y-0.5 text-[9px] font-medium overflow-y-auto custom-scrollbar">
-                    {[
+                    {(activeDashboard === 0 ? [
                       { label: 'Dashboard', icon: LayoutDashboard, active: true },
                       { label: 'Members', icon: Users, active: false },
                       { label: 'Violations', icon: Scale, active: false },
@@ -1449,46 +1569,46 @@ export default function LandingPage() {
                       { label: 'Reports', icon: TrendingUp, active: false },
                       { label: 'Meetings & Surveys', icon: CalendarRange, active: false },
                       { label: 'News & Announcements', icon: Megaphone, active: false },
-                    ].map((item) => {
+                    ] : activeDashboard === 1 ? [
+                      { label: 'Landlord Dashboard', icon: LayoutDashboard, active: true },
+                      { label: 'Properties & Units', icon: Building2, active: false },
+                      { label: 'Tenant Screening', icon: UserCheck, active: false },
+                      { label: 'Lease Agreements', icon: FileText, active: false },
+                      { label: 'Tenants', icon: Users, active: false },
+                      { label: 'Payments Ledger', icon: Wallet, active: false },
+                      { label: 'Maintenance Desk', icon: Wrench, active: false },
+                      { label: 'Contractors / Vendors', icon: Truck, active: false },
+                      { label: 'Reports', icon: TrendingUp, active: false },
+                    ] : [
+                      { label: 'Condo Dashboard', icon: LayoutDashboard, active: true },
+                      { label: 'Unit Owners', icon: Users, active: false },
+                      { label: 'Amenity Booking', icon: CalendarRange, active: false },
+                      { label: 'Guest Access & OTPs', icon: Shield, active: false },
+                      { label: 'Maintenance', icon: Wrench, active: false },
+                      { label: 'Dues & Payments', icon: Wallet, active: false },
+                      { label: 'Building Notices', icon: Megaphone, active: false },
+                      { label: 'Documents', icon: Folder, active: false },
+                      { label: 'Reports', icon: TrendingUp, active: false },
+                    ]).map((item) => {
                       const Icon = item.icon;
                       return (
-                        <div
-                          key={item.label}
-                          className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg transition-colors ${
-                            item.active
-                              ? isDark
-                                ? 'bg-blue-500/10 text-blue-400 font-semibold border-l-2 border-blue-500'
-                                : 'bg-white text-blue-600 font-semibold border-l-2 border-blue-600 shadow-sm'
-                              : isDark
-                                ? 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/20'
-                                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50'
-                          }`}
-                        >
+                        <div key={item.label} className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg transition-colors ${
+                          item.active
+                            ? isDark ? 'bg-blue-500/10 text-blue-400 font-semibold border-l-2 border-blue-500' : 'bg-white text-blue-600 font-semibold border-l-2 border-blue-600 shadow-sm'
+                            : isDark ? 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/20' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50'
+                        }`}>
                           <Icon size={11} className="shrink-0" />
                           <span className="truncate">{item.label}</span>
                         </div>
                       );
                     })}
                   </nav>
-                  {/* User Profile Card at Bottom of Sidebar */}
-                  <div className={`p-2.5 border-t shrink-0 ${
-                    isDark ? 'border-white/[0.06] bg-[#0A1128]/40' : 'border-slate-200/80 bg-slate-200/25'
-                  }`}>
-                    <div className={`flex items-center gap-2 p-1.5 rounded-xl border ${
-                      isDark 
-                        ? 'bg-slate-900/35 border-white/[0.04]' 
-                        : 'bg-white border-slate-200/60 shadow-sm'
-                    }`}>
-                      <img 
-                        src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?q=80&w=150&auto=format&fit=crop" 
-                        alt="John Smith" 
-                        className={`w-6 h-6 rounded-lg object-cover shrink-0 border ${
-                          isDark ? 'border-white/10' : 'border-slate-200'
-                        }`}
-                      />
+                  <div className={`p-2.5 border-t shrink-0 ${isDark ? 'border-white/[0.06] bg-[#0A1128]/40' : 'border-slate-200/80 bg-slate-200/25'}`}>
+                    <div className={`flex items-center gap-2 p-1.5 rounded-xl border ${isDark ? 'bg-slate-900/35 border-white/[0.04]' : 'bg-white border-slate-200/60 shadow-sm'}`}>
+                      <div className={`w-6 h-6 rounded-lg flex items-center justify-center text-[9px] font-black text-white ${pd.managerColor}`}>{pd.managerInitials}</div>
                       <div className="min-w-0">
-                        <div className={`text-[8px] font-bold truncate ${isDark ? 'text-white' : 'text-slate-800'}`}>John Smith</div>
-                        <div className={`text-[6px] font-extrabold uppercase tracking-widest truncate ${isDark ? 'text-blue-400' : 'text-blue-600'}`}>PROPERTY MANAGER</div>
+                        <div className={`text-[8px] font-bold truncate ${isDark ? 'text-white' : 'text-slate-800'}`}>{pd.managerName}</div>
+                        <div className={`text-[6px] font-extrabold uppercase tracking-widest truncate ${isDark ? 'text-blue-400' : 'text-blue-600'}`}>{pd.managerRole}</div>
                       </div>
                     </div>
                   </div>
@@ -1496,234 +1616,259 @@ export default function LandingPage() {
 
                 {/* ── Main Content ── */}
                 <div className="flex-1 flex flex-col overflow-hidden">
-
                   {/* Topbar */}
                   <div className={`px-4 py-2.5 flex items-center justify-between shrink-0 transition-colors duration-300 border-b ${
-                    isDark 
-                      ? 'bg-[#0B132B] border-white/[0.06]' 
-                      : 'bg-white border-slate-200/80 shadow-sm'
+                    isDark ? 'bg-[#0B132B] border-white/[0.06]' : 'bg-white border-slate-200/80 shadow-sm'
                   }`}>
-                    {/* Left: MY COMMUNITY Willow Creek Community */}
                     <div className="flex items-center gap-3">
-                      <div className="w-6 h-6 rounded-lg bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center text-blue-600 dark:text-blue-400">
-                        <Building size={12} />
-                      </div>
+                      <div className="w-6 h-6 rounded-lg bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center text-blue-600 dark:text-blue-400"><Building size={12} /></div>
                       <div className="text-left">
-                        <span className="text-[6px] font-extrabold text-slate-400 uppercase tracking-widest block leading-none">MY COMMUNITY</span>
+                        <span className="text-[6px] font-extrabold text-slate-400 uppercase tracking-widest block leading-none">{pd.contextLabel}</span>
                         <div className="flex items-center gap-1 mt-0.5">
-                          <span className={`text-xs font-black ${isDark ? 'text-white' : 'text-slate-800'}`}>Willow Creek Community</span>
-                          <span className={`text-[7px] font-extrabold px-1.5 py-0.5 rounded font-mono border ${
-                            isDark 
-                              ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' 
-                              : 'bg-blue-50 text-blue-600 border-blue-500/20'
-                          }`}>VIK774 ▾</span>
+                          <span className={`text-xs font-black ${isDark ? 'text-white' : 'text-slate-800'}`}>{pd.communityName}</span>
+                          <span className={`text-[7px] font-extrabold px-1.5 py-0.5 rounded font-mono border ${isDark ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' : 'bg-blue-50 text-blue-600 border-blue-500/20'}`}>{pd.communityCode}</span>
                         </div>
                       </div>
                     </div>
-                    
-                    {/* Right: Theme Toggle, Bell, Profile Widget */}
                     <div className="flex items-center gap-3">
-                      {/* Icons */}
                       <div className={`flex items-center gap-2 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                        <Sun size={12} className={`cursor-pointer ${isDark ? 'hover:text-white' : 'hover:text-slate-800'}`} />
-                        <div className={`relative cursor-pointer ${isDark ? 'hover:text-white' : 'hover:text-slate-800'}`}>
-                          <Bell size={12} />
-                          <span className={`absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-red-500 rounded-full border ${
-                            isDark ? 'border-[#0B132B]' : 'border-white'
-                          }`} />
-                        </div>
+                        <Sun size={12} />
+                        <div className="relative"><Bell size={12} /><span className={`absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-red-500 rounded-full border ${isDark ? 'border-[#0B132B]' : 'border-white'}`} /></div>
                       </div>
-                      
-                      {/* Profile Widget */}
                       <div className={`flex items-center gap-2 pl-3 border-l ${isDark ? 'border-white/[0.06]' : 'border-slate-200'}`}>
                         <div className="hidden sm:block text-right">
-                          <p className={`text-[8px] font-bold leading-none ${isDark ? 'text-white' : 'text-slate-800'}`}>John Smith</p>
-                          <span className={`text-[6px] font-extrabold uppercase tracking-wider ${isDark ? 'text-blue-400' : 'text-blue-600'}`}>PROPERTY MANAGER</span>
+                          <p className={`text-[8px] font-bold leading-none ${isDark ? 'text-white' : 'text-slate-800'}`}>{pd.managerName}</p>
+                          <span className={`text-[6px] font-extrabold uppercase tracking-wider ${isDark ? 'text-blue-400' : 'text-blue-600'}`}>{pd.managerRole}</span>
                         </div>
-                        <img 
-                          src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?q=80&w=150&auto=format&fit=crop" 
-                          alt="John Smith" 
-                          className={`w-6 h-6 rounded-lg object-cover shrink-0 border ${
-                            isDark ? 'border-white/10' : 'border-slate-200'
-                          }`}
-                        />
+                        <div className={`w-6 h-6 rounded-lg flex items-center justify-center text-[9px] font-black text-white ${pd.managerColor}`}>{pd.managerInitials}</div>
                       </div>
                     </div>
                   </div>
 
-                  {/* Dashboard body (Updated to match the actual Property Manager dashboard) */}
-                  <div className={`flex-1 overflow-y-auto p-5 space-y-5 custom-scrollbar transition-colors duration-300 ${
+                  {/* Dashboard body */}
+                  <div className={`flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar transition-colors duration-300 ${
                     isDark ? 'bg-[#090F16]' : 'bg-slate-50'
                   }`}>
 
-                    {/* ── Page Header & Community Highlight Card ── */}
-                    <div className={`relative overflow-hidden rounded-2xl p-5 border shadow-sm flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 ${
-                      isDark 
-                        ? 'bg-gradient-to-r from-[#1E2E42] via-[#162535] to-[#121B2A] text-white border-white/[0.06]' 
-                        : 'bg-white text-slate-800 border-slate-200/80 shadow-sm'
+                    {/* Welcome + Stats Header Card */}
+                    <div className={`rounded-2xl p-4 border flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 ${
+                      isDark ? 'bg-gradient-to-r from-[#1E2E42] via-[#162535] to-[#121B2A] border-white/[0.06]' : 'bg-white border-slate-200/80 shadow-sm'
                     }`}>
-                      {/* Left: Premium Welcome & Metadata */}
-                      <div className="flex-1 min-w-0 space-y-3 text-left">
-                        <div>
-                          <h2 className={`text-base sm:text-lg font-black tracking-tight leading-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                            Welcome back, John! 
-                          </h2>
-                          <p className={`text-[8px] mt-0.5 font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                            Here is a summary of your community's active operations today.
-                          </p>
-                        </div>
-
-                        <div className="flex flex-wrap items-center gap-1.5 mt-1">
-                          <span className={`inline-flex items-center text-[7px] font-bold px-2 py-0.5 rounded-lg border ${
-                            isDark ? 'bg-white/5 text-slate-300 border-white/10' : 'bg-slate-100 text-slate-600 border-slate-200'
-                          }`}>
-                            Code: VIK774
-                          </span>
-                          <span className="inline-flex items-center text-[7px] font-black text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-lg border border-emerald-500/20">
-                            ACTIVE PM LICENSE
-                          </span>
-                          <span className={`inline-flex items-center gap-1 text-[7px] font-semibold px-2 py-0.5 rounded-lg border ${
-                            isDark ? 'bg-white/[0.02] text-gray-300 border-white/5' : 'bg-slate-50 text-slate-600 border-slate-200/40'
-                          }`}>
-                            <MapPin size={8} className="text-slate-450" />
-                            123 Willow Creek Way, Sunnyvale, CA 94086
+                      <div className="flex-1 min-w-0 text-left">
+                        <h2 className={`text-sm font-black tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>{pd.welcomeMsg}</h2>
+                        <p className={`text-[8px] mt-0.5 font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{pd.subMsg}</p>
+                        <div className="flex flex-wrap items-center gap-1.5 mt-2">
+                          <span className={`inline-flex items-center text-[7px] font-bold px-2 py-0.5 rounded-lg border ${pd.badge1color}`}>{pd.badge1}</span>
+                          <span className={`inline-flex items-center text-[7px] font-black px-2 py-0.5 rounded-lg border ${pd.badge2color}`}>{pd.badge2}</span>
+                          <span className={`inline-flex items-center gap-1 text-[7px] font-semibold px-2 py-0.5 rounded-lg border ${isDark ? 'bg-white/[0.02] text-gray-300 border-white/5' : 'bg-slate-50 text-slate-600 border-slate-200/40'}`}>
+                            <MapPin size={8} />{pd.address}
                           </span>
                         </div>
                       </div>
-
-                      {/* Right: Stats Grid */}
-                      <div className="w-full lg:w-auto mt-2 lg:mt-0 pt-3 lg:pt-0 border-t lg:border-t-0 border-slate-200/60 dark:border-white/5">
-                        <div className="flex flex-row justify-around lg:justify-end gap-6 sm:gap-8 lg:gap-9">
-                          <div className="text-center min-w-[40px]">
-                            <p className="text-base font-black text-blue-600 dark:text-blue-400 font-mono">3</p>
-                            <p className={`text-[6px] font-extrabold uppercase tracking-wider mt-0.5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Members</p>
+                      <div className="flex flex-row gap-6 sm:gap-8">
+                        {pd.stats.map((s, i) => (
+                          <div key={i} className="text-center min-w-[36px]">
+                            <p className={`text-base font-black font-mono ${s.color}`}>{s.val}</p>
+                            <p className={`text-[6px] font-extrabold uppercase tracking-wider mt-0.5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{s.label}</p>
                           </div>
-                          <div className="text-center min-w-[40px]">
-                            <p className="text-base font-black text-amber-600 dark:text-amber-500 font-mono">2</p>
-                            <p className={`text-[6px] font-extrabold uppercase tracking-wider mt-0.5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Violations</p>
-                          </div>
-                          <div className="text-center min-w-[40px]">
-                            <p className="text-base font-black text-blue-600 dark:text-blue-400 font-mono">1</p>
-                            <p className={`text-[6px] font-extrabold uppercase tracking-wider mt-0.5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Service Req</p>
-                          </div>
-                          <div className="text-center min-w-[40px]">
-                            <p className="text-base font-black text-indigo-600 dark:text-indigo-400 font-mono">120</p>
-                            <p className={`text-[6px] font-extrabold uppercase tracking-wider mt-0.5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Total Units</p>
-                          </div>
-                        </div>
+                        ))}
                       </div>
                     </div>
 
-                    {/* ── Main Workspace Grid ── */}
-                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-                      
-                      {/* Left: Quick Links (7 Cols) */}
-                      <div className={`lg:col-span-7 border rounded-2xl p-4 shadow-sm flex flex-col justify-between ${
-                        isDark ? 'bg-[#1E2E42] border-white/[0.06]' : 'bg-white border-slate-200/80 shadow-sm'
-                      }`}>
-                        <div className="flex items-center justify-between mb-4 pb-2 border-b border-slate-200/50 dark:border-white/[0.05] text-left">
-                          <h3 className={`font-extrabold text-[9px] uppercase tracking-wider ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                            Quick Links
-                          </h3>
-                          <div className="flex items-center gap-2">
-                            <span className="text-[7px] font-bold text-slate-400 uppercase tracking-widest font-mono hidden sm:inline">
-                              July 2026
-                            </span>
-                            <button className={`px-2 py-0.5 rounded border text-[7.5px] font-bold ${
-                              isDark ? 'bg-white/5 border-white/10 text-white' : 'bg-slate-100 border-slate-200 text-slate-700'
-                            }`}>
-                              All Communities
-                            </button>
-                            <button className="px-2 py-0.5 bg-blue-600 text-white rounded text-[7.5px] font-black flex items-center gap-1">
-                              <Download size={8} />
-                              Export Report
-                            </button>
+                    {/* DYNAMIC DASHBOARD PORTALS LAYOUTS */}
+                    {activeDashboard === 0 && (
+                      <div className="grid grid-cols-1 lg:grid-cols-12 gap-3">
+                        {/* HOA Left Panel: Quick Links */}
+                        <div className={`lg:col-span-7 border rounded-2xl p-4 flex flex-col justify-between ${isDark ? 'bg-[#1E2E42] border-white/[0.06]' : 'bg-white border-slate-200/80 shadow-sm'}`}>
+                          <div className="flex items-center justify-between mb-3 pb-2 border-b border-slate-200/50 dark:border-white/[0.05] text-left">
+                            <h3 className={`font-extrabold text-[9px] uppercase tracking-wider ${isDark ? 'text-white' : 'text-slate-900'}`}>Quick Links</h3>
+                            <div className="flex items-center gap-2">
+                              <span className="text-[7px] font-bold text-slate-400 uppercase tracking-widest font-mono hidden sm:inline">July 2026</span>
+                              <button className={`px-2 py-0.5 rounded border text-[7.5px] font-bold ${isDark ? 'bg-white/5 border-white/10 text-white' : 'bg-slate-100 border-slate-200 text-slate-700'}`}>All Communities</button>
+                              <button className="px-2 py-0.5 bg-blue-600 text-white rounded text-[7.5px] font-black flex items-center gap-1"><Download size={8} />Export</button>
+                            </div>
+                          </div>
+                          <div className="grid grid-cols-3 gap-2.5">
+                            {[
+                              { label: 'Service Req', icon: <Wrench size={12} className="text-amber-500" />, badge: 1 },
+                              { label: 'Vendor List', icon: <Users size={12} className="text-blue-500" /> },
+                              { label: 'Violations', icon: <AlertTriangle size={12} className="text-red-500" />, badge: 2 },
+                              { label: 'Amenities', icon: <Building2 size={12} className="text-blue-500" /> },
+                              { label: 'Payments', icon: <Wallet size={12} className="text-emerald-500" /> },
+                              { label: 'Documents', icon: <Folder size={12} className="text-slate-500" /> },
+                            ].map((btn, idx) => (
+                              <div key={idx} className={`relative p-3 rounded-xl border flex flex-col justify-between h-16 text-left ${isDark ? 'border-white/[0.04] bg-white/[0.01]' : 'border-slate-200/60 bg-slate-50/50'}`}>
+                                <div className="flex justify-between items-start">
+                                  <div className={`p-1 rounded-lg ${isDark ? 'bg-white/5' : 'bg-slate-100'}`}>{btn.icon}</div>
+                                  {btn.badge && <span className="bg-red-500 text-white text-[7px] font-black px-1.5 py-0.5 rounded-full">{btn.badge}</span>}
+                                </div>
+                                <span className={`text-[8px] font-bold ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>{btn.label}</span>
+                              </div>
+                            ))}
                           </div>
                         </div>
 
-                        {/* Shortcuts Grid */}
-                        <div className="grid grid-cols-3 gap-3">
-                          {[
-                            { label: "Service Req", icon: <Wrench size={12} className="text-amber-500" />, badge: 1 },
-                            { label: "Vendor List", icon: <Users size={12} className="text-blue-500" /> },
-                            { label: "Violations", icon: <AlertTriangle size={12} className="text-red-500" /> },
-                            { label: "Amenities", icon: <Building2 size={12} className="text-blue-500" /> },
-                            { label: "Payments", icon: <Wallet size={12} className="text-emerald-500" /> },
-                            { label: "Documents", icon: <Folder size={12} className="text-slate-500" /> }
-                          ].map((btn, idx) => (
-                            <div
-                              key={idx}
-                              className={`relative p-3.5 rounded-xl border flex flex-col justify-between h-20 text-left transition-all ${
-                                isDark 
-                                  ? 'border-white/[0.04] bg-white/[0.01]' 
-                                  : 'border-slate-200/60 bg-slate-50/50'
-                              }`}
-                            >
-                              <div className="flex justify-between items-start">
-                                <div className={`p-1.5 rounded-lg ${isDark ? 'bg-white/5' : 'bg-slate-100'}`}>
-                                  {btn.icon}
-                                </div>
-                                {btn.badge && (
-                                  <span className="bg-red-500 text-white text-[7px] font-black px-1.5 py-0.5 rounded-full">
-                                    {btn.badge}
-                                  </span>
-                                )}
-                              </div>
-                              <span className={`text-[8px] font-bold ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
-                                {btn.label}
-                              </span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* Right: Calendar Schedule (5 Cols) */}
-                      <div className={`lg:col-span-5 border rounded-2xl p-4 shadow-sm text-left flex flex-col justify-between ${
-                        isDark ? 'bg-[#1E2E42] border-white/[0.06]' : 'bg-white border-slate-200/80 shadow-sm'
-                      }`}>
-                        <div className="flex items-center justify-between mb-3 pb-2 border-b border-slate-200/50 dark:border-white/[0.05]">
-                          <h3 className={`font-extrabold text-[9px] uppercase tracking-wider ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                            Calendar Schedule
-                          </h3>
-                          <span className="text-[7.5px] font-bold text-blue-600 hover:underline cursor-pointer">
-                            View Calendar
-                          </span>
-                        </div>
-                        
-                        <div className="space-y-3 flex-1 flex flex-col justify-center">
-                          <p className="text-[6.5px] font-extrabold text-slate-450 uppercase tracking-widest mb-1">
-                            Upcoming Events & Tasks
-                          </p>
-
-                          <div className="space-y-2">
+                        {/* HOA Right Panel: Calendar Schedule */}
+                        <div className={`lg:col-span-5 border rounded-2xl p-4 text-left flex flex-col justify-between ${isDark ? 'bg-[#1E2E42] border-white/[0.06]' : 'bg-white border-slate-200/80 shadow-sm'}`}>
+                          <div className="flex items-center justify-between mb-3 pb-2 border-b border-slate-200/50 dark:border-white/[0.05]">
+                            <h3 className={`font-extrabold text-[9px] uppercase tracking-wider ${isDark ? 'text-white' : 'text-slate-900'}`}>Calendar Schedule</h3>
+                            <span className="text-[7.5px] font-bold text-blue-600 hover:underline cursor-pointer">View Calendar</span>
+                          </div>
+                          <div className="space-y-2 flex-1 flex flex-col justify-center">
                             {[
-                              { title: "Budget Meeting", date: "Jul 3, 2026, 04:31 PM" },
-                              { title: "Annual Budget Review & Fee...", date: "Jul 10, 2026, 11:00 AM" }
+                              { title: 'Budget Meeting', sub: 'Jul 3, 2026, 04:31 PM', badge: 'MEETING', bc: 'bg-purple-100 dark:bg-purple-500/10 text-purple-650 dark:text-purple-400 border-purple-200/30' },
+                              { title: 'Annual Budget Review & Fee...', sub: 'Jul 10, 2026, 11:00 AM', badge: 'MEETING', bc: 'bg-purple-100 dark:bg-purple-500/10 text-purple-650 dark:text-purple-400 border-purple-200/30' },
                             ].map((evt, idx) => (
-                              <div
-                                key={idx}
-                                className={`p-2.5 rounded-xl border flex items-center justify-between gap-3 ${
-                                  isDark ? 'bg-white/[0.02] border-white/5' : 'bg-slate-50/70 border-slate-200/50'
-                                }`}
-                              >
-                                <div className="min-w-0 flex-1">
-                                  <h4 className={`text-[8px] font-bold truncate ${isDark ? 'text-white' : 'text-slate-800'}`}>
-                                    {evt.title}
-                                  </h4>
-                                  <p className="text-[7px] text-slate-405 mt-0.5">
-                                    {evt.date}
-                                  </p>
+                              <div key={idx} className={`p-2.5 rounded-xl border flex items-center justify-between gap-3 ${isDark ? 'bg-white/[0.02] border-white/5' : 'bg-slate-50/70 border-slate-200/50'}`}>
+                                <div className="min-w-0 flex-1 text-left">
+                                  <h4 className={`text-[8px] font-bold truncate ${isDark ? 'text-white' : 'text-slate-800'}`}>{evt.title}</h4>
+                                  <p className="text-[7px] text-slate-405 mt-0.5">{evt.sub}</p>
                                 </div>
-                                <span className="bg-purple-100 dark:bg-purple-500/10 text-purple-650 dark:text-purple-400 text-[6px] font-extrabold px-1.5 py-0.5 rounded border border-purple-200/30">
-                                  MEETING
-                                </span>
+                                <span className={`text-[6px] font-extrabold px-1.5 py-0.5 rounded border shrink-0 ${evt.bc}`}>{evt.badge}</span>
                               </div>
                             ))}
                           </div>
                         </div>
                       </div>
+                    )}
 
-                    </div>
+                    {activeDashboard === 1 && (
+                      <div className="space-y-4">
+                        {/* 4 Cards Grid - Matching Real Landlord Dashboard exactly */}
+                        <div className="grid grid-cols-4 gap-3 text-left">
+                          <div className={`p-3 rounded-xl border flex flex-col justify-between shadow-sm ${isDark ? 'bg-[#111C2A]/60 border-white/5' : 'bg-white border-slate-200/80'}`}>
+                            <span className="text-[7px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wider block">RENT RECEIVED</span>
+                            <span className="text-base font-black text-slate-900 dark:text-white mt-1 font-mono">$3,100.00</span>
+                            <span className="text-[6px] text-emerald-600 dark:text-emerald-400 font-bold mt-1">Collection Rate: 39%</span>
+                          </div>
+                          <div className={`p-3 rounded-xl border flex flex-col justify-between shadow-sm ${isDark ? 'bg-[#111C2A]/60 border-white/5' : 'bg-white border-slate-200/80'}`}>
+                            <span className="text-[7px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wider block">UNPAID EXPENSES</span>
+                            <span className="text-base font-black text-slate-900 dark:text-white mt-1 font-mono">$100.00</span>
+                            <span className="text-[6px] text-red-600 dark:text-red-400 font-bold mt-1">Active Invoices</span>
+                          </div>
+                          <div className={`p-3 rounded-xl border flex flex-col justify-between shadow-sm ${isDark ? 'bg-[#111C2A]/60 border-white/5' : 'bg-white border-slate-200/80'}`}>
+                            <span className="text-[7px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wider block">OVERDUE RENT</span>
+                            <span className="text-base font-black text-slate-900 dark:text-white mt-1 font-mono">$5,000.00</span>
+                            <span className="text-[6px] text-amber-600 dark:text-amber-500 font-bold mt-1">Overdue Invoices</span>
+                          </div>
+                          <div className={`p-3 rounded-xl border flex flex-col justify-between shadow-sm ${isDark ? 'bg-[#111C2A]/60 border-white/5' : 'bg-white border-slate-200/80'}`}>
+                            <span className="text-[7px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wider block">UPCOMING EXPENSES</span>
+                            <span className="text-base font-black text-slate-900 dark:text-white mt-1 font-mono">$100.00</span>
+                            <span className="text-[6px] text-blue-600 dark:text-blue-400 font-bold mt-1 font-sans">Open Tickets</span>
+                          </div>
+                        </div>
+
+                        {/* Cashflow Summary & Action Required Grid */}
+                        <div className="grid grid-cols-12 gap-3 text-left">
+                          {/* Cashflow chart (7 Cols) */}
+                          <div className={`col-span-7 border rounded-2xl p-3 flex flex-col justify-between ${isDark ? 'bg-[#1E2E42] border-white/[0.06]' : 'bg-white border-slate-200/80 shadow-sm'}`}>
+                            <div className="flex justify-between items-center pb-2 border-b border-slate-200/40 dark:border-white/5">
+                              <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">Cashflow Summary</span>
+                              <span className="text-[6px] text-slate-500">Real-time Income vs Expense</span>
+                            </div>
+                            <div className="flex items-end justify-between h-24 pt-4 px-2">
+                              {[
+                                { month: 'Mar', inc: 10, exp: 5 },
+                                { month: 'Apr', inc: 15, exp: 8 },
+                                { month: 'May', inc: 35, exp: 20 },
+                                { month: 'Jun', inc: 40, exp: 12 },
+                                { month: 'Jul', inc: 75, exp: 40 },
+                                { month: 'Aug', inc: 20, exp: 10 },
+                              ].map((d, idx) => (
+                                <div key={idx} className="flex flex-col items-center gap-1.5 flex-1">
+                                  <div className="w-full flex items-end justify-center gap-1 h-14">
+                                    <div className="w-1.5 bg-emerald-500 rounded-t-sm" style={{ height: `${d.inc}%` }} />
+                                    <div className="w-1.5 bg-amber-500 rounded-t-sm" style={{ height: `${d.exp}%` }} />
+                                  </div>
+                                  <span className="text-[7px] font-semibold text-slate-400">{d.month}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+
+                          {/* Action Required: Tenant requests (5 Cols) */}
+                          <div className={`col-span-5 border rounded-2xl p-3 flex flex-col justify-between ${isDark ? 'bg-[#1E2E42] border-white/[0.06]' : 'bg-white border-slate-200/80 shadow-sm'}`}>
+                            <div className="flex justify-between items-center pb-2 border-b border-slate-200/40 dark:border-white/5">
+                              <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">Action Required</span>
+                              <span className="text-[6px] text-blue-600 font-bold">Tenant Requests</span>
+                            </div>
+                            <div className="space-y-2 py-1.5 flex-1 flex flex-col justify-center">
+                              <div className={`p-2 border rounded-xl flex items-center justify-between gap-2 ${isDark ? 'bg-[#111C2A]/60 border-red-500/20' : 'bg-red-50/50 border-red-100'}`}>
+                                <div className="min-w-0 flex-1">
+                                  <h4 className="text-[8px] font-bold text-slate-800 dark:text-red-300 truncate">Electrician</h4>
+                                  <p className="text-[6px] text-slate-500 dark:text-slate-450 mt-0.5">Unit 102 — Priority: NORMAL</p>
+                                </div>
+                                <button className="bg-red-500 hover:bg-red-600 text-white font-bold text-[7px] px-2 py-1 rounded shrink-0 transition-colors shadow-sm">Assign</button>
+                              </div>
+                              <div className={`p-2 border rounded-xl flex items-center justify-between gap-2 ${isDark ? 'bg-[#111C2A]/60 border-white/5' : 'bg-slate-50 border-slate-200/50'}`}>
+                                <div className="min-w-0 flex-1">
+                                  <h4 className="text-[8px] font-bold text-slate-800 dark:text-slate-200 truncate">Plumber</h4>
+                                  <p className="text-[6px] text-slate-500 dark:text-slate-450 mt-0.5">Unit 104 — Pipe Leak Report</p>
+                                </div>
+                                <button className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-[7px] px-2 py-1 rounded shrink-0 transition-colors shadow-sm">Assign</button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {activeDashboard === 2 && (
+                      <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 text-left">
+                        {/* Condo Left Panel: Visitor OTP Logs */}
+                        <div className={`lg:col-span-7 border rounded-2xl p-4 flex flex-col justify-between ${isDark ? 'bg-[#1E2E42] border-white/[0.06]' : 'bg-white border-slate-200/80 shadow-sm'}`}>
+                          <div className="flex items-center justify-between mb-3 pb-2 border-b border-slate-200/50 dark:border-white/[0.05]">
+                            <h3 className={`font-extrabold text-[9px] uppercase tracking-wider ${isDark ? 'text-white' : 'text-slate-900'}`}>Guest Access & OTPs</h3>
+                            <div className="flex items-center gap-2">
+                              <span className="text-[7px] font-bold text-slate-400 uppercase tracking-widest font-mono">14 Active Passes</span>
+                              <button className="px-2 py-0.5 bg-blue-600 text-white rounded text-[7.5px] font-black">+ Issue Pass</button>
+                            </div>
+                          </div>
+                          <div className="space-y-2">
+                            {[
+                              { guest: 'Sarah Connor', unit: 'Unit #404', code: 'OTP-9821', time: 'Exp: 2 Hours', status: 'Active' },
+                              { guest: 'John Miller', unit: 'Unit #102', code: 'OTP-1055', time: 'Exp: 6 Hours', status: 'Active' },
+                              { guest: 'David Wilson', unit: 'Unit #301', code: 'OTP-4482', time: 'Exp: 10 mins', status: 'Expired' }
+                            ].map((g, idx) => (
+                              <div key={idx} className={`p-2.5 rounded-xl border flex items-center justify-between gap-3 ${isDark ? 'bg-white/[0.02] border-white/5' : 'bg-slate-50/70 border-slate-200/50'}`}>
+                                <div className="min-w-0 flex-1">
+                                  <h4 className={`text-[8px] font-bold truncate ${isDark ? 'text-white' : 'text-slate-800'}`}>{g.guest}</h4>
+                                  <p className="text-[7px] text-slate-450 mt-0.5">{g.unit} • {g.time}</p>
+                                </div>
+                                <div className="text-right shrink-0">
+                                  <p className="text-[8.5px] font-mono font-black text-blue-600 dark:text-blue-400">{g.code}</p>
+                                  <span className={`text-[6.5px] font-bold ${g.status === 'Active' ? 'text-emerald-500' : 'text-slate-500'}`}>{g.status}</span>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Condo Right Panel: Upcoming Bookings */}
+                        <div className={`lg:col-span-5 border rounded-2xl p-4 flex flex-col justify-between ${isDark ? 'bg-[#1E2E42] border-white/[0.06]' : 'bg-white border-slate-200/80 shadow-sm'}`}>
+                          <div className="flex items-center justify-between mb-3 pb-2 border-b border-slate-200/50 dark:border-white/[0.05]">
+                            <h3 className={`font-extrabold text-[9px] uppercase tracking-wider ${isDark ? 'text-white' : 'text-slate-900'}`}>Upcoming Bookings</h3>
+                            <span className="text-[7.5px] font-bold text-blue-600 hover:underline cursor-pointer">View All</span>
+                          </div>
+                          <div className="space-y-2 flex-1 flex flex-col justify-center">
+                            {[
+                              { title: 'Pool — Carter Family', sub: 'Jul 5, 2026 · 10:00 AM', badge: 'APPROVED', bc: 'bg-emerald-100 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-200/30' },
+                              { title: 'Gym — Kevin Andrews', sub: 'Jul 6, 2026 · 07:00 AM', badge: 'APPROVED', bc: 'bg-emerald-100 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-200/30' },
+                              { title: 'Clubhouse — Diana Moore', sub: 'Jul 8, 2026 · 06:00 PM', badge: 'PENDING', bc: 'bg-amber-100 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-200/30' },
+                            ].map((evt, idx) => (
+                              <div key={idx} className={`p-2.5 rounded-xl border flex items-center justify-between gap-3 ${isDark ? 'bg-white/[0.02] border-white/5' : 'bg-slate-50/70 border-slate-200/50'}`}>
+                                <div className="min-w-0 flex-1 text-left">
+                                  <h4 className={`text-[8px] font-bold truncate ${isDark ? 'text-white' : 'text-slate-800'}`}>{evt.title}</h4>
+                                  <p className="text-[7px] text-slate-400 mt-0.5">{evt.sub}</p>
+                                </div>
+                                <span className={`text-[6px] font-extrabold px-1.5 py-0.5 rounded border shrink-0 ${evt.bc}`}>{evt.badge}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
                   </div>
                 </div>
               </div>

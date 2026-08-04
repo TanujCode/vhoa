@@ -58,10 +58,10 @@ export default function PortalSelect() {
       </header>
 
       {/* Main Container */}
-      <main className="relative z-10 flex-1 flex flex-col items-center justify-center max-w-5xl mx-auto px-6 py-12 md:py-20 w-full animate-float-up">
+      <main className="relative z-10 flex-1 flex flex-col items-center justify-center max-w-5xl mx-auto px-6 py-4 md:py-6 w-full animate-float-up">
         
         {/* Title Block */}
-        <div className="text-center max-w-2xl mb-12 md:mb-16">
+        <div className="text-center max-w-2xl mb-6 md:mb-8">
           <span className="px-3.5 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase bg-gradient-to-r from-violet-500/10 to-indigo-500/10 text-violet-600 dark:text-violet-400 border border-violet-500/20 mb-4 inline-flex items-center gap-1.5 shadow-sm">
             <Sparkles size={11} />
             Unified Workspace Hub

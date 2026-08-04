@@ -3,7 +3,7 @@ import {
   DollarSign, CreditCard, Calendar, History, CheckCircle, 
   AlertCircle, ArrowRight, Lock, Shield, X, Loader, 
   FileText, ArrowDownLeft, ArrowUpRight, Zap,
-  User as UserIcon, Dumbbell, AlertTriangle, Wrench, Building2, PartyPopper
+  User as UserIcon, Dumbbell, AlertTriangle, Wrench, Building2, PartyPopper, ChevronDown
 } from 'lucide-react';
 import API from '../services/api';
 
@@ -356,29 +356,35 @@ const Payments = ({ community, user, paymentState, setPaymentState, viewAsReside
 
               <div>
                 <label className="block text-sm text-slate-600 dark:text-gray-400 mb-2">Billing Frequency</label>
-                <select
-                  name="interval"
-                  className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl p-4 text-slate-900 dark:text-white focus:outline-none focus:border-[#1D68DF]"
-                >
-                  <option value="MONTHLY">Monthly (10th of every month)</option>
-                  <option value="ANNUALLY">Annually</option>
-                </select>
+                <div className="relative max-w-md">
+                  <select
+                    name="interval"
+                    className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl pl-4 pr-10 py-3 text-slate-900 dark:text-white focus:outline-none focus:border-[#1D68DF] appearance-none cursor-pointer text-sm"
+                  >
+                    <option value="MONTHLY">Monthly (10th of every month)</option>
+                    <option value="ANNUALLY">Annually</option>
+                  </select>
+                  <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-gray-500 pointer-events-none" size={18} />
+                </div>
               </div>
 
               <div>
                 <label className="block text-sm text-slate-600 dark:text-gray-400 mb-2">Auto-Pay Method</label>
-                <select
-                  name="payment_method"
-                  className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl p-4 text-slate-900 dark:text-white focus:outline-none focus:border-[#1D68DF]"
-                  onChange={(e) => {
-                    const el = document.getElementById('recurring-bank-fields');
-                    if (el) el.style.display = e.target.value === 'BANK_TRANSFER' ? 'block' : 'none';
-                  }}
-                >
-                  <option value="PAYPAL">Mock PayPal Account</option>
-                  <option value="VISA_CHECKOUT">Mock Visa Checkout Token</option>
-                  <option value="BANK_TRANSFER">ACH Bank Account</option>
-                </select>
+                <div className="relative max-w-md">
+                  <select
+                    name="payment_method"
+                    className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl pl-4 pr-10 py-3 text-slate-900 dark:text-white focus:outline-none focus:border-[#1D68DF] appearance-none cursor-pointer text-sm"
+                    onChange={(e) => {
+                      const el = document.getElementById('recurring-bank-fields');
+                      if (el) el.style.display = e.target.value === 'BANK_TRANSFER' ? 'block' : 'none';
+                    }}
+                  >
+                    <option value="PAYPAL">Mock PayPal Account</option>
+                    <option value="VISA_CHECKOUT">Mock Visa Checkout Token</option>
+                    <option value="BANK_TRANSFER">ACH Bank Account</option>
+                  </select>
+                  <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-gray-500 pointer-events-none" size={18} />
+                </div>
               </div>
 
               <div id="recurring-bank-fields" style={{ display: 'none' }} className="space-y-4 bg-slate-50 dark:bg-[#1E3248] rounded-2xl p-4 border border-slate-200 dark:border-white/5">

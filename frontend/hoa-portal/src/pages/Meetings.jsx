@@ -1917,7 +1917,7 @@ nextMonth.setMonth(currentMonth.getMonth() + step);
                             />
                           </div>
                         )}
-                        {(meeting.summary || meeting.transcript) && (
+                        {(meeting.recording_url || meeting.summary || meeting.transcript) && (
                           <div>
                             <button
                               onClick={() => setExpandedTranscriptMeetingId(expandedTranscriptMeetingId === meeting.meeting_id ? null : meeting.meeting_id)}
@@ -2350,7 +2350,7 @@ nextMonth.setMonth(currentMonth.getMonth() + step);
                     </div>
                     <button
                       onClick={() => setShowRsvpModalMeetingId(meeting.meeting_id)}
-                      className="px-4 py-2 bg-purple-605 hover:bg-purple-500 text-white rounded-xl text-xs font-extrabold uppercase tracking-wider transition shadow-sm"
+                      className="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-xl text-xs font-extrabold uppercase tracking-wider transition shadow-sm"
                     >
                       Check RSVPs
                     </button>
@@ -2707,8 +2707,17 @@ nextMonth.setMonth(currentMonth.getMonth() + step);
                         </div>
                         <button
                           onClick={() => {
-                            setSelectedDate(new Date(meeting.meeting_date));
-                            setCurrentMonth(new Date(meeting.meeting_date));
+                            const dateObj = new Date(meeting.meeting_date);
+                            setSelectedDate(dateObj);
+                            setCurrentMonth(dateObj);
+                            setSelectedEvent({
+                              id: `meeting-${meeting.meeting_id}`,
+                              type: 'meeting',
+                              title: meeting.title,
+                              desc: meeting.description,
+                              time: dateObj.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+                              raw: meeting
+                            });
                           }}
                           className="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-700 dark:text-gray-300 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm whitespace-nowrap self-end md:self-auto"
                         >

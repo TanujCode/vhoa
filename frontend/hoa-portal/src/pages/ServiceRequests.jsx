@@ -143,7 +143,7 @@ const SubmitModal = ({ communityId, onClose, onSuccess, showAlert, showConfirm }
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
             <label className="text-xs text-slate-500 dark:text-gray-400 mb-1.5 block">Request Type <span className="text-red-500">*</span></label>
-            <div className="relative">
+            <div className="relative max-w-md">
               <select 
                 required 
                 value={form.type_id} 
@@ -329,7 +329,7 @@ const StatusModal = ({ request, statuses, userRole, onClose, onSuccess, showAler
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="text-xs text-slate-500 dark:text-gray-400 mb-1 block">New Status</label>
-            <div className="relative">
+            <div className="relative max-w-md">
               <select 
                 required 
                 value={statusId} 
@@ -349,7 +349,7 @@ const StatusModal = ({ request, statuses, userRole, onClose, onSuccess, showAler
             <>
               <div>
                 <label className="text-xs text-slate-500 dark:text-gray-400 mb-1 block">Assign Vendor</label>
-                <div className="relative">
+                <div className="relative max-w-md">
                   <select
                     required
                     value={vendorId}
@@ -494,7 +494,7 @@ const EditModal = ({ request, communityId, isAdmin, userRole, onClose, onSuccess
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
             <label className="text-xs text-slate-500 dark:text-gray-400 mb-1.5 block">Request Type</label>
-            <div className="relative">
+            <div className="relative max-w-md">
               <select 
                 required 
                 value={form.type_id} 
@@ -580,7 +580,7 @@ const EditModal = ({ request, communityId, isAdmin, userRole, onClose, onSuccess
             <>
               <div>
                 <label className="text-xs text-slate-500 dark:text-gray-400 mb-1.5 block">Assign Vendor</label>
-                <div className="relative">
+                <div className="relative max-w-md">
                   <select 
                     value={form.vendor_id} 
                     onChange={e => setForm({...form, vendor_id: e.target.value})}

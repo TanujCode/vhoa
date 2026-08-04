@@ -50,7 +50,6 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all' }) {
   };
   const [prefilledFromApp, setPrefilledFromApp] = useState(false);
   const [confirmConfig, setConfirmConfig] = useState({ isOpen: false, title: '', message: '', onConfirm: null });
-  const hasVacantUnits = units.length === 0 || units.some(u => u.status === 'VACANT');
 
   // Create Lease Form States
   const [selectedTemplate, setSelectedTemplate] = useState('standard');
@@ -79,6 +78,14 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all' }) {
   const [formErrors, setFormErrors] = useState({});
   const [errorMsg, setErrorMsg] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+
+  const filteredUnits = units.filter(u => 
+    selectedPropertyFilterId === 'all' || 
+    String(u.property_id) === String(selectedPropertyFilterId) ||
+    String(u.unit_id) === String(selectedUnitId)
+  );
+
+  const hasVacantUnits = filteredUnits.length === 0 || filteredUnits.some(u => u.status === 'VACANT');
   const canSignAsPrimary = selectedLease && isLandlord && !selectedLease.landlord_signature;
   const isUserPrimaryLandlord = selectedLease && selectedLease.landlord_signature && 
     (user?.name && (
@@ -206,6 +213,21 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all' }) {
       setDeposit('');
     }
   }, [selectedUnitId, units]);
+
+  useEffect(() => {
+    if (isLandlord && units.length > 0 && showCreateModal && !prefilledFromApp) {
+      const propUnits = units.filter(u => 
+        selectedPropertyFilterId === 'all' || String(u.property_id) === String(selectedPropertyFilterId)
+      );
+      if (propUnits.length > 0) {
+        if (!selectedUnitId || !propUnits.some(u => String(u.unit_id) === String(selectedUnitId))) {
+          setSelectedUnitId(propUnits[0].unit_id.toString());
+        }
+      } else {
+        setSelectedUnitId('');
+      }
+    }
+  }, [selectedPropertyFilterId, units, isLandlord, showCreateModal, prefilledFromApp]);
 
   useEffect(() => {
     if (selectedLease) {
@@ -723,7 +745,7 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all' }) {
                       } ${formErrors.selectedUnitId ? 'border-red-500' : ''}`}
                     >
                       <option value="">-- Select a Unit --</option>
-                      {units.map(u=>(
+                      {filteredUnits.map(u=>(
                         <option key={u.unit_id} value={u.unit_id}>
                           Unit {u.unit_number} (${u.rent_amount}) - {u.status || 'VACANT'}
                         </option>

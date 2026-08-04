@@ -173,6 +173,171 @@ export default function PropertiesHub({
     }
   };
 
+  const STATE_CAPITALS = {
+    "alabama": { city: "Montgomery", zip: "36104" },
+    "alaska": { city: "Juneau", zip: "99801" },
+    "arizona": { city: "Phoenix", zip: "85001" },
+    "arkansas": { city: "Little Rock", zip: "72201" },
+    "california": { city: "Sacramento", zip: "95814" },
+    "colorado": { city: "Denver", zip: "80202" },
+    "connecticut": { city: "Hartford", zip: "06103" },
+    "delaware": { city: "Dover", zip: "19901" },
+    "florida": { city: "Tallahassee", zip: "32301" },
+    "georgia": { city: "Atlanta", zip: "30303" },
+    "hawaii": { city: "Honolulu", zip: "96813" },
+    "idaho": { city: "Boise", zip: "83702" },
+    "illinois": { city: "Springfield", zip: "62701" },
+    "indiana": { city: "Indianapolis", zip: "46204" },
+    "iowa": { city: "Des Moines", zip: "50309" },
+    "kansas": { city: "Topeka", zip: "66603" },
+    "kentucky": { city: "Frankfort", zip: "40601" },
+    "louisiana": { city: "Baton Rouge", zip: "70802" },
+    "maine": { city: "Augusta", zip: "04330" },
+    "maryland": { city: "Annapolis", zip: "21401" },
+    "massachusetts": { city: "Boston", zip: "02108" },
+    "michigan": { city: "Lansing", zip: "48933" },
+    "minnesota": { city: "Saint Paul", zip: "55102" },
+    "mississippi": { city: "Jackson", zip: "39201" },
+    "missouri": { city: "Jefferson City", zip: "65101" },
+    "montana": { city: "Helena", zip: "59601" },
+    "nebraska": { city: "Lincoln", zip: "68502" },
+    "nevada": { city: "Carson City", zip: "89701" },
+    "new hampshire": { city: "Concord", zip: "03301" },
+    "new jersey": { city: "Trenton", zip: "08608" },
+    "new mexico": { city: "Santa Fe", zip: "87501" },
+    "new york": { city: "Albany", zip: "12207" },
+    "north carolina": { city: "Raleigh", zip: "27601" },
+    "north dakota": { city: "Bismarck", zip: "58501" },
+    "ohio": { city: "Columbus", zip: "43215" },
+    "oklahoma": { city: "Oklahoma City", zip: "73102" },
+    "oregon": { city: "Salem", zip: "97301" },
+    "pennsylvania": { city: "Harrisburg", zip: "17101" },
+    "rhode island": { city: "Providence", zip: "02903" },
+    "south carolina": { city: "Columbia", zip: "29201" },
+    "south dakota": { city: "Pierre", zip: "57501" },
+    "tennessee": { city: "Nashville", zip: "37219" },
+    "texas": { city: "Austin", zip: "78701" },
+    "utah": { city: "Salt Lake City", zip: "84111" },
+    "vermont": { city: "Montpelier", zip: "05602" },
+    "virginia": { city: "Richmond", zip: "23219" },
+    "washington": { city: "Olympia", zip: "98501" },
+    "west virginia": { city: "Charleston", zip: "25301" },
+    "wisconsin": { city: "Madison", zip: "53703" },
+    "wyoming": { city: "Cheyenne", zip: "82001" },
+    "al": { city: "Montgomery", zip: "36104" },
+    "ak": { city: "Juneau", zip: "99801" },
+    "az": { city: "Phoenix", zip: "85001" },
+    "ar": { city: "Little Rock", zip: "72201" },
+    "ca": { city: "Sacramento", zip: "95814" },
+    "co": { city: "Denver", zip: "80202" },
+    "ct": { city: "Hartford", zip: "06103" },
+    "de": { city: "Dover", zip: "19901" },
+    "fl": { city: "Tallahassee", zip: "32301" },
+    "ga": { city: "Atlanta", zip: "30303" },
+    "hi": { city: "Honolulu", zip: "96813" },
+    "id": { city: "Boise", zip: "83702" },
+    "il": { city: "Springfield", zip: "62701" },
+    "in": { city: "Indianapolis", zip: "46204" },
+    "ia": { city: "Des Moines", zip: "50309" },
+    "ks": { city: "Topeka", zip: "66603" },
+    "ky": { city: "Frankfort", zip: "40601" },
+    "la": { city: "Baton Rouge", zip: "70802" },
+    "me": { city: "Augusta", zip: "04330" },
+    "md": { city: "Annapolis", zip: "21401" },
+    "ma": { city: "Boston", zip: "02108" },
+    "mi": { city: "Lansing", zip: "48933" },
+    "mn": { city: "Saint Paul", zip: "55102" },
+    "ms": { city: "Jackson", zip: "39201" },
+    "mo": { city: "Jefferson City", zip: "65101" },
+    "mt": { city: "Helena", zip: "59601" },
+    "ne": { city: "Lincoln", zip: "68502" },
+    "nv": { city: "Carson City", zip: "89701" },
+    "nh": { city: "Concord", zip: "03301" },
+    "nj": { city: "Trenton", zip: "08608" },
+    "nm": { city: "Santa Fe", zip: "87501" },
+    "ny": { city: "Albany", zip: "12207" },
+    "nc": { city: "Raleigh", zip: "27601" },
+    "nd": { city: "Bismarck", zip: "58501" },
+    "oh": { city: "Columbus", zip: "43215" },
+    "ok": { city: "Oklahoma City", zip: "73102" },
+    "or": { city: "Salem", zip: "97301" },
+    "pa": { city: "Harrisburg", zip: "17101" },
+    "ri": { city: "Providence", zip: "02903" },
+    "sc": { city: "Columbia", zip: "29201" },
+    "sd": { city: "Pierre", zip: "57501" },
+    "tn": { city: "Nashville", zip: "37219" },
+    "tx": { city: "Austin", zip: "78701" },
+    "ut": { city: "Salt Lake City", zip: "84111" },
+    "vt": { city: "Montpelier", zip: "05602" },
+    "va": { city: "Richmond", zip: "23219" },
+    "wa": { city: "Olympia", zip: "98501" },
+    "wv": { city: "Charleston", zip: "25301" },
+    "wi": { city: "Madison", zip: "53703" },
+    "wy": { city: "Cheyenne", zip: "82001" }
+  };
+
+  const handleCityLookup = async (cityVal) => {
+    const cleanCity = cityVal.trim();
+    if (cleanCity.length < 3) return;
+    try {
+      const response = await fetch(`https://nominatim.openstreetmap.org/search?city=${encodeURIComponent(cleanCity)}&countrycodes=us&format=json&addressdetails=1&limit=1`);
+      if (response.ok) {
+        const data = await response.json();
+        if (data && data.length > 0) {
+          const address = data[0].address;
+          if (address) {
+            const state = address.state || '';
+            const zip = address.postcode || '';
+            if (state) setPropState(state);
+            if (zip) setPropZip(zip.split('-')[0]);
+          }
+        }
+      }
+    } catch (err) {
+      console.warn("City lookup failed:", err);
+    }
+  };
+
+  const handleStateLookup = (stateVal) => {
+    const cleanState = stateVal.trim().toLowerCase();
+    const capitalInfo = STATE_CAPITALS[cleanState];
+    if (capitalInfo) {
+      setPropCity(capitalInfo.city);
+      setPropZip(capitalInfo.zip);
+    }
+  };
+
+  const handleEditCityLookup = async (cityVal) => {
+    const cleanCity = cityVal.trim();
+    if (cleanCity.length < 3) return;
+    try {
+      const response = await fetch(`https://nominatim.openstreetmap.org/search?city=${encodeURIComponent(cleanCity)}&countrycodes=us&format=json&addressdetails=1&limit=1`);
+      if (response.ok) {
+        const data = await response.json();
+        if (data && data.length > 0) {
+          const address = data[0].address;
+          if (address) {
+            const state = address.state || '';
+            const zip = address.postcode || '';
+            if (state) setEditState(state);
+            if (zip) setEditZip(zip.split('-')[0]);
+          }
+        }
+      }
+    } catch (err) {
+      console.warn("Edit City lookup failed:", err);
+    }
+  };
+
+  const handleEditStateLookup = (stateVal) => {
+    const cleanState = stateVal.trim().toLowerCase();
+    const capitalInfo = STATE_CAPITALS[cleanState];
+    if (capitalInfo) {
+      setEditCity(capitalInfo.city);
+      setEditZip(capitalInfo.zip);
+    }
+  };
+
   useEffect(() => {
     fetchProperties();
   }, []);
@@ -995,11 +1160,23 @@ export default function PropertiesHub({
                       <div className="grid grid-cols-3 gap-3">
                         <div>
                           <label className="block text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">City</label>
-                          <input required type="text" value={propCity} onChange={e=>setPropCity(e.target.value)} onBlur={() => handleCityStateLookup(propCity, propState)} className="w-full bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 focus:border-blue-500 rounded-lg px-3.5 py-2.5 text-xs text-slate-900 dark:text-white outline-none" placeholder="New York" />
+                          <input required type="text" value={propCity} onChange={e=>setPropCity(e.target.value)} onBlur={() => {
+                            if (propCity && !propState) {
+                              handleCityLookup(propCity);
+                            } else if (propCity && propState) {
+                              handleCityStateLookup(propCity, propState);
+                            }
+                          }} className="w-full bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 focus:border-blue-500 rounded-lg px-3.5 py-2.5 text-xs text-slate-900 dark:text-white outline-none" placeholder="New York" />
                         </div>
                         <div>
                           <label className="block text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">State</label>
-                          <input required type="text" value={propState} onChange={e=>setPropState(e.target.value)} onBlur={() => handleCityStateLookup(propCity, propState)} className="w-full bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 focus:border-blue-500 rounded-lg px-3.5 py-2.5 text-xs text-slate-900 dark:text-white outline-none" placeholder="New York" />
+                          <input required type="text" value={propState} onChange={e=>setPropState(e.target.value)} onBlur={() => {
+                            if (propState && !propCity) {
+                              handleStateLookup(propState);
+                            } else if (propCity && propState) {
+                              handleCityStateLookup(propCity, propState);
+                            }
+                          }} className="w-full bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 focus:border-blue-500 rounded-lg px-3.5 py-2.5 text-xs text-slate-900 dark:text-white outline-none" placeholder="New York" />
                         </div>
                         <div>
                           <label className="block text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Zip</label>
@@ -1189,11 +1366,23 @@ export default function PropertiesHub({
               <div className="grid grid-cols-3 gap-3">
                 <div>
                   <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">City</label>
-                  <input required type="text" value={editCity} onChange={e=>setEditCity(e.target.value)} onBlur={() => handleEditCityStateLookup(editCity, editState)} className="w-full bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 focus:border-blue-500 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none" placeholder="New York" />
+                  <input required type="text" value={editCity} onChange={e=>setEditCity(e.target.value)} onBlur={() => {
+                    if (editCity && !editState) {
+                      handleEditCityLookup(editCity);
+                    } else if (editCity && editState) {
+                      handleEditCityStateLookup(editCity, editState);
+                    }
+                  }} className="w-full bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 focus:border-blue-500 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none" placeholder="New York" />
                 </div>
                 <div>
                   <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">State</label>
-                  <input required type="text" value={editState} onChange={e=>setEditState(e.target.value)} onBlur={() => handleEditCityStateLookup(editCity, editState)} className="w-full bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 focus:border-blue-500 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none" placeholder="New York" />
+                  <input required type="text" value={editState} onChange={e=>setEditState(e.target.value)} onBlur={() => {
+                    if (editState && !editCity) {
+                      handleEditStateLookup(editState);
+                    } else if (editCity && editState) {
+                      handleEditCityStateLookup(editCity, editState);
+                    }
+                  }} className="w-full bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 focus:border-blue-500 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none" placeholder="New York" />
                 </div>
                 <div>
                   <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Zip</label>

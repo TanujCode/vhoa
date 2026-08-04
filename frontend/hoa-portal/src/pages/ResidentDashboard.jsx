@@ -164,16 +164,16 @@ const ResidentDashboard = ({ community, user: initialUser, setActivePage }) => {
       </div>
 
       {/* Active Violations Alert Banner */}
-      {violations.filter(v => ['OPEN', 'IN_PROGRESS', 'APPEALED'].includes(v.violation_status)).length > 0 && (
+      {violations.filter(v => ['OPEN', 'IN_PROGRESS', 'APPEALED'].includes(v.violation_status) && v.client_id === user?.user_id).length > 0 && (
         <div className="bg-red-500/10 dark:bg-red-500/10 border border-red-500/35 rounded-3xl p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm animate-in slide-in-from-top duration-300">
           <div className="flex items-start gap-3">
             <span className="mt-0.5 sm:mt-0 text-red-500"><AlertTriangle size={20} /></span>
             <div>
               <h4 className="font-bold text-sm text-red-700 dark:text-red-400">
-                Active Violation Notice{violations.filter(v => ['OPEN', 'IN_PROGRESS', 'APPEALED'].includes(v.violation_status)).length > 1 ? 's' : ''}
+                Active Violation Notice{violations.filter(v => ['OPEN', 'IN_PROGRESS', 'APPEALED'].includes(v.violation_status) && v.client_id === user?.user_id).length > 1 ? 's' : ''}
               </h4>
               <p className="text-xs text-red-650 dark:text-red-300/80 mt-0.5 leading-relaxed">
-                You have {violations.filter(v => ['OPEN', 'IN_PROGRESS', 'APPEALED'].includes(v.violation_status)).length} outstanding rule infraction{violations.filter(v => ['OPEN', 'IN_PROGRESS', 'APPEALED'].includes(v.violation_status)).length > 1 ? 's' : ''} requiring compliance action. Please review details or submit an appeal.
+                You have {violations.filter(v => ['OPEN', 'IN_PROGRESS', 'APPEALED'].includes(v.violation_status) && v.client_id === user?.user_id).length} outstanding rule infraction{violations.filter(v => ['OPEN', 'IN_PROGRESS', 'APPEALED'].includes(v.violation_status) && v.client_id === user?.user_id).length > 1 ? 's' : ''} requiring compliance action. Please review details or submit an appeal.
               </p>
             </div>
           </div>
