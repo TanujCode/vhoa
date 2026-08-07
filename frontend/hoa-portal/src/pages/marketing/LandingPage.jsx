@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import {
   ArrowRight, Play, CheckCircle, Zap,
-  ChevronDown, ChevronUp, Star, UserPlus, Mail,
+  ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Star, UserPlus, Mail,
   Wallet, Wrench, MessageSquare, Send,
   Shield, Activity, Sparkles, TrendingUp, Globe, Clock,
   Phone, Map, Building, FileText, UserCheck,
@@ -32,7 +32,6 @@ import featureCopilot from '../../assets/feature_copilot.png';
 
 import solutionRental from '../../assets/solution_rental.png';
 import solutionCondo from '../../assets/solution_condo.png';
-import solutionApartment from '../../assets/solution_apartment.png';
 import solutionHoa from '../../assets/solution_hoa.png';
 
 /* ─── Hero Image Slideshow Slides ────────────────────── */
@@ -922,8 +921,11 @@ export default function LandingPage() {
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
   const [activeDashboard, setActiveDashboard] = useState(0);
   const [dashboardFading, setDashboardFading] = useState(false);
-  // Auto-cycle dashboard portal every 5.0s
+  const [isDashboardHovered, setIsDashboardHovered] = useState(false);
+  
+  // Auto-cycle dashboard portal every 5.0s, paused on hover
   useEffect(() => {
+    if (isDashboardHovered) return;
     const timer = setInterval(() => {
       setDashboardFading(true);
       setTimeout(() => {
@@ -932,7 +934,7 @@ export default function LandingPage() {
       }, 350);
     }, 5000);
     return () => clearInterval(timer);
-  }, []);
+  }, [isDashboardHovered]);
   // Portal data configuration
   const dashboardData = [
     {
@@ -950,10 +952,10 @@ export default function LandingPage() {
       badge2: 'ACTIVE PM LICENSE', badge2color: 'text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 border-emerald-500/20',
       address: '123 Willow Creek Way, Sunnyvale, CA 94086',
       stats: [
-        { val: '3', label: 'Members', color: 'text-blue-600 dark:text-blue-400' },
-        { val: '2', label: 'Violations', color: 'text-amber-600 dark:text-amber-500' },
-        { val: '1', label: 'Service Req', color: 'text-blue-600 dark:text-blue-400' },
-        { val: '120', label: 'Total Units', color: 'text-indigo-600 dark:text-indigo-400' },
+        { val: '4', label: 'Members', color: 'text-blue-600 dark:text-blue-400' },
+        { val: '5', label: 'Violations', color: 'text-amber-600 dark:text-amber-500' },
+        { val: '2', label: 'Service Req', color: 'text-blue-600 dark:text-blue-400' },
+        { val: '1000', label: 'Total Units', color: 'text-indigo-600 dark:text-indigo-400' },
       ],
       leftPanelTitle: 'Quick Links',
       rightPanelTitle: 'Calendar Schedule',
@@ -998,10 +1000,9 @@ export default function LandingPage() {
       badge2: 'FULLY OCCUPIED', badge2color: 'text-amber-700 dark:text-amber-400 bg-amber-500/10 border-amber-500/20',
       address: '1450 Harbor Blvd, San Diego, CA 92101',
       stats: [
-        { val: '48', label: 'Total Units', color: 'text-amber-600 dark:text-amber-400' },
-        { val: '46', label: 'Occupied', color: 'text-emerald-600 dark:text-emerald-400' },
-        { val: '3', label: 'Maintenance', color: 'text-red-600 dark:text-red-400' },
-        { val: '12', label: 'Bookings', color: 'text-blue-600 dark:text-blue-400' },
+        { val: '3', label: 'Repairs', color: 'text-red-600 dark:text-red-400' },
+        { val: '12', label: 'Parcels', color: 'text-emerald-600 dark:text-emerald-450' },
+        { val: '120', label: 'Total Units', color: 'text-indigo-600 dark:text-indigo-400' },
       ],
       leftPanelTitle: 'Unit Status Board',
       rightPanelTitle: 'Upcoming Bookings',
@@ -1098,10 +1099,9 @@ export default function LandingPage() {
   }, [isAutoPlaying]);
 
   const rotatingWords = [
+    "HOA Management",
     "Rental Property Management",
-    "Condo Management",
-    "Apartment Management",
-    "HOA Management"
+    "Condo Management"
   ];
   const [wordIndex, setWordIndex] = useState(0);
   const [typedText, setTypedText] = useState("");
@@ -1147,7 +1147,7 @@ export default function LandingPage() {
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const type = params.get('type');
-    const validTypes = ['rental', 'condo', 'apartment', 'hoa'];
+    const validTypes = ['rental', 'condo', 'hoa'];
     if (type && validTypes.includes(type)) {
       setActiveSolution(type);
       setTimeout(() => {
@@ -1465,7 +1465,7 @@ export default function LandingPage() {
 
           {/* CTA Buttons */}
           <div className="flex flex-wrap gap-4 justify-center">
-            <Link to="/register" className="btn-glow px-8 py-3.5 text-sm font-semibold text-white rounded-xl flex items-center gap-2 group">
+            <Link to="/portal-select" className="btn-glow px-8 py-3.5 text-sm font-semibold text-white rounded-xl flex items-center gap-2 group">
               Start Free Trial
               <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
             </Link>
@@ -1524,7 +1524,11 @@ export default function LandingPage() {
             </div>
 
             {/* Browser chrome wrapper */}
-            <div className="relative rounded-t-2xl overflow-hidden border border-slate-200/60 dark:border-white/[0.08] shadow-[0_32px_80px_rgba(0,0,0,0.12)] dark:shadow-[0_32px_80px_rgba(0,0,0,0.5)] bg-white dark:bg-[#0B1929]">
+            <div 
+              onMouseEnter={() => setIsDashboardHovered(true)}
+              onMouseLeave={() => setIsDashboardHovered(false)}
+              className="relative rounded-t-2xl overflow-hidden border border-slate-200/60 dark:border-white/[0.08] shadow-[0_32px_80px_rgba(0,0,0,0.12)] dark:shadow-[0_32px_80px_rgba(0,0,0,0.5)] bg-white dark:bg-[#0B1929]"
+            >
 
               {/* Browser top bar */}
               <div className="flex items-center gap-2 px-4 py-3 bg-slate-100 dark:bg-[#0D1B2A] border-b border-slate-200/60 dark:border-white/[0.06]">
@@ -1679,23 +1683,26 @@ export default function LandingPage() {
                     {activeDashboard === 0 && (
                       <div className="grid grid-cols-1 lg:grid-cols-12 gap-3">
                         {/* HOA Left Panel: Quick Links */}
-                        <div className={`lg:col-span-7 border rounded-2xl p-4 flex flex-col justify-between ${isDark ? 'bg-[#1E2E42] border-white/[0.06]' : 'bg-white border-slate-200/80 shadow-sm'}`}>
+                        <div className={`lg:col-span-7 border rounded-2xl p-4 flex flex-col gap-3.5 ${isDark ? 'bg-[#1E2E42] border-white/[0.06]' : 'bg-white border-slate-200/80 shadow-sm'}`}>
                           <div className="flex items-center justify-between mb-3 pb-2 border-b border-slate-200/50 dark:border-white/[0.05] text-left">
-                            <h3 className={`font-extrabold text-[9px] uppercase tracking-wider ${isDark ? 'text-white' : 'text-slate-900'}`}>Quick Links</h3>
+                            <h3 className={`font-extrabold text-[9px] uppercase tracking-wider ${isDark ? 'text-white' : 'text-slate-900'}`}>QUICK LINKS</h3>
                             <div className="flex items-center gap-2">
-                              <span className="text-[7px] font-bold text-slate-400 uppercase tracking-widest font-mono hidden sm:inline">July 2026</span>
+                              <span className="text-[7px] font-bold text-slate-400 uppercase tracking-widest font-mono hidden sm:inline">AUGUST 2026</span>
                               <button className={`px-2 py-0.5 rounded border text-[7.5px] font-bold ${isDark ? 'bg-white/5 border-white/10 text-white' : 'bg-slate-100 border-slate-200 text-slate-700'}`}>All Communities</button>
-                              <button className="px-2 py-0.5 bg-blue-600 text-white rounded text-[7.5px] font-black flex items-center gap-1"><Download size={8} />Export</button>
+                              <button className="px-2.5 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-[7.5px] font-extrabold flex items-center gap-1 shadow-sm"><Download size={10} />Export Report</button>
                             </div>
                           </div>
                           <div className="grid grid-cols-3 gap-2.5">
                             {[
-                              { label: 'Service Req', icon: <Wrench size={12} className="text-amber-500" />, badge: 1 },
+                              { label: 'Service Req', icon: <Wrench size={12} className="text-amber-500" />, badge: 2 },
                               { label: 'Vendor List', icon: <Users size={12} className="text-blue-500" /> },
-                              { label: 'Violations', icon: <AlertTriangle size={12} className="text-red-500" />, badge: 2 },
+                              { label: 'Violations', icon: <AlertTriangle size={12} className="text-red-500" />, badge: 5 },
                               { label: 'Amenities', icon: <Building2 size={12} className="text-blue-500" /> },
                               { label: 'Payments', icon: <Wallet size={12} className="text-emerald-500" /> },
                               { label: 'Documents', icon: <Folder size={12} className="text-slate-500" /> },
+                              { label: 'News & Announce', icon: <Megaphone size={12} className="text-orange-500" /> },
+                              { label: 'Members', icon: <UserPlus size={12} className="text-purple-500" />, badge: 4 },
+                              { label: 'Reports', icon: <TrendingUp size={12} className="text-purple-500" /> },
                             ].map((btn, idx) => (
                               <div key={idx} className={`relative p-3 rounded-xl border flex flex-col justify-between h-16 text-left ${isDark ? 'border-white/[0.04] bg-white/[0.01]' : 'border-slate-200/60 bg-slate-50/50'}`}>
                                 <div className="flex justify-between items-start">
@@ -1709,24 +1716,70 @@ export default function LandingPage() {
                         </div>
 
                         {/* HOA Right Panel: Calendar Schedule */}
-                        <div className={`lg:col-span-5 border rounded-2xl p-4 text-left flex flex-col justify-between ${isDark ? 'bg-[#1E2E42] border-white/[0.06]' : 'bg-white border-slate-200/80 shadow-sm'}`}>
+                        <div className={`lg:col-span-5 border rounded-2xl p-4 text-left flex flex-col gap-3 ${isDark ? 'bg-[#1E2E42] border-white/[0.06]' : 'bg-white border-slate-200/80 shadow-sm'}`}>
                           <div className="flex items-center justify-between mb-3 pb-2 border-b border-slate-200/50 dark:border-white/[0.05]">
-                            <h3 className={`font-extrabold text-[9px] uppercase tracking-wider ${isDark ? 'text-white' : 'text-slate-900'}`}>Calendar Schedule</h3>
+                            <h3 className={`font-extrabold text-[9px] uppercase tracking-wider ${isDark ? 'text-white' : 'text-slate-900'}`}>CALENDAR SCHEDULE</h3>
                             <span className="text-[7.5px] font-bold text-blue-600 hover:underline cursor-pointer">View Calendar</span>
                           </div>
-                          <div className="space-y-2 flex-1 flex flex-col justify-center">
-                            {[
-                              { title: 'Budget Meeting', sub: 'Jul 3, 2026, 04:31 PM', badge: 'MEETING', bc: 'bg-purple-100 dark:bg-purple-500/10 text-purple-650 dark:text-purple-400 border-purple-200/30' },
-                              { title: 'Annual Budget Review & Fee...', sub: 'Jul 10, 2026, 11:00 AM', badge: 'MEETING', bc: 'bg-purple-100 dark:bg-purple-500/10 text-purple-650 dark:text-purple-400 border-purple-200/30' },
-                            ].map((evt, idx) => (
-                              <div key={idx} className={`p-2.5 rounded-xl border flex items-center justify-between gap-3 ${isDark ? 'bg-white/[0.02] border-white/5' : 'bg-slate-50/70 border-slate-200/50'}`}>
-                                <div className="min-w-0 flex-1 text-left">
-                                  <h4 className={`text-[8px] font-bold truncate ${isDark ? 'text-white' : 'text-slate-800'}`}>{evt.title}</h4>
-                                  <p className="text-[7px] text-slate-405 mt-0.5">{evt.sub}</p>
-                                </div>
-                                <span className={`text-[6px] font-extrabold px-1.5 py-0.5 rounded border shrink-0 ${evt.bc}`}>{evt.badge}</span>
+                          
+                          {/* Calendar navigation */}
+                          <div className="bg-slate-50/40 dark:bg-slate-900/40 backdrop-blur-sm border border-slate-200/50 dark:border-white/[0.04] rounded-2xl p-3 shadow-sm mb-3 w-full">
+                            <div className="flex items-center justify-between mb-2 pb-1.5 border-b border-slate-200/50 dark:border-white/[0.04]">
+                              <span className="text-[9px] font-bold text-slate-800 dark:text-slate-250 uppercase tracking-wider">August 2026</span>
+                              <div className="flex gap-1.5">
+                                <button className="p-0.5 hover:bg-slate-100 dark:hover:bg-white/10 rounded text-slate-500 transition"><ChevronLeft size={10} /></button>
+                                <span className="px-1.5 py-0.5 bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded text-[8px] font-black uppercase tracking-wider">Today</span>
+                                <button className="p-0.5 hover:bg-slate-100 dark:hover:bg-white/10 rounded text-slate-500 transition"><ChevronRight size={10} /></button>
                               </div>
-                            ))}
+                            </div>
+                            
+                            <div className="grid grid-cols-7 gap-1 text-center text-[8px] font-bold text-slate-400 dark:text-gray-500 mb-1.5">
+                              {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d, i) => <div key={i}>{d}</div>)}
+                            </div>
+                            
+                            <div className="grid grid-cols-7 gap-1">
+                              {Array(6).fill(null).map((_, i) => <div key={`b-${i}`} className="h-6" />)}
+                              {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => {
+                                const isToday = day === 7;
+                                return (
+                                  <div
+                                    key={day}
+                                    className={`h-6 flex flex-col items-center justify-center text-[9px] font-semibold rounded-lg relative ${
+                                      isToday
+                                        ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400 font-bold border border-blue-500/25'
+                                        : 'text-slate-700 dark:text-gray-300'
+                                    }`}
+                                  >
+                                    <span className="leading-none">{day}</span>
+                                    {day === 7 && (
+                                      <span className="absolute bottom-0.5 w-1 h-1 rounded-full bg-blue-500"></span>
+                                    )}
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+
+                          {/* Upcoming Events List */}
+                          <div className="space-y-2 mt-1">
+                            <span className="text-[8px] font-bold text-slate-400 dark:text-gray-500 uppercase tracking-widest block font-mono">Upcoming Events & Tasks</span>
+                            
+                            <div className="flex gap-2.5 items-center p-2.5 bg-white/40 dark:bg-white/[0.01] border border-slate-200/60 dark:border-white/[0.04] rounded-xl hover:border-blue-500/20 transition-all duration-200">
+                              <div className="w-6 h-6 rounded-lg flex items-center justify-center font-bold text-xs bg-blue-500/10 text-blue-600 dark:text-blue-400">
+                                1
+                              </div>
+                              <div className="flex-1 min-w-0 text-left">
+                                <p className="text-[10px] font-extrabold text-slate-850 dark:text-slate-250 truncate">Gym Booking</p>
+                                <span className="text-[8.5px] text-slate-405 dark:text-gray-500 font-semibold">Sep 10, 2026</span>
+                              </div>
+                              <span className="text-[8px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider bg-blue-500/10 text-blue-600 dark:text-blue-400">
+                                Booking
+                              </span>
+                            </div>
+                            
+                            <button className="w-full py-1.5 bg-blue-50/50 dark:bg-white/5 text-blue-600 dark:text-blue-400 rounded-lg text-[9px] font-black transition border border-blue-200/30 dark:border-white/5 text-center uppercase tracking-wider">
+                              + View All 4 Events
+                            </button>
                           </div>
                         </div>
                       </div>
@@ -1736,32 +1789,32 @@ export default function LandingPage() {
                       <div className="space-y-4">
                         {/* 4 Cards Grid - Matching Real Landlord Dashboard exactly */}
                         <div className="grid grid-cols-4 gap-3 text-left">
-                          <div className={`p-3 rounded-xl border flex flex-col justify-between shadow-sm ${isDark ? 'bg-[#111C2A]/60 border-white/5' : 'bg-white border-slate-200/80'}`}>
+                          <div className={`p-3 rounded-xl border flex flex-col gap-1 shadow-sm ${isDark ? 'bg-[#111C2A]/60 border-white/5' : 'bg-white border-slate-200/80'}`}>
                             <span className="text-[7px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wider block">RENT RECEIVED</span>
-                            <span className="text-base font-black text-slate-900 dark:text-white mt-1 font-mono">$3,100.00</span>
-                            <span className="text-[6px] text-emerald-600 dark:text-emerald-400 font-bold mt-1">Collection Rate: 39%</span>
+                            <span className="text-base font-black text-slate-900 dark:text-white font-mono">$3,100.00</span>
+                            <span className="text-[6px] text-emerald-600 dark:text-emerald-400 font-bold">Collection Rate: 39%</span>
                           </div>
-                          <div className={`p-3 rounded-xl border flex flex-col justify-between shadow-sm ${isDark ? 'bg-[#111C2A]/60 border-white/5' : 'bg-white border-slate-200/80'}`}>
+                          <div className={`p-3 rounded-xl border flex flex-col gap-1 shadow-sm ${isDark ? 'bg-[#111C2A]/60 border-white/5' : 'bg-white border-slate-200/80'}`}>
                             <span className="text-[7px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wider block">UNPAID EXPENSES</span>
-                            <span className="text-base font-black text-slate-900 dark:text-white mt-1 font-mono">$100.00</span>
-                            <span className="text-[6px] text-red-600 dark:text-red-400 font-bold mt-1">Active Invoices</span>
+                            <span className="text-base font-black text-slate-900 dark:text-white font-mono">$100.00</span>
+                            <span className="text-[6px] text-red-600 dark:text-red-400 font-bold">Active Invoices</span>
                           </div>
-                          <div className={`p-3 rounded-xl border flex flex-col justify-between shadow-sm ${isDark ? 'bg-[#111C2A]/60 border-white/5' : 'bg-white border-slate-200/80'}`}>
+                          <div className={`p-3 rounded-xl border flex flex-col gap-1 shadow-sm ${isDark ? 'bg-[#111C2A]/60 border-white/5' : 'bg-white border-slate-200/80'}`}>
                             <span className="text-[7px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wider block">OVERDUE RENT</span>
-                            <span className="text-base font-black text-slate-900 dark:text-white mt-1 font-mono">$5,000.00</span>
-                            <span className="text-[6px] text-amber-600 dark:text-amber-500 font-bold mt-1">Overdue Invoices</span>
+                            <span className="text-base font-black text-slate-955 dark:text-white font-mono">$5,000.00</span>
+                            <span className="text-[6px] text-amber-600 dark:text-amber-500 font-bold">Overdue Invoices</span>
                           </div>
-                          <div className={`p-3 rounded-xl border flex flex-col justify-between shadow-sm ${isDark ? 'bg-[#111C2A]/60 border-white/5' : 'bg-white border-slate-200/80'}`}>
+                          <div className={`p-3 rounded-xl border flex flex-col gap-1 shadow-sm ${isDark ? 'bg-[#111C2A]/60 border-white/5' : 'bg-white border-slate-200/80'}`}>
                             <span className="text-[7px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wider block">UPCOMING EXPENSES</span>
-                            <span className="text-base font-black text-slate-900 dark:text-white mt-1 font-mono">$100.00</span>
-                            <span className="text-[6px] text-blue-600 dark:text-blue-400 font-bold mt-1 font-sans">Open Tickets</span>
+                            <span className="text-base font-black text-slate-900 dark:text-white font-mono">$100.00</span>
+                            <span className="text-[6px] text-blue-600 dark:text-blue-400 font-bold font-sans">Open Tickets</span>
                           </div>
                         </div>
 
                         {/* Cashflow Summary & Action Required Grid */}
                         <div className="grid grid-cols-12 gap-3 text-left">
                           {/* Cashflow chart (7 Cols) */}
-                          <div className={`col-span-7 border rounded-2xl p-3 flex flex-col justify-between ${isDark ? 'bg-[#1E2E42] border-white/[0.06]' : 'bg-white border-slate-200/80 shadow-sm'}`}>
+                          <div className={`col-span-7 border rounded-2xl p-3 flex flex-col gap-3 ${isDark ? 'bg-[#1E2E42] border-white/[0.06]' : 'bg-white border-slate-200/80 shadow-sm'}`}>
                             <div className="flex justify-between items-center pb-2 border-b border-slate-200/40 dark:border-white/5">
                               <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">Cashflow Summary</span>
                               <span className="text-[6px] text-slate-500">Real-time Income vs Expense</span>
@@ -1796,14 +1849,14 @@ export default function LandingPage() {
                               <div className={`p-2 border rounded-xl flex items-center justify-between gap-2 ${isDark ? 'bg-[#111C2A]/60 border-red-500/20' : 'bg-red-50/50 border-red-100'}`}>
                                 <div className="min-w-0 flex-1">
                                   <h4 className="text-[8px] font-bold text-slate-800 dark:text-red-300 truncate">Electrician</h4>
-                                  <p className="text-[6px] text-slate-500 dark:text-slate-450 mt-0.5">Unit 102 — Priority: NORMAL</p>
+                                  <p className="text-[6px] text-slate-505 dark:text-slate-450 mt-0.5">Unit 102 — Priority: NORMAL</p>
                                 </div>
                                 <button className="bg-red-500 hover:bg-red-600 text-white font-bold text-[7px] px-2 py-1 rounded shrink-0 transition-colors shadow-sm">Assign</button>
                               </div>
                               <div className={`p-2 border rounded-xl flex items-center justify-between gap-2 ${isDark ? 'bg-[#111C2A]/60 border-white/5' : 'bg-slate-50 border-slate-200/50'}`}>
                                 <div className="min-w-0 flex-1">
                                   <h4 className="text-[8px] font-bold text-slate-800 dark:text-slate-200 truncate">Plumber</h4>
-                                  <p className="text-[6px] text-slate-500 dark:text-slate-450 mt-0.5">Unit 104 — Pipe Leak Report</p>
+                                  <p className="text-[6px] text-slate-505 dark:text-slate-450 mt-0.5">Unit 104 — Pipe Leak Report</p>
                                 </div>
                                 <button className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-[7px] px-2 py-1 rounded shrink-0 transition-colors shadow-sm">Assign</button>
                               </div>
@@ -1815,55 +1868,72 @@ export default function LandingPage() {
 
                     {activeDashboard === 2 && (
                       <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 text-left">
-                        {/* Condo Left Panel: Visitor OTP Logs */}
-                        <div className={`lg:col-span-7 border rounded-2xl p-4 flex flex-col justify-between ${isDark ? 'bg-[#1E2E42] border-white/[0.06]' : 'bg-white border-slate-200/80 shadow-sm'}`}>
+                        {/* Condo Left Panel: Quick Actions */}
+                        <div className={`lg:col-span-7 border rounded-2xl p-4 flex flex-col gap-3.5 ${isDark ? 'bg-[#1E2E42] border-white/[0.06]' : 'bg-white border-slate-200/80 shadow-sm'}`}>
                           <div className="flex items-center justify-between mb-3 pb-2 border-b border-slate-200/50 dark:border-white/[0.05]">
-                            <h3 className={`font-extrabold text-[9px] uppercase tracking-wider ${isDark ? 'text-white' : 'text-slate-900'}`}>Guest Access & OTPs</h3>
-                            <div className="flex items-center gap-2">
-                              <span className="text-[7px] font-bold text-slate-400 uppercase tracking-widest font-mono">14 Active Passes</span>
-                              <button className="px-2 py-0.5 bg-blue-600 text-white rounded text-[7.5px] font-black">+ Issue Pass</button>
-                            </div>
+                            <h3 className={`font-extrabold text-[9px] uppercase tracking-wider ${isDark ? 'text-white' : 'text-slate-900'}`}>Quick Actions</h3>
+                            <button className="px-2 py-0.5 bg-blue-600 text-white rounded text-[7.5px] font-black">+ Invite Resident</button>
                           </div>
-                          <div className="space-y-2">
+                          <div className="grid grid-cols-3 gap-2.5">
                             {[
-                              { guest: 'Sarah Connor', unit: 'Unit #404', code: 'OTP-9821', time: 'Exp: 2 Hours', status: 'Active' },
-                              { guest: 'John Miller', unit: 'Unit #102', code: 'OTP-1055', time: 'Exp: 6 Hours', status: 'Active' },
-                              { guest: 'David Wilson', unit: 'Unit #301', code: 'OTP-4482', time: 'Exp: 10 mins', status: 'Expired' }
-                            ].map((g, idx) => (
-                              <div key={idx} className={`p-2.5 rounded-xl border flex items-center justify-between gap-3 ${isDark ? 'bg-white/[0.02] border-white/5' : 'bg-slate-50/70 border-slate-200/50'}`}>
-                                <div className="min-w-0 flex-1">
-                                  <h4 className={`text-[8px] font-bold truncate ${isDark ? 'text-white' : 'text-slate-800'}`}>{g.guest}</h4>
-                                  <p className="text-[7px] text-slate-450 mt-0.5">{g.unit} • {g.time}</p>
+                              { label: 'Residents Directory', icon: <Users size={12} className="text-blue-500" /> },
+                              { label: 'Documents Center', icon: <FileText size={12} className="text-purple-500" /> },
+                              { label: 'Service Requests', icon: <Wrench size={12} className="text-amber-500" />, badge: 3 },
+                              { label: 'Payments Ledger', icon: <Wallet size={12} className="text-indigo-500" /> },
+                              { label: 'Parking Allocations', icon: <Building2 size={12} className="text-emerald-500" /> },
+                              { label: 'Visitor Passes', icon: <Zap size={12} className="text-rose-500" />, badge: 1 },
+                            ].map((btn, idx) => (
+                              <div key={idx} className={`relative p-3 rounded-xl border flex flex-col justify-between h-16 text-left ${isDark ? 'border-white/[0.04] bg-white/[0.01]' : 'border-slate-200/60 bg-slate-50/50'}`}>
+                                <div className="flex justify-between items-start">
+                                  <div className={`p-1 rounded-lg ${isDark ? 'bg-white/5' : 'bg-slate-100'}`}>{btn.icon}</div>
+                                  {btn.badge && <span className="bg-red-500 text-white text-[7px] font-black px-1.5 py-0.5 rounded-full">{btn.badge}</span>}
                                 </div>
-                                <div className="text-right shrink-0">
-                                  <p className="text-[8.5px] font-mono font-black text-blue-600 dark:text-blue-400">{g.code}</p>
-                                  <span className={`text-[6.5px] font-bold ${g.status === 'Active' ? 'text-emerald-500' : 'text-slate-500'}`}>{g.status}</span>
-                                </div>
+                                <span className={`text-[8px] font-bold ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>{btn.label}</span>
                               </div>
                             ))}
                           </div>
                         </div>
 
-                        {/* Condo Right Panel: Upcoming Bookings */}
-                        <div className={`lg:col-span-5 border rounded-2xl p-4 flex flex-col justify-between ${isDark ? 'bg-[#1E2E42] border-white/[0.06]' : 'bg-white border-slate-200/80 shadow-sm'}`}>
+                        {/* Condo Right Panel: Operations Monitor */}
+                        <div className={`lg:col-span-5 border rounded-2xl p-4 flex flex-col gap-3 ${isDark ? 'bg-[#1E2E42] border-white/[0.06]' : 'bg-white border-slate-200/80 shadow-sm'}`}>
                           <div className="flex items-center justify-between mb-3 pb-2 border-b border-slate-200/50 dark:border-white/[0.05]">
-                            <h3 className={`font-extrabold text-[9px] uppercase tracking-wider ${isDark ? 'text-white' : 'text-slate-900'}`}>Upcoming Bookings</h3>
-                            <span className="text-[7.5px] font-bold text-blue-600 hover:underline cursor-pointer">View All</span>
+                            <h3 className={`font-extrabold text-[9px] uppercase tracking-wider ${isDark ? 'text-white' : 'text-slate-900'}`}>Operations Monitor</h3>
+                            <span className="text-[7.5px] font-mono text-emerald-500 flex items-center gap-1">
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse inline-block" /> Live
+                            </span>
                           </div>
-                          <div className="space-y-2 flex-1 flex flex-col justify-center">
-                            {[
-                              { title: 'Pool — Carter Family', sub: 'Jul 5, 2026 · 10:00 AM', badge: 'APPROVED', bc: 'bg-emerald-100 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-200/30' },
-                              { title: 'Gym — Kevin Andrews', sub: 'Jul 6, 2026 · 07:00 AM', badge: 'APPROVED', bc: 'bg-emerald-100 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-200/30' },
-                              { title: 'Clubhouse — Diana Moore', sub: 'Jul 8, 2026 · 06:00 PM', badge: 'PENDING', bc: 'bg-amber-100 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-200/30' },
-                            ].map((evt, idx) => (
-                              <div key={idx} className={`p-2.5 rounded-xl border flex items-center justify-between gap-3 ${isDark ? 'bg-white/[0.02] border-white/5' : 'bg-slate-50/70 border-slate-200/50'}`}>
-                                <div className="min-w-0 flex-1 text-left">
-                                  <h4 className={`text-[8px] font-bold truncate ${isDark ? 'text-white' : 'text-slate-800'}`}>{evt.title}</h4>
-                                  <p className="text-[7px] text-slate-400 mt-0.5">{evt.sub}</p>
-                                </div>
-                                <span className={`text-[6px] font-extrabold px-1.5 py-0.5 rounded border shrink-0 ${evt.bc}`}>{evt.badge}</span>
+                          
+                          <div className="space-y-3.5 flex-1 flex flex-col justify-center text-left">
+                            {/* Service Clear Rate */}
+                            <div className="space-y-1">
+                              <div className="flex justify-between items-center text-[8.5px] font-bold">
+                                <span className="text-slate-505 uppercase tracking-wider">Service Clear Rate</span>
+                                <span className="text-slate-900 dark:text-white">75% Resolved</span>
                               </div>
-                            ))}
+                              <div className="w-full bg-slate-100 dark:bg-white/[0.05] h-1.5 rounded-full overflow-hidden">
+                                <div className="bg-gradient-to-r from-blue-500 to-indigo-500 h-full rounded-full" style={{ width: '75%' }} />
+                              </div>
+                            </div>
+                            
+                            {/* Mail Pickup Rate */}
+                            <div className="space-y-1">
+                              <div className="flex justify-between items-center text-[8.5px] font-bold">
+                                <span className="text-slate-505 uppercase tracking-wider">Mail Pickup Rate</span>
+                                <span className="text-slate-900 dark:text-white">92% Collected</span>
+                              </div>
+                              <div className="w-full bg-slate-100 dark:bg-white/[0.05] h-1.5 rounded-full overflow-hidden">
+                                <div className="bg-gradient-to-r from-emerald-500 to-teal-500 h-full rounded-full" style={{ width: '92%' }} />
+                              </div>
+                            </div>
+                            
+                            {/* Join Request Queue */}
+                            <div className="p-2 bg-white/70 dark:bg-white/[0.01] border border-slate-200/40 dark:border-white/[0.03] rounded-xl flex items-center justify-between">
+                              <div>
+                                <span className="text-[7.5px] font-bold text-slate-400 tracking-wider uppercase block">Join Requests Queue</span>
+                                <span className="text-[9px] font-extrabold text-slate-850 dark:text-slate-250">3 requests awaiting review</span>
+                              </div>
+                              <span className="px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-600 text-[7px] font-black uppercase">Review Needed</span>
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -1949,8 +2019,17 @@ export default function LandingPage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 pt-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 pt-8">
             {[
+              {
+                title: 'Homeowner Association (HOA)',
+                tagline: 'Assemblies & e-Voting',
+                desc: 'E-voting on society resolutions, bylaws audits, and quarterly security audits with absolute transparency.',
+                icon: Users,
+                colorClass: 'text-indigo-600 dark:text-indigo-400 bg-indigo-500/10 dark:bg-indigo-500/20 border-indigo-500/20',
+                cardBg: 'hover:border-indigo-500/40 dark:hover:border-indigo-500/35 hover:shadow-indigo-500/5',
+                textColor: 'text-indigo-600 dark:text-indigo-400'
+              },
               {
                 title: 'Rental Property Management',
                 tagline: 'Rent Roll & Vacancy Tracker',
@@ -1968,24 +2047,6 @@ export default function LandingPage() {
                 colorClass: 'text-violet-600 dark:text-violet-400 bg-violet-500/10 dark:bg-violet-500/20 border-violet-500/20',
                 cardBg: 'hover:border-violet-500/40 dark:hover:border-violet-500/35 hover:shadow-violet-500/5',
                 textColor: 'text-violet-650 dark:text-violet-400'
-              },
-              {
-                title: 'Apartment Complex Portal',
-                tagline: 'Work Order & Dispatch Desk',
-                desc: 'Collaborative work ticket dispatches, maintenance logs, and visitor directories for unified operations.',
-                icon: Wrench,
-                colorClass: 'text-blue-600 dark:text-blue-400 bg-blue-500/10 dark:bg-blue-500/20 border-blue-500/20',
-                cardBg: 'hover:border-blue-500/40 dark:hover:border-blue-500/35 hover:shadow-blue-500/5',
-                textColor: 'text-blue-600 dark:text-blue-400'
-              },
-              {
-                title: 'Homeowner Association (HOA)',
-                tagline: 'Assemblies & e-Voting',
-                desc: 'E-voting on society resolutions, bylaws audits, and quarterly security audits with absolute transparency.',
-                icon: Users,
-                colorClass: 'text-indigo-600 dark:text-indigo-400 bg-indigo-500/10 dark:bg-indigo-500/20 border-indigo-500/20',
-                cardBg: 'hover:border-indigo-500/40 dark:hover:border-indigo-500/35 hover:shadow-indigo-500/5',
-                textColor: 'text-indigo-600 dark:text-indigo-400'
               }
             ].map((solution, i) => {
               const IconComponent = solution.icon;
@@ -2363,7 +2424,7 @@ export default function LandingPage() {
                 Join 500+ communities on NestBloq. Get your community live in under 48 hours with full setup support.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center pt-2">
-                <Link to="/register" className="px-8 py-4 bg-white text-violet-700 font-black text-sm rounded-2xl hover:bg-white/95 shadow-2xl shadow-black/30 transition-all hover:-translate-y-0.5 flex items-center justify-center gap-2 group">
+                <Link to="/portal-select" className="px-8 py-4 bg-white text-violet-700 font-black text-sm rounded-2xl hover:bg-white/95 shadow-2xl shadow-black/30 transition-all hover:-translate-y-0.5 flex items-center justify-center gap-2 group">
                   Get Started Free
                   <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
                 </Link>

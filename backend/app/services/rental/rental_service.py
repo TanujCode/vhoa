@@ -160,7 +160,16 @@ def create_lease_and_invite(landlord_id: int, data: LeaseCreate, db: Session) ->
     if not unit:
         raise ValueError("Unit not found.")
 
-    # 2. Check if there is an existing user with this email
+    # 2. Check if tenant has an approved background screening application for this unit
+    screening_app = db.query(RentalApplication).filter(
+        RentalApplication.tenant_email == data.tenant_email.lower().strip(),
+        RentalApplication.unit_id == data.unit_id,
+        RentalApplication.screening_status == "APPROVED"
+    ).first()
+    if not screening_app:
+        raise ValueError("Tenant must have an approved background screening application for this unit before a lease can be created.")
+
+    # 3. Check if there is an existing user with this email
     tenant_user = db.query(RentalUser).filter(RentalUser.email_id == data.tenant_email.lower().strip()).first()
     tenant_id = tenant_user.user_id if tenant_user else None
 
@@ -395,6 +404,8 @@ def submit_rental_application(data: RentalApplicationCreate, db: Session) -> Ren
         monthly_income=data.monthly_income,
         references_data=data.references_data,
         pet_details=data.pet_details,
+        vehicle_details=data.vehicle_details,
+        income_proof_url=data.income_proof_url,
         screening_status="SUBMITTED",
         credit_score=credit_score,
         eviction_history="No eviction records found within the past 7 years." if credit_score > 650 else "1 minor eviction warning in 2021.",
@@ -538,6 +549,8 @@ def complete_rental_application(application_id: int, data: RentalApplicationComp
     app.monthly_income = data.monthly_income
     app.references_data = data.references_data
     app.pet_details = data.pet_details
+    app.vehicle_details = data.vehicle_details
+    app.income_proof_url = data.income_proof_url
     app.screening_status = "SUBMITTED"
     app.credit_score = credit_score
     app.criminal_history = criminal_history

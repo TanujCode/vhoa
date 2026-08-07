@@ -8,6 +8,8 @@ from app.models.rental.property import Property
 from app.models.rental.unit import Unit
 from app.models.rental.lease import Lease
 from app.models.rental.rental_ledger import RentalLedger
+from app.models.rental.rental_maintenance import RentalMaintenanceRequest
+from app.models.rental.rental_application import RentalApplication
 from app.models.hoa.user import Role
 from app.services.rental.audit_service import log_rental_action
 from app.routers.rental.dependencies import require_rental_role
@@ -142,3 +144,63 @@ def toggle_landlord_status(
     )
 
     return {"detail": "Landlord status updated successfully", "active_status": landlord.active_status}
+
+
+@router.delete("/landlords/{landlord_id}")
+def delete_landlord(
+    landlord_id: int,
+    db: Session = Depends(get_rental_db),
+    current_user: RentalUser = Depends(require_rental_role("super_admin"))
+):
+    """
+    Hard delete a Landlord account and all associated properties, units, leases, ledgers, maintenance requests, and applications.
+    """
+    landlord = db.query(RentalUser).filter(RentalUser.user_id == landlord_id).first()
+    if not landlord:
+        raise HTTPException(status_code=404, detail="Landlord not found.")
+
+    # Find properties
+    props = db.query(Property).filter(Property.landlord_id == landlord_id).all()
+    prop_ids = [p.property_id for p in props]
+
+    if prop_ids:
+        # Find units
+        units = db.query(Unit).filter(Unit.property_id.in_(prop_ids)).all()
+        unit_ids = [u.unit_id for u in units]
+
+        if unit_ids:
+            # Delete rental applications
+            db.query(RentalApplication).filter(RentalApplication.unit_id.in_(unit_ids)).delete(synchronize_session=False)
+            
+            # Find leases
+            leases = db.query(Lease).filter(Lease.unit_id.in_(unit_ids)).all()
+            lease_ids = [l.lease_id for l in leases]
+            if lease_ids:
+                # Delete maintenance requests
+                db.query(RentalMaintenanceRequest).filter(RentalMaintenanceRequest.lease_id.in_(lease_ids)).delete(synchronize_session=False)
+                # Delete leases
+                db.query(Lease).filter(Lease.lease_id.in_(lease_ids)).delete(synchronize_session=False)
+
+            # Delete ledgers
+            db.query(RentalLedger).filter(RentalLedger.unit_id.in_(unit_ids)).delete(synchronize_session=False)
+            
+            # Delete units
+            db.query(Unit).filter(Unit.property_id.in_(prop_ids)).delete(synchronize_session=False)
+
+        # Delete properties
+        db.query(Property).filter(Property.landlord_id == landlord_id).delete(synchronize_session=False)
+
+    # Log the action
+    log_rental_action(
+        db,
+        "DELETE_LANDLORD",
+        "rental",
+        f"Landlord '{landlord.full_name}' was deleted.",
+        current_user.user_id
+    )
+
+    # Delete landlord user
+    db.delete(landlord)
+    db.commit()
+
+    return {"detail": "Landlord deleted successfully"}

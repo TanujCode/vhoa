@@ -137,6 +137,7 @@ class UnitOut(BaseModel):
     created_date: datetime
     tenant_name: Optional[str] = None
     tenant_email: Optional[str] = None
+    has_active_lease: bool = False
 
     class Config:
         from_attributes = True
@@ -223,6 +224,8 @@ class RentalApplicationCreate(BaseModel):
     monthly_income: float
     references_data: Optional[str] = None
     pet_details: Optional[str] = None
+    vehicle_details: Optional[str] = None
+    income_proof_url: Optional[str] = None
 
 
 class RentalApplicationInvite(BaseModel):
@@ -237,6 +240,8 @@ class RentalApplicationComplete(BaseModel):
     monthly_income: float
     references_data: Optional[str] = None
     pet_details: Optional[str] = None
+    vehicle_details: Optional[str] = None
+    income_proof_url: Optional[str] = None
     simulation_mode: Optional[str] = "CLEAN"
 
 
@@ -250,6 +255,8 @@ class RentalApplicationOut(BaseModel):
     monthly_income: float
     references_data: Optional[str] = None
     pet_details: Optional[str] = None
+    vehicle_details: Optional[str] = None
+    income_proof_url: Optional[str] = None
     screening_status: str
     credit_score: int
     eviction_history: str

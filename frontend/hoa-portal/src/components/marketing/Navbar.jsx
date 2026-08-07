@@ -110,24 +110,13 @@ export default function Navbar() {
               Sign in
             </Link>
 
-            {/* Get Started Dropdown */}
-            <div 
-              className="relative" 
-              onMouseEnter={() => setShowRegisterDropdown(true)} 
-              onMouseLeave={() => setShowRegisterDropdown(false)}
+            {/* Get Started Button */}
+            <Link
+              to="/portal-select"
+              className="btn-glow px-5 py-2.5 text-sm font-semibold text-white rounded-xl transition-all duration-200"
             >
-              <button
-                className="btn-glow px-5 py-2.5 text-sm font-semibold text-white rounded-xl transition-all duration-200 flex items-center gap-1.5"
-              >
-                Get Started <ChevronDown size={14} className={`transition-transform duration-200 ${showRegisterDropdown ? 'rotate-180' : ''}`} />
-              </button>
-              {showRegisterDropdown && (
-                <div className="absolute right-0 top-full w-52 bg-white dark:bg-[#161426] border border-slate-100 dark:border-white/[0.08] rounded-xl shadow-xl py-2 mt-1.5 z-50 text-left animate-scale-up">
-                  <Link to="/register" className="block px-4 py-2.5 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5 transition-all">HOA Community Portal</Link>
-                  <Link to="/rental/register" className="block px-4 py-2.5 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5 transition-all">Rental Management Portal</Link>
-                </div>
-              )}
-            </div>
+              Get Started
+            </Link>
           </div>
 
           {/* Mobile Menu Icon */}
@@ -173,24 +162,14 @@ export default function Navbar() {
                 Sign in to Gateway
               </Link>
               
-              <div className="space-y-1.5 pt-2">
-                <span className="text-[10px] font-bold text-slate-400 dark:text-slate-550 uppercase tracking-widest block px-2">Create Account</span>
-                <div className="grid grid-cols-2 gap-2">
-                  <Link
-                    to="/register"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="btn-glow text-center py-2 rounded-lg text-xs font-bold text-white transition-all block"
-                  >
-                    HOA Portal
-                  </Link>
-                  <Link
-                    to="/rental/register"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="btn-glow text-center py-2 rounded-lg text-xs font-bold text-white transition-all block"
-                  >
-                    Rental Portal
-                  </Link>
-                </div>
+              <div className="pt-2">
+                <Link
+                  to="/portal-select"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="btn-glow text-center py-2.5 rounded-xl text-xs font-bold text-white transition-all block"
+                >
+                  Get Started Free
+                </Link>
               </div>
             </div>
           </div>

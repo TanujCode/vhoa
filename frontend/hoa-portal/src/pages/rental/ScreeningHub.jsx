@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Users, FileText, CheckCircle2, ShieldAlert, Sparkles, User, Mail, DollarSign, Briefcase, Phone, ShieldCheck, Info, Trash2, Search, X, Eye } from 'lucide-react';
 import { toast } from 'react-hot-toast';
-import API from '../../services/api';
+import API, { getBaseUrl } from '../../services/api';
 import ConfirmModal from '../../components/ConfirmModal';
 
 export default function ScreeningHub({ user, setActivePage, selectedPropertyFilterId = 'all' }) {
@@ -33,7 +33,10 @@ export default function ScreeningHub({ user, setActivePage, selectedPropertyFilt
   const [empStatus, setEmpStatus] = useState('Employed');
   const [income, setIncome] = useState('');
   const [pets, setPets] = useState('');
+  const [vehicles, setVehicles] = useState('');
   const [references, setReferences] = useState('');
+  const [incomeProofUrl, setIncomeProofUrl] = useState('');
+  const [uploadingProof, setUploadingProof] = useState(false);
 
   const [showApplyForm, setShowApplyForm] = useState(!isLandlord);
 
@@ -131,6 +134,14 @@ export default function ScreeningHub({ user, setActivePage, selectedPropertyFilt
     return '';
   };
 
+  const validateVehicles = (val) => {
+    const trimmed = val.trim();
+    if (trimmed && trimmed.length < 2) {
+      return 'Vehicle details must be at least 2 characters.';
+    }
+    return '';
+  };
+
   const handleInviteNameChange = (e) => {
     const val = e.target.value;
     if (val === '' || /^[a-zA-Z\s]*$/.test(val)) {
@@ -213,6 +224,41 @@ export default function ScreeningHub({ user, setActivePage, selectedPropertyFilt
     }
   };
 
+  const handleVehiclesChange = (e) => {
+    const val = e.target.value;
+    setVehicles(val);
+    if (touched.vehicles) {
+      setErrors(prev => ({ ...prev, vehicles: validateVehicles(val) }));
+    }
+  };
+
+  const handleIncomeProofUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    if (file.size > 10 * 1024 * 1024) {
+      setErrors(prev => ({ ...prev, incomeProof: 'File size must not exceed 10MB.' }));
+      return;
+    }
+    
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    try {
+      setUploadingProof(true);
+      setErrors(prev => ({ ...prev, incomeProof: '' }));
+      const res = await API.post('/rental/applications/upload-proof', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      setIncomeProofUrl(res.data.url);
+    } catch (err) {
+      console.error("Proof upload failed:", err);
+      setErrors(prev => ({ ...prev, incomeProof: err.response?.data?.detail || 'Failed to upload proof of income.' }));
+    } finally {
+      setUploadingProof(false);
+    }
+  };
+
   const handleBlur = (field, value) => {
     setTouched(prev => ({ ...prev, [field]: true }));
     let error = '';
@@ -222,6 +268,7 @@ export default function ScreeningHub({ user, setActivePage, selectedPropertyFilt
     else if (field === 'income') error = validateIncome(value);
     else if (field === 'references') error = validateReferences(value);
     else if (field === 'pets') error = validatePets(value);
+    else if (field === 'vehicles') error = validateVehicles(value);
     
     setErrors(prev => ({ ...prev, [field]: error }));
   };
@@ -292,7 +339,7 @@ export default function ScreeningHub({ user, setActivePage, selectedPropertyFilt
       const allUnits = [];
       for (const p of props) {
         const unitRes = await API.get(`/rental/properties/${p.property_id}/units`);
-        const vacant = unitRes.data.filter(u => u.status !== 'OCCUPIED');
+        const vacant = unitRes.data.filter(u => u.status !== 'OCCUPIED' && !u.has_active_lease);
         allUnits.push(...vacant.map(u => ({ ...u, propertyName: p.name })));
       }
       setUnits(allUnits);
@@ -384,7 +431,7 @@ export default function ScreeningHub({ user, setActivePage, selectedPropertyFilt
       const allUnits = [];
       for (const p of props) {
         const unitRes = await API.get(`/rental/properties/${p.property_id}/units`);
-        const vacant = unitRes.data.filter(u => u.status !== 'OCCUPIED');
+        const vacant = unitRes.data.filter(u => u.status !== 'OCCUPIED' && !u.has_active_lease);
         allUnits.push(...vacant.map(u => ({ ...u, propertyName: p.name })));
       }
       setUnits(allUnits);
@@ -453,7 +500,8 @@ export default function ScreeningHub({ user, setActivePage, selectedPropertyFilt
       phone: true,
       income: true,
       references: true,
-      pets: true
+      pets: true,
+      vehicles: true
     };
     setTouched(newTouched);
 
@@ -463,6 +511,7 @@ export default function ScreeningHub({ user, setActivePage, selectedPropertyFilt
     const incomeErr = validateIncome(income);
     const refErr = validateReferences(references);
     const petsErr = validatePets(pets);
+    const vehiclesErr = validateVehicles(vehicles);
 
     // Validate unit selection
     let unitErr = '';
@@ -477,6 +526,7 @@ export default function ScreeningHub({ user, setActivePage, selectedPropertyFilt
       income: incomeErr,
       references: refErr,
       pets: petsErr,
+      vehicles: vehiclesErr,
       unitId: unitErr
     };
 
@@ -501,6 +551,8 @@ export default function ScreeningHub({ user, setActivePage, selectedPropertyFilt
           monthly_income: parseFloat(income),
           references_data: references.trim(),
           pet_details: pets.trim(),
+          vehicle_details: vehicles.trim(),
+          income_proof_url: incomeProofUrl,
           simulation_mode: simulationMode
         });
       } else {
@@ -512,7 +564,9 @@ export default function ScreeningHub({ user, setActivePage, selectedPropertyFilt
           employment_status: empStatus,
           monthly_income: parseFloat(income),
           references_data: references.trim(),
-          pet_details: pets.trim()
+          pet_details: pets.trim(),
+          vehicle_details: vehicles.trim(),
+          income_proof_url: incomeProofUrl
         });
       }
       toast.success('Application submitted successfully! Renter background check is pending review.');
@@ -521,7 +575,9 @@ export default function ScreeningHub({ user, setActivePage, selectedPropertyFilt
       setPhone('');
       setIncome('');
       setPets('');
+      setVehicles('');
       setReferences('');
+      setIncomeProofUrl('');
       setConsent(false);
       setErrors({});
       setTouched({});
@@ -807,15 +863,50 @@ export default function ScreeningHub({ user, setActivePage, selectedPropertyFilt
                       <span className="text-gray-400 block text-xs">References</span>
                       <span className="font-semibold text-gray-900 dark:text-white block whitespace-pre-wrap">{selectedApp.references_data || 'None'}</span>
                     </div>
-                    <div className="md:col-span-2">
+                    <div>
                       <span className="text-gray-400 block text-xs">Pet Details</span>
                       <span className="font-semibold text-gray-900 dark:text-white block whitespace-pre-wrap">{selectedApp.pet_details || 'None'}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-400 block text-xs">Vehicle / Parking Details</span>
+                      <span className="font-semibold text-gray-900 dark:text-white block whitespace-pre-wrap">{selectedApp.vehicle_details || 'None'}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-400 block text-xs">Income Proof Document</span>
+                      {selectedApp.income_proof_url ? (
+                        <a 
+                          href={getBaseUrl(selectedApp.income_proof_url)} 
+                          target="_blank" 
+                          rel="noreferrer"
+                          className="text-xs font-semibold text-blue-500 hover:underline flex items-center gap-1 mt-1 cursor-pointer"
+                        >
+                          View / Download Uploaded Proof (PDF/Image)
+                        </a>
+                      ) : (
+                        <span className="font-semibold text-gray-900 dark:text-white block text-xs">Not provided</span>
+                      )}
                     </div>
                   </div>
                 </div>
 
                 <div className="flex justify-end gap-3 pt-4 border-t border-gray-100 dark:border-white/5">
-
+                  {selectedApp.screening_status === 'APPROVED' && (
+                    <button
+                      onClick={() => {
+                        localStorage.setItem('prefill_lease_email', selectedApp.tenant_email);
+                        localStorage.setItem('prefill_lease_unit_id', String(selectedApp.unit_id));
+                        localStorage.setItem('prefill_lease_pets', selectedApp.pet_details || '');
+                        localStorage.setItem('prefill_lease_vehicles', selectedApp.vehicle_details || '');
+                        localStorage.setItem('prefill_lease_rent', String(selectedApp.unit?.rent_amount || ''));
+                        localStorage.setItem('open_create_lease_modal', 'true');
+                        setActivePage('leases_hub');
+                        setSelectedApp(null);
+                      }}
+                      className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-sm transition-all cursor-pointer"
+                    >
+                      Draft Lease Agreement
+                    </button>
+                  )}
                   <button
                     onClick={() => setSelectedApp(null)}
                     className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-gray-700 dark:text-gray-300 font-bold rounded-xl text-sm transition-all cursor-pointer"
@@ -975,6 +1066,29 @@ export default function ScreeningHub({ user, setActivePage, selectedPropertyFilt
                     <div>
                       <span className="text-gray-400 block mb-0.5">Reported Monthly Income</span>
                       <span className="font-semibold text-gray-900 dark:text-white">${latestApp.monthly_income?.toLocaleString()}/mo</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-400 block mb-0.5">Pet Details</span>
+                      <span className="font-semibold text-gray-900 dark:text-white">{latestApp.pet_details || 'None'}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-400 block mb-0.5">Vehicle / Parking Details</span>
+                      <span className="font-semibold text-gray-900 dark:text-white">{latestApp.vehicle_details || 'None'}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-400 block mb-0.5">Income Proof Document</span>
+                      {latestApp.income_proof_url ? (
+                        <a 
+                          href={getBaseUrl(latestApp.income_proof_url)} 
+                          target="_blank" 
+                          rel="noreferrer"
+                          className="text-xs font-semibold text-blue-500 hover:underline flex items-center gap-1 mt-1 cursor-pointer"
+                        >
+                          View Uploaded Proof
+                        </a>
+                      ) : (
+                        <span className="font-semibold text-gray-900 dark:text-white text-xs">Not provided</span>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -1234,6 +1348,25 @@ export default function ScreeningHub({ user, setActivePage, selectedPropertyFilt
                     </p>
                   )}
                 </div>
+
+                <div className="md:col-span-3">
+                  <label className="block text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">PROOF OF INCOME (Paystubs, Tax Returns, W-2, etc. PDF/PNG/JPG)</label>
+                  <div className="flex items-center gap-3">
+                    <input 
+                      type="file" 
+                      accept=".pdf,.png,.jpg,.jpeg"
+                      onChange={handleIncomeProofUpload}
+                      className="text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 dark:file:bg-[#1E3248] dark:file:text-[#5BA4F5] dark:hover:file:bg-white/10 file:transition-all file:cursor-pointer"
+                    />
+                    {uploadingProof && <span className="text-xs text-blue-500 animate-pulse font-medium">Uploading document...</span>}
+                    {incomeProofUrl && <span className="text-xs text-emerald-500 font-bold flex items-center gap-1">✓ Document uploaded successfully!</span>}
+                  </div>
+                  {errors.incomeProof && (
+                    <p className="mt-1.5 text-xs text-red-550 dark:text-red-400 flex items-center gap-1 font-medium">
+                      <Info size={12} /> {errors.incomeProof}
+                    </p>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -1241,27 +1374,52 @@ export default function ScreeningHub({ user, setActivePage, selectedPropertyFilt
             <div className="space-y-3">
               <h3 className="text-xs font-bold text-indigo-650 dark:text-indigo-400 uppercase tracking-widest">4. Additional Background</h3>
               
-              <div>
-                <label className="block text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">PET DETAILS (IF ANY)</label>
-                <input 
-                  type="text" 
-                  value={pets} 
-                  onChange={handlePetsChange}
-                  onBlur={e => handleBlur('pets', e.target.value)}
-                  className={`w-full text-sm px-4 py-2.5 border rounded-xl bg-white dark:bg-slate-950 text-gray-900 dark:text-white focus:outline-none focus:ring-2 transition-all duration-200 ${
-                    errors.pets 
-                      ? 'border-red-500 focus:ring-red-100 dark:focus:ring-red-950' 
-                      : touched.pets && pets
-                        ? 'border-emerald-500 focus:ring-emerald-50/50 dark:focus:ring-emerald-950/20'
-                        : 'border-gray-250 dark:border-white/10 focus:ring-indigo-150 focus:border-indigo-500'
-                  }`} 
-                  placeholder="e.g., 1 cat (indoor, neutered) or None" 
-                />
-                {errors.pets && (
-                  <p className="mt-1.5 text-xs text-red-550 dark:text-red-400 flex items-center gap-1 font-medium">
-                    <Info size={12} /> {errors.pets}
-                  </p>
-                )}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">PET DETAILS (IF ANY)</label>
+                  <input 
+                    type="text" 
+                    value={pets} 
+                    onChange={handlePetsChange}
+                    onBlur={e => handleBlur('pets', e.target.value)}
+                    className={`w-full text-sm px-4 py-2.5 border rounded-xl bg-white dark:bg-slate-950 text-gray-900 dark:text-white focus:outline-none focus:ring-2 transition-all duration-200 ${
+                      errors.pets 
+                        ? 'border-red-500 focus:ring-red-100 dark:focus:ring-red-950' 
+                        : touched.pets && pets
+                          ? 'border-emerald-500 focus:ring-emerald-50/50 dark:focus:ring-emerald-950/20'
+                          : 'border-gray-250 dark:border-white/10 focus:ring-indigo-150 focus:border-indigo-500'
+                    }`} 
+                    placeholder="e.g., 1 cat (indoor, neutered) or None" 
+                  />
+                  {errors.pets && (
+                    <p className="mt-1.5 text-xs text-red-550 dark:text-red-400 flex items-center gap-1 font-medium">
+                      <Info size={12} /> {errors.pets}
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">VEHICLE / PARKING DETAILS (IF ANY)</label>
+                  <input 
+                    type="text" 
+                    value={vehicles} 
+                    onChange={handleVehiclesChange}
+                    onBlur={e => handleBlur('vehicles', e.target.value)}
+                    className={`w-full text-sm px-4 py-2.5 border rounded-xl bg-white dark:bg-slate-950 text-gray-900 dark:text-white focus:outline-none focus:ring-2 transition-all duration-200 ${
+                      errors.vehicles 
+                        ? 'border-red-500 focus:ring-red-100 dark:focus:ring-red-950' 
+                        : touched.vehicles && vehicles
+                          ? 'border-emerald-500 focus:ring-emerald-50/50 dark:focus:ring-emerald-950/20'
+                          : 'border-gray-250 dark:border-white/10 focus:ring-indigo-150 focus:border-indigo-500'
+                    }`} 
+                    placeholder="e.g., 1 Sedan (Toyota Camry, Black) or None" 
+                  />
+                  {errors.vehicles && (
+                    <p className="mt-1.5 text-xs text-red-550 dark:text-red-400 flex items-center gap-1 font-medium">
+                      <Info size={12} /> {errors.vehicles}
+                    </p>
+                  )}
+                </div>
               </div>
 
               <div>

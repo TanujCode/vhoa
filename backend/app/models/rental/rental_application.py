@@ -16,6 +16,8 @@ class RentalApplication(Base):
     monthly_income = Column(Double, default=0.0)
     references_data = Column(Text, nullable=True)  # JSON or text string
     pet_details = Column(String(255), nullable=True)
+    vehicle_details = Column(String(255), nullable=True)
+    income_proof_url = Column(String(500), nullable=True)
     
     screening_status = Column(String(30), default="SUBMITTED")  # SUBMITTED, APPROVED, REJECTED
     credit_score = Column(Integer, default=700)

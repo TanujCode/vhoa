@@ -29,6 +29,15 @@ export default function CondoContracts() {
   const [submitting, setSubmitting] = useState(false);
   const [confirmConfig, setConfirmConfig] = useState({ isOpen: false });
 
+  // Address autocomplete states
+  const [addressSuggestions, setAddressSuggestions] = useState([]);
+  const [searchingAddress, setSearchingAddress] = useState(false);
+  const addressTimeoutRef = useRef(null);
+
+  const [businessAddressSuggestions, setBusinessAddressSuggestions] = useState([]);
+  const [searchingBusinessAddress, setSearchingBusinessAddress] = useState(false);
+  const businessAddressTimeoutRef = useRef(null);
+
   const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm({
     mode: 'onTouched',
     defaultValues: {
@@ -108,9 +117,121 @@ export default function CondoContracts() {
     }
   };
 
+  const STATE_NAME_TO_ABBR = {
+    "alabama": "AL", "alaska": "AK", "arizona": "AZ", "arkansas": "AR", "california": "CA", "colorado": "CO", "connecticut": "CT", "delaware": "DE", "florida": "FL", "georgia": "GA", "hawaii": "HI", "idaho": "ID", "illinois": "IL", "indiana": "IN", "iowa": "IA", "kansas": "KS", "kentucky": "KY", "louisiana": "LA", "maine": "ME", "maryland": "MD", "massachusetts": "MA", "michigan": "MI", "minnesota": "MN", "mississippi": "MS", "missouri": "MO", "montana": "MT", "nebraska": "NE", "nevada": "NV", "new hampshire": "NH", "new jersey": "NJ", "new mexico": "NM", "new york": "NY", "north carolina": "NC", "north dakota": "ND", "ohio": "OH", "oklahoma": "OK", "oregon": "OR", "pennsylvania": "PA", "rhode island": "RI", "south carolina": "SC", "south dakota": "SD", "tennessee": "TN", "texas": "TX", "utah": "UT", "vermont": "VT", "virginia": "VA", "washington": "WA", "west virginia": "WV", "wisconsin": "WI", "wyoming": "WY"
+  };
+
+  const getAbbr = (stateStr) => {
+    if (!stateStr) return '';
+    const clean = stateStr.trim().toLowerCase();
+    if (clean.length === 2) return clean.toUpperCase();
+    return STATE_NAME_TO_ABBR[clean] || stateStr;
+  };
+
+  const handleAddressInputChange = (val) => {
+    if (addressTimeoutRef.current) {
+      clearTimeout(addressTimeoutRef.current);
+    }
+
+    if (!val || val.trim().length < 1) {
+      setAddressSuggestions([]);
+      return;
+    }
+
+    addressTimeoutRef.current = setTimeout(async () => {
+      try {
+        setSearchingAddress(true);
+        const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(val)}&format=json&addressdetails=1&countrycodes=us&limit=5&email=contact@nestbloq.com`, {
+          headers: {
+            'Accept': 'application/json',
+            'User-Agent': 'NestBloq-RentalPortal/1.0'
+          }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          const mapped = data.map(item => {
+            const addr = item.address || {};
+            const street = `${addr.house_number || ''} ${addr.road || ''}`.trim();
+            const city = addr.city || addr.town || addr.village || addr.hamlet || addr.suburb || '';
+            const state = addr.state || '';
+            const zip = addr.postcode || '';
+            return {
+              id: item.place_id,
+              place_name: item.display_name,
+              street: street || item.display_name.split(',')[0],
+              city: city,
+              state: getAbbr(state),
+              zip: zip
+            };
+          });
+          setAddressSuggestions(mapped);
+        }
+      } catch (err) {
+        console.error('Error fetching address suggestions:', err);
+        setAddressSuggestions([]);
+      } finally {
+        setSearchingAddress(false);
+      }
+    }, 400);
+  };
+
+  const handleSelectSuggestion = (suggestion) => {
+    setAddressSuggestions([]);
+    setValue('client_address', suggestion.street, { shouldValidate: true });
+    if (suggestion.city) setValue('client_city', suggestion.city, { shouldValidate: true });
+    if (suggestion.zip) setValue('client_zip_code', suggestion.zip, { shouldValidate: true });
+    if (suggestion.state) setValue('client_state', suggestion.state, { shouldValidate: true });
+    setValue('client_country', 'USA');
+  };
+
+  const handleBusinessAddressInputChange = (val) => {
+    if (businessAddressTimeoutRef.current) {
+      clearTimeout(businessAddressTimeoutRef.current);
+    }
+
+    if (!val || val.trim().length < 1) {
+      setBusinessAddressSuggestions([]);
+      return;
+    }
+
+    businessAddressTimeoutRef.current = setTimeout(async () => {
+      try {
+        setSearchingBusinessAddress(true);
+        const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(val)}&format=json&addressdetails=1&countrycodes=us&limit=5&email=contact@nestbloq.com`, {
+          headers: {
+            'Accept': 'application/json',
+            'User-Agent': 'NestBloq-RentalPortal/1.0'
+          }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          const mapped = data.map(item => {
+            return {
+              id: item.place_id,
+              place_name: item.display_name
+            };
+          });
+          setBusinessAddressSuggestions(mapped);
+        }
+      } catch (err) {
+        console.error('Error fetching business address suggestions:', err);
+        setBusinessAddressSuggestions([]);
+      } finally {
+        setSearchingBusinessAddress(false);
+      }
+    }, 400);
+  };
+
+  const handleSelectBusinessSuggestion = (suggestion) => {
+    setBusinessAddressSuggestions([]);
+    setValue('business_address', suggestion.place_name, { shouldValidate: true });
+  };
+
   const handleCloseModal = () => {
     setIsModalOpen(false);
     reset();
+    setAddressSuggestions([]);
+    setBusinessAddressSuggestions([]);
   };
 
   const fetchContracts = async () => {
@@ -575,15 +696,44 @@ export default function CondoContracts() {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                  <div className="md:col-span-2">
+                  <div className="md:col-span-2 relative">
                     <label className="block text-xs font-bold text-slate-500 dark:text-gray-400 uppercase tracking-wider mb-2">Client Address *</label>
                     <input
                       type="text"
-                      {...register('client_address', { required: 'Required' })}
+                      name={register('client_address').name}
+                      ref={register('client_address').ref}
+                      onBlur={register('client_address').onBlur}
+                      onChange={(e) => {
+                        register('client_address').onChange(e);
+                        handleAddressInputChange(e.target.value);
+                      }}
                       className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-slate-900 dark:text-white transition-all"
-                      placeholder="e.g. 100 Main St"
+                      placeholder="Start typing to search..."
                     />
                     {errors.client_address && <p className="text-rose-500 text-[10px] mt-1 font-bold">{errors.client_address.message}</p>}
+
+                    {/* Autocomplete suggestions dropdown */}
+                    {searchingAddress && (
+                      <div className="absolute z-50 w-full mt-1 bg-slate-50 dark:bg-[#1e2f41] border border-slate-200 dark:border-white/10 rounded-xl p-3 text-xs text-gray-500 dark:text-gray-400 flex items-center gap-2">
+                        <RefreshCw size={14} className="animate-spin text-blue-400" />
+                        Searching address...
+                      </div>
+                    )}
+
+                    {!searchingAddress && addressSuggestions.length > 0 && (
+                      <div className="absolute z-50 w-full mt-1 bg-white dark:bg-[#162535] border border-slate-200 dark:border-white/10 rounded-xl overflow-hidden shadow-2xl max-h-60 overflow-y-auto">
+                        {addressSuggestions.map((suggestion) => (
+                          <button
+                            key={suggestion.id}
+                            type="button"
+                            onClick={() => handleSelectSuggestion(suggestion)}
+                            className="w-full text-left px-4 py-2.5 hover:bg-blue-500/10 hover:text-blue-600 dark:hover:text-blue-400 text-xs text-slate-800 dark:text-gray-200 border-b border-slate-200 dark:border-white/5 last:border-0 transition-colors"
+                          >
+                            {suggestion.place_name}
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
                   <div>
                     <label className="block text-xs font-bold text-slate-500 dark:text-gray-400 uppercase tracking-wider mb-2">Zip Code *</label>
@@ -626,15 +776,44 @@ export default function CondoContracts() {
                     />
                     {errors.business_name && <p className="text-rose-500 text-[10px] mt-1 font-bold">{errors.business_name.message}</p>}
                   </div>
-                  <div>
+                  <div className="relative">
                     <label className="block text-xs font-bold text-slate-500 dark:text-gray-400 uppercase tracking-wider mb-2">Building Address *</label>
                     <input
                       type="text"
-                      {...register('business_address', { required: 'Required' })}
+                      name={register('business_address').name}
+                      ref={register('business_address').ref}
+                      onBlur={register('business_address').onBlur}
+                      onChange={(e) => {
+                        register('business_address').onChange(e);
+                        handleBusinessAddressInputChange(e.target.value);
+                      }}
                       className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-slate-900 dark:text-white transition-all"
                       placeholder="Condo Building address"
                     />
                     {errors.business_address && <p className="text-rose-500 text-[10px] mt-1 font-bold">{errors.business_address.message}</p>}
+
+                    {/* Autocomplete suggestions dropdown */}
+                    {searchingBusinessAddress && (
+                      <div className="absolute z-50 w-full mt-1 bg-slate-50 dark:bg-[#1e2f41] border border-slate-200 dark:border-white/10 rounded-xl p-3 text-xs text-gray-500 dark:text-gray-400 flex items-center gap-2">
+                        <RefreshCw size={14} className="animate-spin text-blue-400" />
+                        Searching address...
+                      </div>
+                    )}
+
+                    {!searchingBusinessAddress && businessAddressSuggestions.length > 0 && (
+                      <div className="absolute z-50 w-full mt-1 bg-white dark:bg-[#162535] border border-slate-200 dark:border-white/10 rounded-xl overflow-hidden shadow-2xl max-h-60 overflow-y-auto">
+                        {businessAddressSuggestions.map((suggestion) => (
+                          <button
+                            key={suggestion.id}
+                            type="button"
+                            onClick={() => handleSelectBusinessSuggestion(suggestion)}
+                            className="w-full text-left px-4 py-2.5 hover:bg-blue-500/10 hover:text-blue-600 dark:hover:text-blue-400 text-xs text-slate-800 dark:text-gray-200 border-b border-slate-200 dark:border-white/5 last:border-0 transition-colors"
+                          >
+                            {suggestion.place_name}
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

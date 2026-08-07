@@ -33,6 +33,11 @@ export default function Contracts() {
   const [addressSelected, setAddressSelected] = useState(false);
   const addressTimeoutRef = useRef(null);
 
+  // Business Address suggestions states
+  const [businessAddressSuggestions, setBusinessAddressSuggestions] = useState([]);
+  const [searchingBusinessAddress, setSearchingBusinessAddress] = useState(false);
+  const businessAddressTimeoutRef = useRef(null);
+
   const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm({
     mode: 'onTouched',
     defaultValues: {
@@ -82,19 +87,29 @@ export default function Contracts() {
       if (addressTimeoutRef.current) {
         clearTimeout(addressTimeoutRef.current);
       }
+      if (businessAddressTimeoutRef.current) {
+        clearTimeout(businessAddressTimeoutRef.current);
+      }
     };
   }, []);
 
-  const handleAddressInputChange = (val) => {
-    if (!mapboxToken || mapboxToken.startsWith('pk.placeholder_please_replace')) {
-      return;
-    }
+  const STATE_NAME_TO_ABBR = {
+    "alabama": "AL", "alaska": "AK", "arizona": "AZ", "arkansas": "AR", "california": "CA", "colorado": "CO", "connecticut": "CT", "delaware": "DE", "florida": "FL", "georgia": "GA", "hawaii": "HI", "idaho": "ID", "illinois": "IL", "indiana": "IN", "iowa": "IA", "kansas": "KS", "kentucky": "KY", "louisiana": "LA", "maine": "ME", "maryland": "MD", "massachusetts": "MA", "michigan": "MI", "minnesota": "MN", "mississippi": "MS", "missouri": "MO", "montana": "MT", "nebraska": "NE", "nevada": "NV", "new hampshire": "NH", "new jersey": "NJ", "new mexico": "NM", "new york": "NY", "north carolina": "NC", "north dakota": "ND", "ohio": "OH", "oklahoma": "OK", "oregon": "OR", "pennsylvania": "PA", "rhode island": "RI", "south carolina": "SC", "south dakota": "SD", "tennessee": "TN", "texas": "TX", "utah": "UT", "vermont": "VT", "virginia": "VA", "washington": "WA", "west virginia": "WV", "wisconsin": "WI", "wyoming": "WY"
+  };
 
+  const getAbbr = (stateStr) => {
+    if (!stateStr) return '';
+    const clean = stateStr.trim().toLowerCase();
+    if (clean.length === 2) return clean.toUpperCase();
+    return STATE_NAME_TO_ABBR[clean] || stateStr;
+  };
+
+  const handleAddressInputChange = (val) => {
     if (addressTimeoutRef.current) {
       clearTimeout(addressTimeoutRef.current);
     }
 
-    if (!val || val.trim().length < 3) {
+    if (!val || val.trim().length < 1) {
       setAddressSuggestions([]);
       return;
     }
@@ -102,51 +117,92 @@ export default function Contracts() {
     addressTimeoutRef.current = setTimeout(async () => {
       try {
         setSearchingAddress(true);
-        const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(val)}.json?access_token=${mapboxToken}&autocomplete=true&types=address&limit=5`;
-        const response = await fetch(url);
-        if (!response.ok) throw new Error('Mapbox API failed');
-        const data = await response.json();
-        setAddressSuggestions(data.features || []);
+        const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(val)}&format=json&addressdetails=1&countrycodes=us&limit=5&email=contact@nestbloq.com`, {
+          headers: {
+            'Accept': 'application/json',
+            'User-Agent': 'NestBloq-RentalPortal/1.0'
+          }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          const mapped = data.map(item => {
+            const addr = item.address || {};
+            const street = `${addr.house_number || ''} ${addr.road || ''}`.trim();
+            const city = addr.city || addr.town || addr.village || addr.hamlet || addr.suburb || '';
+            const state = addr.state || '';
+            const zip = addr.postcode || '';
+            return {
+              id: item.place_id,
+              place_name: item.display_name,
+              street: street || item.display_name.split(',')[0],
+              city: city,
+              state: getAbbr(state),
+              zip: zip
+            };
+          });
+          setAddressSuggestions(mapped);
+        }
       } catch (err) {
         console.error('Error fetching address suggestions:', err);
         setAddressSuggestions([]);
       } finally {
         setSearchingAddress(false);
       }
-    }, 600);
+    }, 400);
   };
 
-  const handleSelectSuggestion = (feature) => {
+  const handleSelectSuggestion = (suggestion) => {
     setAddressSuggestions([]);
     
-    const streetNumber = feature.address || '';
-    const streetName = feature.text || '';
-    const fullStreet = streetNumber ? `${streetNumber} ${streetName}`.trim() : streetName;
-    
-    let city = '';
-    let zipCode = '';
-    let countryName = '';
-    let countryCode = '';
-
-    if (feature.context) {
-      feature.context.forEach((item) => {
-        if (item.id.startsWith('postcode')) {
-          zipCode = item.text;
-        } else if (item.id.startsWith('place') || item.id.startsWith('locality')) {
-          city = item.text;
-        } else if (item.id.startsWith('country')) {
-          countryName = item.text;
-          countryCode = item.short_code ? item.short_code.toUpperCase() : '';
-        }
-      });
-    }
-
-    setValue('client_address', fullStreet || feature.place_name);
-    if (city) setValue('client_city', city);
-    if (zipCode) setValue('client_zip_code', zipCode);
-    if (countryName) setValue('client_country', countryName);
+    setValue('client_address', suggestion.street);
+    if (suggestion.city) setValue('client_city', suggestion.city, { shouldValidate: true });
+    if (suggestion.zip) setValue('client_zip_code', suggestion.zip, { shouldValidate: true });
+    setValue('client_country', 'USA');
 
     setAddressSelected(true);
+  };
+
+  const handleBusinessAddressInputChange = (val) => {
+    if (businessAddressTimeoutRef.current) {
+      clearTimeout(businessAddressTimeoutRef.current);
+    }
+
+    if (!val || val.trim().length < 1) {
+      setBusinessAddressSuggestions([]);
+      return;
+    }
+
+    businessAddressTimeoutRef.current = setTimeout(async () => {
+      try {
+        setSearchingBusinessAddress(true);
+        const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(val)}&format=json&addressdetails=1&countrycodes=us&limit=5&email=contact@nestbloq.com`, {
+          headers: {
+            'Accept': 'application/json',
+            'User-Agent': 'NestBloq-RentalPortal/1.0'
+          }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          const mapped = data.map(item => {
+            return {
+              id: item.place_id,
+              place_name: item.display_name
+            };
+          });
+          setBusinessAddressSuggestions(mapped);
+        }
+      } catch (err) {
+        console.error('Error fetching business address suggestions:', err);
+        setBusinessAddressSuggestions([]);
+      } finally {
+        setSearchingBusinessAddress(false);
+      }
+    }, 400);
+  };
+
+  const handleSelectBusinessSuggestion = (suggestion) => {
+    setBusinessAddressSuggestions([]);
+    setValue('business_address', suggestion.place_name, { shouldValidate: true });
   };
 
   const handleResetAddress = () => {
@@ -179,6 +235,7 @@ export default function Contracts() {
     setIsModalOpen(false);
     reset();
     setAddressSelected(false);
+    setBusinessAddressSuggestions([]);
   };
 
   const fetchContracts = async () => {
@@ -615,7 +672,18 @@ export default function Contracts() {
 
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4">
                   <div className="md:col-span-2 relative">
-                    <label className="block text-xs font-medium text-slate-500 dark:text-gray-400 mb-1">Client Address</label>
+                    <div className="flex justify-between items-center mb-1">
+                      <label className="block text-xs font-medium text-slate-500 dark:text-gray-400">Client Address</label>
+                      {addressSelected && (
+                        <button
+                          type="button"
+                          onClick={handleResetAddress}
+                          className="text-xs text-blue-500 hover:text-blue-600 dark:hover:text-blue-400 font-semibold cursor-pointer"
+                        >
+                          (Reset)
+                        </button>
+                      )}
+                    </div>
                     <input
                       type="text"
                       name={clientAddressRegister.name}
@@ -625,11 +693,8 @@ export default function Contracts() {
                         clientAddressRegister.onChange(e);
                         handleAddressInputChange(e.target.value);
                       }}
-                      readOnly={addressSelected}
-                      placeholder={mapboxToken ? "Start typing to search..." : "Street Address"}
-                      className={`w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl px-4 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-[#1D68DF] placeholder-slate-400 dark:placeholder-gray-500 ${
-                        addressSelected ? 'opacity-65 bg-slate-100/50 dark:bg-[#0D1B2A]/50 cursor-not-allowed' : ''
-                      }`}
+                      placeholder="Start typing to search..."
+                      className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl px-4 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-[#1D68DF] placeholder-slate-400 dark:placeholder-gray-500"
                     />
 
                     {/* Autocomplete suggestions dropdown */}
@@ -661,10 +726,7 @@ export default function Contracts() {
                       type="text"
                       {...register('client_city', { validate: validateCity })}
                       onKeyPress={onlyLettersKeyPress}
-                      readOnly={addressSelected}
-                      className={`w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl px-4 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-[#1D68DF] placeholder-slate-400 dark:placeholder-gray-500 ${
-                        addressSelected ? 'opacity-65 bg-slate-100/50 dark:bg-[#0D1B2A]/50 cursor-not-allowed' : ''
-                      }`}
+                      className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl px-4 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-[#1D68DF] placeholder-slate-400 dark:placeholder-gray-500"
                     />
                     {errors.client_city && <span className="text-xs text-red-400 mt-1">{errors.client_city.message}</span>}
                   </div>
@@ -684,10 +746,7 @@ export default function Contracts() {
                         }
                       })}
                       onKeyPress={onlyDigitsKeyPress}
-                      readOnly={addressSelected}
-                      className={`w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl px-4 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-[#1D68DF] placeholder-slate-400 dark:placeholder-gray-500 ${
-                        addressSelected ? 'opacity-65 bg-slate-100/50 dark:bg-[#0D1B2A]/50 cursor-not-allowed' : ''
-                      }`}
+                      className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl px-4 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-[#1D68DF] placeholder-slate-400 dark:placeholder-gray-500"
                     />
                     {errors.client_zip_code && <span className="text-xs text-red-400 mt-1">{errors.client_zip_code.message}</span>}
                   </div>
@@ -781,12 +840,44 @@ export default function Contracts() {
                   </div>
                 </div>
                 <div className="mt-4">
-                  <label className="block text-xs font-medium text-slate-500 dark:text-gray-400 mb-1">Business Address</label>
-                  <input
-                    type="text"
-                    {...register('business_address')}
-                    className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl px-4 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-[#1D68DF] placeholder-slate-400 dark:placeholder-gray-500"
-                  />
+                  <div className="relative">
+                    <label className="block text-xs font-medium text-slate-500 dark:text-gray-400 mb-1">Business Address</label>
+                    <input
+                      type="text"
+                      name={register('business_address').name}
+                      ref={register('business_address').ref}
+                      onBlur={register('business_address').onBlur}
+                      onChange={(e) => {
+                        register('business_address').onChange(e);
+                        handleBusinessAddressInputChange(e.target.value);
+                      }}
+                      placeholder="e.g. 1600 Amphitheatre Pkwy"
+                      className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl px-4 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-[#1D68DF] placeholder-slate-400 dark:placeholder-gray-500"
+                    />
+
+                    {/* Autocomplete suggestions dropdown */}
+                    {searchingBusinessAddress && (
+                      <div className="absolute z-50 w-full mt-1 bg-slate-50 dark:bg-[#1e2f41] border border-slate-200 dark:border-white/10 rounded-xl p-3 text-xs text-gray-500 dark:text-gray-400 flex items-center gap-2">
+                        <RefreshCw size={14} className="animate-spin text-blue-400" />
+                        Searching address...
+                      </div>
+                    )}
+
+                    {!searchingBusinessAddress && businessAddressSuggestions.length > 0 && (
+                      <div className="absolute z-50 w-full mt-1 bg-white dark:bg-[#162535] border border-slate-200 dark:border-white/10 rounded-xl overflow-hidden shadow-2xl max-h-60 overflow-y-auto">
+                        {businessAddressSuggestions.map((suggestion) => (
+                          <button
+                            key={suggestion.id}
+                            type="button"
+                            onClick={() => handleSelectBusinessSuggestion(suggestion)}
+                            className="w-full text-left px-4 py-2.5 hover:bg-blue-500/10 hover:text-blue-600 dark:hover:text-blue-400 text-xs text-slate-800 dark:text-gray-200 border-b border-slate-200 dark:border-white/5 last:border-0 transition-colors"
+                          >
+                            {suggestion.place_name}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
 

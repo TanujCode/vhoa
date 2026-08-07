@@ -675,7 +675,7 @@ export default function FeaturesPage() {
                   </ul>
                 </div>
                 <div className="pt-4 flex gap-3">
-                  <Link to="/register" className="flex-1 py-3 bg-gradient-to-r from-violet-500 to-indigo-600 hover:from-violet-600 hover:to-indigo-700 text-white font-bold text-xs uppercase tracking-wider rounded-xl text-center shadow-md active:scale-95 transition-all">
+                  <Link to="/portal-select" className="flex-1 py-3 bg-gradient-to-r from-violet-500 to-indigo-600 hover:from-violet-600 hover:to-indigo-700 text-white font-bold text-xs uppercase tracking-wider rounded-xl text-center shadow-md active:scale-95 transition-all">
                     Start Free Trial
                   </Link>
                   <Link to="/contact" className="px-5 py-3 border border-slate-200 dark:border-white/[0.08] hover:border-violet-500/25 text-slate-700 dark:text-slate-300 font-bold text-xs uppercase tracking-wider rounded-xl text-center hover:bg-slate-50 dark:hover:bg-white/5 active:scale-95 transition-all">

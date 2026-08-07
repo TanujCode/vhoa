@@ -571,13 +571,12 @@ const Dashboard = ({ community, user, setActivePage }) => {
             ))}
           </div>
 
-          {/* 4 Large Action Boxes at Bottom */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {/* 3 Large Action Boxes at Bottom */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {[
               { label: "Onboard Community", page: "contracts", desc: "Create SOW and contracts", icon: <UserPlus size={16} /> },
               { label: "Condo Management", page: "settings", desc: "Configure amenity schedules", icon: <Calendar size={16} /> },
-              { label: "HOA Governance", page: "settings", desc: "Configure e-Voting & bylaws", icon: <ShieldAlert size={16} /> },
-              { label: "Apartment Management", page: "settings", desc: "Configure work order tickets", icon: <Settings2 size={16} /> }
+              { label: "HOA Governance", page: "settings", desc: "Configure e-Voting & bylaws", icon: <ShieldAlert size={16} /> }
             ].map((box, idx) => (
               <button
                 key={idx}

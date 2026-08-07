@@ -15,9 +15,7 @@ from app.routers.condo.vendor import router as condo_vendor_router
 from app.routers.hoa import user
 
 try:
-    print("[INFO] Connecting to database and creating all tables (HOA + Rental)...")
     Base.metadata.create_all(bind=engine)
-    print("[SUCCESS] Database connected. All HOA and Rental tables created successfully.")
 except Exception as e:
     import traceback
     print("[ERROR] CRITICAL DATABASE ERROR ON STARTUP:")
@@ -250,6 +248,16 @@ def run_db_upgrades():
             f"rental_leases.{col_name}"
         )
 
+    # rental_applications vehicle_details column
+    _safe_execute(
+        "ALTER TABLE rental_applications ADD COLUMN IF NOT EXISTS vehicle_details VARCHAR(255);",
+        "rental_applications.vehicle_details"
+    )
+    _safe_execute(
+        "ALTER TABLE rental_applications ADD COLUMN IF NOT EXISTS income_proof_url VARCHAR(500);",
+        "rental_applications.income_proof_url"
+    )
+
     # rental_otp_tokens (user_id)
     _safe_execute("ALTER TABLE rental_otp_tokens DROP CONSTRAINT IF EXISTS rental_otp_tokens_user_id_fkey;", "drop_otp_user_fk")
     _safe_execute("ALTER TABLE rental_otp_tokens ADD CONSTRAINT rental_otp_tokens_user_id_fkey FOREIGN KEY (user_id) REFERENCES rental_users(user_id) ON DELETE CASCADE;", "add_otp_user_fk")
@@ -462,7 +470,7 @@ def seed_roles():
         db.commit()
         db.execute(text("SELECT setval('roles_role_id_seq', COALESCE((SELECT MAX(role_id) FROM roles), 1) + 1, false);"))
         db.commit()
-        print("[SUCCESS] Roles seeded successfully.")
+        # print("[SUCCESS] Roles seeded successfully.")
     finally:
         db.close()
 
@@ -474,7 +482,7 @@ def seed_violation_statuses():
     db = SessionLocal()
     try:
         _seed(db)
-        print("Violation statuses seeded.")
+        # print("Violation statuses seeded.")
     finally:
         db.close()
 
@@ -484,7 +492,7 @@ def seed_sr_statuses():
     db = SessionLocal()
     try:
         _seed(db)
-        print("[SUCCESS] Service Request statuses seeded.")
+        # print("[SUCCESS] Service Request statuses seeded.")
     finally:
         db.close()
 
@@ -513,7 +521,7 @@ def seed_condo_sr_statuses():
     db = SessionLocal()
     try:
         _seed(db)
-        print("[SUCCESS] Condo Service Request statuses seeded.")
+        # print("[SUCCESS] Condo Service Request statuses seeded.")
     finally:
         db.close()
 
@@ -523,7 +531,7 @@ def seed_default_condo_service_types_for_all_communities():
     db = SessionLocal()
     try:
         _seed(db)
-        print("[SUCCESS] Condo default service types seeded.")
+        # print("[SUCCESS] Condo default service types seeded.")
     finally:
         db.close()
 
@@ -554,7 +562,7 @@ def seed_amenity_types():
             if not db.query(AmenityType).filter(AmenityType.type_name == t["type_name"]).first():
                 db.add(AmenityType(**t))
         db.commit()
-        print("[SUCCESS] Amenity types seeded.")
+        # print("[SUCCESS] Amenity types seeded.")
     except Exception as e:
         print(f"[ERROR] Amenity types seed failed: {e}")
     finally:
@@ -656,7 +664,7 @@ seed_default_condo_service_types_for_all_communities()
 seed_amenity_types()
 seed_custom_users()
 
-print("All database upgrades and seeding completed successfully!")
+print("[SUCCESS] Database connected. All tables, upgrades, and seed data synchronized successfully.")
 
 # ==================== FASTAPI APP ====================
 app = FastAPI(

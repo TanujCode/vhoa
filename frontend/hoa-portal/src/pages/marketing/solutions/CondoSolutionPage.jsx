@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import Navbar from '../../../components/marketing/Navbar';
 import Footer from '../../../components/marketing/Footer';
+import Logo from '../../../components/marketing/Logo';
 
 // Import high-fidelity image assets
 import solutionCondo from '../../../assets/solution_condo.png';
@@ -75,7 +76,7 @@ export default function CondoSolutionPage() {
                 NestBloq delivers administrative command over facility bookings, resident scheduling rules, and security guest pass distribution.
               </p>
               <div className="flex flex-wrap gap-4">
-                <Link to="/register" className="btn-glow px-8 py-3.5 text-sm font-semibold text-white rounded-xl flex items-center gap-2">
+                <Link to="/portal-select" className="btn-glow px-8 py-3.5 text-sm font-semibold text-white rounded-xl flex items-center gap-2">
                   Start for Free
                   <ArrowRight className="w-4 h-4" />
                 </Link>
@@ -86,26 +87,104 @@ export default function CondoSolutionPage() {
             </div>
 
             <div className="lg:col-span-7 relative flex justify-center">
-              {/* Visual highlight: 3D Stack / Frame */}
-              <div className="relative w-full aspect-[4/3] sm:aspect-[16/10] rounded-3xl overflow-hidden border border-slate-200/60 dark:border-white/[0.08] shadow-2xl group">
-                <img 
-                  src={solutionCondo} 
-                  alt="Premium Condo Amenity" 
-                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/10 to-transparent" />
+              {/* Visual highlight: Mockup Condo Bookings Workspace */}
+              <div className="relative w-full h-[320px] sm:h-[380px] rounded-3xl overflow-hidden border border-slate-200/60 dark:border-white/[0.08] shadow-2xl flex flex-col bg-slate-50 dark:bg-[#090F16] z-10">
+                {/* Browser top bar */}
+                <div className="flex items-center gap-1.5 px-4 py-2.5 bg-slate-100 dark:bg-[#0D1B2A] border-b border-slate-200/60 dark:border-white/[0.06] shrink-0 text-left">
+                  <div className="flex gap-1.5 shrink-0">
+                    <div className="w-2.5 h-2.5 rounded-full bg-red-400" />
+                    <div className="w-2.5 h-2.5 rounded-full bg-amber-400" />
+                    <div className="w-2.5 h-2.5 rounded-full bg-emerald-400" />
+                  </div>
+                  <div className="flex-1 mx-4">
+                    <div className="bg-white dark:bg-[#090F16] rounded px-3 py-0.5 text-[9px] text-slate-405 dark:text-slate-500 max-w-xs mx-auto border border-slate-200 dark:border-white/[0.06]">
+                      app.nestbloq.com/condo/bookings
+                    </div>
+                  </div>
+                </div>
                 
-                {/* Floating stats card overlapping the image */}
-                <div className="absolute bottom-5 left-5 right-5 p-4 sm:p-5 rounded-2xl bg-black/45 backdrop-blur-md border border-white/10 text-white flex justify-between items-center gap-4">
-                  <div className="space-y-0.5 text-left">
-                    <p className="text-[10px] text-violet-400 font-extrabold uppercase tracking-wider">SCHEDULING ERRORS</p>
-                    <p className="text-sm sm:text-base font-black">Zero Overlaps</p>
-                  </div>
-                  <div className="w-px h-8 bg-white/20" />
-                  <div className="space-y-0.5 text-left">
-                    <p className="text-[10px] text-violet-400 font-extrabold uppercase tracking-wider">GATE INTEGRATIONS</p>
-                    <p className="text-sm sm:text-base font-black">Automated OTP</p>
-                  </div>
+                {/* Browser Body */}
+                <div className="flex-1 flex overflow-hidden text-left text-slate-800 dark:text-slate-200">
+                  {/* Mini Sidebar */}
+                  <aside className="w-24 sm:w-28 shrink-0 bg-slate-100/50 dark:bg-[#0B132B] border-r border-slate-200/60 dark:border-white/[0.06] p-2 flex flex-col gap-2">
+                    <div className="px-1 py-1.5 border-b border-slate-200/50 dark:border-white/[0.05] mb-1 shrink-0">
+                      <Logo className="h-5 w-auto" />
+                    </div>
+                    {[
+                      { label: 'Dashboard', active: false },
+                      { label: 'Amenities', active: true },
+                      { label: 'Residents', active: false },
+                      { label: 'Bookings', active: false },
+                      { label: 'Parking Slots', active: false }
+                    ].map((item, idx) => (
+                      <div key={idx} className={`px-2 py-1 rounded text-[8px] font-bold ${item.active ? 'bg-violet-600 text-white shadow-sm' : 'text-slate-500 hover:bg-slate-200 dark:hover:bg-white/5'}`}>
+                        {item.label}
+                      </div>
+                    ))}
+                  </aside>
+                  
+                  {/* Workspace */}
+                  <main className="flex-1 p-3 sm:p-4 overflow-y-auto space-y-3 bg-white dark:bg-[#090F16] custom-scrollbar text-[9px]">
+                    <div className="pb-2 border-b border-slate-200/50 dark:border-white/[0.05] flex justify-between items-center">
+                      <div>
+                        <h4 className="font-extrabold text-slate-900 dark:text-white uppercase tracking-tight text-[10px]">Amenity Bookings</h4>
+                        <p className="text-[7.5px] text-slate-400">Manage bookings, schedule slots, and check reservation status.</p>
+                      </div>
+                      <button className="bg-violet-600 hover:bg-violet-500 text-white px-2 py-1 rounded text-[7.5px] font-black shadow-sm shrink-0">+ Add Booking</button>
+                    </div>
+
+                    {/* Status filter tabs */}
+                    <div className="flex items-center gap-1.5 pb-1">
+                      {[
+                        { label: 'All', count: 5, active: true },
+                        { label: 'Approved', count: 3, active: false },
+                        { label: 'Pending', count: 2, active: false }
+                      ].map((tab, idx) => (
+                        <div key={idx} className={`px-2 py-0.5 rounded-lg text-[7px] font-bold flex items-center gap-1 border cursor-pointer transition-all ${
+                          tab.active 
+                            ? 'bg-violet-600 text-white border-violet-600 shadow-sm shadow-violet-500/10' 
+                            : 'text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-white/[0.02] border-slate-200 dark:border-white/5 hover:bg-slate-100'
+                        }`}>
+                          <span>{tab.label}</span>
+                          <span className={`text-[6px] px-1 py-0.2 rounded-full font-black ${
+                            tab.active ? 'bg-white/20 text-white' : 'bg-slate-200 dark:bg-white/10 text-slate-500'
+                          }`}>{tab.count}</span>
+                        </div>
+                      ))}
+                    </div>
+                    
+                    {/* Booking Card 1 */}
+                    <div className="p-3 border border-slate-200/70 dark:border-white/[0.05] bg-white dark:bg-[#1E2E42] rounded-xl space-y-2">
+                      <div className="flex justify-between items-center">
+                        <span className="text-[8px] font-extrabold text-slate-900 dark:text-white">Clubhouse Party Hall</span>
+                        <span className="text-[7px] px-2 py-0.5 rounded-full font-bold bg-blue-500/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400">Amenity booked</span>
+                      </div>
+                      <div className="flex justify-between text-[7.5px] font-medium text-slate-500">
+                        <span>Today, 14:00 - 18:00</span>
+                        <span className="font-semibold text-slate-700 dark:text-slate-350">Unit 305 — Tanuj Tongse</span>
+                      </div>
+                      <div className="pt-2 border-t border-slate-100 dark:border-white/5 flex justify-between items-center text-[7.5px]">
+                        <span className="text-slate-400">Temporary entry gate pass issued:</span>
+                        <span className="font-mono font-black text-violet-500 bg-violet-500/5 px-2 py-0.5 rounded border border-violet-500/10">OTP: 7810</span>
+                      </div>
+                    </div>
+
+                    {/* Booking Card 2 */}
+                    <div className="p-3 border border-slate-200/70 dark:border-white/[0.05] bg-white dark:bg-[#1E2E42] rounded-xl space-y-2">
+                      <div className="flex justify-between items-center">
+                        <span className="text-[8px] font-extrabold text-slate-900 dark:text-white">Indoor Tennis Court B</span>
+                        <span className="text-[7px] px-2 py-0.5 rounded-full font-bold bg-amber-500/10 text-amber-600 dark:bg-amber-500/20 dark:text-amber-300">PENDING</span>
+                      </div>
+                      <div className="flex justify-between text-[7.5px] font-medium text-slate-500">
+                        <span>Tomorrow, 08:00 - 10:00</span>
+                        <span className="font-semibold text-slate-700 dark:text-slate-350">Unit 102 — John Smith</span>
+                      </div>
+                      <div className="pt-2 border-t border-slate-100 dark:border-white/5 flex justify-end gap-2 text-[7.5px]">
+                        <button className="bg-slate-200 dark:bg-white/10 text-slate-700 dark:text-slate-300 font-bold px-2 py-0.5 rounded">Decline</button>
+                        <button className="bg-violet-600 hover:bg-violet-500 text-white font-black px-2 py-0.5 rounded shadow-sm">Approve Booking</button>
+                      </div>
+                    </div>
+                  </main>
                 </div>
               </div>
               
@@ -173,49 +252,101 @@ export default function CondoSolutionPage() {
               </p>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
-              {/* Card 1: Main Clubhouse Hall */}
-              <div className="group relative rounded-2xl overflow-hidden border border-slate-200/60 dark:border-white/[0.08] shadow-md aspect-[4/3] bg-slate-900 flex flex-col justify-end p-6">
-                <img 
-                  src={heroClubDark} 
-                  alt="Clubhouse Lounge" 
-                  className="absolute inset-0 w-full h-full object-cover opacity-75 group-hover:scale-105 transition-transform duration-500"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/30 to-transparent" />
-                <div className="relative text-left text-white space-y-1 z-10">
-                  <span className="text-[9px] uppercase tracking-wider font-extrabold text-violet-400">Social Center</span>
-                  <h4 className="text-base font-black">Main Clubhouse Lounge</h4>
-                  <p className="text-xs text-slate-300">Indoor banquet halls, dining rooms, and event spaces.</p>
+             <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
+              {/* Card 1: Members Directory */}
+              <div className="rounded-2xl border border-slate-200/60 dark:border-white/[0.08] shadow-md bg-white dark:bg-[#0E1927] p-5 flex flex-col justify-between text-left h-[260px]">
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center pb-2 border-b border-slate-100 dark:border-white/5">
+                    <span className="text-[9px] uppercase tracking-wider font-extrabold text-violet-500">Members Directory</span>
+                    <span className="text-[7.5px] font-mono text-slate-400">Roster</span>
+                  </div>
+                  <div className="space-y-2">
+                    {[
+                      { name: 'John Smith', role: 'Property Manager', status: 'Active' },
+                      { name: 'Sarah Jenkins', role: 'Board President', status: 'Active' },
+                      { name: 'Marcus Vance', role: 'Homeowner', status: 'Active' }
+                    ].map((member, idx) => (
+                      <div key={idx} className="flex justify-between items-center text-[8.5px] py-1">
+                        <div className="flex items-center gap-2">
+                          <div className="w-5 h-5 rounded-full bg-violet-500/10 text-violet-650 flex items-center justify-center font-bold text-[8px] uppercase">{member.name[0]}</div>
+                          <div>
+                            <p className="font-extrabold text-slate-900 dark:text-white leading-none">{member.name}</p>
+                            <span className="text-[7px] text-slate-400 leading-none">{member.role}</span>
+                          </div>
+                        </div>
+                        <span className="px-1.5 py-0.5 rounded text-[7px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25">{member.status}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div className="text-[7.5px] text-slate-400 dark:text-slate-500 pt-2 border-t border-slate-100 dark:border-white/5">
+                  Showing 3 of 42 active community members
                 </div>
               </div>
 
-              {/* Card 2: Society Parks */}
-              <div className="group relative rounded-2xl overflow-hidden border border-slate-200/60 dark:border-white/[0.08] shadow-md aspect-[4/3] bg-slate-900 flex flex-col justify-end p-6">
-                <img 
-                  src={heroParkDark} 
-                  alt="Society Community Parks" 
-                  className="absolute inset-0 w-full h-full object-cover opacity-75 group-hover:scale-105 transition-transform duration-500"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/30 to-transparent" />
-                <div className="relative text-left text-white space-y-1 z-10">
-                  <span className="text-[9px] uppercase tracking-wider font-extrabold text-indigo-400">Outdoor Zone</span>
-                  <h4 className="text-base font-black">Society Community Parks</h4>
-                  <p className="text-xs text-slate-300">Green lawns, paved walking trails, and pet runs.</p>
+              {/* Card 2: Maintenance Kanban */}
+              <div className="rounded-2xl border border-slate-200/60 dark:border-white/[0.08] shadow-md bg-white dark:bg-[#0E1927] p-5 flex flex-col justify-between text-left h-[260px]">
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center pb-2 border-b border-slate-100 dark:border-white/5">
+                    <span className="text-[9px] uppercase tracking-wider font-extrabold text-blue-500">Maintenance Dispatch</span>
+                    <span className="text-[7.5px] font-mono text-slate-400">Kanban</span>
+                  </div>
+                  <div className="space-y-2">
+                    {[
+                      { title: 'AC Compressor Repair', prio: 'High', status: 'Unassigned', contractor: 'None' },
+                      { title: 'Unit 304 Pipe Leak', prio: 'Medium', status: 'Assigned', contractor: 'Plumber Pro' },
+                      { title: 'Pool Light Replacement', prio: 'Low', status: 'Completed', contractor: 'Elite Electrics' }
+                    ].map((ticket, idx) => (
+                      <div key={idx} className="p-2 border border-slate-100 dark:border-white/5 rounded-xl bg-slate-50/50 dark:bg-white/[0.01] space-y-1">
+                        <div className="flex justify-between items-center text-[7.5px]">
+                          <p className="font-extrabold text-slate-900 dark:text-white truncate max-w-[120px]">{ticket.title}</p>
+                          <span className={`px-1.5 py-0.5 rounded text-[6.5px] font-bold ${
+                            ticket.prio === 'High' ? 'bg-red-500/10 text-red-500 border border-red-500/25' :
+                            ticket.prio === 'Medium' ? 'bg-amber-500/10 text-amber-605 border border-amber-500/25' :
+                            'bg-emerald-500/10 text-emerald-600 border border-emerald-500/25'
+                          }`}>{ticket.prio}</span>
+                        </div>
+                        <div className="flex justify-between items-center text-[6.5px] text-slate-400 leading-none">
+                          <span>Status: {ticket.status}</span>
+                          <span>Contractor: {ticket.contractor}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div className="text-[7.5px] text-slate-400 dark:text-slate-550 pt-2 border-t border-slate-100 dark:border-white/5">
+                  Real-time ticket dispatch logs
                 </div>
               </div>
 
-              {/* Card 3: Botanical Gardens */}
-              <div className="group relative rounded-2xl overflow-hidden border border-slate-200/60 dark:border-white/[0.08] shadow-md aspect-[4/3] bg-slate-900 flex flex-col justify-end p-6">
-                <img 
-                  src={heroGardenDark} 
-                  alt="Botanical Gardens" 
-                  className="absolute inset-0 w-full h-full object-cover opacity-75 group-hover:scale-105 transition-transform duration-500"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/30 to-transparent" />
-                <div className="relative text-left text-white space-y-1 z-10">
-                  <span className="text-[9px] uppercase tracking-wider font-extrabold text-indigo-400">Green Spaces</span>
-                  <h4 className="text-base font-black">Botanical Shrubberies</h4>
-                  <p className="text-xs text-slate-300">Exquisite flowers, private seating corners, and pathways.</p>
+              {/* Card 3: Payments Ledger */}
+              <div className="rounded-2xl border border-slate-200/60 dark:border-white/[0.08] shadow-md bg-white dark:bg-[#0E1927] p-5 flex flex-col justify-between text-left h-[260px]">
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center pb-2 border-b border-slate-100 dark:border-white/5">
+                    <span className="text-[9px] uppercase tracking-wider font-extrabold text-indigo-500">Dues & Payments</span>
+                    <span className="text-[7.5px] font-mono text-slate-400">Ledger</span>
+                  </div>
+                  <div className="space-y-2.5">
+                    {[
+                      { type: 'Monthly HOA Assessment', amount: '+$150.00', date: 'Aug 5', status: 'Paid' },
+                      { type: 'Clubhouse Slot Deposit', amount: '+$100.00', date: 'Aug 3', status: 'Paid' },
+                      { type: 'Late Payment Penalty Fee', amount: '+$50.00', date: 'Aug 1', status: 'Pending' }
+                    ].map((row, idx) => (
+                      <div key={idx} className="flex justify-between items-center text-[8.5px]">
+                        <div>
+                          <p className="font-extrabold text-slate-900 dark:text-white leading-none">{row.type}</p>
+                          <span className="text-[7px] text-slate-400 leading-none">{row.date} · verified</span>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-mono font-bold text-slate-900 dark:text-white leading-none">{row.amount}</p>
+                          <span className={`text-[6.5px] font-bold ${row.status === 'Paid' ? 'text-emerald-500' : 'text-amber-500'}`}>{row.status}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div className="text-[7.5px] text-slate-400 dark:text-slate-500 pt-2 border-t border-slate-100 dark:border-white/5">
+                  SHA-256 Ledger Balance Trail
                 </div>
               </div>
             </div>
@@ -352,7 +483,7 @@ export default function CondoSolutionPage() {
               Get started for free today with a 14-day trial, or request an onboarding specialist to customize your amenity options.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link to="/register" className="btn-glow px-6 py-3 text-white font-bold text-xs rounded-xl shadow-md">
+              <Link to="/portal-select" className="btn-glow px-6 py-3 text-white font-bold text-xs rounded-xl shadow-md">
                 Start Free Trial
               </Link>
               <Link to="/contact" className="px-6 py-3 bg-white dark:bg-slate-800 text-slate-800 dark:text-white border border-slate-200 dark:border-slate-700 hover:border-violet-500 dark:hover:border-violet-500 font-bold text-xs rounded-xl transition-all flex items-center justify-center gap-1.5">

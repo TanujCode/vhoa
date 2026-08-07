@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   Building2, Users, Home, FileText, CreditCard, ShieldCheck, 
   Search, RefreshCw, AlertCircle, CheckCircle2, XCircle, ArrowUpRight,
-  ChevronRight, Activity, TrendingUp, Sparkles, Filter, UserCheck, Wrench
+  ChevronRight, Activity, TrendingUp, Sparkles, Filter, UserCheck, Wrench, Trash2
 } from 'lucide-react';
 import API from '../../services/api';
 import { useTheme } from '../../context/ThemeContext';
@@ -45,6 +45,8 @@ const SuperAdminDashboard = ({ user, setActivePage }) => {
     }
   };
 
+  const [deletingId, setDeletingId] = useState(null);
+
   const handleToggleStatus = async (landlord) => {
     try {
       setTogglingId(landlord.user_id);
@@ -56,6 +58,24 @@ const SuperAdminDashboard = ({ user, setActivePage }) => {
       alert(err?.response?.data?.detail || "Failed to update status.");
     } finally {
       setTogglingId(null);
+    }
+  };
+
+  const handleDeleteLandlord = async (landlord) => {
+    if (!window.confirm(`Are you sure you want to permanently delete Landlord "${landlord.full_name || landlord.email_id}" and all their properties/leases/tenants? This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      setDeletingId(landlord.user_id);
+      await API.delete(`/rental/landlords/${landlord.user_id}`);
+      setLandlords(prev => prev.filter(l => l.user_id !== landlord.user_id));
+      alert("Landlord deleted successfully.");
+    } catch (err) {
+      console.error("Failed to delete landlord:", err);
+      alert(err?.response?.data?.detail || "Failed to delete landlord registration.");
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -341,29 +361,33 @@ const SuperAdminDashboard = ({ user, setActivePage }) => {
 
                     {/* Status Badge */}
                     <td className="py-3 px-4 sm:px-5">
-                      {l.active_status ? (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400 border border-emerald-500/20">
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> Active
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-rose-500/10 text-rose-600 dark:bg-rose-500/20 dark:text-rose-400 border border-rose-500/20">
-                          <span className="w-1.5 h-1.5 rounded-full bg-rose-500" /> Inactive
-                        </span>
-                      )}
+                      <button
+                        onClick={() => handleToggleStatus(l)}
+                        disabled={togglingId === l.user_id}
+                        className="focus:outline-none cursor-pointer disabled:opacity-60 transition-transform active:scale-95 text-left inline-flex"
+                        title={l.active_status ? "Click to Deactivate" : "Click to Activate"}
+                      >
+                        {l.active_status ? (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400 border border-emerald-500/20">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> Active
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-rose-500/10 text-rose-600 dark:bg-rose-500/20 dark:text-rose-400 border border-rose-500/20">
+                            <span className="w-1.5 h-1.5 rounded-full bg-rose-500" /> Inactive
+                          </span>
+                        )}
+                      </button>
                     </td>
 
                     {/* Actions */}
                     <td className="py-3 px-4 sm:px-5 text-right">
                       <button
-                        onClick={() => handleToggleStatus(l)}
-                        disabled={togglingId === l.user_id}
-                        className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all border ${
-                          l.active_status
-                            ? 'bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400 border-rose-200 dark:border-rose-800 hover:bg-rose-100'
-                            : 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100'
-                        }`}
+                        onClick={() => handleDeleteLandlord(l)}
+                        disabled={deletingId === l.user_id}
+                        className="p-2 rounded-xl text-rose-500 hover:bg-rose-500/10 dark:text-rose-400 dark:hover:bg-rose-500/20 transition-all cursor-pointer disabled:opacity-50 inline-flex items-center justify-center border border-transparent hover:border-rose-500/20"
+                        title="Delete Landlord"
                       >
-                        {togglingId === l.user_id ? "..." : (l.active_status ? "Deactivate" : "Activate")}
+                        <Trash2 size={16} className={deletingId === l.user_id ? "animate-spin" : ""} />
                       </button>
                     </td>
 

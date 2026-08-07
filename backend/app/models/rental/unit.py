@@ -35,3 +35,10 @@ class Unit(Base):
             if lease.status == "ACTIVE":
                 return lease.tenant_email
         return None
+
+    @builtins.property
+    def has_active_lease(self) -> bool:
+        for lease in self.leases:
+            if lease.status in ["ACTIVE", "PENDING_SIGNATURE"]:
+                return True
+        return False

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, File, UploadFile
 from sqlalchemy.orm import Session
 from typing import List
 from app.database import get_rental_db
@@ -7,8 +7,21 @@ from app.schemas.rental import RentalApplicationCreate, RentalApplicationOut, Re
 from app.services.rental import rental_service
 from app.services.rental.audit_service import log_rental_action
 from app.routers.rental.dependencies import require_rental_role, get_verified_rental_user
+from app.utils.file_service import save_document
 
 router = APIRouter(prefix="/rental", tags=["Rental - Tenant Screening"])
+
+@router.post("/applications/upload-proof")
+async def upload_income_proof(
+    file: UploadFile = File(...),
+    current_user: RentalUser = Depends(get_verified_rental_user)
+):
+    try:
+        file_url = await save_document(file, "income_proofs")
+        return {"url": file_url}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
 
 @router.post("/applications/invite", response_model=RentalApplicationOut, status_code=201)
 def invite_tenant(

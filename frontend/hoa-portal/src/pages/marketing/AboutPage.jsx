@@ -265,7 +265,7 @@ export default function AboutPage() {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center pt-2">
               <Link
-                to="/register"
+                to="/portal-select"
                 className="px-6 py-3.5 bg-gradient-to-r from-violet-500 to-indigo-650 hover:from-violet-600 hover:to-indigo-700 text-white font-extrabold text-xs uppercase tracking-wider rounded-xl shadow-lg shadow-violet-500/20 transition-all active:scale-95 text-center"
               >
                 Get Started Now

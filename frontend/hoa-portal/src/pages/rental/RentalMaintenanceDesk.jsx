@@ -208,6 +208,15 @@ export default function RentalMaintenanceDesk({ user, selectedPropertyFilterId =
 
   useEffect(() => {
     fetchData();
+    if (localStorage.getItem('open_create_ticket_modal') === 'true') {
+      localStorage.removeItem('open_create_ticket_modal');
+      setErrors({});
+      setRequestType('');
+      setTitle('');
+      setDescription('');
+      setPriority('NORMAL');
+      setShowSubmitModal(true);
+    }
   }, [user?.property_name, user?.unit_number]);
 
   async function fetchData() {

@@ -40,6 +40,12 @@ export default function LandlordDashboard({
     fetchDashboardData();
   }, []);
 
+  useEffect(() => {
+    if (globalProperties) {
+      setProperties(globalProperties);
+    }
+  }, [globalProperties]);
+
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
@@ -298,6 +304,175 @@ export default function LandlordDashboard({
   const offsetVacant = dashOccupied;
   const offsetMaint = dashOccupied + dashVacant;
 
+  if (properties.length === 0) {
+    return (
+      <div className="space-y-8 animate-fade-in text-left pb-16 font-sans">
+        
+        {/* Single Merged Hero Card */}
+        <div className="p-8 sm:p-10 rounded-3xl bg-gradient-to-br from-blue-500/[0.04] via-indigo-500/[0.02] to-purple-500/[0.04] dark:from-blue-500/[0.05] dark:via-indigo-500/[0.02] dark:to-purple-500/[0.05] border border-blue-550/20 dark:border-blue-500/30 relative overflow-hidden shadow-sm flex flex-col md:flex-row items-center gap-8 group animate-fade-in">
+          <div className="absolute top-0 right-0 w-80 h-80 bg-blue-500/[0.03] dark:bg-blue-500/[0.04] rounded-full blur-3xl pointer-events-none" />
+          
+          <div className="relative p-6 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white shadow-xl shadow-blue-500/20 flex-shrink-0 animate-bounce-slow">
+            <Building2 className="w-14 h-14 stroke-[1.5]" />
+            <div className="absolute -top-1 -right-1 w-3 h-3 bg-emerald-400 rounded-full animate-ping" />
+            <div className="absolute -top-1 -right-1 w-3 h-3 bg-emerald-400 rounded-full" />
+          </div>
+
+          <div className="space-y-5 text-center md:text-left flex-1 relative z-10">
+            <div className="space-y-3">
+              <div className="flex flex-wrap items-center justify-center md:justify-start gap-2.5">
+                <span className="inline-flex items-center text-[10px] font-bold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-white/5 px-2.5 py-1 rounded-xl border border-slate-200/50 dark:border-white/10 font-mono">
+                  Properties: 0
+                </span>
+                <span className="inline-flex items-center text-[10px] font-black text-amber-700 dark:text-amber-400 bg-amber-500/10 px-2.5 py-1 rounded-xl border border-amber-500/20">
+                  ONBOARDING
+                </span>
+              </div>
+              
+              <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white leading-tight">
+                Welcome, {user?.name || 'Landlord'}! <Sparkles className="inline-block w-6 h-6 text-blue-500 animate-pulse shrink-0 animate-bounce-slow" />
+              </h2>
+              
+              <h3 className="text-sm font-bold text-blue-600 dark:text-blue-400 tracking-wide uppercase">
+                Your workspace is ready.
+              </h3>
+              
+              <p className="text-sm text-slate-500 dark:text-gray-400 font-medium max-w-2xl leading-relaxed">
+                Create your first property to start managing everything in one place. Draft leases, approve tenant applications, schedule maintenance, and automate rent invoicing.
+              </p>
+            </div>
+
+            <div className="pt-2 flex flex-wrap justify-center md:justify-start gap-4">
+              <button
+                onClick={() => {
+                  localStorage.setItem('open_add_property_modal', 'true');
+                  setActivePage('properties_hub');
+                }}
+                className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white font-extrabold px-6 py-3.5 rounded-2xl shadow-lg shadow-blue-550/15 hover:shadow-blue-550/30 hover:-translate-y-0.5 active:translate-y-0 active:scale-98 transition duration-200 flex items-center gap-2 cursor-pointer text-sm"
+              >
+                <Plus className="w-4.5 h-4.5 stroke-[2.5]" /> Create Property
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Horizontal Steps Roadmap */}
+        <div className="space-y-5 animate-fade-in">
+          <div>
+            <h3 className="text-lg font-black text-slate-900 dark:text-white">Getting Started is Easy</h3>
+            <p className="text-xs text-slate-500 dark:text-gray-400 mt-0.5">Follow these three standard steps to initialize your landlord dashboard</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            
+            {/* Step 1 */}
+            <div 
+              className="p-6 rounded-2xl bg-white dark:bg-slate-900/60 dark:backdrop-blur-md border border-slate-200/60 dark:border-white/[0.05] hover:border-slate-300 dark:hover:border-white/10 transition-all duration-350 flex flex-col justify-between text-left"
+            >
+              <div className="space-y-4">
+                <div className="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold">
+                  <Building2 className="w-5 h-5" />
+                </div>
+                <div className="space-y-1">
+                  <h4 className="text-sm font-black text-slate-900 dark:text-white">1. Add Properties & Units</h4>
+                  <p className="text-[11px] text-slate-500 dark:text-gray-400 font-medium leading-relaxed font-sans">
+                    Set up your real estate assets. Supports Single Family Homes, Individual Condo Units, or Multi-Unit Apartment complexes.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Step 2 */}
+            <div 
+              className="p-6 rounded-2xl bg-white dark:bg-slate-900/60 dark:backdrop-blur-md border border-slate-200/60 dark:border-white/[0.05] hover:border-slate-300 dark:hover:border-white/10 transition-all duration-350 flex flex-col justify-between text-left"
+            >
+              <div className="space-y-4">
+                <div className="w-10 h-10 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center font-bold">
+                  <FileText className="w-5 h-5" />
+                </div>
+                <div className="space-y-1">
+                  <h4 className="text-sm font-black text-slate-900 dark:text-white">2. Draft Digital Leases</h4>
+                  <p className="text-[11px] text-slate-500 dark:text-gray-450 font-medium leading-relaxed font-sans">
+                    Establish lease terms, security deposits, monthly rent values, and late fee rules using pre-approved templates.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Step 3 */}
+            <div 
+              className="p-6 rounded-2xl bg-white dark:bg-slate-900/60 dark:backdrop-blur-md border border-slate-200/60 dark:border-white/[0.05] hover:border-slate-300 dark:hover:border-white/10 transition-all duration-350 flex flex-col justify-between text-left"
+            >
+              <div className="space-y-4">
+                <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold">
+                  <Users className="w-5 h-5" />
+                </div>
+                <div className="space-y-1">
+                  <h4 className="text-sm font-black text-slate-900 dark:text-white">3. Onboard & Automate</h4>
+                  <p className="text-[11px] text-slate-500 dark:text-gray-455 font-medium leading-relaxed font-sans">
+                    Invite tenants to sign leases, set up auto-pay, track monthly collection ledgers, and automate ticket assignments.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        {/* Feature Lock Previews */}
+        <div className="space-y-5 border-t border-slate-200/60 dark:border-white/[0.05] pt-8 animate-fade-in">
+          <div>
+            <h3 className="text-lg font-black text-slate-900 dark:text-white font-sans">Workspace Feature Suite</h3>
+            <p className="text-xs text-slate-500 dark:text-gray-400 mt-0.5">Explore standard tools that unlock immediately after adding a property</p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="p-5 rounded-2xl bg-slate-50/50 dark:bg-[#1E2E42]/20 border border-slate-100 dark:border-white/[0.03] flex items-start gap-4">
+              <div className="p-2.5 rounded-xl bg-slate-100 dark:bg-white/5 text-blue-500 shrink-0">
+                <CreditCard className="w-5 h-5" />
+              </div>
+              <div className="text-left space-y-1">
+                <h5 className="text-xs font-black text-slate-800 dark:text-white font-sans">Rent Invoicing</h5>
+                <p className="text-[10px] text-slate-500 dark:text-gray-400 font-semibold leading-normal">Track paid, unpaid, and overdue rental invoices automatically.</p>
+              </div>
+            </div>
+
+            <div className="p-5 rounded-2xl bg-slate-50/50 dark:bg-[#1E2E42]/20 border border-slate-100 dark:border-white/[0.03] flex items-start gap-4">
+              <div className="p-2.5 rounded-xl bg-slate-100 dark:bg-white/5 text-purple-500 shrink-0">
+                <Wrench className="w-5 h-5" />
+              </div>
+              <div className="text-left space-y-1">
+                <h5 className="text-xs font-black text-slate-800 dark:text-white font-sans">Maintenance Desk</h5>
+                <p className="text-[10px] text-slate-500 dark:text-gray-400 font-semibold leading-normal">Assign service requests to vendors and track cost estimates.</p>
+              </div>
+            </div>
+
+            <div className="p-5 rounded-2xl bg-slate-50/50 dark:bg-[#1E2E42]/20 border border-slate-100 dark:border-white/[0.03] flex items-start gap-4">
+              <div className="p-2.5 rounded-xl bg-slate-100 dark:bg-white/5 text-amber-500 shrink-0">
+                <Users className="w-5 h-5" />
+              </div>
+              <div className="text-left space-y-1">
+                <h5 className="text-xs font-black text-slate-800 dark:text-white font-sans">Tenant Screening</h5>
+                <p className="text-[10px] text-slate-500 dark:text-gray-400 font-semibold leading-normal">Review applications, credit scores, and background check files.</p>
+              </div>
+            </div>
+
+            <div className="p-5 rounded-2xl bg-slate-50/50 dark:bg-[#1E2E42]/20 border border-slate-100 dark:border-white/[0.03] flex items-start gap-4">
+              <div className="p-2.5 rounded-xl bg-slate-100 dark:bg-white/5 text-emerald-500 shrink-0">
+                <TrendingUp className="w-5 h-5" />
+              </div>
+              <div className="text-left space-y-1">
+                <h5 className="text-xs font-black text-slate-800 dark:text-white font-sans">Financial Yields</h5>
+                <p className="text-[10px] text-slate-500 dark:text-gray-400 font-semibold leading-normal">Generate historical cashflow charts and annual valuation metrics.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-8 animate-fade-in text-left pb-16 font-sans">
       
@@ -312,7 +487,7 @@ export default function LandlordDashboard({
         <div className="flex-1 min-w-0 relative z-10 space-y-4">
           <div>
             <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white leading-tight flex items-center gap-2">
-              Welcome back, {user?.name?.split(' ')[0] || 'Landlord'}! <Sparkles className="w-6 h-6 text-blue-500 animate-pulse shrink-0" />
+              Welcome back, {user?.name?.split(' ')[0] || 'Landlord'}! <Sparkles className="w-6 h-6 text-blue-550 dark:text-blue-400 animate-pulse shrink-0 animate-bounce-slow" />
             </h1>
             <p className="text-slate-500 dark:text-gray-455 text-xs mt-1 font-medium">
               Rental Console • Real-Time Portfolio Summary
@@ -358,19 +533,31 @@ export default function LandlordDashboard({
               {showCreateDropdown && (
                 <div className="absolute left-0 mt-2 w-48 bg-white dark:bg-[#1A2635] border border-slate-100 dark:border-white/10 rounded-2xl shadow-2xl z-30 py-2 text-slate-800 dark:text-slate-200 overflow-hidden animate-slide-up">
                   <button
-                    onClick={() => { setActivePage('properties_hub'); setShowCreateDropdown(false); }}
+                    onClick={() => { 
+                      localStorage.setItem('open_add_property_modal', 'true');
+                      setActivePage('properties_hub'); 
+                      setShowCreateDropdown(false); 
+                    }}
                     className="w-full text-left px-4 py-2.5 text-xs font-bold hover:bg-slate-50 dark:hover:bg-white/5 transition flex items-center gap-2 cursor-pointer"
                   >
                     <Building2 className="w-4 h-4 text-blue-500" /> Add Property
                   </button>
                   <button
-                    onClick={() => { setActivePage('leases_hub'); setShowCreateDropdown(false); }}
+                    onClick={() => { 
+                      localStorage.setItem('open_create_lease_modal', 'true');
+                      setActivePage('leases_hub'); 
+                      setShowCreateDropdown(false); 
+                    }}
                     className="w-full text-left px-4 py-2.5 text-xs font-bold hover:bg-slate-50 dark:hover:bg-white/5 transition flex items-center gap-2 cursor-pointer"
                   >
                     <FileText className="w-4 h-4 text-purple-500" /> Draft Lease Agreement
                   </button>
                   <button
-                    onClick={() => { setActivePage('servicereq'); setShowCreateDropdown(false); }}
+                    onClick={() => { 
+                      localStorage.setItem('open_create_ticket_modal', 'true');
+                      setActivePage('servicereq'); 
+                      setShowCreateDropdown(false); 
+                    }}
                     className="w-full text-left px-4 py-2.5 text-xs font-bold hover:bg-slate-50 dark:hover:bg-white/5 transition flex items-center gap-2 cursor-pointer"
                   >
                     <Wrench className="w-4 h-4 text-amber-500" /> Log Maintenance Ticket

@@ -1,15 +1,15 @@
-import subprocess
-import sys
-import os
-try:
-    script_path = r"d:\Vhoa_Management\copy_to_git.py"
-    if os.path.exists(script_path):
-        res = subprocess.run([sys.executable, script_path], capture_output=True, text=True)
-        print("SYNC SCRIPT OUTPUT:", res.stdout)
-        if res.stderr:
-            print("SYNC SCRIPT ERROR:", res.stderr)
-except Exception as e:
-    print("Sync script run failed:", e)
+# import subprocess
+# import sys
+# import os
+# try:
+#     script_path = r"d:\Vhoa_Management\copy_to_git.py"
+#     if os.path.exists(script_path):
+#         res = subprocess.run([sys.executable, script_path], capture_output=True, text=True)
+#         print("SYNC SCRIPT OUTPUT:", res.stdout)
+#         if res.stderr:
+#             print("SYNC SCRIPT ERROR:", res.stderr)
+# except Exception as e:
+#     print("Sync script run failed:", e)
 
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session

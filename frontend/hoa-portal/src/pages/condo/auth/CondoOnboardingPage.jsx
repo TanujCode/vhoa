@@ -40,6 +40,19 @@ export default function CondoOnboardingPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
+  // Address autocomplete states
+  const [addressSuggestions, setAddressSuggestions] = useState([]);
+  const [searchingAddress, setSearchingAddress] = useState(false);
+  const addressTimeoutRef = useRef(null);
+
+  useEffect(() => {
+    return () => {
+      if (addressTimeoutRef.current) {
+        clearTimeout(addressTimeoutRef.current);
+      }
+    };
+  }, []);
+
   const { register, handleSubmit, setValue, watch, trigger, formState: { errors, isSubmitting } } = useForm({
     mode: 'onTouched',
     defaultValues: {
@@ -110,6 +123,72 @@ export default function CondoOnboardingPage() {
         }
       } catch { /* silent */ } finally { setZipLoading(false); }
     }
+  };
+
+  const STATE_NAME_TO_ABBR = {
+    "alabama": "AL", "alaska": "AK", "arizona": "AZ", "arkansas": "AR", "california": "CA", "colorado": "CO", "connecticut": "CT", "delaware": "DE", "florida": "FL", "georgia": "GA", "hawaii": "HI", "idaho": "ID", "illinois": "IL", "indiana": "IN", "iowa": "IA", "kansas": "KS", "kentucky": "KY", "louisiana": "LA", "maine": "ME", "maryland": "MD", "massachusetts": "MA", "michigan": "MI", "minnesota": "MN", "mississippi": "MS", "missouri": "MO", "montana": "MT", "nebraska": "NE", "nevada": "NV", "new hampshire": "NH", "new jersey": "NJ", "new mexico": "NM", "new york": "NY", "north carolina": "NC", "north dakota": "ND", "ohio": "OH", "oklahoma": "OK", "oregon": "OR", "pennsylvania": "PA", "rhode island": "RI", "south carolina": "SC", "south dakota": "SD", "tennessee": "TN", "texas": "TX", "utah": "UT", "vermont": "VT", "virginia": "VA", "washington": "WA", "west virginia": "WV", "wisconsin": "WI", "wyoming": "WY"
+  };
+
+  const getAbbr = (stateStr) => {
+    if (!stateStr) return '';
+    const clean = stateStr.trim().toLowerCase();
+    if (clean.length === 2) return clean.toUpperCase();
+    return STATE_NAME_TO_ABBR[clean] || stateStr;
+  };
+
+  const handleAddressInputChange = (val) => {
+    if (addressTimeoutRef.current) {
+      clearTimeout(addressTimeoutRef.current);
+    }
+
+    if (!val || val.trim().length < 1) {
+      setAddressSuggestions([]);
+      return;
+    }
+
+    addressTimeoutRef.current = setTimeout(async () => {
+      try {
+        setSearchingAddress(true);
+        const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(val)}&format=json&addressdetails=1&countrycodes=us&limit=5&email=contact@nestbloq.com`, {
+          headers: {
+            'Accept': 'application/json',
+            'User-Agent': 'NestBloq-RentalPortal/1.0'
+          }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          const mapped = data.map(item => {
+            const addr = item.address || {};
+            const street = `${addr.house_number || ''} ${addr.road || ''}`.trim();
+            const city = addr.city || addr.town || addr.village || addr.hamlet || addr.suburb || '';
+            const state = addr.state || '';
+            const zip = addr.postcode || '';
+            return {
+              id: item.place_id,
+              place_name: item.display_name,
+              street: street || item.display_name.split(',')[0],
+              city: city,
+              state: getAbbr(state),
+              zip: zip
+            };
+          });
+          setAddressSuggestions(mapped);
+        }
+      } catch (err) {
+        console.error('Error fetching address suggestions:', err);
+        setAddressSuggestions([]);
+      } finally {
+        setSearchingAddress(false);
+      }
+    }, 400);
+  };
+
+  const handleSelectSuggestion = (suggestion) => {
+    setAddressSuggestions([]);
+    setValue('condo_address', suggestion.street, { shouldValidate: true });
+    if (suggestion.city) setValue('condo_city', suggestion.city, { shouldValidate: true });
+    if (suggestion.zip) setValue('condo_zip_code', suggestion.zip, { shouldValidate: true });
+    if (suggestion.state) setValue('condo_state', suggestion.state, { shouldValidate: true });
   };
 
   const handleNext = async () => {
@@ -337,13 +416,47 @@ export default function CondoOnboardingPage() {
                       </div>
                       {errors.condo_name && <p className={err_cls}>{errors.condo_name.message}</p>}
                     </div>
-                    <div>
+                    <div className="relative">
                       <label className={lbl}>Street Address *</label>
                       <div className="relative">
                         <MapPin className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" />
-                        <input type="text" {...register('condo_address', { required: 'Required', validate: validateAddress })} className={`${inp(!!errors.condo_address)} pl-9`} placeholder="e.g. 500 Park Ave" />
+                        <input
+                          type="text"
+                          name={register('condo_address').name}
+                          ref={register('condo_address').ref}
+                          onBlur={register('condo_address').onBlur}
+                          onChange={(e) => {
+                            register('condo_address').onChange(e);
+                            handleAddressInputChange(e.target.value);
+                          }}
+                          className={`${inp(!!errors.condo_address)} pl-9`}
+                          placeholder="Start typing to search..."
+                        />
                       </div>
                       {errors.condo_address && <p className={err_cls}>{errors.condo_address.message}</p>}
+
+                      {/* Autocomplete suggestions dropdown */}
+                      {searchingAddress && (
+                        <div className="absolute z-50 w-full mt-1 bg-[#1e2f41] border border-white/10 rounded-xl p-3 text-xs text-gray-400 flex items-center gap-2">
+                          <RefreshCw size={14} className="animate-spin text-indigo-400" />
+                          Searching address...
+                        </div>
+                      )}
+
+                      {!searchingAddress && addressSuggestions.length > 0 && (
+                        <div className="absolute z-50 w-full mt-1 bg-white dark:bg-[#162535] border border-slate-200 dark:border-white/10 rounded-xl overflow-hidden shadow-2xl max-h-60 overflow-y-auto">
+                          {addressSuggestions.map((suggestion) => (
+                            <button
+                              key={suggestion.id}
+                              type="button"
+                              onClick={() => handleSelectSuggestion(suggestion)}
+                              className="w-full text-left px-4 py-2.5 hover:bg-indigo-500/10 hover:text-indigo-600 dark:hover:text-indigo-400 text-xs text-slate-800 dark:text-gray-200 border-b border-slate-200 dark:border-white/5 last:border-0 transition-colors"
+                            >
+                              {suggestion.place_name}
+                            </button>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </div>
 

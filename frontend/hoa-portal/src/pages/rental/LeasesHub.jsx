@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { FileText, Plus, CheckCircle, Clock, Send, Lock, PenTool, Sparkles, Trash2, ShieldAlert, Search, X, Eye, Calendar } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { FileText, Plus, CheckCircle, Clock, Send, Lock, PenTool, Sparkles, Trash2, ShieldAlert, Search, X, Eye, Calendar, DollarSign, Settings, Paperclip, User, CheckSquare, ArrowLeft, ArrowRight, AlertCircle, Info, Home, Mail, Phone, Edit3, ArrowUp, ArrowDown, Download } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import API from '../../services/api';
 import ConfirmModal from '../../components/ConfirmModal';
@@ -31,6 +31,17 @@ The Co-Signer guarantees the payment of monthly rent of \${{RENT_AMOUNT}} and an
 - Co-Signer Email: {{TENANT_EMAIL}}`
 };
 
+const INITIAL_RULES = [
+  "No additional locks or other similar devices shall be attached to any door without Landlord's written consent.",
+  "Hallways, stairways and elevators shall not be obstructed or used for any purpose other than ingress and egress from the building. Children are not permitted to play in the common areas. Tenant may not store any items in the hallways or common areas of the building.",
+  "Operation of electrical appliances or other devices which interfere with radio or television reception is not permitted.",
+  "Deliveries and moving of furniture must be conducted at times permitted by Landlord.",
+  "$50 per key will be charged to provide additional or replacement keys to the property.",
+  "The dwelling to be occupied by Tenant and members of Tenant's household is a smoke-free living environment. Tenant and members of Tenant's household shall not smoke, tobacco or marijuana, anywhere in the dwelling, or in the building in which the dwelling is a part, or in any of the common areas or adjoining grounds of such building. Further, Tenant shall not permit any guests or visitors under the control of Tenant to do so."
+];
+
+const INITIAL_ATTACHMENTS = [];
+
 export default function LeasesHub({ user, selectedPropertyFilterId = 'all' }) {
   const isLandlord = user?.role === 'landlord' || user?.role_name === 'landlord' || user?.role_id === 1;
 
@@ -38,6 +49,7 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all' }) {
   const [units, setUnits] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedLease, setSelectedLease] = useState(null);
+  const [applications, setApplications] = useState([]);
 
   const getLeaseSeqNum = (lease) => {
     const propId = lease.unit?.property_id;
@@ -51,7 +63,8 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all' }) {
   const [prefilledFromApp, setPrefilledFromApp] = useState(false);
   const [confirmConfig, setConfirmConfig] = useState({ isOpen: false, title: '', message: '', onConfirm: null });
 
-  // Create Lease Form States
+  // Create Lease Form States & Wizard Refactoring
+  const [currentStep, setCurrentStep] = useState(1);
   const [selectedTemplate, setSelectedTemplate] = useState('standard');
   const [selectedUnitId, setSelectedUnitId] = useState('');
   const [tenantEmail, setTenantEmail] = useState('');
@@ -59,6 +72,11 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all' }) {
   const [deposit, setDeposit] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+  const [duration, setDuration] = useState('12');
+  const [customDuration, setCustomDuration] = useState('');
+  const [rentDueDate, setRentDueDate] = useState('1');
+  const [moveInFee, setMoveInFee] = useState('0');
+  const [moveOutFee, setMoveOutFee] = useState('0');
   const [gracePeriod, setGracePeriod] = useState('5');
   const [feeType, setFeeType] = useState('FLAT');
   const [feeAmount, setFeeAmount] = useState('50');
@@ -67,6 +85,160 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all' }) {
   const [parkingFee, setParkingFee] = useState('0');
   const [petFee, setPetFee] = useState('0');
   
+  // Custom Fee options
+  const [electricityPayee, setElectricityPayee] = useState('tenant');
+  const [waterPayee, setWaterPayee] = useState('tenant');
+  const [gasPayee, setGasPayee] = useState('tenant');
+  const [internetPayee, setInternetPayee] = useState('tenant');
+  const [trashPayee, setTrashPayee] = useState('tenant');
+  const [hasUtilFee, setHasUtilFee] = useState(false);
+  const [hasParkingFee, setHasParkingFee] = useState(false);
+  const [parkingFeePerCar, setParkingFeePerCar] = useState('0');
+  const [parkingCarsCount, setParkingCarsCount] = useState('1');
+  const [hasPetFee, setHasPetFee] = useState(false);
+  const [petFeePerPet, setPetFeePerPet] = useState('0');
+  const [petsCount, setPetsCount] = useState('1');
+  const [keyExchangeNotes, setKeyExchangeNotes] = useState('');
+
+  // Clauses
+  const [clauseOnlineRent, setClauseOnlineRent] = useState(true);
+  const [clauseQuietHours, setClauseQuietHours] = useState(true);
+  const [clauseMaintenance, setClauseMaintenance] = useState(true);
+  const [clauseCustomText, setClauseCustomText] = useState('');
+
+  // Rules Refactoring
+  const [rules, setRules] = useState(INITIAL_RULES);
+  const [editingRuleIndex, setEditingRuleIndex] = useState(null);
+  const [editingRuleText, setEditingRuleText] = useState('');
+  
+  // Attachments Refactoring
+  const [attachments, setAttachments] = useState(INITIAL_ATTACHMENTS);
+  const [editingAttachmentId, setEditingAttachmentId] = useState(null);
+  const [editingAttachmentName, setEditingAttachmentName] = useState('');
+  const fileInputRef = useRef(null);
+  const addressTimeoutRef = useRef(null);
+
+  // Disclosures
+  const [disclosureLeadPaint, setDisclosureLeadPaint] = useState(false);
+  const [disclosureMold, setDisclosureMold] = useState(false);
+  const [disclosureBedBugs, setDisclosureBedBugs] = useState(false);
+
+  const handleUploadClick = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+
+  const handleFileChange = (e) => {
+    const files = Array.from(e.target.files);
+    if (files.length > 0) {
+      const newAttachments = files.map((file, idx) => ({
+        id: Date.now() + idx,
+        name: file.name,
+        source: 'Uploaded by User',
+        file: file
+      }));
+      setAttachments([...attachments, ...newAttachments]);
+      toast.success(`Successfully attached ${files.length} document(s)`);
+    }
+  };
+
+  const handleDownloadAttachment = (att) => {
+    if (att.file) {
+      const url = URL.createObjectURL(att.file);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', att.name);
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode.removeChild(link);
+      URL.revokeObjectURL(url);
+      toast.success(`Downloading ${att.name}`);
+    } else {
+      toast.success(`Downloading ${att.name}...`);
+    }
+  };
+
+  // Lessor Info
+  const [lessorFullName, setLessorFullName] = useState('');
+  const [lessorAddress, setLessorAddress] = useState('');
+  const [lessorAddressSuggestions, setLessorAddressSuggestions] = useState([]);
+  const [isLessorAddressSelected, setIsLessorAddressSelected] = useState(false);
+
+  const STATE_NAME_TO_ABBR = {
+    "alabama": "AL", "alaska": "AK", "arizona": "AZ", "arkansas": "AR", "california": "CA", "colorado": "CO", "connecticut": "CT", "delaware": "DE", "florida": "FL", "georgia": "GA", "hawaii": "HI", "idaho": "ID", "illinois": "IL", "indiana": "IN", "iowa": "IA", "kansas": "KS", "kentucky": "KY", "louisiana": "LA", "maine": "ME", "maryland": "MD", "massachusetts": "MA", "michigan": "MI", "minnesota": "MN", "mississippi": "MS", "missouri": "MO", "montana": "MT", "nebraska": "NE", "nevada": "NV", "new hampshire": "NH", "new jersey": "NJ", "new mexico": "NM", "new york": "NY", "north carolina": "NC", "north dakota": "ND", "ohio": "OH", "oklahoma": "OK", "oregon": "OR", "pennsylvania": "PA", "rhode island": "RI", "south carolina": "SC", "south dakota": "SD", "tennessee": "TN", "texas": "TX", "utah": "UT", "vermont": "VT", "virginia": "VA", "washington": "WA", "west virginia": "WV", "wisconsin": "WI", "wyoming": "WY"
+  };
+
+  const getAbbr = (stateStr) => {
+    if (!stateStr) return '';
+    const clean = stateStr.trim().toLowerCase();
+    if (clean.length === 2) return clean.toUpperCase();
+    return STATE_NAME_TO_ABBR[clean] || stateStr;
+  };
+
+  const handleLessorAddressChange = (value) => {
+    setLessorAddress(value);
+    setIsLessorAddressSelected(false);
+    
+    if (!value.trim()) {
+      setLessorAddressSuggestions([]);
+      return;
+    }
+
+    if (addressTimeoutRef.current) {
+      clearTimeout(addressTimeoutRef.current);
+    }
+
+    addressTimeoutRef.current = setTimeout(async () => {
+      try {
+        const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(value)}&format=json&addressdetails=1&countrycodes=us&limit=5&email=contact@nestbloq.com`, {
+          headers: {
+            'Accept': 'application/json',
+            'User-Agent': 'NestBloq-RentalPortal/1.0'
+          }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          const mapped = data.map(item => {
+            const addr = item.address || {};
+            const street = `${addr.house_number || ''} ${addr.road || ''}`.trim();
+            const city = addr.city || addr.town || addr.village || addr.hamlet || addr.suburb || '';
+            const state = addr.state || '';
+            const zip = addr.postcode || '';
+            
+            const parts = [];
+            if (street) parts.push(street);
+            else parts.push(item.display_name.split(',')[0]);
+            
+            if (city) parts.push(city);
+            
+            const stateAbbr = getAbbr(state);
+            if (stateAbbr) parts.push(stateAbbr);
+            
+            if (zip) parts.push(zip);
+
+            return {
+              display: item.display_name,
+              formatted: parts.join(', ')
+            };
+          });
+          setLessorAddressSuggestions(mapped);
+        }
+      } catch (err) {
+        console.warn("Geocoding failed:", err);
+      }
+    }, 400);
+  };
+
+  const handleSelectLessorSuggestion = (suggestion) => {
+    setLessorAddress(suggestion.formatted);
+    setLessorAddressSuggestions([]);
+    setIsLessorAddressSelected(true);
+  };
+  const [lessorPhone, setLessorPhone] = useState('');
+  const [lessorEmail, setLessorEmail] = useState('');
+  const [termsAgreed, setTermsAgreed] = useState(false);
+
   // Co-Landlord states
   const [coLandlordName, setCoLandlordName] = useState('');
   const [signingAsRole, setSigningAsRole] = useState('landlord');
@@ -97,94 +269,364 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all' }) {
 
   const showSignPad = selectedLease && (canSignAsPrimary || canSignAsCo || canSignAsTenant);
 
-  const validateLeaseForm = () => {
-    const errs = {};
-    if (!selectedUnitId) {
-      errs.selectedUnitId = 'Please select a unit.';
-    }
-    const selectedUnitObj = units.find(u => u.unit_id === parseInt(selectedUnitId));
-    if (selectedUnitObj && selectedUnitObj.status === 'OCCUPIED') {
-      errs.selectedUnitId = 'This unit is currently occupied. You cannot lease it out again.';
-    }
-
-    if (!tenantEmail) {
-      errs.tenantEmail = 'Tenant email is required.';
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(tenantEmail.trim())) {
-      errs.tenantEmail = 'Please enter a valid email address.';
-    }
-
-    const rent = parseFloat(rentAmount);
-    if (!rentAmount || isNaN(rent) || rent <= 0) {
-      errs.rentAmount = 'Monthly rent must be a positive number greater than 0.';
-    }
-
-    const dep = parseFloat(deposit);
-    if (!deposit || isNaN(dep) || dep < 0) {
-      errs.deposit = 'Security deposit must be 0 or a positive number.';
-    }
-
-    const todayStr = new Date().toISOString().split('T')[0];
-    if (!startDate) {
-      errs.startDate = 'Start date is required.';
-    } else if (startDate < todayStr) {
-      errs.startDate = 'Start date cannot be in the past.';
-    }
-
-    if (!endDate) {
-      errs.endDate = 'End date is required.';
-    } else if (startDate && new Date(endDate) <= new Date(startDate)) {
-      errs.endDate = 'End date must be after start date.';
-    }
-
-    const gp = parseInt(gracePeriod);
-    if (!gracePeriod || isNaN(gp) || gp < 0) {
-      errs.gracePeriod = 'Grace days must be a positive number (min 0).';
-    }
-
-    const fee = parseFloat(feeAmount);
-    if (!feeAmount || isNaN(fee) || fee < 0) {
-      errs.feeAmount = 'Fee amount must be 0 or positive.';
-    }
-
-    const util = parseFloat(utilFee);
-    if (utilFee && (isNaN(util) || util < 0)) {
-      errs.utilFee = 'Utilities fee must be 0 or positive.';
-    }
-
-    const park = parseFloat(parkingFee);
-    if (parkingFee && (isNaN(park) || park < 0)) {
-      errs.parkingFee = 'Parking fee must be 0 or positive.';
-    }
-
-    const pet = parseFloat(petFee);
-    if (petFee && (isNaN(pet) || pet < 0)) {
-      errs.petFee = 'Pet fee must be 0 or positive.';
-    }
-
-    return errs;
+  const resetWizardForm = () => {
+    setCurrentStep(1);
+    setSelectedTemplate('standard');
+    setSelectedUnitId('');
+    setTenantEmail('');
+    setRentAmount('');
+    setDeposit('');
+    setStartDate('');
+    setEndDate('');
+    setDuration('12');
+    setCustomDuration('');
+    setRentDueDate('1');
+    setMoveInFee('0');
+    setMoveOutFee('0');
+    setGracePeriod('5');
+    setFeeType('FLAT');
+    setFeeAmount('50');
+    setLeaseText('');
+    setUtilFee('0');
+    setParkingFee('0');
+    setPetFee('0');
+    setElectricityPayee('tenant');
+    setWaterPayee('tenant');
+    setGasPayee('tenant');
+    setInternetPayee('tenant');
+    setTrashPayee('tenant');
+    setHasUtilFee(false);
+    setHasParkingFee(false);
+    setParkingFeePerCar('0');
+    setParkingCarsCount('1');
+    setHasPetFee(false);
+    setPetFeePerPet('0');
+    setPetsCount('1');
+    setKeyExchangeNotes('');
+    setClauseOnlineRent(true);
+    setClauseQuietHours(true);
+    setClauseMaintenance(true);
+    setClauseCustomText('');
+    setRules(INITIAL_RULES);
+    setEditingRuleIndex(null);
+    setAttachments(INITIAL_ATTACHMENTS);
+    setEditingAttachmentId(null);
+    setDisclosureLeadPaint(false);
+    setDisclosureMold(false);
+    setDisclosureBedBugs(false);
+    setLessorFullName(user?.name || user?.full_name || '');
+    setLessorAddress('');
+    setLessorAddressSuggestions([]);
+    setIsLessorAddressSelected(false);
+    setLessorPhone(user?.mobile_number || '');
+    setLessorEmail(user?.email || '');
+    setCoLandlordName('');
+    setTermsAgreed(false);
+    setFormErrors({});
+    setErrorMsg('');
   };
 
-  const compileLeaseText = (templateKey, rent, dep, start, end, grace, fee, email, unitId, util, park, pet) => {
-    const template = LEASE_TEMPLATES[templateKey] || '';
-    const unitObj = units.find(u => u.unit_id === parseInt(unitId)) || {};
+  const validateStep = (step) => {
+    const errors = {};
+    if (step === 1) {
+      if (!selectedUnitId) {
+        errors.selectedUnitId = 'Please select a unit.';
+      } else {
+        const selectedUnitObj = units.find(u => u.unit_id === parseInt(selectedUnitId));
+        if (selectedUnitObj && selectedUnitObj.status === 'OCCUPIED' && !prefilledFromApp) {
+          errors.selectedUnitId = 'This unit is currently occupied.';
+        }
+      }
+      if (!tenantEmail) {
+        errors.tenantEmail = 'Tenant email is required.';
+      } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(tenantEmail.trim())) {
+        errors.tenantEmail = 'Please enter a valid email address.';
+      } else if (isLandlord) {
+        const hasApprovedScreening = applications.some(app => 
+          app.tenant_email?.toLowerCase().trim() === tenantEmail.toLowerCase().trim() &&
+          String(app.unit_id) === String(selectedUnitId) &&
+          app.screening_status === 'APPROVED'
+        );
+        if (!hasApprovedScreening) {
+          errors.tenantEmail = 'This tenant email does not have an APPROVED screening application for this unit.';
+        }
+      }
+      if (!startDate) {
+        errors.startDate = 'Start date is required.';
+      }
+      const todayStr = new Date().toISOString().split('T')[0];
+      if (startDate && startDate < todayStr) {
+        errors.startDate = 'Start date cannot be in the past.';
+      }
+      const numMonths = duration === 'custom' ? parseInt(customDuration) : parseInt(duration);
+      if (isNaN(numMonths) || numMonths < 1) {
+        errors.duration = 'Please provide a valid duration of at least 1 month.';
+      }
+    }
+    
+    if (step === 2) {
+      const rent = parseFloat(rentAmount);
+      if (!rentAmount || isNaN(rent) || rent <= 0) {
+        errors.rentAmount = 'Monthly rent must be a positive number greater than 0.';
+      }
+      const dep = parseFloat(deposit);
+      if (!deposit || isNaN(dep) || dep < 0) {
+        errors.deposit = 'Security deposit must be 0 or positive.';
+      }
+      const gp = parseInt(gracePeriod);
+      if (!gracePeriod || isNaN(gp) || gp < 0) {
+        errors.gracePeriod = 'Grace days must be a positive number (min 0).';
+      }
+      const fee = parseFloat(feeAmount);
+      if (!feeAmount || isNaN(fee) || fee < 0) {
+        errors.feeAmount = 'Fee amount must be 0 or positive.';
+      }
+      const mIn = parseFloat(moveInFee);
+      if (moveInFee && (isNaN(mIn) || mIn < 0)) {
+        errors.moveInFee = 'Move-in fee must be 0 or positive.';
+      }
+      const mOut = parseFloat(moveOutFee);
+      if (moveOutFee && (isNaN(mOut) || mOut < 0)) {
+        errors.moveOutFee = 'Move-out fee must be 0 or positive.';
+      }
+    }
+    
+    if (step === 3) {
+      if (hasUtilFee) {
+        const util = parseFloat(utilFee);
+        if (!utilFee || isNaN(util) || util < 0) {
+          errors.utilFee = 'Utility fee must be 0 or positive.';
+        }
+      }
+      if (hasParkingFee) {
+        const parkFee = parseFloat(parkingFeePerCar);
+        if (!parkingFeePerCar || isNaN(parkFee) || parkFee < 0) {
+          errors.parkingFeePerCar = 'Parking fee per car must be 0 or positive.';
+        }
+        const cars = parseInt(parkingCarsCount);
+        if (!parkingCarsCount || isNaN(cars) || cars < 1) {
+          errors.parkingCarsCount = 'Must be at least 1 car.';
+        } else if (cars > 3) {
+          errors.parkingCarsCount = 'Maximum 3 cars are allowed.';
+        }
+      }
+      if (hasPetFee) {
+        const petFee = parseFloat(petFeePerPet);
+        if (!petFeePerPet || isNaN(petFee) || petFee < 0) {
+          errors.petFeePerPet = 'Pet fee per pet must be 0 or positive.';
+        }
+        const pets = parseInt(petsCount);
+        if (!petsCount || isNaN(pets) || pets < 1) {
+          errors.petsCount = 'Must be at least 1 pet.';
+        } else if (pets > 5) {
+          errors.petsCount = 'Maximum 5 pets are allowed.';
+        }
+      }
+    }
+    
+    if (step === 8) {
+      if (!lessorFullName.trim()) {
+        errors.lessorFullName = 'Primary Landlord name is required.';
+      } else if (!/^[a-zA-Z\s.-]{2,50}$/.test(lessorFullName.trim())) {
+        errors.lessorFullName = 'Name must only contain letters, spaces, dots, and hyphens (2-50 chars).';
+      }
+      if (coLandlordName.trim() && !/^[a-zA-Z\s.-]{2,50}$/.test(coLandlordName.trim())) {
+        errors.coLandlordName = 'Co-Landlord name must only contain letters, spaces, dots, and hyphens (2-50 chars).';
+      }
+      if (!lessorAddress.trim()) {
+        errors.lessorAddress = 'Notice/payment address is required.';
+      } else if (!isLessorAddressSelected) {
+        errors.lessorAddress = 'Please select a valid address from the suggestions dropdown.';
+      }
+      if (!lessorPhone.trim()) {
+        errors.lessorPhone = 'Phone number is required.';
+      } else if (!/^\+?[0-9\s\-()]{7,15}$/.test(lessorPhone.trim())) {
+        errors.lessorPhone = 'Please enter a valid phone number.';
+      }
+      if (!lessorEmail.trim()) {
+        errors.lessorEmail = 'Email is required.';
+      } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(lessorEmail.trim())) {
+        errors.lessorEmail = 'Please enter a valid email address.';
+      }
+    }
+    
+    if (step === 9) {
+      if (!termsAgreed) {
+        errors.termsAgreed = 'You must agree to the terms before submitting.';
+      }
+      if (!leaseText.trim()) {
+        errors.leaseText = 'Lease agreement text draft cannot be empty.';
+      }
+    }
+    
+    return errors;
+  };
+
+  const handleNext = () => {
+    const errors = validateStep(currentStep);
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors);
+      if (errors.tenantEmail && errors.tenantEmail.includes("APPROVED")) {
+        toast.error(errors.tenantEmail);
+      } else {
+        toast.error('Please complete all required fields on this page first.');
+      }
+      return;
+    }
+    setFormErrors({});
+    setCurrentStep(prev => Math.min(prev + 1, 9));
+  };
+
+  const handleBack = () => {
+    setFormErrors({});
+    setCurrentStep(prev => Math.max(prev - 1, 1));
+  };
+
+  const handleStepClick = (targetStep) => {
+    if (targetStep < currentStep) {
+      setCurrentStep(targetStep);
+      setFormErrors({});
+    } else if (targetStep > currentStep) {
+      const errors = validateStep(currentStep);
+      if (Object.keys(errors).length > 0) {
+        setFormErrors(errors);
+        if (errors.tenantEmail && errors.tenantEmail.includes("APPROVED")) {
+          toast.error(errors.tenantEmail);
+        } else {
+          toast.error('Please complete the required details before moving forward.');
+        }
+        return;
+      }
+      for (let s = currentStep; s < targetStep; s++) {
+        const stepErrs = validateStep(s);
+        if (Object.keys(stepErrs).length > 0) {
+          setFormErrors(stepErrs);
+          setCurrentStep(s);
+          if (stepErrs.tenantEmail && stepErrs.tenantEmail.includes("APPROVED")) {
+            toast.error(stepErrs.tenantEmail);
+          } else {
+            toast.error(`Please complete Step ${s} first.`);
+          }
+          return;
+        }
+      }
+      setCurrentStep(targetStep);
+      setFormErrors({});
+    }
+  };
+
+  const compileLeaseText = () => {
+    const unitObj = units.find(u => u.unit_id === parseInt(selectedUnitId)) || {};
     const unitNo = unitObj.unit_number || '[Unit Number]';
     
-    let compiled = template
-      .replace(/\{\{START_DATE\}\}/g, start || '[Start Date]')
-      .replace(/\{\{END_DATE\}\}/g, end || '[End Date]')
-      .replace(/\{\{UNIT_NUMBER\}\}/g, unitNo)
-      .replace(/\{\{RENT_AMOUNT\}\}/g, rent || '[Rent]')
-      .replace(/\{\{DEPOSIT_AMOUNT\}\}/g, dep || '[Deposit]')
-      .replace(/\{\{GRACE_PERIOD\}\}/g, grace || '5')
-      .replace(/\{\{LATE_FEE\}\}/g, fee || '50')
-      .replace(/\{\{TENANT_EMAIL\}\}/g, email || '[Tenant Email]');
-
-    if (parseFloat(util) > 0 || parseFloat(park) > 0 || parseFloat(pet) > 0) {
-      compiled += `\n\nADDITIONAL MONTHLY CHARGES BREAKDOWN:\n`;
-      if (parseFloat(util) > 0) compiled += `- Monthly Utilities Fee: \$${util}\n`;
-      if (parseFloat(park) > 0) compiled += `- Monthly Parking Fee: \$${park}\n`;
-      if (parseFloat(pet) > 0) compiled += `- Monthly Pet Fee: \$${pet}\n`;
+    let compiled = `RESIDENTIAL LEASE AGREEMENT (PORTAL COMPILED DRAFT)\n`;
+    compiled += `==================================================\n\n`;
+    compiled += `1. PARTIES: This Lease Agreement is entered into between the Landlord:\n`;
+    compiled += `   - Name: ${lessorFullName || '[Landlord Name]'}\n`;
+    if (coLandlordName) {
+      compiled += `   - Co-Landlord: ${coLandlordName}\n`;
     }
+    compiled += `   - Notice/Payment Address: ${lessorAddress || '[Notice Address]'}\n`;
+    compiled += `   - Phone: ${lessorPhone || '[Landlord Phone]'}\n`;
+    compiled += `   - Email: ${lessorEmail || '[Landlord Email]'}\n\n`;
+    compiled += `   And the Tenant:\n`;
+    compiled += `   - Email: ${tenantEmail || '[Tenant Email]'}\n\n`;
+    
+    compiled += `2. PROPERTY: Landlord rents to Tenant the premises located at:\n`;
+    compiled += `   - Unit Number: ${unitNo}\n`;
+    if (unitObj.property_id) {
+      compiled += `   - Property Reference ID: ${unitObj.property_id}\n`;
+    }
+    compiled += `\n`;
+    
+    compiled += `3. TERM & DURATION: The lease shall start on ${startDate || '[Start Date]'}.\n`;
+    compiled += `   - Lease Duration: ${duration === 'custom' ? `${customDuration} Months` : `${duration} Months`}\n`;
+    compiled += `   - Calculated End Date: ${endDate || '[End Date]'}\n\n`;
+    
+    compiled += `4. RENT, DEPOSIT & FEES:\n`;
+    compiled += `   - Monthly Rent: \$${rentAmount || '0.00'}\n`;
+    compiled += `   - Rent Due Date: Rent is due on the ${rentDueDate || '1st'} day of each calendar month.\n`;
+    compiled += `   - Security Deposit: \$${deposit || '0.00'}\n`;
+    if (parseFloat(moveInFee) > 0) compiled += `   - Move-in Fee: \$${moveInFee}\n`;
+    if (parseFloat(moveOutFee) > 0) compiled += `   - Move-out Fee: \$${moveOutFee}\n`;
+    compiled += `   - Late Fee: Past due rent will incur a late fee of \$${feeAmount || '50'} (${feeType === 'FLAT' ? 'Flat Fee' : 'Percentage'}) after a grace period of ${gracePeriod || '5'} days.\n\n`;
+    
+    compiled += `5. UTILITIES RESPONSIBILITY:\n`;
+    compiled += `   - Electricity: Paid by ${electricityPayee === 'landlord' ? 'Landlord' : 'Tenant'}\n`;
+    compiled += `   - Water: Paid by ${waterPayee === 'landlord' ? 'Landlord' : 'Tenant'}\n`;
+    compiled += `   - Gas: Paid by ${gasPayee === 'landlord' ? 'Landlord' : 'Tenant'}\n`;
+    compiled += `   - Internet: Paid by ${internetPayee === 'landlord' ? 'Landlord' : 'Tenant'}\n`;
+    compiled += `   - Trash Removal: Paid by ${trashPayee === 'landlord' ? 'Landlord' : 'Tenant'}\n`;
+    if (hasUtilFee && parseFloat(utilFee) > 0) {
+      compiled += `   - Flat Utility Fee Charged by Landlord: \$${utilFee}/month\n`;
+    }
+    compiled += `\n`;
+    
+    compiled += `6. ADDITIONAL CHARGES:\n`;
+    if (hasParkingFee && parseFloat(parkingFeePerCar) > 0) {
+      compiled += `   - Parking Fee: \$${parkingFeePerCar}/car per month (Total cars: ${parkingCarsCount}, calculated total: \$${parseFloat(parkingFeePerCar) * parseInt(parkingCarsCount)}/mo)\n`;
+    } else {
+      compiled += `   - Parking Fee: None / Not applicable\n`;
+    }
+    if (hasPetFee && parseFloat(petFeePerPet) > 0) {
+      compiled += `   - Pet Fee: \$${petFeePerPet}/pet per month (Total pets: ${petsCount}, calculated total: \$${parseFloat(petFeePerPet) * parseInt(petsCount)}/mo)\n`;
+    } else {
+      compiled += `   - Pet Fee: None / Not applicable\n`;
+    }
+    if (keyExchangeNotes) {
+      compiled += `   - Key Exchange Instructions: ${keyExchangeNotes}\n`;
+    }
+    compiled += `\n`;
+    
+    compiled += `7. LEASE CLAUSES & AGREEMENTS:\n`;
+    if (clauseOnlineRent) {
+      compiled += `   - ONLINE RENT PAYMENT: Tenant agrees to pay monthly rent via the secure online portal.\n`;
+    }
+    if (clauseQuietHours) {
+      compiled += `   - COMMUNITY QUIET HOURS: Tenant agrees to respect quiet hours from 10:00 PM to 8:00 AM daily.\n`;
+    }
+    if (clauseMaintenance) {
+      compiled += `   - MAINTENANCE & REPAIRS: Tenant shall keep the premises in clean condition and report any defects immediately.\n`;
+    }
+    if (clauseCustomText && clauseCustomText.trim()) {
+      compiled += `   - ADDITIONAL CUSTOM CLAUSE: ${clauseCustomText.trim()}\n`;
+    }
+    compiled += `\n`;
+    
+    compiled += `8. RULES & POLICIES:\n`;
+    rules.forEach((rule, idx) => {
+      compiled += `   - Rule ${idx + 1}: ${rule}\n`;
+    });
+    compiled += `\n`;
+    
+    compiled += `9. LEGAL DISCLOSURES:\n`;
+    if (disclosureLeadPaint) {
+      compiled += `   - LEAD-BASED PAINT DISCLOSURE: Lead-based paint hazards warning received and understood (applicable for units built before 1978).\n`;
+    }
+    if (disclosureMold) {
+      compiled += `   - MOLD DISCLOSURE: Tenant acknowledges warning regarding potential mold growth and agrees to ventilate unit.\n`;
+    }
+    if (disclosureBedBugs) {
+      compiled += `   - BED BUG DISCLOSURE: Tenant has inspected the unit and found no active bed bug infestation.\n`;
+    }
+    if (!disclosureLeadPaint && !disclosureMold && !disclosureBedBugs) {
+      compiled += `   - No standard disclosures specified.\n`;
+    }
+    compiled += `\n`;
+    
+    if (attachments.length > 0) {
+      compiled += `10. ATTACHMENTS & ADDENDA:\n`;
+      compiled += `    The following documents are attached and made part of this Lease:\n`;
+      attachments.forEach((att) => {
+        compiled += `    - ${att.name}\n`;
+      });
+      compiled += `\n`;
+    }
+    
+    compiled += `Signatures below indicate full agreement to these terms.\n`;
+    compiled += `Landlord Signature: _______________________\n`;
+    compiled += `Tenant Signature: _______________________`;
+    
     return compiled;
   };
 
@@ -192,14 +634,102 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all' }) {
     fetchLeases();
     if (isLandlord) {
       fetchUnits();
+      fetchApplications();
+    }
+    if (localStorage.getItem('open_create_lease_modal') === 'true') {
+      localStorage.removeItem('open_create_lease_modal');
+      setShowCreateModal(true);
     }
   }, [isLandlord, user?.property_name, user?.unit_number]);
 
   useEffect(() => {
-    if (showCreateModal) {
-      setLeaseText(compileLeaseText(selectedTemplate, rentAmount, deposit, startDate, endDate, gracePeriod, feeAmount, tenantEmail, selectedUnitId, utilFee, parkingFee, petFee));
+    if (showCreateModal && user) {
+      setLessorFullName(user.name || user.full_name || '');
+      setLessorEmail(user.email || '');
+      setLessorPhone(user.mobile_number || '');
+      if (isLandlord) {
+        fetchApplications();
+      }
     }
-  }, [selectedTemplate, rentAmount, deposit, startDate, endDate, gracePeriod, feeAmount, tenantEmail, selectedUnitId, showCreateModal, units, utilFee, parkingFee, petFee]);
+  }, [showCreateModal, user, isLandlord]);
+
+  useEffect(() => {
+    if (showCreateModal) {
+      setLeaseText(compileLeaseText());
+    }
+  }, [
+    showCreateModal,
+    selectedUnitId,
+    tenantEmail,
+    startDate,
+    endDate,
+    duration,
+    customDuration,
+    rentAmount,
+    deposit,
+    rentDueDate,
+    moveInFee,
+    moveOutFee,
+    gracePeriod,
+    feeType,
+    feeAmount,
+    electricityPayee,
+    waterPayee,
+    gasPayee,
+    internetPayee,
+    trashPayee,
+    hasUtilFee,
+    utilFee,
+    hasParkingFee,
+    parkingFeePerCar,
+    parkingCarsCount,
+    hasPetFee,
+    petFeePerPet,
+    petsCount,
+    keyExchangeNotes,
+    clauseOnlineRent,
+    clauseQuietHours,
+    clauseMaintenance,
+    clauseCustomText,
+    rules,
+    disclosureLeadPaint,
+    disclosureMold,
+    disclosureBedBugs,
+    attachments,
+    lessorFullName,
+    lessorAddress,
+    lessorPhone,
+    lessorEmail,
+    coLandlordName
+  ]);
+
+  useEffect(() => {
+    if (!startDate) {
+      setEndDate('');
+      return;
+    }
+    
+    const numMonths = duration === 'custom' ? parseInt(customDuration) : parseInt(duration);
+    if (isNaN(numMonths) || numMonths < 1) {
+      setEndDate('');
+      return;
+    }
+    
+    const start = new Date(startDate);
+    if (isNaN(start.getTime())) {
+      setEndDate('');
+      return;
+    }
+    
+    const end = new Date(start);
+    end.setMonth(start.getMonth() + numMonths);
+    end.setDate(end.getDate() - 1);
+    
+    const yyyy = end.getFullYear();
+    const mm = String(end.getMonth() + 1).padStart(2, '0');
+    const dd = String(end.getDate()).padStart(2, '0');
+    setEndDate(`${yyyy}-${mm}-${dd}`);
+  }, [startDate, duration, customDuration]);
 
   useEffect(() => {
     if (selectedUnitId && units.length > 0) {
@@ -262,17 +792,17 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all' }) {
 
   async function fetchUnits() {
     try {
+      const prefillEmail = localStorage.getItem('prefill_lease_email');
+      const prefillUnitId = localStorage.getItem('prefill_lease_unit_id');
+
       const propRes = await API.get('/rental/properties');
       const props = propRes.data;
       const allUnits = [];
       for (const p of props) {
         const unitRes = await API.get(`/rental/properties/${p.property_id}/units`);
-        allUnits.push(...unitRes.data);
+        allUnits.push(...unitRes.data.filter(u => !u.has_active_lease || String(u.unit_id) === String(prefillUnitId)));
       }
       setUnits(allUnits);
-      
-      const prefillEmail = localStorage.getItem('prefill_lease_email');
-      const prefillUnitId = localStorage.getItem('prefill_lease_unit_id');
       
       if (prefillUnitId) {
         setSelectedUnitId(prefillUnitId);
@@ -281,6 +811,39 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all' }) {
           setTenantEmail(prefillEmail);
           localStorage.removeItem('prefill_lease_email');
         }
+
+        const prefillPets = localStorage.getItem('prefill_lease_pets');
+        const prefillVehicles = localStorage.getItem('prefill_lease_vehicles');
+        const prefillRent = localStorage.getItem('prefill_lease_rent');
+
+        if (prefillPets) {
+          localStorage.removeItem('prefill_lease_pets');
+          const petMatch = prefillPets.match(/(\d+)/);
+          const pCount = petMatch ? parseInt(petMatch[1]) : 1;
+          setHasPetFee(true);
+          setPetsCount(String(pCount));
+          setPetFeePerPet('50');
+          setPetFee(String(pCount * 50));
+          setClauseCustomText(prev => prev + `\nTenant is authorized to keep pets: ${prefillPets}.`);
+        }
+
+        if (prefillVehicles) {
+          localStorage.removeItem('prefill_lease_vehicles');
+          const vehicleMatch = prefillVehicles.match(/(\d+)/);
+          const vCount = vehicleMatch ? parseInt(vehicleMatch[1]) : 1;
+          setHasParkingFee(true);
+          setParkingCarsCount(String(vCount));
+          setParkingFeePerCar('25');
+          setParkingFee(String(vCount * 25));
+          setClauseCustomText(prev => prev + `\nTenant is authorized to park vehicles: ${prefillVehicles}.`);
+        }
+
+        if (prefillRent && prefillRent !== 'undefined' && prefillRent !== 'null') {
+          localStorage.removeItem('prefill_lease_rent');
+          setRentAmount(prefillRent);
+          setDeposit(prefillRent);
+        }
+
         setPrefilledFromApp(true);
         setShowCreateModal(true);
       } else {
@@ -291,19 +854,34 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all' }) {
     }
   }
 
+  async function fetchApplications() {
+    try {
+      const res = await API.get('/rental/applications');
+      setApplications(res.data || []);
+    } catch (err) {
+      console.error("Error fetching applications for validation:", err);
+    }
+  }
+
   async function handleCreateLease(e) {
-    e.preventDefault();
+    if (e) e.preventDefault();
     
-    const validationErrors = validateLeaseForm();
-    setFormErrors(validationErrors);
-    
-    const hasErrors = Object.keys(validationErrors).length > 0;
-    if (hasErrors) {
-      toast.error('Please correct the highlighted errors before creating the lease.');
-      return;
+    // Final check for all steps
+    for (let step = 1; step <= 9; step++) {
+      const validationErrors = validateStep(step);
+      if (Object.keys(validationErrors).length > 0) {
+        setFormErrors(validationErrors);
+        setCurrentStep(step);
+        toast.error(`Please complete the required details in Step ${step} before submitting.`);
+        return;
+      }
     }
 
     try {
+      const calculatedUtilFee = hasUtilFee ? parseFloat(utilFee || 0) : 0;
+      const calculatedParkingFee = hasParkingFee ? (parseFloat(parkingFeePerCar || 0) * parseInt(parkingCarsCount || 1)) : 0;
+      const calculatedPetFee = hasPetFee ? (parseFloat(petFeePerPet || 0) * parseInt(petsCount || 1)) : 0;
+
       const res = await API.post('/rental/leases', {
         unit_id: parseInt(selectedUnitId),
         tenant_email: tenantEmail,
@@ -315,26 +893,16 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all' }) {
         late_fee_type: feeType,
         late_fee_amount: parseFloat(feeAmount),
         lease_agreement_text: leaseText,
-        utilities_fee: parseFloat(utilFee || 0),
-        parking_fee: parseFloat(parkingFee || 0),
-        pet_fee: parseFloat(petFee || 0),
+        utilities_fee: calculatedUtilFee,
+        parking_fee: calculatedParkingFee,
+        pet_fee: calculatedPetFee,
         co_landlord_name: coLandlordName.trim() || null
       });
       setLeases(prev => [...prev, res.data]);
       setSelectedLease(res.data);
+      resetWizardForm();
       setShowCreateModal(false);
       setPrefilledFromApp(false);
-      setTenantEmail('');
-      setRentAmount('');
-      setDeposit('');
-      setStartDate('');
-      setEndDate('');
-      setLeaseText('');
-      setUtilFee('0');
-      setParkingFee('0');
-      setPetFee('0');
-      setCoLandlordName('');
-      setFormErrors({});
       toast.success("Lease agreement created successfully!");
     } catch (err) {
       const msg = err.response?.data?.detail || "Failed to create lease.";
@@ -380,6 +948,942 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all' }) {
       }
     });
   }
+
+  const renderStep1 = () => (
+    <div className="space-y-5">
+      <div className="border-b dark:border-white/5 pb-3">
+        <span className="text-[10px] uppercase font-bold text-blue-600 dark:text-blue-400 tracking-wider">Step 1 of 9</span>
+        <h4 className="text-lg font-extrabold text-slate-800 dark:text-white mt-1">Lease Term Details</h4>
+        <p className="text-xs text-slate-400">Specify the property unit, the tenant's email address, and the lease start date/duration.</p>
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <div>
+          <label className="block text-xs font-bold text-slate-650 dark:text-gray-400 tracking-wider mb-2">SELECT UNIT</label>
+          <div className="relative">
+            <Home className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
+            <select 
+              required 
+              disabled={prefilledFromApp}
+              value={selectedUnitId} 
+              onChange={e => setSelectedUnitId(e.target.value)} 
+              className={`w-full text-sm pl-10 pr-3.5 py-3 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none transition focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 ${
+                prefilledFromApp ? 'opacity-80 cursor-not-allowed bg-slate-100 dark:bg-slate-950 border-slate-200 dark:border-white/5' : 'border-slate-200 dark:border-white/10'
+              } ${formErrors.selectedUnitId ? 'border-red-500 ring-2 ring-red-500/10' : ''}`}
+            >
+              <option value="">-- Select a Unit --</option>
+              {filteredUnits.map(u => (
+                <option key={u.unit_id} value={u.unit_id}>
+                  Unit {u.unit_number} (${u.rent_amount}) - {u.status || 'VACANT'}
+                </option>
+              ))}
+            </select>
+          </div>
+          {formErrors.selectedUnitId && <p className="text-xs text-red-500 mt-1.5 flex items-center gap-1.5"><AlertCircle size={13}/>{formErrors.selectedUnitId}</p>}
+        </div>
+        
+        <div>
+          <label className="block text-xs font-bold text-slate-655 dark:text-gray-400 tracking-wider mb-2">TENANT EMAIL</label>
+          <div className="relative">
+            <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
+            <input 
+              required 
+              disabled={prefilledFromApp}
+              type="email" 
+              value={tenantEmail} 
+              onChange={e => setTenantEmail(e.target.value)} 
+              className={`w-full text-sm pl-10 pr-3.5 py-3 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none transition focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 ${
+                prefilledFromApp ? 'opacity-80 cursor-not-allowed bg-slate-100 dark:bg-slate-950 border-slate-200 dark:border-white/5' : 'border-slate-200 dark:border-white/10'
+              } ${formErrors.tenantEmail ? 'border-red-500 ring-2 ring-red-500/10' : ''}`} 
+              placeholder="tenant@example.com" 
+            />
+          </div>
+          {formErrors.tenantEmail && <p className="text-xs text-red-500 mt-1.5 flex items-center gap-1.5"><AlertCircle size={13}/>{formErrors.tenantEmail}</p>}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <div>
+          <label className="block text-xs font-bold text-slate-655 dark:text-gray-400 tracking-wider mb-2">START DATE</label>
+          <div className="relative">
+            <Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
+            <input 
+              required 
+              type="date" 
+              min={new Date().toISOString().split('T')[0]} 
+              value={startDate} 
+              onChange={e => setStartDate(e.target.value)} 
+              className={`w-full text-sm pl-10 pr-3.5 py-3 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none transition focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 border-slate-200 dark:border-white/10 ${formErrors.startDate ? 'border-red-500 ring-2 ring-red-500/10' : ''}`} 
+            />
+          </div>
+          {formErrors.startDate && <p className="text-xs text-red-500 mt-1.5 flex items-center gap-1.5"><AlertCircle size={13}/>{formErrors.startDate}</p>}
+        </div>
+        
+        <div>
+          <label className="block text-xs font-bold text-slate-655 dark:text-gray-400 tracking-wider mb-2">LEASE DURATION</label>
+          <div className="relative">
+            <Clock className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
+            <select 
+              value={duration} 
+              onChange={e => setDuration(e.target.value)} 
+              className="w-full text-sm pl-10 pr-3.5 py-3 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none transition focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 border-slate-200 dark:border-white/10"
+            >
+              <option value="12">12 Months (1 Year)</option>
+              <option value="6">6 Months</option>
+              <option value="24">24 Months (2 Years)</option>
+              <option value="custom">Custom Months</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      {duration === 'custom' && (
+        <div className="w-full md:w-1/2">
+          <label className="block text-xs font-bold text-slate-655 dark:text-gray-400 tracking-wider mb-2">CUSTOM DURATION (MONTHS)</label>
+          <input 
+            type="number" 
+            min="1" 
+            value={customDuration} 
+            onChange={e => setCustomDuration(e.target.value)} 
+            placeholder="Enter number of months" 
+            className={`w-full text-sm px-3.5 py-3 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white border-slate-200 dark:border-white/10 ${formErrors.duration ? 'border-red-500 ring-2 ring-red-500/10' : ''}`} 
+          />
+          {formErrors.duration && <p className="text-xs text-red-500 mt-1.5 flex items-center gap-1.5"><AlertCircle size={13}/>{formErrors.duration}</p>}
+        </div>
+      )}
+
+      <div className="p-4 rounded-2xl bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-500/5 dark:to-indigo-500/5 border border-blue-500/10 flex items-center justify-between mt-3 shadow-inner">
+        <div className="text-left">
+          <span className="text-xs font-bold text-blue-600 dark:text-blue-400 block tracking-wider uppercase">Calculated Lease End Date</span>
+          <p className="text-[11px] text-slate-450 dark:text-slate-450">Determined automatically based on the start date and lease duration.</p>
+        </div>
+        <span className="text-sm font-extrabold text-blue-600 dark:text-blue-400 bg-blue-500/10 border border-blue-500/20 px-4 py-2.5 rounded-xl shadow-sm">
+          {endDate || 'Select start date & duration'}
+        </span>
+      </div>
+    </div>
+  );
+
+  const renderStep2 = () => (
+    <div className="space-y-5">
+      <div className="border-b dark:border-white/5 pb-3">
+        <span className="text-[10px] uppercase font-bold text-blue-600 dark:text-blue-400 tracking-wider">Step 2 of 9</span>
+        <h4 className="text-lg font-extrabold text-slate-800 dark:text-white mt-1">Rent, Deposit & Fees</h4>
+        <p className="text-xs text-slate-400">Establish rent payment amounts, late fee guidelines, and security deposits.</p>
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <div>
+          <label className="block text-xs font-bold text-slate-655 dark:text-gray-400 tracking-wider mb-2">MONTHLY RENT ($)</label>
+          <div className="relative">
+            <DollarSign className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
+            <input 
+              required 
+              type="number" 
+              value={rentAmount} 
+              onChange={e => setRentAmount(e.target.value)} 
+              className={`w-full text-sm pl-10 pr-3.5 py-3 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none transition focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 border-slate-200 dark:border-white/10 ${formErrors.rentAmount ? 'border-red-500 ring-2 ring-red-500/10' : ''}`} 
+              placeholder="1500" 
+            />
+          </div>
+          {formErrors.rentAmount && <p className="text-xs text-red-500 mt-1.5 flex items-center gap-1.5"><AlertCircle size={13}/>{formErrors.rentAmount}</p>}
+        </div>
+        
+        <div>
+          <label className="block text-xs font-bold text-slate-655 dark:text-gray-400 tracking-wider mb-2">RENT DUE DAY</label>
+          <div className="relative">
+            <Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
+            <select 
+              value={rentDueDate} 
+              onChange={e => setRentDueDate(e.target.value)} 
+              className="w-full text-sm pl-10 pr-3.5 py-3 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none transition focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 border-slate-200 dark:border-white/10"
+            >
+              {[...Array(28).keys()].map(x => (
+                <option key={x + 1} value={String(x + 1)}>{x + 1}{x === 0 ? 'st' : x === 1 ? 'nd' : x === 2 ? 'rd' : 'th'} day of month</option>
+              ))}
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <div>
+          <label className="block text-xs font-bold text-slate-655 dark:text-gray-400 tracking-wider mb-2">SECURITY DEPOSIT ($)</label>
+          <div className="relative">
+            <DollarSign className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
+            <input 
+              required 
+              type="number" 
+              value={deposit} 
+              onChange={e => setDeposit(e.target.value)} 
+              className={`w-full text-sm pl-10 pr-3.5 py-3 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none transition focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 border-slate-200 dark:border-white/10 ${formErrors.deposit ? 'border-red-500 ring-2 ring-red-500/10' : ''}`} 
+              placeholder="1500" 
+            />
+          </div>
+          {formErrors.deposit && <p className="text-xs text-red-500 mt-1.5 flex items-center gap-1.5"><AlertCircle size={13}/>{formErrors.deposit}</p>}
+        </div>
+        
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="block text-xs font-bold text-slate-655 dark:text-gray-400 tracking-wider mb-2">MOVE-IN FEE ($)</label>
+            <div className="relative">
+              <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-450 pointer-events-none" size={14} />
+              <input 
+                type="number" 
+                value={moveInFee} 
+                onChange={e => setMoveInFee(e.target.value)} 
+                className={`w-full text-sm pl-7 pr-3 py-3 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none transition focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 border-slate-200 dark:border-white/10 ${formErrors.moveInFee ? 'border-red-500 ring-2 ring-red-500/10' : ''}`} 
+              />
+            </div>
+            {formErrors.moveInFee && <p className="text-xs text-red-500 mt-1.5 flex items-center gap-1.5"><AlertCircle size={13}/>{formErrors.moveInFee}</p>}
+          </div>
+          <div>
+            <label className="block text-xs font-bold text-slate-655 dark:text-gray-400 tracking-wider mb-2">MOVE-OUT FEE ($)</label>
+            <div className="relative">
+              <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-450 pointer-events-none" size={14} />
+              <input 
+                type="number" 
+                value={moveOutFee} 
+                onChange={e => setMoveOutFee(e.target.value)} 
+                className={`w-full text-sm pl-7 pr-3 py-3 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none transition focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 border-slate-200 dark:border-white/10 ${formErrors.moveOutFee ? 'border-red-500 ring-2 ring-red-500/10' : ''}`} 
+              />
+            </div>
+            {formErrors.moveOutFee && <p className="text-xs text-red-500 mt-1.5 flex items-center gap-1.5"><AlertCircle size={13}/>{formErrors.moveOutFee}</p>}
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5 border-t dark:border-white/5 pt-4">
+        <div>
+          <label className="block text-xs font-bold text-slate-655 dark:text-gray-400 tracking-wider mb-2">GRACE DAYS</label>
+          <div className="relative">
+            <Clock className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-405 pointer-events-none" size={16} />
+            <input 
+              required 
+              type="number" 
+              value={gracePeriod} 
+              onChange={e => setGracePeriod(e.target.value)} 
+              className={`w-full text-sm pl-10 pr-3.5 py-3 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none transition focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 border-slate-200 dark:border-white/10 ${formErrors.gracePeriod ? 'border-red-500 ring-2 ring-red-500/10' : ''}`} 
+            />
+          </div>
+          {formErrors.gracePeriod && <p className="text-xs text-red-500 mt-1.5 flex items-center gap-1.5"><AlertCircle size={13}/>{formErrors.gracePeriod}</p>}
+        </div>
+        <div>
+          <label className="block text-xs font-bold text-slate-655 dark:text-gray-400 tracking-wider mb-2">LATE FEE TYPE</label>
+          <select 
+            value={feeType} 
+            onChange={e => setFeeType(e.target.value)} 
+            className="w-full text-sm px-3.5 py-3 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none transition focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 border-slate-200 dark:border-white/10"
+          >
+            <option value="FLAT">Flat Fee</option>
+            <option value="PERCENTAGE">Percentage</option>
+          </select>
+        </div>
+        <div>
+          <label className="block text-xs font-bold text-slate-655 dark:text-gray-400 tracking-wider mb-2">LATE FEE AMOUNT</label>
+          <div className="relative">
+            <DollarSign className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
+            <input 
+              required 
+              type="number" 
+              value={feeAmount} 
+              onChange={e => setFeeAmount(e.target.value)} 
+              className={`w-full text-sm pl-10 pr-3.5 py-3 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none transition focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 border-slate-200 dark:border-white/10 ${formErrors.feeAmount ? 'border-red-500 ring-2 ring-red-500/10' : ''}`} 
+            />
+          </div>
+          {formErrors.feeAmount && <p className="text-xs text-red-500 mt-1.5 flex items-center gap-1.5"><AlertCircle size={13}/>{formErrors.feeAmount}</p>}
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderStep3 = () => (
+    <div className="space-y-5">
+      <div className="border-b dark:border-white/5 pb-3">
+        <span className="text-[10px] uppercase font-bold text-blue-600 dark:text-blue-400 tracking-wider">Step 3 of 9</span>
+        <h4 className="text-lg font-extrabold text-slate-800 dark:text-white mt-1">Utilities & Options</h4>
+        <p className="text-xs text-slate-400">Define utilities coverage, flat monthly utility charges, parking and pet details.</p>
+      </div>
+
+      <div className="space-y-3">
+        <label className="block text-xs font-bold text-slate-650 dark:text-gray-400 tracking-wider uppercase text-left">Utilities Responsibility</label>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3">
+          {[
+            { id: 'electricity', label: 'Electricity', payee: electricityPayee, setPayee: setElectricityPayee },
+            { id: 'water', label: 'Water', payee: waterPayee, setPayee: setWaterPayee },
+            { id: 'gas', label: 'Gas', payee: gasPayee, setPayee: setGasPayee },
+            { id: 'internet', label: 'Internet/Wifi', payee: internetPayee, setPayee: setInternetPayee },
+            { id: 'trash', label: 'Trash Removal', payee: trashPayee, setPayee: setTrashPayee }
+          ].map(util => (
+            <div key={util.id} className="p-3 border border-slate-150 dark:border-white/5 rounded-2xl bg-slate-50/40 dark:bg-slate-950/20 text-center flex flex-col justify-between">
+              <span className="text-xs font-bold block text-slate-700 dark:text-slate-300 mb-2">{util.label}</span>
+              <div className="flex rounded-lg overflow-hidden border border-slate-200 dark:border-white/10 p-0.5 bg-white dark:bg-[#132030]">
+                <button
+                  type="button"
+                  onClick={() => util.setPayee('tenant')}
+                  className={`flex-1 text-[10px] font-bold py-1.5 px-2 rounded-md transition ${
+                    util.payee === 'tenant' 
+                      ? 'bg-blue-600 text-white shadow-sm' 
+                      : 'text-slate-500 hover:text-slate-700 dark:hover:text-white bg-transparent'
+                  }`}
+                >
+                  Tenant
+                </button>
+                <button
+                  type="button"
+                  onClick={() => util.setPayee('landlord')}
+                  className={`flex-1 text-[10px] font-bold py-1.5 px-2 rounded-md transition ${
+                    util.payee === 'landlord' 
+                      ? 'bg-blue-600 text-white shadow-sm' 
+                      : 'text-slate-500 hover:text-slate-700 dark:hover:text-white bg-transparent'
+                  }`}
+                >
+                  Owner
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className={`p-4 border rounded-2xl transition-all text-left ${hasUtilFee ? 'border-blue-500/30 bg-blue-500/[0.02]' : 'border-slate-200 dark:border-white/5 bg-slate-50/30 dark:bg-slate-950/5'}`}>
+        <label className="flex items-center gap-3 cursor-pointer">
+          <input 
+            type="checkbox" 
+            checked={hasUtilFee} 
+            onChange={e => setHasUtilFee(e.target.checked)} 
+            className="w-4.5 h-4.5 text-blue-600 border-slate-350 rounded focus:ring-blue-500" 
+          />
+          <div>
+            <span className="text-xs font-bold text-slate-800 dark:text-white block">Landlord will charge flat monthly utility fee?</span>
+            <span className="text-[10px] text-slate-400">Enable this to add a set utility cost directly to the ledger bill.</span>
+          </div>
+        </label>
+        {hasUtilFee && (
+          <div className="w-full md:w-1/2 pt-3 mt-2 border-t border-blue-500/10 animate-fade-in">
+            <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">Utility Fee Amount ($)</label>
+            <div className="relative">
+              <DollarSign className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
+              <input 
+                type="number" 
+                value={utilFee} 
+                onChange={e => setUtilFee(e.target.value)} 
+                className={`w-full text-sm pl-10 pr-3.5 py-2.5 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none transition focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 border-slate-200 dark:border-white/10 ${formErrors.utilFee ? 'border-red-500 ring-2 ring-red-500/10' : ''}`} 
+                placeholder="e.g. 100" 
+              />
+            </div>
+            {formErrors.utilFee && <p className="text-xs text-red-500 mt-1 flex items-center gap-1"><AlertCircle size={12}/>{formErrors.utilFee}</p>}
+          </div>
+        )}
+      </div>
+
+      <div className={`p-4 border rounded-2xl transition-all text-left ${hasParkingFee ? 'border-blue-500/30 bg-blue-500/[0.02]' : 'border-slate-200 dark:border-white/5 bg-slate-50/30 dark:bg-slate-950/5'}`}>
+        <label className="flex items-center gap-3 cursor-pointer">
+          <input 
+            type="checkbox" 
+            checked={hasParkingFee} 
+            onChange={e => setHasParkingFee(e.target.checked)} 
+            className="w-4.5 h-4.5 text-blue-600 border-slate-350 rounded focus:ring-blue-500" 
+          />
+          <div>
+            <span className="text-xs font-bold text-slate-800 dark:text-white block">Charge parking fee?</span>
+            <span className="text-[10px] text-slate-400">Specify fee per vehicle and cars count.</span>
+          </div>
+        </label>
+        {hasParkingFee && (
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-start pt-3 mt-2 border-t border-blue-500/10 animate-fade-in">
+            <div>
+              <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">Parking Fee per Car ($/car)</label>
+              <div className="relative">
+                <DollarSign className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
+                <input 
+                  type="number" 
+                  value={parkingFeePerCar} 
+                  onChange={e => setParkingFeePerCar(e.target.value)} 
+                  className={`w-full text-sm pl-10 pr-3.5 py-2.5 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none border-slate-200 dark:border-white/10 ${formErrors.parkingFeePerCar ? 'border-red-500' : ''}`} 
+                  placeholder="50" 
+                />
+              </div>
+              {formErrors.parkingFeePerCar && <p className="text-xs text-red-500 mt-1 flex items-center gap-1"><AlertCircle size={12}/>{formErrors.parkingFeePerCar}</p>}
+            </div>
+            <div>
+              <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">Number of Cars</label>
+              <input 
+                type="number" 
+                min="1"
+                max="3"
+                value={parkingCarsCount} 
+                onChange={e => setParkingCarsCount(e.target.value)} 
+                className={`w-full text-sm px-3.5 py-2.5 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none border-slate-200 dark:border-white/10 ${formErrors.parkingCarsCount ? 'border-red-500' : ''}`} 
+              />
+              {formErrors.parkingCarsCount && <p className="text-xs text-red-500 mt-1 flex items-center gap-1"><AlertCircle size={12}/>{formErrors.parkingCarsCount}</p>}
+            </div>
+            <div>
+              <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">Total Parking Fee</label>
+              <div className="bg-blue-500/10 border border-blue-500/20 px-3.5 py-2.5 rounded-xl text-center text-xs font-bold text-blue-600 dark:text-blue-400">
+                Total: ${parseFloat(parkingFeePerCar || 0) * parseInt(parkingCarsCount || 1)}/mo
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div className={`p-4 border rounded-2xl transition-all text-left ${hasPetFee ? 'border-blue-500/30 bg-blue-500/[0.02]' : 'border-slate-200 dark:border-white/5 bg-slate-50/30 dark:bg-slate-950/5'}`}>
+        <label className="flex items-center gap-3 cursor-pointer">
+          <input 
+            type="checkbox" 
+            checked={hasPetFee} 
+            onChange={e => setHasPetFee(e.target.checked)} 
+            className="w-4.5 h-4.5 text-blue-600 border-slate-350 rounded focus:ring-blue-500" 
+          />
+          <div>
+            <span className="text-xs font-bold text-slate-800 dark:text-white block">Charge pet fee?</span>
+            <span className="text-[10px] text-slate-400">Specify fee per pet and pet count.</span>
+          </div>
+        </label>
+        {hasPetFee && (
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-start pt-3 mt-2 border-t border-blue-500/10 animate-fade-in">
+            <div>
+              <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">Pet Fee per Pet ($/pet)</label>
+              <div className="relative">
+                <DollarSign className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
+                <input 
+                  type="number" 
+                  value={petFeePerPet} 
+                  onChange={e => setPetFeePerPet(e.target.value)} 
+                  className={`w-full text-sm pl-10 pr-3.5 py-2.5 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none border-slate-200 dark:border-white/10 ${formErrors.petFeePerPet ? 'border-red-500' : ''}`} 
+                  placeholder="25" 
+                />
+              </div>
+              {formErrors.petFeePerPet && <p className="text-xs text-red-500 mt-1 flex items-center gap-1"><AlertCircle size={12}/>{formErrors.petFeePerPet}</p>}
+            </div>
+            <div>
+              <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">Number of Pets</label>
+              <input 
+                type="number" 
+                min="1"
+                max="5"
+                value={petsCount} 
+                onChange={e => setPetsCount(e.target.value)} 
+                className={`w-full text-sm px-3.5 py-2.5 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none border-slate-200 dark:border-white/10 ${formErrors.petsCount ? 'border-red-500' : ''}`} 
+              />
+              {formErrors.petsCount && <p className="text-xs text-red-500 mt-1 flex items-center gap-1"><AlertCircle size={12}/>{formErrors.petsCount}</p>}
+            </div>
+            <div>
+              <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">Total Pet Fee</label>
+              <div className="bg-blue-500/10 border border-blue-500/20 px-3.5 py-2.5 rounded-xl text-center text-xs font-bold text-blue-600 dark:text-blue-400">
+                Total: ${parseFloat(petFeePerPet || 0) * parseInt(petsCount || 1)}/mo
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div>
+        <label className="block text-xs font-bold text-slate-600 dark:text-gray-400 tracking-wider mb-2">KEY EXCHANGE & ENTRY INSTRUCTIONS (OPTIONAL)</label>
+        <textarea 
+          value={keyExchangeNotes} 
+          onChange={e => setKeyExchangeNotes(e.target.value)} 
+          maxLength={500}
+          className="w-full text-sm px-3.5 py-2.5 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white border-slate-200 dark:border-white/10 h-20 resize-none outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" 
+          placeholder="e.g. Keys will be left in lockbox code 1234, or pick up from office."
+        />
+      </div>
+    </div>
+  );
+
+  const renderStep4 = () => (
+    <div className="space-y-5">
+      <div className="border-b dark:border-white/5 pb-3">
+        <span className="text-[10px] uppercase font-bold text-blue-600 dark:text-blue-400 tracking-wider">Step 4 of 9</span>
+        <h4 className="text-lg font-extrabold text-slate-800 dark:text-white mt-1">Lease Clauses</h4>
+        <p className="text-xs text-slate-400">Add operational covenants or insert custom addenda terms.</p>
+      </div>
+      
+      <div className="space-y-3 text-left">
+        <label className="flex items-start gap-3 cursor-pointer p-4 border border-slate-200 dark:border-white/5 rounded-2xl hover:bg-slate-50 dark:hover:bg-white/[0.01] transition">
+          <input 
+            type="checkbox" 
+            checked={clauseOnlineRent} 
+            onChange={e => setClauseOnlineRent(e.target.checked)} 
+            className="w-4.5 h-4.5 text-blue-600 border-slate-300 rounded focus:ring-blue-500 mt-1" 
+          />
+          <div>
+            <span className="text-xs font-bold text-slate-800 dark:text-white block">Online Rent Payment Agreement</span>
+            <span className="text-[10px] text-slate-400">Tenant agrees to pay rent online via the secure landlord ledger portal.</span>
+          </div>
+        </label>
+
+        <label className="flex items-start gap-3 cursor-pointer p-4 border border-slate-200 dark:border-white/5 rounded-2xl hover:bg-slate-50 dark:hover:bg-white/[0.01] transition">
+          <input 
+            type="checkbox" 
+            checked={clauseQuietHours} 
+            onChange={e => setClauseQuietHours(e.target.checked)} 
+            className="w-4.5 h-4.5 text-blue-600 border-slate-300 rounded focus:ring-blue-500 mt-1" 
+          />
+          <div>
+            <span className="text-xs font-bold text-slate-800 dark:text-white block">Community Quiet Hours</span>
+            <span className="text-[10px] text-slate-400">Tenant agrees to respect community noise limits and quiet hours (10:00 PM to 8:00 AM).</span>
+          </div>
+        </label>
+
+        <label className="flex items-start gap-3 cursor-pointer p-4 border border-slate-200 dark:border-white/5 rounded-2xl hover:bg-slate-50 dark:hover:bg-white/[0.01] transition">
+          <input 
+            type="checkbox" 
+            checked={clauseMaintenance} 
+            onChange={e => setClauseMaintenance(e.target.checked)} 
+            className="w-4.5 h-4.5 text-blue-600 border-slate-300 rounded focus:ring-blue-500 mt-1" 
+          />
+          <div>
+            <span className="text-xs font-bold text-slate-800 dark:text-white block">Maintenance & Repairs Covenant</span>
+            <span className="text-[10px] text-slate-400">Tenant shall keep premises clean and report any maintenance needs immediately.</span>
+          </div>
+        </label>
+      </div>
+
+      <div>
+        <label className="block text-xs font-bold text-slate-600 dark:text-gray-400 tracking-wider mb-2">CUSTOM ADDITIONAL CLAUSE (OPTIONAL)</label>
+        <textarea 
+          value={clauseCustomText} 
+          onChange={e => setClauseCustomText(e.target.value)} 
+          className="w-full text-sm p-3.5 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white border-slate-200 dark:border-white/10 h-28 resize-none outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" 
+          placeholder="Type any custom regulations or requirements for this lease..." 
+        />
+      </div>
+    </div>
+  );
+
+  const renderStep5 = () => (
+    <div className="space-y-5">
+      <div className="border-b dark:border-white/5 pb-3 flex justify-between items-center text-left">
+        <div>
+          <span className="text-[10px] uppercase font-bold text-blue-600 dark:text-blue-400 tracking-wider">Step 5 of 9</span>
+          <h4 className="text-lg font-extrabold text-slate-800 dark:text-white mt-1 flex items-center gap-1.5 font-bold">Rules <span className="text-xs font-normal text-slate-400 normal-case">(editable)</span></h4>
+          <p className="text-xs text-slate-400">Establish and customize rules for residents living in the property.</p>
+        </div>
+        <button
+          type="button"
+          onClick={() => setRules(INITIAL_RULES)}
+          className="text-[10px] uppercase px-3 py-2 border border-slate-200 dark:border-white/10 rounded-xl hover:bg-slate-100 dark:hover:bg-white/5 font-extrabold text-slate-600 dark:text-slate-400 transition cursor-pointer"
+        >
+          Restore Original Rules
+        </button>
+      </div>
+
+      <div className="space-y-3 text-left">
+        {rules.map((rule, idx) => (
+          <div key={idx} className="p-4 border border-slate-200/80 dark:border-white/[0.08] rounded-2xl bg-slate-50/20 dark:bg-slate-950/10 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 hover:shadow-sm transition-all animate-fade-in">
+            <div className="flex-1 text-xs text-slate-800 dark:text-slate-200">
+              {editingRuleIndex === idx ? (
+                <div className="space-y-2">
+                  <textarea
+                    value={editingRuleText}
+                    onChange={e => setEditingRuleText(e.target.value)}
+                    className="w-full text-xs p-3 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white border-slate-200 dark:border-white/10 h-20 resize-none outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                  />
+                  <div className="flex gap-2 justify-end">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const updated = [...rules];
+                        updated[idx] = editingRuleText;
+                        setRules(updated);
+                        setEditingRuleIndex(null);
+                      }}
+                      className="px-3 py-1.5 bg-blue-600 text-white text-[10px] font-bold rounded-lg hover:bg-blue-700 transition cursor-pointer"
+                    >
+                      Save
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setEditingRuleIndex(null)}
+                      className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-white/5 text-slate-700 dark:text-slate-350 text-[10px] font-bold rounded-lg transition cursor-pointer"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="leading-relaxed">
+                  <span className="font-bold mr-1.5 text-slate-400 dark:text-slate-500">{idx + 1}.</span>
+                  {rule}
+                </div>
+              )}
+            </div>
+             {editingRuleIndex !== idx && (
+              <div className="flex items-center gap-1.5 self-end md:self-center shrink-0">
+                {/* Edit Button */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditingRuleIndex(idx);
+                    setEditingRuleText(rule);
+                  }}
+                  className="w-7 h-7 flex items-center justify-center border border-slate-200 dark:border-white/10 rounded-full hover:bg-slate-100 dark:hover:bg-white/5 text-blue-600 dark:text-blue-400 transition cursor-pointer"
+                  title="Edit Rule"
+                >
+                  <Edit3 size={12} />
+                </button>
+                {/* Delete Button */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setRules(rules.filter((_, i) => i !== idx));
+                  }}
+                  className="w-7 h-7 flex items-center justify-center border border-slate-200 dark:border-white/10 rounded-full hover:bg-red-50 dark:hover:bg-red-500/10 text-red-500 transition cursor-pointer"
+                  title="Delete Rule"
+                >
+                  <Trash2 size={12} />
+                </button>
+              </div>
+            )}
+          </div>
+        ))}
+        
+        {/* Add Custom Rule Button */}
+        <button
+          type="button"
+          onClick={() => {
+            const newRule = "Tenant shall agree to comply with all common area policies and guidelines of the property.";
+            setRules([...rules, newRule]);
+            setEditingRuleIndex(rules.length);
+            setEditingRuleText(newRule);
+          }}
+          className="w-full py-3 border border-dashed border-blue-500/40 hover:border-blue-500 text-blue-600 dark:text-blue-400 hover:bg-blue-50/20 dark:hover:bg-blue-500/[0.01] text-xs font-bold rounded-2xl transition flex items-center justify-center gap-1.5 cursor-pointer"
+        >
+          <Plus size={14} /> Add Custom Rule
+        </button>
+      </div>
+    </div>
+  );
+
+  const renderStep6 = () => (
+    <div className="space-y-5">
+      <div className="border-b dark:border-white/5 pb-3">
+        <span className="text-[10px] uppercase font-bold text-blue-600 dark:text-blue-400 tracking-wider">Step 6 of 9</span>
+        <h4 className="text-lg font-extrabold text-slate-800 dark:text-white mt-1">Legal Disclosures</h4>
+        <p className="text-xs text-slate-400">Select legally mandated tenant notices and hazard statements.</p>
+      </div>
+
+      <div className="space-y-3 text-left">
+        <label className="flex items-start gap-3 cursor-pointer p-4 border border-slate-200 dark:border-white/5 rounded-2xl hover:bg-slate-50 dark:hover:bg-white/[0.01] transition">
+          <input 
+            type="checkbox" 
+            checked={disclosureLeadPaint} 
+            onChange={e => setDisclosureLeadPaint(e.target.checked)} 
+            className="w-4.5 h-4.5 text-blue-600 border-slate-300 rounded focus:ring-blue-500 mt-1" 
+          />
+          <div>
+            <span className="text-xs font-bold text-slate-800 dark:text-white block">Lead-Based Paint Hazard Warning</span>
+            <span className="text-[10px] text-slate-400">Landlord discloses presence of lead-based paint and hazards (mandated for pre-1978 properties).</span>
+          </div>
+        </label>
+
+        <label className="flex items-start gap-3 cursor-pointer p-4 border border-slate-200 dark:border-white/5 rounded-2xl hover:bg-slate-50 dark:hover:bg-white/[0.01] transition">
+          <input 
+            type="checkbox" 
+            checked={disclosureMold} 
+            onChange={e => setDisclosureMold(e.target.checked)} 
+            className="w-4.5 h-4.5 text-blue-600 border-slate-300 rounded focus:ring-blue-500 mt-1" 
+          />
+          <div>
+            <span className="text-xs font-bold text-slate-800 dark:text-white block">Mold Warning & Preventative Addendum</span>
+            <span className="text-[10px] text-slate-400">Tenant acknowledges receipt of information regarding mold prevention and agreement to ventilate.</span>
+          </div>
+        </label>
+
+        <label className="flex items-start gap-3 cursor-pointer p-4 border border-slate-200 dark:border-white/5 rounded-2xl hover:bg-slate-50 dark:hover:bg-white/[0.01] transition">
+          <input 
+            type="checkbox" 
+            checked={disclosureBedBugs} 
+            onChange={e => setDisclosureBedBugs(e.target.checked)} 
+            className="w-4.5 h-4.5 text-blue-600 border-slate-300 rounded focus:ring-blue-500 mt-1" 
+          />
+          <div>
+            <span className="text-xs font-bold text-slate-800 dark:text-white block">Bed Bug Infestation History & Info</span>
+            <span className="text-[10px] text-slate-400">Tenant agrees to report active infestation and landlord confirms unit inspection.</span>
+          </div>
+        </label>
+      </div>
+    </div>
+  );
+
+  const renderStep7 = () => (
+    <div className="space-y-5">
+      <div className="border-b dark:border-white/5 pb-3 text-left">
+        <span className="text-[10px] uppercase font-bold text-blue-600 dark:text-blue-400 tracking-wider">Step 7 of 9</span>
+        <h4 className="text-lg font-extrabold text-slate-800 dark:text-white mt-1">Attachments & Addenda</h4>
+        <p className="text-xs text-slate-400">Upload or attach disclosures, rules, or guides to include with the lease agreement.</p>
+      </div>
+
+      <div className="space-y-3 text-left">
+        {attachments.length === 0 ? (
+          <div className="p-8 border border-dashed border-slate-200 dark:border-white/5 rounded-2xl text-center bg-slate-50/10">
+            <Paperclip size={24} className="mx-auto text-slate-400 mb-2" />
+            <p className="text-xs text-slate-500 font-semibold">No attachments added yet.</p>
+            <p className="text-[10px] text-slate-400">Click below to upload or add documents.</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {attachments.map((att) => (
+              <div key={att.id} className="p-4 border border-slate-200/80 dark:border-white/[0.08] rounded-2xl bg-slate-50/20 dark:bg-slate-950/10 flex justify-between items-center gap-4 hover:shadow-sm transition animate-fade-in">
+                <div className="flex-1 min-w-0 font-bold">
+                  {editingAttachmentId === att.id ? (
+                    <div className="flex gap-2 max-w-md">
+                      <input
+                        type="text"
+                        value={editingAttachmentName}
+                        onChange={e => setEditingAttachmentName(e.target.value)}
+                        className="flex-1 text-xs px-3 py-1.5 border rounded-lg bg-white dark:bg-[#132030] text-slate-900 dark:text-white border-slate-200 dark:border-white/10 outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                        onKeyDown={e => {
+                          if (e.key === 'Enter') {
+                            setAttachments(attachments.map(a => a.id === att.id ? { ...a, name: editingAttachmentName } : a));
+                            setEditingAttachmentId(null);
+                          }
+                        }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setAttachments(attachments.map(a => a.id === att.id ? { ...a, name: editingAttachmentName } : a));
+                          setEditingAttachmentId(null);
+                        }}
+                        className="px-2.5 py-1.5 bg-blue-600 text-white text-[10px] font-bold rounded-lg hover:bg-blue-700 cursor-pointer"
+                      >
+                        Save
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">{att.name}</span>
+                    </div>
+                  )}
+                  {editingAttachmentId !== att.id && (
+                    <div className="flex gap-3 mt-1.5 text-[10px] text-slate-400 font-semibold">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEditingAttachmentId(att.id);
+                          setEditingAttachmentName(att.name);
+                        }}
+                        className="hover:text-blue-500 transition cursor-pointer"
+                      >
+                        Rename
+                      </button>
+                      <span className="opacity-30">|</span>
+                      <button
+                        type="button"
+                        onClick={() => handleDownloadAttachment(att)}
+                        className="hover:text-blue-500 transition flex items-center gap-1 cursor-pointer"
+                      >
+                        <Download size={10} /> Download
+                      </button>
+                    </div>
+                  )}
+                </div>
+                
+                <button
+                  type="button"
+                  onClick={() => setAttachments(attachments.filter(a => a.id !== att.id))}
+                  className="text-xs text-red-500 hover:text-red-600 font-bold uppercase tracking-wider shrink-0 hover:bg-red-50 dark:hover:bg-red-500/10 px-3 py-1.5 rounded-xl transition cursor-pointer"
+                >
+                  Remove
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <input
+          type="file"
+          ref={fileInputRef}
+          onChange={handleFileChange}
+          className="hidden"
+          multiple
+        />
+        
+        {/* Upload Other Files Button */}
+        <button
+          type="button"
+          onClick={handleUploadClick}
+          className="w-full py-3 border border-dashed border-blue-500/40 hover:border-blue-500 text-blue-600 dark:text-blue-400 hover:bg-blue-50/20 dark:hover:bg-blue-500/[0.01] text-xs font-bold rounded-2xl transition flex items-center justify-center gap-1.5 cursor-pointer"
+        >
+          <Paperclip size={14} /> Upload other files
+        </button>
+      </div>
+    </div>
+  );
+
+  const renderStep8 = () => (
+    <div className="space-y-5">
+      <div className="border-b dark:border-white/5 pb-3">
+        <span className="text-[10px] uppercase font-bold text-blue-600 dark:text-blue-400 tracking-wider">Step 8 of 9</span>
+        <h4 className="text-lg font-extrabold text-slate-800 dark:text-white mt-1">Lessor (Landlord) Information</h4>
+        <p className="text-xs text-slate-400">Provide official contact information for payments and notices.</p>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <div>
+          <label className="block text-xs font-bold text-slate-655 dark:text-gray-400 tracking-wider mb-2">PRIMARY LANDLORD NAME</label>
+          <div className="relative">
+            <User className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
+            <input 
+              required 
+              type="text" 
+              value={lessorFullName} 
+              onChange={e => {
+                const val = e.target.value.replace(/[^a-zA-Z\s.-]/g, '');
+                setLessorFullName(val);
+                if (formErrors.lessorFullName) {
+                  setFormErrors(prev => ({ ...prev, lessorFullName: '' }));
+                }
+              }} 
+              className={`w-full text-sm pl-10 pr-3.5 py-3 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none transition focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 border-slate-200 dark:border-white/10 ${formErrors.lessorFullName ? 'border-red-500 ring-2 ring-red-500/10' : ''}`} 
+              placeholder="First and Last name" 
+            />
+          </div>
+          {formErrors.lessorFullName && <p className="text-xs text-red-500 mt-1.5 flex items-center gap-1.5"><AlertCircle size={13}/>{formErrors.lessorFullName}</p>}
+        </div>
+
+        <div>
+          <label className="block text-xs font-bold text-slate-655 dark:text-gray-400 tracking-wider mb-2">CO-LANDLORD NAME (OPTIONAL)</label>
+          <div className="relative">
+            <User className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-405 pointer-events-none" size={16} />
+            <input 
+              type="text" 
+              value={coLandlordName} 
+              onChange={e => {
+                const val = e.target.value.replace(/[^a-zA-Z\s.-]/g, '');
+                setCoLandlordName(val);
+                if (formErrors.coLandlordName) {
+                  setFormErrors(prev => ({ ...prev, coLandlordName: '' }));
+                }
+              }} 
+              className={`w-full text-sm pl-10 pr-3.5 py-3 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none transition focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 border-slate-200 dark:border-white/10 ${formErrors.coLandlordName ? 'border-red-500 ring-2 ring-red-500/10' : ''}`} 
+              placeholder="e.g. Joint Owner Name" 
+            />
+          </div>
+          {formErrors.coLandlordName && <p className="text-xs text-red-500 mt-1.5 flex items-center gap-1.5"><AlertCircle size={13}/>{formErrors.coLandlordName}</p>}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <div>
+          <label className="block text-xs font-bold text-slate-655 dark:text-gray-400 tracking-wider mb-2">CONTACT PHONE</label>
+          <div className="relative">
+            <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
+            <input 
+              required 
+              type="tel" 
+              value={lessorPhone} 
+              onChange={e => {
+                const val = e.target.value.replace(/[^0-9\s\-()+]/g, '');
+                setLessorPhone(val);
+                if (formErrors.lessorPhone) {
+                  setFormErrors(prev => ({ ...prev, lessorPhone: '' }));
+                }
+              }} 
+              className={`w-full text-sm pl-10 pr-3.5 py-3 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none transition focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 border-slate-200 dark:border-white/10 ${formErrors.lessorPhone ? 'border-red-500 ring-2 ring-red-500/10' : ''}`} 
+              placeholder="10-digit phone number" 
+            />
+          </div>
+          {formErrors.lessorPhone && <p className="text-xs text-red-500 mt-1.5 flex items-center gap-1.5"><AlertCircle size={13}/>{formErrors.lessorPhone}</p>}
+        </div>
+
+        <div>
+          <label className="block text-xs font-bold text-slate-655 dark:text-gray-400 tracking-wider mb-2">CONTACT EMAIL</label>
+          <div className="relative">
+            <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
+            <input 
+              required 
+              type="email" 
+              value={lessorEmail} 
+              onChange={e => {
+                const val = e.target.value.replace(/\s/g, '');
+                setLessorEmail(val);
+                if (formErrors.lessorEmail) {
+                  setFormErrors(prev => ({ ...prev, lessorEmail: '' }));
+                }
+              }} 
+              className={`w-full text-sm pl-10 pr-3.5 py-3 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none transition focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 border-slate-200 dark:border-white/10 ${formErrors.lessorEmail ? 'border-red-500 ring-2 ring-red-500/10' : ''}`} 
+              placeholder="landlord@example.com" 
+            />
+          </div>
+          {formErrors.lessorEmail && <p className="text-xs text-red-500 mt-1.5 flex items-center gap-1.5"><AlertCircle size={13}/>{formErrors.lessorEmail}</p>}
+        </div>
+      </div>
+
+      <div className="relative">
+        <label className="block text-xs font-bold text-slate-655 dark:text-gray-400 tracking-wider mb-2">NOTICE / RENT PAYMENT ADDRESS</label>
+        <div className="relative">
+          <Home className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
+          <input 
+            required 
+            type="text" 
+            value={lessorAddress} 
+            onChange={e => {
+              handleLessorAddressChange(e.target.value);
+              if (formErrors.lessorAddress) {
+                setFormErrors(prev => ({ ...prev, lessorAddress: '' }));
+              }
+            }} 
+            className={`w-full text-sm pl-10 pr-3.5 py-3 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none transition focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 border-slate-200 dark:border-white/10 ${formErrors.lessorAddress ? 'border-red-500 ring-2 ring-red-500/10' : ''}`} 
+            placeholder="Official address to send checks/notices" 
+          />
+          
+          {lessorAddressSuggestions.length > 0 && (
+            <div className="absolute left-0 right-0 bottom-full mb-2 bg-white dark:bg-[#1D2B3A] border border-slate-200 dark:border-white/10 rounded-xl shadow-xl z-50 max-h-48 overflow-y-auto custom-scrollbar text-left">
+              {lessorAddressSuggestions.map((suggestion, idx) => (
+                <div
+                  key={idx}
+                  onClick={() => handleSelectLessorSuggestion(suggestion)}
+                  className="px-4 py-3 hover:bg-slate-50 dark:hover:bg-white/5 cursor-pointer text-xs font-semibold border-b border-slate-100 dark:border-white/[0.03] last:border-none text-slate-700 dark:text-slate-350"
+                >
+                  {suggestion.formatted}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+        {formErrors.lessorAddress && <p className="text-xs text-red-500 mt-1.5 flex items-center gap-1.5"><AlertCircle size={13}/>{formErrors.lessorAddress}</p>}
+      </div>
+    </div>
+  );
+
+  const renderStep9 = () => (
+    <div className="space-y-5 flex flex-col h-full">
+      <div className="border-b dark:border-white/5 pb-3">
+        <span className="text-[10px] uppercase font-bold text-blue-600 dark:text-blue-400 tracking-wider">Step 9 of 9</span>
+        <h4 className="text-lg font-extrabold text-slate-800 dark:text-white mt-1">Terms Agreement & Final Review</h4>
+        <p className="text-xs text-slate-400">Review the dynamically compiled lease agreement and confirm.</p>
+      </div>
+
+      <div className="flex-1 min-h-[220px] flex flex-col">
+        <label className="block text-xs font-bold text-blue-600 dark:text-blue-400 tracking-wider mb-2 uppercase text-left">Live Compiled Lease Text</label>
+        <textarea 
+          value={leaseText} 
+          onChange={e => setLeaseText(e.target.value)} 
+          className="flex-1 w-full p-4 border border-blue-500/20 dark:border-white/10 rounded-2xl bg-slate-50 dark:bg-slate-950/40 text-xs font-mono text-slate-800 dark:text-slate-350 leading-relaxed overflow-y-auto shadow-inner resize-none focus:outline-none focus:border-blue-500" 
+        />
+      </div>
+
+      <div className="p-4 bg-slate-50/50 dark:bg-slate-950/10 border border-slate-200 dark:border-white/5 rounded-2xl text-left mt-2">
+        <label className="flex items-start gap-3 cursor-pointer">
+          <input 
+            type="checkbox" 
+            checked={termsAgreed} 
+            onChange={e => setTermsAgreed(e.target.checked)} 
+            className="w-4.5 h-4.5 text-blue-600 border-slate-300 rounded focus:ring-blue-500 mt-1" 
+          />
+          <div>
+            <span className="text-xs font-bold text-slate-800 dark:text-white block">I verify and agree to the terms in this lease agreement.</span>
+            <span className="text-[10px] text-slate-400">Checking this will finalize the agreement and send an official invitation to the tenant.</span>
+          </div>
+        </label>
+        {formErrors.termsAgreed && <p className="text-xs text-red-500 mt-1.5 flex items-center gap-1.5"><AlertCircle size={13}/>{formErrors.termsAgreed}</p>}
+      </div>
+    </div>
+  );
 
   if (loading) {
     return (
@@ -696,202 +2200,134 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all' }) {
           </div>
         )}
 
-      {/* Create Lease Modal */}
+      {/* Create Lease Modal Refactored to Premium Wizard */}
       {showCreateModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-white/[0.08] w-full max-w-4xl rounded-2xl p-6 space-y-4 shadow-2xl animate-scale-up max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center border-b dark:border-white/5 pb-3">
-              <h3 className="text-lg font-bold text-gray-905 dark:text-white flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-blue-500" /> Build Lease Agreement
-              </h3>
-              <button onClick={() => { setShowCreateModal(false); setPrefilledFromApp(false); setFormErrors({}); setErrorMsg(''); }} className="text-gray-400 hover:text-gray-600 text-lg">×</button>
-            </div>
-             {errorMsg && <p className="text-xs text-red-500 bg-red-50 p-2.5 rounded-lg">{errorMsg}</p>}
-            {!hasVacantUnits && (
-              <div className="p-3.5 bg-red-500/10 border border-red-500/20 text-red-700 dark:text-red-400 rounded-xl text-xs font-semibold flex items-center gap-2">
-                <ShieldAlert className="w-4 h-4 flex-shrink-0" />
-                <span>Warning: There are no vacant units available in your portfolio. You cannot create a new lease agreement until you have a vacant unit.</span>
-              </div>
-            )}
+        <div className="fixed inset-0 bg-white dark:bg-slate-900 z-50 flex flex-col md:flex-row h-screen w-screen overflow-hidden">
             
-            <form onSubmit={handleCreateLease} className="grid grid-cols-1 md:grid-cols-2 gap-6 text-left">
-              {/* Form Controls Column */}
-              <div className="space-y-3">
-                <div>
-                  <label className="block text-xs font-bold text-gray-600 dark:text-gray-400 tracking-wider mb-1">SELECT LEASE TEMPLATE</label>
-                  <select 
-                    value={selectedTemplate} 
-                    onChange={e=>setSelectedTemplate(e.target.value)} 
-                    className="w-full text-sm px-3 py-2 border rounded-lg bg-white dark:bg-black/20 text-gray-900 dark:text-white border-blue-500/30"
-                  >
-                    <option value="standard">Standard Residential Lease Template</option>
-                    <option value="condo">Condominium (HOA Guidelines) Lease</option>
-                    <option value="guaranty">Co-Signer Guaranty Addendum</option>
-                  </select>
+            {/* Sidebar Navigation */}
+            <div className="w-full md:w-64 bg-slate-50 dark:bg-slate-950/40 border-r border-slate-200 dark:border-white/5 p-5 flex flex-col justify-between overflow-y-auto">
+              <div className="space-y-6">
+                <div className="text-left">
+                  <h3 className="text-sm font-extrabold text-blue-600 dark:text-blue-400 tracking-wider uppercase">Lease Builder</h3>
                 </div>
+                
+                <nav className="space-y-1">
+                  {[
+                    { number: 1, label: 'Lease Term', icon: Calendar },
+                    { number: 2, label: 'Rent & Deposit', icon: DollarSign },
+                    { number: 3, label: 'Options & Utilities', icon: Settings },
+                    { number: 4, label: 'Clauses', icon: FileText },
+                    { number: 5, label: 'Rules & Policies', icon: ShieldAlert },
+                    { number: 6, label: 'Disclosures', icon: Info },
+                    { number: 7, label: 'Attachments', icon: Paperclip },
+                    { number: 8, label: 'Lessor Info', icon: User },
+                    { number: 9, label: 'Terms Agreement', icon: CheckSquare }
+                  ].map(step => {
+                    const StepIcon = step.icon;
+                    const isCompleted = step.number < currentStep && Object.keys(validateStep(step.number)).length === 0;
+                    const isActive = currentStep === step.number;
+                    
+                    return (
+                      <button
+                        key={step.number}
+                        type="button"
+                        onClick={() => handleStepClick(step.number)}
+                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left text-xs font-semibold transition-all border ${
+                          isActive 
+                            ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-500/10' 
+                            : isCompleted
+                              ? 'bg-emerald-500/5 text-emerald-600 border-emerald-500/10 hover:bg-emerald-500/10'
+                              : 'bg-transparent text-slate-500 dark:text-slate-400 border-transparent hover:bg-slate-100 dark:hover:bg-white/5'
+                        }`}
+                      >
+                        <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${
+                          isActive 
+                            ? 'bg-white text-blue-600' 
+                            : isCompleted
+                              ? 'bg-emerald-500 text-white'
+                              : 'bg-slate-200 dark:bg-white/10 text-slate-600 dark:text-slate-400'
+                        }`}>
+                          {isCompleted ? '✓' : step.number}
+                        </span>
+                        <span className="flex-1 truncate">{step.label}</span>
+                        <StepIcon size={14} className={isActive ? 'text-white' : 'text-slate-400'} />
+                      </button>
+                    );
+                  })}
+                </nav>
+              </div>
+              
+              <div className="pt-4 border-t border-slate-200 dark:border-white/5 text-[10px] text-slate-400 text-left">
+                Press Cancel to discard draft.
+              </div>
+            </div>
 
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs font-bold text-gray-605 dark:text-gray-400 tracking-wider mb-1">
-                      {prefilledFromApp ? 'SELECT UNIT (LOCKED)' : 'SELECT UNIT'}
-                    </label>
-                    <select 
-                      required 
-                      disabled={prefilledFromApp}
-                      value={selectedUnitId} 
-                      onChange={e=>setSelectedUnitId(e.target.value)} 
-                      className={`w-full text-sm px-3 py-2 border rounded-lg bg-white dark:bg-black/20 text-gray-905 dark:text-white ${
-                        prefilledFromApp ? 'bg-gray-100 dark:bg-slate-900 cursor-not-allowed opacity-80 border-gray-200 dark:border-white/5 text-gray-450 dark:text-gray-500' : 'border-gray-250 dark:border-white/10'
-                      } ${formErrors.selectedUnitId ? 'border-red-500' : ''}`}
+            {/* Active Step Panel */}
+            <div className="flex-1 flex flex-col justify-between overflow-hidden bg-white dark:bg-slate-900">
+              
+              {/* Form Content Area */}
+              <div className="flex-1 overflow-y-auto p-6 text-left">
+                {errorMsg && <p className="text-xs text-red-500 bg-red-50 dark:bg-red-500/10 p-3 rounded-xl mb-4 border border-red-500/20">{errorMsg}</p>}
+                {!hasVacantUnits && currentStep === 1 && (
+                  <div className="p-3.5 bg-red-500/10 border border-red-500/20 text-red-700 dark:text-red-400 rounded-xl text-xs font-semibold flex items-center gap-2 mb-4">
+                    <ShieldAlert className="w-4 h-4 flex-shrink-0" />
+                    <span>Warning: There are no vacant units available in your portfolio. You cannot create a new lease agreement until you have a vacant unit.</span>
+                  </div>
+                )}
+                
+                {currentStep === 1 && renderStep1()}
+                {currentStep === 2 && renderStep2()}
+                {currentStep === 3 && renderStep3()}
+                {currentStep === 4 && renderStep4()}
+                {currentStep === 5 && renderStep5()}
+                {currentStep === 6 && renderStep6()}
+                {currentStep === 7 && renderStep7()}
+                {currentStep === 8 && renderStep8()}
+                {currentStep === 9 && renderStep9()}
+              </div>
+
+              {/* Wizard Footer Controls */}
+              <div className="p-4 border-t border-slate-200 dark:border-white/5 bg-slate-50/50 dark:bg-slate-950/20 flex justify-between items-center">
+                <button
+                  type="button"
+                  onClick={() => { resetWizardForm(); setShowCreateModal(false); }}
+                  className="px-4 py-2 border border-slate-200 dark:border-white/10 rounded-xl text-xs hover:bg-slate-100 dark:hover:bg-white/5 text-slate-600 dark:text-slate-400 font-bold transition cursor-pointer"
+                >
+                  Cancel
+                </button>
+                
+                <div className="flex gap-2">
+                  {currentStep > 1 && (
+                    <button
+                      type="button"
+                      onClick={handleBack}
+                      className="px-4 py-2 bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-350 hover:bg-slate-200 dark:hover:bg-white/10 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
                     >
-                      <option value="">-- Select a Unit --</option>
-                      {filteredUnits.map(u=>(
-                        <option key={u.unit_id} value={u.unit_id}>
-                          Unit {u.unit_number} (${u.rent_amount}) - {u.status || 'VACANT'}
-                        </option>
-                      ))}
-                    </select>
-                    {formErrors.selectedUnitId && <p className="text-[10px] text-red-500 mt-0.5">{formErrors.selectedUnitId}</p>}
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-gray-605 dark:text-gray-400 tracking-wider mb-1">
-                      {prefilledFromApp ? 'TENANT EMAIL (LOCKED)' : 'TENANT EMAIL'}
-                    </label>
-                    <input 
-                      required 
-                      disabled={prefilledFromApp}
-                      type="email" 
-                      value={tenantEmail} 
-                      onChange={e=>setTenantEmail(e.target.value)} 
-                      className={`w-full text-sm px-3 py-2 border rounded-lg bg-white dark:bg-black/20 text-gray-905 dark:text-white ${
-                        prefilledFromApp ? 'bg-gray-100 dark:bg-slate-900 cursor-not-allowed opacity-80 border-gray-200 dark:border-white/5 text-gray-450 dark:text-gray-500' : 'border-gray-250 dark:border-white/10'
-                      } ${formErrors.tenantEmail ? 'border-red-500 focus:ring-red-200' : ''}`} 
-                      placeholder="tenant@example.com" 
-                    />
-                    {formErrors.tenantEmail && <p className="text-[10px] text-red-500 mt-0.5">{formErrors.tenantEmail}</p>}
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs font-bold text-gray-600 tracking-wider mb-1">MONTHLY RENT ($)</label>
-                    <input required type="number" value={rentAmount} onChange={e=>setRentAmount(e.target.value)} className={`w-full text-sm px-3 py-2 border rounded-lg bg-white dark:bg-black/20 text-gray-900 dark:text-white ${formErrors.rentAmount ? 'border-red-500' : 'border-gray-250 dark:border-white/10'}`} placeholder="1500" />
-                    {formErrors.rentAmount && <p className="text-[10px] text-red-500 mt-0.5">{formErrors.rentAmount}</p>}
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-gray-600 tracking-wider mb-1">SECURITY DEPOSIT ($)</label>
-                    <input required type="number" value={deposit} onChange={e=>setDeposit(e.target.value)} className={`w-full text-sm px-3 py-2 border rounded-lg bg-white dark:bg-black/20 text-gray-900 dark:text-white ${formErrors.deposit ? 'border-red-500' : 'border-gray-250 dark:border-white/10'}`} placeholder="1500" />
-                    {formErrors.deposit && <p className="text-[10px] text-red-500 mt-0.5">{formErrors.deposit}</p>}
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-3 gap-2">
-                  <div>
-                    <label className="block text-xs font-bold text-gray-600 tracking-wider mb-1">UTILITIES FEE ($)</label>
-                    <input type="number" value={utilFee} onChange={e=>setUtilFee(e.target.value)} className={`w-full text-sm px-3 py-2 border rounded-lg bg-white dark:bg-black/20 text-gray-900 dark:text-white ${formErrors.utilFee ? 'border-red-500' : 'border-gray-250 dark:border-white/10'}`} placeholder="50" />
-                    {formErrors.utilFee && <p className="text-[10px] text-red-500 mt-0.5">{formErrors.utilFee}</p>}
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-gray-600 tracking-wider mb-1">PARKING FEE ($)</label>
-                    <input type="number" value={parkingFee} onChange={e=>setParkingFee(e.target.value)} className={`w-full text-sm px-3 py-2 border rounded-lg bg-white dark:bg-black/20 text-gray-900 dark:text-white ${formErrors.parkingFee ? 'border-red-500' : 'border-gray-250 dark:border-white/10'}`} placeholder="25" />
-                    {formErrors.parkingFee && <p className="text-[10px] text-red-500 mt-0.5">{formErrors.parkingFee}</p>}
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-gray-600 tracking-wider mb-1">PET FEE ($)</label>
-                    <input type="number" value={petFee} onChange={e=>setPetFee(e.target.value)} className={`w-full text-sm px-3 py-2 border rounded-lg bg-white dark:bg-black/20 text-gray-900 dark:text-white ${formErrors.petFee ? 'border-red-500' : 'border-gray-250 dark:border-white/10'}`} placeholder="15" />
-                    {formErrors.petFee && <p className="text-[10px] text-red-500 mt-0.5">{formErrors.petFee}</p>}
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs font-bold text-gray-600 tracking-wider mb-1">START DATE</label>
-                    <div className="relative">
-                      <Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-gray-500 pointer-events-none" size={16} />
-                      <input 
-                        required 
-                        type="date" 
-                        min={new Date().toISOString().split('T')[0]} 
-                        autoComplete="off"
-                        onKeyDown={e => e.preventDefault()}
-                        value={startDate} 
-                        onChange={e=>setStartDate(e.target.value)} 
-                        className={`w-full text-sm pl-10 pr-3 py-2 border rounded-lg bg-white dark:bg-black/20 text-gray-900 dark:text-white cursor-pointer ${formErrors.startDate ? 'border-red-500' : 'border-gray-250 dark:border-white/10'}`} 
-                      />
-                    </div>
-                    {formErrors.startDate && <p className="text-[10px] text-red-500 mt-0.5">{formErrors.startDate}</p>}
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-gray-600 tracking-wider mb-1">END DATE</label>
-                    <div className="relative">
-                      <Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-gray-500 pointer-events-none" size={16} />
-                      <input 
-                        required 
-                        type="date" 
-                        min={startDate || new Date().toISOString().split('T')[0]} 
-                        autoComplete="off"
-                        onKeyDown={e => e.preventDefault()}
-                        value={endDate} 
-                        onChange={e=>setEndDate(e.target.value)} 
-                        className={`w-full text-sm pl-10 pr-3 py-2 border rounded-lg bg-white dark:bg-black/20 text-gray-900 dark:text-white cursor-pointer ${formErrors.endDate ? 'border-red-500' : 'border-gray-250 dark:border-white/10'}`} 
-                      />
-                    </div>
-                    {formErrors.endDate && <p className="text-[10px] text-red-500 mt-0.5">{formErrors.endDate}</p>}
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-3 gap-2">
-                  <div>
-                    <label className="block text-xs font-bold text-gray-600 tracking-wider mb-1">GRACE DAYS</label>
-                    <input required type="number" value={gracePeriod} onChange={e=>setGracePeriod(e.target.value)} className={`w-full text-sm px-3 py-2 border rounded-lg bg-white dark:bg-black/20 text-gray-900 dark:text-white ${formErrors.gracePeriod ? 'border-red-500' : 'border-gray-250 dark:border-white/10'}`} />
-                    {formErrors.gracePeriod && <p className="text-[10px] text-red-500 mt-0.5">{formErrors.gracePeriod}</p>}
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-gray-600 tracking-wider mb-1">LATE FEE TYPE</label>
-                    <select value={feeType} onChange={e=>setFeeType(e.target.value)} className="w-full text-sm px-3 py-2 border border-gray-250 dark:border-white/10 rounded-lg bg-white dark:bg-black/20 text-gray-900 dark:text-white">
-                      <option value="FLAT">Flat Fee</option>
-                      <option value="PERCENTAGE">Percentage</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-gray-600 tracking-wider mb-1">FEE AMOUNT</label>
-                    <input required type="number" value={feeAmount} onChange={e=>setFeeAmount(e.target.value)} className={`w-full text-sm px-3 py-2 border rounded-lg bg-white dark:bg-black/20 text-gray-900 dark:text-white ${formErrors.feeAmount ? 'border-red-500' : 'border-gray-250 dark:border-white/10'}`} />
-                    {formErrors.feeAmount && <p className="text-[10px] text-red-500 mt-0.5">{formErrors.feeAmount}</p>}
-                  </div>
-                </div>
-                
-                <div className="pt-2">
-                  <label className="block text-xs font-bold text-gray-605 dark:text-gray-400 tracking-wider mb-1">CO-LANDLORD FULL NAME (OPTIONAL)</label>
-                  <input 
-                    type="text" 
-                    value={coLandlordName} 
-                    onChange={e => setCoLandlordName(e.target.value)} 
-                    className="w-full text-sm px-3 py-2 border rounded-lg bg-white dark:bg-black/20 text-gray-900 dark:text-white border-gray-250 dark:border-white/10 outline-none focus:border-blue-500" 
-                    placeholder="e.g. Jane Doe (Joint Landlord)" 
-                  />
-                  <p className="text-[10px] text-gray-400 mt-1 italic">
-                    If specified, they will be given the option to sign the lease contract as an optional second landlord.
-                  </p>
+                      <ArrowLeft size={14} /> Back
+                    </button>
+                  )}
+                  
+                  {currentStep < 9 ? (
+                    <button
+                      type="button"
+                      onClick={handleNext}
+                      className="px-5 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold transition shadow-md shadow-blue-500/20 flex items-center gap-1.5 cursor-pointer"
+                    >
+                      Next <ArrowRight size={14} />
+                    </button>
+                  ) : (
+                    <button
+                      type="submit"
+                      disabled={!hasVacantUnits && !prefilledFromApp}
+                      onClick={handleCreateLease}
+                      className="px-6 py-2.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white rounded-xl text-xs font-extrabold transition shadow-lg shadow-blue-500/30 flex items-center gap-1.5 cursor-pointer"
+                    >
+                      Create & Invite Tenant
+                    </button>
+                  )}
                 </div>
               </div>
-
-              {/* Dynamic Contract Preview Sheet Column */}
-              <div className="flex flex-col h-full space-y-2">
-                <label className="block text-xs font-bold text-blue-600 dark:text-blue-400 tracking-wider">LIVE LEASE CONTRACT EDIT / PREVIEW</label>
-                <textarea
-                  value={leaseText}
-                  onChange={(e) => setLeaseText(e.target.value)}
-                  className="flex-1 w-full p-4 border border-blue-500/20 dark:border-white/10 rounded-xl bg-slate-50 dark:bg-[#0D1B2A] text-xs font-mono text-gray-850 dark:text-gray-300 leading-relaxed h-80 max-h-[320px] overflow-y-auto shadow-inner focus:outline-none focus:border-blue-500 custom-scrollbar resize-none"
-                  placeholder="Draft lease agreement..."
-                />
-                
-                <div className="flex gap-3 justify-end pt-3 mt-auto">
-                  <button type="button" onClick={() => { setShowCreateModal(false); setPrefilledFromApp(false); setFormErrors({}); setErrorMsg(''); }} className="px-4 py-2 border rounded-lg text-sm hover:bg-gray-50 text-gray-600 dark:text-gray-400 font-bold">Cancel</button>
-                  <button type="submit" disabled={!hasVacantUnits && !prefilledFromApp} className="px-5 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-bold hover:bg-blue-700 shadow-md disabled:opacity-50 disabled:cursor-not-allowed">Create & Invite Tenant</button>
-                </div>
-              </div>
-            </form>
-          </div>
+            </div>
         </div>
       )}
       <ConfirmModal

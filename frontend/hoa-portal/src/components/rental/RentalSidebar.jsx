@@ -8,7 +8,7 @@ import { getBaseUrl } from '../../services/api';
 import { useTheme } from '../../context/ThemeContext';
 import Logo from '../marketing/Logo';
 
-const RentalSidebar = ({ activePage, setActivePage, isOpen, setIsOpen, user }) => {
+const RentalSidebar = ({ activePage, setActivePage, isOpen, setIsOpen, user, properties = [] }) => {
   const userRole = (user?.role_name || user?.role || 'tenant').toLowerCase();
   const { theme } = useTheme();
   const isDark = theme === 'dark';
@@ -28,7 +28,7 @@ const RentalSidebar = ({ activePage, setActivePage, isOpen, setIsOpen, user }) =
   const superAdminNavItems = [
     { id: 'dashboard', label: 'Dashboard', icon: Layout },
     { id: 'properties_hub', label: 'All Properties & Units', icon: Globe },
-    { id: 'screening_hub', label: 'Tenant Screening', icon: Users },
+    { id: 'screening_hub', label: 'Tenant Screening', icon: ClipboardList },
     { id: 'leases_hub', label: 'Lease Agreements', icon: FileText },
     { id: 'tenants_hub', label: 'Tenants Directory', icon: Users },
     { id: 'rent_ledger', label: 'Payments Ledger', icon: CreditCard },
@@ -41,7 +41,7 @@ const RentalSidebar = ({ activePage, setActivePage, isOpen, setIsOpen, user }) =
   const landlordNavItems = [
     { id: 'dashboard', label: 'Landlord Dashboard', icon: Layout },
     { id: 'properties_hub', label: 'Properties & Units', icon: Globe },
-    { id: 'screening_hub', label: 'Tenant Screening', icon: Users },
+    { id: 'screening_hub', label: 'Tenant Screening', icon: ClipboardList },
     { id: 'leases_hub', label: 'Lease Agreements', icon: FileText },
     { id: 'tenants_hub', label: 'Tenants', icon: Users },
     { id: 'rent_ledger', label: 'Payments Ledger', icon: CreditCard },
@@ -58,11 +58,13 @@ const RentalSidebar = ({ activePage, setActivePage, isOpen, setIsOpen, user }) =
     { id: 'servicereq', label: 'Maintenance Request', icon: Wrench },
   ];
 
+  const hasNoProperties = (userRole === 'landlord' || userRole === 'super_admin') && properties.length === 0;
+
   let navItems = tenantNavItems;
   if (userRole === 'super_admin') {
-    navItems = superAdminNavItems;
+    navItems = hasNoProperties ? superAdminNavItems.filter(item => item.id === 'dashboard') : superAdminNavItems;
   } else if (userRole === 'landlord') {
-    navItems = landlordNavItems;
+    navItems = hasNoProperties ? landlordNavItems.filter(item => item.id === 'dashboard') : landlordNavItems;
   }
 
   const getNavItemClass = (itemId) => {
@@ -119,7 +121,7 @@ const RentalSidebar = ({ activePage, setActivePage, isOpen, setIsOpen, user }) =
                 <User size={18} /> My Profile
               </div>
 
-              {(userRole === 'landlord' || userRole === 'super_admin') && (
+              {(userRole === 'landlord' || userRole === 'super_admin') && !hasNoProperties && (
                 <div
                   onClick={() => { setActivePage('audit'); setIsOpen(false); }}
                   className={getNavItemClass('audit')}

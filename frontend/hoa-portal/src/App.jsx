@@ -53,7 +53,6 @@ try {
 // Solution subpages
 import RentalSolutionPage from './pages/marketing/solutions/RentalSolutionPage';
 import CondoSolutionPage from './pages/marketing/solutions/CondoSolutionPage';
-import ApartmentSolutionPage from './pages/marketing/solutions/ApartmentSolutionPage';
 import HoaSolutionPage from './pages/marketing/solutions/HoaSolutionPage';
 import CondoLoginPage from './pages/condo/auth/CondoLoginPage';
 import CondoRegisterPage from './pages/condo/auth/CondoRegisterPage';
@@ -142,7 +141,6 @@ export default function App() {
         <Route path="/security" element={<SecurityPage />} />
         <Route path="/solutions/rental" element={<RentalSolutionPage />} />
         <Route path="/solutions/condo" element={<CondoSolutionPage />} />
-        <Route path="/solutions/apartment" element={<ApartmentSolutionPage />} />
         <Route path="/solutions/hoa" element={<HoaSolutionPage />} />
 
         {/* --- Public Routes --- */}

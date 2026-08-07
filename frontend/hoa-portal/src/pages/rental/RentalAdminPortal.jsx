@@ -249,6 +249,14 @@ const RentalAdminPortal = () => {
     fetchInitialData();
   }, []);
 
+  useEffect(() => {
+    if (user && (user.role === 'landlord' || user.role === 'super_admin')) {
+      API.get('/rental/properties')
+        .then(res => setProperties(res.data))
+        .catch(err => console.error("Sync landlord properties list:", err));
+    }
+  }, [activePage, user]);
+
   const fetchInitialData = async () => {
     try {
       setLoading(true);
@@ -397,6 +405,7 @@ const RentalAdminPortal = () => {
         isOpen={isSidebarOpen}
         setIsOpen={setIsSidebarOpen}
         user={user}
+        properties={properties}
       />
 
       <div className="flex-1 flex flex-col overflow-hidden">

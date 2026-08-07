@@ -30,10 +30,9 @@ export default function Footer() {
       { name: 'Integrations', path: '#' },
     ],
     Products: [
+      { name: 'HOA Governance', path: '/solutions/hoa' },
       { name: 'Rental Property Management', path: '/solutions/rental' },
       { name: 'Condo Management', path: '/solutions/condo' },
-      { name: 'Apartment Portal', path: '/solutions/apartment' },
-      { name: 'HOA Governance', path: '/solutions/hoa' },
     ],
     Company: [
       { name: 'About Us', path: '/about' },
@@ -90,7 +89,7 @@ export default function Footer() {
           <div className="lg:col-span-2 space-y-4">
             <h5 className="text-xs font-black uppercase tracking-wider text-slate-200">Get Started</h5>
             <div className="space-y-2.5">
-              <Link to="/register" className="btn-glow w-full text-center py-3 text-sm font-semibold text-white rounded-xl flex items-center justify-center gap-1.5 group">
+              <Link to="/portal-select" className="btn-glow w-full text-center py-3 text-sm font-semibold text-white rounded-xl flex items-center justify-center gap-1.5 group">
                 Free Trial <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
               </Link>
               <Link to="/contact" className="w-full text-center py-3 text-sm font-bold text-slate-350 rounded-xl border border-white/[0.08] bg-[#1a102b]/40 hover:bg-white/[0.03] hover:border-violet-500/20 transition-all block">

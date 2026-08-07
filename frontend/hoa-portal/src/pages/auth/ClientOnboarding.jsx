@@ -635,16 +635,23 @@ export default function ClientOnboarding() {
     };
   }, []);
 
-  const handleAddressInputChange = (val) => {
-    if (!mapboxToken || mapboxToken.startsWith('pk.placeholder_please_replace')) {
-      return;
-    }
+  const STATE_NAME_TO_ABBR = {
+    "alabama": "AL", "alaska": "AK", "arizona": "AZ", "arkansas": "AR", "california": "CA", "colorado": "CO", "connecticut": "CT", "delaware": "DE", "florida": "FL", "georgia": "GA", "hawaii": "HI", "idaho": "ID", "illinois": "IL", "indiana": "IN", "iowa": "IA", "kansas": "KS", "kentucky": "KY", "louisiana": "LA", "maine": "ME", "maryland": "MD", "massachusetts": "MA", "michigan": "MI", "minnesota": "MN", "mississippi": "MS", "missouri": "MO", "montana": "MT", "nebraska": "NE", "nevada": "NV", "new hampshire": "NH", "new jersey": "NJ", "new mexico": "NM", "new york": "NY", "north carolina": "NC", "north dakota": "ND", "ohio": "OH", "oklahoma": "OK", "oregon": "OR", "pennsylvania": "PA", "rhode island": "RI", "south carolina": "SC", "south dakota": "SD", "tennessee": "TN", "texas": "TX", "utah": "UT", "vermont": "VT", "virginia": "VA", "washington": "WA", "west virginia": "WV", "wisconsin": "WI", "wyoming": "WY"
+  };
 
+  const getAbbr = (stateStr) => {
+    if (!stateStr) return '';
+    const clean = stateStr.trim().toLowerCase();
+    if (clean.length === 2) return clean.toUpperCase();
+    return STATE_NAME_TO_ABBR[clean] || stateStr;
+  };
+
+  const handleAddressInputChange = (val) => {
     if (addressTimeoutRef.current) {
       clearTimeout(addressTimeoutRef.current);
     }
 
-    if (!val || val.trim().length < 3) {
+    if (!val || val.trim().length < 1) {
       setAddressSuggestions([]);
       return;
     }
@@ -652,53 +659,55 @@ export default function ClientOnboarding() {
     addressTimeoutRef.current = setTimeout(async () => {
       try {
         setSearchingAddress(true);
-        const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(val)}.json?access_token=${mapboxToken}&autocomplete=true&types=address&limit=5`;
-        const response = await fetch(url);
-        if (!response.ok) throw new Error('Mapbox API failed');
-        const data = await response.json();
-        setAddressSuggestions(data.features || []);
+        const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(val)}&format=json&addressdetails=1&countrycodes=us&limit=5&email=contact@nestbloq.com`, {
+          headers: {
+            'Accept': 'application/json',
+            'User-Agent': 'NestBloq-RentalPortal/1.0'
+          }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          const mapped = data.map(item => {
+            const addr = item.address || {};
+            const street = `${addr.house_number || ''} ${addr.road || ''}`.trim();
+            const city = addr.city || addr.town || addr.village || addr.hamlet || addr.suburb || '';
+            const state = addr.state || '';
+            const zip = addr.postcode || '';
+            const country = addr.country || '';
+            const countryCode = addr.country_code || '';
+            return {
+              id: item.place_id,
+              place_name: item.display_name,
+              street: street || item.display_name.split(',')[0],
+              city: city,
+              state: state,
+              zip: zip,
+              country: country,
+              countryCode: countryCode.toUpperCase()
+            };
+          });
+          setAddressSuggestions(mapped);
+        }
       } catch (err) {
         console.error('Error fetching address suggestions:', err);
         setAddressSuggestions([]);
       } finally {
         setSearchingAddress(false);
       }
-    }, 600);
+    }, 400);
   };
 
-  const handleSelectSuggestion = async (feature) => {
+  const handleSelectSuggestion = async (suggestion) => {
     setAddressSuggestions([]);
     
-    const streetNumber = feature.address || '';
-    const streetName = feature.text || '';
-    const fullStreet = streetNumber ? `${streetNumber} ${streetName}`.trim() : streetName;
-    
-    let city = '';
-    let zipCode = '';
-    let stateName = '';
-    let stateCode = '';
-    let countryName = '';
-    let countryCode = '';
+    setValue('hoa_address', suggestion.street);
+    if (suggestion.city) setValue('hoa_city', suggestion.city);
+    if (suggestion.zip) setValue('hoa_zip_code', suggestion.zip);
 
-    if (feature.context) {
-      feature.context.forEach((item) => {
-        if (item.id.startsWith('postcode')) {
-          zipCode = item.text;
-        } else if (item.id.startsWith('place') || item.id.startsWith('locality')) {
-          city = item.text;
-        } else if (item.id.startsWith('region')) {
-          stateName = item.text;
-          stateCode = item.short_code ? item.short_code.replace(/^[^-]+-/, '').toUpperCase() : '';
-        } else if (item.id.startsWith('country')) {
-          countryName = item.text;
-          countryCode = item.short_code ? item.short_code.toUpperCase() : '';
-        }
-      });
-    }
-
-    setValue('hoa_address', fullStreet || feature.place_name);
-    if (city) setValue('hoa_city', city);
-    if (zipCode) setValue('hoa_zip_code', zipCode);
+    const countryCode = suggestion.countryCode;
+    const countryName = suggestion.country;
+    const stateName = suggestion.state;
+    const stateCode = getAbbr(stateName);
 
     let matchedCountry = null;
     if (countryCode || countryName) {
@@ -1379,11 +1388,8 @@ export default function ClientOnboarding() {
                           hoaAddressRegister.onChange(e);
                           handleAddressInputChange(e.target.value);
                         }}
-                        readOnly={addressSelected}
                         placeholder={mapboxToken ? "Start typing to search..." : "Street Name & No"}
-                        className={`w-full bg-[#1e2f41] border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-[#1D68DF] ${
-                          addressSelected ? 'opacity-65 bg-[#162535] cursor-not-allowed' : ''
-                        }`}
+                        className="w-full bg-[#1e2f41] border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-[#1D68DF]"
                       />
                       {errors.hoa_address && <span className="text-xs text-red-400">{errors.hoa_address.message}</span>}
 
@@ -1436,10 +1442,7 @@ export default function ClientOnboarding() {
                             e.preventDefault();
                           }
                         }}
-                        readOnly={addressSelected}
-                        className={`w-full bg-[#1e2f41] border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-[#1D68DF] ${
-                          addressSelected ? 'opacity-65 bg-[#162535] cursor-not-allowed' : ''
-                        }`}
+                        className="w-full bg-[#1e2f41] border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-[#1D68DF]"
                       />
                       {errors.hoa_zip_code && <span className="text-xs text-red-400 mt-1 block">{errors.hoa_zip_code.message}</span>}
                       {zipError && <span className="text-xs text-red-400 mt-1 block font-medium">{zipError}</span>}
@@ -1450,7 +1453,7 @@ export default function ClientOnboarding() {
                     <div className="p-3 bg-emerald-500/10 border border-emerald-500/25 rounded-xl flex items-center justify-between text-xs text-[#5BA4F5]">
                       <div className="flex items-center gap-1.5 font-medium">
                         <CheckCircle size={14} />
-                        <span>Address auto-filled & verified via Mapbox.</span>
+                        <span>Address auto-filled & verified.</span>
                       </div>
                       <button
                         type="button"

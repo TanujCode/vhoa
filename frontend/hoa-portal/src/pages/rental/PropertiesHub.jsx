@@ -80,6 +80,8 @@ export default function PropertiesHub({
     setWizardUnits(prev => prev.map((item, i) => i === index ? { ...item, [field]: value } : item));
   };
 
+  const [addressSuggestions, setAddressSuggestions] = useState([]);
+
   // Auto-fill logic for Add form
   const STATE_NAME_TO_ABBR = {
     "alabama": "AL", "alaska": "AK", "arizona": "AZ", "arkansas": "AR", "california": "CA", "colorado": "CO", "connecticut": "CT", "delaware": "DE", "florida": "FL", "georgia": "GA", "hawaii": "HI", "idaho": "ID", "illinois": "IL", "indiana": "IN", "iowa": "IA", "kansas": "KS", "kentucky": "KY", "louisiana": "LA", "maine": "ME", "maryland": "MD", "massachusetts": "MA", "michigan": "MI", "minnesota": "MN", "mississippi": "MS", "missouri": "MO", "montana": "MT", "nebraska": "NE", "nevada": "NV", "new hampshire": "NH", "new jersey": "NJ", "new mexico": "NM", "new york": "NY", "north carolina": "NC", "north dakota": "ND", "ohio": "OH", "oklahoma": "OK", "oregon": "OR", "pennsylvania": "PA", "rhode island": "RI", "south carolina": "SC", "south dakota": "SD", "tennessee": "TN", "texas": "TX", "utah": "UT", "vermont": "VT", "virginia": "VA", "washington": "WA", "west virginia": "WV", "wisconsin": "WI", "wyoming": "WY"
@@ -129,6 +131,85 @@ export default function PropertiesHub({
       }
     } catch (err) {
       console.warn("City/State zip lookup failed:", err);
+    }
+  };
+
+  const handleAddressChange = async (value) => {
+    setPropAddress(value);
+    
+    if (!value.trim() || value.length < 3) {
+      setAddressSuggestions([]);
+      return;
+    }
+
+    try {
+      const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(value)}&format=json&addressdetails=1&countrycodes=us&limit=5&email=contact@nestbloq.com`, {
+        headers: {
+          'Accept': 'application/json'
+        }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const mapped = data.map(item => {
+          const addr = item.address || {};
+          const street = `${addr.house_number || ''} ${addr.road || ''}`.trim();
+          const city = addr.city || addr.town || addr.village || addr.hamlet || addr.suburb || '';
+          const state = addr.state || '';
+          const zip = addr.postcode || '';
+          return {
+            display: item.display_name,
+            street: street || item.display_name.split(',')[0],
+            city: city,
+            state: getAbbr(state),
+            zip: zip
+          };
+        }).filter(item => item.city && item.state && item.zip);
+        setAddressSuggestions(mapped);
+      }
+    } catch (err) {
+      console.warn("Geocoding failed:", err);
+    }
+  };
+
+  const handleSelectSuggestion = (suggestion) => {
+    setPropAddress(suggestion.street);
+    setPropCity(suggestion.city);
+    setPropState(suggestion.state);
+    setPropZip(suggestion.zip);
+    setAddressSuggestions([]);
+  };
+
+  const handleAddressBlur = async () => {
+    if (propCity && propState && propZip) return;
+    if (!propAddress.trim()) return;
+
+    try {
+      const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(propAddress)}&format=json&addressdetails=1&countrycodes=us&limit=1&email=contact@nestbloq.com`, {
+        headers: {
+          'Accept': 'application/json'
+        }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.length > 0) {
+          const item = data[0];
+          const addr = item.address || {};
+          const street = `${addr.house_number || ''} ${addr.road || ''}`.trim() || item.display_name.split(',')[0];
+          const city = addr.city || addr.town || addr.village || addr.hamlet || addr.suburb || '';
+          const state = addr.state || '';
+          const zip = addr.postcode || '';
+
+          if (city && state && zip) {
+            setPropAddress(street);
+            setPropCity(city);
+            setPropState(getAbbr(state));
+            setPropZip(zip);
+            setAddressSuggestions([]);
+          }
+        }
+      }
+    } catch (err) {
+      console.warn("Geocoding blur lookup failed:", err);
     }
   };
 
@@ -340,6 +421,11 @@ export default function PropertiesHub({
 
   useEffect(() => {
     fetchProperties();
+    if (localStorage.getItem('open_add_property_modal') === 'true') {
+      localStorage.removeItem('open_add_property_modal');
+      setShowPropModal(true);
+      setWizardStep(1);
+    }
   }, []);
 
   useEffect(() => {
@@ -448,41 +534,17 @@ export default function PropertiesHub({
       return;
     }
 
-    // Validate and format units based on property type
     const formattedUnits = [];
-    if (propertyType === 'single' || propertyType === 'condo') {
-      const rentVal = parseFloat(wizardUnits[0]?.rent_amount);
-      if (isNaN(rentVal) || rentVal <= 0) {
-        alert("Monthly rent must be a positive number.");
-        return;
-      }
+    if (propertyType === 'single') {
       formattedUnits.push({
-        unit_number: propertyType === 'single' ? 'Single Family' : 'Condo Unit',
-        rent_amount: rentVal
+        unit_number: 'Single Family',
+        rent_amount: 0.0
       });
     } else {
-      // Multi-unit validation
-      if (wizardUnits.length === 0) {
-        alert("Please add at least one unit row.");
-        return;
-      }
-      for (let i = 0; i < wizardUnits.length; i++) {
-        const u = wizardUnits[i];
-        const num = u.unit_number.trim();
-        const rentVal = parseFloat(u.rent_amount);
-        if (!num) {
-          alert(`Unit row ${i + 1} is missing a Unit Number.`);
-          return;
-        }
-        if (isNaN(rentVal) || rentVal <= 0) {
-          alert(`Unit "${num}" has an invalid rent amount.`);
-          return;
-        }
-        formattedUnits.push({
-          unit_number: num,
-          rent_amount: rentVal
-        });
-      }
+      formattedUnits.push({
+        unit_number: 'Unit 1',
+        rent_amount: 0.0
+      });
     }
 
     try {
@@ -1028,8 +1090,7 @@ export default function PropertiesHub({
               <div className="flex items-center justify-between">
                 {[
                   { step: 1, label: 'Property Type' },
-                  { step: 2, label: 'Address & Name' },
-                  { step: 3, label: 'Configure Units' }
+                  { step: 2, label: 'Address & Name' }
                 ].map((item, idx) => (
                   <React.Fragment key={item.step}>
                     <div className="flex items-center gap-2">
@@ -1046,7 +1107,7 @@ export default function PropertiesHub({
                         {item.label}
                       </span>
                     </div>
-                    {idx < 2 && (
+                    {idx < 1 && (
                       <div className={`flex-1 h-0.5 mx-2 transition-all duration-300 ${
                         wizardStep > item.step ? 'bg-blue-600' : 'bg-slate-150 dark:bg-white/5'
                       }`} />
@@ -1072,168 +1133,56 @@ export default function PropertiesHub({
                 
                 {/* STEP 1: Property Type Selection */}
                 {wizardStep === 1 && (
-                  <div className="space-y-4">
-                    <h4 className="text-sm font-bold text-slate-700 dark:text-slate-350 uppercase tracking-wide">Select your building layout:</h4>
-                    <div className="grid grid-cols-1 gap-3.5">
-                      {[
-                        { 
-                          type: 'single', 
-                          title: 'Single-Family Home', 
-                          desc: 'A detached home, townhouse, or condo with one address and one renter unit.',
-                          icon: <Home className="w-6 h-6 text-emerald-500" />
-                        },
-                        { 
-                          type: 'condo', 
-                          title: 'Condo / Townhouse / Room', 
-                          desc: 'A single designated unit within a larger HOA association community.',
-                          icon: <Building className="w-6 h-6 text-indigo-500" />
-                        },
-                        { 
-                          type: 'multi', 
-                          title: 'Multi-Unit Building (Apartment / Duplex)', 
-                          desc: 'A building containing multiple distinct rooms or apartments (e.g. Apt 1, Apt 2).',
-                          icon: <Building2 className="w-6 h-6 text-blue-500" />
-                        }
-                      ].map(item => (
-                        <div
-                          key={item.type}
-                          onClick={() => {
-                            setPropertyType(item.type);
-                            if (item.type === 'single') {
+                  <div className="space-y-6 py-4 animate-fade-in text-left">
+                    <div className="space-y-2">
+                      <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
+                        SELECT PROPERTY TYPE *
+                      </label>
+                      <div className="relative">
+                        <select
+                          value={propertyType}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setPropertyType(val);
+                            if (val === 'single') {
                               setWizardUnits([{ unit_number: 'Single Family', rent_amount: '' }]);
-                            } else if (item.type === 'condo') {
-                              setWizardUnits([{ unit_number: 'Condo Unit', rent_amount: '' }]);
                             } else {
                               setWizardUnits([{ unit_number: 'Apt 101', rent_amount: '' }]);
                             }
-                            setWizardStep(2);
                           }}
-                          className={`p-4 rounded-xl border cursor-pointer text-left flex items-start gap-4 transition-all hover:bg-slate-50 dark:hover:bg-white/5 ${
-                            propertyType === item.type 
-                              ? 'border-blue-500 bg-blue-600/5 dark:bg-blue-500/10' 
-                              : 'border-slate-200 dark:border-white/10 bg-slate-50/20 dark:bg-black/15'
-                          }`}
+                          className="appearance-none w-full bg-slate-50 dark:bg-[#1E2E42] border border-slate-200 dark:border-white/10 text-slate-800 dark:text-white py-3.5 pl-4 pr-10 rounded-2xl text-sm font-semibold focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none cursor-pointer shadow-sm transition-all"
                         >
-                          <div className="p-2.5 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-white/5">
-                            {item.icon}
-                          </div>
-                          <div>
-                            <h5 className="text-sm font-bold text-slate-900 dark:text-white">{item.title}</h5>
-                            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">{item.desc}</p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* STEP 2: Address and Property Name */}
-                {wizardStep === 2 && (
-                  <div className="space-y-4">
-                    <h4 className="text-sm font-bold text-slate-700 dark:text-slate-350 uppercase tracking-wide">Enter address details:</h4>
-                    
-                    <div className="space-y-3.5">
-                      <div>
-                        <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">Property Name / Portfolio</label>
-                        <input 
-                          required 
-                          type="text" 
-                          value={propName} 
-                          onChange={e => setPropName(e.target.value)} 
-                          className="w-full bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 focus:border-blue-500 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none" 
-                          placeholder="e.g. Greenwood Villa or Oakwood Complex" 
-                        />
+                          <option value="single">Single-Unit Property (House, Condo, Townhouse, Room)</option>
+                          <option value="multi">Multi-Unit Property (Apartment Building, Duplex, Triplex)</option>
+                        </select>
+                        <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-slate-400 pointer-events-none" />
                       </div>
                       
-                      <div>
-                        <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">Street Address</label>
-                        <input 
-                          required 
-                          type="text" 
-                          value={propAddress} 
-                          onChange={e => setPropAddress(e.target.value)} 
-                          className="w-full bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 focus:border-blue-500 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none" 
-                          placeholder="e.g. 100 Main St" 
-                        />
-                      </div>
-
-                      <div className="grid grid-cols-3 gap-3">
-                        <div>
-                          <label className="block text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">City</label>
-                          <input required type="text" value={propCity} onChange={e=>setPropCity(e.target.value)} onBlur={() => {
-                            if (propCity && !propState) {
-                              handleCityLookup(propCity);
-                            } else if (propCity && propState) {
-                              handleCityStateLookup(propCity, propState);
-                            }
-                          }} className="w-full bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 focus:border-blue-500 rounded-lg px-3.5 py-2.5 text-xs text-slate-900 dark:text-white outline-none" placeholder="New York" />
-                        </div>
-                        <div>
-                          <label className="block text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">State</label>
-                          <input required type="text" value={propState} onChange={e=>setPropState(e.target.value)} onBlur={() => {
-                            if (propState && !propCity) {
-                              handleStateLookup(propState);
-                            } else if (propCity && propState) {
-                              handleCityStateLookup(propCity, propState);
-                            }
-                          }} className="w-full bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 focus:border-blue-500 rounded-lg px-3.5 py-2.5 text-xs text-slate-900 dark:text-white outline-none" placeholder="New York" />
-                        </div>
-                        <div>
-                          <label className="block text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Zip</label>
-                          <input required type="text" value={propZip} onChange={e=>handleZipLookup(e.target.value)} className="w-full bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 focus:border-blue-500 rounded-lg px-3.5 py-2.5 text-xs text-slate-900 dark:text-white outline-none" placeholder="10001" />
-                        </div>
+                      <div className="p-4 rounded-2xl bg-blue-500/[0.03] dark:bg-blue-500/[0.02] border border-blue-500/10 dark:border-blue-500/20 text-xs font-medium text-slate-500 dark:text-slate-400 leading-relaxed mt-3">
+                        {propertyType === 'single' ? (
+                          <span>
+                            <strong>Single-Unit Property:</strong> Best used for a single-family home, townhouse, individual condo, or room. This creates one rentable unit at this address under one lease agreement.
+                          </span>
+                        ) : (
+                          <span>
+                            <strong>Multi-Unit Property:</strong> Best used for duplexes, triplexes, or apartment buildings. This allows you to manage multiple separate rentable units under a single main address.
+                          </span>
+                        )}
                       </div>
                     </div>
 
-                    <div className="pt-4 flex gap-3 border-t dark:border-white/5">
-                      <button 
-                        type="button" 
-                        onClick={() => setWizardStep(1)} 
-                        className="flex-1 py-2.5 rounded-xl text-sm font-semibold border border-slate-250 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-white/5 transition flex items-center justify-center gap-1.5 text-slate-700 dark:text-slate-350 cursor-pointer"
-                      >
-                        <ArrowLeft className="w-4 h-4" /> Back
-                      </button>
-                      <button 
-                        type="button" 
+                    <div className="pt-4 flex justify-end">
+                      <button
+                        type="button"
                         onClick={() => {
-                          const name = propName.trim();
-                          const address = propAddress.trim();
-                          const city = propCity.trim();
-                          const state = propState.trim();
-                          const zip = propZip.trim();
-
-                          if (!name || !address || !city || !state || !zip) {
-                            alert("All address details are required.");
-                            return;
+                          if (propertyType === 'single') {
+                            setWizardUnits([{ unit_number: 'Single Family', rent_amount: '' }]);
+                          } else {
+                            setWizardUnits([{ unit_number: 'Apt 101', rent_amount: '' }]);
                           }
-                          if (!/^[a-zA-Z\s]+$/.test(name)) {
-                            alert("Property Name must contain only letters and spaces.");
-                            return;
-                          }
-                          if (!/[a-zA-Z]/.test(address)) {
-                            alert("Street Address must contain at least one letter.");
-                            return;
-                          }
-
-                          // US State validation
-                          const cleanState = state.trim().toLowerCase();
-                          const isUSState = STATE_NAME_TO_ABBR.hasOwnProperty(cleanState) || 
-                                            Object.values(STATE_NAME_TO_ABBR).map(abbr => abbr.toLowerCase()).includes(cleanState);
-                          if (!isUSState) {
-                            alert("Validation Error: Only US states are allowed.");
-                            return;
-                          }
-
-                          // US Zip validation
-                          if (!/^\d{5}(-\d{4})?$/.test(zip)) {
-                            alert("Validation Error: ZIP code must be a valid 5-digit US ZIP code.");
-                            return;
-                          }
-
-                          setErrorMsg('');
-                          setWizardStep(3);
-                        }} 
-                        className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-sm font-semibold transition flex items-center justify-center gap-1.5 shadow-md shadow-blue-500/20 cursor-pointer"
+                          setWizardStep(2);
+                        }}
+                        className="bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-6 rounded-xl text-xs transition duration-200 flex items-center gap-1.5 cursor-pointer shadow-md shadow-blue-500/10 font-sans"
                       >
                         Next <ArrowRight className="w-4 h-4" />
                       </button>
@@ -1241,104 +1190,126 @@ export default function PropertiesHub({
                   </div>
                 )}
 
-                {/* STEP 3: Configure Units */}
-                {wizardStep === 3 && (
-                  <div className="space-y-4">
-                    <div className="flex justify-between items-center">
-                      <h4 className="text-sm font-bold text-slate-700 dark:text-slate-350 uppercase tracking-wide">
-                        {propertyType === 'multi' ? 'Configure Apartment Units:' : 'Set Rent Amount:'}
-                      </h4>
-                      {propertyType === 'multi' && (
-                        <button
-                          type="button"
-                          onClick={addWizardUnitRow}
-                          className="text-xs bg-blue-600/10 hover:bg-blue-600/20 text-blue-600 dark:text-blue-400 px-3 py-1.5 rounded-lg flex items-center gap-1 font-bold transition cursor-pointer"
-                        >
-                          <Plus className="w-3.5 h-3.5" /> Add Row
-                        </button>
-                      )}
-                    </div>
-
-                    {/* Single Unit / Condo Configuration */}
-                    {(propertyType === 'single' || propertyType === 'condo') && (
-                      <div className="p-4 rounded-xl border border-slate-200 dark:border-white/5 bg-slate-50/30 dark:bg-black/10">
-                        <label className="block text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">MONTHLY RENT ($)</label>
+                {/* STEP 2: Address and Property Name */}
+                {wizardStep === 2 && (
+                  <div className="space-y-5 animate-fade-in text-left">
+                    <h4 className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Address & Details</h4>
+                    
+                    <div className="space-y-4 relative">
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5 font-sans">Property Name / Portfolio *</label>
                         <input 
-                          required
-                          type="number" 
-                          value={wizardUnits[0]?.rent_amount || ''} 
-                          onChange={e => updateWizardUnit(0, 'rent_amount', e.target.value)} 
+                          required 
+                          type="text" 
+                          value={propName} 
+                          onChange={e => setPropName(e.target.value)} 
                           className="w-full bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 focus:border-blue-500 rounded-lg px-3.5 py-2.5 text-sm text-slate-900 dark:text-white outline-none" 
-                          placeholder="e.g. 1500" 
+                          placeholder="e.g. Greenwood Villa or Oakwood Complex" 
                         />
                       </div>
-                    )}
-
-                    {/* Multi-unit Configuration list */}
-                    {propertyType === 'multi' && (
-                      <div className="space-y-3.5 max-h-[35vh] overflow-y-auto pr-1">
-                        {wizardUnits.map((unit, index) => (
-                          <div 
-                            key={index} 
-                            className="p-3.5 rounded-xl border border-slate-200/85 dark:border-white/5 bg-slate-50/20 dark:bg-black/10 flex items-end gap-3"
-                          >
-                            <div className="flex-1">
-                              <label className="block text-[9px] font-bold text-slate-400 dark:text-gray-500 uppercase tracking-wider mb-1">Unit Number</label>
-                              <input 
-                                required
-                                type="text" 
-                                value={unit.unit_number} 
-                                onChange={e => updateWizardUnit(index, 'unit_number', e.target.value)} 
-                                className="w-full bg-slate-50 dark:bg-[#111c2a] border border-slate-250 dark:border-white/10 focus:border-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 dark:text-white outline-none" 
-                                placeholder="e.g. Apt 101" 
-                              />
-                            </div>
-                            <div className="w-32">
-                              <label className="block text-[9px] font-bold text-slate-400 dark:text-gray-500 uppercase tracking-wider mb-1">Monthly Rent ($)</label>
-                              <input 
-                                required
-                                type="number" 
-                                value={unit.rent_amount} 
-                                onChange={e => updateWizardUnit(index, 'rent_amount', e.target.value)} 
-                                className="w-full bg-slate-50 dark:bg-[#111c2a] border border-slate-250 dark:border-white/10 focus:border-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 dark:text-white outline-none" 
-                                placeholder="1200" 
-                              />
-                            </div>
-                            <button
-                              type="button"
-                              onClick={() => removeWizardUnitRow(index)}
-                              disabled={wizardUnits.length === 1}
-                              className="p-2 hover:bg-red-500/10 rounded-lg text-slate-400 hover:text-red-550 dark:hover:text-red-450 transition disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
-                              title="Delete Row"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
+                      
+                      <div className="relative">
+                        <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5 font-sans">Street Address *</label>
+                        <input 
+                          required 
+                          type="text" 
+                          value={propAddress} 
+                          onChange={e => handleAddressChange(e.target.value)} 
+                          onBlur={handleAddressBlur}
+                          className="w-full bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 focus:border-blue-500 rounded-lg px-3.5 py-2.5 text-sm text-slate-900 dark:text-white outline-none" 
+                          placeholder="e.g. 1600 Amphitheatre Pkwy" 
+                        />
+                        
+                        {addressSuggestions.length > 0 && (
+                          <div className="absolute left-0 right-0 top-full mt-1 bg-white dark:bg-[#1D2B3A] border border-slate-200 dark:border-white/10 rounded-xl shadow-xl z-50 max-h-48 overflow-y-auto custom-scrollbar">
+                            {addressSuggestions.map((suggestion, idx) => (
+                              <div
+                                key={idx}
+                                onClick={() => handleSelectSuggestion(suggestion)}
+                                className="px-4 py-3 hover:bg-slate-50 dark:hover:bg-white/5 cursor-pointer text-left text-xs font-semibold border-b border-slate-100 dark:border-white/[0.03] last:border-none text-slate-700 dark:text-slate-350"
+                              >
+                                {suggestion.street}, {suggestion.city}, {suggestion.state} {suggestion.zip}
+                              </div>
+                            ))}
                           </div>
-                        ))}
+                        )}
                       </div>
-                    )}
+
+                      <div className="grid grid-cols-3 gap-3">
+                        <div>
+                          <label className="block text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 font-sans">City</label>
+                          <input 
+                            required 
+                            readOnly 
+                            type="text" 
+                            value={propCity} 
+                            className="w-full bg-slate-100 dark:bg-[#111c2a]/40 border border-slate-200 dark:border-white/10 rounded-lg px-3.5 py-2.5 text-xs text-slate-500 dark:text-slate-400 outline-none cursor-not-allowed" 
+                            placeholder="City" 
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 font-sans">State</label>
+                          <input 
+                            required 
+                            readOnly 
+                            type="text" 
+                            value={propState} 
+                            className="w-full bg-slate-100 dark:bg-[#111c2a]/40 border border-slate-200 dark:border-white/10 rounded-lg px-3.5 py-2.5 text-xs text-slate-500 dark:text-slate-400 outline-none cursor-not-allowed" 
+                            placeholder="State" 
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 font-sans">Zip Code</label>
+                          <input 
+                            required 
+                            readOnly 
+                            type="text" 
+                            value={propZip} 
+                            className="w-full bg-slate-100 dark:bg-[#111c2a]/40 border border-slate-200 dark:border-white/10 rounded-lg px-3.5 py-2.5 text-xs text-slate-500 dark:text-slate-400 outline-none cursor-not-allowed" 
+                            placeholder="Zip" 
+                          />
+                        </div>
+                      </div>
+
+                      {propAddress.trim().length > 0 && (
+                        <div className="text-[10px] font-semibold font-sans">
+                          {propCity && propState && /^\d{5}(-\d{4})?$/.test(propZip) ? (
+                            <span className="text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                              ✓ Address verified (United States)
+                            </span>
+                          ) : (
+                            <span className="text-red-500 dark:text-red-400 flex items-center gap-1">
+                              ⚠️ Invalid US Address. Please select a valid US address from the suggestions or type a fully formatted address.
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </div>
 
                     <div className="pt-4 flex gap-3 border-t dark:border-white/5">
                       <button 
                         type="button" 
-                        onClick={() => setWizardStep(2)} 
-                        className="flex-1 py-2.5 rounded-xl text-sm font-semibold border border-slate-250 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-white/5 transition flex items-center justify-center gap-1.5 text-slate-700 dark:text-slate-350 cursor-pointer"
+                        onClick={() => setWizardStep(1)} 
+                        className="flex-1 bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-800 dark:text-white font-bold py-3 rounded-xl text-xs transition duration-200 cursor-pointer flex items-center justify-center gap-1 font-sans"
                       >
                         <ArrowLeft className="w-4 h-4" /> Back
                       </button>
                       <button 
-                        type="submit" 
-                        className="flex-1 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-xl text-sm font-bold transition flex items-center justify-center gap-1.5 shadow-md shadow-blue-500/25 cursor-pointer"
+                        type="submit"
+                        disabled={!(propName.trim() && propCity && propState && /^\d{5}(-\d{4})?$/.test(propZip))}
+                        className={`flex-1 font-bold py-3 rounded-xl text-xs transition duration-200 flex items-center justify-center gap-1.5 font-sans ${
+                          propName.trim() && propCity && propState && /^\d{5}(-\d{4})?$/.test(propZip)
+                            ? 'bg-blue-600 hover:bg-blue-500 text-white cursor-pointer shadow-md shadow-blue-500/10'
+                            : 'bg-slate-200 dark:bg-white/5 text-slate-400 dark:text-slate-600 cursor-not-allowed'
+                        }`}
                       >
-                        <CheckCircle className="w-4 h-4" /> Finish & Create
+                        Create Property <Check className="w-4 h-4" />
                       </button>
                     </div>
                   </div>
                 )}
-
               </form>
             </div>
-
           </div>
         </div>
       )}

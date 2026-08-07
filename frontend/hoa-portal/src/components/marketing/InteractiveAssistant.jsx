@@ -65,7 +65,7 @@ const localGeneralAnswers = {
   'who founded google': 'Google was founded by Larry Page and Sergey Brin on September 4, 1998, while they were PhD students at Stanford University.',
   'who created google': 'Google was founded by Larry Page and Sergey Brin in 1998.',
 
-  'nestbloq': 'NestBloq is an all-in-one community management platform designed for HOAs, condos, apartments, and rental properties.',
+  'nestbloq': 'NestBloq is an all-in-one community management platform designed for HOAs, condos, and rental properties.',
   'who developed nestbloq': 'NestBloq was developed by **Crestcode Technology** to serve as a comprehensive operating system for community and property management.',
   'who founded nestbloq': 'NestBloq was founded and developed by **Crestcode Technology**.',
   'who created nestbloq': 'NestBloq was created by **Crestcode Technology**.'
@@ -116,7 +116,7 @@ export default function InteractiveAssistant() {
     });
 
     if (q.includes('community') && w('create', 'add', 'make', 'new', 'register', 'setup', 'set up')) {
-      return `Here are the steps to **Create a Community** in NestBloq:\n\n1️⃣ **Register/Sign Up** — Click **'Start Free Trial'** on the homepage to create your admin account.\n2️⃣ **Add Community** — In your Admin Dashboard, click the **'Add Community'** or **'Create Community'** button.\n3️⃣ **Enter Details** — Fill in the community details (Name, Address, Zip, and Type: HOA, Condo, Apartment, or Rental).\n4️⃣ **Get Community Code** — A unique code (e.g., \`VIK071\`) will be generated. You can share this code with residents to invite them to join!`;
+      return `Here are the steps to **Create a Community** in NestBloq:\n\n1️⃣ **Register/Sign Up** — Click **'Start Free Trial'** on the homepage to create your admin account.\n2️⃣ **Add Community** — In your Admin Dashboard, click the **'Add Community'** or **'Create Community'** button.\n3️⃣ **Enter Details** — Fill in the community details (Name, Address, Zip, and Type: HOA, Condo, or Rental).\n4️⃣ **Get Community Code** — A unique code (e.g., \`VIK071\`) will be generated. You can share this code with residents to invite them to join!`;
     }
 
     if (w('add member', 'invite member', 'add resident', 'invite resident', 'add homeowner', 'invite homeowner', 'add user', 'invite user') ||
@@ -153,7 +153,7 @@ export default function InteractiveAssistant() {
       (q.includes('nestbloq') && (w('what', 'explain', 'about', 'is', 'platform', 'software', 'app', 'product'))) ||
       w('what is nestbloq', 'about nestbloq', 'nestbloq platform', 'nestbloq software', 'tell me about nestbloq', 'explain nestbloq')
     ) {
-      return `**NestBloq** is a modern all-in-one **community management platform**! ️\n\nIt brings together everything a property community needs:\n\n **Dues Collection** — Automated billing via ACH & card\n **Maintenance Kanban** — Work orders & contractor dispatch\n️ **E-Voting** — SHA-256 secure online voting & resolutions\n **Bylaws AI Copilot** — 24/7 automated resident Q&A\n **Amenity Booking** — Real-time pool, gym & clubhouse booking\n **Financial Ledger** — Auto accounting & reporting\n\n Built for **HOAs, Apartments, Condos & Rental** communities.\n\nWant to know more about any feature?`;
+      return `**NestBloq** is a modern all-in-one **community management platform**! ️\n\nIt brings together everything a property community needs:\n\n **Dues Collection** — Automated billing via ACH & card\n **Maintenance Kanban** — Work orders & contractor dispatch\n️ **E-Voting** — SHA-256 secure online voting & resolutions\n **Bylaws AI Copilot** — 24/7 automated resident Q&A\n **Amenity Booking** — Real-time pool, gym & clubhouse booking\n **Financial Ledger** — Auto accounting & reporting\n\n Built for **HOAs, Condos & Rental** communities.\n\nWant to know more about any feature?`;
     }
 
     if (w('subscription renew', 'credit renew', 'credits renew', 'credit also renew', 'subscription renewal', 'plan renew', 'auto renew', 'automatic renewal')) {
@@ -204,8 +204,8 @@ export default function InteractiveAssistant() {
       return `NestBloq integrates with your favorite tools! \n\n• **Stripe & Plaid** — Secure payment processing\n• **Twilio** — SMS & WhatsApp notifications\n• **QuickBooks** — Accounting sync\n• **Zapier** — 5,000+ app connections\n• **Open REST API** — Custom integrations\n\nAll available on Pro & Enterprise plans.`;
     }
 
-    if (w('hoa', 'homeowner association', 'apartment complex', 'condominium', 'condo association', 'rental property', 'community type', 'property type', 'residential community')) {
-      return `NestBloq is purpose-built for **all community types**! ️\n\n• **HOA** — Homeowner Association management\n• **Apartments** — Multi-unit residential buildings\n• **Condos** — Condominium association tools\n• **Rentals** — Rental portfolio management\n\nEach module is tailored to the workflows of that community type!`;
+    if (w('hoa', 'homeowner association', 'condominium', 'condo association', 'rental property', 'community type', 'property type', 'residential community')) {
+      return `NestBloq is purpose-built for **all community types**! ️\n\n• **HOA** — Homeowner Association management\n• **Condos** — Condominium association tools\n• **Rentals** — Rental portfolio management\n\nEach module is tailored to the workflows of that community type!`;
     }
 
     if (w('who are you', 'what are you', 'your name', 'yourself') || (w('name') && q.split(' ').length <= 5)) {
