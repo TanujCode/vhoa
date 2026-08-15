@@ -134,7 +134,7 @@ export default function RentalMaintenanceDesk({ user, selectedPropertyFilterId =
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [priorityFilter, setPriorityFilter] = useState('');
-  const [sortBy, setSortBy] = useState('newest');
+  const [sortBy, setSortBy] = useState('oldest');
 
   // Tenant submit request states
   const [showSubmitModal, setShowSubmitModal] = useState(false);
@@ -217,6 +217,14 @@ export default function RentalMaintenanceDesk({ user, selectedPropertyFilterId =
       setPriority('NORMAL');
       setShowSubmitModal(true);
     }
+
+    const handleGlobalUpdate = () => {
+      fetchData();
+    };
+    window.addEventListener('rental-data-changed', handleGlobalUpdate);
+    return () => {
+      window.removeEventListener('rental-data-changed', handleGlobalUpdate);
+    };
   }, [user?.property_name, user?.unit_number]);
 
   async function fetchData() {
@@ -894,7 +902,8 @@ export default function RentalMaintenanceDesk({ user, selectedPropertyFilterId =
                   type="text"
                   value={title}
                   onChange={e => {
-                    setTitle(e.target.value);
+                    const cleaned = e.target.value.replace(/[^A-Za-z\s]/g, '');
+                    setTitle(cleaned);
                     if (errors.title) setErrors(prev => ({ ...prev, title: null }));
                   }}
                   placeholder="Brief title of the issue..."
@@ -1160,7 +1169,8 @@ export default function RentalMaintenanceDesk({ user, selectedPropertyFilterId =
                   type="text"
                   value={tenantEditTitle}
                   onChange={e => {
-                    setTenantEditTitle(e.target.value);
+                    const cleaned = e.target.value.replace(/[^A-Za-z\s]/g, '');
+                    setTenantEditTitle(cleaned);
                     if (errors.title) setErrors(prev => ({ ...prev, title: null }));
                   }}
                   className={`w-full bg-slate-50 dark:bg-[#0D1B2A] border ${errors.title ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/20'} rounded-2xl px-4 py-3 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 focus:outline-none focus:border-blue-500`}

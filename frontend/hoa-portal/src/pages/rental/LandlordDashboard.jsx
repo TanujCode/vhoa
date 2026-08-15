@@ -212,9 +212,10 @@ export default function LandlordDashboard({
     if (a.screening_status !== 'APPROVED') return false;
     return !leases.some(l => l.unit_id === a.unit_id && l.tenant_email === a.tenant_email);
   });
-  const pendingSignatures = leases.filter(l => l.status === 'PENDING_SIGNATURE');
+  const pendingSignatures = leases.filter(l => l.status === 'PENDING_SIGNATURE' || l.status === 'PENDING_TENANT_REVIEW');
+  const leasesAwaitingApproval = leases.filter(l => l.status === 'PENDING_LANDLORD_APPROVAL');
   const openMaint = maintRequests.filter(m => m.status === 'OPEN');
-  const totalActionsCount = pendingScreening.length + approvedScreeningNoLease.length + pendingSignatures.length + openMaint.length;
+  const totalActionsCount = pendingScreening.length + approvedScreeningNoLease.length + pendingSignatures.length + leasesAwaitingApproval.length + openMaint.length;
 
   // --- Dynamic Monthly Cashflow Generation (Historical 6-Month Timeline) ---
   const cashflowMonths = [];
@@ -376,8 +377,9 @@ export default function LandlordDashboard({
                 <div className="space-y-1">
                   <h4 className="text-sm font-black text-slate-900 dark:text-white">1. Add Properties & Units</h4>
                   <p className="text-[11px] text-slate-500 dark:text-gray-400 font-medium leading-relaxed font-sans">
-                    Set up your real estate assets. Supports Single Family Homes, Individual Condo Units, or Multi-Unit Apartment complexes.
+                    Set up your real estate assets. Register and manage single-family rental properties.
                   </p>
+
                 </div>
               </div>
             </div>
@@ -958,6 +960,25 @@ export default function LandlordDashboard({
                       </div>
                     ))}
 
+                    {leasesAwaitingApproval.map(lease => (
+                      <div key={lease.lease_id} className="p-3.5 rounded-2xl bg-orange-500/[0.03] dark:bg-orange-500/[0.01] border border-orange-500/10 dark:border-orange-500/5 flex items-center justify-between gap-3 text-xs font-semibold shadow-sm hover:border-orange-500/30 transition text-left animate-pulse">
+                        <div className="min-w-0 space-y-0.5">
+                          <span className="text-[9px] text-orange-600 dark:text-orange-400 font-bold uppercase tracking-wider block">Approval Needed</span>
+                          <p className="text-xs text-slate-800 dark:text-white font-bold truncate">Unit {lease.unit?.unit_number || 'N/A'}</p>
+                          <p className="text-[10px] text-gray-500 dark:text-gray-400 font-normal truncate">{lease.tenant_email}</p>
+                        </div>
+                        <button 
+                          onClick={() => {
+                            localStorage.setItem('pending_lease_id', lease.lease_id);
+                            setActivePage('leases_hub');
+                          }}
+                          className="bg-orange-500 hover:bg-orange-600 text-white px-2.5 py-1.5 rounded-lg text-[10px] font-bold transition whitespace-nowrap cursor-pointer shrink-0"
+                        >
+                          Review & Sign
+                        </button>
+                      </div>
+                    ))}
+
                     {pendingSignatures.map(lease => (
                       <div key={lease.lease_id} className="p-3.5 rounded-2xl bg-purple-500/[0.03] dark:bg-purple-500/[0.01] border border-purple-500/10 dark:border-purple-500/5 flex items-center justify-between gap-3 text-xs font-semibold shadow-sm hover:border-purple-500/30 transition text-left">
                         <div className="min-w-0 space-y-0.5">
@@ -966,7 +987,10 @@ export default function LandlordDashboard({
                           <p className="text-[10px] text-gray-500 dark:text-gray-400 font-normal truncate">{lease.tenant_email}</p>
                         </div>
                         <button 
-                          onClick={() => setActivePage('leases_hub')}
+                          onClick={() => {
+                            localStorage.setItem('pending_lease_id', lease.lease_id);
+                            setActivePage('leases_hub');
+                          }}
                           className="bg-purple-600 hover:bg-purple-500 text-white px-2.5 py-1.5 rounded-lg text-[10px] font-bold transition whitespace-nowrap cursor-pointer shrink-0"
                         >
                           Status

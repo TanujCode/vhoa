@@ -113,9 +113,12 @@ class RentalLoginRequest(BaseModel):
     captcha_answer: str
 
 
+from typing import Optional
+
 class GoogleLoginRequest(BaseModel):
     access_token: str
     flow: str = "login"
+    role: Optional[str] = None
 
 
 @router.get("/auth/check-email")
@@ -149,13 +152,14 @@ def rental_register(
         first_name, middle_name, last_name = split_full_name(body.full_name)
         u_code = generate_user_code(db, first_name, last_name, is_rental=True)
 
+        from app.utils.encryption import encrypt_field
         user = RentalUser(
-            first_name=first_name,
-            middle_name=middle_name,
-            last_name=last_name,
+            first_name=encrypt_field(first_name),
+            middle_name=encrypt_field(middle_name),
+            last_name=encrypt_field(last_name),
             user_code=u_code,
             email_id=body.email_id.lower().strip(),
-            mobile_number=body.mobile_number,
+            mobile_number=encrypt_field(body.mobile_number),
             password=hash_password(body.password),
             role_id=rental_role.role_id,
             active_status=True,
@@ -168,11 +172,15 @@ def rental_register(
         db.commit()
         db.refresh(user)
 
-        # Link any pending leases to this user
-        lease = db.query(Lease).filter(Lease.tenant_email == user.email_id).first()
-        if lease and not lease.tenant_id:
-            lease.tenant_id = user.user_id
-            db.commit()
+        # Link any pending leases to this user (decrypting in memory)
+        unlinked_leases = db.query(Lease).filter(Lease.tenant_id == None).all()
+        for l in unlinked_leases:
+            from app.utils.encryption import safe_decrypt_field
+            decrypted_email = safe_decrypt_field(l.tenant_email)
+            if decrypted_email and decrypted_email.strip().lower() == user.email_id.lower().strip():
+                l.tenant_id = user.user_id
+                db.commit()
+                break
 
         access_token = create_access_token(user.user_id, user.email_id, body.role, user.email_id_is_verified)
         session_token = create_session_token(user.user_id, user.email_id, body.role, user.email_id_is_verified)
@@ -265,25 +273,39 @@ def rental_get_me(
 
     if role_name == "tenant":
         from app.models.rental.lease import Lease
-        from sqlalchemy import func
         active_lease = db.query(Lease).filter(
-            (Lease.tenant_id == current_user.user_id) | (func.lower(Lease.tenant_email) == func.lower(current_user.email_id.strip()))
+            Lease.tenant_id == current_user.user_id
         ).filter(Lease.status.in_(["ACTIVE", "PENDING_SIGNATURE"])).first()
+        
+        if not active_lease:
+            unlinked_leases = db.query(Lease).filter(Lease.tenant_id == None).filter(Lease.status.in_(["ACTIVE", "PENDING_SIGNATURE"])).all()
+            for l in unlinked_leases:
+                from app.utils.encryption import safe_decrypt_field
+                decrypted_email = safe_decrypt_field(l.tenant_email)
+                if decrypted_email and decrypted_email.strip().lower() == current_user.email_id.lower().strip():
+                    active_lease = l
+                    break
 
         if active_lease and active_lease.unit:
             unit_number = active_lease.unit.unit_number
             if active_lease.unit.property:
                 property_name = active_lease.unit.property.name
 
+    from app.utils.encryption import safe_decrypt_field
+    first_dec = safe_decrypt_field(current_user.first_name) or ""
+    middle_dec = safe_decrypt_field(current_user.middle_name)
+    last_dec = safe_decrypt_field(current_user.last_name) or ""
+    phone_dec = safe_decrypt_field(current_user.mobile_number)
+
     return {
         "user_id": current_user.user_id,
         "user_code": current_user.user_code,
-        "first_name": current_user.first_name,
-        "middle_name": current_user.middle_name,
-        "last_name": current_user.last_name,
-        "full_name": f"{current_user.first_name or ''} {current_user.last_name or ''}".strip(),
+        "first_name": first_dec,
+        "middle_name": middle_dec,
+        "last_name": last_dec,
+        "full_name": f"{first_dec} {last_dec}".strip(),
         "email_id": current_user.email_id,
-        "mobile_number": current_user.mobile_number,
+        "mobile_number": phone_dec,
         "mobile_is_verified": current_user.mobile_is_verified,
         "email_id_is_verified": current_user.email_id_is_verified,
         "is_client": False,
@@ -385,9 +407,14 @@ def rental_google_auth(
         else:
             if body.flow == "login":
                 raise HTTPException(status_code=400, detail="Account not found. Please register first.")
-            landlord_role = db.query(Role).filter(Role.role_name == "landlord").first()
-            if not landlord_role:
-                raise HTTPException(status_code=500, detail="Default role 'landlord' not found.")
+            
+            target_role = "landlord"
+            if body.role and body.role.lower().strip() in ["landlord", "tenant"]:
+                target_role = body.role.lower().strip()
+
+            selected_role_obj = db.query(Role).filter(Role.role_name == target_role).first()
+            if not selected_role_obj:
+                raise HTTPException(status_code=500, detail=f"Default role '{target_role}' not found.")
 
             full_name = google_user.get("name", "Google User").strip()
             first_name, middle_name, last_name = split_full_name(full_name)
@@ -402,7 +429,7 @@ def rental_google_auth(
                 user_code=u_code,
                 email_id=email,
                 password=hash_password(random_password),
-                role_id=landlord_role.role_id,
+                role_id=selected_role_obj.role_id,
                 active_status=True,
                 account_status="APPROVED",
                 email_id_is_verified=True,
@@ -413,10 +440,15 @@ def rental_google_auth(
             db.commit()
             db.refresh(user)
 
-            lease = db.query(Lease).filter(Lease.tenant_email == user.email_id).first()
-            if lease and not lease.tenant_id:
-                lease.tenant_id = user.user_id
-                db.commit()
+            if target_role == "tenant":
+                unlinked_leases = db.query(Lease).filter(Lease.tenant_id == None).all()
+                for l in unlinked_leases:
+                    from app.utils.encryption import safe_decrypt_field
+                    decrypted_email = safe_decrypt_field(l.tenant_email)
+                    if decrypted_email and decrypted_email.strip().lower() == user.email_id.lower().strip():
+                        l.tenant_id = user.user_id
+                        db.commit()
+                        break
 
         rental_role_name = user.role.role_name if user.role else "landlord"
         access_token = create_access_token(user.user_id, user.email_id, rental_role_name, True)
@@ -522,11 +554,12 @@ def rental_verify_otp(request: Request, body: VerifyOtpRequest, db: Session = De
         ip_address  = request.client.host,
     )
     
+    from app.utils.encryption import safe_decrypt_field
     return {
         "user_id": user.user_id,
         "email_id": user.email_id,
-        "first_name": user.first_name,
-        "last_name": user.last_name,
+        "first_name": safe_decrypt_field(user.first_name),
+        "last_name": safe_decrypt_field(user.last_name),
         "role": user.role.role_name if user.role else "",
         "role_id": user.role_id,
         "mobile_is_verified": user.mobile_is_verified

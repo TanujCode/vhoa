@@ -69,3 +69,8 @@ export const renameSpeaker = async (meetingId, oldLabel, newLabel) => {
   return res.data;
 };
 
+export const reprocessMeetingAudio = async (meetingId) => {
+  const res = await API.post(`/meeting-survey/meetings/${meetingId}/reprocess`);
+  return res.data;
+};
+

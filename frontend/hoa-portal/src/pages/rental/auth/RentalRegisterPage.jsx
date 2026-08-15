@@ -13,6 +13,13 @@ export default function RentalRegisterPage() {
   const [searchParams] = useSearchParams();
   const roleFromUrl = searchParams.get('role') || 'landlord';
   const emailFromUrl = searchParams.get('email') || '';
+  const leaseIdFromUrl = searchParams.get('lease_id') || '';
+
+  useEffect(() => {
+    if (leaseIdFromUrl) {
+      localStorage.setItem('pending_lease_id', leaseIdFromUrl);
+    }
+  }, [leaseIdFromUrl]);
 
   const {
     register,
@@ -81,9 +88,8 @@ export default function RentalRegisterPage() {
       sessionStorage.removeItem('rental_token');
       sessionStorage.removeItem('rental_session_token');
       sessionStorage.removeItem('rental_user');
-      navigate('/rental/login', { replace: true });
     }
-  }, [navigate]);
+  }, []);
 
   useEffect(() => {
     if (emailFromUrl) {
@@ -158,7 +164,8 @@ export default function RentalRegisterPage() {
       try {
         const response = await API.post('/rental/auth/google', {
           access_token: tokenResponse.access_token,
-          flow: 'register'
+          flow: 'register',
+          role: selectedRole
         });
 
         if (response.data && response.data.access_token) {

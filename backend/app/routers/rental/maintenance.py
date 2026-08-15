@@ -17,7 +17,11 @@ router = APIRouter(prefix="/rental", tags=["Rental - Maintenance Desk"])
 def populate_maintenance_extra_fields(r, db: Session):
     if r.vendor_id:
         vendor = db.query(RentalVendor).filter(RentalVendor.vendor_id == r.vendor_id).first()
-        r.vendor_company_name = vendor.company_name if vendor else None
+        if vendor:
+            from app.utils.encryption import safe_decrypt_field
+            r.vendor_company_name = safe_decrypt_field(vendor.company_name)
+        else:
+            r.vendor_company_name = None
     else:
         r.vendor_company_name = None
         
@@ -37,12 +41,16 @@ def populate_maintenance_extra_fields(r, db: Session):
         if r.lease.tenant_id:
             tenant = db.query(RentalUser).filter(RentalUser.user_id == r.lease.tenant_id).first()
         if not tenant and r.lease.tenant_email:
-            tenant = db.query(RentalUser).filter(RentalUser.email_id == r.lease.tenant_email.lower().strip()).first()
+            from app.utils.encryption import safe_decrypt_field
+            dec_email = safe_decrypt_field(r.lease.tenant_email)
+            if dec_email:
+                tenant = db.query(RentalUser).filter(RentalUser.email_id == dec_email.lower().strip()).first()
             
         if tenant:
             r.submitted_by_name = tenant.full_name
         else:
-            r.submitted_by_name = r.lease.tenant_email or "Unknown Tenant"
+            from app.utils.encryption import safe_decrypt_field
+            r.submitted_by_name = safe_decrypt_field(r.lease.tenant_email) or "Unknown Tenant"
     else:
         r.submitted_by_name = "Unknown"
 
@@ -60,7 +68,7 @@ def create_maintenance(
         if not body.lease_id or body.lease_id <= 0:
             user_leases = rental_service.get_leases_by_tenant(current_user.user_id, db)
             if user_leases:
-                body.lease_id = user_leases[0].lease_id
+                body.lease_id = user_leases[0].get("lease_id")
             else:
                 raise ValueError("No active lease agreement found for your account. Please contact your landlord.")
 
@@ -84,7 +92,7 @@ def list_maintenance(
     elif role_name == "tenant":
         leases = rental_service.get_leases_by_tenant(current_user.user_id, db)
         for l in leases:
-            reqs.extend(rental_service.get_maintenance_requests_by_lease(l.lease_id, db))
+            reqs.extend(rental_service.get_maintenance_requests_by_lease(l.get("lease_id"), db))
     else:
         reqs = []
 

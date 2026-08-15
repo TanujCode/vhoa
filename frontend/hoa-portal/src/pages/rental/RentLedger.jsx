@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   CreditCard, DollarSign, Activity, Settings2, 
-  ShieldAlert, Sparkles, CheckCircle2, X, Landmark 
+  ShieldAlert, Sparkles, CheckCircle2, X, Landmark, Edit3
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import API from '../../services/api';
@@ -42,6 +42,13 @@ export default function RentLedger({ user, selectedPropertyFilterId = 'all' }) {
   const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [payMethod, setPayMethod] = useState('ACH');
   const [showPayModal, setShowPayModal] = useState(false);
+
+  // Edit Late Fee states
+  const [showEditFeeModal, setShowEditFeeModal] = useState(false);
+  const [editFeeInvoice, setEditFeeInvoice] = useState(null);
+  const [editFeeAmount, setEditFeeAmount] = useState('');
+  const [editFeeLoading, setEditFeeLoading] = useState(false);
+
 
   const [confirmConfig, setConfirmConfig] = useState({ 
     isOpen: false, 
@@ -86,6 +93,14 @@ export default function RentLedger({ user, selectedPropertyFilterId = 'all' }) {
 
   useEffect(() => {
     fetchData();
+
+    const handleGlobalUpdate = () => {
+      fetchData();
+    };
+    window.addEventListener('rental-data-changed', handleGlobalUpdate);
+    return () => {
+      window.removeEventListener('rental-data-changed', handleGlobalUpdate);
+    };
   }, [user?.property_name, user?.unit_number]);
 
   async function fetchData() {
@@ -105,8 +120,8 @@ export default function RentLedger({ user, selectedPropertyFilterId = 'all' }) {
         const ledgerRes = await API.get(`/rental/leases/${lease.lease_id}/ledgers`);
         allInvoices.push(...ledgerRes.data.map(i => ({ ...i, lease })));
       }
-      // Sort by due date descending
-      allInvoices.sort((a, b) => new Date(b.due_date) - new Date(a.due_date));
+      // Sort by invoice_id ascending
+      allInvoices.sort((a, b) => a.invoice_id - b.invoice_id);
       setInvoices(allInvoices);
     } catch (err) {
       console.error(err);
@@ -186,6 +201,27 @@ export default function RentLedger({ user, selectedPropertyFilterId = 'all' }) {
       "Yes, Revert Fee"
     );
   }
+
+  async function handleEditLateFeeSubmit(e) {
+    e.preventDefault();
+    const amount = parseFloat(editFeeAmount);
+    if (isNaN(amount) || amount < 0) {
+      toast.error('Please enter a valid non-negative amount.');
+      return;
+    }
+    try {
+      setEditFeeLoading(true);
+      const res = await API.patch(`/rental/ledgers/${editFeeInvoice.invoice_id}/edit-late-fee`, { amount });
+      setInvoices(prev => prev.map(inv => inv.invoice_id === editFeeInvoice.invoice_id ? { ...res.data, lease: inv.lease } : inv));
+      setShowEditFeeModal(false);
+      toast.success(`Late fee updated to $${amount} on invoice #${editFeeInvoice.invoice_id}.`);
+    } catch (err) {
+      toast.error(err.response?.data?.detail || 'Failed to update late fee.');
+    } finally {
+      setEditFeeLoading(false);
+    }
+  }
+
 
   async function handlePayInvoice(e) {
     e.preventDefault();
@@ -278,6 +314,11 @@ export default function RentLedger({ user, selectedPropertyFilterId = 'all' }) {
                             Tenant: {inv.lease.tenant_name}
                           </span>
                         )}
+                        {inv.lease?.property_name && (
+                          <span className="text-[10px] text-slate-400 dark:text-gray-550 font-medium italic">
+                            Property: {inv.lease.property_name}
+                          </span>
+                        )}
                       </div>
                     </td>
                     <td className="px-4 py-4 text-xs text-slate-500 dark:text-gray-400 whitespace-nowrap">{inv.due_date}</td>
@@ -293,7 +334,16 @@ export default function RentLedger({ user, selectedPropertyFilterId = 'all' }) {
                         </div>
                       )}
                     </td>
-                    <td className="px-4 py-4 font-mono font-bold text-rose-600 dark:text-rose-400 whitespace-nowrap">${inv.late_fee_applied || '0.00'}</td>
+                     <td className="px-4 py-4 whitespace-nowrap">
+                       <div className="font-mono font-bold text-rose-600 dark:text-rose-400">
+                         ${inv.late_fee_applied || '0.00'}
+                       </div>
+                       {inv.late_fee_applied > 0 && inv.lease?.late_fee_type && (
+                         <div className="text-[9px] uppercase tracking-wide font-bold mt-0.5 text-rose-400/70">
+                           {inv.lease.late_fee_type === 'PERCENTAGE' ? `${inv.lease.late_fee_amount}% of rent` : 'Flat fee'}
+                         </div>
+                       )}
+                     </td>
                     <td className="px-4 py-4 text-center whitespace-nowrap">
                       <StatusBadge status={inv.status} />
                     </td>
@@ -443,6 +493,59 @@ export default function RentLedger({ user, selectedPropertyFilterId = 'all' }) {
           </div>
         </div>
       )}
+
+      {/* Edit Late Fee Modal */}
+      {showEditFeeModal && editFeeInvoice && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-[#1e2a3b] border border-slate-200 dark:border-white/10 w-full max-w-sm rounded-2xl p-6 space-y-4 shadow-2xl animate-scale-up text-slate-900 dark:text-white text-left">
+            <div className="flex justify-between items-center border-b dark:border-white/5 pb-3">
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                <Edit3 className="w-5 h-5 text-indigo-500" /> Edit Late Fee
+              </h3>
+              <button onClick={() => setShowEditFeeModal(false)} className="text-gray-400 hover:text-gray-900 dark:text-gray-500 dark:hover:text-white cursor-pointer"><X size={20} /></button>
+            </div>
+
+            <div className="bg-slate-50 dark:bg-[#111c2a] p-3.5 rounded-xl border border-slate-200 dark:border-white/10 text-xs space-y-1.5">
+              <div className="flex justify-between">
+                <span className="text-slate-500 dark:text-gray-400">Invoice:</span>
+                <span className="font-bold text-slate-900 dark:text-white">#{getInvoiceSeqNum(editFeeInvoice)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-500 dark:text-gray-400">Unit:</span>
+                <span className="font-bold text-slate-900 dark:text-white">Unit {editFeeInvoice.lease?.unit?.unit_number || 'N/A'}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-500 dark:text-gray-400">Current Late Fee:</span>
+                <span className="font-bold text-rose-500">${editFeeInvoice.late_fee_applied || '0.00'}</span>
+              </div>
+            </div>
+
+            <form onSubmit={handleEditLateFeeSubmit} className="space-y-4">
+              <div>
+                <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide font-bold">New Late Fee Amount ($)</label>
+                <input
+                  required
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={editFeeAmount}
+                  onChange={e => setEditFeeAmount(e.target.value)}
+                  className="w-full bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 focus:border-indigo-500 rounded-lg px-3 py-2.5 text-sm text-slate-900 dark:text-white outline-none"
+                  placeholder="e.g. 75.00"
+                />
+                <p className="text-[10px] text-slate-400 dark:text-gray-500 mt-1">Enter 0 to remove the late fee entirely (reverts to UNPAID).</p>
+              </div>
+              <div className="pt-2 flex gap-3">
+                <button type="button" onClick={() => setShowEditFeeModal(false)} className="flex-1 py-2.5 rounded-xl text-sm font-semibold border border-slate-200 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors">Cancel</button>
+                <button type="submit" disabled={editFeeLoading} className="flex-1 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-semibold hover:bg-indigo-500 transition-all shadow-md shadow-indigo-500/25 disabled:opacity-60">
+                  {editFeeLoading ? 'Saving...' : 'Save Fee'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       <ConfirmModal
         isOpen={confirmConfig.isOpen}
         title={confirmConfig.title}

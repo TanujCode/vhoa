@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import API from '../../services/api';
 import { useTheme } from '../../context/ThemeContext';
+import ConfirmModal from '../../components/ConfirmModal';
 
 const SuperAdminDashboard = ({ user, setActivePage }) => {
   const { theme } = useTheme();
@@ -46,6 +47,8 @@ const SuperAdminDashboard = ({ user, setActivePage }) => {
   };
 
   const [deletingId, setDeletingId] = useState(null);
+  const [landlordToDelete, setLandlordToDelete] = useState(null);
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
 
   const handleToggleStatus = async (landlord) => {
     try {
@@ -61,21 +64,26 @@ const SuperAdminDashboard = ({ user, setActivePage }) => {
     }
   };
 
-  const handleDeleteLandlord = async (landlord) => {
-    if (!window.confirm(`Are you sure you want to permanently delete Landlord "${landlord.full_name || landlord.email_id}" and all their properties/leases/tenants? This action cannot be undone.`)) {
-      return;
-    }
+  const handleDeleteLandlord = (landlord) => {
+    setLandlordToDelete(landlord);
+    setIsConfirmOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!landlordToDelete) return;
+    setIsConfirmOpen(false);
 
     try {
-      setDeletingId(landlord.user_id);
-      await API.delete(`/rental/landlords/${landlord.user_id}`);
-      setLandlords(prev => prev.filter(l => l.user_id !== landlord.user_id));
+      setDeletingId(landlordToDelete.user_id);
+      await API.delete(`/rental/landlords/${landlordToDelete.user_id}`);
+      setLandlords(prev => prev.filter(l => l.user_id !== landlordToDelete.user_id));
       alert("Landlord deleted successfully.");
     } catch (err) {
       console.error("Failed to delete landlord:", err);
       alert(err?.response?.data?.detail || "Failed to delete landlord registration.");
     } finally {
       setDeletingId(null);
+      setLandlordToDelete(null);
     }
   };
 
@@ -481,6 +489,20 @@ const SuperAdminDashboard = ({ user, setActivePage }) => {
 
         </div>
       </div>
+
+      <ConfirmModal
+        isOpen={isConfirmOpen}
+        title="Confirm Landlord Deletion"
+        message={`Are you sure you want to permanently delete Landlord "${landlordToDelete?.full_name || landlordToDelete?.email_id}" and all their properties, units, leases, ledgers, maintenance requests, and vendors? This action cannot be undone.`}
+        confirmText="Permanently Delete"
+        cancelText="Cancel"
+        onConfirm={handleConfirmDelete}
+        onCancel={() => {
+          setIsConfirmOpen(false);
+          setLandlordToDelete(null);
+        }}
+        type="danger"
+      />
 
     </div>
   );

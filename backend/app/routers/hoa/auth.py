@@ -85,12 +85,12 @@ def register(request: Request, body: RegisterRequest, db: Session = Depends(get_
         # Link to any pending leases matching the tenant email
         if body.role == "tenant":
             from app.models.rental.lease import Lease
-            pending_leases = db.query(Lease).filter(
-                func.lower(Lease.tenant_email) == user_email_clean,
-                Lease.tenant_id == None
-            ).all()
-            for lease in pending_leases:
-                lease.tenant_id = user.user_id
+            from app.utils.encryption import safe_decrypt_field
+            unlinked_leases = db.query(Lease).filter(Lease.tenant_id == None).all()
+            for lease in unlinked_leases:
+                decrypted_email = safe_decrypt_field(lease.tenant_email)
+                if decrypted_email and decrypted_email.strip().lower() == user_email_clean:
+                    lease.tenant_id = user.user_id
             db.commit()
 
         # Auto-link with case insensitive lowercase matching

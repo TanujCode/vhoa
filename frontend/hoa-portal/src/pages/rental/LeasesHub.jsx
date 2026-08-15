@@ -3,6 +3,7 @@ import { FileText, Plus, CheckCircle, Clock, Send, Lock, PenTool, Sparkles, Tras
 import { toast } from 'react-hot-toast';
 import API from '../../services/api';
 import ConfirmModal from '../../components/ConfirmModal';
+import { formatPhoneAsYouType, formatUsPhone } from '../../utils/phoneFormatter';
 
 const LEASE_TEMPLATES = {
   standard: `STANDARD RESIDENTIAL LEASE AGREEMENT
@@ -11,9 +12,7 @@ This lease agreement is made and entered on {{START_DATE}} by and between the La
 1. PROPERTY: Landlord rents to Tenant the property located at Unit {{UNIT_NUMBER}}.
 2. TERM: The term of this lease shall begin on {{START_DATE}} and terminate on {{END_DATE}}.
 3. RENT: Tenant agrees to pay a monthly rent of \${{RENT_AMOUNT}} due on the 1st of each month. A grace period of {{GRACE_PERIOD}} days is allowed, after which a late fee of \${{LATE_FEE}} will be applied.
-4. SECURITY DEPOSIT: Tenant shall deposit \${{DEPOSIT_AMOUNT}} as security for any damage caused to the premises.
-
-Signatures below indicate full agreement to these terms.`,
+4. SECURITY DEPOSIT: Tenant shall deposit \${{DEPOSIT_AMOUNT}} as security for any damage caused to the premises.`,
 
   condo: `CONDOMINIUM LEASE AGREEMENT
 
@@ -42,7 +41,7 @@ const INITIAL_RULES = [
 
 const INITIAL_ATTACHMENTS = [];
 
-export default function LeasesHub({ user, selectedPropertyFilterId = 'all' }) {
+export default function LeasesHub({ user, selectedPropertyFilterId = 'all', initialShowCreate = false, onLeaseCreated }) {
   const isLandlord = user?.role === 'landlord' || user?.role_name === 'landlord' || user?.role_id === 1;
 
   const [leases, setLeases] = useState([]);
@@ -51,13 +50,31 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all' }) {
   const [selectedLease, setSelectedLease] = useState(null);
   const [applications, setApplications] = useState([]);
 
+  // Tenant Form States for Lease Onboarding
+  const [tenantDob, setTenantDob] = useState('');
+  const [tenantCurrentAddress, setTenantCurrentAddress] = useState('');
+  const [tenantAddressSuggestions, setTenantAddressSuggestions] = useState([]);
+  const [isTenantAddressSelected, setIsTenantAddressSelected] = useState(false);
+  const [tenantEmergencyContact, setTenantEmergencyContact] = useState('');
+  const [tenantEmergencyPhone, setTenantEmergencyPhone] = useState('');
+  const [tenantSignatureText, setTenantSignatureText] = useState('');
+  const [tenantAgreeTerms, setTenantAgreeTerms] = useState(false);
+  const [tenantOnboardingStep, setTenantOnboardingStep] = useState(1);
+  const [uploadedDocs, setUploadedDocs] = useState([]); // Array of { document_id, doc_type, original_name }
+  const [uploadingDoc, setUploadingDoc] = useState(null); // 'PAY_SLIP' | 'DRIVING_LICENSE' etc.
+  const [tenantHasParking, setTenantHasParking] = useState(false);
+  const [tenantParkingCarsCount, setTenantParkingCarsCount] = useState(1);
+  const [tenantVehicleDetails, setTenantVehicleDetails] = useState('');
+  const [tenantHasPets, setTenantHasPets] = useState(false);
+  const [tenantPetsCount, setTenantPetsCount] = useState(1);
+  const [tenantPetDetails, setTenantPetDetails] = useState('');
+  const [numOccupants, setNumOccupants] = useState(1);
+
+
   const getLeaseSeqNum = (lease) => {
-    const propId = lease.unit?.property_id;
-    if (!propId) return lease.lease_id;
-    const propLeases = leases
-      .filter(item => item.unit?.property_id === propId)
-      .sort((a, b) => a.lease_id - b.lease_id);
-    const idx = propLeases.findIndex(item => item.lease_id === lease.lease_id);
+    if (!lease) return '';
+    const sorted = [...leases].sort((a, b) => a.lease_id - b.lease_id);
+    const idx = sorted.findIndex(item => item.lease_id === lease.lease_id);
     return idx !== -1 ? idx + 1 : lease.lease_id;
   };
   const [prefilledFromApp, setPrefilledFromApp] = useState(false);
@@ -68,6 +85,8 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all' }) {
   const [selectedTemplate, setSelectedTemplate] = useState('standard');
   const [selectedUnitId, setSelectedUnitId] = useState('');
   const [tenantEmail, setTenantEmail] = useState('');
+  const [tenantName, setTenantName] = useState('');
+  const [tenantPhone, setTenantPhone] = useState('');
   const [rentAmount, setRentAmount] = useState('');
   const [deposit, setDeposit] = useState('');
   const [startDate, setStartDate] = useState('');
@@ -84,6 +103,8 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all' }) {
   const [utilFee, setUtilFee] = useState('0');
   const [parkingFee, setParkingFee] = useState('0');
   const [petFee, setPetFee] = useState('0');
+  const [editingLeaseId, setEditingLeaseId] = useState(null);
+
   
   // Custom Fee options
   const [electricityPayee, setElectricityPayee] = useState('tenant');
@@ -235,6 +256,67 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all' }) {
     setLessorAddressSuggestions([]);
     setIsLessorAddressSelected(true);
   };
+
+  const handleTenantAddressChange = (value) => {
+    setTenantCurrentAddress(value);
+    setIsTenantAddressSelected(false);
+    
+    if (!value.trim()) {
+      setTenantAddressSuggestions([]);
+      return;
+    }
+
+    if (addressTimeoutRef.current) {
+      clearTimeout(addressTimeoutRef.current);
+    }
+
+    addressTimeoutRef.current = setTimeout(async () => {
+      try {
+        const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(value)}&format=json&addressdetails=1&countrycodes=us&limit=5&email=contact@nestbloq.com`, {
+          headers: {
+            'Accept': 'application/json',
+            'User-Agent': 'NestBloq-RentalPortal/1.0'
+          }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          const mapped = data.map(item => {
+            const addr = item.address || {};
+            const street = `${addr.house_number || ''} ${addr.road || ''}`.trim();
+            const city = addr.city || addr.town || addr.village || addr.hamlet || addr.suburb || '';
+            const state = addr.state || '';
+            const zip = addr.postcode || '';
+            
+            const parts = [];
+            if (street) parts.push(street);
+            else parts.push(item.display_name.split(',')[0]);
+            
+            if (city) parts.push(city);
+            
+            const stateAbbr = getAbbr(state);
+            if (stateAbbr) parts.push(stateAbbr);
+            
+            if (zip) parts.push(zip);
+
+            return {
+              display: item.display_name,
+              formatted: parts.join(', ')
+            };
+          });
+          setTenantAddressSuggestions(mapped);
+        }
+      } catch (err) {
+        console.warn("Geocoding failed:", err);
+      }
+    }, 400);
+  };
+
+  const handleSelectTenantSuggestion = (suggestion) => {
+    setTenantCurrentAddress(suggestion.formatted);
+    setTenantAddressSuggestions([]);
+    setIsTenantAddressSelected(true);
+  };
+
   const [lessorPhone, setLessorPhone] = useState('');
   const [lessorEmail, setLessorEmail] = useState('');
   const [termsAgreed, setTermsAgreed] = useState(false);
@@ -246,7 +328,7 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all' }) {
   // Signature state
   const [signature, setSignature] = useState('');
 
-  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showCreateModal, setShowCreateModal] = useState(initialShowCreate);
   const [formErrors, setFormErrors] = useState({});
   const [errorMsg, setErrorMsg] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
@@ -274,6 +356,8 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all' }) {
     setSelectedTemplate('standard');
     setSelectedUnitId('');
     setTenantEmail('');
+    setTenantName('');
+    setTenantPhone('');
     setRentAmount('');
     setDeposit('');
     setStartDate('');
@@ -324,7 +408,80 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all' }) {
     setTermsAgreed(false);
     setFormErrors({});
     setErrorMsg('');
+    setEditingLeaseId(null);
   };
+
+  const handleEditLeaseClick = (lease, e) => {
+    if (e) e.stopPropagation();
+    
+    if (lease.unit) {
+      const unitExists = units.some(u => String(u.unit_id) === String(lease.unit_id));
+      if (!unitExists) {
+        const mappedUnit = {
+          ...lease.unit,
+          property_name: lease.unit.property_name || 'Assigned Property',
+          property_address: lease.unit.property_address || '',
+          property_city: lease.unit.property_city || '',
+          property_state: lease.unit.property_state || '',
+          property_zip: lease.unit.property_zip || ''
+        };
+        setUnits(prev => [...prev, mappedUnit]);
+      }
+    }
+
+    setEditingLeaseId(lease.lease_id);
+    setSelectedUnitId(lease.unit_id.toString());
+
+    setTenantEmail(lease.tenant_email || '');
+    setTenantName(lease.tenant_name || '');
+    setTenantPhone(formatPhoneAsYouType(lease.tenant_phone || ''));
+    setStartDate(lease.start_date || '');
+
+    setEndDate(lease.end_date || '');
+    
+    if (lease.start_date && lease.end_date) {
+      const start = new Date(lease.start_date);
+      const end = new Date(lease.end_date);
+      const diffMonths = (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth());
+      if (diffMonths === 12 || diffMonths === 6 || diffMonths === 1 || diffMonths === 24) {
+        setDuration(diffMonths.toString());
+        setCustomDuration('');
+      } else {
+        setDuration('custom');
+        setCustomDuration(diffMonths.toString());
+      }
+    } else {
+      setDuration('12');
+      setCustomDuration('');
+    }
+
+    setRentAmount(lease.rent_amount?.toString() || '');
+    setDeposit(lease.security_deposit?.toString() || '0');
+    setGracePeriod(lease.grace_period_days?.toString() || '5');
+    setFeeType(lease.late_fee_type || 'FLAT');
+    setFeeAmount(lease.late_fee_amount?.toString() || '50');
+    setLeaseText(lease.lease_agreement_text || '');
+    
+    const utilVal = parseFloat(lease.utilities_fee || 0);
+    setHasUtilFee(utilVal > 0);
+    setUtilFee(utilVal.toString());
+
+    const parkVal = parseFloat(lease.parking_fee || 0);
+    setHasParkingFee(parkVal > 0);
+    setParkingFeePerCar(parkVal.toString());
+    setParkingCarsCount('1');
+
+    const petVal = parseFloat(lease.pet_fee || 0);
+    setHasPetFee(petVal > 0);
+    setPetFeePerPet(petVal.toString());
+    setPetsCount('1');
+
+    setCoLandlordName(lease.co_landlord_name || '');
+    
+    setShowCreateModal(true);
+    setCurrentStep(1);
+  };
+
 
   const validateStep = (step) => {
     const errors = {};
@@ -334,37 +491,43 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all' }) {
       } else {
         const selectedUnitObj = units.find(u => u.unit_id === parseInt(selectedUnitId));
         if (selectedUnitObj && selectedUnitObj.status === 'OCCUPIED' && !prefilledFromApp) {
-          errors.selectedUnitId = 'This unit is currently occupied.';
+          const editingLease = leases.find(l => l.lease_id === editingLeaseId);
+          if (!editingLease || editingLease.unit_id !== selectedUnitObj.unit_id) {
+            errors.selectedUnitId = 'This unit is currently occupied.';
+          }
         }
+
       }
       if (!tenantEmail) {
         errors.tenantEmail = 'Tenant email is required.';
       } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(tenantEmail.trim())) {
         errors.tenantEmail = 'Please enter a valid email address.';
-      } else if (isLandlord) {
-        const hasApprovedScreening = applications.some(app => 
-          app.tenant_email?.toLowerCase().trim() === tenantEmail.toLowerCase().trim() &&
-          String(app.unit_id) === String(selectedUnitId) &&
-          app.screening_status === 'APPROVED'
-        );
-        if (!hasApprovedScreening) {
-          errors.tenantEmail = 'This tenant email does not have an APPROVED screening application for this unit.';
-        }
       }
-      if (!startDate) {
-        errors.startDate = 'Start date is required.';
+      if (!tenantName.trim()) {
+        errors.tenantName = 'Tenant name is required.';
+      } else if (!/^[a-zA-Z\s.-]{2,50}$/.test(tenantName.trim())) {
+        errors.tenantName = 'Name must only contain letters, spaces, dots, and hyphens (2-50 chars).';
       }
-      const todayStr = new Date().toISOString().split('T')[0];
-      if (startDate && startDate < todayStr) {
-        errors.startDate = 'Start date cannot be in the past.';
-      }
-      const numMonths = duration === 'custom' ? parseInt(customDuration) : parseInt(duration);
-      if (isNaN(numMonths) || numMonths < 1) {
-        errors.duration = 'Please provide a valid duration of at least 1 month.';
+      if (!tenantPhone.trim()) {
+        errors.tenantPhone = 'Phone number is required.';
+      } else if (!/^\+?[0-9\s\-()]{7,15}$/.test(tenantPhone.trim())) {
+        errors.tenantPhone = 'Please enter a valid phone number (7-15 digits).';
       }
     }
     
     if (step === 2) {
+      if (!startDate) {
+        errors.startDate = 'Start date is required.';
+      }
+      const todayStr = new Date().toISOString().split('T')[0];
+      if (startDate && startDate < todayStr && !editingLeaseId) {
+        errors.startDate = 'Start date cannot be in the past.';
+      }
+
+      const numMonths = duration === 'custom' ? parseInt(customDuration) : parseInt(duration);
+      if (isNaN(numMonths) || numMonths < 1) {
+        errors.duration = 'Please provide a valid duration of at least 1 month.';
+      }
       const rent = parseFloat(rentAmount);
       if (!rentAmount || isNaN(rent) || rent <= 0) {
         errors.rentAmount = 'Monthly rent must be a positive number greater than 0.';
@@ -398,33 +561,9 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all' }) {
           errors.utilFee = 'Utility fee must be 0 or positive.';
         }
       }
-      if (hasParkingFee) {
-        const parkFee = parseFloat(parkingFeePerCar);
-        if (!parkingFeePerCar || isNaN(parkFee) || parkFee < 0) {
-          errors.parkingFeePerCar = 'Parking fee per car must be 0 or positive.';
-        }
-        const cars = parseInt(parkingCarsCount);
-        if (!parkingCarsCount || isNaN(cars) || cars < 1) {
-          errors.parkingCarsCount = 'Must be at least 1 car.';
-        } else if (cars > 3) {
-          errors.parkingCarsCount = 'Maximum 3 cars are allowed.';
-        }
-      }
-      if (hasPetFee) {
-        const petFee = parseFloat(petFeePerPet);
-        if (!petFeePerPet || isNaN(petFee) || petFee < 0) {
-          errors.petFeePerPet = 'Pet fee per pet must be 0 or positive.';
-        }
-        const pets = parseInt(petsCount);
-        if (!petsCount || isNaN(pets) || pets < 1) {
-          errors.petsCount = 'Must be at least 1 pet.';
-        } else if (pets > 5) {
-          errors.petsCount = 'Maximum 5 pets are allowed.';
-        }
-      }
     }
     
-    if (step === 8) {
+    if (step === 4) {
       if (!lessorFullName.trim()) {
         errors.lessorFullName = 'Primary Landlord name is required.';
       } else if (!/^[a-zA-Z\s.-]{2,50}$/.test(lessorFullName.trim())) {
@@ -450,7 +589,7 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all' }) {
       }
     }
     
-    if (step === 9) {
+    if (step === 5) {
       if (!termsAgreed) {
         errors.termsAgreed = 'You must agree to the terms before submitting.';
       }
@@ -474,7 +613,7 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all' }) {
       return;
     }
     setFormErrors({});
-    setCurrentStep(prev => Math.min(prev + 1, 9));
+    setCurrentStep(prev => Math.min(prev + 1, 5));
   };
 
   const handleBack = () => {
@@ -530,6 +669,8 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all' }) {
     compiled += `   - Phone: ${lessorPhone || '[Landlord Phone]'}\n`;
     compiled += `   - Email: ${lessorEmail || '[Landlord Email]'}\n\n`;
     compiled += `   And the Tenant:\n`;
+    compiled += `   - Name: ${tenantName || '[Tenant Name]'}\n`;
+    compiled += `   - Phone: ${tenantPhone || '[Tenant Phone]'}\n`;
     compiled += `   - Email: ${tenantEmail || '[Tenant Email]'}\n\n`;
     
     compiled += `2. PROPERTY: Landlord rents to Tenant the premises located at:\n`;
@@ -623,10 +764,6 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all' }) {
       compiled += `\n`;
     }
     
-    compiled += `Signatures below indicate full agreement to these terms.\n`;
-    compiled += `Landlord Signature: _______________________\n`;
-    compiled += `Tenant Signature: _______________________`;
-    
     return compiled;
   };
 
@@ -640,27 +777,62 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all' }) {
       localStorage.removeItem('open_create_lease_modal');
       setShowCreateModal(true);
     }
+
+    const handleGlobalUpdate = () => {
+      fetchLeases();
+      if (isLandlord) {
+        fetchUnits();
+        fetchApplications();
+      }
+    };
+    window.addEventListener('rental-data-changed', handleGlobalUpdate);
+    return () => {
+      window.removeEventListener('rental-data-changed', handleGlobalUpdate);
+    };
   }, [isLandlord, user?.property_name, user?.unit_number]);
 
   useEffect(() => {
     if (showCreateModal && user) {
       setLessorFullName(user.name || user.full_name || '');
       setLessorEmail(user.email || '');
-      setLessorPhone(user.mobile_number || '');
+      setLessorPhone(formatPhoneAsYouType(user.mobile_number || ''));
       if (isLandlord) {
         fetchApplications();
       }
     }
   }, [showCreateModal, user, isLandlord]);
 
+
   useEffect(() => {
-    if (showCreateModal) {
+    if (tenantEmail && selectedUnitId && applications.length > 0) {
+      const matchedApp = applications.find(app => 
+        app.tenant_email?.toLowerCase().trim() === tenantEmail.toLowerCase().trim() &&
+        String(app.unit_id) === String(selectedUnitId) &&
+        app.screening_status === 'APPROVED'
+      );
+      if (matchedApp) {
+        if (matchedApp.full_name) {
+          setTenantName(matchedApp.full_name);
+        }
+        if (matchedApp.phone) {
+          setTenantPhone(formatPhoneAsYouType(matchedApp.phone));
+        }
+      }
+    }
+  }, [tenantEmail, selectedUnitId, applications]);
+
+
+  useEffect(() => {
+    if (showCreateModal && !editingLeaseId) {
       setLeaseText(compileLeaseText());
     }
   }, [
+
     showCreateModal,
     selectedUnitId,
     tenantEmail,
+    tenantName,
+    tenantPhone,
     startDate,
     endDate,
     duration,
@@ -732,6 +904,7 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all' }) {
   }, [startDate, duration, customDuration]);
 
   useEffect(() => {
+    if (editingLeaseId) return; // Do not overwrite values when editing a lease!
     if (selectedUnitId && units.length > 0) {
       const u = units.find(item => item.unit_id === parseInt(selectedUnitId));
       if (u && u.rent_amount) {
@@ -742,9 +915,21 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all' }) {
       setRentAmount('');
       setDeposit('');
     }
+  }, [selectedUnitId, units, editingLeaseId]);
+  useEffect(() => {
+    if (selectedUnitId && units.length > 0) {
+      const u = units.find(item => item.unit_id === parseInt(selectedUnitId));
+      if (u && u.property_address) {
+        const fullAddr = `${u.property_address}, ${u.property_city || ''}, ${u.property_state || ''} ${u.property_zip || ''}`.replace(/,\s*,/g, ',').trim().replace(/^,|,$/g, '');
+        setLessorAddress(fullAddr);
+        setIsLessorAddressSelected(true);
+      }
+    }
   }, [selectedUnitId, units]);
 
+
   useEffect(() => {
+    if (editingLeaseId) return; // Do not overwrite unit selection in edit mode!
     if (isLandlord && units.length > 0 && showCreateModal && !prefilledFromApp) {
       const propUnits = units.filter(u => 
         selectedPropertyFilterId === 'all' || String(u.property_id) === String(selectedPropertyFilterId)
@@ -757,7 +942,8 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all' }) {
         setSelectedUnitId('');
       }
     }
-  }, [selectedPropertyFilterId, units, isLandlord, showCreateModal, prefilledFromApp]);
+  }, [selectedPropertyFilterId, units, isLandlord, showCreateModal, prefilledFromApp, editingLeaseId]);
+
 
   useEffect(() => {
     if (selectedLease) {
@@ -766,6 +952,28 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all' }) {
       } else {
         setSigningAsRole('landlord');
       }
+      setTenantDob(selectedLease.tenant_dob || '');
+      setTenantCurrentAddress(selectedLease.tenant_current_address || '');
+      setTenantEmergencyContact(selectedLease.tenant_emergency_contact || '');
+      setTenantEmergencyPhone(selectedLease.tenant_emergency_phone || '');
+      setTenantSignatureText(selectedLease.tenant_signature || '');
+      setNumOccupants(selectedLease.num_occupants || 1);
+
+      setUploadedDocs(selectedLease.documents || []);
+      setTenantOnboardingStep(1);
+      setTenantAgreeTerms(false);
+
+      const hasPark = parseFloat(selectedLease.parking_fee || 0) > 0;
+      setTenantHasParking(hasPark);
+      const carCount = hasPark ? Math.round(parseFloat(selectedLease.parking_fee) / 25) : 1;
+      setTenantParkingCarsCount(carCount > 0 ? carCount : 1);
+      setTenantVehicleDetails(selectedLease.parking_fee ? 'Submitted parking request' : '');
+
+      const hasPetsVal = parseFloat(selectedLease.pet_fee || 0) > 0;
+      setTenantHasPets(hasPetsVal);
+      const petCount = hasPetsVal ? Math.round(parseFloat(selectedLease.pet_fee) / 50) : 1;
+      setTenantPetsCount(petCount > 0 ? petCount : 1);
+      setTenantPetDetails(selectedLease.pet_fee ? 'Submitted pet request' : '');
     }
   }, [selectedLease]);
 
@@ -773,10 +981,26 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all' }) {
     try {
       setLoading(true);
       const res = await API.get('/rental/leases');
+
+      const pendingLeaseId = localStorage.getItem('pending_lease_id');
+      if (pendingLeaseId) {
+        const found = res.data.find(l => String(l.lease_id) === String(pendingLeaseId));
+        if (found) {
+          setSelectedLease(found);
+        }
+        localStorage.removeItem('pending_lease_id');
+      }
+
       if (!isLandlord) {
         const activeId = localStorage.getItem('tenant_active_lease_id');
         if (activeId) {
-          setLeases(res.data.filter(l => String(l.lease_id) === String(activeId)));
+          setLeases(res.data.filter(l => 
+            String(l.lease_id) === String(activeId) ||
+            String(l.lease_id) === String(pendingLeaseId) ||
+            l.status === 'PENDING_TENANT_REVIEW' ||
+            l.status === 'PENDING_SIGNATURE' ||
+            l.status === 'PENDING_LANDLORD_APPROVAL'
+          ));
         } else {
           setLeases(res.data);
         }
@@ -800,7 +1024,16 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all' }) {
       const allUnits = [];
       for (const p of props) {
         const unitRes = await API.get(`/rental/properties/${p.property_id}/units`);
-        allUnits.push(...unitRes.data.filter(u => !u.has_active_lease || String(u.unit_id) === String(prefillUnitId)));
+        const mapped = unitRes.data.map(u => ({ 
+          ...u, 
+          property_name: p.name,
+          property_address: p.address,
+          property_city: p.city,
+          property_state: p.state,
+          property_zip: p.zip_code
+        }));
+
+        allUnits.push(...mapped.filter(u => !u.has_active_lease || String(u.unit_id) === String(prefillUnitId)));
       }
       setUnits(allUnits);
       
@@ -867,7 +1100,7 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all' }) {
     if (e) e.preventDefault();
     
     // Final check for all steps
-    for (let step = 1; step <= 9; step++) {
+    for (let step = 1; step <= 5; step++) {
       const validationErrors = validateStep(step);
       if (Object.keys(validationErrors).length > 0) {
         setFormErrors(validationErrors);
@@ -882,7 +1115,7 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all' }) {
       const calculatedParkingFee = hasParkingFee ? (parseFloat(parkingFeePerCar || 0) * parseInt(parkingCarsCount || 1)) : 0;
       const calculatedPetFee = hasPetFee ? (parseFloat(petFeePerPet || 0) * parseInt(petsCount || 1)) : 0;
 
-      const res = await API.post('/rental/leases', {
+      const payload = {
         unit_id: parseInt(selectedUnitId),
         tenant_email: tenantEmail,
         start_date: startDate,
@@ -897,13 +1130,30 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all' }) {
         parking_fee: calculatedParkingFee,
         pet_fee: calculatedPetFee,
         co_landlord_name: coLandlordName.trim() || null
-      });
-      setLeases(prev => [...prev, res.data]);
-      setSelectedLease(res.data);
-      resetWizardForm();
-      setShowCreateModal(false);
-      setPrefilledFromApp(false);
-      toast.success("Lease agreement created successfully!");
+      };
+
+      if (editingLeaseId) {
+        const res = await API.put(`/rental/leases/${editingLeaseId}`, payload);
+        const newLeases = leases.map(l => l.lease_id === editingLeaseId ? res.data : l);
+        setLeases(newLeases);
+        setSelectedLease(res.data);
+        resetWizardForm();
+        setShowCreateModal(false);
+        setPrefilledFromApp(false);
+        toast.success("Lease agreement updated successfully!");
+        if (onLeaseCreated) onLeaseCreated(newLeases);
+      } else {
+        const res = await API.post('/rental/leases', payload);
+        const newLeases = [...leases, res.data];
+        setLeases(newLeases);
+        setSelectedLease(res.data);
+        resetWizardForm();
+        setShowCreateModal(false);
+        setPrefilledFromApp(false);
+        toast.success("Lease agreement created successfully!");
+        if (onLeaseCreated) onLeaseCreated(newLeases);
+      }
+
     } catch (err) {
       const msg = err.response?.data?.detail || "Failed to create lease.";
       setErrorMsg(msg);
@@ -911,6 +1161,685 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all' }) {
     }
   }
 
+  // --- NEW WORKFLOW API HANDLERS ---
+  async function handleTenantDocUpload(e, docType) {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    // Size check
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("File size exceeds 10MB limit.");
+      return;
+    }
+    
+    // Type check
+    const allowed = ["application/pdf", "image/jpeg", "image/png", "image/jpg", "image/webp"];
+    if (!allowed.includes(file.type)) {
+      toast.error("Invalid file format. Upload PDF/JPG/PNG/WEBP.");
+      return;
+    }
+
+    setUploadingDoc(docType);
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const res = await API.post(`/rental/leases/${selectedLease.lease_id}/documents?doc_type=${docType}`, formData, {
+        headers: { "Content-Type": "multipart/form-data" }
+      });
+      toast.success("Document uploaded and encrypted successfully!");
+      setUploadedDocs(prev => [...prev, {
+        document_id: res.data.document_id,
+        doc_type: docType,
+        original_name: file.name
+      }]);
+    } catch (err) {
+      toast.error(err.response?.data?.detail || "Failed to upload document.");
+    } finally {
+      setUploadingDoc(null);
+    }
+  }
+
+  async function handleDownloadDoc(docId, originalName) {
+    try {
+      const res = await API.get(`/rental/leases/${selectedLease.lease_id}/documents/${docId}/download`, { responseType: 'blob' });
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', originalName);
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      toast.error("Failed to download or decrypt document.");
+    }
+  }
+
+  async function handleRemoveDoc(docId, docType) {
+    if (!window.confirm("Are you sure you want to remove this document?")) return;
+    try {
+      await API.delete(`/rental/leases/${selectedLease.lease_id}/documents/${docId}`);
+      toast.success("Document removed successfully!");
+      setUploadedDocs(prev => prev.filter(d => d.document_id !== docId));
+    } catch (err) {
+      toast.error(err.response?.data?.detail || "Failed to remove document.");
+    }
+  }
+
+  async function handleTenantOnboardingSubmit(e) {
+    if (e) e.preventDefault();
+    
+    // Validate Step 2 details
+    if (!tenantDob) {
+      toast.error("Please enter your date of birth.");
+      return;
+    }
+    
+    // 18+ check
+    const birthDate = new Date(tenantDob);
+    const ageDiffMs = Date.now() - birthDate.getTime();
+    const ageDate = new Date(ageDiffMs);
+    const age = Math.abs(ageDate.getUTCFullYear() - 1970);
+    if (age < 18) {
+      toast.error("You must be 18 years or older to sign a lease.");
+      return;
+    }
+
+    if (!tenantCurrentAddress.trim() || tenantCurrentAddress.length < 10) {
+      toast.error("Please enter a valid current address (min 10 chars).");
+      return;
+    }
+
+    if (!tenantEmergencyContact.trim() || !/^[a-zA-Z\s.-]{2,50}$/.test(tenantEmergencyContact.trim())) {
+      toast.error("Please enter a valid emergency contact name (letters only).");
+      return;
+    }
+
+    const cleanedPhone = tenantEmergencyPhone.replace(/\D/g, '');
+    if (!cleanedPhone || cleanedPhone.length !== 10) {
+      toast.error("Please enter a valid 10-digit US emergency phone number.");
+      return;
+    }
+
+    // Documents check
+    const requiredTypes = ["PAY_SLIP", "DRIVING_LICENSE", "ADDRESS_PROOF"];
+    const missing = requiredTypes.filter(type => !uploadedDocs.some(d => d.doc_type === type));
+    if (missing.length > 0) {
+      const labels = { PAY_SLIP: "Pay Slip", DRIVING_LICENSE: "Driving License / ID", ADDRESS_PROOF: "Address Proof" };
+      toast.error(`Please upload: ${missing.map(m => labels[m]).join(", ")}`);
+      return;
+    }
+
+    // Step 3 validation (Signature)
+    if (!tenantSignatureText.trim() || !/^[a-zA-Z\s]+$/.test(tenantSignatureText.trim()) || tenantSignatureText.trim().length < 3) {
+      toast.error("Please enter your full legal name to sign (letters only, min 3 chars).");
+      return;
+    }
+
+    if (!tenantAgreeTerms) {
+      toast.error("You must agree to the terms in the lease contract.");
+      return;
+    }
+
+    try {
+      const res = await API.post(`/rental/leases/${selectedLease.lease_id}/tenant-submit`, {
+        tenant_dob: tenantDob,
+        tenant_current_address: tenantCurrentAddress,
+        tenant_emergency_contact: tenantEmergencyContact,
+        tenant_emergency_phone: tenantEmergencyPhone,
+        signature_text: tenantSignatureText,
+        has_parking: tenantHasParking,
+        parking_cars_count: tenantHasParking ? parseInt(tenantParkingCarsCount) : 0,
+        has_pets: tenantHasPets,
+        pets_count: tenantHasPets ? parseInt(tenantPetsCount) : 0,
+        pet_details: tenantHasPets ? tenantPetDetails : "",
+        num_occupants: parseInt(numOccupants) || 1
+
+      });
+      toast.success("Lease submitted successfully! Landlord has been notified for final approval.");
+      setLeases(prev => prev.map(l => l.lease_id === selectedLease.lease_id ? res.data : l));
+      setSelectedLease(res.data);
+    } catch (err) {
+      toast.error(err.response?.data?.detail || "Submission failed.");
+    }
+  }
+
+  async function handleLandlordApproveLease() {
+    try {
+      const res = await API.post(`/rental/leases/${selectedLease.lease_id}/approve`);
+      toast.success("Lease approved and activated! The unit is now occupied.");
+      setLeases(prev => prev.map(l => l.lease_id === selectedLease.lease_id ? res.data : l));
+      setSelectedLease(res.data);
+    } catch (err) {
+      toast.error(err.response?.data?.detail || "Failed to approve lease.");
+    }
+  }
+  const renderTenantOnboardingFlow = () => {
+    const docLabels = { PAY_SLIP: "Pay Slip / Income Proof", DRIVING_LICENSE: "Driving License / National ID", ADDRESS_PROOF: "Notice/Payment Address Proof" };
+    return (
+      <div className="space-y-6 text-left">
+        {/* Step Indicator */}
+        <div className="flex items-center justify-between border-b dark:border-white/5 pb-4">
+          <div className="flex gap-2">
+            {[1, 2, 3].map(step => (
+              <button
+                key={step}
+                type="button"
+                disabled={step > tenantOnboardingStep}
+                onClick={() => setTenantOnboardingStep(step)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
+                  tenantOnboardingStep === step
+                    ? 'bg-blue-600 text-white shadow-sm'
+                    : 'bg-slate-100 dark:bg-white/5 text-slate-500 hover:text-slate-700'
+                }`}
+              >
+                Step {step}
+              </button>
+            ))}
+          </div>
+          <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Tenant Verification Flow</span>
+        </div>
+
+        {tenantOnboardingStep === 1 && (
+          <div className="space-y-4">
+            <h3 className="text-sm font-extrabold text-slate-800 dark:text-white uppercase tracking-wider">Step 1: Review Prepared Lease Agreement</h3>
+            <p className="text-xs text-slate-400">Please review all tenancy parameters (rent, deposit, charges, clauses) compiled by the landlord.</p>
+            <div className="p-4 border border-slate-200 dark:border-white/10 rounded-xl bg-slate-50/40 dark:bg-black/20 text-xs font-mono max-h-72 overflow-y-auto leading-relaxed whitespace-pre-wrap">
+              {selectedLease.lease_agreement_text}
+            </div>
+            <div className="flex justify-end">
+              <button
+                type="button"
+                onClick={() => setTenantOnboardingStep(2)}
+                className="px-5 py-2.5 bg-blue-600 hover:bg-blue-750 text-white rounded-xl text-xs font-bold cursor-pointer transition shadow-md shadow-blue-500/10"
+              >
+                Proceed to Details & Docs
+              </button>
+            </div>
+          </div>
+        )}
+
+        {tenantOnboardingStep === 2 && (
+          <div className="space-y-5">
+            <h3 className="text-sm font-extrabold text-slate-800 dark:text-white uppercase tracking-wider">Step 2: Enter Details & Upload Identity Documents</h3>
+            
+            {/* Details Form */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">Your Date of Birth (must be 18+)</label>
+                <input
+                  type="date"
+                  value={tenantDob}
+                  onChange={e => setTenantDob(e.target.value)}
+                  className="w-full text-xs px-3.5 py-2.5 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none border-slate-200 dark:border-white/10 focus:ring-2 focus:ring-blue-500/20"
+                />
+              </div>
+
+              <div className="relative">
+                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">Current Physical Address</label>
+                <input
+                  type="text"
+                  value={tenantCurrentAddress}
+                  onChange={e => handleTenantAddressChange(e.target.value)}
+                  className="w-full text-xs px-3.5 py-2.5 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none border-slate-200 dark:border-white/10 focus:ring-2 focus:ring-blue-500/20"
+                  placeholder="Street, City, State, ZIP"
+                />
+                {tenantAddressSuggestions.length > 0 && (
+                  <div className="absolute left-0 right-0 top-full mt-1 bg-white dark:bg-[#1D2B3A] border border-slate-200 dark:border-white/10 rounded-xl shadow-xl z-50 max-h-48 overflow-y-auto custom-scrollbar text-left">
+                    {tenantAddressSuggestions.map((suggestion, idx) => (
+                      <div
+                        key={idx}
+                        onClick={() => handleSelectTenantSuggestion(suggestion)}
+                        className="px-4 py-3 hover:bg-slate-50 dark:hover:bg-white/5 cursor-pointer text-xs font-semibold border-b border-slate-100 dark:border-white/[0.03] last:border-none text-slate-700 dark:text-slate-350"
+                      >
+                        {suggestion.formatted}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">Emergency Contact Name</label>
+                <input
+                  type="text"
+                  value={tenantEmergencyContact}
+                  onChange={e => setTenantEmergencyContact(e.target.value.replace(/[^a-zA-Z\s.-]/g, ''))}
+                  className="w-full text-xs px-3.5 py-2.5 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none border-slate-200 dark:border-white/10 focus:ring-2 focus:ring-blue-500/20"
+                  placeholder="Contact full name"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">Emergency Phone Number</label>
+                <input
+                  type="tel"
+                  value={tenantEmergencyPhone}
+                  onChange={e => setTenantEmergencyPhone(formatPhoneAsYouType(e.target.value))}
+                  className="w-full text-xs px-3.5 py-2.5 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none border-slate-200 dark:border-white/10 focus:ring-2 focus:ring-blue-500/20"
+                  placeholder="(555) 555-5555"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">Number of Residents / People in Unit</label>
+                <input
+                  type="number"
+                  min="1"
+                  max="20"
+                  value={numOccupants}
+                  onChange={e => setNumOccupants(Math.min(20, Math.max(1, parseInt(e.target.value) || 1)))}
+                  className="w-full text-xs px-3.5 py-2.5 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none border-slate-200 dark:border-white/10 focus:ring-2 focus:ring-blue-500/20"
+                  placeholder="Number of occupants"
+                />
+              </div>
+
+            </div>
+
+            {/* Parking & Pet Options */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-slate-200 dark:border-white/5">
+              
+              {/* Parking */}
+              <div className={`p-4 border rounded-2xl transition-all text-left ${tenantHasParking ? 'border-blue-500/30 bg-blue-500/[0.02]' : 'border-slate-200 dark:border-white/5 bg-slate-50/30 dark:bg-slate-950/5'}`}>
+                <div className="flex items-center justify-between gap-4">
+                  <div>
+                    <span className="text-xs font-bold text-slate-800 dark:text-white block">Do you need vehicle parking?</span>
+                    <span className="text-[10px] text-slate-400">Flat rate of $25/month per vehicle.</span>
+                  </div>
+                  <div className="flex w-24 rounded-lg overflow-hidden border border-slate-200 dark:border-white/10 p-0.5 bg-white dark:bg-[#132030] shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => setTenantHasParking(true)}
+                      className={`flex-1 text-[10px] font-bold py-1 rounded-md transition cursor-pointer ${
+                        tenantHasParking 
+                          ? 'bg-blue-600 text-white shadow-sm' 
+                          : 'text-slate-500 hover:text-slate-700 dark:hover:text-white bg-transparent'
+                      }`}
+                    >
+                      Yes
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setTenantHasParking(false);
+                        setTenantParkingCarsCount(1);
+                        setTenantVehicleDetails('');
+                      }}
+                      className={`flex-1 text-[10px] font-bold py-1 rounded-md transition cursor-pointer ${
+                        !tenantHasParking 
+                          ? 'bg-blue-600 text-white shadow-sm' 
+                          : 'text-slate-500 hover:text-slate-700 dark:hover:text-white bg-transparent'
+                      }`}
+                    >
+                      No
+                    </button>
+                  </div>
+                </div>
+
+                {tenantHasParking && (
+                  <div className="space-y-3 mt-3 pt-3 border-t border-blue-500/10 animate-fade-in">
+                    <div>
+                      <label className="block text-[10px] font-bold text-gray-450 uppercase tracking-wider mb-1.5">Number of Cars (1 to 3)</label>
+                      <input 
+                        type="number" 
+                        min="1"
+                        max="3"
+                        value={tenantParkingCarsCount} 
+                        onChange={e => setTenantParkingCarsCount(Math.min(3, Math.max(1, parseInt(e.target.value) || 1)))} 
+                        className="w-full text-xs px-3 py-2 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none border-slate-200 dark:border-white/10"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-gray-450 uppercase tracking-wider mb-1.5">Vehicle License Plate(s) / Description</label>
+                      <input 
+                        type="text" 
+                        required
+                        value={tenantVehicleDetails}
+                        onChange={e => setTenantVehicleDetails(e.target.value)}
+                        placeholder="e.g. Toyota Camry (Plate: ABC-123)"
+                        className="w-full text-xs px-3 py-2 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none border-slate-200 dark:border-white/10"
+                      />
+                    </div>
+                    <div className="text-[10px] font-bold text-blue-600 dark:text-blue-400 bg-blue-500/10 border border-blue-500/20 py-2 px-3 rounded-xl text-center">
+                      Monthly Charges: ${tenantParkingCarsCount * 25}/mo
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Pets */}
+              <div className={`p-4 border rounded-2xl transition-all text-left ${tenantHasPets ? 'border-blue-500/30 bg-blue-500/[0.02]' : 'border-slate-200 dark:border-white/5 bg-slate-50/30 dark:bg-slate-950/5'}`}>
+                <div className="flex items-center justify-between gap-4">
+                  <div>
+                    <span className="text-xs font-bold text-slate-800 dark:text-white block">Do you have any pets?</span>
+                    <span className="text-[10px] text-slate-400">Flat rate of $50/month per pet.</span>
+                  </div>
+                  <div className="flex w-24 rounded-lg overflow-hidden border border-slate-200 dark:border-white/10 p-0.5 bg-white dark:bg-[#132030] shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => setTenantHasPets(true)}
+                      className={`flex-1 text-[10px] font-bold py-1 rounded-md transition cursor-pointer ${
+                        tenantHasPets 
+                          ? 'bg-blue-600 text-white shadow-sm' 
+                          : 'text-slate-500 hover:text-slate-700 dark:hover:text-white bg-transparent'
+                      }`}
+                    >
+                      Yes
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setTenantHasPets(false);
+                        setTenantPetsCount(1);
+                        setTenantPetDetails('');
+                      }}
+                      className={`flex-1 text-[10px] font-bold py-1 rounded-md transition cursor-pointer ${
+                        !tenantHasPets 
+                          ? 'bg-blue-600 text-white shadow-sm' 
+                          : 'text-slate-500 hover:text-slate-700 dark:hover:text-white bg-transparent'
+                      }`}
+                    >
+                      No
+                    </button>
+                  </div>
+                </div>
+
+                {tenantHasPets && (
+                  <div className="space-y-3 mt-3 pt-3 border-t border-blue-500/10 animate-fade-in">
+                    <div>
+                      <label className="block text-[10px] font-bold text-gray-450 uppercase tracking-wider mb-1.5">Number of Pets (1 to 5)</label>
+                      <input 
+                        type="number" 
+                        min="1"
+                        max="5"
+                        value={tenantPetsCount} 
+                        onChange={e => setTenantPetsCount(Math.min(5, Math.max(1, parseInt(e.target.value) || 1)))} 
+                        className="w-full text-xs px-3 py-2 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none border-slate-200 dark:border-white/10"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-gray-450 uppercase tracking-wider mb-1.5">Pet Breed(s) / Description</label>
+                      <input 
+                        type="text" 
+                        required
+                        value={tenantPetDetails}
+                        onChange={e => setTenantPetDetails(e.target.value)}
+                        placeholder="e.g. Golden Retriever, 2 years old"
+                        className="w-full text-xs px-3 py-2 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none border-slate-200 dark:border-white/10"
+                      />
+                    </div>
+                    <div className="text-[10px] font-bold text-blue-600 dark:text-blue-400 bg-blue-500/10 border border-blue-500/20 py-2 px-3 rounded-xl text-center">
+                      Monthly Charges: ${tenantPetsCount * 50}/mo
+                    </div>
+                  </div>
+                )}
+              </div>
+
+            </div>
+
+            {/* Document Upload Blocks */}
+            <div className="space-y-3 pt-3 border-t dark:border-white/5">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">Required Documents (PDF / JPG / PNG / WEBP)</span>
+              
+              {["PAY_SLIP", "DRIVING_LICENSE", "ADDRESS_PROOF"].map(type => {
+                const existing = uploadedDocs.find(d => d.doc_type === type);
+                return (
+                  <div key={type} className="p-3 border border-slate-200 dark:border-white/5 rounded-xl flex items-center justify-between gap-4 bg-slate-50/20 dark:bg-white/[0.01]">
+                    <div className="text-left">
+                      <span className="text-xs font-bold text-slate-800 dark:text-white block">{docLabels[type]}</span>
+                      {existing ? (
+                        <span className="text-[10px] text-emerald-500 font-semibold block">✓ Uploaded: {existing.original_name}</span>
+                      ) : (
+                        <span className="text-[10px] text-red-500 block">⚠️ Upload Required (max 10MB)</span>
+                      )}
+                    </div>
+                    
+                    <div>
+                      {existing ? (
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => handleDownloadDoc(existing.document_id, existing.original_name)}
+                            className="px-3 py-1.5 border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-350 hover:bg-slate-100 dark:hover:bg-white/5 rounded-lg text-[10px] font-bold transition cursor-pointer"
+                          >
+                            Verify File
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveDoc(existing.document_id, type)}
+                            className="px-3 py-1.5 border border-red-200 hover:border-red-300 dark:border-red-500/20 text-red-600 dark:text-red-450 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-lg text-[10px] font-bold transition cursor-pointer"
+                          >
+                            Remove File
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="relative group">
+                          <input
+                            type="file"
+                            onChange={e => handleTenantDocUpload(e, type)}
+                            accept=".pdf,.jpg,.jpeg,.png,.webp"
+                            className="absolute inset-0 opacity-0 cursor-pointer w-full h-full z-10"
+                          />
+                          <button
+                            type="button"
+                            disabled={uploadingDoc === type}
+                            className="px-3 py-1.5 bg-blue-600 group-hover:bg-blue-700 text-white rounded-lg text-[10px] font-bold transition cursor-pointer pointer-events-none"
+                          >
+                            {uploadingDoc === type ? "Uploading..." : "Upload File"}
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="flex justify-between items-center pt-2">
+              <button
+                type="button"
+                onClick={() => setTenantOnboardingStep(1)}
+                className="px-4 py-2 border border-slate-250 dark:border-white/10 text-slate-600 dark:text-slate-400 rounded-xl text-xs font-bold cursor-pointer transition"
+              >
+                Back
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (!tenantDob) {
+                    toast.error("Please enter your date of birth.");
+                    return;
+                  }
+                  const birthDate = new Date(tenantDob);
+                  const ageDiffMs = Date.now() - birthDate.getTime();
+                  const ageDate = new Date(ageDiffMs);
+                  const age = Math.abs(ageDate.getUTCFullYear() - 1970);
+                  if (age < 18) {
+                    toast.error("You must be 18 years or older to sign a lease.");
+                    return;
+                  }
+                  if (!tenantCurrentAddress.trim() || tenantCurrentAddress.trim().length < 10) {
+                    toast.error("Please enter a valid current address (min 10 characters).");
+                    return;
+                  }
+                  if (!tenantEmergencyContact.trim() || !/^[a-zA-Z\s.-]{2,50}$/.test(tenantEmergencyContact.trim())) {
+                    toast.error("Please enter a valid emergency contact name (letters only, 2-50 characters).");
+                    return;
+                  }
+                  const cleanedPhone = tenantEmergencyPhone.replace(/\D/g, '');
+                  if (!cleanedPhone || cleanedPhone.length !== 10) {
+                    toast.error("Please enter a valid 10-digit US emergency phone number.");
+                    return;
+                  }
+                  
+                  if (tenantHasParking && !tenantVehicleDetails.trim()) {
+                    toast.error("Please enter your vehicle details / license plates.");
+                    return;
+                  }
+                  if (tenantHasPets && !tenantPetDetails.trim()) {
+                    toast.error("Please enter your pet breed / description details.");
+                    return;
+                  }
+                  
+                  // Document uploads validation
+                  const requiredTypes = ["PAY_SLIP", "DRIVING_LICENSE", "ADDRESS_PROOF"];
+                  const missing = requiredTypes.filter(type => !uploadedDocs.some(d => d.doc_type === type));
+                  if (missing.length > 0) {
+                    const labels = { PAY_SLIP: "Pay Slip / Income Proof", DRIVING_LICENSE: "Driving License / National ID", ADDRESS_PROOF: "Notice/Payment Address Proof" };
+                    toast.error(`Please upload required documents: ${missing.map(m => labels[m]).join(", ")}`);
+                    return;
+                  }
+
+                  setTenantOnboardingStep(3);
+                }}
+                className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold cursor-pointer transition shadow-md shadow-blue-500/10"
+              >
+                Proceed to Sign
+              </button>
+            </div>
+          </div>
+        )}
+
+        {tenantOnboardingStep === 3 && (
+          <div className="space-y-5">
+            <h3 className="text-sm font-extrabold text-slate-800 dark:text-white uppercase tracking-wider">Step 3: Legal Digital Signature</h3>
+            
+            <div className="p-4 bg-slate-50/50 dark:bg-slate-950/10 border border-slate-250 dark:border-white/5 rounded-2xl text-left space-y-4">
+              <label className="flex items-start gap-3 cursor-pointer">
+                <input 
+                  type="checkbox" 
+                  checked={tenantAgreeTerms} 
+                  onChange={e => setTenantAgreeTerms(e.target.checked)} 
+                  className="w-4.5 h-4.5 text-blue-600 border-slate-300 rounded focus:ring-blue-500 mt-1" 
+                />
+                <div>
+                  <span className="text-xs font-bold text-slate-800 dark:text-white block">I verify and agree to the terms in this lease agreement.</span>
+                  <span className="text-[10px] text-slate-400">By checking this, you agree to digital execution of this lease contract under the U.S. ESIGN Act.</span>
+                </div>
+              </label>
+
+              <div className="space-y-2">
+                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider">Type Your Full Name to Digitally Sign</label>
+                <input
+                  type="text"
+                  value={tenantSignatureText}
+                  onChange={e => setTenantSignatureText(e.target.value.replace(/[^a-zA-Z\s]/g, ''))}
+                  className="w-full text-sm px-4 py-3 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white font-serif italic text-lg outline-none border-slate-200 dark:border-white/10 focus:ring-2 focus:ring-blue-500/20"
+                  placeholder="e.g. John Doe"
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-between items-center pt-2">
+              <button
+                type="button"
+                onClick={() => setTenantOnboardingStep(2)}
+                className="px-4 py-2 border border-slate-250 dark:border-white/10 text-slate-650 dark:text-slate-400 rounded-xl text-xs font-bold cursor-pointer transition"
+              >
+                Back
+              </button>
+              <button
+                type="button"
+                onClick={handleTenantOnboardingSubmit}
+                className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-extrabold cursor-pointer transition shadow-md shadow-emerald-500/10"
+              >
+                Submit Signed Agreement
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const renderLandlordApprovalPanel = () => {
+    const docLabels = { PAY_SLIP: "Pay Slip / Income Proof", DRIVING_LICENSE: "Driving License / ID", ADDRESS_PROOF: "Address Proof" };
+    return (
+      <div className="space-y-6 text-left border-t dark:border-white/5 pt-6 animate-fade-in">
+        <div>
+          <h3 className="text-sm font-extrabold text-slate-800 dark:text-white uppercase tracking-wider">Review Tenant Submission Details</h3>
+          <p className="text-xs text-slate-400">Review the personal information and uploaded verification documents submitted by the tenant before activating the lease.</p>
+        </div>
+
+        {/* Tenant Information Grid */}
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-xs bg-slate-50/50 dark:bg-white/[0.01] p-4 rounded-xl border border-slate-200/60 dark:border-white/[0.03]">
+          <div>
+            <span className="text-gray-400 block text-[10px] uppercase font-bold tracking-wider">Date of Birth</span>
+            <span className="font-bold text-gray-950 dark:text-white">{selectedLease.tenant_dob || "Not Provided"}</span>
+          </div>
+          <div>
+            <span className="text-gray-400 block text-[10px] uppercase font-bold tracking-wider">Current Address</span>
+            <span className="font-bold text-gray-950 dark:text-white">{selectedLease.tenant_current_address || "Not Provided"}</span>
+          </div>
+          <div>
+            <span className="text-gray-400 block text-[10px] uppercase font-bold tracking-wider">Emergency Contact</span>
+            <span className="font-bold text-gray-950 dark:text-white">{selectedLease.tenant_emergency_contact || "Not Provided"}</span>
+          </div>
+          <div>
+            <span className="text-gray-400 block text-[10px] uppercase font-bold tracking-wider">Emergency Phone</span>
+            <span className="font-bold text-gray-950 dark:text-white">{selectedLease.tenant_emergency_phone ? formatUsPhone(selectedLease.tenant_emergency_phone) : "Not Provided"}</span>
+          </div>
+          <div>
+            <span className="text-gray-400 block text-[10px] uppercase font-bold tracking-wider">Number of Occupants</span>
+            <span className="font-bold text-gray-950 dark:text-white">{selectedLease.num_occupants || "1"}</span>
+          </div>
+        </div>
+
+        {/* Verification Documents List */}
+        <div className="space-y-3">
+          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">Tenant Identity & Income Verification Files</span>
+          {["PAY_SLIP", "DRIVING_LICENSE", "ADDRESS_PROOF"].map(type => {
+            const doc = uploadedDocs.find(d => d.doc_type === type);
+            return (
+              <div key={type} className="p-3.5 border border-slate-200 dark:border-white/5 rounded-xl flex items-center justify-between gap-4 bg-slate-50/20 dark:bg-white/[0.01]">
+                <div className="text-left">
+                  <span className="text-xs font-bold text-slate-800 dark:text-white block">{docLabels[type]}</span>
+                  {doc ? (
+                    <span className="text-[10px] text-emerald-500 font-semibold block">✓ Uploaded</span>
+                  ) : (
+                    <span className="text-[10px] text-red-500 block">⚠️ Missing Document</span>
+                  )}
+                </div>
+                
+                <div>
+                  {doc && (
+                    <button
+                      type="button"
+                      onClick={() => handleDownloadDoc(doc.document_id, doc.original_name)}
+                      className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition shadow-md shadow-blue-500/10 cursor-pointer"
+                    >
+                      Download File
+                    </button>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Tenant Signature verification */}
+        <div className="p-4 bg-indigo-500/[0.02] border border-dashed border-indigo-500/20 rounded-xl flex items-center justify-between gap-4">
+          <div className="text-left">
+            <span className="text-[10px] text-indigo-500 uppercase font-extrabold tracking-wider block">Verified Tenant E-Signature</span>
+            <span className="text-lg font-serif italic font-bold dark:text-white">/ {selectedLease.tenant_signature || "Not Signed Yet"} /</span>
+          </div>
+          <span className="text-[10px] text-slate-400 uppercase font-semibold">U.S. ESIGN Compliant</span>
+        </div>
+
+        {/* Action Controls */}
+        <div className="flex justify-end gap-3 pt-3 border-t dark:border-white/5">
+          <button
+            type="button"
+            onClick={handleLandlordApproveLease}
+            className="px-6 py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-extrabold transition shadow-lg shadow-emerald-500/20 cursor-pointer"
+          >
+            ✓ Approve Submission & Activate Lease
+          </button>
+        </div>
+      </div>
+    );
+  };
   async function handleSignLease(e) {
     e.preventDefault();
     try {
@@ -952,36 +1881,34 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all' }) {
   const renderStep1 = () => (
     <div className="space-y-5">
       <div className="border-b dark:border-white/5 pb-3">
-        <span className="text-[10px] uppercase font-bold text-blue-600 dark:text-blue-400 tracking-wider">Step 1 of 9</span>
-        <h4 className="text-lg font-extrabold text-slate-800 dark:text-white mt-1">Lease Term Details</h4>
-        <p className="text-xs text-slate-400">Specify the property unit, the tenant's email address, and the lease start date/duration.</p>
+        <span className="text-[10px] uppercase font-bold text-blue-600 dark:text-blue-400 tracking-wider">Step 1 of 5</span>
+        <h4 className="text-lg font-extrabold text-slate-800 dark:text-white mt-1">Tenant Profile Details</h4>
+        <p className="text-xs text-slate-400">Specify the property unit, the tenant's email address, full name, and phone number.</p>
       </div>
       
+      {/* Row 1: Tenant Name & Tenant Email */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         <div>
-          <label className="block text-xs font-bold text-slate-650 dark:text-gray-400 tracking-wider mb-2">SELECT UNIT</label>
+          <label className="block text-xs font-bold text-slate-655 dark:text-gray-400 tracking-wider mb-2">TENANT NAME</label>
           <div className="relative">
-            <Home className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
-            <select 
+            <User className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
+            <input 
               required 
-              disabled={prefilledFromApp}
-              value={selectedUnitId} 
-              onChange={e => setSelectedUnitId(e.target.value)} 
-              className={`w-full text-sm pl-10 pr-3.5 py-3 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none transition focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 ${
-                prefilledFromApp ? 'opacity-80 cursor-not-allowed bg-slate-100 dark:bg-slate-950 border-slate-200 dark:border-white/5' : 'border-slate-200 dark:border-white/10'
-              } ${formErrors.selectedUnitId ? 'border-red-500 ring-2 ring-red-500/10' : ''}`}
-            >
-              <option value="">-- Select a Unit --</option>
-              {filteredUnits.map(u => (
-                <option key={u.unit_id} value={u.unit_id}>
-                  Unit {u.unit_number} (${u.rent_amount}) - {u.status || 'VACANT'}
-                </option>
-              ))}
-            </select>
+              type="text" 
+              value={tenantName} 
+              onChange={e => {
+                const val = e.target.value;
+                if (/^[a-zA-Z\s.-]*$/.test(val)) {
+                  setTenantName(val);
+                }
+              }} 
+              className={`w-full text-sm pl-10 pr-3.5 py-3 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none transition focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 border-slate-200 dark:border-white/10 ${formErrors.tenantName ? 'border-red-500 ring-2 ring-red-500/10' : ''}`} 
+              placeholder="John Doe" 
+            />
           </div>
-          {formErrors.selectedUnitId && <p className="text-xs text-red-500 mt-1.5 flex items-center gap-1.5"><AlertCircle size={13}/>{formErrors.selectedUnitId}</p>}
+          {formErrors.tenantName && <p className="text-xs text-red-500 mt-1.5 flex items-center gap-1.5"><AlertCircle size={13}/>{formErrors.tenantName}</p>}
         </div>
-        
+
         <div>
           <label className="block text-xs font-bold text-slate-655 dark:text-gray-400 tracking-wider mb-2">TENANT EMAIL</label>
           <div className="relative">
@@ -1002,79 +1929,128 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all' }) {
         </div>
       </div>
 
+      {/* Row 2: Select Unit & Tenant Phone */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         <div>
-          <label className="block text-xs font-bold text-slate-655 dark:text-gray-400 tracking-wider mb-2">START DATE</label>
+          <label className="block text-xs font-bold text-slate-655 dark:text-gray-400 tracking-wider mb-2">SELECT UNIT</label>
           <div className="relative">
-            <Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
-            <input 
-              required 
-              type="date" 
-              min={new Date().toISOString().split('T')[0]} 
-              value={startDate} 
-              onChange={e => setStartDate(e.target.value)} 
-              className={`w-full text-sm pl-10 pr-3.5 py-3 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none transition focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 border-slate-200 dark:border-white/10 ${formErrors.startDate ? 'border-red-500 ring-2 ring-red-500/10' : ''}`} 
-            />
-          </div>
-          {formErrors.startDate && <p className="text-xs text-red-500 mt-1.5 flex items-center gap-1.5"><AlertCircle size={13}/>{formErrors.startDate}</p>}
-        </div>
-        
-        <div>
-          <label className="block text-xs font-bold text-slate-655 dark:text-gray-400 tracking-wider mb-2">LEASE DURATION</label>
-          <div className="relative">
-            <Clock className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
+            <Home className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
             <select 
-              value={duration} 
-              onChange={e => setDuration(e.target.value)} 
-              className="w-full text-sm pl-10 pr-3.5 py-3 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none transition focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 border-slate-200 dark:border-white/10"
+              required 
+              disabled={prefilledFromApp}
+              value={selectedUnitId} 
+              onChange={e => setSelectedUnitId(e.target.value)} 
+              className={`w-full text-sm pl-10 pr-3.5 py-3 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none transition focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 ${
+                prefilledFromApp ? 'opacity-80 cursor-not-allowed bg-slate-100 dark:bg-slate-950 border-slate-200 dark:border-white/5' : 'border-slate-200 dark:border-white/10'
+              } ${formErrors.selectedUnitId ? 'border-red-500 ring-2 ring-red-500/10' : ''}`}
             >
-              <option value="12">12 Months (1 Year)</option>
-              <option value="6">6 Months</option>
-              <option value="24">24 Months (2 Years)</option>
-              <option value="custom">Custom Months</option>
+              <option value="">-- Select a Unit --</option>
+              {filteredUnits.map(u => (
+                <option key={u.unit_id} value={u.unit_id}>
+                  Unit {u.unit_number} - {u.status || 'VACANT'}
+                </option>
+              ))}
             </select>
           </div>
+          {formErrors.selectedUnitId && <p className="text-xs text-red-500 mt-1.5 flex items-center gap-1.5"><AlertCircle size={13}/>{formErrors.selectedUnitId}</p>}
         </div>
-      </div>
 
-      {duration === 'custom' && (
-        <div className="w-full md:w-1/2">
-          <label className="block text-xs font-bold text-slate-655 dark:text-gray-400 tracking-wider mb-2">CUSTOM DURATION (MONTHS)</label>
-          <input 
-            type="number" 
-            min="1" 
-            value={customDuration} 
-            onChange={e => setCustomDuration(e.target.value)} 
-            placeholder="Enter number of months" 
-            className={`w-full text-sm px-3.5 py-3 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white border-slate-200 dark:border-white/10 ${formErrors.duration ? 'border-red-500 ring-2 ring-red-500/10' : ''}`} 
-          />
-          {formErrors.duration && <p className="text-xs text-red-500 mt-1.5 flex items-center gap-1.5"><AlertCircle size={13}/>{formErrors.duration}</p>}
+        <div>
+          <label className="block text-xs font-bold text-slate-655 dark:text-gray-400 tracking-wider mb-2">TENANT PHONE</label>
+          <div className="relative">
+            <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
+            <input 
+              required 
+              type="text" 
+              value={tenantPhone} 
+              maxLength={15} 
+              onChange={e => {
+                setTenantPhone(formatPhoneAsYouType(e.target.value));
+              }} 
+              className={`w-full text-sm pl-10 pr-3.5 py-3 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none transition focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 border-slate-200 dark:border-white/10 ${formErrors.tenantPhone ? 'border-red-500 ring-2 ring-red-500/10' : ''}`} 
+              placeholder="+1 (555) 000-0000" 
+            />
+          </div>
+          {formErrors.tenantPhone && <p className="text-xs text-red-500 mt-1.5 flex items-center gap-1.5"><AlertCircle size={13}/>{formErrors.tenantPhone}</p>}
         </div>
-      )}
-
-      <div className="p-4 rounded-2xl bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-500/5 dark:to-indigo-500/5 border border-blue-500/10 flex items-center justify-between mt-3 shadow-inner">
-        <div className="text-left">
-          <span className="text-xs font-bold text-blue-600 dark:text-blue-400 block tracking-wider uppercase">Calculated Lease End Date</span>
-          <p className="text-[11px] text-slate-450 dark:text-slate-450">Determined automatically based on the start date and lease duration.</p>
-        </div>
-        <span className="text-sm font-extrabold text-blue-600 dark:text-blue-400 bg-blue-500/10 border border-blue-500/20 px-4 py-2.5 rounded-xl shadow-sm">
-          {endDate || 'Select start date & duration'}
-        </span>
       </div>
     </div>
   );
 
-  const renderStep2 = () => (
-    <div className="space-y-5">
-      <div className="border-b dark:border-white/5 pb-3">
-        <span className="text-[10px] uppercase font-bold text-blue-600 dark:text-blue-400 tracking-wider">Step 2 of 9</span>
-        <h4 className="text-lg font-extrabold text-slate-800 dark:text-white mt-1">Rent, Deposit & Fees</h4>
-        <p className="text-xs text-slate-400">Establish rent payment amounts, late fee guidelines, and security deposits.</p>
-      </div>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-        <div>
-          <label className="block text-xs font-bold text-slate-655 dark:text-gray-400 tracking-wider mb-2">MONTHLY RENT ($)</label>
+  const renderStep2 = () => {
+    const selectedUnitObj = units.find(u => String(u.unit_id) === String(selectedUnitId));
+    return (
+      <div className="space-y-5">
+        <div className="border-b dark:border-white/5 pb-3">
+          <span className="text-[10px] uppercase font-bold text-blue-600 dark:text-blue-400 tracking-wider">Step 2 of 5</span>
+          <h4 className="text-lg font-extrabold text-slate-800 dark:text-white mt-1">Lease Term Details</h4>
+          <p className="text-xs text-slate-400">Specify lease start date/duration, monthly rent amounts, late fee guidelines, and security deposits.</p>
+        </div>
+
+        {selectedUnitObj && (
+          <div className="p-3.5 rounded-2xl bg-blue-500/5 border border-blue-500/10 flex items-center gap-3">
+            <Home className="text-blue-600 dark:text-blue-400" size={18} />
+            <div className="text-left">
+              <span className="text-[10px] uppercase font-bold text-blue-600 dark:text-blue-400 tracking-wider block">Property Name</span>
+              <span className="text-sm font-bold text-slate-800 dark:text-white block">{selectedUnitObj.property_name || 'N/A'} (Unit {selectedUnitObj.unit_number})</span>
+            </div>
+          </div>
+        )}
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div>
+            <label className="block text-xs font-bold text-slate-655 dark:text-gray-400 tracking-wider mb-2">START DATE</label>
+            <div className="relative">
+              <Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
+              <input 
+                required 
+                type="date" 
+                min={editingLeaseId ? undefined : new Date().toISOString().split('T')[0]} 
+                value={startDate} 
+                onChange={e => setStartDate(e.target.value)} 
+                className={`w-full text-sm pl-10 pr-3.5 py-3 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none transition focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 border-slate-200 dark:border-white/10 ${formErrors.startDate ? 'border-red-500 ring-2 ring-red-500/10' : ''}`} 
+              />
+
+            </div>
+            {formErrors.startDate && <p className="text-xs text-red-500 mt-1.5 flex items-center gap-1.5"><AlertCircle size={13}/>{formErrors.startDate}</p>}
+          </div>
+          
+          <div>
+            <label className="block text-xs font-bold text-slate-655 dark:text-gray-400 tracking-wider mb-2">LEASE DURATION</label>
+            <div className="relative">
+              <Clock className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
+              <select 
+                value={duration} 
+                onChange={e => setDuration(e.target.value)} 
+                className="w-full text-sm pl-10 pr-3.5 py-3 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none transition focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 border-slate-200 dark:border-white/10"
+              >
+                <option value="12">12 Months (1 Year)</option>
+                <option value="6">6 Months</option>
+                <option value="24">24 Months (2 Years)</option>
+                <option value="custom">Custom Months</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        {duration === 'custom' && (
+          <div className="w-full md:w-1/2">
+            <label className="block text-xs font-bold text-slate-655 dark:text-gray-400 tracking-wider mb-2">CUSTOM DURATION (MONTHS)</label>
+            <input 
+              type="number" 
+              min="1" 
+              value={customDuration} 
+              onChange={e => setCustomDuration(e.target.value)} 
+              placeholder="Enter number of months" 
+              className={`w-full text-sm px-3.5 py-3 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white border-slate-200 dark:border-white/10 ${formErrors.duration ? 'border-red-500 ring-2 ring-red-500/10' : ''}`} 
+            />
+            {formErrors.duration && <p className="text-xs text-red-500 mt-1.5 flex items-center gap-1.5"><AlertCircle size={13}/>{formErrors.duration}</p>}
+          </div>
+        )}
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 border-t dark:border-white/5 pt-4">
+          <div>
+            <label className="block text-xs font-bold text-slate-655 dark:text-gray-400 tracking-wider mb-2">MONTHLY RENT ($)</label>
           <div className="relative">
             <DollarSign className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
             <input 
@@ -1196,11 +2172,12 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all' }) {
       </div>
     </div>
   );
+};
 
   const renderStep3 = () => (
     <div className="space-y-5">
       <div className="border-b dark:border-white/5 pb-3">
-        <span className="text-[10px] uppercase font-bold text-blue-600 dark:text-blue-400 tracking-wider">Step 3 of 9</span>
+        <span className="text-[10px] uppercase font-bold text-blue-600 dark:text-blue-400 tracking-wider">Step 3 of 5</span>
         <h4 className="text-lg font-extrabold text-slate-800 dark:text-white mt-1">Utilities & Options</h4>
         <p className="text-xs text-slate-400">Define utilities coverage, flat monthly utility charges, parking and pet details.</p>
       </div>
@@ -1247,18 +2224,37 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all' }) {
       </div>
 
       <div className={`p-4 border rounded-2xl transition-all text-left ${hasUtilFee ? 'border-blue-500/30 bg-blue-500/[0.02]' : 'border-slate-200 dark:border-white/5 bg-slate-50/30 dark:bg-slate-950/5'}`}>
-        <label className="flex items-center gap-3 cursor-pointer">
-          <input 
-            type="checkbox" 
-            checked={hasUtilFee} 
-            onChange={e => setHasUtilFee(e.target.checked)} 
-            className="w-4.5 h-4.5 text-blue-600 border-slate-350 rounded focus:ring-blue-500" 
-          />
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <span className="text-xs font-bold text-slate-800 dark:text-white block">Landlord will charge flat monthly utility fee?</span>
             <span className="text-[10px] text-slate-400">Enable this to add a set utility cost directly to the ledger bill.</span>
           </div>
-        </label>
+          
+          <div className="flex w-32 rounded-lg overflow-hidden border border-slate-200 dark:border-white/10 p-0.5 bg-white dark:bg-[#132030] shrink-0">
+            <button
+              type="button"
+              onClick={() => setHasUtilFee(true)}
+              className={`flex-1 text-[10px] font-bold py-1.5 rounded-md transition cursor-pointer ${
+                hasUtilFee 
+                  ? 'bg-blue-600 text-white shadow-sm' 
+                  : 'text-slate-500 hover:text-slate-700 dark:hover:text-white bg-transparent'
+              }`}
+            >
+              Yes
+            </button>
+            <button
+              type="button"
+              onClick={() => setHasUtilFee(false)}
+              className={`flex-1 text-[10px] font-bold py-1.5 rounded-md transition cursor-pointer ${
+                !hasUtilFee 
+                  ? 'bg-blue-600 text-white shadow-sm' 
+                  : 'text-slate-500 hover:text-slate-700 dark:hover:text-white bg-transparent'
+              }`}
+            >
+              No
+            </button>
+          </div>
+        </div>
         {hasUtilFee && (
           <div className="w-full md:w-1/2 pt-3 mt-2 border-t border-blue-500/10 animate-fade-in">
             <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">Utility Fee Amount ($)</label>
@@ -1277,107 +2273,7 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all' }) {
         )}
       </div>
 
-      <div className={`p-4 border rounded-2xl transition-all text-left ${hasParkingFee ? 'border-blue-500/30 bg-blue-500/[0.02]' : 'border-slate-200 dark:border-white/5 bg-slate-50/30 dark:bg-slate-950/5'}`}>
-        <label className="flex items-center gap-3 cursor-pointer">
-          <input 
-            type="checkbox" 
-            checked={hasParkingFee} 
-            onChange={e => setHasParkingFee(e.target.checked)} 
-            className="w-4.5 h-4.5 text-blue-600 border-slate-350 rounded focus:ring-blue-500" 
-          />
-          <div>
-            <span className="text-xs font-bold text-slate-800 dark:text-white block">Charge parking fee?</span>
-            <span className="text-[10px] text-slate-400">Specify fee per vehicle and cars count.</span>
-          </div>
-        </label>
-        {hasParkingFee && (
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-start pt-3 mt-2 border-t border-blue-500/10 animate-fade-in">
-            <div>
-              <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">Parking Fee per Car ($/car)</label>
-              <div className="relative">
-                <DollarSign className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
-                <input 
-                  type="number" 
-                  value={parkingFeePerCar} 
-                  onChange={e => setParkingFeePerCar(e.target.value)} 
-                  className={`w-full text-sm pl-10 pr-3.5 py-2.5 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none border-slate-200 dark:border-white/10 ${formErrors.parkingFeePerCar ? 'border-red-500' : ''}`} 
-                  placeholder="50" 
-                />
-              </div>
-              {formErrors.parkingFeePerCar && <p className="text-xs text-red-500 mt-1 flex items-center gap-1"><AlertCircle size={12}/>{formErrors.parkingFeePerCar}</p>}
-            </div>
-            <div>
-              <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">Number of Cars</label>
-              <input 
-                type="number" 
-                min="1"
-                max="3"
-                value={parkingCarsCount} 
-                onChange={e => setParkingCarsCount(e.target.value)} 
-                className={`w-full text-sm px-3.5 py-2.5 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none border-slate-200 dark:border-white/10 ${formErrors.parkingCarsCount ? 'border-red-500' : ''}`} 
-              />
-              {formErrors.parkingCarsCount && <p className="text-xs text-red-500 mt-1 flex items-center gap-1"><AlertCircle size={12}/>{formErrors.parkingCarsCount}</p>}
-            </div>
-            <div>
-              <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">Total Parking Fee</label>
-              <div className="bg-blue-500/10 border border-blue-500/20 px-3.5 py-2.5 rounded-xl text-center text-xs font-bold text-blue-600 dark:text-blue-400">
-                Total: ${parseFloat(parkingFeePerCar || 0) * parseInt(parkingCarsCount || 1)}/mo
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
 
-      <div className={`p-4 border rounded-2xl transition-all text-left ${hasPetFee ? 'border-blue-500/30 bg-blue-500/[0.02]' : 'border-slate-200 dark:border-white/5 bg-slate-50/30 dark:bg-slate-950/5'}`}>
-        <label className="flex items-center gap-3 cursor-pointer">
-          <input 
-            type="checkbox" 
-            checked={hasPetFee} 
-            onChange={e => setHasPetFee(e.target.checked)} 
-            className="w-4.5 h-4.5 text-blue-600 border-slate-350 rounded focus:ring-blue-500" 
-          />
-          <div>
-            <span className="text-xs font-bold text-slate-800 dark:text-white block">Charge pet fee?</span>
-            <span className="text-[10px] text-slate-400">Specify fee per pet and pet count.</span>
-          </div>
-        </label>
-        {hasPetFee && (
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-start pt-3 mt-2 border-t border-blue-500/10 animate-fade-in">
-            <div>
-              <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">Pet Fee per Pet ($/pet)</label>
-              <div className="relative">
-                <DollarSign className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
-                <input 
-                  type="number" 
-                  value={petFeePerPet} 
-                  onChange={e => setPetFeePerPet(e.target.value)} 
-                  className={`w-full text-sm pl-10 pr-3.5 py-2.5 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none border-slate-200 dark:border-white/10 ${formErrors.petFeePerPet ? 'border-red-500' : ''}`} 
-                  placeholder="25" 
-                />
-              </div>
-              {formErrors.petFeePerPet && <p className="text-xs text-red-500 mt-1 flex items-center gap-1"><AlertCircle size={12}/>{formErrors.petFeePerPet}</p>}
-            </div>
-            <div>
-              <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">Number of Pets</label>
-              <input 
-                type="number" 
-                min="1"
-                max="5"
-                value={petsCount} 
-                onChange={e => setPetsCount(e.target.value)} 
-                className={`w-full text-sm px-3.5 py-2.5 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none border-slate-200 dark:border-white/10 ${formErrors.petsCount ? 'border-red-500' : ''}`} 
-              />
-              {formErrors.petsCount && <p className="text-xs text-red-500 mt-1 flex items-center gap-1"><AlertCircle size={12}/>{formErrors.petsCount}</p>}
-            </div>
-            <div>
-              <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">Total Pet Fee</label>
-              <div className="bg-blue-500/10 border border-blue-500/20 px-3.5 py-2.5 rounded-xl text-center text-xs font-bold text-blue-600 dark:text-blue-400">
-                Total: ${parseFloat(petFeePerPet || 0) * parseInt(petsCount || 1)}/mo
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
 
       <div>
         <label className="block text-xs font-bold text-slate-600 dark:text-gray-400 tracking-wider mb-2">KEY EXCHANGE & ENTRY INSTRUCTIONS (OPTIONAL)</label>
@@ -1457,7 +2353,7 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all' }) {
     <div className="space-y-5">
       <div className="border-b dark:border-white/5 pb-3 flex justify-between items-center text-left">
         <div>
-          <span className="text-[10px] uppercase font-bold text-blue-600 dark:text-blue-400 tracking-wider">Step 5 of 9</span>
+          <span className="text-[10px] uppercase font-bold text-blue-600 dark:text-blue-400 tracking-wider">Step 4 of 6</span>
           <h4 className="text-lg font-extrabold text-slate-800 dark:text-white mt-1 flex items-center gap-1.5 font-bold">Rules <span className="text-xs font-normal text-slate-400 normal-case">(editable)</span></h4>
           <p className="text-xs text-slate-400">Establish and customize rules for residents living in the property.</p>
         </div>
@@ -1717,7 +2613,7 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all' }) {
   const renderStep8 = () => (
     <div className="space-y-5">
       <div className="border-b dark:border-white/5 pb-3">
-        <span className="text-[10px] uppercase font-bold text-blue-600 dark:text-blue-400 tracking-wider">Step 8 of 9</span>
+        <span className="text-[10px] uppercase font-bold text-blue-600 dark:text-blue-400 tracking-wider">Step 4 of 5</span>
         <h4 className="text-lg font-extrabold text-slate-800 dark:text-white mt-1">Lessor (Landlord) Information</h4>
         <p className="text-xs text-slate-400">Provide official contact information for payments and notices.</p>
       </div>
@@ -1777,7 +2673,7 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all' }) {
               type="tel" 
               value={lessorPhone} 
               onChange={e => {
-                const val = e.target.value.replace(/[^0-9\s\-()+]/g, '');
+                const val = formatPhoneAsYouType(e.target.value);
                 setLessorPhone(val);
                 if (formErrors.lessorPhone) {
                   setFormErrors(prev => ({ ...prev, lessorPhone: '' }));
@@ -1851,36 +2747,142 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all' }) {
   );
 
   const renderStep9 = () => (
-    <div className="space-y-5 flex flex-col h-full">
+    <div className="space-y-5">
       <div className="border-b dark:border-white/5 pb-3">
-        <span className="text-[10px] uppercase font-bold text-blue-600 dark:text-blue-400 tracking-wider">Step 9 of 9</span>
+        <span className="text-[10px] uppercase font-bold text-blue-600 dark:text-blue-400 tracking-wider">Step 5 of 5</span>
         <h4 className="text-lg font-extrabold text-slate-800 dark:text-white mt-1">Terms Agreement & Final Review</h4>
-        <p className="text-xs text-slate-400">Review the dynamically compiled lease agreement and confirm.</p>
+        <p className="text-xs text-slate-400">Customize property rules, review the compiled agreement draft, and sign to finalize.</p>
       </div>
 
-      <div className="flex-1 min-h-[220px] flex flex-col">
-        <label className="block text-xs font-bold text-blue-600 dark:text-blue-400 tracking-wider mb-2 uppercase text-left">Live Compiled Lease Text</label>
-        <textarea 
-          value={leaseText} 
-          onChange={e => setLeaseText(e.target.value)} 
-          className="flex-1 w-full p-4 border border-blue-500/20 dark:border-white/10 rounded-2xl bg-slate-50 dark:bg-slate-950/40 text-xs font-mono text-slate-800 dark:text-slate-350 leading-relaxed overflow-y-auto shadow-inner resize-none focus:outline-none focus:border-blue-500" 
-        />
-      </div>
-
-      <div className="p-4 bg-slate-50/50 dark:bg-slate-950/10 border border-slate-200 dark:border-white/5 rounded-2xl text-left mt-2">
-        <label className="flex items-start gap-3 cursor-pointer">
-          <input 
-            type="checkbox" 
-            checked={termsAgreed} 
-            onChange={e => setTermsAgreed(e.target.checked)} 
-            className="w-4.5 h-4.5 text-blue-600 border-slate-300 rounded focus:ring-blue-500 mt-1" 
-          />
-          <div>
-            <span className="text-xs font-bold text-slate-800 dark:text-white block">I verify and agree to the terms in this lease agreement.</span>
-            <span className="text-[10px] text-slate-400">Checking this will finalize the agreement and send an official invitation to the tenant.</span>
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        {/* Rules & Policies Column */}
+        <div className="lg:col-span-5 flex flex-col bg-slate-50/30 dark:bg-slate-900/30 border border-slate-200/60 dark:border-white/5 rounded-2xl p-4 lg:h-[calc(100vh-295px)] min-h-[420px] lg:min-h-0">
+          <div className="flex justify-between items-center text-left border-b dark:border-white/5 pb-2.5 shrink-0">
+            <div>
+              <span className="text-xs font-bold text-slate-800 dark:text-white block">Rules & Policies</span>
+              <span className="text-[10px] text-slate-400">Customize rules for residents.</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setRules(INITIAL_RULES)}
+              className="text-[9px] uppercase px-2.5 py-1.5 border border-slate-200 dark:border-white/10 rounded-lg hover:bg-slate-100 dark:hover:bg-white/5 font-extrabold text-slate-600 dark:text-slate-400 transition cursor-pointer"
+            >
+              Restore Defaults
+            </button>
           </div>
-        </label>
-        {formErrors.termsAgreed && <p className="text-xs text-red-500 mt-1.5 flex items-center gap-1.5"><AlertCircle size={13}/>{formErrors.termsAgreed}</p>}
+
+          <div className="flex-1 overflow-y-auto pr-1 space-y-2.5 py-3 custom-scrollbar text-left">
+            {rules.map((rule, idx) => (
+              <div key={idx} className="p-3 border border-slate-200/80 dark:border-white/[0.08] rounded-xl bg-slate-50/20 dark:bg-slate-950/10 flex flex-col justify-between gap-2.5 hover:shadow-sm transition-all animate-fade-in">
+                <div className="text-xs text-slate-800 dark:text-slate-200">
+                  {editingRuleIndex === idx ? (
+                    <div className="space-y-2">
+                      <textarea
+                        value={editingRuleText}
+                        onChange={e => setEditingRuleText(e.target.value)}
+                        className="w-full text-xs p-2.5 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white border-slate-200 dark:border-white/10 h-16 resize-none outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                      />
+                      <div className="flex gap-2 justify-end">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const updated = [...rules];
+                            updated[idx] = editingRuleText;
+                            setRules(updated);
+                            setEditingRuleIndex(null);
+                          }}
+                          className="px-2.5 py-1.5 bg-blue-600 text-white text-[9px] font-bold rounded-lg hover:bg-blue-700 transition cursor-pointer"
+                        >
+                          Save
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setEditingRuleIndex(null)}
+                          className="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-white/5 text-slate-700 dark:text-slate-350 text-[9px] font-bold rounded-lg transition cursor-pointer"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="leading-relaxed">
+                      <span className="font-bold mr-1.5 text-slate-400 dark:text-slate-500">{idx + 1}.</span>
+                      {rule}
+                    </div>
+                  )}
+                </div>
+                {editingRuleIndex !== idx && (
+                  <div className="flex items-center gap-1.5 justify-end shrink-0 border-t dark:border-white/5 pt-1.5">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEditingRuleIndex(idx);
+                        setEditingRuleText(rule);
+                      }}
+                      className="w-6 h-6 flex items-center justify-center border border-slate-200 dark:border-white/10 rounded-full hover:bg-slate-100 dark:hover:bg-white/5 text-blue-600 dark:text-blue-400 transition cursor-pointer"
+                      title="Edit Rule"
+                    >
+                      <Edit3 size={10} />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setRules(rules.filter((_, i) => i !== idx));
+                      }}
+                      className="w-6 h-6 flex items-center justify-center border border-slate-200 dark:border-white/10 rounded-full hover:bg-red-50 dark:hover:bg-red-500/10 text-red-500 transition cursor-pointer"
+                      title="Delete Rule"
+                    >
+                      <Trash2 size={10} />
+                    </button>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+
+          <div className="pt-2.5 border-t dark:border-white/5 shrink-0">
+            <button
+              type="button"
+              onClick={() => {
+                const newRule = "Tenant shall agree to comply with all common area policies and guidelines of the property.";
+                setRules([...rules, newRule]);
+                setEditingRuleIndex(rules.length);
+                setEditingRuleText(newRule);
+              }}
+              className="w-full py-2.5 border border-dashed border-blue-500/40 hover:border-blue-500 text-blue-600 dark:text-blue-400 hover:bg-blue-50/20 dark:hover:bg-blue-500/[0.01] text-[11px] font-bold rounded-xl transition flex items-center justify-center gap-1.5 cursor-pointer"
+            >
+              <Plus size={12} /> Add Custom Rule
+            </button>
+          </div>
+        </div>
+
+        {/* Live Draft and Terms Column */}
+        <div className="lg:col-span-7 flex flex-col lg:h-[calc(100vh-295px)] min-h-[420px] lg:min-h-0 space-y-4">
+          <div className="flex-1 flex flex-col min-h-0 text-left">
+            <label className="block text-xs font-bold text-blue-600 dark:text-blue-400 tracking-wider mb-2 uppercase text-left shrink-0">Live Compiled Lease Text</label>
+            <textarea 
+              value={leaseText} 
+              onChange={e => setLeaseText(e.target.value)} 
+              className="flex-1 w-full p-4 border border-blue-500/20 dark:border-white/10 rounded-2xl bg-slate-50 dark:bg-slate-950/40 text-xs font-mono text-slate-800 dark:text-slate-350 leading-relaxed overflow-y-auto shadow-inner resize-none focus:outline-none focus:border-blue-500 min-h-0" 
+            />
+          </div>
+
+          <div className="p-3 bg-slate-50/50 dark:bg-slate-950/10 border border-slate-200 dark:border-white/5 rounded-xl text-left shrink-0">
+            <label className="flex items-start gap-2.5 cursor-pointer">
+              <input 
+                type="checkbox" 
+                checked={termsAgreed} 
+                onChange={e => setTermsAgreed(e.target.checked)} 
+                className="w-3.5 h-3.5 text-blue-600 border-slate-300 rounded focus:ring-blue-500 mt-0.5" 
+              />
+              <div>
+                <span className="text-[11px] font-bold text-slate-800 dark:text-white block">I verify and agree to the terms in this lease agreement.</span>
+                <span className="text-[9px] text-slate-400">Checking this will finalize the agreement and send an official invitation to the tenant.</span>
+              </div>
+            </label>
+            {formErrors.termsAgreed && <p className="text-[10px] text-red-500 mt-1 flex items-center gap-1"><AlertCircle size={11}/>{formErrors.termsAgreed}</p>}
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -1985,9 +2987,13 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all' }) {
                         <span className={`px-2.5 py-0.5 rounded text-[10px] font-bold border ${
                           l.status === 'ACTIVE'
                             ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 dark:bg-emerald-500/20 border-emerald-500/20'
-                            : 'text-amber-600 dark:text-amber-400 bg-amber-500/10 dark:bg-amber-500/20 border-amber-500/20'
+                            : l.status === 'PENDING_LANDLORD_APPROVAL'
+                              ? 'text-orange-600 dark:text-orange-400 bg-orange-500/10 dark:bg-orange-500/20 border-orange-500/20 animate-pulse'
+                              : l.status === 'PENDING_TENANT_REVIEW'
+                                ? 'text-amber-600 dark:text-amber-400 bg-amber-500/10 dark:bg-amber-500/20 border-amber-500/20'
+                                : 'text-slate-650 dark:text-slate-400 bg-slate-500/10 dark:bg-slate-500/20 border-slate-500/20'
                         }`}>
-                          {l.status}
+                          {l.status === 'PENDING_LANDLORD_APPROVAL' ? 'Ready to Review' : l.status === 'PENDING_TENANT_REVIEW' ? 'Awaiting Tenant' : l.status}
                         </span>
                       </td>
                       <td className="px-4 py-4 text-right whitespace-nowrap space-x-1">
@@ -2000,15 +3006,26 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all' }) {
                           <Eye size={14} />
                         </button>
                         {isLandlord && (
-                          <button
-                            type="button"
-                            onClick={(e) => handleDeleteLease(l.lease_id, e)}
-                            className="p-1.5 hover:bg-red-500/10 rounded-lg text-slate-400 hover:text-red-500 transition cursor-pointer"
-                            title="Delete Agreement"
-                          >
-                            <Trash2 size={14} />
-                          </button>
+                          <>
+                            <button
+                              type="button"
+                              onClick={(e) => handleEditLeaseClick(l, e)}
+                              className="p-1.5 hover:bg-slate-100 dark:hover:bg-white/10 rounded-lg text-slate-400 hover:text-indigo-500 transition cursor-pointer"
+                              title="Edit Lease"
+                            >
+                              <Edit3 size={14} />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={(e) => handleDeleteLease(l.lease_id, e)}
+                              className="p-1.5 hover:bg-red-500/10 rounded-lg text-slate-400 hover:text-red-500 transition cursor-pointer"
+                              title="Delete Agreement"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </>
                         )}
+
                       </td>
                     </tr>
                   ))}
@@ -2037,155 +3054,169 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all' }) {
                   ×
                 </button>
               </div>
-
               {/* Status Banner */}
               <div className="flex justify-between items-center bg-slate-50 dark:bg-white/[0.01] p-3 rounded-xl border border-gray-150 dark:border-white/5">
                 <span className="text-xs font-semibold text-gray-550 dark:text-gray-400">Signature Status:</span>
                 <span className={`flex items-center gap-1 text-xs font-bold py-1 px-3 rounded-full ${
                   selectedLease.status === 'ACTIVE'
                     ? 'bg-emerald-500/10 text-emerald-500'
-                    : 'bg-yellow-500/10 text-yellow-500'
+                    : selectedLease.status === 'PENDING_LANDLORD_APPROVAL'
+                      ? 'bg-orange-500/10 text-orange-500 animate-pulse'
+                      : 'bg-yellow-500/10 text-yellow-500'
                 }`}>
                   {selectedLease.status === 'ACTIVE' ? <CheckCircle className="w-3.5 h-3.5" /> : <Clock className="w-3.5 h-3.5" />}
-                  {selectedLease.status}
+                  {selectedLease.status === 'PENDING_LANDLORD_APPROVAL' ? 'Ready to Review' : selectedLease.status}
                 </span>
               </div>
 
-              {/* Lease parameters grid */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm bg-gray-50/50 dark:bg-white/[0.01] p-4 rounded-xl border border-gray-200/60 dark:border-white/[0.03] text-left">
-                <div>
-                  <span className="text-gray-400 block text-xs">Rent</span>
-                  <span className="font-bold text-gray-950 dark:text-white">${selectedLease.rent_amount}/mo</span>
-                </div>
-                <div>
-                  <span className="text-gray-400 block text-xs">Security Deposit</span>
-                  <span className="font-bold text-gray-950 dark:text-white">${selectedLease.security_deposit}</span>
-                </div>
-                <div>
-                  <span className="text-gray-400 block text-xs">Start Date</span>
-                  <span className="font-semibold text-gray-900 dark:text-white">{selectedLease.start_date}</span>
-                </div>
-                <div>
-                  <span className="text-gray-400 block text-xs">End Date</span>
-                  <span className="font-semibold text-gray-900 dark:text-white">{selectedLease.end_date}</span>
-                </div>
-              </div>
-
-              {/* Additional Fees Breakdown */}
-              {(selectedLease.utilities_fee > 0 || selectedLease.parking_fee > 0 || selectedLease.pet_fee > 0) && (
-                <div className="p-4 rounded-xl border border-blue-500/10 bg-blue-500/[0.01] text-xs space-y-2 text-left">
-                  <span className="font-bold text-gray-800 dark:text-gray-300 uppercase tracking-wider block">Additional Monthly Charge Items</span>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    {selectedLease.utilities_fee > 0 && (
-                      <div className="bg-white dark:bg-slate-900/40 p-2.5 rounded-lg border border-slate-200/50 dark:border-white/5">
-                        <span className="text-gray-400 block">Utilities</span>
-                        <span className="font-bold dark:text-white">${selectedLease.utilities_fee}/mo</span>
-                      </div>
-                    )}
-                    {selectedLease.parking_fee > 0 && (
-                      <div className="bg-white dark:bg-slate-900/40 p-2.5 rounded-lg border border-slate-200/50 dark:border-white/5">
-                        <span className="text-gray-400 block">Parking</span>
-                        <span className="font-bold dark:text-white">${selectedLease.parking_fee}/mo</span>
-                      </div>
-                    )}
-                    {selectedLease.pet_fee > 0 && (
-                      <div className="bg-white dark:bg-slate-900/40 p-2.5 rounded-lg border border-slate-200/50 dark:border-white/5">
-                        <span className="text-gray-400 block">Pet Fee</span>
-                        <span className="font-bold dark:text-white">${selectedLease.pet_fee}/mo</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* Agreement text body */}
-              <div className="p-5 border border-gray-200 dark:border-white/10 rounded-xl bg-gray-50/20 dark:bg-black/20 text-sm max-h-60 overflow-y-auto font-mono text-gray-800 dark:text-gray-300 leading-relaxed whitespace-pre-wrap text-left">
-                {selectedLease.lease_agreement_text}
-              </div>
-
-              {/* Signatures display */}
-              <div className={`grid grid-cols-1 ${selectedLease.co_landlord_name ? 'md:grid-cols-3' : 'md:grid-cols-2'} gap-6 border-t border-gray-100 dark:border-white/5 pt-6 text-sm text-left`}>
-                <div className="p-4 rounded-xl border border-gray-100 dark:border-white/5 bg-gray-50/50 dark:bg-white/[0.01]">
-                  <span className="text-gray-400 block text-xs mb-1">Primary Landlord Signature</span>
-                  {selectedLease.landlord_signature ? (
-                    <span className="font-semibold text-gray-900 dark:text-white italic text-lg font-serif">/ {selectedLease.landlord_signature} /</span>
-                  ) : (
-                    <span className="text-yellow-550 text-xs flex items-center gap-1 font-bold">
-                      <Clock className="w-3.5 h-3.5" /> Pending Landlord Sign
-                    </span>
-                  )}
-                </div>
-
-                {selectedLease.co_landlord_name && (
-                  <div className="p-4 rounded-xl border border-gray-100 dark:border-white/5 bg-gray-50/50 dark:bg-white/[0.01]">
-                    <span className="text-gray-400 block text-xs mb-1">Co-Landlord Signature ({selectedLease.co_landlord_name})</span>
-                    {selectedLease.co_landlord_signature ? (
-                      <span className="font-semibold text-gray-900 dark:text-white italic text-lg font-serif">/ {selectedLease.co_landlord_signature} /</span>
-                    ) : (
-                      <span className="text-slate-400 text-xs flex items-center gap-1 font-medium">
-                        <Clock className="w-3.5 h-3.5" /> Pending Co-Landlord (Optional)
-                      </span>
-                    )}
-                  </div>
-                )}
-
-                <div className="p-4 rounded-xl border border-gray-100 dark:border-white/5 bg-gray-50/50 dark:bg-white/[0.01]">
-                  <span className="text-gray-400 block text-xs mb-1">Tenant Signature</span>
-                  {selectedLease.tenant_signature ? (
-                    <span className="font-semibold text-gray-900 dark:text-white italic text-lg font-serif">/ {selectedLease.tenant_signature} /</span>
-                  ) : (
-                    <span className="text-yellow-550 text-xs flex items-center gap-1 font-bold">
-                      <Clock className="w-3.5 h-3.5" /> Pending Tenant Sign
-                    </span>
-                  )}
-                </div>
-              </div>
-
-              {/* Signing Pad Form */}
-              {showSignPad && (
-                <form onSubmit={handleSignLease} className="p-5 border border-dashed border-blue-500/30 rounded-xl bg-blue-500/[0.02] space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <PenTool className="w-5 h-5 text-blue-500" />
-                      <h3 className="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider text-left">E-Signature Pad</h3>
+              {/* Onboarding Wizard for Tenant */}
+              {!isLandlord && (selectedLease.status === 'PENDING_TENANT_REVIEW' || selectedLease.status === 'PENDING_SIGNATURE') ? (
+                renderTenantOnboardingFlow()
+              ) : (
+                <>
+                  {/* Lease parameters grid */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm bg-gray-50/50 dark:bg-white/[0.01] p-4 rounded-xl border border-gray-200/60 dark:border-white/[0.03] text-left">
+                    <div>
+                      <span className="text-gray-400 block text-xs">Rent</span>
+                      <span className="font-bold text-gray-950 dark:text-white">${selectedLease.rent_amount}/mo</span>
                     </div>
-                    {isLandlord && selectedLease.co_landlord_name && (
-                      <div className="flex items-center gap-2">
-                        <span className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase tracking-wider">Signing As:</span>
-                        <select 
-                          value={signingAsRole} 
-                          onChange={e => setSigningAsRole(e.target.value)} 
-                          className="text-xs px-2.5 py-1.5 border border-slate-200 dark:border-white/10 rounded-lg bg-white dark:bg-[#1a2736] text-slate-900 dark:text-white outline-none cursor-pointer font-bold"
-                        >
-                          {!selectedLease.landlord_signature && (
-                            <option value="landlord">Primary Landlord</option>
-                          )}
-                          {!selectedLease.co_landlord_signature && (
-                            <option value="co_landlord">Co-Landlord ({selectedLease.co_landlord_name})</option>
-                          )}
-                        </select>
-                      </div>
-                    )}
-                  </div>
-
-                  
-                  <div className="space-y-2 text-left">
-                    <label className="block text-xs font-bold text-gray-600 dark:text-gray-400 tracking-wider">TYPE YOUR LEGAL FULL NAME TO SIGN</label>
-                    <div className="flex gap-2">
-                      <input 
-                        required 
-                        type="text" 
-                        value={signature} 
-                        onChange={e=>setSignature(e.target.value)} 
-                        className="flex-1 text-sm px-4 py-2.5 border rounded-lg bg-white dark:bg-black/20 text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-600" 
-                        placeholder="e.g. Johnathan Doe" 
-                      />
-                      <button type="submit" className="px-5 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-bold hover:bg-blue-700 cursor-pointer transition">
-                        Sign Contract
-                      </button>
+                    <div>
+                      <span className="text-gray-400 block text-xs">Security Deposit</span>
+                      <span className="font-bold text-gray-950 dark:text-white">${selectedLease.security_deposit}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-400 block text-xs">Start Date</span>
+                      <span className="font-semibold text-gray-900 dark:text-white">{selectedLease.start_date}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-400 block text-xs">End Date</span>
+                      <span className="font-semibold text-gray-900 dark:text-white">{selectedLease.end_date}</span>
                     </div>
                   </div>
-                </form>
+
+                  {/* Additional Fees Breakdown */}
+                  {(selectedLease.utilities_fee > 0 || selectedLease.parking_fee > 0 || selectedLease.pet_fee > 0) && (
+                    <div className="p-4 rounded-xl border border-blue-500/10 bg-blue-500/[0.01] text-xs space-y-2 text-left">
+                      <span className="font-bold text-gray-800 dark:text-gray-300 uppercase tracking-wider block">Additional Monthly Charge Items</span>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        {selectedLease.utilities_fee > 0 && (
+                          <div className="bg-white dark:bg-slate-900/40 p-2.5 rounded-lg border border-slate-200/50 dark:border-white/5">
+                            <span className="text-gray-400 block">Utilities</span>
+                            <span className="font-bold dark:text-white">${selectedLease.utilities_fee}/mo</span>
+                          </div>
+                        )}
+                        {selectedLease.parking_fee > 0 && (
+                          <div className="bg-white dark:bg-slate-900/40 p-2.5 rounded-lg border border-slate-200/50 dark:border-white/5">
+                            <span className="text-gray-400 block">Parking</span>
+                            <span className="font-bold dark:text-white">${selectedLease.parking_fee}/mo</span>
+                          </div>
+                        )}
+                        {selectedLease.pet_fee > 0 && (
+                          <div className="bg-white dark:bg-slate-900/40 p-2.5 rounded-lg border border-slate-200/50 dark:border-white/5">
+                            <span className="text-gray-400 block">Pet Fee</span>
+                            <span className="font-bold dark:text-white">${selectedLease.pet_fee}/mo</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Agreement text body */}
+                  <div className="p-5 border border-gray-200 dark:border-white/10 rounded-xl bg-gray-50/20 dark:bg-black/20 text-sm max-h-60 overflow-y-auto font-mono text-gray-800 dark:text-gray-300 leading-relaxed whitespace-pre-wrap text-left">
+                    {selectedLease.lease_agreement_text}
+                  </div>
+
+                  {/* Landlord Approval Panel if awaiting approval */}
+                  {isLandlord && selectedLease.status === 'PENDING_LANDLORD_APPROVAL' ? (
+                    renderLandlordApprovalPanel()
+                  ) : (
+                    <>
+                      {/* Signatures display */}
+                      <div className={`grid grid-cols-1 ${selectedLease.co_landlord_name ? 'md:grid-cols-3' : 'md:grid-cols-2'} gap-6 border-t border-gray-100 dark:border-white/5 pt-6 text-sm text-left`}>
+                        <div className="p-4 rounded-xl border border-gray-100 dark:border-white/5 bg-gray-50/50 dark:bg-white/[0.01]">
+                          <span className="text-gray-400 block text-xs mb-1">Primary Landlord Signature</span>
+                          {selectedLease.landlord_signature ? (
+                            <span className="font-semibold text-gray-900 dark:text-white italic text-lg font-serif">/ {selectedLease.landlord_signature} /</span>
+                          ) : (
+                            <span className="text-yellow-550 text-xs flex items-center gap-1 font-bold">
+                              <Clock className="w-3.5 h-3.5" /> Pending Landlord Sign
+                            </span>
+                          )}
+                        </div>
+
+                        {selectedLease.co_landlord_name && (
+                          <div className="p-4 rounded-xl border border-gray-100 dark:border-white/5 bg-gray-50/50 dark:bg-white/[0.01]">
+                            <span className="text-gray-400 block text-xs mb-1">Co-Landlord Signature ({selectedLease.co_landlord_name})</span>
+                            {selectedLease.co_landlord_signature ? (
+                              <span className="font-semibold text-gray-900 dark:text-white italic text-lg font-serif">/ {selectedLease.co_landlord_signature} /</span>
+                            ) : (
+                              <span className="text-slate-400 text-xs flex items-center gap-1 font-medium">
+                                <Clock className="w-3.5 h-3.5" /> Pending Co-Landlord (Optional)
+                              </span>
+                            )}
+                          </div>
+                        )}
+
+                        <div className="p-4 rounded-xl border border-gray-100 dark:border-white/5 bg-gray-50/50 dark:bg-white/[0.01]">
+                          <span className="text-gray-400 block text-xs mb-1">Tenant Signature</span>
+                          {selectedLease.tenant_signature ? (
+                            <span className="font-semibold text-gray-900 dark:text-white italic text-lg font-serif">/ {selectedLease.tenant_signature} /</span>
+                          ) : (
+                            <span className="text-yellow-550 text-xs flex items-center gap-1 font-bold">
+                              <Clock className="w-3.5 h-3.5" /> Pending Tenant Sign
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Signing Pad Form (Legacy compatibility) */}
+                      {showSignPad && (
+                        <form onSubmit={handleSignLease} className="p-5 border border-dashed border-blue-500/30 rounded-xl bg-blue-500/[0.02] space-y-4">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <PenTool className="w-5 h-5 text-blue-500" />
+                              <h3 className="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider text-left">E-Signature Pad</h3>
+                            </div>
+                            {isLandlord && selectedLease.co_landlord_name && (
+                              <div className="flex items-center gap-2">
+                                <span className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase tracking-wider">Signing As:</span>
+                                <select 
+                                  value={signingAsRole} 
+                                  onChange={e => setSigningAsRole(e.target.value)} 
+                                  className="text-xs px-2.5 py-1.5 border border-slate-200 dark:border-white/10 rounded-lg bg-white dark:bg-[#1a2736] text-slate-900 dark:text-white outline-none cursor-pointer font-bold"
+                                >
+                                  {!selectedLease.landlord_signature && (
+                                    <option value="landlord">Primary Landlord</option>
+                                  )}
+                                  {!selectedLease.co_landlord_signature && (
+                                    <option value="co_landlord">Co-Landlord ({selectedLease.co_landlord_name})</option>
+                                  )}
+                                </select>
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="space-y-2 text-left">
+                            <label className="block text-xs font-bold text-gray-600 dark:text-gray-400 tracking-wider">TYPE YOUR LEGAL FULL NAME TO SIGN</label>
+                            <div className="flex gap-2">
+                              <input 
+                                required 
+                                type="text" 
+                                value={signature} 
+                                onChange={e=>setSignature(e.target.value)} 
+                                className="flex-1 text-sm px-4 py-2.5 border rounded-lg bg-white dark:bg-black/20 text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500" 
+                                placeholder="e.g. Johnathan Doe" 
+                              />
+                              <button type="submit" className="px-5 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-bold hover:bg-blue-700 cursor-pointer transition">
+                                Sign Contract
+                              </button>
+                            </div>
+                          </div>
+                        </form>
+                      )}
+                    </>
+                  )}
+                </>
               )}
 
               <div className="flex justify-end pt-4 border-t border-gray-100 dark:border-white/5">
@@ -2202,63 +3233,72 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all' }) {
 
       {/* Create Lease Modal Refactored to Premium Wizard */}
       {showCreateModal && (
-        <div className="fixed inset-0 bg-white dark:bg-slate-900 z-50 flex flex-col md:flex-row h-screen w-screen overflow-hidden">
+        <div className="fixed inset-0 bg-white dark:bg-slate-900 z-50 flex flex-col h-screen w-screen overflow-hidden">
             
-            {/* Sidebar Navigation */}
-            <div className="w-full md:w-64 bg-slate-50 dark:bg-slate-950/40 border-r border-slate-200 dark:border-white/5 p-5 flex flex-col justify-between overflow-y-auto">
-              <div className="space-y-6">
-                <div className="text-left">
-                  <h3 className="text-sm font-extrabold text-blue-600 dark:text-blue-400 tracking-wider uppercase">Lease Builder</h3>
-                </div>
-                
-                <nav className="space-y-1">
-                  {[
-                    { number: 1, label: 'Lease Term', icon: Calendar },
-                    { number: 2, label: 'Rent & Deposit', icon: DollarSign },
-                    { number: 3, label: 'Options & Utilities', icon: Settings },
-                    { number: 4, label: 'Clauses', icon: FileText },
-                    { number: 5, label: 'Rules & Policies', icon: ShieldAlert },
-                    { number: 6, label: 'Disclosures', icon: Info },
-                    { number: 7, label: 'Attachments', icon: Paperclip },
-                    { number: 8, label: 'Lessor Info', icon: User },
-                    { number: 9, label: 'Terms Agreement', icon: CheckSquare }
-                  ].map(step => {
-                    const StepIcon = step.icon;
-                    const isCompleted = step.number < currentStep && Object.keys(validateStep(step.number)).length === 0;
-                    const isActive = currentStep === step.number;
-                    
-                    return (
+            {/* Top Navigation / Progress Bar */}
+            <div className="w-full bg-slate-50 dark:bg-[#0B1520] border-b border-slate-200 dark:border-white/5 px-6 py-4 flex items-center justify-between gap-4 select-none">
+              {/* Column 1: Title */}
+              <div className="text-left shrink-0 w-32">
+                <h3 className="text-xs font-black text-blue-600 dark:text-blue-400 tracking-widest uppercase">
+                  {editingLeaseId ? 'Lease Editor' : 'Lease Builder'}
+                </h3>
+              </div>
+
+
+              {/* Column 2: Horizontal Stepper (Centered, No Scrollbar) */}
+              <div className="flex items-center justify-center gap-2 flex-grow max-w-xl mx-auto py-1">
+                {[
+                  { number: 1 },
+                  { number: 2 },
+                  { number: 3 },
+                  { number: 4 },
+                  { number: 5 }
+                ].map((step, idx) => {
+                  const isCompleted = step.number < currentStep && Object.keys(validateStep(step.number)).length === 0;
+                  const isActive = currentStep === step.number;
+                  
+                  return (
+                    <div key={step.number} className="flex items-center gap-2 shrink-0">
+                      {/* Step Circle */}
                       <button
-                        key={step.number}
                         type="button"
                         onClick={() => handleStepClick(step.number)}
-                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left text-xs font-semibold transition-all border ${
-                          isActive 
-                            ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-500/10' 
-                            : isCompleted
-                              ? 'bg-emerald-500/5 text-emerald-600 border-emerald-500/10 hover:bg-emerald-500/10'
-                              : 'bg-transparent text-slate-500 dark:text-slate-400 border-transparent hover:bg-slate-100 dark:hover:bg-white/5'
-                        }`}
+                        className="focus:outline-none cursor-pointer"
+                        title={`Step ${step.number}`}
                       >
-                        <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${
+                        <div className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold transition-all border shrink-0 ${
                           isActive 
-                            ? 'bg-white text-blue-600' 
+                            ? 'bg-blue-600 text-white border-blue-600 ring-4 ring-blue-500/20 shadow-md shadow-blue-500/10' 
                             : isCompleted
-                              ? 'bg-emerald-500 text-white'
-                              : 'bg-slate-200 dark:bg-white/10 text-slate-600 dark:text-slate-400'
+                              ? 'bg-emerald-500 text-white border-emerald-500 shadow-md shadow-emerald-500/10'
+                              : 'bg-white dark:bg-[#132030] text-slate-500 dark:text-slate-400 border-slate-200 dark:border-white/10 hover:border-slate-350 dark:hover:border-white/20'
                         }`}>
                           {isCompleted ? '✓' : step.number}
-                        </span>
-                        <span className="flex-1 truncate">{step.label}</span>
-                        <StepIcon size={14} className={isActive ? 'text-white' : 'text-slate-400'} />
+                        </div>
                       </button>
-                    );
-                  })}
-                </nav>
+
+                      {/* Connector Line */}
+                      {idx < 4 && (
+                        <div className="w-10 sm:w-16 h-0.5 bg-slate-200 dark:bg-white/10 relative shrink-0">
+                          <div className={`absolute inset-y-0 left-0 bg-blue-600 transition-all duration-300 ${
+                            step.number < currentStep ? 'w-full' : 'w-0'
+                          }`} />
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
-              
-              <div className="pt-4 border-t border-slate-200 dark:border-white/5 text-[10px] text-slate-400 text-left">
-                Press Cancel to discard draft.
+
+              {/* Column 3: Cancel Button (Right Aligned) */}
+              <div className="w-32 text-right shrink-0">
+                <button
+                  type="button"
+                  onClick={() => { resetWizardForm(); setShowCreateModal(false); }}
+                  className="px-3.5 py-1.5 border border-slate-200 dark:border-white/10 rounded-xl text-[10px] uppercase tracking-wider hover:bg-slate-100 dark:hover:bg-white/5 text-slate-550 dark:text-slate-400 font-extrabold transition cursor-pointer"
+                >
+                  Cancel
+                </button>
               </div>
             </div>
 
@@ -2268,7 +3308,7 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all' }) {
               {/* Form Content Area */}
               <div className="flex-1 overflow-y-auto p-6 text-left">
                 {errorMsg && <p className="text-xs text-red-500 bg-red-50 dark:bg-red-500/10 p-3 rounded-xl mb-4 border border-red-500/20">{errorMsg}</p>}
-                {!hasVacantUnits && currentStep === 1 && (
+                {!editingLeaseId && !hasVacantUnits && currentStep === 1 && (
                   <div className="p-3.5 bg-red-500/10 border border-red-500/20 text-red-700 dark:text-red-400 rounded-xl text-xs font-semibold flex items-center gap-2 mb-4">
                     <ShieldAlert className="w-4 h-4 flex-shrink-0" />
                     <span>Warning: There are no vacant units available in your portfolio. You cannot create a new lease agreement until you have a vacant unit.</span>
@@ -2278,24 +3318,12 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all' }) {
                 {currentStep === 1 && renderStep1()}
                 {currentStep === 2 && renderStep2()}
                 {currentStep === 3 && renderStep3()}
-                {currentStep === 4 && renderStep4()}
-                {currentStep === 5 && renderStep5()}
-                {currentStep === 6 && renderStep6()}
-                {currentStep === 7 && renderStep7()}
-                {currentStep === 8 && renderStep8()}
-                {currentStep === 9 && renderStep9()}
+                {currentStep === 4 && renderStep8()}
+                {currentStep === 5 && renderStep9()}
               </div>
 
               {/* Wizard Footer Controls */}
-              <div className="p-4 border-t border-slate-200 dark:border-white/5 bg-slate-50/50 dark:bg-slate-950/20 flex justify-between items-center">
-                <button
-                  type="button"
-                  onClick={() => { resetWizardForm(); setShowCreateModal(false); }}
-                  className="px-4 py-2 border border-slate-200 dark:border-white/10 rounded-xl text-xs hover:bg-slate-100 dark:hover:bg-white/5 text-slate-600 dark:text-slate-400 font-bold transition cursor-pointer"
-                >
-                  Cancel
-                </button>
-                
+              <div className="p-4 border-t border-slate-200 dark:border-white/5 bg-slate-50/50 dark:bg-slate-950/20 flex justify-end items-center">
                 <div className="flex gap-2">
                   {currentStep > 1 && (
                     <button
@@ -2307,7 +3335,7 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all' }) {
                     </button>
                   )}
                   
-                  {currentStep < 9 ? (
+                  {currentStep < 5 ? (
                     <button
                       type="button"
                       onClick={handleNext}
@@ -2318,12 +3346,13 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all' }) {
                   ) : (
                     <button
                       type="submit"
-                      disabled={!hasVacantUnits && !prefilledFromApp}
+                      disabled={!editingLeaseId && !hasVacantUnits && !prefilledFromApp}
                       onClick={handleCreateLease}
                       className="px-6 py-2.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white rounded-xl text-xs font-extrabold transition shadow-lg shadow-blue-500/30 flex items-center gap-1.5 cursor-pointer"
                     >
-                      Create & Invite Tenant
+                      {editingLeaseId ? "Save Lease Changes" : "Create & Invite Tenant"}
                     </button>
+
                   )}
                 </div>
               </div>

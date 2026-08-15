@@ -80,7 +80,18 @@ export const getCleanErrorMessage = (err, fallbackMessage = "An unexpected error
 
 // ── Response interceptor ──
 API.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    const method = response.config?.method?.toLowerCase();
+    const url = response.config?.url || '';
+    if (method && ['post', 'put', 'delete', 'patch'].includes(method) && url.includes('/rental/')) {
+      try {
+        window.dispatchEvent(new CustomEvent('rental-data-changed'));
+      } catch (e) {
+        console.warn("Failed to dispatch rental-data-changed event:", e);
+      }
+    }
+    return response;
+  },
   async (error) => {
     // Sanitize raw DB error strings in response data
     if (error.response?.data?.detail && typeof error.response.data.detail === 'string') {

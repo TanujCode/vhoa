@@ -240,13 +240,62 @@ def run_db_upgrades():
 
     # rental_leases columns for co-landlord support
     for col_name, col_type in [
-        ("co_landlord_name", "VARCHAR(255)"),
+        ("co_landlord_name", "TEXT"),           # was VARCHAR(255) — now TEXT for encryption
         ("co_landlord_signature", "TEXT"),
     ]:
         _safe_execute(
             f"ALTER TABLE rental_leases ADD COLUMN IF NOT EXISTS {col_name} {col_type};",
             f"rental_leases.{col_name}"
         )
+
+    # ── rental_leases: new tenant personal info columns (AES-256 encrypted) ──
+    for col_name in [
+        "tenant_dob",
+        "tenant_current_address",
+        "tenant_emergency_contact",
+        "tenant_emergency_phone",
+    ]:
+        _safe_execute(
+            f"ALTER TABLE rental_leases ADD COLUMN IF NOT EXISTS {col_name} TEXT;",
+            f"rental_leases.{col_name}"
+        )
+
+    _safe_execute(
+        "ALTER TABLE rental_leases ADD COLUMN IF NOT EXISTS num_occupants INTEGER DEFAULT 1;",
+        "rental_leases.num_occupants"
+    )
+
+
+    # ── rental_leases: convert financial Double columns → TEXT (for encryption) ─
+    for col_name in [
+        "rent_amount", "security_deposit", "late_fee_amount",
+        "utilities_fee", "parking_fee", "pet_fee",
+    ]:
+        # Change column type; existing numeric values will be cast to text first
+        _safe_execute(
+            f"ALTER TABLE rental_leases ALTER COLUMN {col_name} TYPE TEXT USING {col_name}::TEXT;",
+            f"rental_leases.alter_{col_name}_to_text"
+        )
+
+    # ── rental_leases: convert tenant_email from VARCHAR → TEXT ──────────────
+    _safe_execute(
+        "ALTER TABLE rental_leases ALTER COLUMN tenant_email TYPE TEXT;",
+        "rental_leases.alter_tenant_email_to_text"
+    )
+
+    # ── rental_tenant_documents table (new) ───────────────────────────────────
+    _safe_execute("""
+        CREATE TABLE IF NOT EXISTS rental_tenant_documents (
+            document_id   SERIAL PRIMARY KEY,
+            lease_id      INTEGER NOT NULL REFERENCES rental_leases(lease_id) ON DELETE CASCADE,
+            tenant_id     INTEGER REFERENCES rental_users(user_id) ON DELETE SET NULL,
+            doc_type      VARCHAR(50) NOT NULL,
+            file_url      TEXT NOT NULL,
+            original_name TEXT NOT NULL,
+            mime_type     VARCHAR(100),
+            uploaded_at   TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+        );
+    """, "create_rental_tenant_documents")
 
     # rental_applications vehicle_details column
     _safe_execute(

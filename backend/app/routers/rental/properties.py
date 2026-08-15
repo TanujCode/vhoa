@@ -63,7 +63,7 @@ def list_properties(
     rental_role = current_user.role.role_name if current_user.role else ""
     if rental_role == "tenant":
         from app.models.rental.property import Property
-        return db.query(Property).filter(Property.active_status == True).all()
+        return db.query(Property).filter(Property.active_status == True).order_by(Property.property_id.asc()).all()
     is_super_admin = (rental_role == "super_admin")
     return rental_service.get_properties(current_user.user_id, db, is_super_admin=is_super_admin)
 

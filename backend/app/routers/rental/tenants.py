@@ -40,27 +40,42 @@ def get_tenants(
 
     # A. Process all leases first so every lease tenant gets exact unit_no and property_id
     for l in leases:
-        if not l.tenant_email and not l.tenant_id:
+        tenant_email = l.get("tenant_email")
+        tenant_id = l.get("tenant_id")
+        lease_id = l.get("lease_id")
+        status = l.get("status")
+        created_date = l.get("created_date")
+        unit_obj = l.get("unit")
+
+        if not tenant_email and not tenant_id:
             continue
 
-        email_clean = l.tenant_email.strip().lower() if l.tenant_email else None
-        linked_user = user_by_id.get(l.tenant_id) or (user_by_email.get(email_clean) if email_clean else None)
+        email_clean = tenant_email.strip().lower() if tenant_email else None
+        linked_user = user_by_id.get(tenant_id) or (user_by_email.get(email_clean) if email_clean else None)
 
-        unit_number = l.unit.unit_number if l.unit else None
-        property_id = l.unit.property_id if l.unit else None
+        unit_number = None
+        property_id = None
+        if unit_obj:
+            unit_number = unit_obj.unit_number if hasattr(unit_obj, "unit_number") else unit_obj.get("unit_number")
+            property_id = unit_obj.property_id if hasattr(unit_obj, "property_id") else unit_obj.get("property_id")
 
-        key = email_clean or (f"id_{l.tenant_id}" if l.tenant_id else f"lease_{l.lease_id}")
+        key = email_clean or (f"id_{tenant_id}" if tenant_id else f"lease_{lease_id}")
 
+        from app.utils.encryption import safe_decrypt_field
         if linked_user:
+            first_dec = safe_decrypt_field(linked_user.first_name) or ""
+            middle_dec = safe_decrypt_field(linked_user.middle_name)
+            last_dec = safe_decrypt_field(linked_user.last_name) or ""
+            phone_dec = safe_decrypt_field(linked_user.mobile_number)
             tenant_map[key] = {
                 "user_id": linked_user.user_id,
                 "user_code": linked_user.user_code or f"USR{linked_user.user_id:04d}",
-                "first_name": linked_user.first_name,
-                "middle_name": linked_user.middle_name,
-                "last_name": linked_user.last_name,
-                "full_name": linked_user.full_name,
+                "first_name": first_dec,
+                "middle_name": middle_dec,
+                "last_name": last_dec,
+                "full_name": f"{first_dec} {last_dec}".strip(),
                 "email_id": linked_user.email_id,
-                "mobile_number": linked_user.mobile_number,
+                "mobile_number": phone_dec,
                 "active_status": linked_user.active_status,
                 "account_status": linked_user.account_status,
                 "unit_no": unit_number,
@@ -70,19 +85,19 @@ def get_tenants(
         else:
             name_part = email_clean.split('@')[0] if email_clean else "Tenant"
             tenant_map[key] = {
-                "user_id": f"lease_{l.lease_id}",
-                "user_code": f"TNT-{l.lease_id:04d}",
+                "user_id": f"lease_{lease_id}",
+                "user_code": f"TNT-{lease_id:04d}",
                 "first_name": name_part.capitalize(),
                 "middle_name": None,
                 "last_name": "",
                 "full_name": name_part.capitalize(),
-                "email_id": l.tenant_email,
+                "email_id": tenant_email,
                 "mobile_number": None,
-                "active_status": (l.status or "").upper() == "ACTIVE",
-                "account_status": l.status,
+                "active_status": (status or "").upper() == "ACTIVE",
+                "account_status": status,
                 "unit_no": unit_number,
                 "property_id": property_id,
-                "created_date": l.created_date.isoformat() if l.created_date else None
+                "created_date": created_date.isoformat() if hasattr(created_date, 'isoformat') else created_date
             }
 
     # B. Also include any registered users with role "tenant" who don't have a lease yet but have applied
@@ -108,23 +123,35 @@ def get_tenants(
                     unit_no = app.unit.unit_number if (app and app.unit) else None
                     prop_id = app.unit.property_id if (app and app.unit) else None
 
+                    from app.utils.encryption import safe_decrypt_field
+                    first_dec = safe_decrypt_field(t.first_name) or ""
+                    middle_dec = safe_decrypt_field(t.middle_name)
+                    last_dec = safe_decrypt_field(t.last_name) or ""
+                    phone_dec = safe_decrypt_field(t.mobile_number)
                     tenant_map[key_check] = {
                         "user_id": t.user_id,
                         "user_code": t.user_code or f"USR{t.user_id:04d}",
-                        "first_name": t.first_name,
-                        "middle_name": t.middle_name,
-                        "last_name": t.last_name,
-                        "full_name": t.full_name,
+                        "first_name": first_dec,
+                        "middle_name": middle_dec,
+                        "last_name": last_dec,
+                        "full_name": f"{first_dec} {last_dec}".strip(),
                         "email_id": t.email_id,
-                        "mobile_number": t.mobile_number,
-                        "active_status": t.active_status,
-                        "account_status": t.account_status,
-                        "unit_no": unit_no,
-                        "property_id": prop_id,
-                        "created_date": t.created_date.isoformat() if t.created_date else None
+                        "mobile_number": phone_dec,
                     }
 
-    return list(tenant_map.values())
+    tenants_list = list(tenant_map.values())
+    def sort_key(tenant_item):
+        uid = tenant_item.get("user_id")
+        if isinstance(uid, int):
+            return (0, uid)
+        else:
+            try:
+                num = int(str(uid).split("_")[-1])
+                return (1, num)
+            except Exception:
+                return (2, str(uid))
+    tenants_list.sort(key=sort_key)
+    return tenants_list
 
 
 @router.put("/tenants/{tenant_id}/status")
@@ -159,10 +186,11 @@ def update_tenant(
         if existing:
             raise HTTPException(status_code=400, detail="Email is already taken by another user.")
             
-    tenant.first_name = body.first_name.strip()
-    tenant.last_name = body.last_name.strip()
+    from app.utils.encryption import encrypt_field
+    tenant.first_name = encrypt_field(body.first_name.strip())
+    tenant.last_name = encrypt_field(body.last_name.strip())
     tenant.email_id = body.email_id.lower().strip()
-    tenant.mobile_number = body.mobile_number
+    tenant.mobile_number = encrypt_field(body.mobile_number)
     if hasattr(tenant, 'unit_no'):
         tenant.unit_no = body.unit_no
     db.commit()

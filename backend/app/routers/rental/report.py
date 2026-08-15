@@ -374,9 +374,10 @@ def export_rental_report(
             .filter(Lease.unit_id.in_(
                 db.query(Unit.unit_id).filter(Unit.property_id.in_(property_ids), Unit.active_status == True)
             ))
-            .order_by(Lease.created_date.desc())
+            .order_by(Lease.lease_id.asc())
             .all()
         )
+        from app.utils.encryption import safe_decrypt_field, safe_decrypt_float
         for l in leases:
             prop_name = l.unit.property.name if l.unit and l.unit.property else "N/A"
             unit_num = l.unit.unit_number if l.unit else "N/A"
@@ -384,11 +385,11 @@ def export_rental_report(
                 l.lease_id,
                 prop_name,
                 unit_num,
-                l.tenant_email or "N/A",
+                safe_decrypt_field(l.tenant_email) or "N/A",
                 l.start_date.strftime('%Y-%m-%d') if l.start_date else "N/A",
                 l.end_date.strftime('%Y-%m-%d') if l.end_date else "N/A",
-                l.rent_amount,
-                l.security_deposit,
+                safe_decrypt_float(l.rent_amount),
+                safe_decrypt_float(l.security_deposit),
                 l.status
             ])
 
@@ -404,13 +405,14 @@ def export_rental_report(
                     )
                 )
             ))
-            .order_by(RentalLedger.due_date.desc())
+            .order_by(RentalLedger.invoice_id.asc())
             .all()
         )
+        from app.utils.encryption import safe_decrypt_field
         for led in ledgers:
             prop_name = led.lease.unit.property.name if led.lease and led.lease.unit and led.lease.unit.property else "N/A"
             unit_num = led.lease.unit.unit_number if led.lease and led.lease.unit else "N/A"
-            tenant_email = led.lease.tenant_email if led.lease else "N/A"
+            tenant_email = safe_decrypt_field(led.lease.tenant_email) if led.lease and led.lease.tenant_email else "N/A"
             rows.append([
                 led.invoice_id,
                 prop_name,
@@ -435,7 +437,7 @@ def export_rental_report(
                     )
                 )
             ))
-            .order_by(RentalMaintenanceRequest.created_date.desc())
+            .order_by(RentalMaintenanceRequest.request_id.asc())
             .all()
         )
         for req in maint_requests:

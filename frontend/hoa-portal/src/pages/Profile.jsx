@@ -1056,7 +1056,7 @@ const Profile = ({ user, setUser, viewRole }) => {
           <div className="bg-white dark:bg-[#162535] border border-slate-200 dark:border-white/10 rounded-3xl p-6 max-w-md w-full shadow-2xl relative animate-in fade-in duration-200">
             <h3 className="text-xl font-semibold text-slate-900 dark:text-white mb-2">Verify Mobile Number</h3>
             <p className="text-sm text-slate-500 dark:text-gray-400 mb-6">
-              A 6-digit OTP code has been generated. Please enter it below to verify your phone number <span className="font-semibold">{user?.mobile_number}</span>.
+              A 6-digit OTP code has been generated. Please enter it below to verify your phone number <span className="font-semibold">{user?.mobile_number ? formatUsPhone(user.mobile_number) : ''}</span>.
             </p>
 
             <div className="space-y-4 mb-6">

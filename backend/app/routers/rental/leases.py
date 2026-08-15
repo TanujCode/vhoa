@@ -1,12 +1,22 @@
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
+import os
+import uuid
+from io import BytesIO
 from typing import List
+
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
+from fastapi.responses import StreamingResponse
+from sqlalchemy.orm import Session
+
+from app.config import BASE_UPLOAD_DIR
 from app.database import get_rental_db
 from app.models.rental.rental_user import RentalUser
-from app.schemas.rental import LeaseCreate, LeaseOut, LeaseSignRequest
+from app.models.rental.tenant_document import TenantDocument
+from app.models.rental.lease import Lease
+from app.schemas.rental import LeaseCreate, LeaseOut, LeaseSignRequest, TenantInfoSubmit, TenantDocumentOut
 from app.services.rental import rental_service
 from app.services.rental.audit_service import log_rental_action
 from app.routers.rental.dependencies import require_rental_role, get_verified_rental_user
+from app.utils.encryption import encrypt_file_bytes, decrypt_file_bytes, encrypt_field, decrypt_field
 
 router = APIRouter(prefix="/rental", tags=["Rental - Lease Agreements"])
 
@@ -17,11 +27,27 @@ def create_lease(
     current_user: RentalUser = Depends(require_rental_role("super_admin", "landlord"))
 ):
     try:
-        lease = rental_service.create_lease_and_invite(current_user.user_id, body, db)
+        lease_dict = rental_service.create_lease_and_invite(current_user.user_id, body, db)
         log_rental_action(db, "CREATE_LEASE", "rental", f"Lease created for unit {body.unit_id} and invited {body.tenant_email}.", current_user.user_id)
-        return lease
+        return lease_dict
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.put("/leases/{lease_id}", response_model=LeaseOut)
+def update_lease_endpoint(
+    lease_id: int,
+    body: LeaseCreate,
+    db: Session = Depends(get_rental_db),
+    current_user: RentalUser = Depends(require_rental_role("super_admin", "landlord"))
+):
+    try:
+        lease_dict = rental_service.update_lease(lease_id, current_user.user_id, body, db)
+        log_rental_action(db, "UPDATE_LEASE", "rental", f"Lease agreement {lease_id} updated.", current_user.user_id)
+        return lease_dict
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
 
 
 @router.get("/leases", response_model=List[LeaseOut])
@@ -30,7 +56,6 @@ def list_leases(
     current_user: RentalUser = Depends(get_verified_rental_user)
 ):
     role_name = (current_user.role.role_name if current_user.role else "").lower()
-    leases = []
     if role_name in ["super_admin", "landlord"]:
         is_super_admin = (role_name == "super_admin")
         leases = rental_service.get_leases_by_landlord(current_user.user_id, db, is_super_admin=is_super_admin)
@@ -39,10 +64,185 @@ def list_leases(
     
     # Populate property_name
     for l in leases:
-        if l.unit and l.unit.property:
-            l.property_name = l.unit.property.name
+        # Since leases is now list of dicts, unit is loaded as dict or SQLAlchemy model depending on mapping
+        # Let's handle both dictionary and object attribute checks safely
+        unit_obj = l.get("unit") if isinstance(l, dict) else getattr(l, "unit", None)
+        if unit_obj:
+            prop = getattr(unit_obj, "property", None)
+            if prop:
+                l["property_name"] = prop.name
             
     return leases
+
+
+@router.post("/leases/{lease_id}/tenant-submit", response_model=LeaseOut)
+def tenant_submit_lease_endpoint(
+    lease_id: int,
+    body: TenantInfoSubmit,
+    db: Session = Depends(get_rental_db),
+    current_user: RentalUser = Depends(get_verified_rental_user)
+):
+    try:
+        lease_dict = rental_service.tenant_submit_lease(lease_id, current_user.user_id, body, db)
+        log_rental_action(db, "TENANT_SUBMIT_LEASE", "rental", f"Lease {lease_id} submitted with info by tenant {current_user.user_id}.", current_user.user_id)
+        return lease_dict
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.post("/leases/{lease_id}/approve", response_model=LeaseOut)
+def approve_lease_endpoint(
+    lease_id: int,
+    db: Session = Depends(get_rental_db),
+    current_user: RentalUser = Depends(require_rental_role("super_admin", "landlord"))
+):
+    try:
+        lease_dict = rental_service.landlord_approve_lease(lease_id, current_user.user_id, db)
+        log_rental_action(db, "APPROVE_LEASE", "rental", f"Lease {lease_id} approved and activated by landlord {current_user.user_id}.", current_user.user_id)
+        return lease_dict
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.post("/leases/{lease_id}/documents")
+async def upload_tenant_document(
+    lease_id: int,
+    doc_type: str, # PAY_SLIP | DRIVING_LICENSE | ADDRESS_PROOF | CURRENT_ADDRESS | OTHER
+    file: UploadFile = File(...),
+    db: Session = Depends(get_rental_db),
+    current_user: RentalUser = Depends(get_verified_rental_user)
+):
+    # Enforce file limits
+    ALLOWED_MIME = {"application/pdf", "image/jpeg", "image/png", "image/jpg", "image/webp"}
+    if file.content_type not in ALLOWED_MIME:
+        raise HTTPException(status_code=400, detail=f"File type {file.content_type} not allowed. Upload PDF/JPG/PNG/WEBP.")
+
+    contents = await file.read()
+    if len(contents) > 10 * 1024 * 1024:
+        raise HTTPException(status_code=400, detail="File size exceeds 10MB limit.")
+
+    # Encrypt file bytes
+    encrypted_bytes = encrypt_file_bytes(contents)
+
+    # Save to disk
+    folder = os.path.join(BASE_UPLOAD_DIR, "tenant_documents")
+    os.makedirs(folder, exist_ok=True)
+    filename = f"{uuid.uuid4().hex}.enc"
+    filepath = os.path.join(folder, filename)
+
+    with open(filepath, "wb") as f:
+        f.write(encrypted_bytes)
+
+    # Store encrypted info in database
+    db_file_url = f"/uploads/tenant_documents/{filename}"
+    enc_file_url = encrypt_field(db_file_url)
+    enc_original_name = encrypt_field(file.filename)
+
+    new_doc = TenantDocument(
+        lease_id=lease_id,
+        tenant_id=current_user.user_id,
+        doc_type=doc_type,
+        file_url=enc_file_url,
+        original_name=enc_original_name,
+        mime_type=file.content_type
+    )
+    db.add(new_doc)
+    db.commit()
+    db.refresh(new_doc)
+
+    return {"detail": "Document uploaded and encrypted successfully.", "document_id": new_doc.document_id}
+
+
+@router.get("/leases/{lease_id}/documents/{document_id}/download")
+def download_tenant_document(
+    lease_id: int,
+    document_id: int,
+    db: Session = Depends(get_rental_db),
+    current_user: RentalUser = Depends(get_verified_rental_user)
+):
+    doc = db.query(TenantDocument).filter(
+        TenantDocument.document_id == document_id,
+        TenantDocument.lease_id == lease_id
+    ).first()
+    if not doc:
+        raise HTTPException(status_code=404, detail="Document not found.")
+
+    # Authorization check
+    role_name = (current_user.role.role_name if current_user.role else "").lower()
+    is_authorized = (
+        role_name in ["super_admin", "landlord"] or
+        doc.tenant_id == current_user.user_id or
+        doc.lease.tenant_id == current_user.user_id
+    )
+    if not is_authorized:
+        raise HTTPException(status_code=403, detail="Unauthorized to download this document.")
+
+    # Decrypt file_url to locate on disk
+    decrypted_url = decrypt_field(doc.file_url)
+    if not decrypted_url:
+        raise HTTPException(status_code=500, detail="Failed to decrypt file path.")
+
+    # Map relative path to absolute
+    filename = decrypted_url.split("/")[-1]
+    filepath = os.path.join(BASE_UPLOAD_DIR, "tenant_documents", filename)
+
+    if not os.path.exists(filepath):
+        raise HTTPException(status_code=404, detail="Encrypted file not found on disk.")
+
+    # Read and decrypt file content
+    with open(filepath, "rb") as f:
+        enc_contents = f.read()
+
+    try:
+        decrypted_contents = decrypt_file_bytes(enc_contents)
+    except Exception:
+        raise HTTPException(status_code=500, detail="Failed to decrypt file content.")
+
+    # Decrypt original name
+    original_name = decrypt_field(doc.original_name) or "download.bin"
+
+    return StreamingResponse(
+        BytesIO(decrypted_contents),
+        media_type=doc.mime_type or "application/octet-stream",
+        headers={"Content-Disposition": f'attachment; filename="{original_name}"'}
+    )
+
+
+@router.delete("/leases/{lease_id}/documents/{document_id}")
+def delete_tenant_document(
+    lease_id: int,
+    document_id: int,
+    db: Session = Depends(get_rental_db),
+    current_user: RentalUser = Depends(get_verified_rental_user)
+):
+    doc = db.query(TenantDocument).filter(
+        TenantDocument.document_id == document_id,
+        TenantDocument.lease_id == lease_id
+    ).first()
+    if not doc:
+        raise HTTPException(status_code=404, detail="Document not found.")
+
+    role_name = (current_user.role.role_name if current_user.role else "").lower()
+    is_authorized = (
+        role_name in ["super_admin", "landlord"] or
+        doc.tenant_id == current_user.user_id
+    )
+    if not is_authorized:
+        raise HTTPException(status_code=403, detail="Unauthorized to delete this document.")
+
+    decrypted_url = decrypt_field(doc.file_url)
+    if decrypted_url:
+        filename = decrypted_url.split("/")[-1]
+        filepath = os.path.join(BASE_UPLOAD_DIR, "tenant_documents", filename)
+        if os.path.exists(filepath):
+            try:
+                os.remove(filepath)
+            except Exception as e:
+                print(f"Error removing document file: {e}")
+
+    db.delete(doc)
+    db.commit()
+    return {"detail": "Document deleted successfully"}
 
 
 @router.post("/leases/{lease_id}/sign", response_model=LeaseOut)
@@ -53,11 +253,9 @@ def sign_lease_agreement(
     current_user: RentalUser = Depends(get_verified_rental_user)
 ):
     try:
-        lease = rental_service.sign_lease(lease_id, current_user.user_id, body.signature_text, body.signing_as, db)
+        lease_dict = rental_service.sign_lease(lease_id, current_user.user_id, body.signature_text, body.signing_as, db)
         log_rental_action(db, "SIGN_LEASE", "rental", f"Lease {lease_id} signed as {body.signing_as} by user {current_user.user_id}.", current_user.user_id)
-        if lease.unit and lease.unit.property:
-            lease.property_name = lease.unit.property.name
-        return lease
+        return lease_dict
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 

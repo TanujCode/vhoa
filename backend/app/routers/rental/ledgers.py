@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Body
 from sqlalchemy.orm import Session
 from typing import List
 from app.database import get_rental_db
@@ -78,3 +78,20 @@ def revert_single_late_fee(
         return ledger
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.patch("/ledgers/{invoice_id}/edit-late-fee", response_model=RentalLedgerOut)
+def edit_late_fee(
+    invoice_id: int,
+    amount: float = Body(..., embed=True),
+    db: Session = Depends(get_rental_db),
+    current_user: RentalUser = Depends(require_rental_role("super_admin", "landlord"))
+):
+    """Manually override the late fee amount on an invoice."""
+    try:
+        ledger = rental_service.edit_late_fee_on_invoice(invoice_id, amount, db)
+        log_rental_action(db, "EDIT_LATE_FEE", "rental", f"Manually set late fee of ${amount} on invoice {invoice_id}.", current_user.user_id)
+        return ledger
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+

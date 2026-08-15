@@ -17,6 +17,7 @@ from app.models.rental.rental_vendor import RentalVendor                        
 from app.models.rental.property import Property                                                       # noqa
 from app.models.rental.unit import Unit                                                               # noqa
 from app.models.rental.lease import Lease                                                             # noqa
+from app.models.rental.tenant_document import TenantDocument                                         # noqa
 from app.models.rental.rental_application import RentalApplication                                     # noqa
 from app.models.rental.rental_ledger import RentalLedger                                               # noqa
 from app.models.rental.rental_maintenance import RentalMaintenanceRequest                              # noqa

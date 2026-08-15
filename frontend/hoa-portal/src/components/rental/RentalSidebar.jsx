@@ -8,7 +8,7 @@ import { getBaseUrl } from '../../services/api';
 import { useTheme } from '../../context/ThemeContext';
 import Logo from '../marketing/Logo';
 
-const RentalSidebar = ({ activePage, setActivePage, isOpen, setIsOpen, user, properties = [] }) => {
+const RentalSidebar = ({ activePage, setActivePage, isOpen, setIsOpen, user, properties = [], hasLease = false }) => {
   const userRole = (user?.role_name || user?.role || 'tenant').toLowerCase();
   const { theme } = useTheme();
   const isDark = theme === 'dark';
@@ -28,7 +28,6 @@ const RentalSidebar = ({ activePage, setActivePage, isOpen, setIsOpen, user, pro
   const superAdminNavItems = [
     { id: 'dashboard', label: 'Dashboard', icon: Layout },
     { id: 'properties_hub', label: 'All Properties & Units', icon: Globe },
-    { id: 'screening_hub', label: 'Tenant Screening', icon: ClipboardList },
     { id: 'leases_hub', label: 'Lease Agreements', icon: FileText },
     { id: 'tenants_hub', label: 'Tenants Directory', icon: Users },
     { id: 'rent_ledger', label: 'Payments Ledger', icon: CreditCard },
@@ -41,7 +40,6 @@ const RentalSidebar = ({ activePage, setActivePage, isOpen, setIsOpen, user, pro
   const landlordNavItems = [
     { id: 'dashboard', label: 'Landlord Dashboard', icon: Layout },
     { id: 'properties_hub', label: 'Properties & Units', icon: Globe },
-    { id: 'screening_hub', label: 'Tenant Screening', icon: ClipboardList },
     { id: 'leases_hub', label: 'Lease Agreements', icon: FileText },
     { id: 'tenants_hub', label: 'Tenants', icon: Users },
     { id: 'rent_ledger', label: 'Payments Ledger', icon: CreditCard },
@@ -60,11 +58,21 @@ const RentalSidebar = ({ activePage, setActivePage, isOpen, setIsOpen, user, pro
 
   const hasNoProperties = (userRole === 'landlord' || userRole === 'super_admin') && properties.length === 0;
 
+  // When landlord has properties but no lease created yet, show limited sidebar
+  const isLandlordNoLease = userRole === 'landlord' && properties.length > 0 && !hasLease;
+
   let navItems = tenantNavItems;
   if (userRole === 'super_admin') {
     navItems = hasNoProperties ? superAdminNavItems.filter(item => item.id === 'dashboard') : superAdminNavItems;
   } else if (userRole === 'landlord') {
-    navItems = hasNoProperties ? landlordNavItems.filter(item => item.id === 'dashboard') : landlordNavItems;
+    if (hasNoProperties) {
+      navItems = landlordNavItems.filter(item => item.id === 'dashboard');
+    } else if (isLandlordNoLease) {
+      // Only show Dashboard + Lease Agreements until a lease is created
+      navItems = landlordNavItems.filter(item => item.id === 'dashboard' || item.id === 'leases_hub');
+    } else {
+      navItems = landlordNavItems;
+    }
   }
 
   const getNavItemClass = (itemId) => {
@@ -121,7 +129,7 @@ const RentalSidebar = ({ activePage, setActivePage, isOpen, setIsOpen, user, pro
                 <User size={18} /> My Profile
               </div>
 
-              {(userRole === 'landlord' || userRole === 'super_admin') && !hasNoProperties && (
+              {(userRole === 'landlord' || userRole === 'super_admin') && !hasNoProperties && !isLandlordNoLease && (
                 <div
                   onClick={() => { setActivePage('audit'); setIsOpen(false); }}
                   className={getNavItemClass('audit')}

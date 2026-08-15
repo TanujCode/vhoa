@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import API from '../../services/api';
 import ConfirmModal from '../../components/ConfirmModal';
+import { formatPhoneAsYouType, formatUsPhone } from '../../utils/phoneFormatter';
 
 export default function TenantsHub({ selectedPropertyFilterId = 'all' }) {
   const [tenants, setTenants] = useState([]);
@@ -67,6 +68,14 @@ export default function TenantsHub({ selectedPropertyFilterId = 'all' }) {
 
   useEffect(() => {
     fetchTenants();
+
+    const handleGlobalUpdate = () => {
+      fetchTenants();
+    };
+    window.addEventListener('rental-data-changed', handleGlobalUpdate);
+    return () => {
+      window.removeEventListener('rental-data-changed', handleGlobalUpdate);
+    };
   }, [selectedPropertyFilterId]);
 
   async function fetchTenants() {
@@ -165,8 +174,8 @@ export default function TenantsHub({ selectedPropertyFilterId = 'all' }) {
 
     if (editPhone.trim()) {
       const digits = editPhone.replace(/\D/g, '');
-      if (digits.length < 7 || digits.length > 15) {
-        errs.phone = 'Phone number must be between 7 and 15 digits.';
+      if (digits.length !== 10) {
+        errs.phone = 'US phone number must be exactly 10 digits.';
       }
     }
 
@@ -354,7 +363,7 @@ export default function TenantsHub({ selectedPropertyFilterId = 'all' }) {
                       </div>
                     </td>
                     <td className="px-4 py-4 text-slate-600 dark:text-gray-400">{t.email_id}</td>
-                    <td className="px-4 py-4 text-slate-600 dark:text-gray-400">{t.mobile_number || 'N/A'}</td>
+                    <td className="px-4 py-4 text-slate-600 dark:text-gray-400">{formatUsPhone(t.mobile_number)}</td>
                     <td className="px-4 py-4">
                       {t.unit_no ? (
                         <span className="bg-blue-500/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400 px-2.5 py-0.5 rounded text-[10px] font-bold border border-blue-500/20">
@@ -467,13 +476,10 @@ export default function TenantsHub({ selectedPropertyFilterId = 'all' }) {
                       type="text"
                       value={editPhone}
                       onChange={e => {
-                        const val = e.target.value;
-                        if (val === '' || /^[+\d\s()-]*$/.test(val)) {
-                          setEditPhone(val);
-                        }
+                        setEditPhone(formatPhoneAsYouType(e.target.value));
                       }}
                       className={`w-full bg-slate-50 dark:bg-[#111c2a] border ${formErrors.phone ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/10 focus:border-blue-500'} rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none`}
-                      placeholder="e.g. +1 (555) 019-2834"
+                      placeholder="(555) 555-5555"
                     />
                     {formErrors.phone && <p className="text-[10px] text-red-550 mt-0.5">{formErrors.phone}</p>}
                   </div>

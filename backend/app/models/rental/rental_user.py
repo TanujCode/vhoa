@@ -11,10 +11,10 @@ class RentalUser(Base):
 
     user_id              = Column(Integer, primary_key=True, index=True)
     user_code            = Column(String(30), unique=True, nullable=True, index=True)
-    first_name           = Column(String(100), nullable=False)
-    middle_name          = Column(String(100), nullable=True)
-    last_name            = Column(String(100), nullable=False)
-    mobile_number        = Column(String(20), unique=True, nullable=True)
+    first_name           = Column(Text, nullable=False)
+    middle_name          = Column(Text, nullable=True)
+    last_name            = Column(Text, nullable=False)
+    mobile_number        = Column(Text, nullable=True)
     mobile_is_verified   = Column(Boolean, default=False)
     email_id             = Column(String(255), unique=True, nullable=False, index=True)
     email_id_is_verified = Column(Boolean, default=False)
@@ -36,5 +36,9 @@ class RentalUser(Base):
 
     @property
     def full_name(self) -> str:
-        parts = [self.first_name, self.middle_name, self.last_name]
+        from app.utils.encryption import safe_decrypt_field
+        first = safe_decrypt_field(self.first_name) or ""
+        middle = safe_decrypt_field(self.middle_name) or ""
+        last = safe_decrypt_field(self.last_name) or ""
+        parts = [first, middle, last]
         return " ".join([p for p in parts if p]).strip()

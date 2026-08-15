@@ -79,9 +79,11 @@ def get_my_applications(
     current_user: RentalUser = Depends(get_verified_rental_user)
 ):
     from app.models.rental.rental_application import RentalApplication
-    return db.query(RentalApplication).filter(
+    from app.utils.decryption_helpers import decrypt_application_obj
+    apps = db.query(RentalApplication).filter(
         RentalApplication.tenant_email == current_user.email_id.lower().strip()
     ).all()
+    return [decrypt_application_obj(a) for a in apps]
 
 
 @router.post("/applications/{application_id}/review", response_model=RentalApplicationOut)

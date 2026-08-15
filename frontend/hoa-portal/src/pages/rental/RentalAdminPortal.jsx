@@ -46,6 +46,14 @@ const RentalAdminPortal = () => {
 
   const [properties, setProperties] = useState([]);
   const [selectedPropertyFilterId, setSelectedPropertyFilterId] = useState('all');
+  const [leasesList, setLeasesList] = useState([]);
+
+  // Derived: does any property have an occupied (leased) unit?
+  const hasOccupiedUnit = properties.some(p =>
+    (p.units || []).some(u => u.status === 'OCCUPIED' && u.active_status !== false)
+  );
+  // Sidebar unlocks as soon as ANY lease exists (don't wait for tenant to sign)
+  const hasAnyLease = leasesList.length > 0;
 
   const currentTab = searchParams.get('tab') || 'dashboard';
   const [activePage, _setActivePage] = useState(currentTab);
@@ -247,6 +255,14 @@ const RentalAdminPortal = () => {
 
   useEffect(() => {
     fetchInitialData();
+
+    const handleGlobalUpdate = () => {
+      fetchInitialData();
+    };
+    window.addEventListener('rental-data-changed', handleGlobalUpdate);
+    return () => {
+      window.removeEventListener('rental-data-changed', handleGlobalUpdate);
+    };
   }, []);
 
   useEffect(() => {
@@ -256,6 +272,37 @@ const RentalAdminPortal = () => {
         .catch(err => console.error("Sync landlord properties list:", err));
     }
   }, [activePage, user]);
+
+  // Auto-poll every 8s when landlord has NO properties yet → stop once a property is registered
+  useEffect(() => {
+    if (!user || (user.role !== 'landlord' && user.role !== 'super_admin')) return;
+    if (properties.length > 0) return; // already have properties, no need to poll
+    const id = setInterval(() => {
+      API.get('/rental/properties')
+        .then(res => {
+          if (res.data && res.data.length > 0) {
+            setProperties(res.data);
+          }
+        })
+        .catch(() => {});
+    }, 8000);
+    return () => clearInterval(id);
+  }, [user, properties.length]);
+
+  // Auto-poll every 6s when landlord has properties but NO lease yet → stop once any lease is created
+  useEffect(() => {
+    if (!user || user.role !== 'landlord') return;
+    if (properties.length === 0) return; // wait until property exists
+    if (hasAnyLease) return;             // already has a lease, stop polling
+    const id = setInterval(() => {
+      API.get('/rental/leases')
+        .then(res => {
+          if (res.data && res.data.length > 0) setLeasesList(res.data);
+        })
+        .catch(() => {});
+    }, 6000);
+    return () => clearInterval(id);
+  }, [user, properties.length, hasAnyLease]);
 
   const fetchInitialData = async () => {
     try {
@@ -296,10 +343,14 @@ const RentalAdminPortal = () => {
 
       if (freshUser.role === 'landlord' || freshUser.role === 'super_admin') {
         try {
-          const propRes = await API.get('/rental/properties');
+          const [propRes, leasesRes] = await Promise.all([
+            API.get('/rental/properties'),
+            API.get('/rental/leases'),
+          ]);
           setProperties(propRes.data);
+          if (leasesRes.data && leasesRes.data.length > 0) setLeasesList(leasesRes.data);
         } catch (propErr) {
-          console.error("Failed to load landlord properties list at root:", propErr);
+          console.error("Failed to load landlord properties/leases at root:", propErr);
         }
       } else if (freshUser.role === 'tenant') {
         try {
@@ -338,10 +389,58 @@ const RentalAdminPortal = () => {
     }
   };
 
+  const handlePropertiesChange = (newProperties) => {
+    if (newProperties) {
+      setProperties(newProperties);
+    } else {
+      API.get('/rental/properties')
+        .then(res => setProperties(res.data))
+        .catch(err => console.error("Sync landlord properties list:", err));
+    }
+  };
+
   const renderPage = () => {
     if (loading) return null;
 
     const role = (user?.role || 'tenant').toLowerCase();
+
+    // Landlord onboarding flow locking
+    if (role === 'landlord') {
+      // Case 1: No properties registered yet -> Force show Property Creation Wizard inline
+      if (properties.length === 0) {
+        return (
+          <PropertiesHub 
+            user={user} 
+            selectedPropertyFilterId={selectedPropertyFilterId} 
+            setSelectedPropertyFilterId={setSelectedPropertyFilterId} 
+            properties={properties} 
+            setActivePage={setActivePage} 
+            onPropertiesChange={handlePropertiesChange}
+          />
+        );
+      }
+
+      // Case 2: Properties exist, but no lease has been created yet → Force show onboarding banner
+      if (!hasAnyLease) {
+        if (activePage === 'leases_hub') {
+          return <LeasesHub user={user} selectedPropertyFilterId={selectedPropertyFilterId} initialShowCreate={true} onLeaseCreated={(leases) => setLeasesList(leases || [])} />;
+        }
+        if (activePage === 'profile') {
+          return <RentalProfile user={user} setUser={setUser} viewRole={role} />;
+        }
+        // Force onboarding success banner (housed in PropertiesHub)
+        return (
+          <PropertiesHub 
+            user={user} 
+            selectedPropertyFilterId={selectedPropertyFilterId} 
+            setSelectedPropertyFilterId={setSelectedPropertyFilterId} 
+            properties={properties} 
+            setActivePage={setActivePage} 
+            onPropertiesChange={handlePropertiesChange}
+          />
+        );
+      }
+    }
 
     switch (activePage) {
       case 'dashboard':
@@ -350,7 +449,7 @@ const RentalAdminPortal = () => {
         return <TenantDashboard user={user} setUser={setUser} setActivePage={setActivePage} />;
 
       case 'properties_hub':
-        return <PropertiesHub user={user} selectedPropertyFilterId={selectedPropertyFilterId} setSelectedPropertyFilterId={setSelectedPropertyFilterId} properties={properties} />;
+        return <PropertiesHub user={user} selectedPropertyFilterId={selectedPropertyFilterId} setSelectedPropertyFilterId={setSelectedPropertyFilterId} properties={properties} setActivePage={setActivePage} onPropertiesChange={handlePropertiesChange} />;
 
       case 'screening_hub':
         return <ScreeningHub user={user} setActivePage={setActivePage} selectedPropertyFilterId={selectedPropertyFilterId} />;
@@ -406,6 +505,7 @@ const RentalAdminPortal = () => {
         setIsOpen={setIsSidebarOpen}
         user={user}
         properties={properties}
+        hasLease={hasAnyLease}
       />
 
       <div className="flex-1 flex flex-col overflow-hidden">

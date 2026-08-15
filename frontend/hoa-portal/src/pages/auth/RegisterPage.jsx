@@ -81,9 +81,8 @@ export default function RegisterPage() {
       sessionStorage.removeItem('session_token');
       sessionStorage.removeItem('user');
       sessionStorage.removeItem('access_token');
-      navigate('/login', { replace: true });
     }
-  }, [navigate]);
+  }, []);
 
   // Password value track karne ke liye for confirm password match
   const password = watch('password');

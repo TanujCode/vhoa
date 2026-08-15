@@ -1,10 +1,15 @@
 from pydantic_settings import BaseSettings
+from dotenv import load_dotenv
+
+# Load all .env file variables into os.environ
+load_dotenv()
 
 
 class Settings(BaseSettings):
     DATABASE_URL: str
     SECRET_KEY: str = "supersecretkey123changethisinproduction"
     ALGORITHM: str = "HS256"
+    AES_ENCRYPTION_KEY: str = ""  # 32-byte hex key for AES-256-GCM field encryption
 
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 15
     SESSION_TOKEN_EXPIRE_HOURS: int = 24

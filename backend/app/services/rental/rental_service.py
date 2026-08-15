@@ -10,8 +10,10 @@ from app.models.rental.rental_ledger import RentalLedger
 from app.models.rental.rental_maintenance import RentalMaintenanceRequest
 from app.models.rental.rental_vendor import RentalVendor
 from app.models.rental.rental_user import RentalUser
-from app.schemas.rental import PropertyCreate, UnitCreate, LeaseCreate, RentalApplicationCreate, RentalMaintenanceCreate, RentalVendorCreate, RentalApplicationInvite, RentalApplicationComplete
+from app.schemas.rental import PropertyCreate, UnitCreate, LeaseCreate, RentalApplicationCreate, RentalMaintenanceCreate, RentalVendorCreate, RentalApplicationInvite, RentalApplicationComplete, TenantInfoSubmit
 from app.services.hoa.email_service import send_email, _wrap_in_responsive_layout
+from app.utils.encryption import safe_decrypt_float
+
 
 
 # --- PROPERTY CRUD ---
@@ -42,11 +44,11 @@ def create_property(landlord_id: int, data: PropertyCreate, db: Session) -> Prop
 
 def get_properties(landlord_id: int, db: Session, is_super_admin: bool = False) -> List[Property]:
     if is_super_admin:
-        return db.query(Property).filter(Property.active_status == True).all()
+        return db.query(Property).filter(Property.active_status == True).order_by(Property.property_id.asc()).all()
     return db.query(Property).filter(
         Property.landlord_id == landlord_id,
         Property.active_status == True
-    ).all()
+    ).order_by(Property.property_id.asc()).all()
 
 
 
@@ -116,7 +118,7 @@ def get_units_by_property(property_id: int, db: Session) -> List[Unit]:
     return db.query(Unit).filter(
         Unit.property_id == property_id,
         Unit.active_status == True
-    ).all()
+    ).order_by(Unit.unit_id.asc()).all()
 
 
 
@@ -154,47 +156,101 @@ def update_unit(unit_id: int, landlord_id: int, data: UnitCreate, db: Session, i
 
 
 # --- LEASE SERVICES ---
-def create_lease_and_invite(landlord_id: int, data: LeaseCreate, db: Session) -> Lease:
-    # 1. Verify unit exists
+
+def decrypt_lease_obj(l: Lease) -> dict:
+    """Helper to decrypt and map database Lease model to schema dictionary."""
+    from app.utils.encryption import safe_decrypt_field, safe_decrypt_float
+
+    docs_out = []
+    for doc in (l.documents or []):
+        docs_out.append({
+            "document_id": doc.document_id,
+            "lease_id": doc.lease_id,
+            "tenant_id": doc.tenant_id,
+            "doc_type": doc.doc_type,
+            "original_name": safe_decrypt_field(doc.original_name) or "",
+            "uploaded_at": doc.uploaded_at
+        })
+
+    return {
+        "lease_id": l.lease_id,
+        "landlord_id": l.landlord_id,
+        "tenant_id": l.tenant_id,
+        "unit_id": l.unit_id,
+        "start_date": l.start_date,
+        "end_date": l.end_date,
+        "rent_amount": safe_decrypt_float(l.rent_amount),
+        "security_deposit": safe_decrypt_float(l.security_deposit),
+        "grace_period_days": l.grace_period_days,
+        "late_fee_type": l.late_fee_type,
+        "late_fee_amount": safe_decrypt_float(l.late_fee_amount),
+        "status": l.status,
+        "lease_agreement_text": safe_decrypt_field(l.lease_agreement_text),
+        "landlord_signature": safe_decrypt_field(l.landlord_signature),
+        "tenant_signature": safe_decrypt_field(l.tenant_signature),
+        "co_landlord_name": safe_decrypt_field(l.co_landlord_name),
+        "co_landlord_signature": safe_decrypt_field(l.co_landlord_signature),
+        "created_date": l.created_date,
+        "utilities_fee": safe_decrypt_float(l.utilities_fee),
+        "parking_fee": safe_decrypt_float(l.parking_fee),
+        "pet_fee": safe_decrypt_float(l.pet_fee),
+        "tenant_email": safe_decrypt_field(l.tenant_email),
+        
+        "tenant_dob": safe_decrypt_field(l.tenant_dob),
+        "tenant_current_address": safe_decrypt_field(l.tenant_current_address),
+        "tenant_emergency_contact": safe_decrypt_field(l.tenant_emergency_contact),
+        "tenant_emergency_phone": safe_decrypt_field(l.tenant_emergency_phone),
+        "num_occupants": l.num_occupants,
+        "documents": docs_out,
+
+        
+        "unit": l.unit,
+        "tenant_name": l.tenant_name,
+        "tenant_phone": l.tenant_phone
+    }
+
+
+def create_lease_and_invite(landlord_id: int, data: LeaseCreate, db: Session) -> dict:
     unit = db.query(Unit).filter(Unit.unit_id == data.unit_id).first()
     if not unit:
         raise ValueError("Unit not found.")
 
-    # 2. Check if tenant has an approved background screening application for this unit
-    screening_app = db.query(RentalApplication).filter(
-        RentalApplication.tenant_email == data.tenant_email.lower().strip(),
-        RentalApplication.unit_id == data.unit_id,
-        RentalApplication.screening_status == "APPROVED"
-    ).first()
-    if not screening_app:
-        raise ValueError("Tenant must have an approved background screening application for this unit before a lease can be created.")
-
-    # 3. Check if there is an existing user with this email
     tenant_user = db.query(RentalUser).filter(RentalUser.email_id == data.tenant_email.lower().strip()).first()
     tenant_id = tenant_user.user_id if tenant_user else None
 
-    # 3. Create the lease record
+    # Encrypt all inputs
+    from app.utils.encryption import encrypt_field, encrypt_float
+    enc_email = encrypt_field(data.tenant_email.lower().strip())
+    enc_co_landlord = encrypt_field(data.co_landlord_name)
+    enc_rent = encrypt_float(data.rent_amount)
+    enc_deposit = encrypt_float(data.security_deposit)
+    enc_late_fee = encrypt_float(data.late_fee_amount)
+    enc_lease_text = encrypt_field(data.lease_agreement_text or f"Standard Lease Agreement for Unit {unit.unit_number}")
+    enc_util = encrypt_float(data.utilities_fee)
+    enc_parking = encrypt_float(data.parking_fee)
+    enc_pet = encrypt_float(data.pet_fee)
+
     new_lease = Lease(
         landlord_id=landlord_id,
         tenant_id=tenant_id,
-        tenant_email=data.tenant_email.lower().strip(),
+        tenant_email=enc_email,
         unit_id=data.unit_id,
         start_date=data.start_date,
         end_date=data.end_date,
-        rent_amount=data.rent_amount,
-        security_deposit=data.security_deposit,
+        rent_amount=enc_rent,
+        security_deposit=enc_deposit,
         grace_period_days=data.grace_period_days,
         late_fee_type=data.late_fee_type,
-        late_fee_amount=data.late_fee_amount,
-        status="PENDING_SIGNATURE",
-        lease_agreement_text=data.lease_agreement_text or f"Standard Lease Agreement for Unit {unit.unit_number}",
-        co_landlord_name=data.co_landlord_name
+        late_fee_amount=enc_late_fee,
+        status="PENDING_TENANT_REVIEW",
+        lease_agreement_text=enc_lease_text,
+        co_landlord_name=enc_co_landlord
     )
     db.add(new_lease)
     db.commit()
     db.refresh(new_lease)
 
-    # Auto-approve any pending screening applications for this tenant and this unit
+    # Auto-approve applications
     pending_apps = db.query(RentalApplication).filter(
         RentalApplication.tenant_email == data.tenant_email.lower().strip(),
         RentalApplication.unit_id == data.unit_id,
@@ -205,22 +261,21 @@ def create_lease_and_invite(landlord_id: int, data: LeaseCreate, db: Session) ->
         app.approved_date = datetime.utcnow()
     db.commit()
 
-    # 4. If tenant doesn't exist or is not registered, send an email invite
     from app.config import settings
     if tenant_user:
-        invitation_url = f"{settings.FRONTEND_URL}/rental/login?email={data.tenant_email}"
-        email_action_text = "Log In & Sign Lease"
-        email_instruction = "Please click the button below to log in to your tenant account and sign the lease agreement:"
+        invitation_url = f"{settings.FRONTEND_URL}/rental/login?email={data.tenant_email}&lease_id={new_lease.lease_id}"
+        email_action_text = "Log In & Review Lease"
+        email_instruction = "Please click the button below to log in to your tenant account, verify details, and sign your lease:"
     else:
-        invitation_url = f"{settings.FRONTEND_URL}/rental/register?email={data.tenant_email}&role=tenant"
-        email_action_text = "Register & Sign Lease"
-        email_instruction = "Please click the button below to register your tenant account and sign the lease agreement:"
+        invitation_url = f"{settings.FRONTEND_URL}/rental/register?email={data.tenant_email}&role=tenant&lease_id={new_lease.lease_id}"
+        email_action_text = "Register & Review Lease"
+        email_instruction = "Please click the button below to register your tenant account, verify details, and sign your lease:"
 
     email_body = f"""
     <div style="padding: 30px; font-size: 16px; line-height: 1.6; color: #D1D5DB;">
-      <h2 style="color: #3B82F6; margin-top: 0;">Lease Agreement Invitation</h2>
+      <h2 style="color: #3B82F6; margin-top: 0;">Lease Agreement Prepared</h2>
       <p>Hello,</p>
-      <p>You have been invited to sign a lease agreement for <strong>Unit {unit.unit_number}</strong> at {unit.property.name}.</p>
+      <p>A lease agreement has been prepared for you for <strong>Unit {unit.unit_number}</strong> at {unit.property.name}.</p>
       <p>{email_instruction}</p>
       <div style="text-align: center; margin: 30px 0;">
         <a href="{invitation_url}" style="background: #3B82F6; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold; display: inline-block;">{email_action_text}</a>
@@ -229,68 +284,209 @@ def create_lease_and_invite(landlord_id: int, data: LeaseCreate, db: Session) ->
     </div>
     """
     wrapped_html = _wrap_in_responsive_layout(email_body, subtitle="Rental Property Management")
-    send_email(data.tenant_email, "Invitation to Sign Lease Agreement", wrapped_html)
+    send_email(data.tenant_email, "Lease Agreement Action Required", wrapped_html)
 
-    return new_lease
+    return decrypt_lease_obj(new_lease)
 
 
-def get_leases_by_landlord(landlord_id: int, db: Session, is_super_admin: bool = False) -> List[Lease]:
+def update_lease(lease_id: int, landlord_id: int, data: LeaseCreate, db: Session) -> dict:
+    lease = db.query(Lease).filter(Lease.lease_id == lease_id).first()
+    if not lease:
+        raise ValueError("Lease not found.")
+
+    if lease.landlord_id != landlord_id:
+        landlord_user = db.query(RentalUser).filter(RentalUser.user_id == landlord_id).first()
+        role_name = (landlord_user.role.role_name if landlord_user.role else "").lower()
+        if role_name != "super_admin":
+            raise ValueError("Unauthorized to edit this lease.")
+
+    unit = db.query(Unit).filter(Unit.unit_id == data.unit_id).first()
+    if not unit:
+        raise ValueError("Unit not found.")
+
+    tenant_user = db.query(RentalUser).filter(RentalUser.email_id == data.tenant_email.lower().strip()).first()
+    tenant_id = tenant_user.user_id if tenant_user else None
+
+    from app.utils.encryption import encrypt_field, encrypt_float
+    lease.tenant_id = tenant_id
+    lease.tenant_email = encrypt_field(data.tenant_email.lower().strip())
+    lease.unit_id = data.unit_id
+    lease.start_date = data.start_date
+    lease.end_date = data.end_date
+    lease.rent_amount = encrypt_float(data.rent_amount)
+    lease.security_deposit = encrypt_float(data.security_deposit)
+    lease.grace_period_days = data.grace_period_days
+    lease.late_fee_type = data.late_fee_type
+    lease.late_fee_amount = encrypt_float(data.late_fee_amount)
+    lease.co_landlord_name = encrypt_field(data.co_landlord_name)
+    if data.lease_agreement_text:
+        lease.lease_agreement_text = encrypt_field(data.lease_agreement_text)
+
+    # Reset signature and status since terms changed
+    lease.tenant_signature = None
+    lease.landlord_signature = None
+    lease.co_landlord_signature = None
+    lease.status = "PENDING_TENANT_REVIEW"
+
+    db.commit()
+    db.refresh(lease)
+    return decrypt_lease_obj(lease)
+
+
+
+def get_leases_by_landlord(landlord_id: int, db: Session, is_super_admin: bool = False) -> List[dict]:
     if is_super_admin:
-        return db.query(Lease).all()
-    return db.query(Lease).filter(Lease.landlord_id == landlord_id).all()
+        leases = db.query(Lease).order_by(Lease.lease_id.asc()).all()
+    else:
+        leases = db.query(Lease).filter(Lease.landlord_id == landlord_id).order_by(Lease.lease_id.asc()).all()
+    return [decrypt_lease_obj(l) for l in leases]
 
 
-def get_leases_by_tenant(tenant_id: int, db: Session) -> List[Lease]:
+def get_leases_by_tenant(tenant_id: int, db: Session) -> List[dict]:
     tenant_user = db.query(RentalUser).filter(RentalUser.user_id == tenant_id).first()
     email_clean = tenant_user.email_id.strip().lower() if (tenant_user and tenant_user.email_id) else None
 
-    from sqlalchemy import func
+    # First get leases matching tenant_id directly
+    leases = db.query(Lease).filter(Lease.tenant_id == tenant_id).order_by(Lease.lease_id.asc()).all()
+    
+    # Also fetch all leases where tenant_id is null and check decrypted tenant_email
     if email_clean:
-        leases = db.query(Lease).filter(
-            (Lease.tenant_id == tenant_id) | (func.lower(func.trim(Lease.tenant_email)) == email_clean)
-        ).all()
-    else:
-        leases = db.query(Lease).filter(Lease.tenant_id == tenant_id).all()
+        unlinked_leases = db.query(Lease).filter(Lease.tenant_id == None).order_by(Lease.lease_id.asc()).all()
+        for l in unlinked_leases:
+            from app.utils.encryption import safe_decrypt_field
+            decrypted_email = safe_decrypt_field(l.tenant_email)
+            if decrypted_email and decrypted_email.strip().lower() == email_clean:
+                # Auto-link tenant_id
+                l.tenant_id = tenant_id
+                db.commit()
+                leases.append(l)
 
-    # Auto-link tenant_id if missing
-    for l in leases:
-        if not l.tenant_id and tenant_id:
-            l.tenant_id = tenant_id
-            db.commit()
-
-    return leases
+    leases_list = [decrypt_lease_obj(l) for l in leases]
+    leases_list.sort(key=lambda x: x.get("lease_id", 0))
+    return leases_list
 
 
-def sign_lease(lease_id: int, user_id: int, signature: str, signing_as: str, db: Session) -> Lease:
+def sign_lease(lease_id: int, user_id: int, signature: str, signing_as: str, db: Session) -> dict:
+    """Legacy signing method (backward compatibility)."""
     lease = db.query(Lease).filter(Lease.lease_id == lease_id).first()
     if not lease:
         raise ValueError("Lease not found.")
 
     user = db.query(RentalUser).filter(RentalUser.user_id == user_id).first()
-    role_name = user.role.role_name if user and user.role else ""
+    role_name = (user.role.role_name if user and user.role else "").lower()
 
+    from app.utils.encryption import encrypt_field
     if role_name in ["super_admin", "landlord"] or lease.landlord_id == user_id:
         if signing_as == "CO_LANDLORD":
-            lease.co_landlord_signature = signature
+            lease.co_landlord_signature = encrypt_field(signature)
         else:
-            lease.landlord_signature = signature
+            lease.landlord_signature = encrypt_field(signature)
     elif role_name == "tenant" or lease.tenant_id == user_id:
-        lease.tenant_signature = signature
+        lease.tenant_signature = encrypt_field(signature)
     else:
         raise ValueError("Unauthorized signature attempt.")
 
-    # Primary Landlord and Tenant signatures are required.
-    # Co-landlord signature is optional and does not block lease activation.
+    # Auto-activate only if both signed (legacy compatibility)
     if lease.landlord_signature and lease.tenant_signature:
         lease.status = "ACTIVE"
         lease.unit.status = "OCCUPIED"
-        
-        # Generate initial rent invoice
         generate_initial_invoice(lease, db)
 
     db.commit()
     db.refresh(lease)
-    return lease
+    return decrypt_lease_obj(lease)
+
+
+def tenant_submit_lease(lease_id: int, tenant_id: int, data: TenantInfoSubmit, db: Session) -> dict:
+    lease = db.query(Lease).filter(Lease.lease_id == lease_id).first()
+    if not lease:
+        raise ValueError("Lease not found.")
+    
+    from app.utils.encryption import encrypt_field, decrypt_field
+    lease.tenant_dob = encrypt_field(data.tenant_dob)
+    lease.tenant_current_address = encrypt_field(data.tenant_current_address)
+    lease.tenant_emergency_contact = encrypt_field(data.tenant_emergency_contact)
+    lease.tenant_emergency_phone = encrypt_field(data.tenant_emergency_phone)
+    lease.tenant_signature = encrypt_field(data.signature_text)
+    lease.num_occupants = data.num_occupants
+
+    
+    # Save parking & pet choices
+    current_text = decrypt_field(lease.lease_agreement_text) or ""
+
+    if data.has_parking:
+        total_parking_fee = float(data.parking_cars_count * 25)
+        lease.parking_fee = encrypt_field(str(total_parking_fee))
+        desc = f"\n\nPARKING AUTHORIZATION COVENANT:\nTenant is authorized to park {data.parking_cars_count} vehicle(s) on the premises. Monthly Parking Charge: ${total_parking_fee}/mo."
+        if desc not in current_text:
+            current_text = current_text.replace(
+                "   - Parking Fee: None / Not applicable",
+                f"   - Parking Fee: ${total_parking_fee}/mo ($25.00/car, {data.parking_cars_count} car(s))"
+            )
+            current_text += desc
+    else:
+        lease.parking_fee = encrypt_field("0.0")
+
+    if data.has_pets:
+        total_pet_fee = float(data.pets_count * 50)
+        lease.pet_fee = encrypt_field(str(total_pet_fee))
+        desc = f"\n\nPETS AUTHORIZATION COVENANT:\nTenant is authorized to keep {data.pets_count} pet(s) on the premises (Details: {data.pet_details}). Monthly Pet Charge: ${total_pet_fee}/mo."
+        if desc not in current_text:
+            current_text = current_text.replace(
+                "   - Pet Fee: None / Not applicable",
+                f"   - Pet Fee: ${total_pet_fee}/mo ($50.00/pet, {data.pets_count} pet(s))"
+            )
+            current_text += desc
+    else:
+        lease.pet_fee = encrypt_field("0.0")
+
+    lease.lease_agreement_text = encrypt_field(current_text)
+
+    lease.tenant_id = tenant_id
+    lease.status = "PENDING_LANDLORD_APPROVAL"
+    
+    db.commit()
+    db.refresh(lease)
+    
+    # Send landlord notification email
+    landlord_user = lease.landlord
+    if landlord_user and landlord_user.email_id:
+        email_body = f"""
+        <div style="padding: 30px; font-size: 16px; line-height: 1.6; color: #D1D5DB;">
+          <h2 style="color: #3B82F6; margin-top: 0;">Lease Signed by Tenant</h2>
+          <p>Hello {landlord_user.first_name},</p>
+          <p>The tenant has submitted their personal details, documents, and signed the lease agreement for <strong>Unit {lease.unit.unit_number}</strong>.</p>
+          <p>Please log in to your dashboard to review their submission and approve the lease.</p>
+        </div>
+        """
+        wrapped_html = _wrap_in_responsive_layout(email_body, subtitle="Rental Property Management")
+        send_email(landlord_user.email_id, "Lease Signed & Awaiting Approval", wrapped_html)
+        
+    return decrypt_lease_obj(lease)
+
+
+def landlord_approve_lease(lease_id: int, landlord_id: int, db: Session) -> dict:
+    lease = db.query(Lease).filter(Lease.lease_id == lease_id).first()
+    if not lease:
+        raise ValueError("Lease not found.")
+        
+    if lease.landlord_id != landlord_id:
+        landlord_user = db.query(RentalUser).filter(RentalUser.user_id == landlord_id).first()
+        role_name = (landlord_user.role.role_name if landlord_user.role else "").lower()
+        if role_name != "super_admin":
+            raise ValueError("Unauthorized to approve this lease.")
+            
+    from app.utils.encryption import encrypt_field
+    if not lease.landlord_signature:
+        lease.landlord_signature = encrypt_field(lease.landlord.full_name)
+        
+    lease.status = "ACTIVE"
+    lease.unit.status = "OCCUPIED"
+    generate_initial_invoice(lease, db)
+    
+    db.commit()
+    db.refresh(lease)
+    return decrypt_lease_obj(lease)
 
 
 def delete_lease(lease_id: int, db: Session) -> bool:
@@ -304,11 +500,11 @@ def delete_lease(lease_id: int, db: Session) -> bool:
 
 
 def generate_initial_invoice(lease: Lease, db: Session) -> RentalLedger:
-    # Generate rent invoice for the current month with extra charges
-    rent = lease.rent_amount
-    util = lease.utilities_fee or 0.0
-    parking = lease.parking_fee or 0.0
-    pet = lease.pet_fee or 0.0
+    from app.utils.encryption import safe_decrypt_float
+    rent = safe_decrypt_float(lease.rent_amount) or 0.0
+    util = safe_decrypt_float(lease.utilities_fee) or 0.0
+    parking = safe_decrypt_float(lease.parking_fee) or 0.0
+    pet = safe_decrypt_float(lease.pet_fee) or 0.0
     total = rent + util + parking + pet
 
     new_ledger = RentalLedger(
@@ -381,7 +577,10 @@ def _calculate_mock_fico_score(
     return max(300, min(850, int(base_score)))
 
 
-def submit_rental_application(data: RentalApplicationCreate, db: Session) -> RentalApplication:
+def submit_rental_application(data: RentalApplicationCreate, db: Session) -> dict:
+    from app.utils.encryption import encrypt_field, encrypt_float
+    from app.utils.decryption_helpers import decrypt_application_obj
+
     unit = db.query(Unit).filter(Unit.unit_id == data.unit_id).first()
     if not unit:
         raise ValueError("Selected rental unit does not exist or is no longer available.")
@@ -398,34 +597,38 @@ def submit_rental_application(data: RentalApplicationCreate, db: Session) -> Ren
     new_app = RentalApplication(
         unit_id=data.unit_id,
         tenant_email=data.tenant_email.lower().strip(),
-        full_name=data.full_name,
-        phone=data.phone,
-        employment_status=data.employment_status,
-        monthly_income=data.monthly_income,
-        references_data=data.references_data,
-        pet_details=data.pet_details,
-        vehicle_details=data.vehicle_details,
-        income_proof_url=data.income_proof_url,
+        full_name=encrypt_field(data.full_name),
+        phone=encrypt_field(data.phone),
+        employment_status=encrypt_field(data.employment_status),
+        monthly_income=encrypt_float(data.monthly_income),
+        references_data=encrypt_field(data.references_data),
+        pet_details=encrypt_field(data.pet_details),
+        vehicle_details=encrypt_field(data.vehicle_details),
+        income_proof_url=encrypt_field(data.income_proof_url),
         screening_status="SUBMITTED",
-        credit_score=credit_score,
-        eviction_history="No eviction records found within the past 7 years." if credit_score > 650 else "1 minor eviction warning in 2021.",
-        criminal_history="No criminal record matches found."
+        credit_score=encrypt_field(str(credit_score)),
+        eviction_history=encrypt_field("No eviction records found within the past 7 years." if credit_score > 650 else "1 minor eviction warning in 2021."),
+        criminal_history=encrypt_field("No criminal record matches found.")
     )
     db.add(new_app)
     db.commit()
     db.refresh(new_app)
-    return new_app
+    return decrypt_application_obj(new_app)
 
 
-def get_applications_by_landlord(landlord_id: int, db: Session, is_super_admin: bool = False) -> List[RentalApplication]:
+def get_applications_by_landlord(landlord_id: int, db: Session, is_super_admin: bool = False) -> List[dict]:
+    from app.utils.decryption_helpers import decrypt_application_obj
     if is_super_admin:
-        return db.query(RentalApplication).all()
-    return db.query(RentalApplication).join(Unit).join(Property).filter(
-        Property.landlord_id == landlord_id
-    ).all()
+        apps = db.query(RentalApplication).order_by(RentalApplication.application_id.asc()).all()
+    else:
+        apps = db.query(RentalApplication).join(Unit).join(Property).filter(
+            Property.landlord_id == landlord_id
+        ).order_by(RentalApplication.application_id.asc()).all()
+    return [decrypt_application_obj(a) for a in apps]
 
 
-def review_application(application_id: int, status: str, db: Session) -> RentalApplication:
+def review_application(application_id: int, status: str, db: Session) -> dict:
+    from app.utils.decryption_helpers import decrypt_application_obj
     app = db.query(RentalApplication).filter(RentalApplication.application_id == application_id).first()
     if not app:
         raise ValueError("Application not found.")
@@ -436,7 +639,7 @@ def review_application(application_id: int, status: str, db: Session) -> RentalA
     app.screening_status = status
     db.commit()
     db.refresh(app)
-    return app
+    return decrypt_application_obj(app)
 
 
 def delete_application(application_id: int, db: Session) -> bool:
@@ -448,7 +651,7 @@ def delete_application(application_id: int, db: Session) -> bool:
     return True
 
 
-def invite_tenant_screening(data: RentalApplicationInvite, landlord_id: int, db: Session) -> RentalApplication:
+def invite_tenant_screening(data: RentalApplicationInvite, landlord_id: int, db: Session) -> dict:
     # 1. Verify unit exists
     unit = db.query(Unit).filter(Unit.unit_id == data.unit_id).first()
     if not unit:
@@ -462,15 +665,18 @@ def invite_tenant_screening(data: RentalApplicationInvite, landlord_id: int, db:
     if existing_lease:
         raise ValueError("A lease already exists for this unit. Screening is not required.")
 
+    from app.utils.encryption import encrypt_field
+    from app.utils.decryption_helpers import decrypt_application_obj
+
     # 2. Create the application in INVITED status
     new_app = RentalApplication(
         unit_id=data.unit_id,
         tenant_email=data.tenant_email.lower().strip(),
-        full_name=data.full_name,
+        full_name=encrypt_field(data.full_name),
         screening_status="INVITED",
-        credit_score=0,
-        eviction_history="",
-        criminal_history=""
+        credit_score=encrypt_field("0"),
+        eviction_history=encrypt_field(""),
+        criminal_history=encrypt_field("")
     )
     db.add(new_app)
     db.commit()
@@ -504,10 +710,10 @@ def invite_tenant_screening(data: RentalApplicationInvite, landlord_id: int, db:
     wrapped_html = _wrap_in_responsive_layout(email_body, subtitle="Rental Property Management")
     send_email(data.tenant_email, "Invitation to Complete Background Check & Rental Application", wrapped_html)
 
-    return new_app
+    return decrypt_application_obj(new_app)
 
 
-def complete_rental_application(application_id: int, data: RentalApplicationComplete, db: Session) -> RentalApplication:
+def complete_rental_application(application_id: int, data: RentalApplicationComplete, db: Session) -> dict:
     app = db.query(RentalApplication).filter(RentalApplication.application_id == application_id).first()
     if not app:
         raise ValueError("Application not found.")
@@ -544,21 +750,24 @@ def complete_rental_application(application_id: int, data: RentalApplicationComp
         criminal_history = "No criminal history matches found."
         eviction_history = "No eviction record matches found within the past 7 years."
 
-    app.phone = data.phone
-    app.employment_status = data.employment_status
-    app.monthly_income = data.monthly_income
-    app.references_data = data.references_data
-    app.pet_details = data.pet_details
-    app.vehicle_details = data.vehicle_details
-    app.income_proof_url = data.income_proof_url
+    from app.utils.encryption import encrypt_field, encrypt_float
+    from app.utils.decryption_helpers import decrypt_application_obj
+
+    app.phone = encrypt_field(data.phone)
+    app.employment_status = encrypt_field(data.employment_status)
+    app.monthly_income = encrypt_float(data.monthly_income)
+    app.references_data = encrypt_field(data.references_data)
+    app.pet_details = encrypt_field(data.pet_details)
+    app.vehicle_details = encrypt_field(data.vehicle_details)
+    app.income_proof_url = encrypt_field(data.income_proof_url)
     app.screening_status = "SUBMITTED"
-    app.credit_score = credit_score
-    app.criminal_history = criminal_history
-    app.eviction_history = eviction_history
+    app.credit_score = encrypt_field(str(credit_score))
+    app.criminal_history = encrypt_field(criminal_history)
+    app.eviction_history = encrypt_field(eviction_history)
 
     db.commit()
     db.refresh(app)
-    return app
+    return decrypt_application_obj(app)
 
 
 # --- LEDGER & PAYMENTS ---
@@ -636,10 +845,10 @@ def apply_late_fees(db: Session):
         if today > grace_date:
             inv.status = "OVERDUE"
             
-            # Apply late fee
-            fee = lease.late_fee_amount
+            # Apply late fee — late_fee_amount is stored encrypted, must decrypt first
+            fee = safe_decrypt_float(lease.late_fee_amount, 0.0)
             if lease.late_fee_type == "PERCENTAGE":
-                fee = inv.amount * (lease.late_fee_amount / 100.0)
+                fee = inv.amount * (fee / 100.0)
                 
             inv.late_fee_applied = fee
             late_fees_applied += 1
@@ -662,10 +871,10 @@ def apply_late_fee_to_invoice(invoice_id: int, db: Session):
         
     inv.status = "OVERDUE"
     
-    # Calculate fee
-    fee = lease.late_fee_amount
+    # Calculate fee — late_fee_amount is stored encrypted, must decrypt first
+    fee = safe_decrypt_float(lease.late_fee_amount, 0.0)
     if lease.late_fee_type == "PERCENTAGE":
-        fee = inv.amount * (lease.late_fee_amount / 100.0)
+        fee = inv.amount * (fee / 100.0)
         
     inv.late_fee_applied = fee
     db.commit()
@@ -686,6 +895,25 @@ def revert_late_fee_from_invoice(invoice_id: int, db: Session):
     db.commit()
     db.refresh(inv)
     return inv
+
+
+def edit_late_fee_on_invoice(invoice_id: int, amount: float, db: Session):
+    """Manually override the late fee amount on an invoice."""
+    inv = db.query(RentalLedger).filter(RentalLedger.invoice_id == invoice_id).first()
+    if not inv:
+        raise ValueError("Invoice not found.")
+    if inv.status == "PAID":
+        raise ValueError("Cannot edit late fee on a paid invoice.")
+    if amount < 0:
+        raise ValueError("Late fee amount cannot be negative.")
+
+    inv.late_fee_applied = amount
+    if amount > 0:
+        inv.status = "OVERDUE"
+    db.commit()
+    db.refresh(inv)
+    return inv
+
 
 
 # --- RENTAL MAINTENANCE SERVICE FUNCTIONS ---
@@ -831,31 +1059,36 @@ def pay_maintenance_request(request_id: int, payment_method: str, db: Session) -
 
 
 # --- RENTAL VENDOR SERVICE FUNCTIONS ---
-def create_rental_vendor(landlord_id: int, data: RentalVendorCreate, db: Session) -> RentalVendor:
+def create_rental_vendor(landlord_id: int, data: RentalVendorCreate, db: Session) -> dict:
+    from app.utils.encryption import encrypt_field
+    from app.utils.decryption_helpers import decrypt_vendor_obj
     new_vendor = RentalVendor(
         landlord_id=landlord_id,
-        company_name=data.company_name,
-        contact_person=data.contact_person,
-        email=data.email,
-        phone=data.phone,
+        company_name=encrypt_field(data.company_name),
+        contact_person=encrypt_field(data.contact_person),
+        email=encrypt_field(data.email),
+        phone=encrypt_field(data.phone),
         category=data.category,
         zip_code=data.zip_code,
-        license_number=data.license_number,
+        license_number=encrypt_field(data.license_number),
         license_expiry=data.license_expiry,
-        insurance_number=data.insurance_number,
+        insurance_number=encrypt_field(data.insurance_number),
         insurance_expiry=data.insurance_expiry,
         active_status=True
     )
     db.add(new_vendor)
     db.commit()
     db.refresh(new_vendor)
-    return new_vendor
+    return decrypt_vendor_obj(new_vendor)
 
 
-def get_rental_vendors(landlord_id: int, db: Session, is_super_admin: bool = False) -> List[RentalVendor]:
+def get_rental_vendors(landlord_id: int, db: Session, is_super_admin: bool = False) -> List[dict]:
+    from app.utils.decryption_helpers import decrypt_vendor_obj
     if is_super_admin:
-        return db.query(RentalVendor).all()
-    return db.query(RentalVendor).filter(RentalVendor.landlord_id == landlord_id).all()
+        vendors = db.query(RentalVendor).all()
+    else:
+        vendors = db.query(RentalVendor).filter(RentalVendor.landlord_id == landlord_id).all()
+    return [decrypt_vendor_obj(v) for v in vendors]
 
 
 def delete_rental_vendor(vendor_id: int, landlord_id: int, db: Session, is_super_admin: bool = False):

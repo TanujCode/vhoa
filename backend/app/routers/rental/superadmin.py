@@ -10,6 +10,9 @@ from app.models.rental.lease import Lease
 from app.models.rental.rental_ledger import RentalLedger
 from app.models.rental.rental_maintenance import RentalMaintenanceRequest
 from app.models.rental.rental_application import RentalApplication
+from app.models.rental.rental_otp import RentalOtpToken
+from app.models.rental.rental_vendor import RentalVendor
+from app.models.rental.rental_audit_log import RentalAuditLog
 from app.models.hoa.user import Role
 from app.services.rental.audit_service import log_rental_action
 from app.routers.rental.dependencies import require_rental_role
@@ -98,15 +101,21 @@ def get_all_landlords(
                     Lease.status == "ACTIVE"
                 ).count()
 
+        from app.utils.encryption import safe_decrypt_field
+        first_dec = safe_decrypt_field(l.first_name) or ""
+        middle_dec = safe_decrypt_field(l.middle_name)
+        last_dec = safe_decrypt_field(l.last_name) or ""
+        phone_dec = safe_decrypt_field(l.mobile_number)
+
         res.append({
             "user_id": l.user_id,
             "user_code": l.user_code or f"LND{l.user_id:04d}",
-            "first_name": l.first_name,
-            "middle_name": l.middle_name,
-            "last_name": l.last_name,
-            "full_name": l.full_name,
+            "first_name": first_dec,
+            "middle_name": middle_dec,
+            "last_name": last_dec,
+            "full_name": f"{first_dec} {last_dec}".strip(),
             "email_id": l.email_id,
-            "mobile_number": l.mobile_number,
+            "mobile_number": phone_dec,
             "active_status": l.active_status,
             "account_status": l.account_status,
             "properties_count": prop_count,
@@ -153,7 +162,7 @@ def delete_landlord(
     current_user: RentalUser = Depends(require_rental_role("super_admin"))
 ):
     """
-    Hard delete a Landlord account and all associated properties, units, leases, ledgers, maintenance requests, and applications.
+    Hard delete a Landlord account and all associated properties, units, leases, ledgers, maintenance requests, applications, OTP tokens, and vendors.
     """
     landlord = db.query(RentalUser).filter(RentalUser.user_id == landlord_id).first()
     if not landlord:
@@ -163,8 +172,10 @@ def delete_landlord(
     props = db.query(Property).filter(Property.landlord_id == landlord_id).all()
     prop_ids = [p.property_id for p in props]
 
+    # Find units, leases, ledgers, maintenance requests, and applications
+    unit_ids = []
+    lease_ids = []
     if prop_ids:
-        # Find units
         units = db.query(Unit).filter(Unit.property_id.in_(prop_ids)).all()
         unit_ids = [u.unit_id for u in units]
 
@@ -178,17 +189,25 @@ def delete_landlord(
             if lease_ids:
                 # Delete maintenance requests
                 db.query(RentalMaintenanceRequest).filter(RentalMaintenanceRequest.lease_id.in_(lease_ids)).delete(synchronize_session=False)
+                # Delete ledgers (RentalLedger uses lease_id, not unit_id)
+                db.query(RentalLedger).filter(RentalLedger.lease_id.in_(lease_ids)).delete(synchronize_session=False)
                 # Delete leases
                 db.query(Lease).filter(Lease.lease_id.in_(lease_ids)).delete(synchronize_session=False)
 
-            # Delete ledgers
-            db.query(RentalLedger).filter(RentalLedger.unit_id.in_(unit_ids)).delete(synchronize_session=False)
-            
             # Delete units
             db.query(Unit).filter(Unit.property_id.in_(prop_ids)).delete(synchronize_session=False)
 
         # Delete properties
         db.query(Property).filter(Property.landlord_id == landlord_id).delete(synchronize_session=False)
+
+    # Delete landlord vendors
+    db.query(RentalVendor).filter(RentalVendor.landlord_id == landlord_id).delete(synchronize_session=False)
+
+    # Delete landlord OTP tokens
+    db.query(RentalOtpToken).filter(RentalOtpToken.user_id == landlord_id).delete(synchronize_session=False)
+
+    # Nullify user_id in audit logs to prevent foreign key constraint issues
+    db.query(RentalAuditLog).filter(RentalAuditLog.user_id == landlord_id).update({RentalAuditLog.user_id: None}, synchronize_session=False)
 
     # Log the action
     log_rental_action(

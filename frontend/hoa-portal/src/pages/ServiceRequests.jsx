@@ -173,7 +173,8 @@ const SubmitModal = ({ communityId, onClose, onSuccess, showAlert, showConfirm }
               placeholder="Brief title of the issue..." 
               value={form.title}
               onChange={e => {
-                setForm({...form, title: e.target.value});
+                const cleaned = e.target.value.replace(/[^A-Za-z\s]/g, '');
+                setForm({...form, title: cleaned});
                 if (errors.title) setErrors(prev => ({ ...prev, title: null }));
               }}
               className={`w-full bg-slate-50 dark:bg-[#0D1B2A] border ${errors.title ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/20'} rounded-2xl px-4 py-3 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 focus:outline-none focus:border-blue-500`}

@@ -18,35 +18,37 @@ def rental_update_profile(
     current_user: RentalUser = Depends(get_current_rental_user),
 ):
     if body.mobile_number:
-        existing = db.query(RentalUser).filter(
-            RentalUser.mobile_number == body.mobile_number,
-            RentalUser.user_id != current_user.user_id
-        ).first()
-        if existing:
-            raise HTTPException(
-                status_code=400,
-                detail="This mobile number is already registered to someone else."
-            )
+        from app.utils.encryption import safe_decrypt_field
+        all_users = db.query(RentalUser).filter(RentalUser.user_id != current_user.user_id).all()
+        for u in all_users:
+            decrypted_mobile = safe_decrypt_field(u.mobile_number)
+            if decrypted_mobile == body.mobile_number:
+                raise HTTPException(
+                    status_code=400,
+                    detail="This mobile number is already registered to someone else."
+                )
+
+    from app.utils.encryption import encrypt_field
 
     if "first_name" in body.model_fields_set:
-        current_user.first_name = body.first_name
+        current_user.first_name = encrypt_field(body.first_name)
     if "middle_name" in body.model_fields_set:
-        current_user.middle_name = body.middle_name
+        current_user.middle_name = encrypt_field(body.middle_name)
     if "last_name" in body.model_fields_set:
-        current_user.last_name = body.last_name
+        current_user.last_name = encrypt_field(body.last_name)
     if "mobile_number" in body.model_fields_set:
-        current_user.mobile_number = body.mobile_number
+        current_user.mobile_number = encrypt_field(body.mobile_number)
     if "time_zone" in body.model_fields_set:
         current_user.time_zone = body.time_zone
 
-    # Sync changes across all tables
+    # Sync changes across all tables (using plain text inputs)
     sync_profile_update(
         db=db,
         email_id=current_user.email_id,
-        first_name=current_user.first_name,
-        middle_name=current_user.middle_name,
-        last_name=current_user.last_name,
-        mobile_number=current_user.mobile_number,
+        first_name=body.first_name if "first_name" in body.model_fields_set else None,
+        middle_name=body.middle_name if "middle_name" in body.model_fields_set else None,
+        last_name=body.last_name if "last_name" in body.model_fields_set else None,
+        mobile_number=body.mobile_number if "mobile_number" in body.model_fields_set else None,
         time_zone=current_user.time_zone
     )
 
@@ -86,13 +88,16 @@ async def rental_upload_profile_picture(
             detail="File size should not exceed 5MB."
         )
 
-    if current_user.user_profile_url:
-        delete_profile_picture(current_user.user_profile_url)
+    from app.utils.encryption import encrypt_field, safe_decrypt_field
+
+    decrypted_profile_url = safe_decrypt_field(current_user.user_profile_url)
+    if decrypted_profile_url:
+        delete_profile_picture(decrypted_profile_url)
 
     encoded = base64.b64encode(contents).decode("utf-8")
     url = f"data:{content_type};base64,{encoded}"
 
-    current_user.user_profile_url = url
+    current_user.user_profile_url = encrypt_field(url)
 
     # Sync picture upload across all tables
     sync_profile_picture_update(db=db, email_id=current_user.email_id, picture_url=url)
@@ -108,10 +113,12 @@ def rental_delete_picture(
     db: Session = Depends(get_rental_db),
     current_user: RentalUser = Depends(get_current_rental_user),
 ):
-    if not current_user.user_profile_url:
+    from app.utils.encryption import safe_decrypt_field
+    decrypted_profile_url = safe_decrypt_field(current_user.user_profile_url)
+    if not decrypted_profile_url:
         raise HTTPException(status_code=400, detail="There is no profile picture.")
 
-    delete_profile_picture(current_user.user_profile_url)
+    delete_profile_picture(decrypted_profile_url)
     current_user.user_profile_url = None
 
     # Sync picture deletion across all tables
@@ -127,8 +134,9 @@ async def rental_upload_my_id_proof(
     db: Session = Depends(get_rental_db),
     current_user: RentalUser = Depends(get_current_rental_user),
 ):
+    from app.utils.encryption import encrypt_field
     url = await save_document(file, folder_name="identity_proofs")
-    current_user.id_proof_url = url
+    current_user.id_proof_url = encrypt_field(url)
     db.commit()
     db.refresh(current_user)
     return {"id_proof_url": url}
@@ -140,8 +148,9 @@ async def rental_upload_my_address_proof(
     db: Session = Depends(get_rental_db),
     current_user: RentalUser = Depends(get_current_rental_user),
 ):
+    from app.utils.encryption import encrypt_field
     url = await save_document(file, folder_name="address_proofs")
-    current_user.address_proof_url = url
+    current_user.address_proof_url = encrypt_field(url)
     db.commit()
     db.refresh(current_user)
     return {"address_proof_url": url}

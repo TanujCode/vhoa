@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Home, FileText, CreditCard, Wrench, ShieldAlert, Sparkles, 
-  Building2, ArrowRight, ArrowUpRight, CheckCircle2, Clock, Calendar 
+  Building2, ArrowRight, ArrowUpRight, CheckCircle2, Clock, Calendar,
+  Search, ChevronRight
 } from 'lucide-react';
 import API from '../../services/api';
 import ScreeningHub from './ScreeningHub';
@@ -13,6 +14,7 @@ export default function TenantDashboard({ user, setUser, setActivePage }) {
   const [invoices, setInvoices] = useState([]);
   const [applications, setApplications] = useState([]);
   const [showSelector, setShowSelector] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     fetchTenantLeaseData();
@@ -73,12 +75,8 @@ export default function TenantDashboard({ user, setUser, setActivePage }) {
   }
   const getLeaseSeqNum = (lease) => {
     if (!lease) return '';
-    const propId = lease.unit?.property_id;
-    if (!propId) return lease.lease_id;
-    const propLeases = leases
-      .filter(item => item.unit?.property_id === propId)
-      .sort((a, b) => a.lease_id - b.lease_id);
-    const idx = propLeases.findIndex(item => item.lease_id === lease.lease_id);
+    const sorted = [...leases].sort((a, b) => a.lease_id - b.lease_id);
+    const idx = sorted.findIndex(item => item.lease_id === lease.lease_id);
     return idx !== -1 ? idx + 1 : lease.lease_id;
   };
 
@@ -165,48 +163,108 @@ export default function TenantDashboard({ user, setUser, setActivePage }) {
 
   // Choose Residence Screen if multiple properties exist and selector is open or no active property is selected
   if (hasMultipleProperties && (showSelector || !localStorage.getItem('tenant_active_property_id'))) {
-    return (
-      <div className="max-w-4xl mx-auto py-12 px-4 text-center animate-fade-in font-sans">
-        <div className="mb-8">
-          <div className="inline-flex p-3 bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-2xl mb-4">
-            <Building2 className="w-8 h-8 animate-pulse" />
-          </div>
-          <h1 className="text-3xl font-black text-gray-950 dark:text-white tracking-tight">Choose Your Residence</h1>
-          <p className="text-gray-500 dark:text-gray-400 mt-2 max-w-md mx-auto">
-            You hold active lease agreements across multiple separate properties. Please select a property portal to view your dashboard.
-          </p>
-        </div>
+    const filteredProperties = uniqueProperties.filter(prop => 
+      prop.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      prop.leases.some(l => l.unit?.unit_number?.toLowerCase().includes(searchQuery.toLowerCase()))
+    );
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-10">
-          {uniqueProperties.map(prop => {
-            return (
-              <div
-                key={prop.property_id}
-                onClick={() => selectProperty(prop.property_id)}
-                className="group relative bg-gradient-to-br from-white to-slate-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200 dark:border-white/10 p-6 rounded-2xl cursor-pointer hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all text-left"
-              >
-                <div className="absolute top-4 right-4 p-2 bg-blue-500/10 text-blue-500 dark:text-blue-400 rounded-xl group-hover:bg-blue-500 group-hover:text-white transition">
-                  <ArrowRight className="w-4 h-4" />
-                </div>
-                <div className="p-3 bg-slate-100 dark:bg-[#0D1B2A] text-slate-700 dark:text-slate-200 rounded-xl w-12 h-12 flex items-center justify-center mb-4 group-hover:border-blue-500/40 border border-transparent transition">
-                  <Home className="w-5 h-5 text-blue-500" />
-                </div>
-                <h3 className="text-lg font-bold text-gray-950 dark:text-white group-hover:text-blue-650 dark:group-hover:text-[#5BA4F5] transition">
-                  {prop.name}
-                </h3>
-                <p className="text-xs text-gray-450 dark:text-gray-400 mt-1 uppercase tracking-wider font-bold">
-                  {prop.leases.length} {prop.leases.length === 1 ? 'Unit Assigned' : 'Units Assigned'}
-                </p>
-                <div className="mt-4 flex flex-wrap gap-2">
-                  {prop.leases.map(l => (
-                    <span key={l.lease_id} className="bg-blue-500/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400 px-2 py-0.5 rounded text-[10px] font-bold border border-blue-500/20">
-                      Unit {l.unit?.unit_number || 'N/A'}
-                    </span>
-                  ))}
-                </div>
+    return (
+      <div className="w-full h-[calc(100vh-150px)] lg:h-[calc(100vh-170px)] flex flex-col overflow-hidden animate-fade-in font-sans">
+        
+        {/* Compact Card Layout */}
+        <div className="flex-1 bg-white dark:bg-slate-900/60 dark:backdrop-blur-md border border-slate-200/80 dark:border-white/[0.05] rounded-3xl shadow-lg overflow-hidden flex flex-col animate-scale-up">
+          
+          {/* Header inside Container */}
+          <div className="relative overflow-hidden bg-gradient-to-r from-blue-600/10 via-indigo-600/5 to-purple-600/10 p-6 border-b border-slate-100 dark:border-white/5 text-left shrink-0">
+            <div className="absolute top-0 right-0 w-48 h-48 bg-blue-500/10 rounded-full blur-3xl pointer-events-none -mr-16 -mt-16"></div>
+            <div className="absolute bottom-0 left-0 w-36 h-36 bg-indigo-500/10 rounded-full blur-2xl pointer-events-none -ml-12 -mb-12"></div>
+            
+            <div className="relative z-10 space-y-1.5">
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 text-[10px] font-bold uppercase tracking-wider">
+                <Building2 size={10} className="animate-pulse" />
+                Active Portals
               </div>
-            );
-          })}
+              <h1 className="text-xl md:text-2xl font-black text-gray-950 dark:text-white tracking-tight leading-none">
+                Select Your Residence
+              </h1>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                You are linked to multiple properties. Choose a portal to view your specific rent details, leases, and maintenance dashboard.
+              </p>
+            </div>
+          </div>
+
+          {/* Search Input Bar */}
+          <div className="p-4 bg-slate-50/50 dark:bg-slate-950/20 border-b border-slate-100 dark:border-white/5 shrink-0">
+            <div className="relative">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-500" />
+              <input
+                type="text"
+                placeholder="Search by property name or unit..."
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-4 py-2.5 text-xs border rounded-2xl bg-white dark:bg-slate-900 text-slate-900 dark:text-white border-slate-200 dark:border-white/10 outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder:text-slate-400 dark:placeholder:text-slate-550"
+              />
+            </div>
+          </div>
+
+          {/* Scrollable List Area */}
+          <div className="flex-1 overflow-y-auto p-4 space-y-2.5 scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-white/5">
+            {filteredProperties.length > 0 ? (
+              filteredProperties.map(prop => (
+                <div
+                  key={prop.property_id}
+                  onClick={() => selectProperty(prop.property_id)}
+                  className="group flex items-center justify-between p-4 rounded-2xl border border-slate-100 dark:border-white/[0.03] bg-slate-50/30 hover:bg-blue-50/30 dark:bg-white/[0.01] dark:hover:bg-blue-500/5 hover:border-blue-500/30 dark:hover:border-blue-500/20 transition-all duration-200 cursor-pointer text-left"
+                >
+                  <div className="flex items-center gap-3.5 flex-1 min-w-0">
+                    <div className="p-2.5 bg-blue-500/5 dark:bg-blue-500/10 rounded-xl border border-blue-500/10 text-blue-600 dark:text-blue-400 shrink-0 group-hover:scale-105 transition-transform duration-200">
+                      <Home className="w-5 h-5" />
+                    </div>
+                    
+                    <div className="min-w-0 flex-1">
+                      <h3 className="text-sm font-bold text-slate-800 dark:text-slate-250 truncate group-hover:text-blue-650 dark:group-hover:text-blue-450 transition-colors">
+                        {prop.name}
+                      </h3>
+                      
+                      <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
+                        <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                          {prop.leases.length} {prop.leases.length === 1 ? 'Unit' : 'Units'} Assigned:
+                        </span>
+                        {prop.leases.map(l => (
+                          <span 
+                            key={l.lease_id} 
+                            className="bg-blue-500/5 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400 px-1.5 py-0.5 rounded-md text-[9px] font-extrabold border border-blue-500/10"
+                          >
+                            Unit {l.unit?.unit_number || 'N/A'}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 shrink-0">
+                    <span className="text-xs font-bold text-slate-400 dark:text-slate-500 group-hover:text-blue-600 dark:group-hover:text-blue-450 transition-colors opacity-0 group-hover:opacity-100 translate-x-1 group-hover:translate-x-0 transition-all duration-250">
+                      Enter Portal
+                    </span>
+                    <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-white/5 flex items-center justify-center text-slate-400 dark:text-slate-500 group-hover:bg-blue-600 group-hover:text-white group-hover:scale-105 transition-all duration-200">
+                      <ChevronRight size={16} />
+                    </div>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="py-12 text-center space-y-2">
+                <div className="w-12 h-12 bg-slate-100 dark:bg-white/5 rounded-full flex items-center justify-center mx-auto text-slate-400 dark:text-slate-500">
+                  <Building2 size={20} className="opacity-50" />
+                </div>
+                <h4 className="text-sm font-bold text-slate-700 dark:text-slate-300">No properties found</h4>
+                <p className="text-xs text-slate-400 dark:text-slate-500 max-w-xs mx-auto">
+                  We couldn't find any residences matching "{searchQuery}". Try searching for another name or unit number.
+                </p>
+              </div>
+            )}
+          </div>
+          
         </div>
       </div>
     );
@@ -248,8 +306,8 @@ export default function TenantDashboard({ user, setUser, setActivePage }) {
         )}
       </div>
 
-      {/* Pending Invites & Signature alerts */}
-      {(applications.some(a => a.screening_status === 'INVITED') || leases.some(l => l.status === 'PENDING_SIGNATURE')) && (
+      {/* Pending Invites, Reviews, & Signature alerts */}
+      {(applications.some(a => a.screening_status === 'INVITED') || leases.some(l => ['PENDING_SIGNATURE', 'PENDING_TENANT_REVIEW', 'PENDING_LANDLORD_APPROVAL'].includes(l.status))) && (
         <div className="space-y-3">
           {applications.filter(a => a.screening_status === 'INVITED').map(app => (
             <div key={app.application_id} className="p-5 rounded-2xl bg-indigo-500/5 dark:bg-indigo-500/10 border border-indigo-500/20 dark:border-indigo-550/20 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 text-xs font-semibold animate-pulse shadow-sm">
@@ -271,23 +329,43 @@ export default function TenantDashboard({ user, setUser, setActivePage }) {
             </div>
           ))}
 
-          {leases.filter(l => l.status === 'PENDING_SIGNATURE').map(lease => (
-            <div key={lease.lease_id} className="p-5 rounded-2xl bg-blue-500/5 dark:bg-blue-500/10 border border-blue-500/20 dark:border-blue-550/20 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 text-xs font-semibold shadow-sm">
+          {leases.filter(l => l.status === 'PENDING_TENANT_REVIEW' || l.status === 'PENDING_SIGNATURE').map(lease => (
+            <div key={lease.lease_id} className="p-5 rounded-2xl bg-amber-500/5 dark:bg-amber-500/10 border border-amber-500/20 dark:border-amber-550/20 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 text-xs font-semibold shadow-sm animate-pulse">
               <div className="space-y-1 text-left">
-                <span className="text-[10px] text-blue-500 dark:text-blue-400 font-bold uppercase tracking-wider block">Action Required • Lease Signature</span>
+                <span className="text-[10px] text-amber-500 dark:text-amber-400 font-bold uppercase tracking-wider block">Action Required • Lease Review & Signature</span>
                 <p className="text-base text-slate-900 dark:text-white font-black">
-                  Unit {lease.unit?.unit_number} at {lease.property?.name || 'Assigned Property'}
+                  Unit {lease.unit?.unit_number} at {lease.property_name || lease.unit?.property?.name || 'Assigned Property'}
                 </p>
                 <p className="text-xs text-slate-550 dark:text-gray-400 font-normal">
-                  A new lease contract is ready for your digital signature to active your tenancy.
+                  A new lease contract is ready for your review, document uploads, and signature to complete your onboarding.
                 </p>
               </div>
               <button
-                onClick={() => setActivePage('leases_hub')}
-                className="bg-blue-600 hover:bg-blue-550 active:scale-95 text-white px-5 py-2.5 rounded-xl text-xs font-bold transition shadow-lg shadow-blue-500/20 whitespace-nowrap cursor-pointer"
+                onClick={() => {
+                  localStorage.setItem('pending_lease_id', lease.lease_id);
+                  setActivePage('leases_hub');
+                }}
+                className="bg-amber-600 hover:bg-amber-550 active:scale-95 text-white px-5 py-2.5 rounded-xl text-xs font-bold transition shadow-lg shadow-amber-500/20 whitespace-nowrap cursor-pointer"
               >
-                Sign Lease Contract
+                Review & Sign Lease
               </button>
+            </div>
+          ))}
+
+          {leases.filter(l => l.status === 'PENDING_LANDLORD_APPROVAL').map(lease => (
+            <div key={lease.lease_id} className="p-5 rounded-2xl bg-blue-500/5 dark:bg-blue-500/10 border border-blue-500/20 dark:border-blue-550/20 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 text-xs font-semibold shadow-sm">
+              <div className="space-y-1 text-left">
+                <span className="text-[10px] text-blue-500 dark:text-blue-400 font-bold uppercase tracking-wider block">Pending Approval • Awaiting Landlord</span>
+                <p className="text-base text-slate-900 dark:text-white font-black">
+                  Unit {lease.unit?.unit_number} at {lease.property_name || lease.unit?.property?.name || 'Assigned Property'}
+                </p>
+                <p className="text-xs text-slate-550 dark:text-gray-400 font-normal">
+                  You have successfully submitted your documents and signed the lease agreement. The landlord is reviewing it for final activation.
+                </p>
+              </div>
+              <div className="bg-slate-100 dark:bg-white/10 text-slate-700 dark:text-gray-300 px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap">
+                Under Review
+              </div>
             </div>
           ))}
         </div>
@@ -429,11 +507,17 @@ export default function TenantDashboard({ user, setUser, setActivePage }) {
           </div>
           
           <div className="space-y-3">
-            {/* Task 1: View/Sign Lease Contract */}
-            <div 
-              onClick={() => setActivePage('leases_hub')}
-              className="group p-4 rounded-2xl border border-slate-150/80 dark:border-white/5 hover:border-blue-500/30 bg-slate-50/40 hover:bg-blue-500/5 dark:bg-white/[0.01] dark:hover:bg-blue-500/5 cursor-pointer text-left transition-all duration-350 flex justify-between items-center gap-3"
-            >
+             {/* Task 1: View/Sign Lease Contract */}
+             <div 
+               onClick={() => {
+                 const pendingLease = leases.find(l => l.status === 'PENDING_TENANT_REVIEW' || l.status === 'PENDING_SIGNATURE');
+                 if (pendingLease) {
+                   localStorage.setItem('pending_lease_id', pendingLease.lease_id);
+                 }
+                 setActivePage('leases_hub');
+               }}
+               className="group p-4 rounded-2xl border border-slate-150/80 dark:border-white/5 hover:border-blue-500/30 bg-slate-50/40 hover:bg-blue-500/5 dark:bg-white/[0.01] dark:hover:bg-blue-500/5 cursor-pointer text-left transition-all duration-350 flex justify-between items-center gap-3"
+             >
               <div className="flex items-start gap-3">
                 <div className="p-2.5 bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-xl mt-0.5 group-hover:scale-110 transition duration-300">
                   <FileText className="w-5 h-5" />

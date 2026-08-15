@@ -125,12 +125,12 @@ def get_meeting_rsvps(
         rsvp_id = user_rsvp.rsvp_id if user_rsvp else None
         updated_at = user_rsvp.updated_at if user_rsvp else None
 
-        user_name = f"{m.first_name or ''} {m.last_name or ''}".strip() or m.email
+        user_name = f"{m.first_name or ''} {m.last_name or ''}".strip() or m.email_id
         result.append({
             "rsvp_id": rsvp_id,
             "user_id": m.user_id,
             "user_name": user_name,
-            "email": m.email,
+            "email": m.email_id,
             "status": status,
             "updated_at": updated_at
         })
@@ -437,6 +437,34 @@ def run_assemblyai_diarization(file_path: str, api_key: str) -> tuple[str, str]:
         time.sleep(3)
 
 
+def generate_extractive_summary(transcript: str) -> str:
+    lines = [line.strip() for line in transcript.split("\n") if line.strip()]
+    if not lines:
+        return "No summary available."
+    
+    summary_bullets = []
+    seen = set()
+    for line in lines:
+        if "System Mode Active" in line or "Simulation Mode" in line or "System:" in line:
+            continue
+        # Strip speaker label like "Speaker 0: "
+        parts = line.split(":", 1)
+        content = parts[1].strip() if len(parts) > 1 else line
+        if len(content) > 15 and content.lower() not in seen:
+            summary_bullets.append(f"• {content}")
+            seen.add(content.lower())
+            if len(summary_bullets) >= 4:
+                break
+                
+    if not summary_bullets:
+        for line in lines[:3]:
+            parts = line.split(":", 1)
+            content = parts[1].strip() if len(parts) > 1 else line
+            summary_bullets.append(f"• {content}")
+            
+    return "\n".join(summary_bullets)
+
+
 def run_deepgram_diarization(file_path: str, api_key: str) -> tuple[str, str]:
     headers = {
         "Authorization": f"Token {api_key}",
@@ -445,8 +473,8 @@ def run_deepgram_diarization(file_path: str, api_key: str) -> tuple[str, str]:
     with open(file_path, "rb") as f:
         file_data = f.read()
 
-    # Use utterances=true and summarize=v2
-    url = "https://api.deepgram.com/v1/listen?diarize_model=latest&punctuate=true&utterances=true&summarize=v2"
+    # Use utterances=true and detect_language=true
+    url = "https://api.deepgram.com/v1/listen?diarize_model=latest&punctuate=true&utterances=true&detect_language=true"
     req = urllib.request.Request(
         url,
         data=file_data,
@@ -479,16 +507,11 @@ def run_deepgram_diarization(file_path: str, api_key: str) -> tuple[str, str]:
             
             transcript_text = "\n".join(transcript_lines)
             
-            # Extract summary from results["summary"]["short"]
-            summary_obj = results.get("summary", {})
-            summary_text = summary_obj.get("short", "")
-            if not summary_text:
-                summary_text = summary_obj.get("text", "")
-                
             # If transcript is empty, raise an exception to fall back to simulated engine
             if not transcript_text.strip():
                 raise Exception("Deepgram returned empty transcript.")
                 
+            summary_text = generate_extractive_summary(transcript_text)
             return transcript_text, summary_text
     except Exception as e:
         raise Exception(f"Deepgram request failed: {e}")
@@ -497,26 +520,32 @@ def run_deepgram_diarization(file_path: str, api_key: str) -> tuple[str, str]:
 def generate_simulated_summary(meeting) -> str:
     title_lower = meeting.title.lower()
     
+    warning = (
+        "⚠️ **[SIMULATION MODE]** API keys for AssemblyAI or Deepgram are missing in backend/.env. "
+        "Showing simulated meeting notes. For real transcription of recorded audio/songs, configure "
+        "ASSEMBLYAI_API_KEY or DEEPGRAM_API_KEY in your .env file.\n\n"
+    )
+    
     if "budget" in title_lower or "finance" in title_lower or "fee" in title_lower:
-        return (
+        return warning + (
             "• **Reserve Fund Allocation**: The board discussed the reserve fund allocation for building maintenance.\n"
             "• **HOA Dues Unchanged**: In response to a resident query, it was confirmed that monthly HOA dues will not increase, as the reserve fund is fully covered by last year's budget surplus.\n"
             "• **Budget Draft Approved**: The current budget draft was formally proposed, seconded, and approved by the board."
         )
     elif "paint" in title_lower or "renovation" in title_lower or "exterior" in title_lower:
-        return (
+        return warning + (
             "• **Exterior Painting Project**: The upcoming exterior painting project for the community buildings was discussed.\n"
             "• **Survey Poll Launched**: A portal survey poll with three exterior color palettes has been launched for residents to vote.\n"
             "• **Project Schedule**: If color choice is finalized by this Friday, the painting work will commence next Monday."
         )
     elif "rule" in title_lower or "violation" in title_lower or "parking" in title_lower:
-        return (
+        return warning + (
             "• **Parking Regulations**: The board addressed multiple complaints regarding guests permanently occupying block B parking spaces.\n"
             "• **New Parking Rules**: A new 24-hour limit on guest parking spots will be enforced, followed by warnings and potential towing for repeat violators.\n"
             "• **Signage Installation**: New signage will be installed this weekend, and rules will take effect starting next week."
         )
     else:
-        return (
+        return warning + (
             "• **Park Cleaning Request**: A resident's request for more frequent cleaning of the community park area was discussed.\n"
             "• **Sanitation Plan**: The board has instructed the sanitation team to increase park cleaning frequency to twice a day.\n"
             "• **Next Steps**: The meeting adjourned to review the remaining agenda items, and minutes will be distributed to all residents."
@@ -548,8 +577,11 @@ def generate_simulated_diarization(meeting, db: Session) -> str:
         
     title_lower = meeting.title.lower()
     
+    warning_line = "System: [Simulation Mode Active - ASSEMBLYAI_API_KEY / DEEPGRAM_API_KEY is not configured in backend/.env. This is a simulated transcript.]"
+    
     if "budget" in title_lower or "finance" in title_lower or "fee" in title_lower:
         script = [
+            warning_line,
             f"{names[2]}: Good evening everyone, let's start the budget review. We need to finalize the maintenance reserve fund allocation for this year.",
             f"{names[0]}: Thanks. As a homeowner, I want to clarify: will there be any increase in our monthly HOA dues for building maintenance?",
             f"{names[1]}: No, the reserve fund is fully covered by our current budget surplus from last year, so we are keeping dues unchanged.",
@@ -559,6 +591,7 @@ def generate_simulated_diarization(meeting, db: Session) -> str:
         ]
     elif "paint" in title_lower or "renovation" in title_lower or "exterior" in title_lower:
         script = [
+            warning_line,
             f"{names[1]}: Hello, we are discussing the upcoming community building exterior painting project.",
             f"{names[0]}: Regarding the color choices, is there a survey active? Many residents prefer neutral earth tones.",
             f"{names[2]}: Yes! We just put up a survey poll on the portal with three palettes. Please cast your votes.",
@@ -568,6 +601,7 @@ def generate_simulated_diarization(meeting, db: Session) -> str:
         ]
     elif "rule" in title_lower or "violation" in title_lower or "parking" in title_lower:
         script = [
+            warning_line,
             f"{names[2]}: Let's discuss the new parking regulations. We have received complaints about guest parking spots being occupied permanently.",
             f"{names[0]}: Yes, the spots near Block B are always full, which makes it hard for actual guests to park.",
             f"{names[1]}: The board is proposing a 24-hour limit on guest spots, followed by warnings and towing warnings for repeat violators.",
@@ -577,6 +611,7 @@ def generate_simulated_diarization(meeting, db: Session) -> str:
         ]
     else:
         script = [
+            warning_line,
             f"{names[2]}: Welcome to today's community meeting. Let's go over the main agenda items.",
             f"{names[0]}: Yes, I had raised a request regarding regular cleaning of the community park area.",
             f"{names[1]}: I have checked the service request. We've instructed the sanitation team to clean the park twice a day.",
@@ -753,6 +788,87 @@ def rename_speaker_in_transcript(
     )
 
 
+@router.post("/meetings/{meeting_id}/reprocess", response_model=MeetingOut)
+def reprocess_meeting_audio(
+    meeting_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    from app.models.hoa.meeting_survey import Meeting
+    meeting = db.query(Meeting).filter(Meeting.meeting_id == meeting_id, Meeting.active_status == True).first()
+    if not meeting:
+        raise HTTPException(status_code=404, detail="Meeting not found.")
+    
+    if not meeting.recording_url:
+        raise HTTPException(status_code=400, detail="No recording found for this meeting.")
+        
+    # strip leading slash
+    rel_path = meeting.recording_url.lstrip("/")
+    if not os.path.exists(rel_path):
+        raise HTTPException(status_code=404, detail=f"Recording file not found on disk: {rel_path}")
+        
+    assemblyai_key = os.getenv("ASSEMBLYAI_API_KEY")
+    deepgram_key = os.getenv("DEEPGRAM_API_KEY")
+
+    transcript_text = ""
+    summary_text = ""
+    if assemblyai_key:
+        try:
+            transcript_text, summary_text = run_assemblyai_diarization(rel_path, assemblyai_key)
+        except Exception as e:
+            print(f"AssemblyAI error: {e}")
+            transcript_text = generate_simulated_diarization(meeting, db)
+            summary_text = generate_simulated_summary(meeting)
+    elif deepgram_key:
+        try:
+            transcript_text, summary_text = run_deepgram_diarization(rel_path, deepgram_key)
+        except Exception as e:
+            print(f"Deepgram error: {e}")
+            transcript_text = generate_simulated_diarization(meeting, db)
+            summary_text = generate_simulated_summary(meeting)
+    else:
+        transcript_text = generate_simulated_diarization(meeting, db)
+        summary_text = generate_simulated_summary(meeting)
+
+    meeting.transcript = transcript_text
+    meeting.summary = summary_text
+    db.commit()
+    db.refresh(meeting)
+
+    # Return updated MeetingOut
+    creator = db.query(User).filter(User.user_id == meeting.created_by_id).first()
+    creator_name = f"{creator.first_name or ''} {creator.last_name or ''}".strip() if creator else "System"
+
+    from app.models.hoa.meeting_survey import MeetingRSVP
+    rsvps = db.query(MeetingRSVP).filter(MeetingRSVP.meeting_id == meeting_id).all()
+    yes_count = sum(1 for r in rsvps if r.status == "YES")
+    no_count = sum(1 for r in rsvps if r.status == "NO")
+    maybe_count = sum(1 for r in rsvps if r.status == "MAYBE")
+    user_rsvp_record = next((r for r in rsvps if r.user_id == current_user.user_id), None)
+    user_rsvp_status = user_rsvp_record.status if user_rsvp_record else None
+
+    return MeetingOut(
+        meeting_id=meeting.meeting_id,
+        community_id=meeting.community_id,
+        title=meeting.title,
+        description=meeting.description,
+        meeting_date=meeting.meeting_date,
+        location=meeting.location,
+        meeting_link=meeting.meeting_link,
+        active_status=meeting.active_status,
+        created_by_id=meeting.created_by_id,
+        created_by_name=creator_name,
+        created_date=meeting.created_date,
+        user_rsvp=user_rsvp_status,
+        rsvp_yes_count=yes_count,
+        rsvp_no_count=no_count,
+        rsvp_maybe_count=maybe_count,
+        recording_url=meeting.recording_url,
+        transcript=meeting.transcript,
+        summary=meeting.summary
+    )
+
+
 @router.get("/debug-db")
 def debug_database_meetings(db: Session = Depends(get_db)):
     import os
@@ -844,5 +960,4 @@ def debug_diarize_test(db: Session = Depends(get_db)):
     except Exception as e:
         return {"success": False, "error": str(e)}
 
-
-
+# Trigger reload to load DEEPGRAM_API_KEY

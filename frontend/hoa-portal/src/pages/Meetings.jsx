@@ -12,7 +12,8 @@ import {
   updateSurvey,
   deleteSurvey,
   diarizeMeetingAudio,
-  renameSpeaker
+  renameSpeaker,
+  reprocessMeetingAudio
 } from '../services/meetingSurveyService';
 import API, { getBaseUrl } from '../services/api';
 
@@ -575,7 +576,7 @@ const ViewRSVPModal = ({ meetingId, onClose }) => {
   }, [meetingId]);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
       <div className="bg-white dark:bg-[#1E2E42] w-full max-w-md rounded-3xl shadow-xl overflow-hidden border border-slate-200/80 dark:border-white/10 animate-in zoom-in-95 duration-200">
         {/* Modal Header */}
         <div className="p-5 border-b border-slate-100 dark:border-white/5 flex items-center justify-between">
@@ -772,6 +773,10 @@ const MeetingRecorderModal = ({ meeting, onClose, onSuccess }) => {
         const audioContext = new (window.AudioContext || window.webkitAudioContext)();
         audioContextRef.current = audioContext;
 
+        if (audioContext.state === 'suspended') {
+          await audioContext.resume();
+        }
+
         const analyser = audioContext.createAnalyser();
         analyser.fftSize = 256;
         analyserRef.current = analyser;
@@ -795,6 +800,10 @@ const MeetingRecorderModal = ({ meeting, onClose, onSuccess }) => {
         // Setup Web Audio for visualizer
         const audioContext = new (window.AudioContext || window.webkitAudioContext)();
         audioContextRef.current = audioContext;
+        
+        if (audioContext.state === 'suspended') {
+          await audioContext.resume();
+        }
         
         const analyser = audioContext.createAnalyser();
         analyser.fftSize = 256;
@@ -1104,6 +1113,7 @@ const Meetings = ({ community, user }) => {
   const [showRecorderModal, setShowRecorderModal] = useState(false);
   const [recordingMeeting, setRecordingMeeting] = useState(null);
   const [expandedTranscriptMeetingId, setExpandedTranscriptMeetingId] = useState(null);
+  const [reprocessingMeetingId, setReprocessingMeetingId] = useState(null);
   const [activeMeetingTab, setActiveMeetingTab] = useState({});
 
   // Speaker Renaming states
@@ -1988,17 +1998,6 @@ nextMonth.setMonth(currentMonth.getMonth() + step);
                                   </div>
                                 ) : (
                                   <div className="bg-white dark:bg-[#0D1B2A] rounded-xl p-4 border border-slate-200/60 dark:border-white/5 text-xs leading-relaxed max-h-60 overflow-y-auto custom-scrollbar space-y-2">
-                                    <div className="flex justify-between items-center bg-slate-50 dark:bg-black/30 p-2 rounded-lg mb-2">
-                                      <span className="font-semibold text-slate-600 dark:text-gray-400">Audio Transcription</span>
-                                      <div className="flex gap-1.5">
-                                        <button 
-                                          onClick={() => diarizeMeetingAudio(meeting.meeting_id)}
-                                          className="px-2 py-0.5 bg-purple-600 hover:bg-purple-500 text-white rounded text-[10px] font-bold transition flex items-center gap-1"
-                                        >
-                                          <Mic size={9} /> Process Speakers
-                                        </button>
-                                      </div>
-                                    </div>
                                     {meeting.transcript ? (
                                       meeting.transcript.split('\n').map((line, tIdx) => {
                                         if (!line.trim()) return null;
@@ -2209,6 +2208,30 @@ nextMonth.setMonth(currentMonth.getMonth() + step);
     }
   };
 
+  const handleReprocessMeeting = async (meetingId) => {
+    setReprocessingMeetingId(meetingId);
+    try {
+      const updated = await reprocessMeetingAudio(meetingId);
+      alert("Meeting audio successfully re-transcribed with Deepgram!");
+      // Update meetings list in state
+      setMeetings(prev => prev.map(m => m.meeting_id === meetingId ? updated : m));
+      // Update selectedEvent if it's currently open
+      setSelectedEvent(prev => {
+        if (prev && prev.type === 'meeting' && prev.raw.meeting_id === meetingId) {
+          return {
+            ...prev,
+            raw: updated
+          };
+        }
+        return prev;
+      });
+    } catch (err) {
+      alert("Failed to re-process meeting audio: " + (err.response?.data?.detail || err.message));
+    } finally {
+      setReprocessingMeetingId(null);
+    }
+  };
+
   const handleDeleteSurvey = async (surveyId) => {
     if (!await window.customConfirm("Are you sure you want to permanently delete this survey/poll?")) return;
     try {
@@ -2292,12 +2315,26 @@ nextMonth.setMonth(currentMonth.getMonth() + step);
                 </span>
               )}
             </div>
-            <button 
-              onClick={() => setSelectedEvent(null)} 
-              className="text-slate-400 hover:text-slate-900 dark:text-gray-400 dark:hover:text-white transition"
-            >
-              <X size={20} />
-            </button>
+            <div className="flex items-center gap-2.5">
+              {isMeeting && isAdmin && (
+                <button
+                  onClick={async () => {
+                    await handleDeleteMeeting(meeting.meeting_id);
+                    setSelectedEvent(null);
+                  }}
+                  className="text-red-500 hover:text-red-700 transition p-1 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg"
+                  title="Delete Meeting"
+                >
+                  <Trash2 size={18} />
+                </button>
+              )}
+              <button 
+                onClick={() => setSelectedEvent(null)} 
+                className="text-slate-400 hover:text-slate-900 dark:text-gray-400 dark:hover:text-white transition p-1 hover:bg-slate-100 dark:hover:bg-white/5 rounded-lg"
+              >
+                <X size={20} />
+              </button>
+            </div>
           </div>
 
           <div className="overflow-y-auto custom-scrollbar flex-1 pr-1 space-y-4">
@@ -2357,6 +2394,27 @@ nextMonth.setMonth(currentMonth.getMonth() + step);
                   </div>
                 )}
 
+                {isAdmin && !expired && !meeting.transcript && !meeting.recording_url && (
+                  <div className="p-4 bg-slate-50 dark:bg-black/20 rounded-2xl border border-slate-200/50 dark:border-white/[0.02] flex items-center justify-between">
+                    <div className="space-y-1">
+                      <span className="text-[10px] font-bold text-slate-400 dark:text-gray-500 uppercase block"> Meeting Recording</span>
+                      <span className="text-xs font-semibold text-slate-800 dark:text-white block">
+                        Record and transcribe this meeting
+                      </span>
+                    </div>
+                    <button
+                      onClick={() => {
+                        setRecordingMeeting(meeting);
+                        setShowRecorderModal(true);
+                        setSelectedEvent(null);
+                      }}
+                      className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-extrabold uppercase tracking-wider transition shadow-sm flex items-center gap-1.5"
+                    >
+                      <Mic size={14} className="shrink-0" /> Record
+                    </button>
+                  </div>
+                )}
+
                 {!expired && (
                   <div className="p-4 bg-slate-50 dark:bg-black/20 rounded-2xl border border-slate-200/50 dark:border-white/[0.02]">
                     <span className="text-[10px] font-bold text-slate-400 dark:text-gray-505 uppercase block mb-3 text-center">Are you attending?</span>
@@ -2400,10 +2458,79 @@ nextMonth.setMonth(currentMonth.getMonth() + step);
                         className="w-full h-8 accent-blue-600"
                       />
                     )}
-                    {meeting.summary && (
-                      <div className="bg-white dark:bg-[#0D1B2A] rounded-xl p-3.5 border border-slate-200/60 dark:border-white/5 text-xs space-y-1.5 max-h-40 overflow-y-auto custom-scrollbar">
-                        <strong className="text-slate-800 dark:text-white text-[10px] uppercase font-bold tracking-wider">AI Summary:</strong>
-                        <p className="text-slate-600 dark:text-gray-300 leading-relaxed font-medium">{meeting.summary}</p>
+
+                    {meeting.transcript && (
+                      <div className="flex gap-1.5 border-b border-slate-200/50 dark:border-white/5 pb-2">
+                        <button
+                          type="button"
+                          onClick={() => setActiveMeetingTab({ ...activeMeetingTab, [meeting.meeting_id]: 'summary' })}
+                          className={`px-3 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1 ${
+                            (activeMeetingTab[meeting.meeting_id] || 'summary') === 'summary'
+                              ? 'bg-blue-600/10 text-blue-600 dark:text-blue-400 shadow-sm'
+                              : 'text-slate-500 hover:text-slate-800 dark:text-gray-400 dark:hover:text-white'
+                          }`}
+                        >
+                          <FileText size={12} className="inline mr-1 align-text-top shrink-0" /> AI Summary
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setActiveMeetingTab({ ...activeMeetingTab, [meeting.meeting_id]: 'transcript' })}
+                          className={`px-3 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1 ${
+                            activeMeetingTab[meeting.meeting_id] === 'transcript'
+                              ? 'bg-blue-600/10 text-blue-600 dark:text-blue-400 shadow-sm'
+                              : 'text-slate-500 hover:text-slate-800 dark:text-gray-400 dark:hover:text-white'
+                          }`}
+                        >
+                          <Mic size={12} className="inline mr-1 align-text-top shrink-0" /> AI Transcript
+                        </button>
+                      </div>
+                    )}
+
+                    {(activeMeetingTab[meeting.meeting_id] || 'summary') === 'summary' ? (
+                      meeting.summary && (
+                        <div className="bg-white dark:bg-[#0D1B2A] rounded-xl p-3.5 border border-slate-200/60 dark:border-white/5 text-xs space-y-1.5 max-h-40 overflow-y-auto custom-scrollbar">
+                          <strong className="text-slate-800 dark:text-white text-[10px] uppercase font-bold tracking-wider">AI Summary:</strong>
+                          <p className="text-slate-600 dark:text-gray-300 leading-relaxed font-medium whitespace-pre-line">{meeting.summary}</p>
+                        </div>
+                      )
+                    ) : (
+                      <div className="bg-white dark:bg-[#0D1B2A] rounded-xl p-3.5 border border-slate-200/60 dark:border-white/5 text-xs max-h-40 overflow-y-auto custom-scrollbar space-y-2">
+                        {meeting.transcript ? (
+                          meeting.transcript.split('\n').map((line, tIdx) => {
+                            if (!line.trim()) return null;
+                            const diarizationMatch = line.match(/^([^:]+):\s*(.*)$/);
+                            if (diarizationMatch) {
+                              const speakerName = diarizationMatch[1].trim();
+                              const speechText = diarizationMatch[2].trim();
+                              return (
+                                <div key={tIdx} className="border-l-2 border-slate-200 dark:border-white/10 pl-3 py-1 hover:bg-slate-50/50 dark:hover:bg-white/[0.01] transition-all group relative">
+                                  <div className="flex items-center gap-1.5 mb-0.5">
+                                    <span className="font-extrabold text-[10px] text-purple-600 dark:text-purple-400 uppercase tracking-wide">
+                                      {speakerName}
+                                    </span>
+                                    {isAdmin && (
+                                      <button
+                                        onClick={() => {
+                                          setRenameSpeakerMeetingId(meeting.meeting_id);
+                                          setRenameSpeakerOldLabel(speakerName);
+                                          setShowRenameSpeakerModal(true);
+                                        }}
+                                        className="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 hover:bg-slate-200 dark:hover:bg-white/10 rounded text-slate-400 hover:text-slate-600 dark:hover:text-white"
+                                        title="Rename Speaker"
+                                      >
+                                        <Edit2 size={10} />
+                                      </button>
+                                    )}
+                                  </div>
+                                  <p className="text-slate-600 dark:text-gray-300 leading-relaxed font-medium">{speechText}</p>
+                                </div>
+                              );
+                            }
+                            return <p key={tIdx} className="text-slate-600 dark:text-gray-300 leading-relaxed font-medium">{line}</p>;
+                          })
+                        ) : (
+                          <p className="italic text-slate-400">No transcript available.</p>
+                        )}
                       </div>
                     )}
                   </div>
@@ -2705,24 +2832,35 @@ nextMonth.setMonth(currentMonth.getMonth() + step);
                           </div>
                           <h4 className="font-extrabold text-sm text-slate-800 dark:text-white truncate">{meeting.title}</h4>
                         </div>
-                        <button
-                          onClick={() => {
-                            const dateObj = new Date(meeting.meeting_date);
-                            setSelectedDate(dateObj);
-                            setCurrentMonth(dateObj);
-                            setSelectedEvent({
-                              id: `meeting-${meeting.meeting_id}`,
-                              type: 'meeting',
-                              title: meeting.title,
-                              desc: meeting.description,
-                              time: dateObj.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
-                              raw: meeting
-                            });
-                          }}
-                          className="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-700 dark:text-gray-300 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm whitespace-nowrap self-end md:self-auto"
-                        >
-                          View Details & Transcripts
-                        </button>
+                        <div className="flex gap-2 items-center self-end md:self-auto">
+                          {isAdmin && (
+                            <button
+                              onClick={() => handleDeleteMeeting(meeting.meeting_id)}
+                              className="p-1.5 bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white rounded-xl transition duration-150 shadow-sm"
+                              title="Delete Meeting"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          )}
+                          <button
+                            onClick={() => {
+                              const dateObj = new Date(meeting.meeting_date);
+                              setSelectedDate(dateObj);
+                              setCurrentMonth(dateObj);
+                              setSelectedEvent({
+                                id: `meeting-${meeting.meeting_id}`,
+                                type: 'meeting',
+                                title: meeting.title,
+                                desc: meeting.description,
+                                time: dateObj.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+                                raw: meeting
+                              });
+                            }}
+                            className="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-700 dark:text-gray-300 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm whitespace-nowrap"
+                          >
+                            View Details & Transcripts
+                          </button>
+                        </div>
                       </div>
                     ))}
                 </div>

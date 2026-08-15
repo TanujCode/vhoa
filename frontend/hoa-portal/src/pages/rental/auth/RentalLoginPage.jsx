@@ -11,6 +11,13 @@ export default function RentalLoginPage() {
   const [searchParams] = useSearchParams();
   const emailFromUrl = searchParams.get('email') || '';
   const msgFromUrl = searchParams.get('msg') || '';
+  const leaseIdFromUrl = searchParams.get('lease_id') || '';
+
+  useEffect(() => {
+    if (leaseIdFromUrl) {
+      localStorage.setItem('pending_lease_id', leaseIdFromUrl);
+    }
+  }, [leaseIdFromUrl]);
 
   const {
     register,

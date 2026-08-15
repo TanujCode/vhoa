@@ -138,9 +138,15 @@ class UnitOut(BaseModel):
     tenant_name: Optional[str] = None
     tenant_email: Optional[str] = None
     has_active_lease: bool = False
+    property_name: Optional[str] = None
+    property_address: Optional[str] = None
+    property_city: Optional[str] = None
+    property_state: Optional[str] = None
+    property_zip: Optional[str] = None
 
     class Config:
         from_attributes = True
+
 
 
 class PropertyOut(BaseModel):
@@ -160,6 +166,33 @@ class PropertyOut(BaseModel):
 
 
 # --- LEASE SCHEMAS ---
+class TenantDocumentOut(BaseModel):
+    document_id: int
+    lease_id: int
+    tenant_id: Optional[int] = None
+    doc_type: str
+    original_name: str
+    uploaded_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class TenantInfoSubmit(BaseModel):
+    tenant_dob: str
+    tenant_current_address: str
+    tenant_emergency_contact: str
+    tenant_emergency_phone: str
+    signature_text: str
+    has_parking: bool = False
+    parking_cars_count: int = 0
+    has_pets: bool = False
+    pets_count: int = 0
+    pet_details: str = ""
+    num_occupants: Optional[int] = 1
+
+
+
 class LeaseCreate(BaseModel):
     unit_id: int
     tenant_email: EmailStr
@@ -204,6 +237,15 @@ class LeaseOut(BaseModel):
     property_name: Optional[str] = None
     tenant_name: Optional[str] = None
     tenant_phone: Optional[str] = None
+
+    # New tenant details
+    tenant_dob: Optional[str] = None
+    tenant_current_address: Optional[str] = None
+    tenant_emergency_contact: Optional[str] = None
+    tenant_emergency_phone: Optional[str] = None
+    num_occupants: Optional[int] = 1
+    documents: List[TenantDocumentOut] = []
+
 
     class Config:
         from_attributes = True
@@ -300,11 +342,51 @@ class RentalMaintenanceCreate(BaseModel):
     description: str
     priority: str = "NORMAL"  # LOW, NORMAL, HIGH, URGENT
 
+    @field_validator("title")
+    @classmethod
+    def title_valid(cls, v):
+        if v and v.strip():
+            import re
+            trimmed = v.strip()
+            # If it starts with [Request Type], strip it before validating
+            match = re.match(r"^\[(.*?)\]\s*(.*)$", trimmed)
+            if match:
+                actual_title = match.group(2).strip()
+            else:
+                actual_title = trimmed
+            
+            if len(actual_title) < 5:
+                raise ValueError("The title must be at least 5 characters long.")
+            if not re.match(r"^[a-zA-Z\s]+$", actual_title):
+                raise ValueError("Title must contain only letters and spaces.")
+            return trimmed
+        return v
+
 
 class RentalMaintenanceTenantUpdate(BaseModel):
     title: str
     description: str
     priority: str = "NORMAL"
+
+    @field_validator("title")
+    @classmethod
+    def title_valid(cls, v):
+        if v and v.strip():
+            import re
+            trimmed = v.strip()
+            # If it starts with [Request Type], strip it before validating
+            match = re.match(r"^\[(.*?)\]\s*(.*)$", trimmed)
+            if match:
+                actual_title = match.group(2).strip()
+            else:
+                actual_title = trimmed
+            
+            if len(actual_title) < 5:
+                raise ValueError("The title must be at least 5 characters long.")
+            if not re.match(r"^[a-zA-Z\s]+$", actual_title):
+                raise ValueError("Title must contain only letters and spaces.")
+            return trimmed
+        return v
 
 
 class RentalMaintenanceNoteRequest(BaseModel):

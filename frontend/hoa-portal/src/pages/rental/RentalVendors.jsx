@@ -40,6 +40,14 @@ export default function RentalVendors() {
 
   useEffect(() => {
     fetchVendors();
+
+    const handleGlobalUpdate = () => {
+      fetchVendors();
+    };
+    window.addEventListener('rental-data-changed', handleGlobalUpdate);
+    return () => {
+      window.removeEventListener('rental-data-changed', handleGlobalUpdate);
+    };
   }, []);
 
   const fetchVendors = async () => {

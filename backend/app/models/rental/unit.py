@@ -22,23 +22,52 @@ class Unit(Base):
 
     @builtins.property
     def tenant_name(self) -> str | None:
+        from app.utils.encryption import safe_decrypt_field
         for lease in self.leases:
             if lease.status == "ACTIVE":
                 if lease.tenant:
                     return lease.tenant.full_name
-                return lease.tenant_email
+                return safe_decrypt_field(lease.tenant_email)
         return None
 
     @builtins.property
     def tenant_email(self) -> str | None:
+        from app.utils.encryption import safe_decrypt_field
         for lease in self.leases:
             if lease.status == "ACTIVE":
-                return lease.tenant_email
+                return safe_decrypt_field(lease.tenant_email)
         return None
 
     @builtins.property
     def has_active_lease(self) -> bool:
         for lease in self.leases:
-            if lease.status in ["ACTIVE", "PENDING_SIGNATURE"]:
+            if lease.status in [
+                "ACTIVE",
+                "PENDING_TENANT_REVIEW",
+                "PENDING_LANDLORD_APPROVAL",
+                "PENDING_SIGNATURE",  # backward compat
+            ]:
                 return True
         return False
+
+    @builtins.property
+    def property_name(self) -> str | None:
+        return self.property.name if self.property else None
+
+    @builtins.property
+    def property_address(self) -> str | None:
+        return self.property.address if self.property else None
+
+    @builtins.property
+    def property_city(self) -> str | None:
+        return self.property.city if self.property else None
+
+    @builtins.property
+    def property_state(self) -> str | None:
+        return self.property.state if self.property else None
+
+    @builtins.property
+    def property_zip(self) -> str | None:
+        return self.property.zip_code if self.property else None
+
+

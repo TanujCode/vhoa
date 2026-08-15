@@ -29,10 +29,17 @@ export const formatUsPhone = (phoneStr) => {
 
 export const formatPhoneAsYouType = (value) => {
   if (!value) return value;
-  const cleaned = value.replace(/\D/g, '');
+  let cleaned = value.replace(/\D/g, '');
   if (cleaned.length === 0) return '';
+  
+  // If it's an 11-digit number starting with '1', strip the leading '1' (US country code)
+  if (cleaned.length === 11 && cleaned.startsWith('1')) {
+    cleaned = cleaned.slice(1);
+  }
+  
   if (cleaned.length <= 3) return `(${cleaned}`;
   if (cleaned.length <= 6) return `(${cleaned.slice(0, 3)}) ${cleaned.slice(3)}`;
   return `(${cleaned.slice(0, 3)}) ${cleaned.slice(3, 6)}-${cleaned.slice(6, 10)}`;
 };
+
 

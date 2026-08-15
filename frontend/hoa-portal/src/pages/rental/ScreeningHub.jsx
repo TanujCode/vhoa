@@ -3,6 +3,8 @@ import { Users, FileText, CheckCircle2, ShieldAlert, Sparkles, User, Mail, Dolla
 import { toast } from 'react-hot-toast';
 import API, { getBaseUrl } from '../../services/api';
 import ConfirmModal from '../../components/ConfirmModal';
+import { formatUsPhone } from '../../utils/phoneFormatter';
+
 
 export default function ScreeningHub({ user, setActivePage, selectedPropertyFilterId = 'all' }) {
   const isLandlord = user?.role === 'landlord' || user?.role_name === 'landlord' || user?.role_id === 1; // Super admin also landlord
@@ -849,7 +851,7 @@ export default function ScreeningHub({ user, setActivePage, selectedPropertyFilt
                     </div>
                     <div>
                       <span className="text-gray-400 block text-xs">Phone</span>
-                      <span className="font-semibold text-gray-900 dark:text-white">{selectedApp.phone || 'N/A'}</span>
+                      <span className="font-semibold text-gray-900 dark:text-white">{formatUsPhone(selectedApp.phone)}</span>
                     </div>
                     <div>
                       <span className="text-gray-400 block text-xs">Employment Status</span>

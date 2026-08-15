@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, Date, ForeignKey, Boolean
+from sqlalchemy import Column, Integer, String, DateTime, Date, ForeignKey, Boolean, Text
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from app.database import Base
@@ -11,18 +11,18 @@ class RentalVendor(Base):
     landlord_id = Column(Integer, ForeignKey("rental_users.user_id"), nullable=False)
 
     # ── Basic Info ────────────────────────────
-    company_name = Column(String(255), nullable=False)
-    contact_person = Column(String(255), nullable=False)
-    email = Column(String(255), nullable=False)
-    phone = Column(String(20), nullable=False)
+    company_name = Column(Text, nullable=False)
+    contact_person = Column(Text, nullable=False)
+    email = Column(Text, nullable=False)
+    phone = Column(Text, nullable=False)
     zip_code = Column(String(20), nullable=True)
     category = Column(String(100), nullable=False)
     # "PLUMBING" | "ELECTRICAL" | "LANDSCAPING" | "SECURITY" | "CLEANING" | "OTHER"
 
     # ── License & Insurance ───────────────────
-    license_number = Column(String(100), nullable=True)
+    license_number = Column(Text, nullable=True)
     license_expiry = Column(Date, nullable=True)
-    insurance_number = Column(String(100), nullable=True)
+    insurance_number = Column(Text, nullable=True)
     insurance_expiry = Column(Date, nullable=True)
 
     # ── Status ────────────────────────────────

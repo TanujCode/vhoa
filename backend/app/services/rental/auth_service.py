@@ -185,11 +185,12 @@ def login_rental_user(email_id: str, password: str, db: Session) -> dict:
 
     from app.services.hoa.token_service import create_access_token, create_session_token
     from app.config import settings
+    from app.utils.decryption_helpers import decrypt_user_obj
     return {
         "access_token": create_access_token(user.user_id, user.email_id, role_name, email_verified),
         "session_token": create_session_token(user.user_id, user.email_id, role_name, email_verified),
         "access_expires_in": settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
         "session_expires_in": settings.SESSION_TOKEN_EXPIRE_HOURS * 3600,
         "email_verified": email_verified,
-        "user": user,
+        "user": decrypt_user_obj(user),
     }

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Bell, CheckCircle, AlertTriangle, Clock, Calendar, FileText, Trash2 } from 'lucide-react';
+import { Bell, CheckCircle, AlertTriangle, Clock, Calendar, FileText, Trash2, X } from 'lucide-react';
 
 const NotifPanel = ({ isOpen, onClose, notifications = [], onMarkAllRead, lastReadTimestamp, readNotificationIds = [], onNotifClick }) => {
   const lastRead = lastReadTimestamp !== undefined ? lastReadTimestamp : Number(localStorage.getItem('last_read_notifications') || 0);
@@ -121,9 +121,9 @@ const NotifPanel = ({ isOpen, onClose, notifications = [], onMarkAllRead, lastRe
         </div>
         <button 
           onClick={onClose} 
-          className="text-2xl text-gray-400 hover:text-gray-600 dark:hover:text-white transition"
+          className="text-gray-400 hover:text-gray-600 dark:hover:text-white transition p-1.5 hover:bg-slate-100 dark:hover:bg-white/10 rounded-xl flex items-center justify-center"
         >
-          
+          <X size={20} />
         </button>
       </div>
 

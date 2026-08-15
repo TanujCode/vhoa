@@ -8,16 +8,8 @@ from app.routers.rental.dependencies import get_current_rental_user
 router = APIRouter(prefix="/rental", tags=["Rental - Audit Logs"])
 
 def _to_audit_out(log) -> AuditLogOut:
-    user_name = None
-    if log.user:
-        parts = []
-        if log.user.first_name:
-            parts.append(log.user.first_name)
-        if log.user.middle_name:
-            parts.append(log.user.middle_name)
-        if log.user.last_name:
-            parts.append(log.user.last_name)
-        user_name = " ".join(parts)
+    user_name = log.user.full_name if log.user else None
+
 
     # Map module dynamically from action string if logged as "rental"
     module_val = log.module

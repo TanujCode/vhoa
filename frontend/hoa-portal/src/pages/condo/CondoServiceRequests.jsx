@@ -80,12 +80,13 @@ const SubmitModal = ({ communityId, onClose, onSuccess, showAlert }) => {
   });
 
   const handleTitleChange = (val) => {
-    setForm(prev => ({ ...prev, title: val }));
-    if (val.trim() === '') {
+    const cleaned = val.replace(/[^A-Za-z\s]/g, '');
+    setForm(prev => ({ ...prev, title: cleaned }));
+    if (cleaned.trim() === '') {
       setErrors(prev => ({ ...prev, title: '' }));
       return;
     }
-    const err = validateTicketTitle(val);
+    const err = validateTicketTitle(cleaned);
     setErrors(prev => ({ ...prev, title: err === true ? '' : err }));
   };
 
