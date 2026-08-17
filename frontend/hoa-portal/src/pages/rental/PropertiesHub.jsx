@@ -833,9 +833,34 @@ export default function PropertiesHub({
   if (properties.length === 0) {
     return (
       <div className="py-12 animate-fade-in text-center">
-              </div>
-            )}
-          </form>
+        <div className="max-w-xl mx-auto bg-white dark:bg-[#1E2E42] border border-slate-200/80 dark:border-white/10 rounded-3xl p-8 sm:p-10 shadow-sm flex flex-col space-y-6 text-left animate-scale-up">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
+              <Sparkles className="w-7 h-7 text-blue-500 animate-pulse" />
+              Welcome, {user?.full_name || 'Landlord'}
+            </h1>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mt-3 font-medium leading-relaxed">
+              Manage your tenants, collect rent online, track maintenance requests, and keep your property portfolios organized all in one place. Let's register your very first property to unlock the full potential of NestBloq!
+            </p>
+          </div>
+          
+          <div className="border-t border-slate-100 dark:border-white/5 pt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+              lets start
+            </span>
+            <button
+              onClick={() => {
+                setErrorMsg('');
+                setPropertyType('single');
+                setWizardUnits([{ unit_number: 'Single Family', rent_amount: '' }]);
+                setWizardStep(1);
+                setShowPropModal(true);
+              }}
+              className="w-full sm:w-auto bg-blue-600 hover:bg-blue-500 text-white font-bold py-3.5 px-6 rounded-2xl text-xs transition duration-200 flex items-center justify-center gap-1.5 cursor-pointer shadow-lg shadow-blue-500/10 font-sans"
+            >
+              <Plus className="w-4 h-4" /> Add Property
+            </button>
+          </div>
         </div>
       </div>
     );
