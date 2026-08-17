@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Building2, Plus, DoorOpen, BadgeAlert, PlusCircle, CheckCircle, Edit3, Trash2, Home, Building, ArrowLeft, ArrowRight, ChevronDown, Check, Sparkles, Key, Users, FileText } from 'lucide-react';
 import API from '../../services/api';
 import ConfirmModal from '../../components/ConfirmModal';
+import CustomSelect from '../../components/CustomSelect';
 
 export default function PropertiesHub({ 
   user, 
@@ -552,6 +553,11 @@ export default function PropertiesHub({
         unit_number: 'Single Family',
         rent_amount: 0.0
       });
+    } else if (propertyType === 'condo') {
+      formattedUnits.push({
+        unit_number: 'Condo Unit',
+        rent_amount: 0.0
+      });
     } else {
       formattedUnits.push({
         unit_number: 'Unit 1',
@@ -875,21 +881,33 @@ export default function PropertiesHub({
                   <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
                     Select Property Type *
                   </label>
-                  <select
+                  <CustomSelect
                     value={propertyType}
-                    onChange={(e) => {
-                      setPropertyType(e.target.value);
-                      setWizardUnits([{ unit_number: 'Single Family', rent_amount: '' }]);
+                    onChange={(val) => {
+                      setPropertyType(val);
+                      if (val === 'single') {
+                        setWizardUnits([{ unit_number: 'Single Family', rent_amount: '' }]);
+                      } else if (val === 'condo') {
+                        setWizardUnits([{ unit_number: 'Condo Unit', rent_amount: '' }]);
+                      }
                     }}
-                    className="appearance-none w-full bg-slate-50 dark:bg-[#1E2E42] border border-slate-250/60 dark:border-white/10 text-slate-800 dark:text-white py-3.5 pl-4 pr-4 rounded-2xl text-sm font-semibold focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none cursor-pointer shadow-sm transition-all"
-                  >
-                    <option value="single">Single-Family Home</option>
-                  </select>
+                    options={[
+                      { value: 'single', label: 'Single-Family Home' },
+                      { value: 'condo', label: 'Condo' }
+                    ]}
+                    buttonClassName="w-full flex items-center justify-between bg-slate-50 dark:bg-[#1E2E42] border border-slate-250/60 dark:border-white/10 text-slate-800 dark:text-white py-3.5 pl-4 pr-4 rounded-2xl text-sm font-semibold focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none cursor-pointer shadow-sm transition-all"
+                  />
                   
                   <div className="p-4 rounded-2xl bg-blue-500/[0.03] dark:bg-blue-500/[0.02] border border-blue-500/10 dark:border-blue-500/20 text-xs font-medium text-slate-500 dark:text-slate-400 leading-relaxed mt-3">
-                    <span>
-                      <strong>Single-Family Home:</strong> Best used for a single-family home. This creates one rentable unit at this address under one lease agreement.
-                    </span>
+                    {propertyType === 'single' ? (
+                      <span>
+                        <strong>Single-Family Home:</strong> Best used for a single-family home. This creates one rentable unit at this address under one lease agreement.
+                      </span>
+                    ) : (
+                      <span>
+                        <strong>Condo:</strong> Best used for an individual condominium unit. This creates one rentable unit at this address under one lease agreement.
+                      </span>
+                    )}
                   </div>
 
                 </div>
@@ -897,7 +915,16 @@ export default function PropertiesHub({
                 <div className="pt-4 flex justify-end">
                   <button
                     type="button"
-                    onClick={() => setWizardStep(2)}
+                    onClick={() => {
+                      if (propertyType === 'single') {
+                        setWizardUnits([{ unit_number: 'Single Family', rent_amount: '' }]);
+                      } else if (propertyType === 'condo') {
+                        setWizardUnits([{ unit_number: 'Condo Unit', rent_amount: '' }]);
+                      } else {
+                        setWizardUnits([{ unit_number: 'Apt 101', rent_amount: '' }]);
+                      }
+                      setWizardStep(2);
+                    }}
                     className="bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-6 rounded-xl text-xs transition duration-200 flex items-center gap-1.5 cursor-pointer shadow-md shadow-blue-500/10 font-sans"
                   >
                     Next <ArrowRight className="w-4 h-4" />
@@ -1207,7 +1234,12 @@ export default function PropertiesHub({
             </button>
           )}
           <button 
-            onClick={() => { setErrorMsg(''); setShowPropModal(true); }}
+            onClick={() => { 
+              setErrorMsg(''); 
+              setPropertyType('single'); 
+              setWizardUnits([{ unit_number: 'Single Family', rent_amount: '' }]); 
+              setShowPropModal(true); 
+            }}
             className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2.5 rounded-xl flex items-center gap-1.5 text-xs font-bold transition-all shadow-md shadow-blue-500/20 whitespace-nowrap cursor-pointer"
           >
             <Plus className="w-4 h-4" /> Add Property
@@ -1368,7 +1400,8 @@ export default function PropertiesHub({
             <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0 custom-scrollbar shrink-0">
               {[
                 { id: 'all', label: 'All Properties', count: properties.length },
-                { id: 'single', label: 'Single Family', count: sfPropsCount }
+                { id: 'single', label: 'Single Family', count: sfPropsCount },
+                { id: 'condo', label: 'Condos', count: condoPropsCount }
               ].map(tab => (
                 <button
                   key={tab.id}
@@ -1504,23 +1537,34 @@ export default function PropertiesHub({
                         SELECT PROPERTY TYPE *
                       </label>
                       <div className="relative">
-                        <select
+                        <CustomSelect
                           value={propertyType}
-                          onChange={(e) => {
-                            const val = e.target.value;
+                          onChange={(val) => {
                             setPropertyType(val);
-                            setWizardUnits([{ unit_number: 'Single Family', rent_amount: '' }]);
+                            if (val === 'single') {
+                              setWizardUnits([{ unit_number: 'Single Family', rent_amount: '' }]);
+                            } else if (val === 'condo') {
+                              setWizardUnits([{ unit_number: 'Condo Unit', rent_amount: '' }]);
+                            }
                           }}
-                          className="appearance-none w-full bg-slate-50 dark:bg-[#1E2E42] border border-slate-200 dark:border-white/10 text-slate-800 dark:text-white py-3.5 pl-4 pr-4 rounded-2xl text-sm font-semibold focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none cursor-pointer shadow-sm transition-all"
-                        >
-                          <option value="single">Single-Family Home</option>
-                        </select>
+                          options={[
+                            { value: 'single', label: 'Single-Family Home' },
+                            { value: 'condo', label: 'Condo' }
+                          ]}
+                          buttonClassName="w-full flex items-center justify-between bg-slate-50 dark:bg-[#1E2E42] border border-slate-200 dark:border-white/10 text-slate-800 dark:text-white py-3.5 pl-4 pr-4 rounded-2xl text-sm font-semibold focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none cursor-pointer shadow-sm transition-all"
+                        />
                       </div>
                       
                       <div className="p-4 rounded-2xl bg-blue-500/[0.03] dark:bg-blue-500/[0.02] border border-blue-500/10 dark:border-blue-500/20 text-xs font-medium text-slate-500 dark:text-slate-400 leading-relaxed mt-3">
-                        <span>
-                          <strong>Single-Family Home:</strong> Best used for a single-family home. This creates one rentable unit at this address under one lease agreement.
-                        </span>
+                        {propertyType === 'single' ? (
+                          <span>
+                            <strong>Single-Family Home:</strong> Best used for a single-family home. This creates one rentable unit at this address under one lease agreement.
+                          </span>
+                        ) : (
+                          <span>
+                            <strong>Condo:</strong> Best used for an individual condominium unit. This creates one rentable unit at this address under one lease agreement.
+                          </span>
+                        )}
                       </div>
 
                     </div>
@@ -1531,6 +1575,8 @@ export default function PropertiesHub({
                         onClick={() => {
                           if (propertyType === 'single') {
                             setWizardUnits([{ unit_number: 'Single Family', rent_amount: '' }]);
+                          } else if (propertyType === 'condo') {
+                            setWizardUnits([{ unit_number: 'Condo Unit', rent_amount: '' }]);
                           } else {
                             setWizardUnits([{ unit_number: 'Apt 101', rent_amount: '' }]);
                           }

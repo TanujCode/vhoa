@@ -198,6 +198,34 @@ def run_db_upgrades():
         )
 
     # ── Separate Rental Users and constraints ─────────────────────
+    # Alter columns to TEXT to support encrypted values, and drop unique constraints
+    # rental_users
+    _safe_execute("ALTER TABLE rental_users ALTER COLUMN mobile_number TYPE TEXT;", "rental_users.mobile_number_to_text")
+    _safe_execute("ALTER TABLE rental_users ALTER COLUMN first_name TYPE TEXT;", "rental_users.first_name_to_text")
+    _safe_execute("ALTER TABLE rental_users ALTER COLUMN middle_name TYPE TEXT;", "rental_users.middle_name_to_text")
+    _safe_execute("ALTER TABLE rental_users ALTER COLUMN last_name TYPE TEXT;", "rental_users.last_name_to_text")
+    _safe_execute("ALTER TABLE rental_users DROP CONSTRAINT IF EXISTS rental_users_mobile_number_key;", "drop_rental_users_mobile_number_key")
+    _safe_execute("ALTER TABLE rental_users DROP CONSTRAINT IF EXISTS uq_rental_users_mobile_number;", "drop_uq_rental_users_mobile_number")
+    _safe_execute("DROP INDEX IF EXISTS idx_rental_users_mobile_number;", "drop_idx_rental_users_mobile_number")
+
+    # rental_applications
+    _safe_execute("ALTER TABLE rental_applications ALTER COLUMN monthly_income TYPE TEXT;", "rental_applications.monthly_income_to_text")
+    _safe_execute("ALTER TABLE rental_applications ALTER COLUMN credit_score TYPE TEXT;", "rental_applications.credit_score_to_text")
+    _safe_execute("ALTER TABLE rental_applications ALTER COLUMN full_name TYPE TEXT;", "rental_applications.full_name_to_text")
+    _safe_execute("ALTER TABLE rental_applications ALTER COLUMN phone TYPE TEXT;", "rental_applications.phone_to_text")
+    _safe_execute("ALTER TABLE rental_applications ALTER COLUMN employment_status TYPE TEXT;", "rental_applications.employment_status_to_text")
+    _safe_execute("ALTER TABLE rental_applications ALTER COLUMN pet_details TYPE TEXT;", "rental_applications.pet_details_to_text")
+    _safe_execute("ALTER TABLE rental_applications ALTER COLUMN vehicle_details TYPE TEXT;", "rental_applications.vehicle_details_to_text")
+    _safe_execute("ALTER TABLE rental_applications ALTER COLUMN income_proof_url TYPE TEXT;", "rental_applications.income_proof_url_to_text")
+
+    # rental_vendors
+    _safe_execute("ALTER TABLE rental_vendors ALTER COLUMN company_name TYPE TEXT;", "rental_vendors.company_name_to_text")
+    _safe_execute("ALTER TABLE rental_vendors ALTER COLUMN contact_person TYPE TEXT;", "rental_vendors.contact_person_to_text")
+    _safe_execute("ALTER TABLE rental_vendors ALTER COLUMN email TYPE TEXT;", "rental_vendors.email_to_text")
+    _safe_execute("ALTER TABLE rental_vendors ALTER COLUMN phone TYPE TEXT;", "rental_vendors.phone_to_text")
+    _safe_execute("ALTER TABLE rental_vendors ALTER COLUMN license_number TYPE TEXT;", "rental_vendors.license_number_to_text")
+    _safe_execute("ALTER TABLE rental_vendors ALTER COLUMN insurance_number TYPE TEXT;", "rental_vendors.insurance_number_to_text")
+
     # 2. Copy existing users from users to rental_users if they have a rental role
     _safe_execute("""
         INSERT INTO rental_users (

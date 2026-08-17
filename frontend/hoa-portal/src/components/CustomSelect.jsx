@@ -11,7 +11,8 @@ export default function CustomSelect({
   placeholder = 'Select option...', 
   className = '',
   disabled = false,
-  direction = 'auto' // 'down' | 'up' | 'auto'
+  direction = 'auto', // 'down' | 'up' | 'auto'
+  buttonClassName = ''
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [openUpward, setOpenUpward] = useState(direction === 'up');
@@ -72,7 +73,7 @@ export default function CustomSelect({
         type="button"
         disabled={disabled}
         onClick={() => setIsOpen(!isOpen)}
-        className={`w-full flex items-center justify-between gap-2 bg-slate-50 dark:bg-[#0D1B2A] hover:bg-slate-100/80 dark:hover:bg-[#112236] border border-slate-200 dark:border-white/20 rounded-2xl px-3.5 py-2.5 text-xs font-bold text-slate-800 dark:text-white transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500/30 ${
+        className={buttonClassName || `w-full flex items-center justify-between gap-2 bg-slate-50 dark:bg-[#0D1B2A] hover:bg-slate-100/80 dark:hover:bg-[#112236] border border-slate-200 dark:border-white/20 rounded-2xl px-3.5 py-2.5 text-xs font-bold text-slate-800 dark:text-white transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500/30 ${
           disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer shadow-sm hover:shadow'
         }`}
       >
