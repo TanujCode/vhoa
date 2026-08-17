@@ -70,6 +70,17 @@ export default function PropertiesHub({
   const [wizardStep, setWizardStep] = useState(1);
   const [propertyType, setPropertyType] = useState('single');
   const [wizardUnits, setWizardUnits] = useState([{ unit_number: 'Single Family', rent_amount: '' }]);
+  const [onboardDropdownOpen, setOnboardDropdownOpen] = useState(false);
+  const [modalDropdownOpen, setModalDropdownOpen] = useState(false);
+
+  useEffect(() => {
+    const handleOutsideClick = () => {
+      setOnboardDropdownOpen(false);
+      setModalDropdownOpen(false);
+    };
+    document.addEventListener('click', handleOutsideClick);
+    return () => document.removeEventListener('click', handleOutsideClick);
+  }, []);
 
   const addWizardUnitRow = () => {
     setWizardUnits(prev => [...prev, { unit_number: `Apt ${prev.length + 1}`, rent_amount: '' }]);
@@ -881,22 +892,53 @@ export default function PropertiesHub({
                   <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
                     Select Property Type *
                   </label>
-                  <CustomSelect
-                    value={propertyType}
-                    onChange={(val) => {
-                      setPropertyType(val);
-                      if (val === 'single') {
-                        setWizardUnits([{ unit_number: 'Single Family', rent_amount: '' }]);
-                      } else if (val === 'condo') {
-                        setWizardUnits([{ unit_number: 'Condo Unit', rent_amount: '' }]);
-                      }
-                    }}
-                    options={[
-                      { value: 'single', label: 'Single-Family Home' },
-                      { value: 'condo', label: 'Condo' }
-                    ]}
-                    buttonClassName="w-full flex items-center justify-between bg-slate-50 dark:bg-[#1E2E42] border border-slate-250/60 dark:border-white/10 text-slate-800 dark:text-white py-3.5 pl-4 pr-4 rounded-2xl text-sm font-semibold focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none cursor-pointer shadow-sm transition-all"
-                  />
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setOnboardDropdownOpen(!onboardDropdownOpen);
+                      }}
+                      className={`w-full text-left bg-slate-50 dark:bg-[#1E2E42] border ${
+                        onboardDropdownOpen ? 'border-blue-500 ring-2 ring-blue-500/20' : 'border-slate-250/60 dark:border-white/10'
+                      } text-slate-800 dark:text-white py-3.5 pl-4 pr-4 rounded-2xl text-sm font-semibold outline-none cursor-pointer shadow-sm transition-all`}
+                    >
+                      {propertyType === 'single' ? 'Single-Family Home' : 'Condo'}
+                    </button>
+                    
+                    {onboardDropdownOpen && (
+                      <div className="absolute left-0 right-0 mt-2 bg-white dark:bg-[#1E2E42] border border-slate-200 dark:border-white/10 rounded-2xl shadow-xl z-50 overflow-hidden">
+                        <div
+                          onClick={() => {
+                            setPropertyType('single');
+                            setWizardUnits([{ unit_number: 'Single Family', rent_amount: '' }]);
+                            setOnboardDropdownOpen(false);
+                          }}
+                          className={`px-4 py-3 text-sm font-semibold cursor-pointer transition-colors ${
+                            propertyType === 'single'
+                              ? 'bg-blue-600/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400'
+                              : 'text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-white/5'
+                          }`}
+                        >
+                          Single-Family Home
+                        </div>
+                        <div
+                          onClick={() => {
+                            setPropertyType('condo');
+                            setWizardUnits([{ unit_number: 'Condo Unit', rent_amount: '' }]);
+                            setOnboardDropdownOpen(false);
+                          }}
+                          className={`px-4 py-3 text-sm font-semibold cursor-pointer transition-colors border-t border-slate-100/50 dark:border-white/5 ${
+                            propertyType === 'condo'
+                              ? 'bg-blue-600/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400'
+                              : 'text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-white/5'
+                          }`}
+                        >
+                          Condo
+                        </div>
+                      </div>
+                    )}
+                  </div>
                   
                   <div className="p-4 rounded-2xl bg-blue-500/[0.03] dark:bg-blue-500/[0.02] border border-blue-500/10 dark:border-blue-500/20 text-xs font-medium text-slate-500 dark:text-slate-400 leading-relaxed mt-3">
                     {propertyType === 'single' ? (
@@ -1537,22 +1579,51 @@ export default function PropertiesHub({
                         SELECT PROPERTY TYPE *
                       </label>
                       <div className="relative">
-                        <CustomSelect
-                          value={propertyType}
-                          onChange={(val) => {
-                            setPropertyType(val);
-                            if (val === 'single') {
-                              setWizardUnits([{ unit_number: 'Single Family', rent_amount: '' }]);
-                            } else if (val === 'condo') {
-                              setWizardUnits([{ unit_number: 'Condo Unit', rent_amount: '' }]);
-                            }
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setModalDropdownOpen(!modalDropdownOpen);
                           }}
-                          options={[
-                            { value: 'single', label: 'Single-Family Home' },
-                            { value: 'condo', label: 'Condo' }
-                          ]}
-                          buttonClassName="w-full flex items-center justify-between bg-slate-50 dark:bg-[#1E2E42] border border-slate-200 dark:border-white/10 text-slate-800 dark:text-white py-3.5 pl-4 pr-4 rounded-2xl text-sm font-semibold focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none cursor-pointer shadow-sm transition-all"
-                        />
+                          className={`w-full text-left bg-slate-50 dark:bg-[#1E2E42] border ${
+                            modalDropdownOpen ? 'border-blue-500 ring-2 ring-blue-500/20' : 'border-slate-200 dark:border-white/10'
+                          } text-slate-800 dark:text-white py-3.5 pl-4 pr-4 rounded-2xl text-sm font-semibold outline-none cursor-pointer shadow-sm transition-all`}
+                        >
+                          {propertyType === 'single' ? 'Single-Family Home' : 'Condo'}
+                        </button>
+                        
+                        {modalDropdownOpen && (
+                          <div className="absolute left-0 right-0 mt-2 bg-white dark:bg-[#1E2E42] border border-slate-200 dark:border-white/10 rounded-2xl shadow-xl z-50 overflow-hidden">
+                            <div
+                              onClick={() => {
+                                setPropertyType('single');
+                                setWizardUnits([{ unit_number: 'Single Family', rent_amount: '' }]);
+                                setModalDropdownOpen(false);
+                              }}
+                              className={`px-4 py-3 text-sm font-semibold cursor-pointer transition-colors ${
+                                propertyType === 'single'
+                                  ? 'bg-blue-600/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400'
+                                  : 'text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-white/5'
+                              }`}
+                            >
+                              Single-Family Home
+                            </div>
+                            <div
+                              onClick={() => {
+                                setPropertyType('condo');
+                                setWizardUnits([{ unit_number: 'Condo Unit', rent_amount: '' }]);
+                                setModalDropdownOpen(false);
+                              }}
+                              className={`px-4 py-3 text-sm font-semibold cursor-pointer transition-colors border-t border-slate-100/50 dark:border-white/5 ${
+                                propertyType === 'condo'
+                                  ? 'bg-blue-600/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400'
+                                  : 'text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-white/5'
+                              }`}
+                            >
+                              Condo
+                            </div>
+                          </div>
+                        )}
                       </div>
                       
                       <div className="p-4 rounded-2xl bg-blue-500/[0.03] dark:bg-blue-500/[0.02] border border-blue-500/10 dark:border-blue-500/20 text-xs font-medium text-slate-500 dark:text-slate-400 leading-relaxed mt-3">
