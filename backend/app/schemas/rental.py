@@ -186,16 +186,19 @@ class TenantInfoSubmit(BaseModel):
     signature_text: str
     has_parking: bool = False
     parking_cars_count: int = 0
+    vehicle_details: Optional[str] = ""
     has_pets: bool = False
     pets_count: int = 0
     pet_details: str = ""
     num_occupants: Optional[int] = 1
+    num_minors: Optional[int] = 0
 
 
 
 class LeaseCreate(BaseModel):
     unit_id: int
     tenant_email: EmailStr
+    tenant_name: Optional[str] = None
     start_date: date
     end_date: date
     rent_amount: float
@@ -238,12 +241,14 @@ class LeaseOut(BaseModel):
     tenant_name: Optional[str] = None
     tenant_phone: Optional[str] = None
 
-    # New tenant details
     tenant_dob: Optional[str] = None
     tenant_current_address: Optional[str] = None
     tenant_emergency_contact: Optional[str] = None
     tenant_emergency_phone: Optional[str] = None
     num_occupants: Optional[int] = 1
+    num_minors: Optional[int] = 0
+    unit_change_requested: Optional[bool] = False
+    unit_change_request_notes: Optional[str] = None
     documents: List[TenantDocumentOut] = []
 
 

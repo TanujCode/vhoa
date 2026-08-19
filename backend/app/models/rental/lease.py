@@ -46,7 +46,10 @@ class Lease(Base):
     tenant_emergency_contact = Column(Text, nullable=True)       # encrypted
     tenant_emergency_phone = Column(Text, nullable=True)         # encrypted
     num_occupants = Column(Integer, nullable=True, default=1)
-
+    num_minors = Column(Integer, nullable=True, default=0)
+    
+    unit_change_requested = Column(Boolean, default=False)
+    unit_change_request_notes = Column(Text, nullable=True)
 
     # Relationships
     landlord = relationship("RentalUser", foreign_keys=[landlord_id])

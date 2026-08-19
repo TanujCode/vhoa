@@ -16,6 +16,12 @@ export default function TenantDashboard({ user, setUser, setActivePage }) {
   const [showSelector, setShowSelector] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
+  const getCleanUnitNumber = (unitNum) => {
+    if (!unitNum) return 'N/A';
+    const isEntireProperty = unitNum === 'Single Family' || unitNum === 'Entire Property' || unitNum === 'Condo Unit' || !/\d/.test(unitNum);
+    return isEntireProperty ? '1' : unitNum;
+  };
+
   useEffect(() => {
     fetchTenantLeaseData();
   }, [user?.property_name, user?.unit_number]);
@@ -289,7 +295,7 @@ export default function TenantDashboard({ user, setUser, setActivePage }) {
               </span>
             )}
           </div>
-          <h1 className="text-3xl font-extrabold tracking-tight">Welcome back, {user?.full_name || 'Resident'}!</h1>
+          <h1 className="text-3xl font-extrabold tracking-tight">Hello, {user?.full_name || 'Resident'}!</h1>
           <p className="text-slate-500 dark:text-gray-400 text-sm max-w-lg leading-relaxed font-semibold">
             Manage your lease contracts, review recent invoicing history, submit maintenance requests, and track utility charges all in one place.
           </p>
@@ -371,8 +377,10 @@ export default function TenantDashboard({ user, setUser, setActivePage }) {
         </div>
       )}
 
-      {/* Premium Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      {activeLease?.status === 'ACTIVE' && (
+        <>
+          {/* Premium Stats Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {/* Card 1: Lease Residence */}
         <div className="group p-5 rounded-3xl bg-white dark:bg-slate-900/60 dark:backdrop-blur-md border border-slate-200/60 dark:border-white/[0.05] shadow-sm hover:shadow-xl hover:border-blue-500/20 hover:-translate-y-1 transition-all duration-300 text-left">
           <div className="flex justify-between items-center text-slate-450 dark:text-slate-500">
@@ -382,7 +390,15 @@ export default function TenantDashboard({ user, setUser, setActivePage }) {
             </div>
           </div>
           <div className="mt-4">
-            <div className="text-2xl font-black text-slate-900 dark:text-white">Unit {activeLease?.unit?.unit_number || 'N/A'}</div>
+            <div className="text-2xl font-black text-slate-900 dark:text-white">
+              {activeLease?.unit?.unit_number === 'Single Family' ? (
+                'Entire House'
+              ) : activeLease?.unit?.unit_number === 'Condo Unit' ? (
+                'Condominium'
+              ) : (
+                `Unit ${getCleanUnitNumber(activeLease?.unit?.unit_number)}`
+              )}
+            </div>
             <div className="text-xs text-slate-500 dark:text-gray-400 mt-1 font-semibold flex items-center gap-1">
               <Building2 size={12} className="text-slate-400" /> {activeLease?.property_name || 'Sunset Heights'}
             </div>
@@ -566,6 +582,8 @@ export default function TenantDashboard({ user, setUser, setActivePage }) {
           </div>
         </div>
       </div>
+        </>
+      )}
     </div>
   );
 }

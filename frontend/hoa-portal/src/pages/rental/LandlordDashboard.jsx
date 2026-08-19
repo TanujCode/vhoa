@@ -593,6 +593,32 @@ export default function LandlordDashboard({
         </div>
       </div>
 
+      {/* Leases Awaiting Approval Alert */}
+      {leasesAwaitingApproval.length > 0 && (
+        <div className="bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/30 dark:border-amber-500/20 rounded-3xl p-5 sm:p-6 text-slate-800 dark:text-white shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4 animate-fade-in mb-6">
+          <div className="flex items-center gap-3.5 text-left">
+            <div className="p-3 bg-amber-500/20 text-amber-600 dark:text-amber-400 rounded-2xl flex items-center justify-center shrink-0">
+              <FileText className="w-6 h-6 animate-pulse" />
+            </div>
+            <div>
+              <h4 className="text-sm font-black text-amber-800 dark:text-amber-400">Lease Agreement Awaiting Your Review</h4>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                {leasesAwaitingApproval.length === 1 
+                  ? `A tenant has signed the lease terms and submitted onboarding details. Please review and approve to activate.`
+                  : `${leasesAwaitingApproval.length} lease agreements have been signed by tenants and are awaiting your final approval.`
+                }
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => setActivePage('leases_hub')}
+            className="w-full sm:w-auto px-5 py-2.5 bg-amber-600 hover:bg-amber-500 text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-amber-600/25 hover:shadow-amber-600/40 shrink-0 cursor-pointer text-center"
+          >
+            Review & Approve
+          </button>
+        </div>
+      )}
+
       {/* --- Main 4-Metrics Row --- */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         

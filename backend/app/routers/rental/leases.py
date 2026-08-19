@@ -17,8 +17,25 @@ from app.services.rental import rental_service
 from app.services.rental.audit_service import log_rental_action
 from app.routers.rental.dependencies import require_rental_role, get_verified_rental_user
 from app.utils.encryption import encrypt_file_bytes, decrypt_file_bytes, encrypt_field, decrypt_field
-
 router = APIRouter(prefix="/rental", tags=["Rental - Lease Agreements"])
+
+
+@router.get("/leases/check-active")
+def check_tenant_active_lease(
+    email: str,
+    exclude_lease_id: int | None = None,
+    db: Session = Depends(get_rental_db),
+    current_user: RentalUser = Depends(require_rental_role("super_admin", "landlord"))
+):
+    if not email:
+        raise HTTPException(status_code=400, detail="Email is required")
+    from app.services.rental.rental_service import check_duplicate_active_lease
+    try:
+        check_duplicate_active_lease(email, db, exclude_lease_id=exclude_lease_id)
+        return {"has_active_lease": False}
+    except ValueError as e:
+        return {"has_active_lease": True, "detail": str(e)}
+
 
 @router.post("/leases", response_model=LeaseOut, status_code=201)
 def create_lease(
@@ -73,6 +90,41 @@ def list_leases(
                 l["property_name"] = prop.name
             
     return leases
+
+
+from pydantic import BaseModel
+class UnitChangeRequest(BaseModel):
+    notes: str
+
+@router.post("/leases/{lease_id}/request-unit-change", response_model=LeaseOut)
+def request_unit_change_endpoint(
+    lease_id: int,
+    body: UnitChangeRequest,
+    db: Session = Depends(get_rental_db),
+    current_user: RentalUser = Depends(get_verified_rental_user)
+):
+    try:
+        lease = db.query(Lease).filter(Lease.lease_id == lease_id).first()
+        if not lease:
+            raise HTTPException(status_code=404, detail="Lease agreement not found.")
+        
+        if lease.tenant_id != current_user.user_id:
+            raise HTTPException(status_code=403, detail="Access denied. Only the tenant can request a unit change.")
+            
+        if lease.status != "PENDING_TENANT_REVIEW":
+            raise HTTPException(status_code=400, detail="Unit change can only be requested while the lease is under review.")
+            
+        lease.unit_change_requested = True
+        lease.unit_change_request_notes = body.notes
+        db.commit()
+        db.refresh(lease)
+        
+        log_rental_action(db, "REQUEST_UNIT_CHANGE", "rental", f"Tenant requested unit change for lease {lease_id}.", current_user.user_id)
+        
+        from app.services.rental.rental_service import decrypt_lease_obj
+        return decrypt_lease_obj(lease)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 @router.post("/leases/{lease_id}/tenant-submit", response_model=LeaseOut)

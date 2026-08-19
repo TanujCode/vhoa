@@ -10,7 +10,8 @@ export default function PropertiesHub({
   setSelectedPropertyFilterId, 
   properties: globalProperties,
   setActivePage,
-  onPropertiesChange
+  onPropertiesChange,
+  leases = []
 }) {
   const [properties, setProperties] = useState([]);
   const [selectedProperty, setSelectedProperty] = useState(null);
@@ -23,18 +24,36 @@ export default function PropertiesHub({
   const [activeCategoryFilter, setActiveCategoryFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Helper to determine property type
   function getPropertyType(property) {
     if (!property) return 'Multi-Unit';
     const activeUnits = (property.units || []).filter(u => u.active_status !== false);
     if (activeUnits.length === 0) return 'Multi-Unit';
-    const firstUnit = activeUnits[0].unit_number;
-    if (activeUnits.length === 1) {
-      if (firstUnit === 'Single Family') return 'Single Family';
-      if (firstUnit === 'Condo Unit') return 'Condo';
-    }
+    
+    const hasSingleFamily = activeUnits.some(u => 
+      u.unit_number === 'Single Family' || 
+      u.unit_number === 'Entire Property' || 
+      u.unit_number === '1'
+    );
+    const hasCondo = activeUnits.some(u => u.unit_number === 'Condo Unit');
+    
+    if (hasSingleFamily) return 'Single Family';
+    if (hasCondo) return 'Condo';
+    
     return 'Multi-Unit';
   }
+
+  const getTotalActiveUnitsCount = () => {
+    let count = 0;
+    (properties || []).forEach(p => {
+      const activeUnits = (p.units || []).filter(u => u.active_status !== false);
+      count += activeUnits.length;
+    });
+    return count;
+  };
+
+  const getNextUnitNumber = () => {
+    return String(getTotalActiveUnitsCount() + 1);
+  };
 
   // Add Property states
   const [propName, setPropName] = useState('');
@@ -64,6 +83,7 @@ export default function PropertiesHub({
   const [selectedUnit, setSelectedUnit] = useState(null);
 
   const [showPropModal, setShowPropModal] = useState(false);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
   // Property Creation Wizard states
@@ -559,22 +579,10 @@ export default function PropertiesHub({
     }
 
     const formattedUnits = [];
-    if (propertyType === 'single') {
-      formattedUnits.push({
-        unit_number: 'Single Family',
-        rent_amount: 0.0
-      });
-    } else if (propertyType === 'condo') {
-      formattedUnits.push({
-        unit_number: 'Condo Unit',
-        rent_amount: 0.0
-      });
-    } else {
-      formattedUnits.push({
-        unit_number: 'Unit 1',
-        rent_amount: 0.0
-      });
-    }
+    formattedUnits.push({
+      unit_number: wizardUnits[0]?.unit_number || '1',
+      rent_amount: 0.0
+    });
 
     try {
       const res = await API.post('/rental/properties-with-units', {
@@ -829,48 +837,40 @@ export default function PropertiesHub({
     );
   }
 
-  // CASE 1: No properties registered yet - Show Welcome Card
-  if (properties.length === 0) {
-    return (
-      <div className="py-12 animate-fade-in text-center">
-        <div className="max-w-xl mx-auto bg-white dark:bg-[#1E2E42] border border-slate-200/80 dark:border-white/10 rounded-3xl p-8 sm:p-10 shadow-sm flex flex-col space-y-6 text-left animate-scale-up">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
-              <Sparkles className="w-7 h-7 text-blue-500 animate-pulse" />
-              Welcome, {user?.full_name || 'Landlord'}
-            </h1>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mt-3 font-medium leading-relaxed">
-              Manage your tenants, collect rent online, track maintenance requests, and keep your property portfolios organized all in one place. Let's register your very first property to unlock the full potential of NestBloq!
-            </p>
-          </div>
-          
-          <div className="border-t border-slate-100 dark:border-white/5 pt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <span className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-              lets start
-            </span>
-            <button
-              onClick={() => {
-                setErrorMsg('');
-                setPropertyType('single');
-                setWizardUnits([{ unit_number: 'Single Family', rent_amount: '' }]);
-                setWizardStep(1);
-                setShowPropModal(true);
-              }}
-              className="w-full sm:w-auto bg-blue-600 hover:bg-blue-500 text-white font-bold py-3.5 px-6 rounded-2xl text-xs transition duration-200 flex items-center justify-center gap-1.5 cursor-pointer shadow-lg shadow-blue-500/10 font-sans"
-            >
-              <Plus className="w-4 h-4" /> Add Property
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
+
 
   // CASE 2: Property exists but no tenant/lease is registered - Lock view to success onboarding banner
   if (properties.length > 0 && !hasOccupiedUnit) {
     const onboardingProperty = createdPropertySuccess || properties[0];
+    const leasesAwaitingApproval = (leases || []).filter(l => l.status === 'PENDING_LANDLORD_APPROVAL');
     return (
       <div className="space-y-6 text-left animate-fade-in">
+        {/* Leases Awaiting Approval Alert */}
+        {leasesAwaitingApproval.length > 0 && (
+          <div className="bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/30 dark:border-amber-500/20 rounded-3xl p-5 sm:p-6 text-slate-800 dark:text-white shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4 animate-fade-in mb-6">
+            <div className="flex items-center gap-3.5 text-left">
+              <div className="p-3 bg-amber-500/20 text-amber-600 dark:text-amber-400 rounded-2xl flex items-center justify-center shrink-0">
+                <FileText className="w-6 h-6 animate-pulse" />
+              </div>
+              <div>
+                <h4 className="text-sm font-black text-amber-800 dark:text-amber-400">Lease Agreement Awaiting Your Review</h4>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                  {leasesAwaitingApproval.length === 1 
+                    ? `A tenant has signed the lease terms and submitted onboarding details. Please review and approve to activate.`
+                    : `${leasesAwaitingApproval.length} lease agreements have been signed by tenants and are awaiting your final approval.`
+                  }
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => setActivePage('leases_hub')}
+              className="w-full sm:w-auto px-5 py-2.5 bg-amber-600 hover:bg-amber-500 text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-amber-600/25 hover:shadow-amber-600/40 shrink-0 cursor-pointer text-center"
+            >
+              Review & Approve
+            </button>
+          </div>
+        )}
+
         {/* Horizontal Onboarding Success Banner */}
         <div className="w-full bg-white dark:bg-[#1E2E42] border border-slate-200 dark:border-white/10 rounded-3xl p-8 sm:p-10 shadow-sm relative overflow-hidden text-slate-900 dark:text-white animate-scale-up">
           {/* Subtle background gradient glow */}
@@ -911,6 +911,7 @@ export default function PropertiesHub({
                 <button
                   type="button"
                   onClick={() => {
+                    localStorage.setItem('open_create_lease_modal', 'true');
                     setCreatedPropertySuccess(null);
                     if (setActivePage) {
                       setActivePage('leases_hub');
@@ -995,7 +996,13 @@ export default function PropertiesHub({
             </div>
             <button
               type="button"
-              onClick={() => { setCreatedPropertySuccess(null); if (setActivePage) setActivePage('leases_hub'); }}
+              onClick={() => {
+                localStorage.setItem('open_create_lease_modal', 'true');
+                setCreatedPropertySuccess(null);
+                if (setActivePage) {
+                  setActivePage('leases_hub');
+                }
+              }}
               className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl px-6 py-2.5 text-xs font-bold transition shadow-md hover:shadow-lg shadow-blue-500/20 cursor-pointer uppercase tracking-wider shrink-0"
             >
               <Sparkles size={14} />
@@ -1010,52 +1017,96 @@ export default function PropertiesHub({
 
   return (
     <div className="space-y-6 text-left animate-fade-in">
-      {/* Header Row */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">
-            {selectedProperty ? `${selectedProperty.name} Details` : 'Properties & Units Hub'}
-          </h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-            {selectedProperty 
-              ? 'Manage individual units, edit property details, and check vacancy status.' 
-              : 'Add rental portfolios and register distinct rooms/apartments.'}
-          </p>
-        </div>
-        <div className="flex items-center gap-3 w-full sm:w-auto self-stretch sm:self-auto justify-end">
-          {selectedProperty && (
+      {/* Header Row - Only show if properties exist */}
+      {properties.length > 0 && (
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div>
+            <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+              {selectedProperty ? `${selectedProperty.name} Details` : 'Properties & Units Hub'}
+            </h1>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+              {selectedProperty 
+                ? 'Manage individual units, edit property details, and check vacancy status.' 
+                : 'Add rental portfolios and register distinct rooms/apartments.'}
+            </p>
+          </div>
+          <div className="flex items-center gap-3 w-full sm:w-auto self-stretch sm:self-auto justify-end">
+            {selectedProperty && (
+              <button 
+                onClick={() => {
+                  if (setSelectedPropertyFilterId) {
+                    setSelectedPropertyFilterId('all');
+                  }
+                  setSelectedProperty(null);
+                }}
+                className="border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-white/5 px-4 py-2.5 rounded-xl flex items-center gap-1.5 text-xs font-bold transition-all whitespace-nowrap cursor-pointer animate-fade-in"
+              >
+                <ArrowLeft className="w-4 h-4" /> All Properties
+              </button>
+            )}
             <button 
-              onClick={() => {
-                if (setSelectedPropertyFilterId) {
-                  setSelectedPropertyFilterId('all');
+              onClick={() => { 
+                const activePropertiesCount = (properties || []).filter(p => p.active_status !== false).length;
+                if (activePropertiesCount >= 2) {
+                  setShowUpgradeModal(true);
+                  return;
                 }
-                setSelectedProperty(null);
+                setErrorMsg(''); 
+                setPropertyType('single'); 
+                setWizardUnits([{ unit_number: 'Single Family', rent_amount: '' }]); 
+                setShowPropModal(true); 
               }}
-              className="border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-white/5 px-4 py-2.5 rounded-xl flex items-center gap-1.5 text-xs font-bold transition-all whitespace-nowrap cursor-pointer animate-fade-in"
+              className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2.5 rounded-xl flex items-center gap-1.5 text-xs font-bold transition-all shadow-md shadow-blue-500/20 whitespace-nowrap cursor-pointer"
             >
-              <ArrowLeft className="w-4 h-4" /> All Properties
+              <Plus className="w-4 h-4" /> Add Property
             </button>
-          )}
-          <button 
-            onClick={() => { 
-              setErrorMsg(''); 
-              setPropertyType('single'); 
-              setWizardUnits([{ unit_number: 'Single Family', rent_amount: '' }]); 
-              setShowPropModal(true); 
-            }}
-            className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2.5 rounded-xl flex items-center gap-1.5 text-xs font-bold transition-all shadow-md shadow-blue-500/20 whitespace-nowrap cursor-pointer"
-          >
-            <Plus className="w-4 h-4" /> Add Property
-          </button>
+          </div>
         </div>
-      </div>
+      )}
 
       {properties.length === 0 ? (
-        <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-xl overflow-hidden shadow-sm">
-          <div className="py-32 text-center text-slate-450 dark:text-slate-400 text-sm">
-            <Building2 className="w-12 h-12 mx-auto text-slate-350 dark:text-slate-650 mb-3 animate-pulse" />
-            <p className="font-bold text-slate-700 dark:text-slate-300">No properties added yet.</p>
-            <p className="text-xs text-slate-550 mt-1">Click the "Add Property" button above to register your first property.</p>
+        <div className="py-6 animate-fade-in text-left">
+          <div className="w-full bg-white dark:bg-[#1E2E42] border border-slate-200 dark:border-white/10 rounded-3xl p-6 sm:p-8 md:p-10 shadow-sm relative overflow-hidden text-slate-900 dark:text-white animate-scale-up">
+            <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+              
+              {/* Left Column: Welcome Text & Badge */}
+              <div className="space-y-4 max-w-2xl">
+                <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-slate-900 dark:text-white">
+                  Welcome, {user?.full_name || 'Landlord'}!
+                </h1>
+                <p className="text-sm font-medium text-slate-500 dark:text-slate-400 leading-relaxed">
+                  Manage your tenants, collect rent online, track maintenance requests, and keep your property portfolios organized all in one place. Let's register your very first property to unlock the full potential of NestBloq!
+                </p>
+                
+                <div className="pt-2">
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-500/10 text-blue-600 dark:text-blue-400 text-xs font-bold rounded-lg border border-blue-500/20">
+                    <Sparkles className="w-3.5 h-3.5" /> Let's register your first property
+                  </div>
+                </div>
+              </div>
+              
+              {/* Right Column: Just the Add Property Button */}
+              <div className="shrink-0 w-full md:w-auto">
+                <button
+                  onClick={() => {
+                    const activePropertiesCount = (properties || []).filter(p => p.active_status !== false).length;
+                    if (activePropertiesCount >= 2) {
+                      setShowUpgradeModal(true);
+                      return;
+                    }
+                    setErrorMsg('');
+                    setPropertyType('single');
+                    setWizardUnits([{ unit_number: 'Single Family', rent_amount: '' }]);
+                    setWizardStep(1);
+                    setShowPropModal(true);
+                  }}
+                  className="w-full md:w-auto bg-blue-600 hover:bg-blue-500 text-white font-bold py-3.5 px-6 rounded-2xl text-xs transition duration-200 flex items-center justify-center gap-1.5 cursor-pointer shadow-lg shadow-blue-500/10 font-sans"
+                >
+                  <Plus className="w-4 h-4" /> Add Property
+                </button>
+              </div>
+
+            </div>
           </div>
         </div>
       ) : selectedProperty ? (
@@ -1090,10 +1141,19 @@ export default function PropertiesHub({
               >
                 <Trash2 className="w-4 h-4" /> Delete
               </button>
-              {!units.some(u => u.unit_number === 'Single Family' || u.unit_number === 'Condo Unit') && (
+              {getPropertyType(selectedProperty) !== 'Single Family' && getPropertyType(selectedProperty) !== 'Condo' && (
                 <button
-                  onClick={() => { setErrorMsg(''); setShowUnitModal(true); }}
-                  className="flex-1 sm:flex-none px-4 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl flex items-center justify-center gap-1.5 text-xs font-bold transition duration-200 shadow-md shadow-blue-500/10 cursor-pointer"
+                  onClick={() => {
+                    const activeUnitsInProperty = (units || []).filter(u => u.active_status !== false).length;
+                    if (activeUnitsInProperty >= 5) {
+                      setShowUpgradeModal(true);
+                      return;
+                    }
+                    setErrorMsg('');
+                    setUnitNo(getNextUnitNumber());
+                    setShowUnitModal(true);
+                  }}
+                  className="flex-1 sm:flex-none px-4 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl flex items-center justify-center gap-1.5 text-xs font-bold transition duration-200 shadow-md shadow-blue-500/10 cursor-pointer animate-fade-in"
                 >
                   <PlusCircle className="w-4.5 h-4.5" /> Add Unit
                 </button>
@@ -1103,24 +1163,25 @@ export default function PropertiesHub({
 
           <div className="p-5">
             {loadingUnits ? (
-              <div className="py-24 text-center text-slate-400 text-sm animate-pulse">Loading units...</div>
+              <div className="py-24 text-center text-slate-400 text-sm animate-pulse">Loading details...</div>
             ) : units.length === 0 ? (
-              <div className="py-24 text-center text-slate-400 text-sm">No units added in this property yet. Click "Add Unit" to get started.</div>
-            ) : (
-              <div className="flex flex-col gap-3">
-                {units.map(u => (
-                  <div 
-                    key={u.unit_id}
-                    className="p-4 rounded-xl border border-slate-100 dark:border-white/[0.03] bg-slate-50/30 dark:bg-black/20 hover:border-slate-200 dark:hover:border-white/[0.06] transition duration-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"
-                  >
-                    <div className="flex items-center gap-4 w-full sm:w-auto">
-                      <div className="p-3 rounded-xl bg-blue-500/10 text-blue-500 flex-shrink-0">
-                        <DoorOpen className="w-5 h-5" />
+              <div className="py-24 text-center text-slate-400 text-sm">No details available.</div>
+            ) : (() => {
+              const u = units[0];
+              const isSFOrCondo = getPropertyType(selectedProperty) === 'Single Family' || getPropertyType(selectedProperty) === 'Condo';
+              if (isSFOrCondo && u) {
+                return (
+                  <div className="p-6 rounded-2xl border border-slate-250/60 dark:border-white/10 bg-white dark:bg-[#1E2E42] shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-6 animate-scale-up text-left">
+                    <div className="flex items-center gap-5">
+                      <div className="p-4 rounded-2xl bg-blue-500/10 text-blue-500 flex-shrink-0">
+                        <Home className="w-6 h-6" />
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <h4 className="text-sm font-bold text-slate-900 dark:text-white truncate">Unit {u.unit_number}</h4>
-                          <span className={`text-[9px] font-bold px-2 py-0.5 rounded border flex-shrink-0 ${
+                      <div className="text-left space-y-1">
+                        <div className="flex items-center gap-3">
+                          <h4 className="text-lg font-bold text-slate-900 dark:text-white">
+                            Property Status
+                          </h4>
+                          <span className={`text-xs font-black px-3 py-1 rounded-xl border ${
                             u.status === 'OCCUPIED'
                               ? 'bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-450 border-emerald-500/20'
                               : u.status === 'VACANT'
@@ -1130,46 +1191,91 @@ export default function PropertiesHub({
                             {u.status}
                           </span>
                         </div>
-                        {(Number(u.rent_amount) > 0 || (u.status === 'OCCUPIED' && u.tenant_name)) && (
-                          <p className="text-xs text-slate-450 dark:text-slate-400 mt-1 font-semibold">
-                            {Number(u.rent_amount) > 0 && (
-                              <>
-                                Rent: <strong className="text-slate-800 dark:text-slate-200">${u.rent_amount}/mo</strong>
-                              </>
-                            )}
-                            {u.status === 'OCCUPIED' && u.tenant_name && (
-                              <span className={`${Number(u.rent_amount) > 0 ? 'ml-3' : ''} px-2 py-0.5 bg-slate-100 dark:bg-white/5 rounded text-[10px] text-slate-650 dark:text-slate-300 font-bold`}>
-                                Tenant: {u.tenant_name}
-                              </span>
-                            )}
-                          </p>
-                        )}
+                        <p className="text-sm font-semibold text-slate-500 dark:text-slate-400">
+                          {u.rent_amount > 0 && (
+                            <>
+                              Rent Amount: <strong className="text-slate-800 dark:text-slate-200">${u.rent_amount}/mo</strong>
+                            </>
+                          )}
+                          {u.status === 'OCCUPIED' && u.tenant_name && (
+                            <span className={`${u.rent_amount > 0 ? 'ml-4' : ''} px-2.5 py-1 bg-slate-100 dark:bg-white/5 rounded-lg text-xs text-slate-655 dark:text-slate-300 font-bold`}>
+                              Tenant: {u.tenant_name}
+                            </span>
+                          )}
+                        </p>
                       </div>
                     </div>
-                    {getPropertyType(selectedProperty) !== 'Single Family' && getPropertyType(selectedProperty) !== 'Condo' && (
-                      <div className="flex items-center gap-2 w-full sm:w-auto justify-end sm:justify-start border-t sm:border-t-0 pt-3 sm:pt-0 border-slate-100 dark:border-white/5">
-                        <button 
-                          onClick={() => openEditUnitModal(u)}
-                          className="p-2 hover:bg-slate-100 dark:hover:bg-white/10 rounded-xl text-slate-400 hover:text-blue-500 transition duration-150 flex items-center gap-1.5 text-xs font-semibold cursor-pointer border border-transparent hover:border-blue-500/10"
-                          title="Edit Unit"
-                        >
-                          <Edit3 className="w-3.5 h-3.5" />
-                          <span className="sm:hidden lg:inline text-[10px]">Edit</span>
-                        </button>
-                        <button 
-                          onClick={() => handleDeleteUnit(u.unit_id)}
-                          className="p-2 hover:bg-red-500/10 rounded-xl text-slate-400 hover:text-red-555 dark:hover:text-red-450 transition duration-155 flex items-center gap-1.5 text-xs font-semibold cursor-pointer border border-transparent hover:border-red-500/10"
-                          title="Delete Unit"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                          <span className="sm:hidden lg:inline text-[10px]">Delete</span>
-                        </button>
-                      </div>
-                    )}
                   </div>
-                ))}
-              </div>
-            )}
+                );
+              }
+
+              return (
+                <div className="flex flex-col gap-3">
+                  {units.map(unitItem => (
+                    <div 
+                      key={unitItem.unit_id}
+                      className="p-4 rounded-xl border border-slate-100 dark:border-white/[0.03] bg-slate-50/30 dark:bg-black/20 hover:border-slate-200 dark:hover:border-white/[0.06] transition duration-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"
+                    >
+                      <div className="flex items-center gap-4 w-full sm:w-auto">
+                        <div className="p-3 rounded-xl bg-blue-500/10 text-blue-500 flex-shrink-0">
+                          <DoorOpen className="w-5 h-5" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <h4 className="text-sm font-bold text-slate-900 dark:text-white truncate">
+                              Unit {unitItem.unit_number === 'Entire Property' || unitItem.unit_number === 'Single Family' || unitItem.unit_number === 'Condo Unit' || !/\d/.test(unitItem.unit_number) ? '1' : unitItem.unit_number}
+                            </h4>
+                            <span className={`text-[9px] font-bold px-2 py-0.5 rounded border flex-shrink-0 ${
+                              unitItem.status === 'OCCUPIED'
+                                ? 'bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-450 border-emerald-500/20'
+                                : unitItem.status === 'VACANT'
+                                  ? 'bg-orange-500/10 text-orange-600 dark:bg-orange-500/20 dark:text-orange-400 border-orange-500/20'
+                                  : 'bg-red-500/10 text-red-600 dark:bg-red-500/20 dark:text-red-400 border-red-500/20'
+                            }`}>
+                              {unitItem.status}
+                            </span>
+                          </div>
+                          {(Number(unitItem.rent_amount) > 0 || (unitItem.status === 'OCCUPIED' && unitItem.tenant_name)) && (
+                            <p className="text-xs text-slate-450 dark:text-slate-400 mt-1 font-semibold">
+                              {Number(unitItem.rent_amount) > 0 && (
+                                <>
+                                  Rent: <strong className="text-slate-800 dark:text-slate-200">${unitItem.rent_amount}/mo</strong>
+                                </>
+                              )}
+                              {unitItem.status === 'OCCUPIED' && unitItem.tenant_name && (
+                                <span className={`${Number(unitItem.rent_amount) > 0 ? 'ml-3' : ''} px-2 py-0.5 bg-slate-100 dark:bg-white/5 rounded text-[10px] text-slate-650 dark:text-slate-300 font-bold`}>
+                                  Tenant: {unitItem.tenant_name}
+                                </span>
+                              )}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                      {(getPropertyType(selectedProperty) !== 'Single Family' && getPropertyType(selectedProperty) !== 'Condo' || units.filter(un => un.active_status !== false).length > 1) && (
+                        <div className="flex items-center gap-2 w-full sm:w-auto justify-end sm:justify-start border-t sm:border-t-0 pt-3 sm:pt-0 border-slate-100 dark:border-white/5">
+                          <button 
+                            onClick={() => openEditUnitModal(unitItem)}
+                            className="p-2 hover:bg-slate-100 dark:hover:bg-white/10 rounded-xl text-slate-400 hover:text-blue-500 transition duration-150 flex items-center gap-1.5 text-xs font-semibold cursor-pointer border border-transparent hover:border-blue-500/10"
+                            title="Edit Unit"
+                          >
+                            <Edit3 className="w-3.5 h-3.5" />
+                            <span className="sm:hidden lg:inline text-[10px]">Edit</span>
+                          </button>
+                          <button 
+                            onClick={() => handleDeleteUnit(unitItem.unit_id)}
+                            className="p-2 hover:bg-red-500/10 rounded-xl text-slate-400 hover:text-red-555 dark:hover:text-red-450 transition duration-155 flex items-center gap-1.5 text-xs font-semibold cursor-pointer border border-transparent hover:border-red-500/10"
+                            title="Delete Unit"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                            <span className="sm:hidden lg:inline text-[10px]">Delete</span>
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              );
+            })()}
           </div>
         </div>
       ) : (
@@ -1390,11 +1496,11 @@ export default function PropertiesHub({
                       <div className="p-4 rounded-2xl bg-blue-500/[0.03] dark:bg-blue-500/[0.02] border border-blue-500/10 dark:border-blue-500/20 text-xs font-medium text-slate-500 dark:text-slate-400 leading-relaxed mt-3">
                         {propertyType === 'single' ? (
                           <span>
-                            <strong>Single-Family Home:</strong> Best used for a single-family home. This creates one rentable unit at this address under one lease agreement.
+                            <strong>Single-Family Home:</strong> Best used for a single-family house. No unit numbers are required.
                           </span>
                         ) : (
                           <span>
-                            <strong>Condo:</strong> Best used for an individual condominium unit. This creates one rentable unit at this address under one lease agreement.
+                            <strong>Condo:</strong> Best used for an individual condominium unit.
                           </span>
                         )}
                       </div>
@@ -1410,7 +1516,7 @@ export default function PropertiesHub({
                           } else if (propertyType === 'condo') {
                             setWizardUnits([{ unit_number: 'Condo Unit', rent_amount: '' }]);
                           } else {
-                            setWizardUnits([{ unit_number: 'Apt 101', rent_amount: '' }]);
+                            setWizardUnits([{ unit_number: '1', rent_amount: '' }]);
                           }
                           setWizardStep(2);
                         }}
@@ -1641,22 +1747,31 @@ export default function PropertiesHub({
       )}
 
       {/* Unit Edit Modal */}
-      {showEditUnitModal && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-[#1e2a3b] border border-slate-200/10 w-full max-w-sm rounded-2xl p-6 space-y-4 shadow-2xl animate-scale-up text-slate-900 dark:text-white text-left">
-            <div className="flex justify-between items-start mb-1">
-              <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                <Edit3 className="w-5 h-5 text-indigo-500" /> Edit Unit
-              </h2>
-              <button onClick={() => setShowEditUnitModal(false)} className="text-slate-400 hover:text-slate-900 dark:text-gray-500 dark:hover:text-white text-lg cursor-pointer">×</button>
-            </div>
-            <p className="text-slate-500 dark:text-gray-400 text-xs mb-6">Modify details for Unit {selectedUnit?.unit_number}.</p>
-            {errorMsg && <p className="text-xs text-red-500 bg-red-50 dark:bg-red-500/10 dark:text-red-400 p-3 rounded-xl font-medium mb-4">{errorMsg}</p>}
-            <form onSubmit={handleEditUnit} className="space-y-4">
-              <div>
-                <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Unit Number</label>
-                <input required type="text" value={editUnitNo} onChange={e=>setEditUnitNo(e.target.value)} className="w-full bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 focus:border-blue-500 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none" placeholder="e.g. Apt 101" />
+      {showEditUnitModal && (() => {
+        const isSFOrCondo = selectedProperty && (getPropertyType(selectedProperty) === 'Single Family' || getPropertyType(selectedProperty) === 'Condo');
+        return (
+          <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="bg-white dark:bg-[#1e2a3b] border border-slate-200/10 w-full max-w-sm rounded-2xl p-6 space-y-4 shadow-2xl animate-scale-up text-slate-900 dark:text-white text-left">
+              <div className="flex justify-between items-start mb-1">
+                <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                  <Edit3 className="w-5 h-5 text-indigo-500" /> {isSFOrCondo ? 'Edit Rent Details' : 'Edit Unit'}
+                </h2>
+                <button onClick={() => setShowEditUnitModal(false)} className="text-slate-400 hover:text-slate-900 dark:text-gray-500 dark:hover:text-white text-lg cursor-pointer">×</button>
               </div>
+              <p className="text-slate-500 dark:text-gray-400 text-xs mb-6">
+                {isSFOrCondo 
+                  ? 'Modify the monthly rent amount for this property.' 
+                  : `Modify details for Unit ${selectedUnit?.unit_number === 'Entire Property' || selectedUnit?.unit_number === 'Single Family' || selectedUnit?.unit_number === 'Condo Unit' || (selectedUnit?.unit_number && !/\d/.test(selectedUnit.unit_number)) ? '1' : selectedUnit?.unit_number}.`
+                }
+              </p>
+              {errorMsg && <p className="text-xs text-red-500 bg-red-50 dark:bg-red-500/10 dark:text-red-400 p-3 rounded-xl font-medium mb-4">{errorMsg}</p>}
+              <form onSubmit={handleEditUnit} className="space-y-4">
+                {!isSFOrCondo && (
+                  <div>
+                    <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Unit Number</label>
+                    <input required type="text" value={editUnitNo} onChange={e=>setEditUnitNo(e.target.value)} className="w-full bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 focus:border-blue-500 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none" placeholder="e.g. Apt 101" />
+                  </div>
+                )}
               <div>
                 <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Monthly Rent ($)</label>
                 <input required type="number" value={editUnitRent} onChange={e=>setEditUnitRent(e.target.value)} className="w-full bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 focus:border-blue-500 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none" placeholder="e.g. 1500" />
@@ -1666,6 +1781,103 @@ export default function PropertiesHub({
                 <button type="submit" className="flex-1 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-semibold hover:bg-blue-500 transition-all shadow-md shadow-blue-500/25">Save Changes</button>
               </div>
             </form>
+          </div>
+        </div>
+        );
+      })()}
+
+      {/* Upgrade Subscription Modal */}
+      {showUpgradeModal && (
+        <div className="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
+          <div className="bg-gradient-to-b from-white to-slate-50 dark:from-[#1e2a3b] dark:to-[#121b26] border border-slate-200 dark:border-white/10 w-full max-w-lg rounded-3xl p-6 md:p-8 space-y-6 shadow-2xl animate-scale-up text-slate-900 dark:text-white text-center relative overflow-hidden">
+            {/* Background Light Glow */}
+            <div className="absolute -top-24 -left-24 w-48 h-48 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute -top-24 -right-24 w-48 h-48 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
+
+            {/* Header */}
+            <div className="space-y-2 relative z-10 flex flex-col items-center">
+              <div className="p-3 bg-blue-600/10 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 rounded-2xl mb-2 flex items-center justify-center">
+                <Sparkles className="w-8 h-8 animate-pulse" />
+              </div>
+              <h3 className="text-xl md:text-2xl font-black tracking-tight text-slate-900 dark:text-white">
+                Portfolio Limit Reached
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm leading-relaxed">
+                You have reached your limit (maximum of 2 properties). Upgrade your plan to add more properties, expand your portfolio, and access premium tools.
+              </p>
+            </div>
+
+            {/* Pricing Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 relative z-10 text-left">
+              {/* Standard Plan */}
+              <div className="p-5 rounded-2xl border border-slate-200 dark:border-white/5 bg-white/60 dark:bg-white/[0.02] hover:border-blue-500/30 dark:hover:border-blue-500/30 transition-all flex flex-col justify-between">
+                <div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Standard</span>
+                    <span className="text-xs font-black text-blue-600 dark:text-blue-400 bg-blue-600/10 dark:bg-blue-500/20 px-2 py-0.5 rounded">Popular</span>
+                  </div>
+                  <div className="mt-3">
+                    <span className="text-2xl font-black tracking-tight">$29</span>
+                    <span className="text-slate-400 text-[10px] font-semibold">/month</span>
+                  </div>
+                  <ul className="mt-4 space-y-2 text-[11px] font-medium text-slate-600 dark:text-slate-350">
+                    <li className="flex items-center gap-1.5">✓ Up to 25 properties maximum</li>
+                    <li className="flex items-center gap-1.5">✓ Automatic invoicing & reminders</li>
+                    <li className="flex items-center gap-1.5">✓ 24h email response support</li>
+                  </ul>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    alert("Thank you! Simulated payment completed. Standard Plan activated successfully.");
+                    setShowUpgradeModal(false);
+                  }}
+                  className="mt-6 w-full py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold transition shadow-md shadow-blue-500/10 cursor-pointer text-center"
+                >
+                  Buy Standard Plan
+                </button>
+              </div>
+
+              {/* Premium Plan */}
+              <div className="p-5 rounded-2xl border border-slate-200 dark:border-white/5 bg-white/60 dark:bg-white/[0.02] hover:border-indigo-500/30 dark:hover:border-indigo-500/30 transition-all flex flex-col justify-between">
+                <div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Premium</span>
+                    <span className="text-xs font-black text-indigo-600 dark:text-indigo-400 bg-indigo-600/10 dark:bg-indigo-500/20 px-2 py-0.5 rounded">Unlimited</span>
+                  </div>
+                  <div className="mt-3">
+                    <span className="text-2xl font-black tracking-tight">$59</span>
+                    <span className="text-slate-400 text-[10px] font-semibold">/month</span>
+                  </div>
+                  <ul className="mt-4 space-y-2 text-[11px] font-medium text-slate-600 dark:text-slate-350">
+                    <li className="flex items-center gap-1.5">✓ Unlimited properties</li>
+                    <li className="flex items-center gap-1.5">✓ Dedicated support manager</li>
+                    <li className="flex items-center gap-1.5">✓ Custom legal agreement clauses</li>
+                  </ul>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    alert("Thank you! Simulated payment completed. Premium Plan activated successfully.");
+                    setShowUpgradeModal(false);
+                  }}
+                  className="mt-6 w-full py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-xl text-xs font-bold transition shadow-md shadow-indigo-500/10 cursor-pointer text-center"
+                >
+                  Buy Premium Plan
+                </button>
+              </div>
+            </div>
+
+            {/* Close / Actions */}
+            <div className="pt-2 flex justify-center relative z-10">
+              <button
+                type="button"
+                onClick={() => setShowUpgradeModal(false)}
+                className="px-6 py-2 border border-slate-200 dark:border-white/10 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white rounded-xl text-xs font-bold cursor-pointer transition"
+              >
+                No Thanks, Cancel
+              </button>
+            </div>
           </div>
         </div>
       )}

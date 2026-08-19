@@ -13,6 +13,20 @@ const cleanDescription = (desc) => {
   clean = clean.replace(/Service Request\s+(\d+)/gi, 'Service Request #$1');
   clean = clean.replace(/\.?\s*Time\s*\(ET\):.*$/gi, '');
   clean = clean.replace(/\s+->\s+/g, '  ');
+  
+  // Clean up "unit" references for Single Family compatibility
+  clean = clean.replace(/\s*for unit Single Family/gi, '');
+  clean = clean.replace(/\s*for unit Condo Unit/gi, '');
+  clean = clean.replace(/\s*for unit Entire Property/gi, '');
+  clean = clean.replace(/\s*for unit \d+/gi, '');
+  clean = clean.replace(/unit change/gi, 'property type details change');
+  clean = clean.replace(/Unit 'Single Family' added/gi, 'Property added');
+  clean = clean.replace(/Unit 'Condo Unit' added/gi, 'Property added');
+  clean = clean.replace(/Unit '[^']+' added/gi, 'Property details added');
+  clean = clean.replace(/Unit \d+ soft deleted/gi, 'Property deleted');
+  clean = clean.replace(/Unit '[^']+' updated/gi, 'Property details updated');
+  
+  clean = clean.replace(/\s+/g, ' ');
   return clean.trim();
 };
 
@@ -257,7 +271,7 @@ const RentalAdminPortal = () => {
     fetchInitialData();
 
     const handleGlobalUpdate = () => {
-      fetchInitialData();
+      fetchInitialData(true);
     };
     window.addEventListener('rental-data-changed', handleGlobalUpdate);
     return () => {
@@ -304,9 +318,9 @@ const RentalAdminPortal = () => {
     return () => clearInterval(id);
   }, [user, properties.length, hasAnyLease]);
 
-  const fetchInitialData = async () => {
+  const fetchInitialData = async (isSilent = false) => {
     try {
-      setLoading(true);
+      if (!isSilent) setLoading(true);
 
       const rawUser = localStorage.getItem('rental_user') || sessionStorage.getItem('rental_user');
       let cachedUser = null;
@@ -416,19 +430,20 @@ const RentalAdminPortal = () => {
             properties={properties} 
             setActivePage={setActivePage} 
             onPropertiesChange={handlePropertiesChange}
+            leases={leasesList}
           />
         );
       }
 
-      // Case 2: Properties exist, but no lease has been created yet → Force show onboarding banner
-      if (!hasAnyLease) {
+      // Case 2: Properties exist, but no tenant is active yet (no occupied units) → Force onboarding setup screen (PropertiesHub)
+      if (!hasOccupiedUnit) {
         if (activePage === 'leases_hub') {
-          return <LeasesHub user={user} selectedPropertyFilterId={selectedPropertyFilterId} initialShowCreate={true} onLeaseCreated={(leases) => setLeasesList(leases || [])} />;
+          return <LeasesHub user={user} selectedPropertyFilterId={selectedPropertyFilterId} initialShowCreate={leasesList.length === 0} onLeaseCreated={(leases) => setLeasesList(leases || [])} />;
         }
         if (activePage === 'profile') {
           return <RentalProfile user={user} setUser={setUser} viewRole={role} />;
         }
-        // Force onboarding success banner (housed in PropertiesHub)
+        // Force properties setup hub content to act as Dashboard
         return (
           <PropertiesHub 
             user={user} 
@@ -437,6 +452,7 @@ const RentalAdminPortal = () => {
             properties={properties} 
             setActivePage={setActivePage} 
             onPropertiesChange={handlePropertiesChange}
+            leases={leasesList}
           />
         );
       }
@@ -505,7 +521,11 @@ const RentalAdminPortal = () => {
         setIsOpen={setIsSidebarOpen}
         user={user}
         properties={properties}
-        hasLease={hasAnyLease}
+        hasLease={
+          (user?.role || 'tenant').toLowerCase() === 'landlord' || (user?.role || 'tenant').toLowerCase() === 'super_admin'
+            ? hasOccupiedUnit
+            : leases.some(l => l.status === 'ACTIVE')
+        }
       />
 
       <div className="flex-1 flex flex-col overflow-hidden">
@@ -540,7 +560,7 @@ const RentalAdminPortal = () => {
           }}
         />
 
-        <main className="flex-1 overflow-auto p-5 lg:p-7 bg-white dark:bg-[#0D1B2A] custom-scrollbar">
+        <main className="flex-1 overflow-auto p-5 lg:p-7 bg-slate-50 dark:bg-[#0D1B2A] custom-scrollbar">
           <div className="max-w-[1600px] mx-auto">
             {renderPage()}
           </div>

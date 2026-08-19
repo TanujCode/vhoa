@@ -293,6 +293,21 @@ def run_db_upgrades():
         "rental_leases.num_occupants"
     )
 
+    _safe_execute(
+        "ALTER TABLE rental_leases ADD COLUMN IF NOT EXISTS num_minors INTEGER DEFAULT 0;",
+        "rental_leases.num_minors"
+    )
+
+    _safe_execute(
+        "ALTER TABLE rental_leases ADD COLUMN IF NOT EXISTS unit_change_requested BOOLEAN DEFAULT FALSE;",
+        "rental_leases.unit_change_requested"
+    )
+
+    _safe_execute(
+        "ALTER TABLE rental_leases ADD COLUMN IF NOT EXISTS unit_change_request_notes TEXT;",
+        "rental_leases.unit_change_request_notes"
+    )
+
 
     # ── rental_leases: convert financial Double columns → TEXT (for encryption) ─
     for col_name in [

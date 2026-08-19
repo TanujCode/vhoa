@@ -26,6 +26,12 @@ const RentalTopbar = ({
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const { theme, toggleTheme } = useTheme();
 
+  const getCleanUnitNumber = (unitNum) => {
+    if (!unitNum) return 'N/A';
+    const isEntireProperty = unitNum === 'Single Family' || unitNum === 'Entire Property' || unitNum === 'Condo Unit' || !/\d/.test(unitNum);
+    return isEntireProperty ? '1' : unitNum;
+  };
+
   const filteredTenantLeases = user?.role === 'tenant'
     ? leases.filter(l => {
         const propName = l.property_name || (l.unit && l.unit.property ? l.unit.property.name : l.property?.name || 'Private Landlord');
@@ -110,8 +116,8 @@ const RentalTopbar = ({
                   {user?.property_name || 'Tenant Rental Portal'}
                 </span>
                 {user?.unit_number && (
-                  <span className="hidden sm:inline-block text-[9px] sm:text-[10px] font-bold px-2 py-0.5 bg-indigo-50 text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-400 rounded-lg border border-indigo-200 dark:border-indigo-500/20 flex-shrink-0 shadow-sm uppercase ml-1">
-                    Unit {user.unit_number}
+                  <span className="hidden sm:inline-block text-[9px] sm:text-[10px] font-bold px-2 py-0.5 bg-indigo-50 text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-400 rounded-lg border border-indigo-200 dark:border-indigo-500/20 flex-shrink-0 shadow-sm uppercase ml-1 animate-fade-in">
+                    {user.unit_number === 'Single Family' ? 'Single Family' : user.unit_number === 'Condo Unit' ? 'Condo' : `Unit ${getCleanUnitNumber(user.unit_number)}`}
                   </span>
                 )}
                 <ChevronDown size={16} className={`text-slate-800 dark:text-slate-200 group-hover:text-blue-600 dark:group-hover:text-[#5BA4F5] transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} />
@@ -130,8 +136,8 @@ const RentalTopbar = ({
                   {user?.property_name || 'Tenant Rental Portal'}
                 </span>
                 {user?.unit_number ? (
-                  <span className="hidden sm:inline-block text-[9px] sm:text-[10px] font-bold px-2 py-0.5 bg-indigo-50 text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-400 rounded-lg border border-indigo-200 dark:border-indigo-500/20 flex-shrink-0 ml-1 shadow-sm uppercase">
-                    Unit {user.unit_number}
+                  <span className="hidden sm:inline-block text-[9px] sm:text-[10px] font-bold px-2 py-0.5 bg-indigo-50 text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-400 rounded-lg border border-indigo-200 dark:border-indigo-500/20 flex-shrink-0 ml-1 shadow-sm uppercase animate-fade-in">
+                    {user.unit_number === 'Single Family' ? 'Single Family' : user.unit_number === 'Condo Unit' ? 'Condo' : `Unit ${getCleanUnitNumber(user.unit_number)}`}
                   </span>
                 ) : (
                   <span className="hidden sm:inline-block text-[9px] sm:text-[10px] font-bold px-2 py-0.5 bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400 rounded-lg border border-blue-200 dark:border-blue-500/20 flex-shrink-0 ml-1 shadow-sm uppercase">
@@ -242,7 +248,7 @@ const RentalTopbar = ({
                       <Home className="w-5 h-5 text-blue-500 shrink-0 mt-0.5" />
                       <div className="min-w-0">
                         <p className="font-bold text-gray-900 dark:text-white text-sm">
-                          Unit {unitNo}
+                          {unitNo === 'Single Family' ? 'Single Family Home' : unitNo === 'Condo Unit' ? 'Condo Unit' : `Unit ${unitNo}`}
                         </p>
                         <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
                           {propName}

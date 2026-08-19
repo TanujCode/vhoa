@@ -127,7 +127,10 @@ export default function TenantsHub({ selectedPropertyFilterId = 'all' }) {
     setEditLastName(tenant.last_name || '');
     setEditEmail(tenant.email_id || '');
     setEditPhone(tenant.mobile_number || '');
-    setEditUnit(tenant.unit_no || '');
+    
+    const cleanUnit = tenant.unit_no === 'Entire Property' || tenant.unit_no === 'Single Family' || tenant.unit_no === 'Condo Unit' || (tenant.unit_no && !/\d/.test(tenant.unit_no)) ? '1' : (tenant.unit_no || '');
+    setEditUnit(cleanUnit);
+    
     setModalError('');
     setModalSuccess('');
     setFormErrors({});
@@ -366,9 +369,19 @@ export default function TenantsHub({ selectedPropertyFilterId = 'all' }) {
                     <td className="px-4 py-4 text-slate-600 dark:text-gray-400">{formatUsPhone(t.mobile_number)}</td>
                     <td className="px-4 py-4">
                       {t.unit_no ? (
-                        <span className="bg-blue-500/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400 px-2.5 py-0.5 rounded text-[10px] font-bold border border-blue-500/20">
-                          Unit {t.unit_no}
-                        </span>
+                        t.unit_no === 'Single Family' ? (
+                          <span className="bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-450 px-2.5 py-0.5 rounded text-[10px] font-bold border border-emerald-500/20 whitespace-nowrap inline-block animate-fade-in">
+                            Single Family
+                          </span>
+                        ) : t.unit_no === 'Condo Unit' ? (
+                          <span className="bg-indigo-500/10 text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-400 px-2.5 py-0.5 rounded text-[10px] font-bold border border-indigo-500/20 whitespace-nowrap inline-block animate-fade-in">
+                            Condo
+                          </span>
+                        ) : (
+                          <span className="bg-blue-500/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400 px-2.5 py-0.5 rounded text-[10px] font-bold border border-blue-500/20 whitespace-nowrap inline-block animate-fade-in">
+                            Unit {t.unit_no === 'Entire Property' || !/\d/.test(t.unit_no) ? '1' : t.unit_no}
+                          </span>
+                        )
                       ) : (
                         <span className="text-slate-450 text-xs italic">Unassigned</span>
                       )}
@@ -484,15 +497,28 @@ export default function TenantsHub({ selectedPropertyFilterId = 'all' }) {
                     {formErrors.phone && <p className="text-[10px] text-red-550 mt-0.5">{formErrors.phone}</p>}
                   </div>
                   <div>
-                    <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Assigned Unit No.</label>
-                    <input
-                      type="text"
-                      value={editUnit}
-                      onChange={e => setEditUnit(e.target.value)}
-                      className={`w-full bg-slate-50 dark:bg-[#111c2a] border ${formErrors.unit ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/10 focus:border-blue-500'} rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none`}
-                      placeholder="e.g. 102"
-                    />
-                    {formErrors.unit && <p className="text-[10px] text-red-550 mt-0.5">{formErrors.unit}</p>}
+                    <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">
+                      {editingTenant?.unit_no === 'Single Family' || editingTenant?.unit_no === 'Condo Unit' ? 'Property Type' : 'Assigned Unit No.'}
+                    </label>
+                    {editingTenant?.unit_no === 'Single Family' || editingTenant?.unit_no === 'Condo Unit' ? (
+                      <input
+                        type="text"
+                        readOnly
+                        value={editingTenant?.unit_no === 'Single Family' ? 'Single Family Home (Entire Property)' : 'Condominium (Entire Property)'}
+                        className="w-full bg-slate-100 dark:bg-[#111c2a]/40 border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-sm text-slate-550 dark:text-slate-400 outline-none cursor-not-allowed font-bold"
+                      />
+                    ) : (
+                      <>
+                        <input
+                          type="text"
+                          value={editUnit}
+                          onChange={e => setEditUnit(e.target.value)}
+                          className={`w-full bg-slate-50 dark:bg-[#111c2a] border ${formErrors.unit ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/10 focus:border-blue-500'} rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none`}
+                          placeholder="e.g. 102"
+                        />
+                        {formErrors.unit && <p className="text-[10px] text-red-550 mt-0.5">{formErrors.unit}</p>}
+                      </>
+                    )}
                   </div>
                 </div>
 

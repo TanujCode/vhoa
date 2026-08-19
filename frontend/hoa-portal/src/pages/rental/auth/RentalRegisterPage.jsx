@@ -14,6 +14,7 @@ export default function RentalRegisterPage() {
   const roleFromUrl = searchParams.get('role') || 'landlord';
   const emailFromUrl = searchParams.get('email') || '';
   const leaseIdFromUrl = searchParams.get('lease_id') || '';
+  const nameFromUrl = searchParams.get('name') || '';
 
   useEffect(() => {
     if (leaseIdFromUrl) {
@@ -30,6 +31,7 @@ export default function RentalRegisterPage() {
   } = useForm({
     mode: 'onTouched',
     defaultValues: {
+      fullName: nameFromUrl,
       email: emailFromUrl,
       mobileNumberOnly: ''
     }
@@ -104,7 +106,10 @@ export default function RentalRegisterPage() {
           console.error("Error checking email registry status:", err);
         });
     }
-  }, [emailFromUrl, setValue, navigate]);
+    if (nameFromUrl) {
+      setValue('fullName', nameFromUrl);
+    }
+  }, [emailFromUrl, nameFromUrl, setValue, navigate]);
 
   const password = watch('password');
 

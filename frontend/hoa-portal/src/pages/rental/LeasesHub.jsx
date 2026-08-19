@@ -62,13 +62,16 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
   const [tenantOnboardingStep, setTenantOnboardingStep] = useState(1);
   const [uploadedDocs, setUploadedDocs] = useState([]); // Array of { document_id, doc_type, original_name }
   const [uploadingDoc, setUploadingDoc] = useState(null); // 'PAY_SLIP' | 'DRIVING_LICENSE' etc.
+  const [docUploadError, setDocUploadError] = useState(''); // Inline upload error (non-blocking)
+  const [formError, setFormError] = useState(''); // Inline submit validation error (non-blocking)
   const [tenantHasParking, setTenantHasParking] = useState(false);
   const [tenantParkingCarsCount, setTenantParkingCarsCount] = useState(1);
-  const [tenantVehicleDetails, setTenantVehicleDetails] = useState('');
+  const [tenantVehicles, setTenantVehicles] = useState([{ plate: '', state: 'AL' }]);
   const [tenantHasPets, setTenantHasPets] = useState(false);
   const [tenantPetsCount, setTenantPetsCount] = useState(1);
-  const [tenantPetDetails, setTenantPetDetails] = useState('');
+  const [tenantPetDetails, setTenantPetDetails] = useState('Dog');
   const [numOccupants, setNumOccupants] = useState(1);
+  const [numMinors, setNumMinors] = useState(0);
 
 
   const getLeaseSeqNum = (lease) => {
@@ -329,15 +332,40 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
   const [signature, setSignature] = useState('');
 
   const [showCreateModal, setShowCreateModal] = useState(initialShowCreate);
+  const [showTenantChangeUnitModal, setShowTenantChangeUnitModal] = useState(false);
+  const [tenantChangeUnitNotes, setTenantChangeUnitNotes] = useState('');
   const [formErrors, setFormErrors] = useState({});
   const [errorMsg, setErrorMsg] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
 
-  const filteredUnits = units.filter(u => 
-    selectedPropertyFilterId === 'all' || 
-    String(u.property_id) === String(selectedPropertyFilterId) ||
-    String(u.unit_id) === String(selectedUnitId)
-  );
+  const filteredUnits = units.filter(u => {
+    const isThisProperty = selectedPropertyFilterId === 'all' || String(u.property_id) === String(selectedPropertyFilterId);
+    if (!isThisProperty) return false;
+    
+    const isVacant = u.status === 'VACANT';
+    const isSelected = String(u.unit_id) === String(selectedUnitId);
+    return isVacant || isSelected;
+  });
+
+  const getUnitDisplayLabel = (u) => {
+    if (u.unit_number === 'Single Family') {
+      return `${u.property_name} (Single Family)`;
+    }
+    if (u.unit_number === 'Condo Unit') {
+      return `${u.property_name} (Condo)`;
+    }
+    const isEntireProperty = u.unit_number === 'Entire Property' || !/\d/.test(u.unit_number);
+    if (isEntireProperty) {
+      return `${u.property_name}`;
+    }
+    return `Unit ${u.unit_number} (${u.property_name})`;
+  };
+
+  const getCleanUnitNumber = (unitNum) => {
+    if (!unitNum) return 'N/A';
+    const isEntireProperty = unitNum === 'Single Family' || unitNum === 'Entire Property' || unitNum === 'Condo Unit' || !/\d/.test(unitNum);
+    return isEntireProperty ? '1' : unitNum;
+  };
 
   const hasVacantUnits = filteredUnits.length === 0 || filteredUnits.some(u => u.status === 'VACANT');
   const canSignAsPrimary = selectedLease && isLandlord && !selectedLease.landlord_signature;
@@ -572,9 +600,7 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
       if (coLandlordName.trim() && !/^[a-zA-Z\s.-]{2,50}$/.test(coLandlordName.trim())) {
         errors.coLandlordName = 'Co-Landlord name must only contain letters, spaces, dots, and hyphens (2-50 chars).';
       }
-      if (!lessorAddress.trim()) {
-        errors.lessorAddress = 'Notice/payment address is required.';
-      } else if (!isLessorAddressSelected) {
+      if (lessorAddress.trim() && !isLessorAddressSelected) {
         errors.lessorAddress = 'Please select a valid address from the suggestions dropdown.';
       }
       if (!lessorPhone.trim()) {
@@ -601,7 +627,7 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
     return errors;
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     const errors = validateStep(currentStep);
     if (Object.keys(errors).length > 0) {
       setFormErrors(errors);
@@ -612,6 +638,21 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
       }
       return;
     }
+
+    if (currentStep === 1) {
+      try {
+        const res = await API.get(`/rental/leases/check-active?email=${encodeURIComponent(tenantEmail)}` + (editingLeaseId ? `&exclude_lease_id=${editingLeaseId}` : ''));
+        if (res.data.has_active_lease) {
+          const detailMsg = res.data.detail || "This tenant email is already registered/invited to an active or pending lease.";
+          setFormErrors({ tenantEmail: detailMsg });
+          toast.error(detailMsg);
+          return;
+        }
+      } catch (err) {
+        console.error("Failed to check active lease:", err);
+      }
+    }
+
     setFormErrors({});
     setCurrentStep(prev => Math.min(prev + 1, 5));
   };
@@ -621,7 +662,7 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
     setCurrentStep(prev => Math.max(prev - 1, 1));
   };
 
-  const handleStepClick = (targetStep) => {
+  const handleStepClick = async (targetStep) => {
     if (targetStep < currentStep) {
       setCurrentStep(targetStep);
       setFormErrors({});
@@ -636,6 +677,21 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
         }
         return;
       }
+
+      if (currentStep === 1) {
+        try {
+          const res = await API.get(`/rental/leases/check-active?email=${encodeURIComponent(tenantEmail)}` + (editingLeaseId ? `&exclude_lease_id=${editingLeaseId}` : ''));
+          if (res.data.has_active_lease) {
+            const detailMsg = res.data.detail || "This tenant email is already registered/invited to an active or pending lease.";
+            setFormErrors({ tenantEmail: detailMsg });
+            toast.error(detailMsg);
+            return;
+          }
+        } catch (err) {
+          console.error("Failed to check active lease:", err);
+        }
+      }
+
       for (let s = currentStep; s < targetStep; s++) {
         const stepErrs = validateStep(s);
         if (Object.keys(stepErrs).length > 0) {
@@ -665,7 +721,7 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
     if (coLandlordName) {
       compiled += `   - Co-Landlord: ${coLandlordName}\n`;
     }
-    compiled += `   - Notice/Payment Address: ${lessorAddress || '[Notice Address]'}\n`;
+    compiled += `   - Notice/Payment Address: ${lessorAddress || 'Not Provided'}\n`;
     compiled += `   - Phone: ${lessorPhone || '[Landlord Phone]'}\n`;
     compiled += `   - Email: ${lessorEmail || '[Landlord Email]'}\n\n`;
     compiled += `   And the Tenant:\n`;
@@ -674,7 +730,13 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
     compiled += `   - Email: ${tenantEmail || '[Tenant Email]'}\n\n`;
     
     compiled += `2. PROPERTY: Landlord rents to Tenant the premises located at:\n`;
-    compiled += `   - Unit Number: ${unitNo}\n`;
+    if (unitNo === 'Single Family') {
+      compiled += `   - Property Type: Single Family Home\n`;
+    } else if (unitNo === 'Condo Unit') {
+      compiled += `   - Property Type: Condo Unit\n`;
+    } else {
+      compiled += `   - Unit Number: ${unitNo}\n`;
+    }
     if (unitObj.property_id) {
       compiled += `   - Property Reference ID: ${unitObj.property_id}\n`;
     }
@@ -740,30 +802,21 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
     });
     compiled += `\n`;
     
-    compiled += `9. LEGAL DISCLOSURES:\n`;
-    if (disclosureLeadPaint) {
-      compiled += `   - LEAD-BASED PAINT DISCLOSURE: Lead-based paint hazards warning received and understood (applicable for units built before 1978).\n`;
-    }
-    if (disclosureMold) {
-      compiled += `   - MOLD DISCLOSURE: Tenant acknowledges warning regarding potential mold growth and agrees to ventilate unit.\n`;
-    }
-    if (disclosureBedBugs) {
-      compiled += `   - BED BUG DISCLOSURE: Tenant has inspected the unit and found no active bed bug infestation.\n`;
-    }
-    if (!disclosureLeadPaint && !disclosureMold && !disclosureBedBugs) {
-      compiled += `   - No standard disclosures specified.\n`;
-    }
-    compiled += `\n`;
-    
-    if (attachments.length > 0) {
-      compiled += `10. ATTACHMENTS & ADDENDA:\n`;
-      compiled += `    The following documents are attached and made part of this Lease:\n`;
-      attachments.forEach((att) => {
-        compiled += `    - ${att.name}\n`;
-      });
+    let currentSecNum = 9;
+    if (disclosureLeadPaint || disclosureMold || disclosureBedBugs) {
+      compiled += `${currentSecNum}. LEGAL DISCLOSURES:\n`;
+      if (disclosureLeadPaint) {
+        compiled += `   - LEAD-BASED PAINT DISCLOSURE: Lead-based paint hazards warning received and understood (applicable for units built before 1978).\n`;
+      }
+      if (disclosureMold) {
+        compiled += `   - MOLD DISCLOSURE: Tenant acknowledges warning regarding potential mold growth and agrees to ventilate unit.\n`;
+      }
+      if (disclosureBedBugs) {
+        compiled += `   - BED BUG DISCLOSURE: Tenant has inspected the unit and found no active bed bug infestation.\n`;
+      }
       compiled += `\n`;
+      currentSecNum += 1;
     }
-    
     return compiled;
   };
 
@@ -779,7 +832,7 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
     }
 
     const handleGlobalUpdate = () => {
-      fetchLeases();
+      fetchLeases(true);
       if (isLandlord) {
         fetchUnits();
         fetchApplications();
@@ -823,7 +876,7 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
 
 
   useEffect(() => {
-    if (showCreateModal && !editingLeaseId) {
+    if (showCreateModal) {
       setLeaseText(compileLeaseText());
     }
   }, [
@@ -958,6 +1011,7 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
       setTenantEmergencyPhone(selectedLease.tenant_emergency_phone || '');
       setTenantSignatureText(selectedLease.tenant_signature || '');
       setNumOccupants(selectedLease.num_occupants || 1);
+      setNumMinors(selectedLease.num_minors || 0);
 
       setUploadedDocs(selectedLease.documents || []);
       setTenantOnboardingStep(1);
@@ -966,20 +1020,21 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
       const hasPark = parseFloat(selectedLease.parking_fee || 0) > 0;
       setTenantHasParking(hasPark);
       const carCount = hasPark ? Math.round(parseFloat(selectedLease.parking_fee) / 25) : 1;
-      setTenantParkingCarsCount(carCount > 0 ? carCount : 1);
-      setTenantVehicleDetails(selectedLease.parking_fee ? 'Submitted parking request' : '');
+      const safeCarCount = carCount > 0 ? carCount : 1;
+      setTenantParkingCarsCount(safeCarCount);
+      setTenantVehicles(Array.from({ length: safeCarCount }, () => ({ plate: '', state: 'AL' })));
 
       const hasPetsVal = parseFloat(selectedLease.pet_fee || 0) > 0;
       setTenantHasPets(hasPetsVal);
       const petCount = hasPetsVal ? Math.round(parseFloat(selectedLease.pet_fee) / 50) : 1;
       setTenantPetsCount(petCount > 0 ? petCount : 1);
-      setTenantPetDetails(selectedLease.pet_fee ? 'Submitted pet request' : '');
+      setTenantPetDetails(selectedLease.pet_fee ? 'Dog' : 'Dog');
     }
   }, [selectedLease]);
 
-  async function fetchLeases() {
+  async function fetchLeases(isSilent = false) {
     try {
-      setLoading(true);
+      if (!isSilent) setLoading(true);
       const res = await API.get('/rental/leases');
 
       const pendingLeaseId = localStorage.getItem('pending_lease_id');
@@ -1118,6 +1173,7 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
       const payload = {
         unit_id: parseInt(selectedUnitId),
         tenant_email: tenantEmail,
+        tenant_name: tenantName,
         start_date: startDate,
         end_date: endDate,
         rent_amount: parseFloat(rentAmount),
@@ -1168,14 +1224,16 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
     
     // Size check
     if (file.size > 10 * 1024 * 1024) {
-      toast.error("File size exceeds 10MB limit.");
+      setDocUploadError("File size exceeds 10MB limit. Max allowed is 10MB.");
+      setTimeout(() => setDocUploadError(''), 4000);
       return;
     }
     
     // Type check
     const allowed = ["application/pdf", "image/jpeg", "image/png", "image/jpg", "image/webp"];
     if (!allowed.includes(file.type)) {
-      toast.error("Invalid file format. Upload PDF/JPG/PNG/WEBP.");
+      setDocUploadError("Invalid file format. Please upload PDF, JPG, PNG or WEBP.");
+      setTimeout(() => setDocUploadError(''), 4000);
       return;
     }
 
@@ -1187,14 +1245,18 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
       const res = await API.post(`/rental/leases/${selectedLease.lease_id}/documents?doc_type=${docType}`, formData, {
         headers: { "Content-Type": "multipart/form-data" }
       });
-      toast.success("Document uploaded and encrypted successfully!");
+      // No blocking alert — uploaded status shows inline with green ✓ text
       setUploadedDocs(prev => [...prev, {
         document_id: res.data.document_id,
         doc_type: docType,
         original_name: file.name
       }]);
     } catch (err) {
-      toast.error(err.response?.data?.detail || "Failed to upload document.");
+      // Use console + inline — avoid window.alert which closes the modal
+      const errMsg = err.response?.data?.detail || "Failed to upload document.";
+      console.error("Doc upload error:", errMsg);
+      setDocUploadError(errMsg);
+      setTimeout(() => setDocUploadError(''), 4000);
     } finally {
       setUploadingDoc(null);
     }
@@ -1291,10 +1353,14 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
         signature_text: tenantSignatureText,
         has_parking: tenantHasParking,
         parking_cars_count: tenantHasParking ? parseInt(tenantParkingCarsCount) : 0,
+        vehicle_details: tenantHasParking
+          ? tenantVehicles.slice(0, tenantParkingCarsCount).map((v, i) => `Car ${i + 1}: ${v.plate || 'N/A'} (State: ${v.state || 'AL'})`).join('; ')
+          : "",
         has_pets: tenantHasPets,
         pets_count: tenantHasPets ? parseInt(tenantPetsCount) : 0,
         pet_details: tenantHasPets ? tenantPetDetails : "",
-        num_occupants: parseInt(numOccupants) || 1
+        num_occupants: parseInt(numOccupants) || 1,
+        num_minors: parseInt(numMinors) || 0
 
       });
       toast.success("Lease submitted successfully! Landlord has been notified for final approval.");
@@ -1302,6 +1368,27 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
       setSelectedLease(res.data);
     } catch (err) {
       toast.error(err.response?.data?.detail || "Submission failed.");
+    }
+  }
+
+  async function handleTenantRequestUnitChange(e) {
+    if (e) e.preventDefault();
+    if (!tenantChangeUnitNotes.trim()) {
+      toast.error("Please enter a note explaining the unit change request.");
+      return;
+    }
+
+    try {
+      const res = await API.post(`/rental/leases/${selectedLease.lease_id}/request-unit-change`, {
+        notes: tenantChangeUnitNotes
+      });
+      toast.success("Unit change request sent to landlord successfully!");
+      setLeases(prev => prev.map(l => l.lease_id === selectedLease.lease_id ? res.data : l));
+      setSelectedLease(res.data);
+      setShowTenantChangeUnitModal(false);
+      setTenantChangeUnitNotes('');
+    } catch (err) {
+      toast.error(err.response?.data?.detail || "Failed to submit request.");
     }
   }
 
@@ -1320,39 +1407,93 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
     return (
       <div className="space-y-6 text-left">
         {/* Step Indicator */}
-        <div className="flex items-center justify-between border-b dark:border-white/5 pb-4">
-          <div className="flex gap-2">
-            {[1, 2, 3].map(step => (
-              <button
-                key={step}
-                type="button"
-                disabled={step > tenantOnboardingStep}
-                onClick={() => setTenantOnboardingStep(step)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
-                  tenantOnboardingStep === step
-                    ? 'bg-blue-600 text-white shadow-sm'
-                    : 'bg-slate-100 dark:bg-white/5 text-slate-500 hover:text-slate-700'
-                }`}
-              >
-                Step {step}
-              </button>
-            ))}
+        <div className="flex items-center justify-between border-b dark:border-white/5 pb-4 select-none">
+          <div className="flex items-center gap-2 py-1">
+            {[1, 2].map((step, idx) => {
+              const isActive = tenantOnboardingStep === step;
+              const isCompleted = step < tenantOnboardingStep;
+              
+              return (
+                <div key={step} className="flex items-center gap-2 shrink-0">
+                  {/* Step Circle */}
+                  <button
+                    type="button"
+                    disabled={step > tenantOnboardingStep}
+                    onClick={() => setTenantOnboardingStep(step)}
+                    className="focus:outline-none cursor-pointer"
+                    title={`Step ${step}`}
+                  >
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all border shrink-0 ${
+                      isActive 
+                        ? 'bg-blue-600 text-white border-blue-600 ring-4 ring-blue-500/20 shadow-md shadow-blue-550/10' 
+                        : isCompleted
+                          ? 'bg-emerald-500 text-white border-emerald-500 shadow-md shadow-emerald-500/10'
+                          : 'bg-white dark:bg-[#132030] text-slate-500 dark:text-slate-400 border-slate-200 dark:border-white/10 hover:border-slate-350 dark:hover:border-white/25'
+                    }`}>
+                      {isCompleted ? '✓' : step}
+                    </div>
+                  </button>
+
+                  {/* Connector Line */}
+                  {idx < 1 && (
+                    <div className="w-8 sm:w-12 h-0.5 bg-slate-200 dark:bg-white/10 relative shrink-0">
+                      <div className={`absolute inset-y-0 left-0 bg-blue-600 transition-all duration-300 ${
+                        step < tenantOnboardingStep ? 'w-full' : 'w-0'
+                      }`} />
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
-          <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Tenant Verification Flow</span>
+          <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Tenant Onboarding Flow</span>
         </div>
 
         {tenantOnboardingStep === 1 && (
-          <div className="space-y-4">
-            <h3 className="text-sm font-extrabold text-slate-800 dark:text-white uppercase tracking-wider">Step 1: Review Prepared Lease Agreement</h3>
-            <p className="text-xs text-slate-400">Please review all tenancy parameters (rent, deposit, charges, clauses) compiled by the landlord.</p>
+          <div className="space-y-4 animate-fade-in">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b dark:border-white/5 pb-3">
+              <div className="space-y-1 text-left">
+                <h3 className="text-sm font-extrabold text-slate-800 dark:text-white uppercase tracking-wider">Step 1: Review Prepared Lease Agreement</h3>
+                <p className="text-xs text-slate-400">Please review all tenancy parameters (rent, deposit, charges, clauses) compiled by the landlord.</p>
+              </div>
+              
+              {/* Reduced Width Status Badge next to Heading */}
+              <div className="shrink-0 text-left space-y-1">
+                <span className="block text-[9px] font-black text-gray-500 dark:text-gray-455 uppercase tracking-wider">Signature Status</span>
+                <span className={`inline-flex items-center gap-1.5 text-xs font-bold py-1.5 px-3.5 rounded-xl border ${
+                  selectedLease.status === 'ACTIVE'
+                    ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-550/20'
+                    : selectedLease.status === 'PENDING_LANDLORD_APPROVAL'
+                      ? 'bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-550/20 animate-pulse'
+                      : 'bg-yellow-500/10 text-yellow-600 dark:text-yellow-405 border-yellow-550/20'
+                }`}>
+                  {selectedLease.status === 'ACTIVE' ? <CheckCircle className="w-3.5 h-3.5" /> : <Clock className="w-3.5 h-3.5" />}
+                  {selectedLease.status === 'PENDING_LANDLORD_APPROVAL' ? 'Ready to Review' : selectedLease.status}
+                </span>
+              </div>
+            </div>
             <div className="p-4 border border-slate-200 dark:border-white/10 rounded-xl bg-slate-50/40 dark:bg-black/20 text-xs font-mono max-h-72 overflow-y-auto leading-relaxed whitespace-pre-wrap">
               {selectedLease.lease_agreement_text}
             </div>
-            <div className="flex justify-end">
+            {selectedLease.unit_change_requested ? (
+              <div className="p-3 bg-orange-500/10 border border-orange-500/20 text-orange-600 dark:text-orange-400 rounded-xl text-xs font-semibold">
+                ⚠️ You requested a unit change: "{selectedLease.unit_change_request_notes}". The landlord will review and update the unit in the lease agreement.
+              </div>
+            ) : null}
+            <div className="flex justify-between items-center gap-3">
+              {!selectedLease.unit_change_requested && (
+                <button
+                  type="button"
+                  onClick={() => setShowTenantChangeUnitModal(true)}
+                  className="px-4 py-2.5 border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-white/5 rounded-xl text-xs font-bold cursor-pointer transition"
+                >
+                  Request Unit Change (Optional)
+                </button>
+              )}
               <button
                 type="button"
                 onClick={() => setTenantOnboardingStep(2)}
-                className="px-5 py-2.5 bg-blue-600 hover:bg-blue-750 text-white rounded-xl text-xs font-bold cursor-pointer transition shadow-md shadow-blue-500/10"
+                className="px-5 py-2.5 bg-blue-600 hover:bg-blue-750 text-white rounded-xl text-xs font-bold cursor-pointer transition shadow-md shadow-blue-500/10 ml-auto"
               >
                 Proceed to Details & Docs
               </button>
@@ -1435,6 +1576,19 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
                 />
               </div>
 
+              <div>
+                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">Total Number of Minors</label>
+                <input
+                  type="number"
+                  min="0"
+                  max="20"
+                  value={numMinors}
+                  onChange={e => setNumMinors(Math.min(20, Math.max(0, parseInt(e.target.value) || 0)))}
+                  className="w-full text-xs px-3.5 py-2.5 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none border-slate-200 dark:border-white/10 focus:ring-2 focus:ring-blue-500/20"
+                  placeholder="Number of minors"
+                />
+              </div>
+
             </div>
 
             {/* Parking & Pet Options */}
@@ -1464,7 +1618,7 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
                       onClick={() => {
                         setTenantHasParking(false);
                         setTenantParkingCarsCount(1);
-                        setTenantVehicleDetails('');
+                        setTenantVehicles([{ plate: '', state: 'AL' }]);
                       }}
                       className={`flex-1 text-[10px] font-bold py-1 rounded-md transition cursor-pointer ${
                         !tenantHasParking 
@@ -1486,21 +1640,88 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
                         min="1"
                         max="3"
                         value={tenantParkingCarsCount} 
-                        onChange={e => setTenantParkingCarsCount(Math.min(3, Math.max(1, parseInt(e.target.value) || 1)))} 
+                        onChange={e => {
+                          const count = Math.min(3, Math.max(1, parseInt(e.target.value) || 1));
+                          setTenantParkingCarsCount(count);
+                          setTenantVehicles(prev => {
+                            const updated = [...prev];
+                            while (updated.length < count) updated.push({ plate: '', state: 'AL' });
+                            return updated.slice(0, count);
+                          });
+                        }}
                         className="w-full text-xs px-3 py-2 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none border-slate-200 dark:border-white/10"
                       />
                     </div>
-                    <div>
-                      <label className="block text-[10px] font-bold text-gray-450 uppercase tracking-wider mb-1.5">Vehicle License Plate(s) / Description</label>
-                      <input 
-                        type="text" 
-                        required
-                        value={tenantVehicleDetails}
-                        onChange={e => setTenantVehicleDetails(e.target.value)}
-                        placeholder="e.g. Toyota Camry (Plate: ABC-123)"
-                        className="w-full text-xs px-3 py-2 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none border-slate-200 dark:border-white/10"
-                      />
-                    </div>
+                    {/* Dynamic per-car vehicle fields */}
+                    {Array.from({ length: tenantParkingCarsCount }).map((_, idx) => (
+                      <div key={idx} className="space-y-2 animate-fade-in">
+                        {tenantParkingCarsCount > 1 && (
+                          <span className="block text-[9px] font-black text-blue-500 uppercase tracking-widest">Car {idx + 1}</span>
+                        )}
+                        <div className="grid grid-cols-2 gap-3 items-start">
+                          <div>
+                            <label className="block text-[10px] font-bold text-gray-450 uppercase tracking-wider mb-1.5 font-sans">License Plate / Model</label>
+                            <div className="relative">
+                              <input
+                                type="text"
+                                required
+                                value={tenantVehicles[idx]?.plate || ''}
+                                onChange={e => {
+                                  const updated = [...tenantVehicles];
+                                  if (!updated[idx]) updated[idx] = { plate: '', state: 'AL' };
+                                  updated[idx] = { ...updated[idx], plate: e.target.value };
+                                  setTenantVehicles(updated);
+                                }}
+                                placeholder="e.g. Toyota Camry (ABC-123)"
+                                className={`w-full text-xs pr-8 pl-3 py-2 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none transition-all ${
+                                  (tenantVehicles[idx]?.plate || '').trim().length >= 3
+                                    ? 'border-emerald-500/50 dark:border-emerald-500/30 focus:ring-2 focus:ring-emerald-500/20'
+                                    : 'border-slate-200 dark:border-white/10 focus:ring-2 focus:ring-blue-500/20'
+                                }`}
+                              />
+                              {(tenantVehicles[idx]?.plate || '').trim().length >= 3 && (
+                                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-emerald-500 text-[10px] font-black select-none pointer-events-none">✓</span>
+                              )}
+                            </div>
+                          </div>
+                          <div>
+                            <label className="block text-[10px] font-bold text-gray-450 uppercase tracking-wider mb-1.5 font-sans">Registration State</label>
+                            <select
+                              value={tenantVehicles[idx]?.state || 'AL'}
+                              onChange={e => {
+                                const updated = [...tenantVehicles];
+                                if (!updated[idx]) updated[idx] = { plate: '', state: 'AL' };
+                                updated[idx] = { ...updated[idx], state: e.target.value };
+                                setTenantVehicles(updated);
+                              }}
+                              className="w-full text-xs px-3 py-2.5 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none border-slate-200 dark:border-white/10 cursor-pointer font-medium"
+                            >
+                              {[
+                                { code: 'AL', name: 'Alabama' }, { code: 'AK', name: 'Alaska' }, { code: 'AZ', name: 'Arizona' },
+                                { code: 'AR', name: 'Arkansas' }, { code: 'CA', name: 'California' }, { code: 'CO', name: 'Colorado' },
+                                { code: 'CT', name: 'Connecticut' }, { code: 'DE', name: 'Delaware' }, { code: 'FL', name: 'Florida' },
+                                { code: 'GA', name: 'Georgia' }, { code: 'HI', name: 'Hawaii' }, { code: 'ID', name: 'Idaho' },
+                                { code: 'IL', name: 'Illinois' }, { code: 'IN', name: 'Indiana' }, { code: 'IA', name: 'Iowa' },
+                                { code: 'KS', name: 'Kansas' }, { code: 'KY', name: 'Kentucky' }, { code: 'LA', name: 'Louisiana' },
+                                { code: 'ME', name: 'Maine' }, { code: 'MD', name: 'Maryland' }, { code: 'MA', name: 'Massachusetts' },
+                                { code: 'MI', name: 'Michigan' }, { code: 'MN', name: 'Minnesota' }, { code: 'MS', name: 'Mississippi' },
+                                { code: 'MO', name: 'Missouri' }, { code: 'MT', name: 'Montana' }, { code: 'NE', name: 'Nebraska' },
+                                { code: 'NV', name: 'Nevada' }, { code: 'NH', name: 'New Hampshire' }, { code: 'NJ', name: 'New Jersey' },
+                                { code: 'NM', name: 'New Mexico' }, { code: 'NY', name: 'New York' }, { code: 'NC', name: 'North Carolina' },
+                                { code: 'ND', name: 'North Dakota' }, { code: 'OH', name: 'Ohio' }, { code: 'OK', name: 'Oklahoma' },
+                                { code: 'OR', name: 'Oregon' }, { code: 'PA', name: 'Pennsylvania' }, { code: 'RI', name: 'Rhode Island' },
+                                { code: 'SC', name: 'South Carolina' }, { code: 'SD', name: 'South Dakota' }, { code: 'TN', name: 'Tennessee' },
+                                { code: 'TX', name: 'Texas' }, { code: 'UT', name: 'Utah' }, { code: 'VT', name: 'Vermont' },
+                                { code: 'VA', name: 'Virginia' }, { code: 'WA', name: 'Washington' }, { code: 'WV', name: 'West Virginia' },
+                                { code: 'WI', name: 'Wisconsin' }, { code: 'WY', name: 'Wyoming' }
+                              ].map(st => (
+                                <option key={st.code} value={st.code}>{st.name} ({st.code})</option>
+                              ))}
+                            </select>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
                     <div className="text-[10px] font-bold text-blue-600 dark:text-blue-400 bg-blue-500/10 border border-blue-500/20 py-2 px-3 rounded-xl text-center">
                       Monthly Charges: ${tenantParkingCarsCount * 25}/mo
                     </div>
@@ -1559,15 +1780,21 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
                       />
                     </div>
                     <div>
-                      <label className="block text-[10px] font-bold text-gray-450 uppercase tracking-wider mb-1.5">Pet Breed(s) / Description</label>
-                      <input 
-                        type="text" 
+                      <label className="block text-[10px] font-bold text-gray-455 uppercase tracking-wider mb-1.5 font-sans">Type of Pet</label>
+                      <select 
                         required
-                        value={tenantPetDetails}
+                        value={tenantPetDetails || 'Dog'}
                         onChange={e => setTenantPetDetails(e.target.value)}
-                        placeholder="e.g. Golden Retriever, 2 years old"
-                        className="w-full text-xs px-3 py-2 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none border-slate-200 dark:border-white/10"
-                      />
+                        className="w-full text-xs px-3 py-2.5 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none border-slate-200 dark:border-white/10 cursor-pointer font-medium"
+                      >
+                        <option value="Dog">Dog</option>
+                        <option value="Cat">Cat</option>
+                        <option value="Bird">Bird</option>
+                        <option value="Fish">Fish</option>
+                        <option value="Rabbit">Rabbit</option>
+                        <option value="Reptile">Reptile</option>
+                        <option value="Other">Other</option>
+                      </select>
                     </div>
                     <div className="text-[10px] font-bold text-blue-600 dark:text-blue-400 bg-blue-500/10 border border-blue-500/20 py-2 px-3 rounded-xl text-center">
                       Monthly Charges: ${tenantPetsCount * 50}/mo
@@ -1582,6 +1809,13 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
             <div className="space-y-3 pt-3 border-t dark:border-white/5">
               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">Required Documents (PDF / JPG / PNG / WEBP)</span>
               
+              {/* Inline upload error - non-blocking, auto-dismisses */}
+              {docUploadError && (
+                <div className="mb-2 px-3 py-2 bg-red-500/10 border border-red-500/20 rounded-xl text-[11px] font-semibold text-red-600 dark:text-red-400 flex items-center gap-2">
+                  <span>⚠️</span> {docUploadError}
+                </div>
+              )}
+
               {["PAY_SLIP", "DRIVING_LICENSE", "ADDRESS_PROOF"].map(type => {
                 const existing = uploadedDocs.find(d => d.doc_type === type);
                 return (
@@ -1636,19 +1870,55 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
               })}
             </div>
 
-            <div className="flex justify-between items-center pt-2">
+            {/* Signature Input and Verification Consent Checkbox right above buttons */}
+            <div className="p-4 bg-slate-50/50 dark:bg-white/[0.01] border border-slate-200/60 dark:border-white/[0.03] rounded-2xl text-left space-y-4 mt-4">
+              <div className="space-y-1.5 text-left">
+                <label className="block text-[9px] font-black text-gray-500 dark:text-gray-455 uppercase tracking-wider">Type Your Full Name to Digitally Sign</label>
+                <input
+                  required
+                  type="text"
+                  value={tenantSignatureText}
+                  onChange={e => setTenantSignatureText(e.target.value.replace(/[^a-zA-Z\s]/g, ''))}
+                  className="w-full text-xs px-3 py-2.5 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white font-serif italic text-[13px] outline-none border-slate-200 dark:border-white/10 focus:ring-2 focus:ring-blue-500/20"
+                  placeholder="e.g. John Doe"
+                />
+              </div>
+
+              <label className="flex items-start gap-3 cursor-pointer">
+                <input 
+                  type="checkbox" 
+                  checked={tenantAgreeTerms} 
+                  onChange={e => setTenantAgreeTerms(e.target.checked)} 
+                  className="w-4.5 h-4.5 text-blue-600 border-slate-300 rounded focus:ring-blue-500 mt-1 cursor-pointer" 
+                />
+                <div>
+                  <span className="text-xs font-bold text-slate-800 dark:text-white block">I verify and agree to the terms in this lease agreement.</span>
+                  <span className="text-[10px] text-slate-400">By checking this, you agree to digital execution of this lease contract under the U.S. ESIGN Act.</span>
+                </div>
+              </label>
+            </div>
+
+                {/* Inline form validation error */}
+                {formError && (
+                  <div className="mb-3 px-3 py-2.5 bg-red-500/10 border border-red-500/20 rounded-xl text-[11px] font-semibold text-red-600 dark:text-red-400 flex items-start gap-2">
+                    <span className="mt-0.5">⚠️</span>
+                    <span>{formError}</span>
+                  </div>
+                )}
+                <div className="flex justify-between items-center pt-4">
               <button
                 type="button"
                 onClick={() => setTenantOnboardingStep(1)}
-                className="px-4 py-2 border border-slate-250 dark:border-white/10 text-slate-600 dark:text-slate-400 rounded-xl text-xs font-bold cursor-pointer transition"
+                className="px-4 py-2 border border-slate-250 dark:border-white/10 text-slate-650 dark:text-slate-400 rounded-xl text-xs font-bold cursor-pointer transition"
               >
                 Back
               </button>
               <button
                 type="button"
                 onClick={() => {
+                  setFormError('');
                   if (!tenantDob) {
-                    toast.error("Please enter your date of birth.");
+                    setFormError("Please enter your date of birth.");
                     return;
                   }
                   const birthDate = new Date(tenantDob);
@@ -1656,29 +1926,33 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
                   const ageDate = new Date(ageDiffMs);
                   const age = Math.abs(ageDate.getUTCFullYear() - 1970);
                   if (age < 18) {
-                    toast.error("You must be 18 years or older to sign a lease.");
+                    setFormError("You must be 18 years or older to sign a lease.");
                     return;
                   }
                   if (!tenantCurrentAddress.trim() || tenantCurrentAddress.trim().length < 10) {
-                    toast.error("Please enter a valid current address (min 10 characters).");
+                    setFormError("Please enter a valid current address (min 10 characters).");
                     return;
                   }
                   if (!tenantEmergencyContact.trim() || !/^[a-zA-Z\s.-]{2,50}$/.test(tenantEmergencyContact.trim())) {
-                    toast.error("Please enter a valid emergency contact name (letters only, 2-50 characters).");
+                    setFormError("Please enter a valid emergency contact name (letters only, 2–50 characters).");
                     return;
                   }
                   const cleanedPhone = tenantEmergencyPhone.replace(/\D/g, '');
                   if (!cleanedPhone || cleanedPhone.length !== 10) {
-                    toast.error("Please enter a valid 10-digit US emergency phone number.");
+                    setFormError("Please enter a valid 10-digit US emergency phone number.");
                     return;
                   }
                   
-                  if (tenantHasParking && !tenantVehicleDetails.trim()) {
-                    toast.error("Please enter your vehicle details / license plates.");
-                    return;
+                  if (tenantHasParking) {
+                    for (let i = 0; i < tenantParkingCarsCount; i++) {
+                      if (!tenantVehicles[i]?.plate?.trim() || tenantVehicles[i].plate.trim().length < 3) {
+                        setFormError(`Please enter license plate / model for Car ${i + 1}.`);
+                        return;
+                      }
+                    }
                   }
                   if (tenantHasPets && !tenantPetDetails.trim()) {
-                    toast.error("Please enter your pet breed / description details.");
+                    setFormError("Please enter your pet breed / description details.");
                     return;
                   }
                   
@@ -1687,61 +1961,23 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
                   const missing = requiredTypes.filter(type => !uploadedDocs.some(d => d.doc_type === type));
                   if (missing.length > 0) {
                     const labels = { PAY_SLIP: "Pay Slip / Income Proof", DRIVING_LICENSE: "Driving License / National ID", ADDRESS_PROOF: "Notice/Payment Address Proof" };
-                    toast.error(`Please upload required documents: ${missing.map(m => labels[m]).join(", ")}`);
+                    setFormError(`Please upload required documents: ${missing.map(m => labels[m]).join(", ")}`);
                     return;
                   }
 
-                  setTenantOnboardingStep(3);
+                  // Signature validation
+                  if (!tenantSignatureText.trim() || !/^[a-zA-Z\s]+$/.test(tenantSignatureText.trim()) || tenantSignatureText.trim().length < 3) {
+                    setFormError("Please type your full legal name in the signature box (letters only, min 3 chars).");
+                    return;
+                  }
+                  
+                  if (!tenantAgreeTerms) {
+                    setFormError("You must check the verification box to agree to the lease terms.");
+                    return;
+                  }
+
+                  handleTenantOnboardingSubmit();
                 }}
-                className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold cursor-pointer transition shadow-md shadow-blue-500/10"
-              >
-                Proceed to Sign
-              </button>
-            </div>
-          </div>
-        )}
-
-        {tenantOnboardingStep === 3 && (
-          <div className="space-y-5">
-            <h3 className="text-sm font-extrabold text-slate-800 dark:text-white uppercase tracking-wider">Step 3: Legal Digital Signature</h3>
-            
-            <div className="p-4 bg-slate-50/50 dark:bg-slate-950/10 border border-slate-250 dark:border-white/5 rounded-2xl text-left space-y-4">
-              <label className="flex items-start gap-3 cursor-pointer">
-                <input 
-                  type="checkbox" 
-                  checked={tenantAgreeTerms} 
-                  onChange={e => setTenantAgreeTerms(e.target.checked)} 
-                  className="w-4.5 h-4.5 text-blue-600 border-slate-300 rounded focus:ring-blue-500 mt-1" 
-                />
-                <div>
-                  <span className="text-xs font-bold text-slate-800 dark:text-white block">I verify and agree to the terms in this lease agreement.</span>
-                  <span className="text-[10px] text-slate-400">By checking this, you agree to digital execution of this lease contract under the U.S. ESIGN Act.</span>
-                </div>
-              </label>
-
-              <div className="space-y-2">
-                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider">Type Your Full Name to Digitally Sign</label>
-                <input
-                  type="text"
-                  value={tenantSignatureText}
-                  onChange={e => setTenantSignatureText(e.target.value.replace(/[^a-zA-Z\s]/g, ''))}
-                  className="w-full text-sm px-4 py-3 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white font-serif italic text-lg outline-none border-slate-200 dark:border-white/10 focus:ring-2 focus:ring-blue-500/20"
-                  placeholder="e.g. John Doe"
-                />
-              </div>
-            </div>
-
-            <div className="flex justify-between items-center pt-2">
-              <button
-                type="button"
-                onClick={() => setTenantOnboardingStep(2)}
-                className="px-4 py-2 border border-slate-250 dark:border-white/10 text-slate-650 dark:text-slate-400 rounded-xl text-xs font-bold cursor-pointer transition"
-              >
-                Back
-              </button>
-              <button
-                type="button"
-                onClick={handleTenantOnboardingSubmit}
                 className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-extrabold cursor-pointer transition shadow-md shadow-emerald-500/10"
               >
                 Submit Signed Agreement
@@ -1763,7 +1999,7 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
         </div>
 
         {/* Tenant Information Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-xs bg-slate-50/50 dark:bg-white/[0.01] p-4 rounded-xl border border-slate-200/60 dark:border-white/[0.03]">
+        <div className="grid grid-cols-2 md:grid-cols-6 gap-4 text-xs bg-slate-50/50 dark:bg-white/[0.01] p-4 rounded-xl border border-slate-200/60 dark:border-white/[0.03]">
           <div>
             <span className="text-gray-400 block text-[10px] uppercase font-bold tracking-wider">Date of Birth</span>
             <span className="font-bold text-gray-950 dark:text-white">{selectedLease.tenant_dob || "Not Provided"}</span>
@@ -1783,6 +2019,10 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
           <div>
             <span className="text-gray-400 block text-[10px] uppercase font-bold tracking-wider">Number of Occupants</span>
             <span className="font-bold text-gray-950 dark:text-white">{selectedLease.num_occupants || "1"}</span>
+          </div>
+          <div>
+            <span className="text-gray-400 block text-[10px] uppercase font-bold tracking-wider">Total Minors</span>
+            <span className="font-bold text-gray-950 dark:text-white">{selectedLease.num_minors || "0"}</span>
           </div>
         </div>
 
@@ -1878,82 +2118,109 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
     });
   }
 
-  const renderStep1 = () => (
-    <div className="space-y-5">
-      <div className="border-b dark:border-white/5 pb-3">
-        <span className="text-[10px] uppercase font-bold text-blue-600 dark:text-blue-400 tracking-wider">Step 1 of 5</span>
-        <h4 className="text-lg font-extrabold text-slate-800 dark:text-white mt-1">Tenant Profile Details</h4>
-        <p className="text-xs text-slate-400">Specify the property unit, the tenant's email address, full name, and phone number.</p>
-      </div>
-      
-      {/* Row 1: Tenant Name & Tenant Email */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-        <div>
-          <label className="block text-xs font-bold text-slate-655 dark:text-gray-400 tracking-wider mb-2">TENANT NAME</label>
-          <div className="relative">
-            <User className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
-            <input 
-              required 
-              type="text" 
-              value={tenantName} 
-              onChange={e => {
-                const val = e.target.value;
-                if (/^[a-zA-Z\s.-]*$/.test(val)) {
-                  setTenantName(val);
-                }
-              }} 
-              className={`w-full text-sm pl-10 pr-3.5 py-3 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none transition focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 border-slate-200 dark:border-white/10 ${formErrors.tenantName ? 'border-red-500 ring-2 ring-red-500/10' : ''}`} 
-              placeholder="John Doe" 
-            />
+  const renderStep1 = () => {
+    const selectedUnitObj = units.find(u => String(u.unit_id) === String(selectedUnitId));
+    const isSingleFamilyOrCondo = selectedUnitObj && (selectedUnitObj.unit_number === 'Single Family' || selectedUnitObj.unit_number === 'Condo Unit');
+    return (
+      <div className="space-y-5">
+        <div className="border-b dark:border-white/5 pb-3">
+          <span className="text-[10px] uppercase font-bold text-blue-600 dark:text-blue-400 tracking-wider">Step 1 of 5</span>
+          <h4 className="text-lg font-extrabold text-slate-800 dark:text-white mt-1">Tenant Profile Details</h4>
+          <p className="text-xs text-slate-400">Specify the property unit, the tenant's email address, full name, and phone number.</p>
+          {selectedUnitObj && (
+            <div className="mt-3 p-3 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center gap-3 animate-fade-in">
+              <Home className="text-blue-600 dark:text-blue-400 w-4 h-4 shrink-0" />
+              <div className="text-left">
+                <span className="text-[9px] uppercase font-extrabold text-blue-600 dark:text-blue-400 tracking-wider block">Assigned Property</span>
+                <span className="text-xs font-bold text-slate-800 dark:text-white block">
+                  {selectedUnitObj.property_name || 'N/A'}
+                </span>
+              </div>
+            </div>
+          )}
+        </div>
+        
+        {/* Row 1: Tenant Name & Tenant Email */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div>
+            <label className="block text-xs font-bold text-slate-655 dark:text-gray-400 tracking-wider mb-2">TENANT NAME</label>
+            <div className="relative">
+              <User className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
+              <input 
+                required 
+                type="text" 
+                value={tenantName} 
+                onChange={e => {
+                  const val = e.target.value;
+                  if (/^[a-zA-Z\s.-]*$/.test(val)) {
+                    setTenantName(val);
+                  }
+                }} 
+                className={`w-full text-sm pl-10 pr-3.5 py-3 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none transition focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 border-slate-200 dark:border-white/10 ${formErrors.tenantName ? 'border-red-500 ring-2 ring-red-500/10' : ''}`} 
+                placeholder="John Doe" 
+              />
+            </div>
+            {formErrors.tenantName && <p className="text-xs text-red-500 mt-1.5 flex items-center gap-1.5"><AlertCircle size={13}/>{formErrors.tenantName}</p>}
           </div>
-          {formErrors.tenantName && <p className="text-xs text-red-500 mt-1.5 flex items-center gap-1.5"><AlertCircle size={13}/>{formErrors.tenantName}</p>}
+
+          <div>
+            <label className="block text-xs font-bold text-slate-655 dark:text-gray-400 tracking-wider mb-2">TENANT EMAIL</label>
+            <div className="relative">
+              <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
+              <input 
+                required 
+                disabled={prefilledFromApp}
+                type="email" 
+                value={tenantEmail} 
+                onChange={e => setTenantEmail(e.target.value)} 
+                className={`w-full text-sm pl-10 pr-3.5 py-3 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none transition focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 ${
+                  prefilledFromApp ? 'opacity-80 cursor-not-allowed bg-slate-100 dark:bg-slate-950 border-slate-200 dark:border-white/5' : 'border-slate-200 dark:border-white/10'
+                } ${formErrors.tenantEmail ? 'border-red-500 ring-2 ring-red-500/10' : ''}`} 
+                placeholder="tenant@example.com" 
+              />
+            </div>
+            {formErrors.tenantEmail && <p className="text-xs text-red-500 mt-1.5 flex items-center gap-1.5"><AlertCircle size={13}/>{formErrors.tenantEmail}</p>}
+          </div>
         </div>
 
-        <div>
-          <label className="block text-xs font-bold text-slate-655 dark:text-gray-400 tracking-wider mb-2">TENANT EMAIL</label>
-          <div className="relative">
-            <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
-            <input 
-              required 
-              disabled={prefilledFromApp}
-              type="email" 
-              value={tenantEmail} 
-              onChange={e => setTenantEmail(e.target.value)} 
-              className={`w-full text-sm pl-10 pr-3.5 py-3 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none transition focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 ${
-                prefilledFromApp ? 'opacity-80 cursor-not-allowed bg-slate-100 dark:bg-slate-950 border-slate-200 dark:border-white/5' : 'border-slate-200 dark:border-white/10'
-              } ${formErrors.tenantEmail ? 'border-red-500 ring-2 ring-red-500/10' : ''}`} 
-              placeholder="tenant@example.com" 
-            />
+        {/* Row 2: Select Unit & Tenant Phone */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div>
+            <label className="block text-xs font-bold text-slate-655 dark:text-gray-400 tracking-wider mb-2">
+              {isSingleFamilyOrCondo ? 'PROPERTY TYPE' : 'SELECT UNIT'}
+            </label>
+            <div className="relative">
+              <Home className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
+              {isSingleFamilyOrCondo ? (
+                <input
+                  type="text"
+                  readOnly
+                  value={selectedUnitObj.unit_number === 'Single Family' ? 'Single Family Home (Entire Property)' : 'Condominium (Entire Property)'}
+                  className="w-full text-sm pl-10 pr-3.5 py-3 border rounded-xl bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-white/5 text-slate-500 dark:text-slate-400 outline-none cursor-not-allowed font-bold"
+                />
+              ) : (
+                <select 
+                  required 
+                  disabled={prefilledFromApp}
+                  value={selectedUnitId} 
+                  onChange={e => setSelectedUnitId(e.target.value)} 
+                  className={`w-full text-sm pl-10 pr-3.5 py-3 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none transition focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 ${
+                    prefilledFromApp ? 'opacity-80 cursor-not-allowed bg-slate-100 dark:bg-slate-950 border-slate-200 dark:border-white/5' : 'border-slate-200 dark:border-white/10'
+                  } ${formErrors.selectedUnitId ? 'border-red-500 ring-2 ring-red-500/10' : ''}`}
+                >
+                  <option value="">-- Select a Unit --</option>
+                  {filteredUnits.map(u => (
+                    <option key={u.unit_id} value={u.unit_id}>
+                      {getUnitDisplayLabel(u)}
+                    </option>
+                  ))}
+                </select>
+              )}
+            </div>
+            {!isSingleFamilyOrCondo && formErrors.selectedUnitId && (
+              <p className="text-xs text-red-500 mt-1.5 flex items-center gap-1.5"><AlertCircle size={13}/>{formErrors.selectedUnitId}</p>
+            )}
           </div>
-          {formErrors.tenantEmail && <p className="text-xs text-red-500 mt-1.5 flex items-center gap-1.5"><AlertCircle size={13}/>{formErrors.tenantEmail}</p>}
-        </div>
-      </div>
-
-      {/* Row 2: Select Unit & Tenant Phone */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-        <div>
-          <label className="block text-xs font-bold text-slate-655 dark:text-gray-400 tracking-wider mb-2">SELECT UNIT</label>
-          <div className="relative">
-            <Home className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
-            <select 
-              required 
-              disabled={prefilledFromApp}
-              value={selectedUnitId} 
-              onChange={e => setSelectedUnitId(e.target.value)} 
-              className={`w-full text-sm pl-10 pr-3.5 py-3 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none transition focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 ${
-                prefilledFromApp ? 'opacity-80 cursor-not-allowed bg-slate-100 dark:bg-slate-950 border-slate-200 dark:border-white/5' : 'border-slate-200 dark:border-white/10'
-              } ${formErrors.selectedUnitId ? 'border-red-500 ring-2 ring-red-500/10' : ''}`}
-            >
-              <option value="">-- Select a Unit --</option>
-              {filteredUnits.map(u => (
-                <option key={u.unit_id} value={u.unit_id}>
-                  Unit {u.unit_number} - {u.status || 'VACANT'}
-                </option>
-              ))}
-            </select>
-          </div>
-          {formErrors.selectedUnitId && <p className="text-xs text-red-500 mt-1.5 flex items-center gap-1.5"><AlertCircle size={13}/>{formErrors.selectedUnitId}</p>}
-        </div>
 
         <div>
           <label className="block text-xs font-bold text-slate-655 dark:text-gray-400 tracking-wider mb-2">TENANT PHONE</label>
@@ -1975,7 +2242,8 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
         </div>
       </div>
     </div>
-  );
+    );
+  };
 
   const renderStep2 = () => {
     const selectedUnitObj = units.find(u => String(u.unit_id) === String(selectedUnitId));
@@ -1992,187 +2260,227 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
             <Home className="text-blue-600 dark:text-blue-400" size={18} />
             <div className="text-left">
               <span className="text-[10px] uppercase font-bold text-blue-600 dark:text-blue-400 tracking-wider block">Property Name</span>
-              <span className="text-sm font-bold text-slate-800 dark:text-white block">{selectedUnitObj.property_name || 'N/A'} (Unit {selectedUnitObj.unit_number})</span>
+              <span className="text-xs font-bold text-slate-800 dark:text-white">
+                {selectedUnitObj.property_name || 'N/A'}
+                {selectedUnitObj.unit_number !== 'Single Family' && selectedUnitObj.unit_number !== 'Condo Unit' && (
+                  <> (Unit {selectedUnitObj.unit_number === 'Entire Property' || !/\d/.test(selectedUnitObj.unit_number) ? '1' : selectedUnitObj.unit_number})</>
+                )}
+              </span>
             </div>
           </div>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          <div>
-            <label className="block text-xs font-bold text-slate-655 dark:text-gray-400 tracking-wider mb-2">START DATE</label>
-            <div className="relative">
-              <Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
-              <input 
-                required 
-                type="date" 
-                min={editingLeaseId ? undefined : new Date().toISOString().split('T')[0]} 
-                value={startDate} 
-                onChange={e => setStartDate(e.target.value)} 
-                className={`w-full text-sm pl-10 pr-3.5 py-3 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none transition focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 border-slate-200 dark:border-white/10 ${formErrors.startDate ? 'border-red-500 ring-2 ring-red-500/10' : ''}`} 
-              />
-
-            </div>
-            {formErrors.startDate && <p className="text-xs text-red-500 mt-1.5 flex items-center gap-1.5"><AlertCircle size={13}/>{formErrors.startDate}</p>}
+        {/* Section 1: Lease Period Settings */}
+        <div className="space-y-3 pt-2">
+          <div className="flex items-center gap-2 border-b border-slate-100 dark:border-white/5 pb-1.5">
+            <div className="h-3.5 w-1 bg-blue-600 rounded-full"></div>
+            <h5 className="text-[10px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-widest">
+              Let's Setup Start Date & Lease Duration
+            </h5>
           </div>
-          
-          <div>
-            <label className="block text-xs font-bold text-slate-655 dark:text-gray-400 tracking-wider mb-2">LEASE DURATION</label>
-            <div className="relative">
-              <Clock className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div>
+              <label className="block text-xs font-bold text-slate-655 dark:text-gray-400 tracking-wider mb-2">START DATE</label>
+              <div className="relative">
+                <Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
+                <input 
+                  required 
+                  type="date" 
+                  min={editingLeaseId ? undefined : new Date().toISOString().split('T')[0]} 
+                  value={startDate} 
+                  onChange={e => setStartDate(e.target.value)} 
+                  className={`w-full text-sm pl-10 pr-3.5 py-3 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none transition focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 border-slate-200 dark:border-white/10 ${formErrors.startDate ? 'border-red-500 ring-2 ring-red-500/10' : ''}`} 
+                />
+              </div>
+              {formErrors.startDate && <p className="text-xs text-red-500 mt-1.5 flex items-center gap-1.5"><AlertCircle size={13}/>{formErrors.startDate}</p>}
+            </div>
+            
+            <div>
+              <label className="block text-xs font-bold text-slate-655 dark:text-gray-400 tracking-wider mb-2">LEASE DURATION</label>
+              <div className="relative">
+                <Clock className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
+                <select 
+                  value={duration} 
+                  onChange={e => setDuration(e.target.value)} 
+                  className="w-full text-sm pl-10 pr-3.5 py-3 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none transition focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 border-slate-200 dark:border-white/10"
+                >
+                  <option value="12">12 Months (1 Year)</option>
+                  <option value="6">6 Months</option>
+                  <option value="24">24 Months (2 Years)</option>
+                  <option value="custom">Custom Months</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          {duration === 'custom' && (
+            <div className="w-full md:w-1/2">
+              <label className="block text-xs font-bold text-slate-655 dark:text-gray-400 tracking-wider mb-2">CUSTOM DURATION (MONTHS)</label>
+              <input 
+                type="number" 
+                min="1" 
+                value={customDuration} 
+                onChange={e => setCustomDuration(e.target.value)} 
+                placeholder="Enter number of months" 
+                className={`w-full text-sm px-3.5 py-3 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white border-slate-200 dark:border-white/10 ${formErrors.duration ? 'border-red-500 ring-2 ring-red-500/10' : ''}`} 
+              />
+              {formErrors.duration && <p className="text-xs text-red-500 mt-1.5 flex items-center gap-1.5"><AlertCircle size={13}/>{formErrors.duration}</p>}
+            </div>
+          )}
+        </div>
+        
+        {/* Section 2: Monthly Rent Settings */}
+        <div className="space-y-3 pt-4">
+          <div className="flex items-center gap-2 border-b border-slate-100 dark:border-white/5 pb-1.5">
+            <div className="h-3.5 w-1 bg-blue-600 rounded-full"></div>
+            <h5 className="text-[10px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-widest">
+              Monthly Rent & Rent Due Date
+            </h5>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div>
+              <label className="block text-xs font-bold text-slate-655 dark:text-gray-400 tracking-wider mb-2">MONTHLY RENT ($)</label>
+              <div className="relative">
+                <DollarSign className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
+                <input 
+                  required 
+                  type="number" 
+                  value={rentAmount} 
+                  onChange={e => setRentAmount(e.target.value)} 
+                  className={`w-full text-sm pl-10 pr-3.5 py-3 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none transition focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 border-slate-200 dark:border-white/10 ${formErrors.rentAmount ? 'border-red-500 ring-2 ring-red-500/10' : ''}`} 
+                  placeholder="1500" 
+                />
+              </div>
+              {formErrors.rentAmount && <p className="text-xs text-red-500 mt-1.5 flex items-center gap-1.5"><AlertCircle size={13}/>{formErrors.rentAmount}</p>}
+            </div>
+            
+            <div>
+              <label className="block text-xs font-bold text-slate-655 dark:text-gray-400 tracking-wider mb-2">RENT DUE DAY</label>
+              <div className="relative">
+                <Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
+                <select 
+                  value={rentDueDate} 
+                  onChange={e => setRentDueDate(e.target.value)} 
+                  className="w-full text-sm pl-10 pr-3.5 py-3 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none transition focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 border-slate-200 dark:border-white/10"
+                >
+                  {[...Array(28).keys()].map(x => (
+                    <option key={x + 1} value={String(x + 1)}>{x + 1}{x === 0 ? 'st' : x === 1 ? 'nd' : x === 2 ? 'rd' : 'th'} day of month</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Section 3: Security Deposit & Fees */}
+        <div className="space-y-3 pt-4">
+          <div className="flex items-center gap-2 border-b border-slate-100 dark:border-white/5 pb-1.5">
+            <div className="h-3.5 w-1 bg-blue-600 rounded-full"></div>
+            <h5 className="text-[10px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-widest">
+              Security Deposit & Move-in/out Fees
+            </h5>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div>
+              <label className="block text-xs font-bold text-slate-655 dark:text-gray-400 tracking-wider mb-2">SECURITY DEPOSIT ($)</label>
+              <div className="relative">
+                <DollarSign className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
+                <input 
+                  required 
+                  type="number" 
+                  value={deposit} 
+                  onChange={e => setDeposit(e.target.value)} 
+                  className={`w-full text-sm pl-10 pr-3.5 py-3 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none transition focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 border-slate-200 dark:border-white/10 ${formErrors.deposit ? 'border-red-500 ring-2 ring-red-500/10' : ''}`} 
+                  placeholder="1500" 
+                />
+              </div>
+              {formErrors.deposit && <p className="text-xs text-red-500 mt-1.5 flex items-center gap-1.5"><AlertCircle size={13}/>{formErrors.deposit}</p>}
+            </div>
+            
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-bold text-slate-655 dark:text-gray-400 tracking-wider mb-2">MOVE-IN FEE ($)</label>
+                <div className="relative">
+                  <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-455 pointer-events-none" size={14} />
+                  <input 
+                    type="number" 
+                    value={moveInFee} 
+                    onChange={e => setMoveInFee(e.target.value)} 
+                    className={`w-full text-sm pl-7 pr-3 py-3 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none transition focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 border-slate-200 dark:border-white/10 ${formErrors.moveInFee ? 'border-red-500 ring-2 ring-red-500/10' : ''}`} 
+                  />
+                </div>
+                {formErrors.moveInFee && <p className="text-xs text-red-500 mt-1.5 flex items-center gap-1.5"><AlertCircle size={13}/>{formErrors.moveInFee}</p>}
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-655 dark:text-gray-400 tracking-wider mb-2">MOVE-OUT FEE ($)</label>
+                <div className="relative">
+                  <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-455 pointer-events-none" size={14} />
+                  <input 
+                    type="number" 
+                    value={moveOutFee} 
+                    onChange={e => setMoveOutFee(e.target.value)} 
+                    className={`w-full text-sm pl-7 pr-3 py-3 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none transition focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 border-slate-200 dark:border-white/10 ${formErrors.moveOutFee ? 'border-red-500 ring-2 ring-red-500/10' : ''}`} 
+                  />
+                </div>
+                {formErrors.moveOutFee && <p className="text-xs text-red-500 mt-1.5 flex items-center gap-1.5"><AlertCircle size={13}/>{formErrors.moveOutFee}</p>}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Section 4: Grace Period & Late Fee Guidelines */}
+        <div className="space-y-3 pt-4">
+          <div className="flex items-center gap-2 border-b border-slate-100 dark:border-white/5 pb-1.5">
+            <div className="h-3.5 w-1 bg-blue-600 rounded-full"></div>
+            <h5 className="text-[10px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-widest">
+              Grace Days & Late Fee Guidelines
+            </h5>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            <div>
+              <label className="block text-xs font-bold text-slate-655 dark:text-gray-400 tracking-wider mb-2">GRACE DAYS</label>
+              <div className="relative">
+                <Clock className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-405 pointer-events-none" size={16} />
+                <input 
+                  required 
+                  type="number" 
+                  value={gracePeriod} 
+                  onChange={e => setGracePeriod(e.target.value)} 
+                  className={`w-full text-sm pl-10 pr-3.5 py-3 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none transition focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 border-slate-200 dark:border-white/10 ${formErrors.gracePeriod ? 'border-red-500 ring-2 ring-red-500/10' : ''}`} 
+                />
+              </div>
+              {formErrors.gracePeriod && <p className="text-xs text-red-500 mt-1.5 flex items-center gap-1.5"><AlertCircle size={13}/>{formErrors.gracePeriod}</p>}
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-slate-655 dark:text-gray-400 tracking-wider mb-2">LATE FEE TYPE</label>
               <select 
-                value={duration} 
-                onChange={e => setDuration(e.target.value)} 
-                className="w-full text-sm pl-10 pr-3.5 py-3 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none transition focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 border-slate-200 dark:border-white/10"
+                value={feeType} 
+                onChange={e => setFeeType(e.target.value)} 
+                className="w-full text-sm px-3.5 py-3 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none transition focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 border-slate-200 dark:border-white/10"
               >
-                <option value="12">12 Months (1 Year)</option>
-                <option value="6">6 Months</option>
-                <option value="24">24 Months (2 Years)</option>
-                <option value="custom">Custom Months</option>
+                <option value="FLAT">Flat Fee</option>
+                <option value="PERCENTAGE">Percentage</option>
               </select>
             </div>
-          </div>
-        </div>
-
-        {duration === 'custom' && (
-          <div className="w-full md:w-1/2">
-            <label className="block text-xs font-bold text-slate-655 dark:text-gray-400 tracking-wider mb-2">CUSTOM DURATION (MONTHS)</label>
-            <input 
-              type="number" 
-              min="1" 
-              value={customDuration} 
-              onChange={e => setCustomDuration(e.target.value)} 
-              placeholder="Enter number of months" 
-              className={`w-full text-sm px-3.5 py-3 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white border-slate-200 dark:border-white/10 ${formErrors.duration ? 'border-red-500 ring-2 ring-red-500/10' : ''}`} 
-            />
-            {formErrors.duration && <p className="text-xs text-red-500 mt-1.5 flex items-center gap-1.5"><AlertCircle size={13}/>{formErrors.duration}</p>}
-          </div>
-        )}
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 border-t dark:border-white/5 pt-4">
-          <div>
-            <label className="block text-xs font-bold text-slate-655 dark:text-gray-400 tracking-wider mb-2">MONTHLY RENT ($)</label>
-          <div className="relative">
-            <DollarSign className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
-            <input 
-              required 
-              type="number" 
-              value={rentAmount} 
-              onChange={e => setRentAmount(e.target.value)} 
-              className={`w-full text-sm pl-10 pr-3.5 py-3 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none transition focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 border-slate-200 dark:border-white/10 ${formErrors.rentAmount ? 'border-red-500 ring-2 ring-red-500/10' : ''}`} 
-              placeholder="1500" 
-            />
-          </div>
-          {formErrors.rentAmount && <p className="text-xs text-red-500 mt-1.5 flex items-center gap-1.5"><AlertCircle size={13}/>{formErrors.rentAmount}</p>}
-        </div>
-        
-        <div>
-          <label className="block text-xs font-bold text-slate-655 dark:text-gray-400 tracking-wider mb-2">RENT DUE DAY</label>
-          <div className="relative">
-            <Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
-            <select 
-              value={rentDueDate} 
-              onChange={e => setRentDueDate(e.target.value)} 
-              className="w-full text-sm pl-10 pr-3.5 py-3 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none transition focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 border-slate-200 dark:border-white/10"
-            >
-              {[...Array(28).keys()].map(x => (
-                <option key={x + 1} value={String(x + 1)}>{x + 1}{x === 0 ? 'st' : x === 1 ? 'nd' : x === 2 ? 'rd' : 'th'} day of month</option>
-              ))}
-            </select>
-          </div>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-        <div>
-          <label className="block text-xs font-bold text-slate-655 dark:text-gray-400 tracking-wider mb-2">SECURITY DEPOSIT ($)</label>
-          <div className="relative">
-            <DollarSign className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
-            <input 
-              required 
-              type="number" 
-              value={deposit} 
-              onChange={e => setDeposit(e.target.value)} 
-              className={`w-full text-sm pl-10 pr-3.5 py-3 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none transition focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 border-slate-200 dark:border-white/10 ${formErrors.deposit ? 'border-red-500 ring-2 ring-red-500/10' : ''}`} 
-              placeholder="1500" 
-            />
-          </div>
-          {formErrors.deposit && <p className="text-xs text-red-500 mt-1.5 flex items-center gap-1.5"><AlertCircle size={13}/>{formErrors.deposit}</p>}
-        </div>
-        
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className="block text-xs font-bold text-slate-655 dark:text-gray-400 tracking-wider mb-2">MOVE-IN FEE ($)</label>
-            <div className="relative">
-              <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-450 pointer-events-none" size={14} />
-              <input 
-                type="number" 
-                value={moveInFee} 
-                onChange={e => setMoveInFee(e.target.value)} 
-                className={`w-full text-sm pl-7 pr-3 py-3 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none transition focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 border-slate-200 dark:border-white/10 ${formErrors.moveInFee ? 'border-red-500 ring-2 ring-red-500/10' : ''}`} 
-              />
+            <div>
+              <label className="block text-xs font-bold text-slate-655 dark:text-gray-400 tracking-wider mb-2">LATE FEE AMOUNT</label>
+              <div className="relative">
+                <DollarSign className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
+                <input 
+                  required 
+                  type="number" 
+                  value={feeAmount} 
+                  onChange={e => setFeeAmount(e.target.value)} 
+                  className={`w-full text-sm pl-10 pr-3.5 py-3 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none transition focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 border-slate-200 dark:border-white/10 ${formErrors.feeAmount ? 'border-red-500 ring-2 ring-red-500/10' : ''}`} 
+                />
+              </div>
+              {formErrors.feeAmount && <p className="text-xs text-red-500 mt-1.5 flex items-center gap-1.5"><AlertCircle size={13}/>{formErrors.feeAmount}</p>}
             </div>
-            {formErrors.moveInFee && <p className="text-xs text-red-500 mt-1.5 flex items-center gap-1.5"><AlertCircle size={13}/>{formErrors.moveInFee}</p>}
-          </div>
-          <div>
-            <label className="block text-xs font-bold text-slate-655 dark:text-gray-400 tracking-wider mb-2">MOVE-OUT FEE ($)</label>
-            <div className="relative">
-              <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-450 pointer-events-none" size={14} />
-              <input 
-                type="number" 
-                value={moveOutFee} 
-                onChange={e => setMoveOutFee(e.target.value)} 
-                className={`w-full text-sm pl-7 pr-3 py-3 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none transition focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 border-slate-200 dark:border-white/10 ${formErrors.moveOutFee ? 'border-red-500 ring-2 ring-red-500/10' : ''}`} 
-              />
-            </div>
-            {formErrors.moveOutFee && <p className="text-xs text-red-500 mt-1.5 flex items-center gap-1.5"><AlertCircle size={13}/>{formErrors.moveOutFee}</p>}
           </div>
         </div>
       </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5 border-t dark:border-white/5 pt-4">
-        <div>
-          <label className="block text-xs font-bold text-slate-655 dark:text-gray-400 tracking-wider mb-2">GRACE DAYS</label>
-          <div className="relative">
-            <Clock className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-405 pointer-events-none" size={16} />
-            <input 
-              required 
-              type="number" 
-              value={gracePeriod} 
-              onChange={e => setGracePeriod(e.target.value)} 
-              className={`w-full text-sm pl-10 pr-3.5 py-3 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none transition focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 border-slate-200 dark:border-white/10 ${formErrors.gracePeriod ? 'border-red-500 ring-2 ring-red-500/10' : ''}`} 
-            />
-          </div>
-          {formErrors.gracePeriod && <p className="text-xs text-red-500 mt-1.5 flex items-center gap-1.5"><AlertCircle size={13}/>{formErrors.gracePeriod}</p>}
-        </div>
-        <div>
-          <label className="block text-xs font-bold text-slate-655 dark:text-gray-400 tracking-wider mb-2">LATE FEE TYPE</label>
-          <select 
-            value={feeType} 
-            onChange={e => setFeeType(e.target.value)} 
-            className="w-full text-sm px-3.5 py-3 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none transition focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 border-slate-200 dark:border-white/10"
-          >
-            <option value="FLAT">Flat Fee</option>
-            <option value="PERCENTAGE">Percentage</option>
-          </select>
-        </div>
-        <div>
-          <label className="block text-xs font-bold text-slate-655 dark:text-gray-400 tracking-wider mb-2">LATE FEE AMOUNT</label>
-          <div className="relative">
-            <DollarSign className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
-            <input 
-              required 
-              type="number" 
-              value={feeAmount} 
-              onChange={e => setFeeAmount(e.target.value)} 
-              className={`w-full text-sm pl-10 pr-3.5 py-3 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none transition focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 border-slate-200 dark:border-white/10 ${formErrors.feeAmount ? 'border-red-500 ring-2 ring-red-500/10' : ''}`} 
-            />
-          </div>
-          {formErrors.feeAmount && <p className="text-xs text-red-500 mt-1.5 flex items-center gap-1.5"><AlertCircle size={13}/>{formErrors.feeAmount}</p>}
-        </div>
-      </div>
-    </div>
-  );
-};
+    );
+  };
 
   const renderStep3 = () => (
     <div className="space-y-5">
@@ -2183,8 +2491,8 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
       </div>
 
       <div className="space-y-3">
-        <label className="block text-xs font-bold text-slate-650 dark:text-gray-400 tracking-wider uppercase text-left">Utilities Responsibility</label>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3">
+        <label className="block text-xs font-bold text-slate-655 dark:text-gray-400 tracking-wider mb-2 uppercase text-left">Utilities Responsibility</label>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
           {[
             { id: 'electricity', label: 'Electricity', payee: electricityPayee, setPayee: setElectricityPayee },
             { id: 'water', label: 'Water', payee: waterPayee, setPayee: setWaterPayee },
@@ -2192,32 +2500,16 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
             { id: 'internet', label: 'Internet/Wifi', payee: internetPayee, setPayee: setInternetPayee },
             { id: 'trash', label: 'Trash Removal', payee: trashPayee, setPayee: setTrashPayee }
           ].map(util => (
-            <div key={util.id} className="p-3 border border-slate-150 dark:border-white/5 rounded-2xl bg-slate-50/40 dark:bg-slate-950/20 text-center flex flex-col justify-between">
-              <span className="text-xs font-bold block text-slate-700 dark:text-slate-300 mb-2">{util.label}</span>
-              <div className="flex rounded-lg overflow-hidden border border-slate-200 dark:border-white/10 p-0.5 bg-white dark:bg-[#132030]">
-                <button
-                  type="button"
-                  onClick={() => util.setPayee('tenant')}
-                  className={`flex-1 text-[10px] font-bold py-1.5 px-2 rounded-md transition ${
-                    util.payee === 'tenant' 
-                      ? 'bg-blue-600 text-white shadow-sm' 
-                      : 'text-slate-500 hover:text-slate-700 dark:hover:text-white bg-transparent'
-                  }`}
-                >
-                  Tenant
-                </button>
-                <button
-                  type="button"
-                  onClick={() => util.setPayee('landlord')}
-                  className={`flex-1 text-[10px] font-bold py-1.5 px-2 rounded-md transition ${
-                    util.payee === 'landlord' 
-                      ? 'bg-blue-600 text-white shadow-sm' 
-                      : 'text-slate-500 hover:text-slate-700 dark:hover:text-white bg-transparent'
-                  }`}
-                >
-                  Owner
-                </button>
-              </div>
+            <div key={util.id} className="space-y-1.5 text-left bg-slate-50/50 dark:bg-white/[0.01] p-3 rounded-2xl border border-slate-200/60 dark:border-white/[0.03]">
+              <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">{util.label}</span>
+              <select
+                value={util.payee}
+                onChange={e => util.setPayee(e.target.value)}
+                className="w-full text-xs px-3 py-2 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none border-slate-200 dark:border-white/10 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 cursor-pointer font-medium"
+              >
+                <option value="tenant">Paid by Tenant</option>
+                <option value="landlord">Paid by Owner</option>
+              </select>
             </div>
           ))}
         </div>
@@ -2710,11 +3002,10 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
       </div>
 
       <div className="relative">
-        <label className="block text-xs font-bold text-slate-655 dark:text-gray-400 tracking-wider mb-2">NOTICE / RENT PAYMENT ADDRESS</label>
+        <label className="block text-xs font-bold text-slate-655 dark:text-gray-400 tracking-wider mb-2">NOTICE / RENT PAYMENT ADDRESS (OPTIONAL)</label>
         <div className="relative">
           <Home className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
           <input 
-            required 
             type="text" 
             value={lessorAddress} 
             onChange={e => {
@@ -2895,6 +3186,134 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
     );
   }
 
+  if (showCreateModal) {
+    return (
+      <div className="p-2 relative text-slate-900 dark:text-white text-left animate-fade-in">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl overflow-hidden shadow-sm flex flex-col h-[calc(100vh-220px)] lg:h-[calc(100vh-240px)] min-h-[420px]">
+          {/* Top Navigation / Progress Bar */}
+          <div className="w-full bg-slate-50 dark:bg-[#0B1520] border-b border-slate-200 dark:border-white/5 px-6 py-4 flex items-center justify-between gap-4 select-none">
+            {/* Column 1: Title */}
+            <div className="text-left shrink-0 w-32">
+              <h3 className="text-xs font-black text-blue-600 dark:text-blue-400 tracking-widest uppercase">
+                {editingLeaseId ? 'Lease Editor' : 'Lease Builder'}
+              </h3>
+            </div>
+
+            {/* Column 2: Horizontal Stepper (Centered, No Scrollbar) */}
+            <div className="flex items-center justify-center gap-2 flex-grow max-w-xl mx-auto py-1">
+              {[
+                { number: 1 },
+                { number: 2 },
+                { number: 3 },
+                { number: 4 },
+                { number: 5 }
+              ].map((step, idx) => {
+                const isCompleted = step.number < currentStep && Object.keys(validateStep(step.number)).length === 0;
+                const isActive = currentStep === step.number;
+                
+                return (
+                  <div key={step.number} className="flex items-center gap-2 shrink-0">
+                    {/* Step Circle */}
+                    <button
+                      type="button"
+                      onClick={() => handleStepClick(step.number)}
+                      className="focus:outline-none cursor-pointer"
+                      title={`Step ${step.number}`}
+                    >
+                      <div className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold transition-all border shrink-0 ${
+                        isActive 
+                          ? 'bg-blue-600 text-white border-blue-600 ring-4 ring-blue-500/20 shadow-md shadow-blue-500/10' 
+                          : isCompleted
+                            ? 'bg-emerald-500 text-white border-emerald-500 shadow-md shadow-emerald-500/10'
+                            : 'bg-white dark:bg-[#132030] text-slate-500 dark:text-slate-400 border-slate-200 dark:border-white/10 hover:border-slate-350 dark:hover:border-white/20'
+                      }`}>
+                        {isCompleted ? '✓' : step.number}
+                      </div>
+                    </button>
+
+                    {/* Connector Line */}
+                    {idx < 4 && (
+                      <div className="w-10 sm:w-16 h-0.5 bg-slate-200 dark:bg-white/10 relative shrink-0">
+                        <div className={`absolute inset-y-0 left-0 bg-blue-600 transition-all duration-300 ${
+                          step.number < currentStep ? 'w-full' : 'w-0'
+                        }`} />
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Column 3: Cancel Button (Right Aligned) */}
+            <div className="w-32 text-right shrink-0">
+              <button
+                type="button"
+                onClick={() => { resetWizardForm(); setShowCreateModal(false); }}
+                className="px-3.5 py-1.5 border border-slate-200 dark:border-white/10 rounded-xl text-[10px] uppercase tracking-wider hover:bg-slate-100 dark:hover:bg-white/5 text-slate-550 dark:text-slate-400 font-extrabold transition cursor-pointer"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+
+          {/* Active Step Panel */}
+          <div className="flex-grow flex-shrink flex flex-col justify-between bg-white dark:bg-slate-900 min-h-0 overflow-hidden">
+            {/* Form Content Area */}
+            <div className="flex-grow p-6 text-left overflow-y-auto">
+              {errorMsg && <p className="text-xs text-red-500 bg-red-50 dark:bg-red-500/10 p-3 rounded-xl mb-4 border border-red-500/20">{errorMsg}</p>}
+              {!editingLeaseId && !hasVacantUnits && currentStep === 1 && (
+                <div className="p-3.5 bg-red-500/10 border border-red-500/20 text-red-700 dark:text-red-400 rounded-xl text-xs font-semibold flex items-center gap-2 mb-4">
+                  <ShieldAlert className="w-4 h-4 flex-shrink-0" />
+                  <span>Warning: There are no vacant units available in your portfolio. You cannot create a new lease agreement until you have a vacant unit.</span>
+                </div>
+              )}
+              
+              {currentStep === 1 && renderStep1()}
+              {currentStep === 2 && renderStep2()}
+              {currentStep === 3 && renderStep3()}
+              {currentStep === 4 && renderStep8()}
+              {currentStep === 5 && renderStep9()}
+            </div>
+
+            {/* Wizard Footer Controls */}
+            <div className="p-4 border-t border-slate-200 dark:border-white/5 bg-slate-50/50 dark:bg-slate-950/20 flex justify-end items-center shrink-0">
+              <div className="flex gap-2">
+                {currentStep > 1 && (
+                  <button
+                    type="button"
+                    onClick={handleBack}
+                    className="px-4 py-2 bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-350 hover:bg-slate-200 dark:hover:bg-white/10 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <ArrowLeft size={14} /> Back
+                  </button>
+                )}
+                
+                {currentStep < 5 ? (
+                  <button
+                    type="button"
+                    onClick={handleNext}
+                    className="px-5 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold transition shadow-md shadow-blue-500/20 flex items-center gap-1.5 cursor-pointer"
+                  >
+                    Next <ArrowRight size={14} />
+                  </button>
+                ) : (
+                  <button
+                    type="submit"
+                    disabled={!editingLeaseId && !hasVacantUnits && !prefilledFromApp}
+                    onClick={handleCreateLease}
+                    className="px-6 py-2.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white rounded-xl text-xs font-extrabold transition shadow-lg shadow-blue-500/30 flex items-center gap-1.5 cursor-pointer"
+                  >
+                    {editingLeaseId ? "Save Lease Changes" : "Create & Invite Tenant"}
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="p-2 relative text-slate-900 dark:text-white text-left animate-fade-in">
       <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-xl overflow-hidden shadow-sm">
@@ -2973,9 +3392,26 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
                       <td className="px-4 py-4 font-mono text-xs font-bold text-indigo-650 dark:text-[#5BA4F5]">Lease #{getLeaseSeqNum(l)}</td>
                       <td className="px-4 py-4 text-slate-600 dark:text-gray-400">{l.tenant_email}</td>
                       <td className="px-4 py-4">
-                        <span className="bg-blue-500/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400 px-2.5 py-0.5 rounded text-[10px] font-bold border border-blue-500/20 whitespace-nowrap">
-                          Unit {l.unit?.unit_number || 'N/A'}
-                        </span>
+                        <div className="flex flex-col items-start gap-1">
+                          {l.unit?.unit_number === 'Single Family' ? (
+                            <span className="bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-450 px-2.5 py-0.5 rounded text-[10px] font-bold border border-emerald-500/20 whitespace-nowrap inline-block animate-fade-in">
+                              Single Family
+                            </span>
+                          ) : l.unit?.unit_number === 'Condo Unit' ? (
+                            <span className="bg-indigo-500/10 text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-400 px-2.5 py-0.5 rounded text-[10px] font-bold border border-indigo-500/20 whitespace-nowrap inline-block animate-fade-in">
+                              Condo
+                            </span>
+                          ) : (
+                            <span className="bg-blue-500/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400 px-2.5 py-0.5 rounded text-[10px] font-bold border border-blue-500/20 whitespace-nowrap inline-block animate-fade-in">
+                              Unit {getCleanUnitNumber(l.unit?.unit_number)}
+                            </span>
+                          )}
+                          {(l.property_name || l.unit?.property_name) && (
+                            <span className="text-[10px] text-slate-455 dark:text-slate-400 font-semibold tracking-wide truncate max-w-[150px]">
+                              {l.property_name || l.unit?.property_name}
+                            </span>
+                          )}
+                        </div>
                       </td>
                       <td className="px-4 py-4 font-mono font-bold text-slate-900 dark:text-white font-semibold">
                         ${l.rent_amount}/mo
@@ -3054,20 +3490,19 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
                   ×
                 </button>
               </div>
-              {/* Status Banner */}
-              <div className="flex justify-between items-center bg-slate-50 dark:bg-white/[0.01] p-3 rounded-xl border border-gray-150 dark:border-white/5">
-                <span className="text-xs font-semibold text-gray-550 dark:text-gray-400">Signature Status:</span>
-                <span className={`flex items-center gap-1 text-xs font-bold py-1 px-3 rounded-full ${
-                  selectedLease.status === 'ACTIVE'
-                    ? 'bg-emerald-500/10 text-emerald-500'
-                    : selectedLease.status === 'PENDING_LANDLORD_APPROVAL'
-                      ? 'bg-orange-500/10 text-orange-500 animate-pulse'
-                      : 'bg-yellow-500/10 text-yellow-500'
-                }`}>
-                  {selectedLease.status === 'ACTIVE' ? <CheckCircle className="w-3.5 h-3.5" /> : <Clock className="w-3.5 h-3.5" />}
-                  {selectedLease.status === 'PENDING_LANDLORD_APPROVAL' ? 'Ready to Review' : selectedLease.status}
-                </span>
-              </div>
+
+
+              {isLandlord && selectedLease.unit_change_requested && (
+                <div className="p-3.5 bg-orange-500/10 border border-orange-500/20 text-orange-600 dark:text-orange-400 rounded-xl text-xs font-semibold text-left flex flex-col gap-1.5">
+                  <span className="font-bold flex items-center gap-1">⚠️ Tenant requested a unit change:</span>
+                  <span className="bg-white/40 dark:bg-black/25 p-2.5 rounded-lg italic text-xs">
+                    "{selectedLease.unit_change_request_notes}"
+                  </span>
+                  <span className="text-[10px] text-slate-450 dark:text-slate-400 font-medium">
+                    To satisfy this request, close this modal and click the <strong>"Edit Lease"</strong> button (pencil icon) in the actions column of the leases table. Change the assigned unit, save changes, and the agreement text will automatically update.
+                  </span>
+                </div>
+              )}
 
               {/* Onboarding Wizard for Tenant */}
               {!isLandlord && (selectedLease.status === 'PENDING_TENANT_REVIEW' || selectedLease.status === 'PENDING_SIGNATURE') ? (
@@ -3231,134 +3666,43 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
           </div>
         )}
 
-      {/* Create Lease Modal Refactored to Premium Wizard */}
-      {showCreateModal && (
-        <div className="fixed inset-0 bg-white dark:bg-slate-900 z-50 flex flex-col h-screen w-screen overflow-hidden">
+      {/* Tenant Unit Change Request Modal */}
+      {showTenantChangeUnitModal && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-[#1e2a3b] border border-slate-200 dark:border-white/10 w-full max-w-md rounded-2xl p-6 space-y-4 shadow-2xl animate-scale-up text-slate-900 dark:text-white text-left">
+            <div className="flex justify-between items-center border-b dark:border-white/5 pb-3">
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                <Home className="w-5 h-5 text-indigo-500" /> Request Unit Change
+              </h3>
+              <button onClick={() => setShowTenantChangeUnitModal(false)} className="text-slate-400 hover:text-slate-900 dark:text-gray-500 dark:hover:text-white text-lg cursor-pointer">×</button>
+            </div>
             
-            {/* Top Navigation / Progress Bar */}
-            <div className="w-full bg-slate-50 dark:bg-[#0B1520] border-b border-slate-200 dark:border-white/5 px-6 py-4 flex items-center justify-between gap-4 select-none">
-              {/* Column 1: Title */}
-              <div className="text-left shrink-0 w-32">
-                <h3 className="text-xs font-black text-blue-600 dark:text-blue-400 tracking-widest uppercase">
-                  {editingLeaseId ? 'Lease Editor' : 'Lease Builder'}
-                </h3>
+            <p className="text-xs text-slate-500 dark:text-slate-450 leading-relaxed">
+              If you would like to move to a different unit, please specify which unit number you prefer (e.g. "Unit 2") and the reason for the change. The landlord will receive your request and can edit the unit in your lease agreement.
+            </p>
+
+            <form onSubmit={handleTenantRequestUnitChange} className="space-y-4">
+              <div>
+                <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide font-bold">Request Details / Preferred Unit</label>
+                <textarea
+                  required
+                  rows={3}
+                  value={tenantChangeUnitNotes}
+                  onChange={e => setTenantChangeUnitNotes(e.target.value)}
+                  className="w-full bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 focus:border-blue-500 rounded-xl p-3 text-xs text-slate-900 dark:text-white outline-none resize-none font-sans"
+                  placeholder="e.g. I prefer Unit 2 instead of Unit 1 because it has better ventilation."
+                />
               </div>
 
-
-              {/* Column 2: Horizontal Stepper (Centered, No Scrollbar) */}
-              <div className="flex items-center justify-center gap-2 flex-grow max-w-xl mx-auto py-1">
-                {[
-                  { number: 1 },
-                  { number: 2 },
-                  { number: 3 },
-                  { number: 4 },
-                  { number: 5 }
-                ].map((step, idx) => {
-                  const isCompleted = step.number < currentStep && Object.keys(validateStep(step.number)).length === 0;
-                  const isActive = currentStep === step.number;
-                  
-                  return (
-                    <div key={step.number} className="flex items-center gap-2 shrink-0">
-                      {/* Step Circle */}
-                      <button
-                        type="button"
-                        onClick={() => handleStepClick(step.number)}
-                        className="focus:outline-none cursor-pointer"
-                        title={`Step ${step.number}`}
-                      >
-                        <div className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold transition-all border shrink-0 ${
-                          isActive 
-                            ? 'bg-blue-600 text-white border-blue-600 ring-4 ring-blue-500/20 shadow-md shadow-blue-500/10' 
-                            : isCompleted
-                              ? 'bg-emerald-500 text-white border-emerald-500 shadow-md shadow-emerald-500/10'
-                              : 'bg-white dark:bg-[#132030] text-slate-500 dark:text-slate-400 border-slate-200 dark:border-white/10 hover:border-slate-350 dark:hover:border-white/20'
-                        }`}>
-                          {isCompleted ? '✓' : step.number}
-                        </div>
-                      </button>
-
-                      {/* Connector Line */}
-                      {idx < 4 && (
-                        <div className="w-10 sm:w-16 h-0.5 bg-slate-200 dark:bg-white/10 relative shrink-0">
-                          <div className={`absolute inset-y-0 left-0 bg-blue-600 transition-all duration-300 ${
-                            step.number < currentStep ? 'w-full' : 'w-0'
-                          }`} />
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
+              <div className="pt-2 flex gap-3">
+                <button type="button" onClick={() => setShowTenantChangeUnitModal(false)} className="flex-1 py-2.5 rounded-xl text-xs font-semibold border border-slate-200 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors">Cancel</button>
+                <button type="submit" className="flex-1 py-2.5 bg-blue-600 text-white rounded-xl text-xs font-semibold hover:bg-blue-500 transition-all shadow-md shadow-blue-500/25">Submit Request</button>
               </div>
-
-              {/* Column 3: Cancel Button (Right Aligned) */}
-              <div className="w-32 text-right shrink-0">
-                <button
-                  type="button"
-                  onClick={() => { resetWizardForm(); setShowCreateModal(false); }}
-                  className="px-3.5 py-1.5 border border-slate-200 dark:border-white/10 rounded-xl text-[10px] uppercase tracking-wider hover:bg-slate-100 dark:hover:bg-white/5 text-slate-550 dark:text-slate-400 font-extrabold transition cursor-pointer"
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-
-            {/* Active Step Panel */}
-            <div className="flex-1 flex flex-col justify-between overflow-hidden bg-white dark:bg-slate-900">
-              
-              {/* Form Content Area */}
-              <div className="flex-1 overflow-y-auto p-6 text-left">
-                {errorMsg && <p className="text-xs text-red-500 bg-red-50 dark:bg-red-500/10 p-3 rounded-xl mb-4 border border-red-500/20">{errorMsg}</p>}
-                {!editingLeaseId && !hasVacantUnits && currentStep === 1 && (
-                  <div className="p-3.5 bg-red-500/10 border border-red-500/20 text-red-700 dark:text-red-400 rounded-xl text-xs font-semibold flex items-center gap-2 mb-4">
-                    <ShieldAlert className="w-4 h-4 flex-shrink-0" />
-                    <span>Warning: There are no vacant units available in your portfolio. You cannot create a new lease agreement until you have a vacant unit.</span>
-                  </div>
-                )}
-                
-                {currentStep === 1 && renderStep1()}
-                {currentStep === 2 && renderStep2()}
-                {currentStep === 3 && renderStep3()}
-                {currentStep === 4 && renderStep8()}
-                {currentStep === 5 && renderStep9()}
-              </div>
-
-              {/* Wizard Footer Controls */}
-              <div className="p-4 border-t border-slate-200 dark:border-white/5 bg-slate-50/50 dark:bg-slate-950/20 flex justify-end items-center">
-                <div className="flex gap-2">
-                  {currentStep > 1 && (
-                    <button
-                      type="button"
-                      onClick={handleBack}
-                      className="px-4 py-2 bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-350 hover:bg-slate-200 dark:hover:bg-white/10 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
-                    >
-                      <ArrowLeft size={14} /> Back
-                    </button>
-                  )}
-                  
-                  {currentStep < 5 ? (
-                    <button
-                      type="button"
-                      onClick={handleNext}
-                      className="px-5 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold transition shadow-md shadow-blue-500/20 flex items-center gap-1.5 cursor-pointer"
-                    >
-                      Next <ArrowRight size={14} />
-                    </button>
-                  ) : (
-                    <button
-                      type="submit"
-                      disabled={!editingLeaseId && !hasVacantUnits && !prefilledFromApp}
-                      onClick={handleCreateLease}
-                      className="px-6 py-2.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white rounded-xl text-xs font-extrabold transition shadow-lg shadow-blue-500/30 flex items-center gap-1.5 cursor-pointer"
-                    >
-                      {editingLeaseId ? "Save Lease Changes" : "Create & Invite Tenant"}
-                    </button>
-
-                  )}
-                </div>
-              </div>
-            </div>
+            </form>
+          </div>
         </div>
       )}
+
       <ConfirmModal
         isOpen={confirmConfig.isOpen}
         title={confirmConfig.title}

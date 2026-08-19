@@ -18,6 +18,13 @@ from app.utils.encryption import safe_decrypt_float
 
 # --- PROPERTY CRUD ---
 def create_property(landlord_id: int, data: PropertyCreate, db: Session) -> Property:
+    current_properties_count = db.query(func.count(Property.property_id)).filter(
+        Property.landlord_id == landlord_id,
+        Property.active_status == True
+    ).scalar() or 0
+    if current_properties_count >= 2:
+        raise ValueError("Property limit reached. A landlord can register a maximum of 2 properties.")
+
     # Check for duplicate active properties (case-insensitive name and address)
     existing = db.query(Property).filter(
         func.lower(Property.name) == func.lower(data.name.strip()),
@@ -101,6 +108,18 @@ def delete_property(property_id: int, landlord_id: int, db: Session, is_super_ad
 
 # --- UNIT CRUD ---
 def create_unit(data: UnitCreate, db: Session) -> Unit:
+    prop = db.query(Property).filter(Property.property_id == data.property_id, Property.active_status == True).first()
+    if not prop:
+        raise ValueError("Property not found or inactive.")
+    
+    current_units_count = db.query(func.count(Unit.unit_id)).filter(
+        Unit.property_id == data.property_id,
+        Unit.active_status == True
+    ).scalar() or 0
+        
+    if current_units_count >= 5:
+        raise ValueError("Unit limit reached. A property can have a maximum of 5 units.")
+
     new_unit = Unit(
         property_id=data.property_id,
         unit_number=data.unit_number,
@@ -115,10 +134,27 @@ def create_unit(data: UnitCreate, db: Session) -> Unit:
 
 
 def get_units_by_property(property_id: int, db: Session) -> List[Unit]:
-    return db.query(Unit).filter(
+    units = db.query(Unit).filter(
         Unit.property_id == property_id,
         Unit.active_status == True
     ).order_by(Unit.unit_id.asc()).all()
+    
+    # Auto-sync unit rent_amount with active/pending leases to fix any existing 0 values
+    from app.utils.encryption import safe_decrypt_float
+    should_commit = False
+    for u in units:
+        for lease in u.leases:
+            if lease.status in ["ACTIVE", "PENDING_TENANT_REVIEW", "PENDING_LANDLORD_APPROVAL"]:
+                rent_val = safe_decrypt_float(lease.rent_amount)
+                if rent_val is not None and rent_val > 0 and u.rent_amount != rent_val:
+                    u.rent_amount = rent_val
+                    db.add(u)
+                    should_commit = True
+    if should_commit:
+        db.commit()
+        for u in units:
+            db.refresh(u)
+    return units
 
 
 
@@ -201,6 +237,9 @@ def decrypt_lease_obj(l: Lease) -> dict:
         "tenant_emergency_contact": safe_decrypt_field(l.tenant_emergency_contact),
         "tenant_emergency_phone": safe_decrypt_field(l.tenant_emergency_phone),
         "num_occupants": l.num_occupants,
+        "num_minors": l.num_minors,
+        "unit_change_requested": l.unit_change_requested,
+        "unit_change_request_notes": l.unit_change_request_notes,
         "documents": docs_out,
 
         
@@ -210,10 +249,81 @@ def decrypt_lease_obj(l: Lease) -> dict:
     }
 
 
+def cleanup_expired_pending_leases(db: Session):
+    cutoff = datetime.utcnow() - timedelta(days=7)
+    expired_leases = db.query(Lease).filter(
+        Lease.status.in_(["PENDING_TENANT_REVIEW", "PENDING_LANDLORD_APPROVAL"]),
+        Lease.created_date < cutoff
+    ).all()
+    for l in expired_leases:
+        db.query(RentalLedger).filter(RentalLedger.lease_id == l.lease_id).delete()
+        from app.models.rental.rental_maintenance import RentalMaintenanceRequest
+        db.query(RentalMaintenanceRequest).filter(RentalMaintenanceRequest.lease_id == l.lease_id).delete()
+        db.delete(l)
+    if expired_leases:
+        db.commit()
+
+
+def check_duplicate_active_lease(email: str, db: Session, exclude_lease_id: Optional[int] = None):
+    from app.utils.encryption import safe_decrypt_field
+    
+    email_clean = email.lower().strip()
+    
+    # 1. Check by tenant user_id if they are already registered
+    tenant_user = db.query(RentalUser).filter(RentalUser.email_id == email_clean).first()
+    if tenant_user:
+        role_name = (tenant_user.role.role_name if tenant_user.role else "").lower()
+        if role_name in ["landlord", "super_admin"]:
+            raise ValueError("This email is already registered as a Landlord or Admin account.")
+
+        query = db.query(Lease).filter(
+            Lease.tenant_id == tenant_user.user_id,
+            Lease.status.in_(["PENDING_TENANT_REVIEW", "PENDING_LANDLORD_APPROVAL", "ACTIVE"])
+        )
+        if exclude_lease_id is not None:
+            query = query.filter(Lease.lease_id != exclude_lease_id)
+        if query.first():
+            raise ValueError("This tenant is already registered/invited to an active or pending lease.")
+            
+    # 2. Check all active/pending leases by decrypting email in memory
+    active_leases_query = db.query(Lease).filter(
+        Lease.status.in_(["PENDING_TENANT_REVIEW", "PENDING_LANDLORD_APPROVAL", "ACTIVE"])
+    )
+    if exclude_lease_id is not None:
+        active_leases_query = active_leases_query.filter(Lease.lease_id != exclude_lease_id)
+    
+    active_leases = active_leases_query.all()
+    for l in active_leases:
+        decrypted = safe_decrypt_field(l.tenant_email)
+        if decrypted and decrypted.lower().strip() == email_clean:
+            raise ValueError("This tenant email is already registered/invited to an active or pending lease.")
+
+
+def get_unit_display_number(unit_number: str) -> str:
+    if not unit_number:
+        return "1"
+    clean_num = unit_number.strip()
+    if clean_num in ["Entire Property", "Single Family", "Condo Unit"] or not any(c.isdigit() for c in clean_num):
+        return "1"
+    return clean_num
+
+
 def create_lease_and_invite(landlord_id: int, data: LeaseCreate, db: Session) -> dict:
+    cleanup_expired_pending_leases(db)
+
     unit = db.query(Unit).filter(Unit.unit_id == data.unit_id).first()
     if not unit:
         raise ValueError("Unit not found.")
+    unit.rent_amount = data.rent_amount
+
+    existing_unit_lease = db.query(Lease).filter(
+        Lease.unit_id == data.unit_id,
+        Lease.status.in_(["PENDING_TENANT_REVIEW", "PENDING_LANDLORD_APPROVAL", "ACTIVE"])
+    ).first()
+    if existing_unit_lease:
+        raise ValueError("A lease has already been created/is active for this unit.")
+
+    check_duplicate_active_lease(data.tenant_email, db)
 
     tenant_user = db.query(RentalUser).filter(RentalUser.email_id == data.tenant_email.lower().strip()).first()
     tenant_id = tenant_user.user_id if tenant_user else None
@@ -225,7 +335,9 @@ def create_lease_and_invite(landlord_id: int, data: LeaseCreate, db: Session) ->
     enc_rent = encrypt_float(data.rent_amount)
     enc_deposit = encrypt_float(data.security_deposit)
     enc_late_fee = encrypt_float(data.late_fee_amount)
-    enc_lease_text = encrypt_field(data.lease_agreement_text or f"Standard Lease Agreement for Unit {unit.unit_number}")
+    unit_label = get_unit_display_number(unit.unit_number)
+    default_lease_text = f"Standard Lease Agreement for the property" if unit.unit_number in ["Single Family", "Condo Unit"] else f"Standard Lease Agreement for Unit {unit_label}"
+    enc_lease_text = encrypt_field(data.lease_agreement_text or default_lease_text)
     enc_util = encrypt_float(data.utilities_fee)
     enc_parking = encrypt_float(data.parking_fee)
     enc_pet = encrypt_float(data.pet_fee)
@@ -262,20 +374,24 @@ def create_lease_and_invite(landlord_id: int, data: LeaseCreate, db: Session) ->
     db.commit()
 
     from app.config import settings
-    if tenant_user:
-        invitation_url = f"{settings.FRONTEND_URL}/rental/login?email={data.tenant_email}&lease_id={new_lease.lease_id}"
-        email_action_text = "Log In & Review Lease"
-        email_instruction = "Please click the button below to log in to your tenant account, verify details, and sign your lease:"
+    import urllib.parse
+    name_qs = f"&name={urllib.parse.quote(data.tenant_name)}" if data.tenant_name else ""
+    invitation_url = f"{settings.FRONTEND_URL}/rental/register?email={data.tenant_email}&role=tenant&lease_id={new_lease.lease_id}{name_qs}"
+    email_action_text = "Register & Review Lease"
+    email_instruction = "Please click the button below to register your tenant account, verify details, and sign your lease:"
+
+    if unit.unit_number == 'Single Family':
+        property_desc = f"the property at <strong>{unit.property.name}</strong>"
+    elif unit.unit_number == 'Condo Unit':
+        property_desc = f"the Condominium at <strong>{unit.property.name}</strong>"
     else:
-        invitation_url = f"{settings.FRONTEND_URL}/rental/register?email={data.tenant_email}&role=tenant&lease_id={new_lease.lease_id}"
-        email_action_text = "Register & Review Lease"
-        email_instruction = "Please click the button below to register your tenant account, verify details, and sign your lease:"
+        property_desc = f"<strong>Unit {unit_label}</strong> at {unit.property.name}"
 
     email_body = f"""
     <div style="padding: 30px; font-size: 16px; line-height: 1.6; color: #D1D5DB;">
       <h2 style="color: #3B82F6; margin-top: 0;">Lease Agreement Prepared</h2>
       <p>Hello,</p>
-      <p>A lease agreement has been prepared for you for <strong>Unit {unit.unit_number}</strong> at {unit.property.name}.</p>
+      <p>A lease agreement has been prepared for you for {property_desc}.</p>
       <p>{email_instruction}</p>
       <div style="text-align: center; margin: 30px 0;">
         <a href="{invitation_url}" style="background: #3B82F6; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold; display: inline-block;">{email_action_text}</a>
@@ -290,6 +406,8 @@ def create_lease_and_invite(landlord_id: int, data: LeaseCreate, db: Session) ->
 
 
 def update_lease(lease_id: int, landlord_id: int, data: LeaseCreate, db: Session) -> dict:
+    cleanup_expired_pending_leases(db)
+
     lease = db.query(Lease).filter(Lease.lease_id == lease_id).first()
     if not lease:
         raise ValueError("Lease not found.")
@@ -304,6 +422,16 @@ def update_lease(lease_id: int, landlord_id: int, data: LeaseCreate, db: Session
     if not unit:
         raise ValueError("Unit not found.")
 
+    existing_unit_lease = db.query(Lease).filter(
+        Lease.unit_id == data.unit_id,
+        Lease.status.in_(["PENDING_TENANT_REVIEW", "PENDING_LANDLORD_APPROVAL", "ACTIVE"]),
+        Lease.lease_id != lease_id
+    ).first()
+    if existing_unit_lease:
+        raise ValueError("A lease has already been created/is active for this unit.")
+
+    check_duplicate_active_lease(data.tenant_email, db, exclude_lease_id=lease_id)
+
     tenant_user = db.query(RentalUser).filter(RentalUser.email_id == data.tenant_email.lower().strip()).first()
     tenant_id = tenant_user.user_id if tenant_user else None
 
@@ -314,6 +442,8 @@ def update_lease(lease_id: int, landlord_id: int, data: LeaseCreate, db: Session
     lease.start_date = data.start_date
     lease.end_date = data.end_date
     lease.rent_amount = encrypt_float(data.rent_amount)
+    if lease.unit:
+        lease.unit.rent_amount = data.rent_amount
     lease.security_deposit = encrypt_float(data.security_deposit)
     lease.grace_period_days = data.grace_period_days
     lease.late_fee_type = data.late_fee_type
@@ -327,6 +457,8 @@ def update_lease(lease_id: int, landlord_id: int, data: LeaseCreate, db: Session
     lease.landlord_signature = None
     lease.co_landlord_signature = None
     lease.status = "PENDING_TENANT_REVIEW"
+    lease.unit_change_requested = False
+    lease.unit_change_request_notes = None
 
     db.commit()
     db.refresh(lease)
@@ -335,6 +467,7 @@ def update_lease(lease_id: int, landlord_id: int, data: LeaseCreate, db: Session
 
 
 def get_leases_by_landlord(landlord_id: int, db: Session, is_super_admin: bool = False) -> List[dict]:
+    cleanup_expired_pending_leases(db)
     if is_super_admin:
         leases = db.query(Lease).order_by(Lease.lease_id.asc()).all()
     else:
@@ -343,6 +476,7 @@ def get_leases_by_landlord(landlord_id: int, db: Session, is_super_admin: bool =
 
 
 def get_leases_by_tenant(tenant_id: int, db: Session) -> List[dict]:
+    cleanup_expired_pending_leases(db)
     tenant_user = db.query(RentalUser).filter(RentalUser.user_id == tenant_id).first()
     email_clean = tenant_user.email_id.strip().lower() if (tenant_user and tenant_user.email_id) else None
 
@@ -390,6 +524,10 @@ def sign_lease(lease_id: int, user_id: int, signature: str, signing_as: str, db:
     if lease.landlord_signature and lease.tenant_signature:
         lease.status = "ACTIVE"
         lease.unit.status = "OCCUPIED"
+        from app.utils.encryption import safe_decrypt_float
+        rent_val = safe_decrypt_float(lease.rent_amount)
+        if rent_val is not None:
+            lease.unit.rent_amount = rent_val
         generate_initial_invoice(lease, db)
 
     db.commit()
@@ -409,6 +547,7 @@ def tenant_submit_lease(lease_id: int, tenant_id: int, data: TenantInfoSubmit, d
     lease.tenant_emergency_phone = encrypt_field(data.tenant_emergency_phone)
     lease.tenant_signature = encrypt_field(data.signature_text)
     lease.num_occupants = data.num_occupants
+    lease.num_minors = data.num_minors
 
     
     # Save parking & pet choices
@@ -417,11 +556,11 @@ def tenant_submit_lease(lease_id: int, tenant_id: int, data: TenantInfoSubmit, d
     if data.has_parking:
         total_parking_fee = float(data.parking_cars_count * 25)
         lease.parking_fee = encrypt_field(str(total_parking_fee))
-        desc = f"\n\nPARKING AUTHORIZATION COVENANT:\nTenant is authorized to park {data.parking_cars_count} vehicle(s) on the premises. Monthly Parking Charge: ${total_parking_fee}/mo."
+        desc = f"\n\nPARKING AUTHORIZATION COVENANT:\nTenant is authorized to park {data.parking_cars_count} vehicle(s) on the premises (Details: {data.vehicle_details}). Monthly Parking Charge: ${total_parking_fee}/mo."
         if desc not in current_text:
             current_text = current_text.replace(
                 "   - Parking Fee: None / Not applicable",
-                f"   - Parking Fee: ${total_parking_fee}/mo ($25.00/car, {data.parking_cars_count} car(s))"
+                f"   - Parking Fee: ${total_parking_fee}/mo ($25.00/car, {data.parking_cars_count} car(s), Details: {data.vehicle_details})"
             )
             current_text += desc
     else:
@@ -451,11 +590,19 @@ def tenant_submit_lease(lease_id: int, tenant_id: int, data: TenantInfoSubmit, d
     # Send landlord notification email
     landlord_user = lease.landlord
     if landlord_user and landlord_user.email_id:
+        if lease.unit.unit_number == 'Single Family':
+            property_desc = f"the property at <strong>{lease.unit.property.name}</strong>"
+        elif lease.unit.unit_number == 'Condo Unit':
+            property_desc = f"the Condominium at <strong>{lease.unit.property.name}</strong>"
+        else:
+            unit_label = get_unit_display_number(lease.unit.unit_number)
+            property_desc = f"<strong>Unit {unit_label}</strong> at {lease.unit.property.name}"
+
         email_body = f"""
         <div style="padding: 30px; font-size: 16px; line-height: 1.6; color: #D1D5DB;">
           <h2 style="color: #3B82F6; margin-top: 0;">Lease Signed by Tenant</h2>
           <p>Hello {landlord_user.first_name},</p>
-          <p>The tenant has submitted their personal details, documents, and signed the lease agreement for <strong>Unit {lease.unit.unit_number}</strong>.</p>
+          <p>The tenant has submitted their personal details, documents, and signed the lease agreement for {property_desc}.</p>
           <p>Please log in to your dashboard to review their submission and approve the lease.</p>
         </div>
         """
@@ -482,6 +629,10 @@ def landlord_approve_lease(lease_id: int, landlord_id: int, db: Session) -> dict
         
     lease.status = "ACTIVE"
     lease.unit.status = "OCCUPIED"
+    from app.utils.encryption import safe_decrypt_float
+    rent_val = safe_decrypt_float(lease.rent_amount)
+    if rent_val is not None:
+        lease.unit.rent_amount = rent_val
     generate_initial_invoice(lease, db)
     
     db.commit()
@@ -684,22 +835,25 @@ def invite_tenant_screening(data: RentalApplicationInvite, landlord_id: int, db:
 
     tenant_user = db.query(RentalUser).filter(RentalUser.email_id == data.tenant_email.lower().strip()).first()
 
-    # 3. Send screening invitation email
     from app.config import settings
-    if tenant_user:
-        invitation_url = f"{settings.FRONTEND_URL}/rental/login?email={data.tenant_email}"
-        email_action_text = "Log In & Complete Application"
-        email_instruction = "Please click the button below to log in to your tenant account and complete your screening application details:"
+    import urllib.parse
+    name_qs = f"&name={urllib.parse.quote(data.full_name)}" if data.full_name else ""
+    invitation_url = f"{settings.FRONTEND_URL}/rental/register?email={data.tenant_email}&role=tenant{name_qs}"
+    email_action_text = "Complete Application"
+    email_instruction = "Please click the button below to register/log in and submit your screening application details:"
+
+    if unit.unit_number == 'Single Family':
+        property_desc = f"the property at <strong>{unit.property.name}</strong>"
+    elif unit.unit_number == 'Condo Unit':
+        property_desc = f"the Condominium at <strong>{unit.property.name}</strong>"
     else:
-        invitation_url = f"{settings.FRONTEND_URL}/rental/register?email={data.tenant_email}&role=tenant"
-        email_action_text = "Complete Application"
-        email_instruction = "Please click the button below to register/log in and submit your screening application details:"
+        property_desc = f"<strong>Unit {unit.unit_number}</strong> at {unit.property.name}"
 
     email_body = f"""
     <div style="padding: 30px; font-size: 16px; line-height: 1.6; color: #D1D5DB;">
       <h2 style="color: #3B82F6; margin-top: 0;">Tenant Screening Background Check Invitation</h2>
       <p>Hello {data.full_name},</p>
-      <p>You have been invited by the landlord to complete a tenant screening application and background check for <strong>Unit {unit.unit_number}</strong> at {unit.property.name}.</p>
+      <p>You have been invited by the landlord to complete a tenant screening application and background check for {property_desc}.</p>
       <p>{email_instruction}</p>
       <div style="text-align: center; margin: 30px 0;">
         <a href="{invitation_url}" style="background: #3B82F6; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold; display: inline-block;">{email_action_text}</a>

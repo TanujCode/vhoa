@@ -17,6 +17,22 @@ def create_property_with_units(
     current_user: RentalUser = Depends(require_rental_role("super_admin", "landlord"))
 ):
     try:
+        from app.models.rental.property import Property
+        from app.models.rental.unit import Unit
+        from sqlalchemy import func
+        
+        # Check property count limit
+        current_properties_count = db.query(func.count(Property.property_id)).filter(
+            Property.landlord_id == current_user.user_id,
+            Property.active_status == True
+        ).scalar() or 0
+        if current_properties_count >= 2:
+            raise ValueError("Property limit reached. A landlord can register a maximum of 2 properties.")
+            
+        requested_units_count = len(body.units)
+        if requested_units_count > 5:
+            raise ValueError(f"Unit limit reached. A property can have a maximum of 5 units. You requested {requested_units_count} units.")
+
         prop_data = PropertyCreate(
             name=body.name,
             address=body.address,
@@ -28,12 +44,16 @@ def create_property_with_units(
         log_rental_action(db, "CREATE_PROPERTY", "rental", f"Property '{prop.name}' created via wizard.", current_user.user_id)
         
         for unit_item in body.units:
-            unit_data = UnitCreate(
+            new_unit = Unit(
                 property_id=prop.property_id,
                 unit_number=unit_item.unit_number,
-                rent_amount=unit_item.rent_amount
+                rent_amount=unit_item.rent_amount,
+                status="VACANT",
+                active_status=True
             )
-            rental_service.create_unit(unit_data, db)
+            db.add(new_unit)
+            db.commit()
+            db.refresh(new_unit)
             log_rental_action(db, "CREATE_UNIT", "rental", f"Unit '{unit_item.unit_number}' added via wizard.", current_user.user_id)
             
         return prop

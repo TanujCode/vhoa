@@ -82,7 +82,7 @@ def send_email(to_email: str, subject: str, html_body: str, from_name: str = Non
     return True
 
 
-def _wrap_in_responsive_layout(inner_html: str, subtitle: str = "HOA Management System") -> str:
+def _wrap_in_responsive_layout(inner_html: str, subtitle: str = "Property Management System") -> str:
     """Wraps inner HTML in a responsive, centered table layout that looks beautiful on mobile email clients."""
     sub_element = f'<p style="margin: 8px 0 0; color: #9CA3AF; font-size: 14px;">{subtitle}</p>' if subtitle else ''
     return f"""
@@ -93,7 +93,7 @@ def _wrap_in_responsive_layout(inner_html: str, subtitle: str = "HOA Management 
             
             <!-- Header -->
             <div style="background: #162535; padding: 30px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1);">
-              <img src="cid:vhoa_logo" alt="VHOA Portal" style="height: 50px; width: auto; display: block; margin: 0 auto;" />
+              <img src="cid:vhoa_logo" alt="NestBloq Portal" style="height: 50px; width: auto; display: block; margin: 0 auto;" />
               {sub_element}
             </div>
 
@@ -103,7 +103,7 @@ def _wrap_in_responsive_layout(inner_html: str, subtitle: str = "HOA Management 
             <!-- Footer -->
             <div style="background: #162535; padding: 20px; text-align: center; border-top: 1px solid rgba(255,255,255,0.1);">
               <p style="margin: 0; color: #6B7280; font-size: 12px;">
-                © 2026 VHOA — {subtitle or 'HOA Management System'}
+                © 2026 NestBloq — {subtitle or 'Property Management System'}
               </p>
             </div>
 
@@ -118,7 +118,7 @@ def _wrap_in_responsive_layout(inner_html: str, subtitle: str = "HOA Management 
 #  EMAIL TEMPLATES
 # ══════════════════════════════════════════════
 
-def send_otp_email(to_email: str, otp_code: str, otp_type: str, system_name: str = "HOA Management System") -> bool:
+def send_otp_email(to_email: str, otp_code: str, otp_type: str, system_name: str = "Property Management System") -> bool:
     """Send OTP email"""
     type_labels = {
         "email_verify":   "Email Verification",
@@ -127,12 +127,13 @@ def send_otp_email(to_email: str, otp_code: str, otp_type: str, system_name: str
     }
     label = type_labels.get(otp_type, "Verification")
     
+    from_name = "NestBloq Property Management"
     if "rental" in system_name.lower():
         subject = f"Rental Portal — {label} OTP"
-        from_name = "NestBloq Rental Management"
+    elif "condo" in system_name.lower():
+        subject = f"Condo Portal — {label} OTP"
     else:
-        subject = f"VHOA Portal — {label} OTP"
-        from_name = "NestBloq HOA Management"
+        subject = f"NestBloq Portal — {label} OTP"
 
     inner_html = f"""
       <div style="padding: 40px 30px; text-align: center;">
@@ -167,12 +168,12 @@ def send_otp_email(to_email: str, otp_code: str, otp_type: str, system_name: str
 
 def send_welcome_email(to_email: str, full_name: str) -> bool:
     """Registration welcome email"""
-    subject = "Welcome to VHOA Portal — HOA Management"
+    subject = "Welcome to NestBloq Portal — Property Management"
     inner_html = f"""
       <div style="padding: 40px 30px;">
         <h2 style="margin: 0 0 16px; color: #ffffff;">Welcome, {full_name}! </h2>
         <p style="color: #9CA3AF; line-height: 1.6;">
-          Your account has been created successfully on VHOA HOA Management System.
+          Your account has been created successfully on NestBloq Property Management System.
         </p>
         <p style="color: #9CA3AF; line-height: 1.6;">
           Please verify your email address to get full access to your account.
@@ -202,7 +203,7 @@ def send_violation_email(
     remarks: str,
 ) -> bool:
     """Send email to resident when a violation is issued"""
-    subject = f"VHOA Portal — Violation Notice: {violation_type}"
+    subject = f"NestBloq Portal — Violation Notice: {violation_type}"
     inner_html = f"""
       <div style="padding: 40px 30px;">
         <div style="background: #7F1D1D; border-radius: 12px; padding: 16px; margin-bottom: 24px; text-align: center; color: #ffffff; font-weight: bold;">
@@ -221,7 +222,7 @@ def send_violation_email(
         </div>
 
         <p style="color: #9CA3AF; font-size: 13px;">
-          You have 30 days to dispute this violation through the VHOA portal.
+          You have 30 days to dispute this violation through the NestBloq portal.
         </p>
 
         <div style="margin: 30px 0; text-align: center;">
@@ -248,7 +249,7 @@ def send_booking_created_email(
     to_email: str
 ) -> bool:
     """Send amenity booking confirmation or payment due email to user/board"""
-    subject = f"VHOA Portal — Amenity Booking Request: {amenity_name}"
+    subject = f"NestBloq Portal — Amenity Booking Request: {amenity_name}"
     
     if status_type == "CONFIRMED":
         status_label = "Confirmed"
@@ -308,7 +309,7 @@ def send_payment_received_email(
     to_email: str
 ) -> bool:
     """Send payment receipt confirmation email to user/board"""
-    subject = f"VHOA Portal — Payment Confirmed for {amenity_name}"
+    subject = f"NestBloq Portal — Payment Confirmed for {amenity_name}"
     inner_html = f"""
       <div style="padding: 40px 30px;">
         <div style="background: #14B8A6; border-radius: 12px; padding: 16px; margin-bottom: 24px; text-align: center; color: #000000; font-weight: bold; font-size: 18px;">
@@ -354,7 +355,7 @@ def send_general_payment_receipt_email(
     escrow_bank: str = None
 ) -> bool:
     """Send general payment receipt"""
-    subject = f"VHOA Portal — Payment Receipt: {reason.replace('_', ' ').title()}"
+    subject = f"NestBloq Portal — Payment Receipt: {reason.replace('_', ' ').title()}"
     escrow_info = f"<p style='color: #9CA3AF;'>Paid to Escrow Bank: <strong>{escrow_bank}</strong></p>" if escrow_bank else ""
     inner_html = f"""
       <div style="padding: 40px 30px;">
@@ -396,7 +397,7 @@ def send_due_payment_reminder_email(
     days_left: int
 ) -> bool:
     """Send due payment reminder email"""
-    subject = f"VHOA Portal — Reminder: Payment Due in {days_left} Days"
+    subject = f"NestBloq Portal — Reminder: Payment Due in {days_left} Days"
     inner_html = f"""
       <div style="padding: 40px 30px;">
         <div style="background: #F59E0B; border-radius: 12px; padding: 16px; margin-bottom: 24px; text-align: center; color: #000000; font-weight: bold; font-size: 18px;">
@@ -415,7 +416,7 @@ def send_due_payment_reminder_email(
           </table>
         </div>
         <p style="color: #9CA3AF; line-height: 1.6; font-size: 14px;">
-          Please log in to the VHOA portal to complete this payment.
+          Please log in to the NestBloq portal to complete this payment.
         </p>
         <div style="margin: 30px 0; text-align: center;">
           <a href="https://nestbloq.vercel.app/login" style="background-color: #14B8A6; color: #000000; padding: 12px 24px; font-weight: bold; font-size: 15px; text-decoration: none; border-radius: 8px; display: inline-block; box-shadow: 0 4px 6px rgba(20, 184, 166, 0.25);">
@@ -430,13 +431,13 @@ def send_due_payment_reminder_email(
 
 def send_invite_email(to_email: str, full_name: str, temp_password: str, community_name: str, role_name: str) -> bool:
     """Send email invitation to join community"""
-    subject = f"Invitation to join {community_name} on VHOA Portal"
+    subject = f"Invitation to join {community_name} on NestBloq Portal"
     role_label = role_name.replace('_', ' ').title()
     inner_html = f"""
       <div style="padding: 40px 30px;">
         <h2 style="margin: 0 0 16px; color: #ffffff;">Hello, {full_name}! </h2>
         <p style="color: #9CA3AF; line-height: 1.6;">
-          You have been invited to join the community <strong>{community_name}</strong> as a <strong>{role_label}</strong> on the VHOA Portal.
+          You have been invited to join the community <strong>{community_name}</strong> as a <strong>{role_label}</strong> on the NestBloq Portal.
         </p>
         <p style="color: #9CA3AF; line-height: 1.6;">
           Below are your temporary login credentials:
@@ -466,16 +467,16 @@ def send_invite_email(to_email: str, full_name: str, temp_password: str, communi
 
 def send_association_email(to_email: str, full_name: str, community_name: str, role_name: str) -> bool:
     """Send email when added to an association"""
-    subject = f"You have been added to {community_name} on VHOA Portal"
+    subject = f"You have been added to {community_name} on NestBloq Portal"
     role_label = role_name.replace('_', ' ').title()
     inner_html = f"""
       <div style="padding: 40px 30px;">
         <h2 style="margin: 0 0 16px; color: #ffffff;">Hello, {full_name}! </h2>
         <p style="color: #9CA3AF; line-height: 1.6;">
-          You have been added to the community <strong>{community_name}</strong> as a <strong>{role_label}</strong> on the VHOA Portal.
+          You have been added to the community <strong>{community_name}</strong> as a <strong>{role_label}</strong> on the NestBloq Portal.
         </p>
         <p style="color: #9CA3AF; line-height: 1.6;">
-          Since you already have a registered account on VHOA Portal, you can log in using your existing credentials.
+          Since you already have a registered account on NestBloq Portal, you can log in using your existing credentials.
         </p>
         <div style="margin: 30px 0; text-align: center;">
           <a href="https://nestbloq.vercel.app/login" style="background-color: #14B8A6; color: #000000; padding: 12px 24px; font-weight: bold; font-size: 15px; text-decoration: none; border-radius: 8px; display: inline-block; box-shadow: 0 4px 6px rgba(20, 184, 166, 0.25);">
@@ -499,7 +500,7 @@ def send_pool_status_email(
     tentative_date: str = None
 ) -> bool:
     """Send pool open/closed status change notification email"""
-    subject = f"VHOA Portal — {amenity_name} Status Update in {community_name}"
+    subject = f"NestBloq Portal — {amenity_name} Status Update in {community_name}"
     
     if pool_open:
         status_banner = " Pool is NOW OPEN!"
@@ -549,7 +550,7 @@ def send_service_request_created_email(
     is_admin: bool = False
 ) -> bool:
     """Send email confirmation/notification when a service request is created"""
-    subject = f"VHOA Portal — New Service Request #{request_id}: {title}"
+    subject = f"NestBloq Portal — New Service Request #{request_id}: {title}"
     if is_admin:
         banner = "️ New Service Request Submitted"
         banner_color = "#3B82F6"  # Blue
@@ -601,7 +602,7 @@ def send_service_request_status_update_email(
     note: str = None
 ) -> bool:
     """Send email update to resident when their service request status changes"""
-    subject = f"VHOA Portal — Service Request #{request_id} Updated: {new_status}"
+    subject = f"NestBloq Portal — Service Request #{request_id} Updated: {new_status}"
     
     # Custom color/banner based on status
     status_colors = {

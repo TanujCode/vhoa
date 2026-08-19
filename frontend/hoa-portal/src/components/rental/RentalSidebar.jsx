@@ -73,6 +73,13 @@ const RentalSidebar = ({ activePage, setActivePage, isOpen, setIsOpen, user, pro
     } else {
       navItems = landlordNavItems;
     }
+  } else if (userRole === 'tenant') {
+    if (!hasLease) {
+      // For tenant with no active lease, only show Dashboard and Lease Agreements
+      navItems = tenantNavItems.filter(item => item.id === 'dashboard' || item.id === 'leases_hub');
+    } else {
+      navItems = tenantNavItems;
+    }
   }
 
   const getNavItemClass = (itemId) => {
