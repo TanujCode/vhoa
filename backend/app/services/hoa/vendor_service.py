@@ -108,11 +108,11 @@ def generate_vendor_access_code(vendor_id: int, db: Session) -> str:
     """
     Generate a one-time use vendor access code.
     Document: ONE TIME USE ONLY & TIME CONSTRAINT
-    48 hours valid।
+    48 hours valid.
     """
     vendor = get_vendor_by_id(vendor_id, db)
 
-    # Naya code generate karo
+    # Generate new access code
     code = _generate_code("VAC")
 
     vendor.vendor_access_code = code

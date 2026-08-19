@@ -73,7 +73,7 @@ class ServiceRequestCreate(BaseModel):
 
 class StatusUpdateRequest(BaseModel):
     """
-    Changed Status।
+    Changed Status.
     Documents rules:
     - Open → Cancelled     = Resident
     - Open → Approved      = Board/Admin

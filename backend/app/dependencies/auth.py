@@ -19,7 +19,7 @@ def get_current_user(
 ) -> User:
     """
     Validate the token — email verification is not checked here.
-    Only /me, /otp/send, /otp/verify।
+    Only /me, /otp/send, /otp/verify.
     """
     token = credentials.credentials
 
@@ -182,10 +182,10 @@ def get_phone_verified_user(
 
 
 # ══════════════════════════════════════════════
-#  ROLE CHECK — verified user ke liye
+#  ROLE CHECK — for verified users
 def require_role(*allowed_roles: str):
     """
-    Email verified + specific role check।
+    Email verified + specific role check.
 
     Usage:
         @router.post("/violation")
