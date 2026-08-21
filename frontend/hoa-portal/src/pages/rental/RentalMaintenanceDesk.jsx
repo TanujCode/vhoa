@@ -637,13 +637,13 @@ export default function RentalMaintenanceDesk({ user, selectedPropertyFilterId =
         
         {/* Header Section */}
         <div className="p-6 border-b border-slate-200 dark:border-white/10 flex flex-col lg:flex-row gap-4 lg:items-center justify-between">
-          <h2 className="font-bold text-slate-900 dark:text-white text-sm flex items-center gap-2">
+          <h2 className="font-bold text-slate-900 dark:text-white text-sm flex items-center gap-2 flex-shrink-0">
             <Wrench size={16} /> Active Maintenance Tickets
           </h2>
           
-          <div className="flex flex-col sm:flex-row flex-wrap items-center gap-3 w-full lg:w-auto lg:justify-end">
+          <div className="flex flex-col sm:flex-row sm:flex-nowrap items-center gap-2 w-full lg:w-auto lg:justify-end">
             {/* Search Bar */}
-            <div className="relative w-full sm:w-60">
+            <div className="relative w-full sm:w-48 flex-shrink-0">
               <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-gray-500 pointer-events-none" />
               <input
                 type="text"
