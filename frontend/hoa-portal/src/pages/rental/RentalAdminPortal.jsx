@@ -379,6 +379,7 @@ const RentalAdminPortal = () => {
             activeLease = leaseRes.data.find(l => l.status === 'ACTIVE') || leaseRes.data[0];
           }
           if (activeLease) {
+            localStorage.setItem('tenant_active_lease_id', String(activeLease.lease_id));
             const updatedUser = {
               ...freshUser,
               property_name: activeLease.property_name || (activeLease.unit && activeLease.unit.property ? activeLease.unit.property.name : null),
@@ -389,6 +390,7 @@ const RentalAdminPortal = () => {
               localStorage.setItem('rental_user', JSON.stringify(updatedUser));
             } catch (_) {}
           }
+
         } catch (leaseErr) {
           console.error("Failed to load tenant lease at root:", leaseErr);
         }
@@ -549,7 +551,8 @@ const RentalAdminPortal = () => {
                 const updatedUser = {
                   ...prevUser,
                   property_name: selected.property_name || (selected.unit && selected.unit.property ? selected.unit.property.name : selected.property?.name || null),
-                  unit_number: selected.unit ? selected.unit.unit_number : null
+                  unit_number: selected.unit ? selected.unit.unit_number : null,
+                  property_type: selected.unit ? selected.unit.property_type : null
                 };
                 try {
                   localStorage.setItem('rental_user', JSON.stringify(updatedUser));

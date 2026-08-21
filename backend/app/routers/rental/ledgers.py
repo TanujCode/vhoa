@@ -10,6 +10,9 @@ from app.routers.rental.dependencies import require_rental_role, get_verified_re
 
 router = APIRouter(prefix="/rental", tags=["Rental - Payments Ledger"])
 
+
+
+
 @router.get("/leases/{lease_id}/ledgers", response_model=List[RentalLedgerOut])
 def get_lease_ledgers(
     lease_id: int,

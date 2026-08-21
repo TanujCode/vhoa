@@ -316,7 +316,7 @@ def rental_get_me(
         "role_name": role_name,
         "property_name": property_name,
         "unit_number": unit_number,
-        "user_profile_url": current_user.user_profile_url,
+        "user_profile_url": safe_decrypt_field(current_user.user_profile_url),
         "id_proof_url": current_user.id_proof_url,
         "address_proof_url": current_user.address_proof_url,
         "created_date": current_user.created_date,

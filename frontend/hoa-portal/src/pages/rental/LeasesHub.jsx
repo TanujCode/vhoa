@@ -70,6 +70,7 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
   const [tenantHasPets, setTenantHasPets] = useState(false);
   const [tenantPetsCount, setTenantPetsCount] = useState(1);
   const [tenantPetDetails, setTenantPetDetails] = useState('Dog');
+  const [tenantPets, setTenantPets] = useState([{ type: 'Dog' }]);
   const [numOccupants, setNumOccupants] = useState(1);
   const [numMinors, setNumMinors] = useState(0);
 
@@ -87,6 +88,7 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedTemplate, setSelectedTemplate] = useState('standard');
   const [selectedUnitId, setSelectedUnitId] = useState('');
+  const [customUnitNo, setCustomUnitNo] = useState('');
   const [tenantEmail, setTenantEmail] = useState('');
   const [tenantName, setTenantName] = useState('');
   const [tenantPhone, setTenantPhone] = useState('');
@@ -358,13 +360,19 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
     if (isEntireProperty) {
       return `${u.property_name}`;
     }
-    return `Unit ${u.unit_number} (${u.property_name})`;
+    const cleanNum = u.unit_number.trim();
+    if (cleanNum.toLowerCase().startsWith('apt') || cleanNum.toLowerCase().startsWith('unit')) {
+      return `${cleanNum} (${u.property_name})`;
+    }
+    return `Apt ${cleanNum} (${u.property_name})`;
   };
+
 
   const getCleanUnitNumber = (unitNum) => {
     if (!unitNum) return 'N/A';
-    const isEntireProperty = unitNum === 'Single Family' || unitNum === 'Entire Property' || unitNum === 'Condo Unit' || !/\d/.test(unitNum);
-    return isEntireProperty ? '1' : unitNum;
+    let clean = unitNum.replace(/^(apt|apartment|unit|room|suite)\.?\s*/i, '').trim();
+    const isEntireProperty = unitNum === 'Single Family' || unitNum === 'Entire Property' || unitNum === 'Condo Unit' || !/\d/.test(clean);
+    return isEntireProperty ? '1' : clean;
   };
 
   const hasVacantUnits = filteredUnits.length === 0 || filteredUnits.some(u => u.status === 'VACANT');
@@ -997,6 +1005,15 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
     }
   }, [selectedPropertyFilterId, units, isLandlord, showCreateModal, prefilledFromApp, editingLeaseId]);
 
+  useEffect(() => {
+    const selectedUnitObj = units.find(u => String(u.unit_id) === String(selectedUnitId));
+    if (selectedUnitObj && (selectedUnitObj.property_type === 'condo' || selectedUnitObj.unit_number === 'Condo Unit')) {
+      setCustomUnitNo(getCleanUnitNumber(selectedUnitObj.unit_number));
+    } else {
+      setCustomUnitNo('');
+    }
+  }, [selectedUnitId, units]);
+
 
   useEffect(() => {
     if (selectedLease) {
@@ -1022,12 +1039,52 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
       const carCount = hasPark ? Math.round(parseFloat(selectedLease.parking_fee) / 25) : 1;
       const safeCarCount = carCount > 0 ? carCount : 1;
       setTenantParkingCarsCount(safeCarCount);
-      setTenantVehicles(Array.from({ length: safeCarCount }, () => ({ plate: '', state: 'AL' })));
+      
+      const parsedVehicles = [];
+      if (selectedLease.vehicle_details) {
+        const parts = selectedLease.vehicle_details.split(';');
+        parts.forEach(part => {
+          const match = part.match(/Car \d+:\s*(.*?)\s*\(State:\s*(.*?)\)/i);
+          if (match && match[1]) {
+            parsedVehicles.push({
+              plate: match[1] === 'N/A' ? '' : match[1].trim(),
+              state: match[2] ? match[2].trim() : 'AL'
+            });
+          } else {
+            const simplePart = part.trim();
+            if (simplePart) {
+              parsedVehicles.push({ plate: simplePart, state: 'AL' });
+            }
+          }
+        });
+      }
+      while (parsedVehicles.length < safeCarCount) {
+        parsedVehicles.push({ plate: '', state: 'AL' });
+      }
+      setTenantVehicles(parsedVehicles.slice(0, safeCarCount));
 
       const hasPetsVal = parseFloat(selectedLease.pet_fee || 0) > 0;
       setTenantHasPets(hasPetsVal);
       const petCount = hasPetsVal ? Math.round(parseFloat(selectedLease.pet_fee) / 50) : 1;
-      setTenantPetsCount(petCount > 0 ? petCount : 1);
+      const safePetCount = petCount > 0 ? petCount : 1;
+      setTenantPetsCount(safePetCount);
+      
+      const parsedPets = [];
+      if (selectedLease.pet_details) {
+        const parts = selectedLease.pet_details.split(';');
+        parts.forEach(part => {
+          const match = part.match(/Pet \d+:\s*(.*)/i);
+          if (match && match[1]) {
+            parsedPets.push({ type: match[1].trim() });
+          } else if (part.trim()) {
+            parsedPets.push({ type: part.trim() });
+          }
+        });
+      }
+      while (parsedPets.length < safePetCount) {
+        parsedPets.push({ type: 'Dog' });
+      }
+      setTenantPets(parsedPets.slice(0, safePetCount));
       setTenantPetDetails(selectedLease.pet_fee ? 'Dog' : 'Dog');
     }
   }, [selectedLease]);
@@ -1048,7 +1105,8 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
 
       if (!isLandlord) {
         const activeId = localStorage.getItem('tenant_active_lease_id');
-        if (activeId) {
+        const hasActiveIdInRes = res.data.some(l => String(l.lease_id) === String(activeId));
+        if (activeId && hasActiveIdInRes) {
           setLeases(res.data.filter(l => 
             String(l.lease_id) === String(activeId) ||
             String(l.lease_id) === String(pendingLeaseId) ||
@@ -1057,11 +1115,17 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
             l.status === 'PENDING_LANDLORD_APPROVAL'
           ));
         } else {
+          if (res.data.length > 0) {
+            localStorage.setItem('tenant_active_lease_id', String(res.data[0].lease_id));
+          } else {
+            localStorage.removeItem('tenant_active_lease_id');
+          }
           setLeases(res.data);
         }
       } else {
         setLeases(res.data);
       }
+
     } catch (err) {
       console.error(err);
     } finally {
@@ -1082,11 +1146,13 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
         const mapped = unitRes.data.map(u => ({ 
           ...u, 
           property_name: p.name,
+          property_type: p.property_type,
           property_address: p.address,
           property_city: p.city,
           property_state: p.state,
           property_zip: p.zip_code
         }));
+
 
         allUnits.push(...mapped.filter(u => !u.has_active_lease || String(u.unit_id) === String(prefillUnitId)));
       }
@@ -1166,6 +1232,20 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
     }
 
     try {
+      const selectedUnitObj = units.find(u => String(u.unit_id) === String(selectedUnitId));
+      if (selectedUnitObj && (selectedUnitObj.property_type === 'condo' || selectedUnitObj.unit_number === 'Condo Unit') && customUnitNo.trim()) {
+        const cleaned = customUnitNo.trim();
+        if (cleaned !== selectedUnitObj.unit_number) {
+          await API.put(`/rental/units/${selectedUnitId}`, {
+            property_id: selectedUnitObj.property_id,
+            unit_number: cleaned,
+            rent_amount: selectedUnitObj.rent_amount || 0.0
+          });
+          setUnits(prev => prev.map(u => String(u.unit_id) === String(selectedUnitId) ? { ...u, unit_number: cleaned } : u));
+          selectedUnitObj.unit_number = cleaned;
+        }
+      }
+
       const calculatedUtilFee = hasUtilFee ? parseFloat(utilFee || 0) : 0;
       const calculatedParkingFee = hasParkingFee ? (parseFloat(parkingFeePerCar || 0) * parseInt(parkingCarsCount || 1)) : 0;
       const calculatedPetFee = hasPetFee ? (parseFloat(petFeePerPet || 0) * parseInt(petsCount || 1)) : 0;
@@ -1211,7 +1291,15 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
       }
 
     } catch (err) {
-      const msg = err.response?.data?.detail || "Failed to create lease.";
+      const detail = err.response?.data?.detail;
+      let msg = "Failed to create lease.";
+      if (typeof detail === 'string') {
+        msg = detail;
+      } else if (Array.isArray(detail)) {
+        msg = detail.map(d => `${d.loc ? d.loc.join('.') : ''}: ${d.msg || ''}`).join(', ');
+      } else if (detail) {
+        msg = JSON.stringify(detail);
+      }
       setErrorMsg(msg);
       toast.error(msg);
     }
@@ -1358,7 +1446,9 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
           : "",
         has_pets: tenantHasPets,
         pets_count: tenantHasPets ? parseInt(tenantPetsCount) : 0,
-        pet_details: tenantHasPets ? tenantPetDetails : "",
+        pet_details: tenantHasPets
+          ? tenantPets.slice(0, tenantPetsCount).map((p, i) => `Pet ${i + 1}: ${p.type || 'Dog'}`).join('; ')
+          : "",
         num_occupants: parseInt(numOccupants) || 1,
         num_minors: parseInt(numMinors) || 0
 
@@ -1753,7 +1843,8 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
                       onClick={() => {
                         setTenantHasPets(false);
                         setTenantPetsCount(1);
-                        setTenantPetDetails('');
+                        setTenantPetDetails('Dog');
+                        setTenantPets([{ type: 'Dog' }]);
                       }}
                       className={`flex-1 text-[10px] font-bold py-1 rounded-md transition cursor-pointer ${
                         !tenantHasPets 
@@ -1769,33 +1860,54 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
                 {tenantHasPets && (
                   <div className="space-y-3 mt-3 pt-3 border-t border-blue-500/10 animate-fade-in">
                     <div>
-                      <label className="block text-[10px] font-bold text-gray-450 uppercase tracking-wider mb-1.5">Number of Pets (1 to 5)</label>
+                      <label className="block text-[10px] font-bold text-gray-455 uppercase tracking-wider mb-1.5 font-sans">Number of Pets (1 to 5)</label>
                       <input 
                         type="number" 
                         min="1"
                         max="5"
                         value={tenantPetsCount} 
-                        onChange={e => setTenantPetsCount(Math.min(5, Math.max(1, parseInt(e.target.value) || 1)))} 
+                        onChange={e => {
+                          const count = Math.min(5, Math.max(1, parseInt(e.target.value) || 1));
+                          setTenantPetsCount(count);
+                          setTenantPets(prev => {
+                            const updated = [...prev];
+                            while (updated.length < count) updated.push({ type: 'Dog' });
+                            return updated.slice(0, count);
+                          });
+                        }} 
                         className="w-full text-xs px-3 py-2 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none border-slate-200 dark:border-white/10"
                       />
                     </div>
-                    <div>
-                      <label className="block text-[10px] font-bold text-gray-455 uppercase tracking-wider mb-1.5 font-sans">Type of Pet</label>
-                      <select 
-                        required
-                        value={tenantPetDetails || 'Dog'}
-                        onChange={e => setTenantPetDetails(e.target.value)}
-                        className="w-full text-xs px-3 py-2.5 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none border-slate-200 dark:border-white/10 cursor-pointer font-medium"
-                      >
-                        <option value="Dog">Dog</option>
-                        <option value="Cat">Cat</option>
-                        <option value="Bird">Bird</option>
-                        <option value="Fish">Fish</option>
-                        <option value="Rabbit">Rabbit</option>
-                        <option value="Reptile">Reptile</option>
-                        <option value="Other">Other</option>
-                      </select>
-                    </div>
+                    {/* Dynamic per-pet fields */}
+                    {Array.from({ length: tenantPetsCount }).map((_, idx) => (
+                      <div key={idx} className="space-y-2 animate-fade-in text-left">
+                        {tenantPetsCount > 1 && (
+                          <span className="block text-[9px] font-black text-blue-500 uppercase tracking-widest">Pet {idx + 1}</span>
+                        )}
+                        <div>
+                          <label className="block text-[10px] font-bold text-gray-455 uppercase tracking-wider mb-1.5 font-sans">Type of Pet</label>
+                          <select 
+                            required
+                            value={tenantPets[idx]?.type || 'Dog'}
+                            onChange={e => {
+                              const updated = [...tenantPets];
+                              if (!updated[idx]) updated[idx] = { type: 'Dog' };
+                              updated[idx] = { ...updated[idx], type: e.target.value };
+                              setTenantPets(updated);
+                            }}
+                            className="w-full text-xs px-3 py-2.5 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none border-slate-200 dark:border-white/10 cursor-pointer font-medium"
+                          >
+                            <option value="Dog">Dog</option>
+                            <option value="Cat">Cat</option>
+                            <option value="Bird">Bird</option>
+                            <option value="Fish">Fish</option>
+                            <option value="Rabbit">Rabbit</option>
+                            <option value="Reptile">Reptile</option>
+                            <option value="Other">Other</option>
+                          </select>
+                        </div>
+                      </div>
+                    ))}
                     <div className="text-[10px] font-bold text-blue-600 dark:text-blue-400 bg-blue-500/10 border border-blue-500/20 py-2 px-3 rounded-xl text-center">
                       Monthly Charges: ${tenantPetsCount * 50}/mo
                     </div>
@@ -1951,9 +2063,13 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
                       }
                     }
                   }
-                  if (tenantHasPets && !tenantPetDetails.trim()) {
-                    setFormError("Please enter your pet breed / description details.");
-                    return;
+                  if (tenantHasPets) {
+                    for (let i = 0; i < tenantPetsCount; i++) {
+                      if (!tenantPets[i]?.type) {
+                        setFormError(`Please select type for Pet ${i + 1}.`);
+                        return;
+                      }
+                    }
                   }
                   
                   // Document uploads validation
@@ -2120,13 +2236,18 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
 
   const renderStep1 = () => {
     const selectedUnitObj = units.find(u => String(u.unit_id) === String(selectedUnitId));
-    const isSingleFamilyOrCondo = selectedUnitObj && (selectedUnitObj.unit_number === 'Single Family' || selectedUnitObj.unit_number === 'Condo Unit');
+    const isSingleFamilyOrCondo = selectedUnitObj && (
+      selectedUnitObj.property_type === 'single_family' ||
+      selectedUnitObj.property_type === 'condo' ||
+      selectedUnitObj.unit_number === 'Single Family' ||
+      selectedUnitObj.unit_number === 'Condo Unit'
+    );
     return (
       <div className="space-y-5">
         <div className="border-b dark:border-white/5 pb-3">
           <span className="text-[10px] uppercase font-bold text-blue-600 dark:text-blue-400 tracking-wider">Step 1 of 5</span>
           <h4 className="text-lg font-extrabold text-slate-800 dark:text-white mt-1">Tenant Profile Details</h4>
-          <p className="text-xs text-slate-400">Specify the property unit, the tenant's email address, full name, and phone number.</p>
+          <p className="text-xs text-slate-400">Specify the property, the tenant's email address, full name, and phone number.</p>
           {selectedUnitObj && (
             <div className="mt-3 p-3 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center gap-3 animate-fade-in">
               <Home className="text-blue-600 dark:text-blue-400 w-4 h-4 shrink-0" />
@@ -2183,19 +2304,27 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
           </div>
         </div>
 
-        {/* Row 2: Select Unit & Tenant Phone */}
+        {/* Row 2: Select Apartment & Tenant Phone */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <div>
             <label className="block text-xs font-bold text-slate-655 dark:text-gray-400 tracking-wider mb-2">
-              {isSingleFamilyOrCondo ? 'PROPERTY TYPE' : 'SELECT UNIT'}
+              {selectedUnitObj?.property_type === 'condo' || selectedUnitObj?.unit_number === 'Condo Unit' ? 'CONDO UNIT / APT NUMBER' : isSingleFamilyOrCondo ? 'PROPERTY TYPE' : 'SELECT APARTMENT'}
             </label>
             <div className="relative">
               <Home className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
-              {isSingleFamilyOrCondo ? (
+              {selectedUnitObj && (selectedUnitObj.property_type === 'condo' || selectedUnitObj.unit_number === 'Condo Unit') ? (
+                <input
+                  type="text"
+                  value={customUnitNo}
+                  onChange={e => setCustomUnitNo(e.target.value)}
+                  className="w-full text-sm pl-10 pr-3.5 py-3 border rounded-xl bg-white dark:bg-[#132030] border-slate-200 dark:border-white/10 text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-bold"
+                  placeholder="e.g. Apt 5, Apt 6, 7"
+                />
+              ) : isSingleFamilyOrCondo ? (
                 <input
                   type="text"
                   readOnly
-                  value={selectedUnitObj.unit_number === 'Single Family' ? 'Single Family Home (Entire Property)' : 'Condominium (Entire Property)'}
+                  value='Single Family Home (Entire Property)'
                   className="w-full text-sm pl-10 pr-3.5 py-3 border rounded-xl bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-white/5 text-slate-500 dark:text-slate-400 outline-none cursor-not-allowed font-bold"
                 />
               ) : (
@@ -2208,7 +2337,7 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
                     prefilledFromApp ? 'opacity-80 cursor-not-allowed bg-slate-100 dark:bg-slate-950 border-slate-200 dark:border-white/5' : 'border-slate-200 dark:border-white/10'
                   } ${formErrors.selectedUnitId ? 'border-red-500 ring-2 ring-red-500/10' : ''}`}
                 >
-                  <option value="">-- Select a Unit --</option>
+                  <option value="">-- Select an Apartment --</option>
                   {filteredUnits.map(u => (
                     <option key={u.unit_id} value={u.unit_id}>
                       {getUnitDisplayLabel(u)}
@@ -2221,6 +2350,7 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
               <p className="text-xs text-red-500 mt-1.5 flex items-center gap-1.5"><AlertCircle size={13}/>{formErrors.selectedUnitId}</p>
             )}
           </div>
+
 
         <div>
           <label className="block text-xs font-bold text-slate-655 dark:text-gray-400 tracking-wider mb-2">TENANT PHONE</label>
@@ -2262,8 +2392,8 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
               <span className="text-[10px] uppercase font-bold text-blue-600 dark:text-blue-400 tracking-wider block">Property Name</span>
               <span className="text-xs font-bold text-slate-800 dark:text-white">
                 {selectedUnitObj.property_name || 'N/A'}
-                {selectedUnitObj.unit_number !== 'Single Family' && selectedUnitObj.unit_number !== 'Condo Unit' && (
-                  <> (Unit {selectedUnitObj.unit_number === 'Entire Property' || !/\d/.test(selectedUnitObj.unit_number) ? '1' : selectedUnitObj.unit_number})</>
+                {selectedUnitObj.unit_number !== 'Single Family' && (
+                  <> (Apt {customUnitNo || getCleanUnitNumber(selectedUnitObj.unit_number)})</>
                 )}
               </span>
             </div>
@@ -3403,7 +3533,7 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
                             </span>
                           ) : (
                             <span className="bg-blue-500/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400 px-2.5 py-0.5 rounded text-[10px] font-bold border border-blue-500/20 whitespace-nowrap inline-block animate-fade-in">
-                              Unit {getCleanUnitNumber(l.unit?.unit_number)}
+                            {l.unit?.property_type === 'condo' ? 'Apt' : 'Unit'} {getCleanUnitNumber(l.unit?.unit_number)}
                             </span>
                           )}
                           {(l.property_name || l.unit?.property_name) && (

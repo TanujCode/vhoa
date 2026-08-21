@@ -350,6 +350,11 @@ def run_db_upgrades():
         "rental_applications.income_proof_url"
     )
 
+    _safe_execute(
+        "ALTER TABLE rental_maintenance_requests ADD COLUMN IF NOT EXISTS scope VARCHAR(50) DEFAULT 'INTERNAL';",
+        "rental_maintenance_requests.scope"
+    )
+
     # rental_otp_tokens (user_id)
     _safe_execute("ALTER TABLE rental_otp_tokens DROP CONSTRAINT IF EXISTS rental_otp_tokens_user_id_fkey;", "drop_otp_user_fk")
     _safe_execute("ALTER TABLE rental_otp_tokens ADD CONSTRAINT rental_otp_tokens_user_id_fkey FOREIGN KEY (user_id) REFERENCES rental_users(user_id) ON DELETE CASCADE;", "add_otp_user_fk")
@@ -406,8 +411,20 @@ def run_db_upgrades():
             print("[CONDO SEED] Restored super_admin role for tanujtongse132@gmail.com")
 
 
+        # Add property_type to rental_properties
+        db.execute(text("ALTER TABLE rental_properties ADD COLUMN IF NOT EXISTS property_type VARCHAR(50) DEFAULT 'single_family';"))
+        # Migrate existing properties to 'condo' if their unit has 'Condo' in the unit number
+        db.execute(text("""
+            UPDATE rental_properties 
+            SET property_type = 'condo' 
+            WHERE property_id IN (
+                SELECT DISTINCT property_id FROM rental_units WHERE unit_number ILIKE '%condo%'
+            );
+        """))
+
         db.commit()
         print("[SUCCESS] Database DDL upgrades completed.")
+
     except Exception as e:
         db.rollback()
         print(f"[ERROR] Database data migrations failed: {e}")

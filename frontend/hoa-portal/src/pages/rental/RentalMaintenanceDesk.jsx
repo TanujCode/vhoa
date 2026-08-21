@@ -3,7 +3,7 @@ import {
   Wrench, Plus, Clock, CheckCircle2, AlertTriangle, 
   Send, DollarSign, UserCheck, ShieldAlert, Sparkles, 
   Search, X, Edit, ChevronDown, Droplets, Zap, Leaf, Shield, Bug, Wind,
-  MessageSquare, XCircle, FileText, Filter, CreditCard, Landmark, Lightbulb
+  MessageSquare, XCircle, FileText, Filter, CreditCard, Landmark, Lightbulb, Info
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import API from '../../services/api';
@@ -41,6 +41,8 @@ const StatusBadge = ({ status }) => {
     OPEN: 'bg-blue-500/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400',
     VENDOR_ASSIGNED: 'bg-purple-500/10 text-purple-600 dark:bg-purple-500/20 dark:text-purple-400',
     IN_PROGRESS: 'bg-amber-500/10 text-amber-600 dark:bg-amber-500/20 dark:text-amber-300',
+    FORWARDED_TO_HOA: 'bg-orange-500/10 text-orange-600 dark:bg-orange-500/20 dark:text-orange-400',
+    HOA_IN_PROGRESS: 'bg-rose-500/10 text-rose-600 dark:bg-rose-500/20 dark:text-rose-400',
     COMPLETED: 'bg-emerald-500/10 text-emerald-500 dark:bg-emerald-500/20 dark:text-emerald-450',
     CANCELLED: 'bg-rose-500/10 text-rose-500 dark:bg-rose-500/20 dark:text-rose-450',
   };
@@ -65,6 +67,19 @@ const PriorityBadge = ({ priority }) => {
   return (
     <span className={`inline-flex items-center gap-1.5 text-xs font-semibold ${textColor}`}>
       {item.label} <span className={`w-2.5 h-2.5 rounded-full ${circleColor}`}></span>
+    </span>
+  );
+};
+
+const ScopeBadge = ({ scope }) => {
+  const config = {
+    INTERNAL: { label: 'Landlord Responsibility', color: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20' },
+    EXTERNAL_HOA: { label: 'HOA/COA Responsibility', color: 'bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-500/20' }
+  };
+  const item = config[scope] || { label: 'Landlord Responsibility', color: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20' };
+  return (
+    <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${item.color}`}>
+      {item.label}
     </span>
   );
 };
@@ -144,7 +159,10 @@ export default function RentalMaintenanceDesk({ user, selectedPropertyFilterId =
   const [selectedLeaseId, setSelectedLeaseId] = useState('');
   const [errors, setErrors] = useState({});
   const [requestType, setRequestType] = useState('');
+  const [scope, setScope] = useState('INTERNAL');
   const [editRequestType, setEditRequestType] = useState('');
+  const activeLease = leases.find(l => String(l.lease_id) === String(selectedLeaseId || (leases[0] && leases[0].lease_id)));
+  const isCondo = activeLease?.unit?.property_type === 'condo' || activeLease?.unit?.unit_number === 'Condo Unit';
 
   // Tenant edit & note modal states
   const [showTenantEditModal, setShowTenantEditModal] = useState(false);
@@ -282,6 +300,9 @@ export default function RentalMaintenanceDesk({ user, selectedPropertyFilterId =
   async function handleSubmitRequest(e) {
     e.preventDefault();
     
+    const activeLease = leases.find(l => String(l.lease_id) === String(selectedLeaseId || (leases[0] && leases[0].lease_id)));
+    const isCondo = activeLease?.unit?.property_type === 'condo' || activeLease?.unit?.unit_number === 'Condo Unit';
+
     // Front-end Validations
     const newErrors = {};
     if (!requestType) {
@@ -296,6 +317,10 @@ export default function RentalMaintenanceDesk({ user, selectedPropertyFilterId =
     const descErr = validateTicketDescription(description);
     if (descErr !== true) {
       newErrors.description = descErr;
+    }
+
+    if (isCondo && !scope) {
+      newErrors.scope = "Location of Issue is required.";
     }
 
     if (Object.keys(newErrors).length > 0) {
@@ -317,7 +342,8 @@ export default function RentalMaintenanceDesk({ user, selectedPropertyFilterId =
         lease_id: leaseIdToUse ? parseInt(leaseIdToUse) : 0,
         title: finalTitle,
         description: description.trim(),
-        priority
+        priority,
+        scope: isCondo ? scope : 'INTERNAL'
       });
       setRequests(prev => [...prev, res.data]);
       setShowSubmitModal(false);
@@ -325,6 +351,7 @@ export default function RentalMaintenanceDesk({ user, selectedPropertyFilterId =
       setDescription('');
       setPriority('NORMAL');
       setRequestType('');
+      setScope('INTERNAL');
       showAlert("Success", "Maintenance request successfully filed! Landlord has been notified.", "success");
     } catch (err) {
       showAlert("Error", err.response?.data?.detail || "Failed to submit request.", "danger");
@@ -638,6 +665,8 @@ export default function RentalMaintenanceDesk({ user, selectedPropertyFilterId =
                 <option value="OPEN" className="text-slate-900 dark:text-white">Open</option>
                 <option value="VENDOR_ASSIGNED" className="text-slate-900 dark:text-white">Vendor Assigned</option>
                 <option value="IN_PROGRESS" className="text-slate-900 dark:text-white">In Progress</option>
+                <option value="FORWARDED_TO_HOA" className="text-slate-900 dark:text-white">Forwarded to HOA/COA</option>
+                <option value="HOA_IN_PROGRESS" className="text-slate-900 dark:text-white">HOA Work in Progress</option>
                 <option value="COMPLETED" className="text-slate-900 dark:text-white">Completed</option>
                 <option value="CANCELLED" className="text-slate-900 dark:text-white">Cancelled</option>
               </select>
@@ -732,6 +761,7 @@ export default function RentalMaintenanceDesk({ user, selectedPropertyFilterId =
                         })}
                       </span></span>
                       <PriorityBadge priority={req.priority} />
+                      <ScopeBadge scope={req.scope} />
                     </div>
 
                     {/* Tenant Notes / Change Requests Display */}
@@ -866,11 +896,32 @@ export default function RentalMaintenanceDesk({ user, selectedPropertyFilterId =
                       className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl pl-4 pr-10 py-3 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-blue-500 appearance-none cursor-pointer"
                     >
                       {leases.map(l => (
-                        <option key={l.lease_id} value={l.lease_id}>Lease #{l.lease_id} (Unit {l.unit?.unit_number})</option>
+                        <option key={l.lease_id} value={l.lease_id}>Lease #{l.lease_id} ({l.unit?.property_type === 'condo' ? 'Apt' : 'Unit'} {l.unit?.unit_number})</option>
                       ))}
                     </select>
                     <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-gray-500 pointer-events-none" size={18} />
                   </div>
+                </div>
+              )}
+
+              {isCondo && (
+                <div>
+                  <label className="text-xs text-slate-500 dark:text-gray-400 mb-1.5 block uppercase font-bold tracking-wider">Location / Scope of Issue *</label>
+                  <div className="relative">
+                    <select
+                      value={scope}
+                      onChange={e => {
+                        setScope(e.target.value);
+                        if (errors.scope) setErrors(prev => ({ ...prev, scope: null }));
+                      }}
+                      className={`w-full bg-slate-50 dark:bg-[#0D1B2A] border ${errors.scope ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/20'} rounded-2xl pl-4 pr-10 py-3 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-blue-500 appearance-none cursor-pointer`}
+                    >
+                      <option value="INTERNAL">Inside Apartment (Landlord Responsibility)</option>
+                      <option value="EXTERNAL_HOA">Outside Apartment / Common Area (HOA/COA Responsibility)</option>
+                    </select>
+                    <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-gray-500 pointer-events-none" size={18} />
+                  </div>
+                  {errors.scope && <p className="text-red-500 text-[10px] mt-1 font-bold">{errors.scope}</p>}
                 </div>
               )}
 
@@ -994,20 +1045,43 @@ export default function RentalMaintenanceDesk({ user, selectedPropertyFilterId =
             </div>
             
             <form onSubmit={handleUpdateWorkOrder} className="space-y-4">
+              {selectedRequest.scope === 'EXTERNAL_HOA' && (
+                <div className="p-3 bg-orange-500/10 border border-orange-500/20 text-orange-700 dark:text-orange-400 text-xs font-semibold rounded-xl flex items-start gap-2">
+                  <Info size={16} className="shrink-0 mt-0.5" />
+                  <div>
+                    <strong>HOA/COA Responsibility:</strong> This issue is in a common area. The association is responsible for this repair. You do not need to dispatch a private vendor or pay for it.
+                  </div>
+                </div>
+              )}
+
               <div>
                 <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">WORK ORDER STATUS *</label>
                 <div className="relative">
-                  <select
-                    value={statusVal}
-                    onChange={e=>setStatusVal(e.target.value)}
-                    className="w-full bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 focus:border-blue-500 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none appearance-none cursor-pointer"
-                  >
-                    <option value="OPEN">Open (Awaiting review)</option>
-                    <option value="IN_PROGRESS">In Progress (Reviewing contractors)</option>
-                    <option value="VENDOR_ASSIGNED">Vendor Assigned</option>
-                    <option value="COMPLETED">Completed (Repairs done)</option>
-                    <option value="CANCELLED">Cancelled</option>
-                  </select>
+                  {selectedRequest.scope === 'EXTERNAL_HOA' ? (
+                    <select
+                      value={statusVal}
+                      onChange={e=>setStatusVal(e.target.value)}
+                      className="w-full bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 focus:border-blue-500 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none appearance-none cursor-pointer"
+                    >
+                      <option value="OPEN">Open (Awaiting review)</option>
+                      <option value="FORWARDED_TO_HOA">Forwarded to HOA/COA</option>
+                      <option value="HOA_IN_PROGRESS">HOA Work in Progress</option>
+                      <option value="COMPLETED">Completed (HOA Repairs done)</option>
+                      <option value="CANCELLED">Cancelled</option>
+                    </select>
+                  ) : (
+                    <select
+                      value={statusVal}
+                      onChange={e=>setStatusVal(e.target.value)}
+                      className="w-full bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 focus:border-blue-500 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none appearance-none cursor-pointer"
+                    >
+                      <option value="OPEN">Open (Awaiting review)</option>
+                      <option value="IN_PROGRESS">In Progress (Reviewing contractors)</option>
+                      <option value="VENDOR_ASSIGNED">Vendor Assigned</option>
+                      <option value="COMPLETED">Completed (Repairs done)</option>
+                      <option value="CANCELLED">Cancelled</option>
+                    </select>
+                  )}
                   <ChevronDown className="absolute right-3 top-3.5 w-4 h-4 text-gray-450 pointer-events-none" />
                 </div>
               </div>

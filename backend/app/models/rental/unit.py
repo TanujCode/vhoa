@@ -55,6 +55,11 @@ class Unit(Base):
         return self.property.name if self.property else None
 
     @builtins.property
+    def property_type(self) -> str | None:
+        return self.property.property_type if self.property else None
+
+
+    @builtins.property
     def property_address(self) -> str | None:
         return self.property.address if self.property else None
 

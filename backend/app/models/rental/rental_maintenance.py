@@ -13,6 +13,7 @@ class RentalMaintenanceRequest(Base):
     description = Column(Text, nullable=False)
     priority = Column(String(30), default="NORMAL")  # LOW, NORMAL, HIGH, URGENT
     status = Column(String(35), default="OPEN")  # OPEN, IN_PROGRESS, VENDOR_ASSIGNED, COMPLETED, CANCELLED
+    scope = Column(String(50), default="INTERNAL")  # INTERNAL, EXTERNAL_HOA
     vendor_id = Column(Integer, ForeignKey("rental_vendors.vendor_id"), nullable=True)
     estimated_cost = Column(Double, default=0.0)
     payment_status = Column(String(30), default="N/A")  # N/A, UNPAID, PAID

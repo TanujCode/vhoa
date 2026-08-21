@@ -692,7 +692,7 @@ export default function ScreeningHub({ user, setActivePage, selectedPropertyFilt
                         <td className="px-4 py-4 text-slate-600 dark:text-gray-400">{a.tenant_email}</td>
                         <td className="px-4 py-4">
                           <span className="bg-blue-500/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400 px-2 py-0.5 rounded text-[10px] font-bold border border-blue-500/20">
-                            Unit {a.unit?.unit_number || 'N/A'}
+                            {a.unit?.property_type === 'condo' ? 'Apt' : 'Unit'} {a.unit?.unit_number || 'N/A'}
                           </span>
                         </td>
                         <td className="px-4 py-4 font-mono font-bold text-slate-900 dark:text-white">
@@ -950,7 +950,7 @@ export default function ScreeningHub({ user, setActivePage, selectedPropertyFilt
                       <span>Pending Background Check Invitation</span>
                     </div>
                     <p className="text-sm text-slate-600 dark:text-slate-350 leading-relaxed">
-                      You have been invited by the landlord to run a tenant screening background check for <strong>Unit {latestApp.unit?.unit_number}</strong> at {latestApp.unit?.propertyName || latestApp.unit?.property?.name || 'Assigned Property'}.
+                      You have been invited by the landlord to run a tenant screening background check for <strong>{latestApp.unit?.property_type === 'condo' ? 'Apt' : 'Unit'} {latestApp.unit?.unit_number}</strong> at {latestApp.unit?.propertyName || latestApp.unit?.property?.name || 'Assigned Property'}.
                       Please complete the form below to authorize the credit and criminal history check.
                     </p>
                     <div className="pt-2">
@@ -1052,7 +1052,7 @@ export default function ScreeningHub({ user, setActivePage, selectedPropertyFilt
                     <div>
                       <span className="text-gray-400 block mb-0.5">Applied For Unit</span>
                       <span className="font-semibold text-gray-900 dark:text-white">
-                        Unit {latestApp.unit?.unit_number || 'N/A'} at {latestApp.unit?.propertyName || latestApp.unit?.property?.name || 'Assigned Property'}
+                        {latestApp.unit?.property_type === 'condo' ? 'Apt' : 'Unit'} {latestApp.unit?.unit_number || 'N/A'} at {latestApp.unit?.propertyName || latestApp.unit?.property?.name || 'Assigned Property'}
                       </span>
                     </div>
                     <div>
@@ -1152,7 +1152,7 @@ export default function ScreeningHub({ user, setActivePage, selectedPropertyFilt
                           <div>
                             <span className="block text-[10px] text-indigo-500 dark:text-indigo-400 font-bold uppercase tracking-wider">Invited Unit</span>
                             <span className="text-sm font-semibold">
-                              Unit {inviteApp?.unit?.unit_number || 'N/A'} at {inviteApp?.unit?.propertyName || inviteApp?.unit?.property?.name || 'Assigned Property'}
+                              {inviteApp?.unit?.property_type === 'condo' ? 'Apt' : 'Unit'} {inviteApp?.unit?.unit_number || 'N/A'} at {inviteApp?.unit?.propertyName || inviteApp?.unit?.property?.name || 'Assigned Property'}
                             </span>
                           </div>
                           <span className="bg-indigo-650/10 text-indigo-600 dark:bg-indigo-550/20 dark:text-indigo-400 px-2.5 py-1 rounded-lg text-[10px] font-bold border border-indigo-500/20">
@@ -1175,7 +1175,7 @@ export default function ScreeningHub({ user, setActivePage, selectedPropertyFilt
                       >
                         {units.map(u => (
                           <option key={u.unit_id} value={u.unit_id}>
-                            Unit {u.unit_number} at {u.propertyName} (${u.rent_amount}/mo) - {u.status}
+                            {u.property_type === 'condo' ? 'Apt' : 'Unit'} {u.unit_number} at {u.propertyName} (${u.rent_amount}/mo) - {u.status}
                           </option>
                         ))}
                       </select>
@@ -1593,7 +1593,7 @@ export default function ScreeningHub({ user, setActivePage, selectedPropertyFilt
                   ) : (
                     filteredUnits.map(u => (
                       <option key={u.unit_id} value={u.unit_id}>
-                        Unit {u.unit_number} at {u.propertyName} (${u.rent_amount}/mo)
+                        {u.property_type === 'condo' ? 'Apt' : 'Unit'} {u.unit_number} at {u.propertyName} (${u.rent_amount}/mo)
                       </option>
                     ))
                   )}

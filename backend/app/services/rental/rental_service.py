@@ -41,8 +41,10 @@ def create_property(landlord_id: int, data: PropertyCreate, db: Session) -> Prop
         state=data.state.strip() if data.state else None,
         zip_code=data.zip_code.strip() if data.zip_code else None,
         landlord_id=landlord_id,
+        property_type=data.property_type.strip() if data.property_type else "single_family",
         active_status=True
     )
+
     db.add(new_prop)
     db.commit()
     db.refresh(new_prop)
@@ -87,9 +89,12 @@ def update_property(property_id: int, landlord_id: int, data: PropertyCreate, db
     prop.city = data.city.strip() if data.city else None
     prop.state = data.state.strip() if data.state else None
     prop.zip_code = data.zip_code.strip() if data.zip_code else None
+    if data.property_type:
+        prop.property_type = data.property_type.strip()
     db.commit()
     db.refresh(prop)
     return prop
+
 
 
 def delete_property(property_id: int, landlord_id: int, db: Session, is_super_admin: bool = False) -> None:
@@ -336,7 +341,7 @@ def create_lease_and_invite(landlord_id: int, data: LeaseCreate, db: Session) ->
     enc_deposit = encrypt_float(data.security_deposit)
     enc_late_fee = encrypt_float(data.late_fee_amount)
     unit_label = get_unit_display_number(unit.unit_number)
-    default_lease_text = f"Standard Lease Agreement for the property" if unit.unit_number in ["Single Family", "Condo Unit"] else f"Standard Lease Agreement for Unit {unit_label}"
+    default_lease_text = f"Standard Lease Agreement for the property" if unit.unit_number in ["Single Family", "Condo Unit"] else f"Standard Lease Agreement for Apt {unit_label}"
     enc_lease_text = encrypt_field(data.lease_agreement_text or default_lease_text)
     enc_util = encrypt_float(data.utilities_fee)
     enc_parking = encrypt_float(data.parking_fee)
@@ -385,7 +390,7 @@ def create_lease_and_invite(landlord_id: int, data: LeaseCreate, db: Session) ->
     elif unit.unit_number == 'Condo Unit':
         property_desc = f"the Condominium at <strong>{unit.property.name}</strong>"
     else:
-        property_desc = f"<strong>Unit {unit_label}</strong> at {unit.property.name}"
+        property_desc = f"<strong>Apt {unit_label}</strong> at {unit.property.name}"
 
     email_body = f"""
     <div style="padding: 30px; font-size: 16px; line-height: 1.6; color: #D1D5DB;">
@@ -462,6 +467,46 @@ def update_lease(lease_id: int, landlord_id: int, data: LeaseCreate, db: Session
 
     db.commit()
     db.refresh(lease)
+
+    # Send update email to tenant
+    if data.tenant_email:
+        from app.config import settings
+        import urllib.parse
+        
+        tenant_user = db.query(RentalUser).filter(RentalUser.email_id == data.tenant_email.lower().strip()).first()
+        if tenant_user:
+            invitation_url = f"{settings.FRONTEND_URL}/rental/dashboard?tab=leases_hub"
+            email_action_text = "Review & Sign Updated Lease"
+            email_instruction = "Your landlord has updated your lease agreement. Please click the button below to review the updated terms and sign the agreement:"
+        else:
+            name_qs = f"&name={urllib.parse.quote(data.tenant_name)}" if data.tenant_name else ""
+            invitation_url = f"{settings.FRONTEND_URL}/rental/register?email={data.tenant_email}&role=tenant&lease_id={lease.lease_id}{name_qs}"
+            email_action_text = "Register & Review Lease"
+            email_instruction = "Your lease agreement has been updated. Please click the button below to register your tenant account, verify details, and sign your lease:"
+
+        if unit.unit_number == 'Single Family':
+            property_desc = f"the property at <strong>{unit.property.name}</strong>"
+        elif unit.unit_number == 'Condo Unit':
+            property_desc = f"the Condominium at <strong>{unit.property.name}</strong>"
+        else:
+            unit_display = get_unit_display_number(unit.unit_number)
+            property_desc = f"<strong>Apt {unit_display}</strong> at {unit.property.name}"
+
+        email_body = f"""
+        <div style="padding: 30px; font-size: 16px; line-height: 1.6; color: #D1D5DB;">
+          <h2 style="color: #3B82F6; margin-top: 0;">Lease Agreement Updated</h2>
+          <p>Hello,</p>
+          <p>The lease agreement for you for {property_desc} has been updated by the landlord.</p>
+          <p>{email_instruction}</p>
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="{invitation_url}" style="background: #3B82F6; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold; display: inline-block;">{email_action_text}</a>
+          </div>
+          <p style="font-size: 13px; color: #9CA3AF;">If you cannot click the button, copy and paste this URL into your browser:<br/>{invitation_url}</p>
+        </div>
+        """
+        wrapped_html = _wrap_in_responsive_layout(email_body, subtitle="Rental Property Management")
+        send_email(data.tenant_email.lower().strip(), "Lease Agreement Updated - Review Required", wrapped_html)
+
     return decrypt_lease_obj(lease)
 
 
@@ -590,18 +635,20 @@ def tenant_submit_lease(lease_id: int, tenant_id: int, data: TenantInfoSubmit, d
     # Send landlord notification email
     landlord_user = lease.landlord
     if landlord_user and landlord_user.email_id:
+        from app.utils.encryption import safe_decrypt_field
+        landlord_first_name = safe_decrypt_field(landlord_user.first_name) or "Landlord"
         if lease.unit.unit_number == 'Single Family':
             property_desc = f"the property at <strong>{lease.unit.property.name}</strong>"
         elif lease.unit.unit_number == 'Condo Unit':
             property_desc = f"the Condominium at <strong>{lease.unit.property.name}</strong>"
         else:
             unit_label = get_unit_display_number(lease.unit.unit_number)
-            property_desc = f"<strong>Unit {unit_label}</strong> at {lease.unit.property.name}"
+            property_desc = f"<strong>Apt {unit_label}</strong> at {lease.unit.property.name}"
 
         email_body = f"""
         <div style="padding: 30px; font-size: 16px; line-height: 1.6; color: #D1D5DB;">
           <h2 style="color: #3B82F6; margin-top: 0;">Lease Signed by Tenant</h2>
-          <p>Hello {landlord_user.first_name},</p>
+          <p>Hello {landlord_first_name},</p>
           <p>The tenant has submitted their personal details, documents, and signed the lease agreement for {property_desc}.</p>
           <p>Please log in to your dashboard to review their submission and approve the lease.</p>
         </div>
@@ -657,6 +704,31 @@ def generate_initial_invoice(lease: Lease, db: Session) -> RentalLedger:
     parking = safe_decrypt_float(lease.parking_fee) or 0.0
     pet = safe_decrypt_float(lease.pet_fee) or 0.0
     total = rent + util + parking + pet
+
+    existing_ledger = db.query(RentalLedger).filter(
+        RentalLedger.lease_id == lease.lease_id,
+        RentalLedger.status.in_(["UNPAID", "OVERDUE"])
+    ).order_by(RentalLedger.invoice_id.asc()).first()
+
+    if existing_ledger:
+        existing_ledger.amount = total
+        existing_ledger.rent_charge = rent
+        existing_ledger.utilities_charge = util
+        existing_ledger.parking_charge = parking
+        existing_ledger.pet_charge = pet
+        db.commit()
+        db.refresh(existing_ledger)
+        
+        extra_ledgers = db.query(RentalLedger).filter(
+            RentalLedger.lease_id == lease.lease_id,
+            RentalLedger.status.in_(["UNPAID", "OVERDUE"]),
+            RentalLedger.invoice_id != existing_ledger.invoice_id
+        ).all()
+        for extra in extra_ledgers:
+            db.delete(extra)
+        db.commit()
+        
+        return existing_ledger
 
     new_ledger = RentalLedger(
         lease_id=lease.lease_id,
@@ -926,6 +998,16 @@ def complete_rental_application(application_id: int, data: RentalApplicationComp
 
 # --- LEDGER & PAYMENTS ---
 def get_ledgers_by_lease(lease_id: int, db: Session) -> List[RentalLedger]:
+    unpaid_ledgers = db.query(RentalLedger).filter(
+        RentalLedger.lease_id == lease_id,
+        RentalLedger.status.in_(["UNPAID", "OVERDUE"])
+    ).order_by(RentalLedger.invoice_id.asc()).all()
+    
+    if len(unpaid_ledgers) > 1:
+        for extra in unpaid_ledgers[1:]:
+            db.delete(extra)
+        db.commit()
+        
     return db.query(RentalLedger).filter(RentalLedger.lease_id == lease_id).all()
 
 
@@ -1077,6 +1159,7 @@ def submit_maintenance_request(data: RentalMaintenanceCreate, db: Session) -> Re
         title=data.title,
         description=data.description,
         priority=data.priority,
+        scope=data.scope,
         status="OPEN",
         estimated_cost=0.0,
         payment_status="N/A"

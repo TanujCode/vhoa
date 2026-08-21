@@ -85,6 +85,18 @@ def run_db_upgrades():
         db.execute(text("ALTER TABLE rental_leases ADD COLUMN IF NOT EXISTS unit_change_requested BOOLEAN DEFAULT FALSE;"))
         db.execute(text("ALTER TABLE rental_leases ADD COLUMN IF NOT EXISTS unit_change_request_notes TEXT;"))
 
+        # Add property_type to rental_properties
+        db.execute(text("ALTER TABLE rental_properties ADD COLUMN IF NOT EXISTS property_type VARCHAR(50) DEFAULT 'single_family';"))
+        # Migrate existing properties to 'condo' if their unit has 'Condo' in the unit number
+        db.execute(text("""
+            UPDATE rental_properties 
+            SET property_type = 'condo' 
+            WHERE property_id IN (
+                SELECT DISTINCT property_id FROM rental_units WHERE unit_number ILIKE '%condo%'
+            );
+        """))
+
+
 
         # Add columns to rental_users and condo_users tables
         db.execute(text("ALTER TABLE rental_users ADD COLUMN IF NOT EXISTS id_proof_url TEXT;"))

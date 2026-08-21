@@ -25,22 +25,50 @@ export default function PropertiesHub({
   const [searchTerm, setSearchTerm] = useState('');
 
   function getPropertyType(property) {
-    if (!property) return 'Multi-Unit';
+    if (!property) return 'Single Family';
+    if (property.property_type === 'condo') return 'Condo';
+    if (property.property_type === 'single_family') return 'Single Family';
+
     const activeUnits = (property.units || []).filter(u => u.active_status !== false);
-    if (activeUnits.length === 0) return 'Multi-Unit';
+    if (activeUnits.length === 0) return 'Single Family';
     
-    const hasSingleFamily = activeUnits.some(u => 
-      u.unit_number === 'Single Family' || 
-      u.unit_number === 'Entire Property' || 
-      u.unit_number === '1'
-    );
-    const hasCondo = activeUnits.some(u => u.unit_number === 'Condo Unit');
-    
-    if (hasSingleFamily) return 'Single Family';
+    const hasCondo = activeUnits.some(u => u.unit_number === 'Condo Unit' || u.unit_number?.toLowerCase().includes('apt') || u.unit_number?.toLowerCase().includes('unit'));
     if (hasCondo) return 'Condo';
     
-    return 'Multi-Unit';
+    return 'Single Family';
   }
+
+  const formatAddressWithUnit = (property, unitNo = null) => {
+    if (!property) return '';
+    const type = getPropertyType(property);
+    let displayUnit = '';
+    if (type === 'Condo') {
+      if (unitNo && unitNo !== 'Condo Unit') {
+        displayUnit = `, ${unitNo}`;
+      } else {
+        const activeUnits = (property.units || []).filter(u => u.active_status !== false);
+        if (activeUnits.length > 0 && activeUnits[0].unit_number !== 'Condo Unit') {
+          displayUnit = `, ${activeUnits[0].unit_number}`;
+        }
+      }
+    }
+    return `${property.address}${displayUnit}, ${property.city}, ${property.state} ${property.zip_code}`;
+  };
+
+  const formatCardAddress = (p) => {
+    if (!p) return '';
+    const type = getPropertyType(p);
+    let displayUnit = '';
+    if (type === 'Condo') {
+      const activeUnits = (p.units || []).filter(u => u.active_status !== false);
+      if (activeUnits.length > 0 && activeUnits[0].unit_number !== 'Condo Unit') {
+        displayUnit = `, ${activeUnits[0].unit_number}`;
+      }
+    }
+    return `${p.address}${displayUnit}, ${p.city}`;
+  };
+
+
 
   const getTotalActiveUnitsCount = () => {
     let count = 0;
@@ -90,8 +118,10 @@ export default function PropertiesHub({
   const [wizardStep, setWizardStep] = useState(1);
   const [propertyType, setPropertyType] = useState('single');
   const [wizardUnits, setWizardUnits] = useState([{ unit_number: 'Single Family', rent_amount: '' }]);
+  const [condoUnitNo, setCondoUnitNo] = useState('');
   const [onboardDropdownOpen, setOnboardDropdownOpen] = useState(false);
   const [modalDropdownOpen, setModalDropdownOpen] = useState(false);
+
 
   useEffect(() => {
     const handleOutsideClick = () => {
@@ -579,10 +609,22 @@ export default function PropertiesHub({
     }
 
     const formattedUnits = [];
-    formattedUnits.push({
-      unit_number: wizardUnits[0]?.unit_number || '1',
-      rent_amount: 0.0
-    });
+    if (propertyType === 'condo') {
+      const cleanUnitNo = condoUnitNo.trim();
+      if (!cleanUnitNo) {
+        alert("Unit / Apt Number is required for Condo properties.");
+        return;
+      }
+      formattedUnits.push({
+        unit_number: cleanUnitNo,
+        rent_amount: 0.0
+      });
+    } else {
+      formattedUnits.push({
+        unit_number: 'Single Family',
+        rent_amount: 0.0
+      });
+    }
 
     try {
       const res = await API.post('/rental/properties-with-units', {
@@ -591,6 +633,7 @@ export default function PropertiesHub({
         city,
         state,
         zip_code: zip,
+        property_type: propertyType,
         units: formattedUnits
       });
       setProperties(prev => {
@@ -612,10 +655,12 @@ export default function PropertiesHub({
       setPropZip('');
       setWizardStep(1);
       setPropertyType('single');
+      setCondoUnitNo('');
       setWizardUnits([{ unit_number: 'Single Family', rent_amount: '' }]);
     } catch (err) {
       alert(err.response?.data?.detail || "Failed to create property with units.");
     }
+
   }
 
   async function handleEditProperty(e) {
@@ -779,8 +824,9 @@ export default function PropertiesHub({
             {p.name}
           </h4>
           <p className="text-xs text-slate-450 dark:text-slate-400 mt-1 font-medium truncate">
-            {p.address}, {p.city}
+            {formatCardAddress(p)}
           </p>
+
         </div>
 
         <div className="mt-4 pt-3 border-t border-slate-100 dark:border-white/5 flex items-center justify-between text-[11px] font-semibold text-slate-500 dark:text-slate-455 relative z-10">
@@ -903,8 +949,9 @@ export default function PropertiesHub({
                   {onboardingProperty.name}
                 </h3>
                 <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-medium leading-relaxed">
-                  {onboardingProperty.address}, {onboardingProperty.city}, {onboardingProperty.state} {onboardingProperty.zip_code}
+                  {formatAddressWithUnit(onboardingProperty)}
                 </p>
+
               </div>
 
               <div className="pt-2 flex justify-start">
@@ -937,11 +984,12 @@ export default function PropertiesHub({
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
             {[
               {
-                step: 1, Icon: Building2, title: 'Select Unit',
-                desc: 'Choose the property and specific unit you want to lease out.',
+                step: 1, Icon: Building2, title: 'Select Apartment',
+                desc: 'Choose the property and specific apartment you want to lease out.',
                 bg: 'bg-blue-50 dark:bg-blue-950/40', border: 'border-blue-100 dark:border-blue-900/30',
                 iconColor: 'text-blue-600 dark:text-blue-400', num: 'bg-blue-600',
               },
+
               {
                 step: 2, Icon: Users, title: 'Add Tenant',
                 desc: 'Enter tenant name, contact details and ID documents.',
@@ -1126,7 +1174,8 @@ export default function PropertiesHub({
                   {getPropertyType(selectedProperty)}
                 </span>
               </div>
-              <p className="text-xs text-slate-450 dark:text-slate-400 mt-1 font-medium">{selectedProperty.address}, {selectedProperty.city}, {selectedProperty.state} {selectedProperty.zip_code}</p>
+              <p className="text-xs text-slate-450 dark:text-slate-400 mt-1 font-medium">{formatAddressWithUnit(selectedProperty)}</p>
+
             </div>
             <div className="flex items-center gap-2 self-stretch sm:self-auto">
               <button
@@ -1282,7 +1331,7 @@ export default function PropertiesHub({
         /* Premium Dashboard Portfolio View */
         <div className="space-y-6">
           {/* Stats Summary Cards Row */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="p-4 rounded-2xl bg-white dark:bg-[#1E2E42] border border-slate-200/80 dark:border-white/10 flex items-center gap-3 shadow-sm">
               <div className="p-3 rounded-xl bg-blue-500/10 text-blue-500 shrink-0">
                 <Building2 className="w-5 h-5" />
@@ -1301,7 +1350,17 @@ export default function PropertiesHub({
                 <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white mt-0.5 truncate">{sfPropsCount} Homes</h3>
               </div>
             </div>
+            <div className="p-4 rounded-2xl bg-white dark:bg-[#1E2E42] border border-slate-200/80 dark:border-white/10 flex items-center gap-3 shadow-sm">
+              <div className="p-3 rounded-xl bg-indigo-500/10 text-indigo-500 shrink-0">
+                <Building className="w-5 h-5" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-[10px] text-slate-450 dark:text-slate-400 font-bold uppercase tracking-wider truncate">Condos</p>
+                <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white mt-0.5 truncate">{condoPropsCount} Homes</h3>
+              </div>
+            </div>
           </div>
+
 
           {/* Interactive Filters & Search Row */}
           <div className="flex flex-col md:flex-row justify-between items-stretch md:items-center gap-4 bg-slate-50 dark:bg-black/15 p-3 rounded-2xl border border-slate-200/60 dark:border-white/5 shadow-inner">
@@ -1572,6 +1631,20 @@ export default function PropertiesHub({
                         )}
                       </div>
 
+                      {propertyType === 'condo' && (
+                        <div>
+                          <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5 font-sans">Unit / Apt Number *</label>
+                          <input 
+                            required 
+                            type="text" 
+                            value={condoUnitNo} 
+                            onChange={e => setCondoUnitNo(e.target.value)} 
+                            className="w-full bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 focus:border-blue-500 rounded-lg px-3.5 py-2.5 text-sm text-slate-900 dark:text-white outline-none" 
+                            placeholder="e.g. Apt 4B or Unit 102" 
+                          />
+                        </div>
+                      )}
+
                       <div className="grid grid-cols-4 gap-3">
                         <div>
                           <label className="block text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 font-sans">City</label>
@@ -1643,9 +1716,9 @@ export default function PropertiesHub({
                       </button>
                       <button 
                         type="submit"
-                        disabled={!(propName.trim() && propCity && propState && /^\d{5}(-\d{4})?$/.test(propZip))}
+                        disabled={!(propName.trim() && propCity && propState && /^\d{5}(-\d{4})?$/.test(propZip) && (propertyType !== 'condo' || condoUnitNo.trim()))}
                         className={`flex-1 font-bold py-3 rounded-xl text-xs transition duration-200 flex items-center justify-center gap-1.5 font-sans ${
-                          propName.trim() && propCity && propState && /^\d{5}(-\d{4})?$/.test(propZip)
+                          propName.trim() && propCity && propState && /^\d{5}(-\d{4})?$/.test(propZip) && (propertyType !== 'condo' || condoUnitNo.trim())
                             ? 'bg-blue-600 hover:bg-blue-500 text-white cursor-pointer shadow-md shadow-blue-500/10'
                             : 'bg-slate-200 dark:bg-white/5 text-slate-400 dark:text-slate-600 cursor-not-allowed'
                         }`}
@@ -1653,6 +1726,7 @@ export default function PropertiesHub({
                         Create Property <Check className="w-4 h-4" />
                       </button>
                     </div>
+
                   </div>
                 )}
               </form>
@@ -1748,25 +1822,26 @@ export default function PropertiesHub({
 
       {/* Unit Edit Modal */}
       {showEditUnitModal && (() => {
-        const isSFOrCondo = selectedProperty && (getPropertyType(selectedProperty) === 'Single Family' || getPropertyType(selectedProperty) === 'Condo');
+
+        const isSingleFamily = selectedProperty && getPropertyType(selectedProperty) === 'Single Family';
         return (
           <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
             <div className="bg-white dark:bg-[#1e2a3b] border border-slate-200/10 w-full max-w-sm rounded-2xl p-6 space-y-4 shadow-2xl animate-scale-up text-slate-900 dark:text-white text-left">
               <div className="flex justify-between items-start mb-1">
                 <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                  <Edit3 className="w-5 h-5 text-indigo-500" /> {isSFOrCondo ? 'Edit Rent Details' : 'Edit Unit'}
+                  <Edit3 className="w-5 h-5 text-indigo-550" /> {isSingleFamily ? 'Edit Rent Details' : 'Edit Unit'}
                 </h2>
                 <button onClick={() => setShowEditUnitModal(false)} className="text-slate-400 hover:text-slate-900 dark:text-gray-500 dark:hover:text-white text-lg cursor-pointer">×</button>
               </div>
               <p className="text-slate-500 dark:text-gray-400 text-xs mb-6">
-                {isSFOrCondo 
+                {isSingleFamily 
                   ? 'Modify the monthly rent amount for this property.' 
                   : `Modify details for Unit ${selectedUnit?.unit_number === 'Entire Property' || selectedUnit?.unit_number === 'Single Family' || selectedUnit?.unit_number === 'Condo Unit' || (selectedUnit?.unit_number && !/\d/.test(selectedUnit.unit_number)) ? '1' : selectedUnit?.unit_number}.`
                 }
               </p>
               {errorMsg && <p className="text-xs text-red-500 bg-red-50 dark:bg-red-500/10 dark:text-red-400 p-3 rounded-xl font-medium mb-4">{errorMsg}</p>}
               <form onSubmit={handleEditUnit} className="space-y-4">
-                {!isSFOrCondo && (
+                {!isSingleFamily && (
                   <div>
                     <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Unit Number</label>
                     <input required type="text" value={editUnitNo} onChange={e=>setEditUnitNo(e.target.value)} className="w-full bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 focus:border-blue-500 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none" placeholder="e.g. Apt 101" />
@@ -1785,6 +1860,7 @@ export default function PropertiesHub({
         </div>
         );
       })()}
+
 
       {/* Upgrade Subscription Modal */}
       {showUpgradeModal && (

@@ -18,7 +18,7 @@ def create_rental_vendor(
 ):
     try:
         vendor = rental_service.create_rental_vendor(current_user.user_id, body, db)
-        log_rental_action(db, "CREATE_RENTAL_VENDOR", "rental", f"Rental vendor '{vendor.company_name}' onboarded.", current_user.user_id)
+        log_rental_action(db, "CREATE_RENTAL_VENDOR", "rental", f"Rental vendor '{vendor.get('company_name')}' onboarded.", current_user.user_id)
         return vendor
     except Exception as e:
         import traceback

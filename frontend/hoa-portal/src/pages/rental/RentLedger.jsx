@@ -308,7 +308,7 @@ export default function RentLedger({ user, selectedPropertyFilterId = 'all' }) {
                     <td className="px-4 py-4 font-mono text-xs font-bold text-indigo-650 dark:text-[#5BA4F5] whitespace-nowrap">#{getInvoiceSeqNum(inv)}</td>
                     <td className="px-4 py-4 whitespace-nowrap">
                       <div className="flex flex-col">
-                        <span className="font-semibold text-slate-900 dark:text-white">Unit {inv.lease?.unit?.unit_number || 'N/A'}</span>
+                        <span className="font-semibold text-slate-900 dark:text-white">{inv.lease?.unit?.property_type === 'condo' ? 'Apt' : 'Unit'} {inv.lease?.unit?.unit_number || 'N/A'}</span>
                         {inv.lease?.tenant_name && (
                           <span className="text-[10px] text-slate-500 dark:text-gray-400 font-medium">
                             Tenant: {inv.lease.tenant_name}
@@ -409,7 +409,7 @@ export default function RentLedger({ user, selectedPropertyFilterId = 'all' }) {
             <div className="bg-slate-50 dark:bg-[#111c2a] p-4 rounded-xl border border-slate-200 dark:border-white/10 text-xs text-gray-500 dark:text-gray-400 space-y-2">
               <div className="flex justify-between">
                 <span>Unit:</span>
-                <span className="font-bold text-gray-900 dark:text-white">Unit {selectedInvoice.lease?.unit?.unit_number}</span>
+                <span className="font-bold text-gray-900 dark:text-white">{selectedInvoice.lease?.unit?.property_type === 'condo' ? 'Apt' : 'Unit'} {selectedInvoice.lease?.unit?.unit_number}</span>
               </div>
               <div className="flex justify-between">
                 <span>Due Date:</span>
@@ -512,7 +512,7 @@ export default function RentLedger({ user, selectedPropertyFilterId = 'all' }) {
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-500 dark:text-gray-400">Unit:</span>
-                <span className="font-bold text-slate-900 dark:text-white">Unit {editFeeInvoice.lease?.unit?.unit_number || 'N/A'}</span>
+                <span className="font-bold text-slate-900 dark:text-white">{editFeeInvoice.lease?.unit?.property_type === 'condo' ? 'Apt' : 'Unit'} {editFeeInvoice.lease?.unit?.unit_number || 'N/A'}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-500 dark:text-gray-400">Current Late Fee:</span>

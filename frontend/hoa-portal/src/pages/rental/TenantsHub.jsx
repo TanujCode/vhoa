@@ -379,7 +379,10 @@ export default function TenantsHub({ selectedPropertyFilterId = 'all' }) {
                           </span>
                         ) : (
                           <span className="bg-blue-500/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400 px-2.5 py-0.5 rounded text-[10px] font-bold border border-blue-500/20 whitespace-nowrap inline-block animate-fade-in">
-                            Unit {t.unit_no === 'Entire Property' || !/\d/.test(t.unit_no) ? '1' : t.unit_no}
+                            {String(t.unit_no).toLowerCase().startsWith('apt') || String(t.unit_no).toLowerCase().startsWith('unit')
+                              ? t.unit_no
+                              : `Unit ${t.unit_no === 'Entire Property' || !/\d/.test(t.unit_no) ? '1' : t.unit_no}`
+                            }
                           </span>
                         )
                       ) : (

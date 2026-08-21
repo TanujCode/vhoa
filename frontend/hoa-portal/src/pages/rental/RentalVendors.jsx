@@ -114,11 +114,11 @@ export default function RentalVendors() {
     }
     if (name === 'license_number') {
       const trimmed = value.trim();
-      const hasMinDigits = (trimmed.replace(/\D/g, '').length >= 3);
-      const hasRepeatingChars = /(.)\1{3,}/.test(trimmed);
-      const hasConsecutiveLetters = /[a-zA-Z]{5,}/.test(trimmed);
+      const stateRegex = /^(A[LKZRSRV]|C[AOT]|D[EC]|F[LM]|G[AU]|HI|I[DLNO]|K[SY]|LA|M[ADEHINOPYT]|N[CDEHJMVY]|O[HKR]|P[ARW]|RI|S[CD]|T[NX]|UT|V[AIT]|W[AIVY])-[a-zA-Z0-9\-]{5,12}$/i;
+      const genericRegex = /^[a-zA-Z0-9]{6,12}$/i;
+      const isValid = stateRegex.test(trimmed) || genericRegex.test(trimmed);
       tempErrors.license_number = trimmed
-        ? ((/^[a-zA-Z0-9-]{6,20}$/.test(trimmed) && hasMinDigits && !hasRepeatingChars && !hasConsecutiveLetters) ? '' : 'License number must be 6-20 alphanumeric characters/hyphens, containing at least 3 digits, without long repeating characters or 5+ consecutive letters')
+        ? (isValid ? '' : 'License number must be 6-12 alphanumeric characters, or start with a 2-letter state prefix followed by a hyphen (e.g., CA-123456)')
         : 'License number is required';
     }
     if (name === 'license_expiry') {
@@ -153,17 +153,16 @@ export default function RentalVendors() {
     setErrors(tempErrors);
     return tempErrors;
   };
-
   const validateAllFields = () => {
     const lTrim = formData.license_number.trim();
-    const lDigits = lTrim.replace(/\D/g, '').length >= 3;
-    const lRep = /(.)\1{3,}/.test(lTrim);
-    const lCons = /[a-zA-Z]{5,}/.test(lTrim);
-
     const iTrim = formData.insurance_number.trim();
     const iDigits = iTrim.replace(/\D/g, '').length >= 3;
     const iRep = /(.)\1{3,}/.test(iTrim);
     const iCons = /[a-zA-Z]{5,}/.test(iTrim);
+
+    const stateRegex = /^(A[LKZRSRV]|C[AOT]|D[EC]|F[LM]|G[AU]|HI|I[DLNO]|K[SY]|LA|M[ADEHINOPYT]|N[CDEHJMVY]|O[HKR]|P[ARW]|RI|S[CD]|T[NX]|UT|V[AIT]|W[AIVY])-[a-zA-Z0-9\-]{5,12}$/i;
+    const genericRegex = /^[a-zA-Z0-9]{6,12}$/i;
+    const isLicenseValid = stateRegex.test(lTrim) || genericRegex.test(lTrim);
 
     const tempErrors = {
       company_name: formData.company_name.trim() 
@@ -175,7 +174,7 @@ export default function RentalVendors() {
       phoneOnly: phoneOnly.length === 14 ? '' : 'Phone number must be 10 digits',
       email: (/^[^\s@]+@[^\s@]+\.[^\s@]+$/).test(formData.email) ? '' : 'Invalid email format',
       license_number: lTrim
-        ? ((/^[a-zA-Z0-9-]{6,20}$/.test(lTrim) && lDigits && !lRep && !lCons) ? '' : 'License number must be 6-20 alphanumeric characters/hyphens, containing at least 3 digits, without long repeating characters or 5+ consecutive letters')
+        ? (isLicenseValid ? '' : 'License number must be 6-12 alphanumeric characters, or start with a 2-letter state prefix followed by a hyphen (e.g., CA-123456)')
         : 'License number is required',
       license_expiry: formData.license_expiry
         ? (new Date(formData.license_expiry) > new Date() ? '' : 'License expiry date must be in the future')
@@ -190,6 +189,7 @@ export default function RentalVendors() {
     setErrors(tempErrors);
     return tempErrors;
   };
+
 
   const handleOnboard = async (e) => {
     e.preventDefault();

@@ -38,9 +38,11 @@ def create_property_with_units(
             address=body.address,
             city=body.city,
             state=body.state,
-            zip_code=body.zip_code
+            zip_code=body.zip_code,
+            property_type=body.property_type
         )
         prop = rental_service.create_property(current_user.user_id, prop_data, db)
+
         log_rental_action(db, "CREATE_PROPERTY", "rental", f"Property '{prop.name}' created via wizard.", current_user.user_id)
         
         for unit_item in body.units:

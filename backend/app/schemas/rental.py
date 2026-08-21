@@ -10,6 +10,7 @@ class PropertyCreate(BaseModel):
     city: Optional[str] = None
     state: Optional[str] = None
     zip_code: Optional[str] = None
+    property_type: Optional[str] = "single_family"
 
     @field_validator("name")
     @classmethod
@@ -70,6 +71,7 @@ class PropertyWithUnitsCreate(BaseModel):
     city: Optional[str] = None
     state: Optional[str] = None
     zip_code: Optional[str] = None
+    property_type: Optional[str] = "single_family"
     units: List[UnitCreateNested] = []
 
     @field_validator("name")
@@ -139,10 +141,12 @@ class UnitOut(BaseModel):
     tenant_email: Optional[str] = None
     has_active_lease: bool = False
     property_name: Optional[str] = None
+    property_type: Optional[str] = None
     property_address: Optional[str] = None
     property_city: Optional[str] = None
     property_state: Optional[str] = None
     property_zip: Optional[str] = None
+
 
     class Config:
         from_attributes = True
@@ -157,6 +161,7 @@ class PropertyOut(BaseModel):
     state: Optional[str] = None
     zip_code: Optional[str] = None
     landlord_id: int
+    property_type: Optional[str] = "single_family"
     active_status: bool
     created_date: datetime
     units: List[UnitOut] = []
@@ -346,6 +351,7 @@ class RentalMaintenanceCreate(BaseModel):
     title: str
     description: str
     priority: str = "NORMAL"  # LOW, NORMAL, HIGH, URGENT
+    scope: str = "INTERNAL"  # INTERNAL, EXTERNAL_HOA
 
     @field_validator("title")
     @classmethod
@@ -405,6 +411,7 @@ class RentalMaintenanceOut(BaseModel):
     description: str
     priority: str
     status: str
+    scope: str
     vendor_id: Optional[int] = None
     estimated_cost: float
     payment_status: str
@@ -453,14 +460,14 @@ class RentalVendorCreate(BaseModel):
         if v is not None and v.strip():
             import re
             trimmed = v.strip()
-            if (not (6 <= len(trimmed) <= 20) or 
-                not re.match(r"^[a-zA-Z0-9\-]+$", trimmed) or 
-                sum(c.isdigit() for c in trimmed) < 3 or 
-                re.search(r"(.)\1{3,}", trimmed) or 
-                re.search(r"[a-zA-Z]{5,}", trimmed)):
-                raise ValueError("License number must be 6-20 alphanumeric characters (or hyphens) containing at least 3 digits, without long repeating characters or 5+ consecutive letters.")
+            state_pattern = r"^(A[LKZRSRV]|C[AOT]|D[EC]|F[LM]|G[AU]|HI|I[DLNO]|K[SY]|LA|M[ADEHINOPYT]|N[CDEHJMVY]|O[HKR]|P[ARW]|RI|S[CD]|T[NX]|UT|V[AIT]|W[AIVY])-[a-zA-Z0-9\-]{5,12}$"
+            generic_pattern = r"^[a-zA-Z0-9]{6,12}$"
+            is_valid = re.match(state_pattern, trimmed, re.IGNORECASE) or re.match(generic_pattern, trimmed, re.IGNORECASE)
+            if not is_valid:
+                raise ValueError("License number must be 6-12 alphanumeric characters, or start with a 2-letter state prefix followed by a hyphen (e.g., CA-123456).")
             return trimmed
         return v
+
 
     @field_validator("insurance_number")
     @classmethod

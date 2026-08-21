@@ -18,8 +18,9 @@ export default function TenantDashboard({ user, setUser, setActivePage }) {
 
   const getCleanUnitNumber = (unitNum) => {
     if (!unitNum) return 'N/A';
-    const isEntireProperty = unitNum === 'Single Family' || unitNum === 'Entire Property' || unitNum === 'Condo Unit' || !/\d/.test(unitNum);
-    return isEntireProperty ? '1' : unitNum;
+    let clean = unitNum.replace(/^(apt|apartment|unit|room|suite)\.?\s*/i, '').trim();
+    const isEntireProperty = unitNum === 'Single Family' || unitNum === 'Entire Property' || unitNum === 'Condo Unit' || !/\d/.test(clean);
+    return isEntireProperty ? '1' : clean;
   };
 
   useEffect(() => {
@@ -60,7 +61,8 @@ export default function TenantDashboard({ user, setUser, setActivePage }) {
             const updatedUser = {
               ...prevUser,
               property_name: propName,
-              unit_number: unitNo
+              unit_number: unitNo,
+              property_type: active.unit?.property_type || null
             };
             try {
               localStorage.setItem('rental_user', JSON.stringify(updatedUser));
@@ -120,7 +122,8 @@ export default function TenantDashboard({ user, setUser, setActivePage }) {
           const updatedUser = {
             ...prevUser,
             property_name: propName,
-            unit_number: unitNo
+            unit_number: unitNo,
+            property_type: chosenLease.unit?.property_type || null
           };
           try {
             localStorage.setItem('rental_user', JSON.stringify(updatedUser));
@@ -241,7 +244,7 @@ export default function TenantDashboard({ user, setUser, setActivePage }) {
                             key={l.lease_id} 
                             className="bg-blue-500/5 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400 px-1.5 py-0.5 rounded-md text-[9px] font-extrabold border border-blue-500/10"
                           >
-                            Unit {l.unit?.unit_number || 'N/A'}
+                            {l.unit?.property_type === 'condo' ? 'Apt' : 'Unit'} {l.unit?.unit_number || 'N/A'}
                           </span>
                         ))}
                       </div>
@@ -320,7 +323,7 @@ export default function TenantDashboard({ user, setUser, setActivePage }) {
               <div className="space-y-1 text-left">
                 <span className="text-[10px] text-indigo-500 dark:text-indigo-400 font-bold uppercase tracking-wider block">Action Required • Screening Invitation</span>
                 <p className="text-base text-slate-900 dark:text-white font-black">
-                  Unit {app.unit?.unit_number} at {app.unit?.propertyName || app.unit?.property?.name || 'Assigned Property'}
+                  {app.unit?.property_type === 'condo' ? 'Apt' : 'Unit'} {app.unit?.unit_number} at {app.unit?.propertyName || app.unit?.property?.name || 'Assigned Property'}
                 </p>
                 <p className="text-xs text-slate-550 dark:text-gray-400 font-normal">
                   Your landlord has invited you to complete a background screening check. Please complete it to sign the lease.
@@ -340,7 +343,7 @@ export default function TenantDashboard({ user, setUser, setActivePage }) {
               <div className="space-y-1 text-left">
                 <span className="text-[10px] text-amber-500 dark:text-amber-400 font-bold uppercase tracking-wider block">Action Required • Lease Review & Signature</span>
                 <p className="text-base text-slate-900 dark:text-white font-black">
-                  Unit {lease.unit?.unit_number} at {lease.property_name || lease.unit?.property?.name || 'Assigned Property'}
+                  {lease.unit?.property_type === 'condo' ? 'Apt' : 'Unit'} {lease.unit?.unit_number} at {lease.property_name || lease.unit?.property?.name || 'Assigned Property'}
                 </p>
                 <p className="text-xs text-slate-550 dark:text-gray-400 font-normal">
                   A new lease contract is ready for your review, document uploads, and signature to complete your onboarding.
@@ -363,7 +366,7 @@ export default function TenantDashboard({ user, setUser, setActivePage }) {
               <div className="space-y-1 text-left">
                 <span className="text-[10px] text-blue-500 dark:text-blue-400 font-bold uppercase tracking-wider block">Pending Approval • Awaiting Landlord</span>
                 <p className="text-base text-slate-900 dark:text-white font-black">
-                  Unit {lease.unit?.unit_number} at {lease.property_name || lease.unit?.property?.name || 'Assigned Property'}
+                  {lease.unit?.property_type === 'condo' ? 'Apt' : 'Unit'} {lease.unit?.unit_number} at {lease.property_name || lease.unit?.property?.name || 'Assigned Property'}
                 </p>
                 <p className="text-xs text-slate-550 dark:text-gray-400 font-normal">
                   You have successfully submitted your documents and signed the lease agreement. The landlord is reviewing it for final activation.
@@ -396,7 +399,7 @@ export default function TenantDashboard({ user, setUser, setActivePage }) {
               ) : activeLease?.unit?.unit_number === 'Condo Unit' ? (
                 'Condominium'
               ) : (
-                `Unit ${getCleanUnitNumber(activeLease?.unit?.unit_number)}`
+                `${activeLease?.unit?.property_type === 'condo' ? 'Apt' : 'Unit'} ${getCleanUnitNumber(activeLease?.unit?.unit_number)}`
               )}
             </div>
             <div className="text-xs text-slate-500 dark:text-gray-400 mt-1 font-semibold flex items-center gap-1">

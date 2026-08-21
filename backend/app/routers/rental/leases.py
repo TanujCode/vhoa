@@ -16,11 +16,12 @@ from app.schemas.rental import LeaseCreate, LeaseOut, LeaseSignRequest, TenantIn
 from app.services.rental import rental_service
 from app.services.rental.audit_service import log_rental_action
 from app.routers.rental.dependencies import require_rental_role, get_verified_rental_user
-from app.utils.encryption import encrypt_file_bytes, decrypt_file_bytes, encrypt_field, decrypt_field
 router = APIRouter(prefix="/rental", tags=["Rental - Lease Agreements"])
 
 
 @router.get("/leases/check-active")
+
+
 def check_tenant_active_lease(
     email: str,
     exclude_lease_id: int | None = None,
@@ -174,6 +175,7 @@ async def upload_tenant_document(
         raise HTTPException(status_code=400, detail="File size exceeds 10MB limit.")
 
     # Encrypt file bytes
+    from app.utils.encryption import encrypt_file_bytes, encrypt_field
     encrypted_bytes = encrypt_file_bytes(contents)
 
     # Save to disk
@@ -230,6 +232,7 @@ def download_tenant_document(
         raise HTTPException(status_code=403, detail="Unauthorized to download this document.")
 
     # Decrypt file_url to locate on disk
+    from app.utils.encryption import decrypt_field, decrypt_file_bytes
     decrypted_url = decrypt_field(doc.file_url)
     if not decrypted_url:
         raise HTTPException(status_code=500, detail="Failed to decrypt file path.")
