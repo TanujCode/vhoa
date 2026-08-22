@@ -206,6 +206,14 @@ export default function LandlordDashboard({
   const maintenanceUnitsCount = filteredUnits.filter(u => u.status === 'MAINTENANCE').length;
   const occupancyPercent = totalUnitsCount > 0 ? Math.round((occupiedUnitsCount / totalUnitsCount) * 100) : 0;
 
+  // --- Tenants Stats ---
+  const tenantsCount = new Set(
+    leases
+      .filter(propertyFilter)
+      .map(l => l.tenant_email)
+      .filter(Boolean)
+  ).size;
+
   // --- Action Required Items ---
   const pendingScreening = applications.filter(a => a.screening_status === 'SUBMITTED');
   const approvedScreeningNoLease = applications.filter(a => {
@@ -582,7 +590,7 @@ export default function LandlordDashboard({
               <p className="text-[9px] sm:text-[10px] font-bold text-slate-500 dark:text-gray-455 uppercase tracking-widest mt-1">Total Units</p>
             </div>
             <div className="text-center flex flex-col items-center min-w-[65px]">
-              <p className="text-3xl sm:text-4xl font-black text-blue-600 dark:text-blue-400 font-mono tracking-tight">{occupiedUnitsCount}</p>
+              <p className="text-3xl sm:text-4xl font-black text-blue-600 dark:text-blue-400 font-mono tracking-tight">{tenantsCount}</p>
               <p className="text-[9px] sm:text-[10px] font-bold text-slate-500 dark:text-gray-455 uppercase tracking-widest mt-1">Tenants</p>
             </div>
             <div className="text-center flex flex-col items-center min-w-[65px]">
