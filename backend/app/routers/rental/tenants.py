@@ -257,6 +257,11 @@ def delete_tenant(
         if not lease:
             raise HTTPException(status_code=404, detail="Lease not found.")
             
+        # Reset unit status to VACANT before deleting lease
+        if lease.unit:
+            lease.unit.status = "VACANT"
+            db.commit()
+            
         # Clean up referencing records due to FK constraints
         from sqlalchemy import text
         db.execute(text("DELETE FROM rental_tenant_documents WHERE lease_id = :lid"), {"lid": lease_id})
@@ -279,6 +284,9 @@ def delete_tenant(
         
         leases_linked = db.query(Lease).filter(Lease.tenant_id == uid).all()
         for l in leases_linked:
+            # Reset unit status to VACANT before unlinking
+            if l.unit:
+                l.unit.status = "VACANT"
             l.tenant_id = None
         db.commit()
         

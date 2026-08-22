@@ -691,6 +691,12 @@ def delete_lease(lease_id: int, db: Session) -> bool:
     lease = db.query(Lease).filter(Lease.lease_id == lease_id).first()
     if not lease:
         raise ValueError("Lease not found.")
+    
+    # Reset unit status to VACANT when lease is deleted
+    if lease.unit:
+        lease.unit.status = "VACANT"
+        db.commit()
+    
     db.query(RentalLedger).filter(RentalLedger.lease_id == lease_id).delete()
     db.delete(lease)
     db.commit()
