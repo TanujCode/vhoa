@@ -464,7 +464,7 @@ export default function ClientOnboarding() {
         const data = await response.json();
         if (data && data.length > 0) {
           let matched = false;
-          const normalizedCity = cityName.toLowerCase();
+          const normalizedCity = cityName.toLowerCase().replace(/[^a-z]/g, '');
           
           for (const item of data) {
             const addr = item.address || {};
@@ -1324,13 +1324,13 @@ export default function ClientOnboarding() {
                             placeholder={stateCities.length > 0 ? "Select or Type City/Town" : "Type City/Town"}
                             {...register('hoa_city', { 
                               required: 'Required',
-                              validate: (val) => /^[A-Za-z]+$/.test(val) || 'City should contain only letters (no spaces or numbers)',
+                              validate: (val) => /^[A-Za-z\s.\-]+$/.test(val) || 'City should contain only letters, spaces, hyphens, or dots',
                               onChange: (e) => {
                                 handleCityInputChange(e.target.value);
                               }
                             })}
                             onKeyPress={(e) => {
-                              if (!/[A-Za-z]/.test(e.key)) {
+                              if (!/[A-Za-z\s.\-]/.test(e.key)) {
                                 e.preventDefault();
                               }
                             }}

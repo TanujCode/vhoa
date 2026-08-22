@@ -156,58 +156,133 @@ def get_tenants(
 
 @router.put("/tenants/{tenant_id}/status")
 def toggle_tenant_status(
-    tenant_id: int,
+    tenant_id: str,
     active_status: bool,
     db: Session = Depends(get_rental_db),
     current_user: RentalUser = Depends(require_rental_role("super_admin", "landlord"))
 ):
-    tenant = db.query(RentalUser).filter(RentalUser.user_id == tenant_id).first()
-    if not tenant:
-        raise HTTPException(status_code=404, detail="Tenant not found.")
-    tenant.active_status = active_status
-    db.commit()
-    log_rental_action(db, "TOGGLE_TENANT_STATUS", "rental", f"Tenant status set to {active_status} for User ID {tenant_id}.", current_user.user_id)
-    return {"detail": "Tenant status updated successfully", "active_status": tenant.active_status}
+    from app.models.rental.lease import Lease
+    if tenant_id.startswith("lease_"):
+        try:
+            lease_id = int(tenant_id.replace("lease_", ""))
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid lease ID format.")
+        lease = db.query(Lease).filter(Lease.lease_id == lease_id).first()
+        if not lease:
+            raise HTTPException(status_code=404, detail="Lease not found.")
+        lease.status = "ACTIVE" if active_status else "INACTIVE"
+        db.commit()
+        log_rental_action(db, "TOGGLE_TENANT_STATUS", "rental", f"Lease status set to {active_status} for Lease ID {lease_id}.", current_user.user_id)
+        return {"detail": "Lease status updated successfully", "active_status": active_status}
+    else:
+        try:
+            uid = int(tenant_id)
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid tenant ID format.")
+        tenant = db.query(RentalUser).filter(RentalUser.user_id == uid).first()
+        if not tenant:
+            raise HTTPException(status_code=404, detail="Tenant not found.")
+        tenant.active_status = active_status
+        db.commit()
+        log_rental_action(db, "TOGGLE_TENANT_STATUS", "rental", f"Tenant status set to {active_status} for User ID {uid}.", current_user.user_id)
+        return {"detail": "Tenant status updated successfully", "active_status": tenant.active_status}
 
 
 @router.put("/tenants/{tenant_id}")
 def update_tenant(
-    tenant_id: int,
+    tenant_id: str,
     body: TenantUpdateRequest,
     db: Session = Depends(get_rental_db),
     current_user: RentalUser = Depends(require_rental_role("super_admin", "landlord"))
 ):
-    tenant = db.query(RentalUser).filter(RentalUser.user_id == tenant_id).first()
-    if not tenant:
-        raise HTTPException(status_code=404, detail="Tenant not found.")
-    
-    if body.email_id.lower().strip() != tenant.email_id.lower().strip():
+    from app.models.rental.lease import Lease
+    from app.utils.encryption import encrypt_field
+    if tenant_id.startswith("lease_"):
+        try:
+            lease_id = int(tenant_id.replace("lease_", ""))
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid lease ID format.")
+        lease = db.query(Lease).filter(Lease.lease_id == lease_id).first()
+        if not lease:
+            raise HTTPException(status_code=404, detail="Lease not found.")
+        
+        # Check duplicate email in RentalUser
         existing = db.query(RentalUser).filter(RentalUser.email_id == body.email_id.lower().strip()).first()
         if existing:
-            raise HTTPException(status_code=400, detail="Email is already taken by another user.")
+            raise HTTPException(status_code=400, detail="Email is already taken by a registered user.")
             
-    from app.utils.encryption import encrypt_field
-    tenant.first_name = encrypt_field(body.first_name.strip())
-    tenant.last_name = encrypt_field(body.last_name.strip())
-    tenant.email_id = body.email_id.lower().strip()
-    tenant.mobile_number = encrypt_field(body.mobile_number)
-    if hasattr(tenant, 'unit_no'):
-        tenant.unit_no = body.unit_no
-    db.commit()
-    log_rental_action(db, "UPDATE_TENANT", "rental", f"Tenant updated details for User ID {tenant_id}.", current_user.user_id)
-    return {"detail": "Tenant updated successfully"}
+        lease.tenant_email = encrypt_field(body.email_id.lower().strip())
+        db.commit()
+        log_rental_action(db, "UPDATE_TENANT", "rental", f"Lease tenant email updated for Lease ID {lease_id}.", current_user.user_id)
+        return {"detail": "Lease updated successfully"}
+    else:
+        try:
+            uid = int(tenant_id)
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid tenant ID format.")
+        tenant = db.query(RentalUser).filter(RentalUser.user_id == uid).first()
+        if not tenant:
+            raise HTTPException(status_code=404, detail="Tenant not found.")
+        
+        if body.email_id.lower().strip() != tenant.email_id.lower().strip():
+            existing = db.query(RentalUser).filter(RentalUser.email_id == body.email_id.lower().strip()).first()
+            if existing:
+                raise HTTPException(status_code=400, detail="Email is already taken by another user.")
+                
+        tenant.first_name = encrypt_field(body.first_name.strip())
+        tenant.last_name = encrypt_field(body.last_name.strip())
+        tenant.email_id = body.email_id.lower().strip()
+        tenant.mobile_number = encrypt_field(body.mobile_number)
+        if hasattr(tenant, 'unit_no'):
+            tenant.unit_no = body.unit_no
+        db.commit()
+        log_rental_action(db, "UPDATE_TENANT", "rental", f"Tenant updated details for User ID {uid}.", current_user.user_id)
+        return {"detail": "Tenant updated successfully"}
 
 
 @router.delete("/tenants/{tenant_id}")
 def delete_tenant(
-    tenant_id: int,
+    tenant_id: str,
     db: Session = Depends(get_rental_db),
     current_user: RentalUser = Depends(require_rental_role("super_admin", "landlord"))
 ):
-    tenant = db.query(RentalUser).filter(RentalUser.user_id == tenant_id).first()
-    if not tenant:
-        raise HTTPException(status_code=404, detail="Tenant not found.")
-    db.delete(tenant)
-    db.commit()
-    log_rental_action(db, "DELETE_TENANT", "rental", f"Tenant deleted with User ID {tenant_id}.", current_user.user_id)
-    return {"detail": "Tenant user deleted successfully"}
+    from app.models.rental.lease import Lease
+    if tenant_id.startswith("lease_"):
+        try:
+            lease_id = int(tenant_id.replace("lease_", ""))
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid lease ID format.")
+        
+        lease = db.query(Lease).filter(Lease.lease_id == lease_id).first()
+        if not lease:
+            raise HTTPException(status_code=404, detail="Lease not found.")
+            
+        # Clean up referencing records due to FK constraints
+        from sqlalchemy import text
+        db.execute(text("DELETE FROM rental_tenant_documents WHERE lease_id = :lid"), {"lid": lease_id})
+        db.execute(text("DELETE FROM rental_ledgers WHERE lease_id = :lid"), {"lid": lease_id})
+        db.execute(text("DELETE FROM rental_maintenance_requests WHERE lease_id = :lid"), {"lid": lease_id})
+        
+        db.delete(lease)
+        db.commit()
+        log_rental_action(db, "DELETE_TENANT", "rental", f"Lease deleted with Lease ID {lease_id}.", current_user.user_id)
+        return {"detail": "Unlinked lease tenant deleted successfully"}
+    else:
+        try:
+            uid = int(tenant_id)
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid tenant ID format.")
+        
+        tenant = db.query(RentalUser).filter(RentalUser.user_id == uid).first()
+        if not tenant:
+            raise HTTPException(status_code=404, detail="Tenant not found.")
+        
+        leases_linked = db.query(Lease).filter(Lease.tenant_id == uid).all()
+        for l in leases_linked:
+            l.tenant_id = None
+        db.commit()
+        
+        db.delete(tenant)
+        db.commit()
+        log_rental_action(db, "DELETE_TENANT", "rental", f"Tenant deleted with User ID {uid}.", current_user.user_id)
+        return {"detail": "Tenant user deleted successfully"}

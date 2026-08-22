@@ -344,9 +344,19 @@ const AdminPortal = () => {
       // 3. Update user state
       setUser(prev => {
         if (!prev) return prev;
+        
+        const userRoleId = Number(updatedUser.role_id || prev.role_id);
+        const roleStr = (updatedUser.role_name || prev.role_name || '').toLowerCase();
+        let mappedRole = 'resident';
+        if (userRoleId === 1) mappedRole = 'super_admin';
+        else if (userRoleId === 2) mappedRole = 'property_manager';
+        else if (userRoleId === 3) mappedRole = 'board_member';
+        else if (roleStr === 'sales_admin') mappedRole = 'sales_admin';
+
         const updated = {
           ...prev,
           ...updatedUser,
+          role: mappedRole,
           community_id: comm.community_id,
           unit_no: updatedUser.unit_no || 'N/A',
           unit_no_2: updatedUser.unit_no_2 || ''
@@ -360,6 +370,9 @@ const AdminPortal = () => {
             parsed.community_id = comm.community_id;
             parsed.unit_no = updatedUser.unit_no;
             parsed.unit_no_2 = updatedUser.unit_no_2;
+            parsed.role_id = userRoleId;
+            parsed.role_name = updatedUser.role_name;
+            parsed.role = mappedRole;
             if (localStorage.getItem('user')) {
               localStorage.setItem('user', JSON.stringify(parsed));
             } else {

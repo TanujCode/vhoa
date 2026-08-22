@@ -697,28 +697,7 @@ def delete_user(
                 detail="Cannot delete member: This member has unresolved violations in this community. Please resolve, pay, or cancel them first."
             )
 
-        # Check for active leases where this user is a tenant
-        from sqlalchemy import text
-        has_lease = db.execute(
-            text("SELECT lease_id FROM leases WHERE tenant_id = :uid AND status NOT IN ('TERMINATED', 'CANCELLED', 'CLOSED') LIMIT 1"),
-            {"uid": user_id}
-        ).first()
-        if has_lease:
-            raise HTTPException(
-                status_code=400,
-                detail="Cannot delete member: This member has an active lease. Please terminate or cancel the lease first."
-            )
 
-        # Check if this user is a landlord for any active properties
-        has_property = db.execute(
-            text("SELECT property_id FROM properties WHERE landlord_id = :uid AND active_status = True LIMIT 1"),
-            {"uid": user_id}
-        ).first()
-        if has_property:
-            raise HTTPException(
-                status_code=400,
-                detail="Cannot delete member: This member is registered as a landlord for properties. Please assign a new landlord or remove the properties first."
-            )
 
     # 3. Handle deletion/unlinking
     from app.models.hoa.user import UserCommunity
@@ -800,7 +779,7 @@ def delete_user(
         # CASE B: User belongs to only one community (or none). Perform complete hard delete.
         from app.models.hoa.user import OtpToken
         from app.models.hoa.payment import Payment, RecurringPayment
-        from app.models.hoa.amenity import AmenityBooking
+        from app.models.hoa.amenity import Amenity, AmenityBooking
         from app.models.hoa.service_request import ServiceRequest, ServiceRequestNote
         from app.models.hoa.meeting_survey import Meeting, MeetingRSVP, Survey, SurveyVote
         from app.models.hoa.violation import Violation, ViolationDocument
@@ -835,17 +814,16 @@ def delete_user(
         db.query(CommunityChangeRequest).filter(CommunityChangeRequest.requested_by_id == user_id).delete()
         db.query(ViolationDocument).filter(ViolationDocument.created_by_id == user_id).update({ViolationDocument.created_by_id: None})
         
-        # Clean up database tables not mapped in models (leases, properties)
-        from sqlalchemy import text
-        db.execute(text("UPDATE leases SET tenant_id = NULL WHERE tenant_id = :uid"), {"uid": user_id})
-        db.execute(text("DELETE FROM leases WHERE landlord_id = :uid"), {"uid": user_id})
-        db.execute(text("DELETE FROM properties WHERE landlord_id = :uid"), {"uid": user_id})
+
         
         # 3. Delete from main tables
         db.query(ServiceRequest).filter(ServiceRequest.submitted_by_id == user_id).delete()
         db.query(Violation).filter(Violation.client_id == user_id).delete()
         
         # 2. Nullify references
+        db.query(User).filter(User.modified_by_id == user_id).update({User.modified_by_id: None})
+        db.query(Amenity).filter(Amenity.created_by_id == user_id).update({Amenity.created_by_id: None})
+        db.query(Amenity).filter(Amenity.modified_by_id == user_id).update({Amenity.modified_by_id: None})
         db.query(AuditLog).filter(AuditLog.user_id == user_id).update({AuditLog.user_id: None})
         db.query(Payment).filter(Payment.user_id == user_id).update({Payment.user_id: None})
         db.query(AmenityBooking).filter(AmenityBooking.cancelled_by_id == user_id).update({AmenityBooking.cancelled_by_id: None})

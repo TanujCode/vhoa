@@ -37,7 +37,19 @@ HOA Admin / Property Manager:
 Resident / Board:
 → No access
     """
-    role = current_user.role.role_name
+    # Resolve role in the requested community if not super_admin
+    role = current_user.role.role_name if current_user.role else "resident"
+    if role != "super_admin" and community_id:
+        from app.models.hoa.user import UserCommunity
+        assoc = db.query(UserCommunity).filter(
+            UserCommunity.user_id == current_user.user_id,
+            UserCommunity.community_id == community_id
+        ).first()
+        if assoc and assoc.role:
+            role = assoc.role.role_name
+
+    # DEBUG PRINT FOR THE DEVELOPER
+    print(f"[AUDIT DEBUG] User ID: {current_user.user_id} | Name: {current_user.first_name} {current_user.last_name} | Primary Role: {current_user.role.role_name if current_user.role else 'None'} | Resolved Role: {role} | Req Comm ID: {community_id}")
 
     # ── Role based access ─────────────────────
     if role == "super_admin":
@@ -50,6 +62,18 @@ Resident / Board:
                 status_code=400,
                 detail="community_id is required. Please provide your HOA ID."
             )
+        # Security: ensure user belongs to the requested community
+        if current_user.role.role_name != "super_admin":
+            from app.models.hoa.user import UserCommunity
+            assoc = db.query(UserCommunity).filter(
+                UserCommunity.user_id == current_user.user_id,
+                UserCommunity.community_id == community_id
+            ).first()
+            if not assoc:
+                raise HTTPException(
+                    status_code=403,
+                    detail="You do not have permission to view audit logs for this community."
+                )
 
     else:
 

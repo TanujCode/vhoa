@@ -1252,6 +1252,16 @@ const Meetings = ({ community, user }) => {
     e.preventDefault();
     if (!quickAddTaskText.trim()) return;
 
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const checkDate = new Date(selectedDate);
+    checkDate.setHours(0, 0, 0, 0);
+
+    if (checkDate < today) {
+      alert("Cannot create meetings or personal notes in the past.");
+      return;
+    }
+
     const isCreatingNote = !isAdmin || quickAddType === 'note';
 
     if (isCreatingNote) {

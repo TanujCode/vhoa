@@ -14,14 +14,14 @@ const cleanDescription = (desc) => {
 };
 
 const AuditHistory = ({ community, user }) => {
+  const role    = user?.role_name || user?.role || '';
+  const isAdmin = ['super_admin', 'property_manager', 'board_member'].includes(role);
+
   const [logs, setLogs]               = useState([]);
   const [loading, setLoading]         = useState(true);
   const [search, setSearch]           = useState('');
   const [moduleFilter, setModuleFilter] = useState('');
-  const [viewMode, setViewMode]       = useState('all');
-
-  const role    = user?.role_name || user?.role || '';
-  const isAdmin = ['super_admin', 'property_manager', 'board_member'].includes(role);
+  const [viewMode, setViewMode]       = useState(isAdmin ? 'all' : 'my');
 
   useEffect(() => {
     if (community?.community_id || viewMode === 'my') fetchLogs();
@@ -31,7 +31,7 @@ const AuditHistory = ({ community, user }) => {
     try {
       setLoading(true);
       let res;
-      if (viewMode === 'my') {
+      if (viewMode === 'my' || !isAdmin) {
         res = await API.get('/audit/my?limit=50');
       } else {
         const params = new URLSearchParams({ limit: 50 });

@@ -82,16 +82,7 @@ def register(request: Request, body: RegisterRequest, db: Session = Depends(get_
         # Safe string formats for matching
         user_email_clean = user.email_id.strip().lower()
 
-        # Link to any pending leases matching the tenant email
-        if body.role == "tenant":
-            from app.models.rental.lease import Lease
-            from app.utils.encryption import safe_decrypt_field
-            unlinked_leases = db.query(Lease).filter(Lease.tenant_id == None).all()
-            for lease in unlinked_leases:
-                decrypted_email = safe_decrypt_field(lease.tenant_email)
-                if decrypted_email and decrypted_email.strip().lower() == user_email_clean:
-                    lease.tenant_id = user.user_id
-            db.commit()
+
 
         # Auto-link with case insensitive lowercase matching
         community = db.query(Community).filter(
@@ -328,12 +319,12 @@ def google_auth(request: Request, body: GoogleLoginRequest, db: Session = Depend
         if not user.active_status or user.account_status == "INACTIVE":
             raise HTTPException(status_code=400, detail="Account is inactive. Contact admin.")
             
-        # If user registered via normal flow but email_id_is_verified was False, set it to True now since they authenticated with Google.
+        # If user registered via normal flow but email_id_is_verified was False, do NOT allow login via Google until verified.
         if not user.email_id_is_verified:
-            user.email_id_is_verified = True
-            user.account_status = "ACTIVE"
-            db.commit()
-            db.refresh(user)
+            raise HTTPException(
+                status_code=403,
+                detail="Email not verified. Please verify your email first."
+            )
             
         log_action(
             db=db,

@@ -169,8 +169,8 @@ def get_payment_history(db: Session, community_id: int, user_id: int | None = No
     )
     if user_id is not None:
         from sqlalchemy import or_, and_
-        res_booking_ids = [b.booking_id for b in db.query(AmenityBooking.booking_id).filter(AmenityBooking.user_id == user_id).all()]
-        res_violation_ids = [v.violation_id for v in db.query(Violation.violation_id).filter(Violation.resident_user_id == user_id).all()]
+        res_booking_ids = [b.booking_id for b in db.query(AmenityBooking.booking_id).filter(AmenityBooking.booked_by_id == user_id).all()]
+        res_violation_ids = [v.violation_id for v in db.query(Violation.violation_id).filter(Violation.client_id == user_id).all()]
 
         filters = [Payment.user_id == user_id]
         if res_booking_ids:
@@ -192,13 +192,13 @@ def get_payment_history(db: Session, community_id: int, user_id: int | None = No
         # Fallback to AmenityBooking or Violation if user_id was NULL on Payment
         if not payer_user and p.reason == "AMENITY_BOOKING" and p.reference_id:
             booking = db.query(AmenityBooking).filter(AmenityBooking.booking_id == p.reference_id).first()
-            if booking and getattr(booking, 'user_id', None):
-                payer_user = db.query(User).filter(User.user_id == booking.user_id).first()
+            if booking and getattr(booking, 'booked_by_id', None):
+                payer_user = db.query(User).filter(User.user_id == booking.booked_by_id).first()
         
         if not payer_user and p.reason == "VIOLATION" and p.reference_id:
             v = db.query(Violation).filter(Violation.violation_id == p.reference_id).first()
-            if v and getattr(v, 'resident_user_id', None):
-                payer_user = db.query(User).filter(User.user_id == v.resident_user_id).first()
+            if v and getattr(v, 'client_id', None):
+                payer_user = db.query(User).filter(User.user_id == v.client_id).first()
 
         if payer_user:
             full = f"{payer_user.first_name or ''} {payer_user.last_name or ''}".strip()

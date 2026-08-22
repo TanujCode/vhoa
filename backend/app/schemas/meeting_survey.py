@@ -26,6 +26,21 @@ class MeetingCreate(BaseModel):
             return trimmed
         return v
 
+    @field_validator("meeting_date")
+    @classmethod
+    def meeting_date_valid(cls, v):
+        if v:
+            if v.tzinfo is not None:
+                from datetime import timezone
+                now = datetime.now(timezone.utc)
+                if v < now:
+                    raise ValueError("Meeting date and time must be in the future.")
+            else:
+                now = datetime.now()
+                if v < now:
+                    raise ValueError("Meeting date and time must be in the future.")
+        return v
+
 
 class MeetingOut(BaseModel):
     meeting_id:       int
@@ -146,6 +161,21 @@ class SurveyCreate(BaseModel):
                 raise ValueError("Options cannot be empty strings.")
         return [opt.strip() for opt in v]
 
+    @field_validator("expires_at")
+    @classmethod
+    def expires_at_valid(cls, v):
+        if v:
+            if v.tzinfo is not None:
+                from datetime import timezone
+                now = datetime.now(timezone.utc)
+                if v < now:
+                    raise ValueError("Voting deadline must be in the future.")
+            else:
+                now = datetime.now()
+                if v < now:
+                    raise ValueError("Voting deadline must be in the future.")
+        return v
+
 
 class SurveyVoteCreate(BaseModel):
     option_id: int
@@ -171,6 +201,21 @@ class MeetingUpdate(BaseModel):
             if not re.match(r"^[a-zA-Z\s]+$", v_strip):
                 raise ValueError("Title must contain only letters and spaces.")
             return v_strip
+        return v
+
+    @field_validator("meeting_date")
+    @classmethod
+    def meeting_date_valid(cls, v):
+        if v is not None:
+            if v.tzinfo is not None:
+                from datetime import timezone
+                now = datetime.now(timezone.utc)
+                if v < now:
+                    raise ValueError("Meeting date and time must be in the future.")
+            else:
+                now = datetime.now()
+                if v < now:
+                    raise ValueError("Meeting date and time must be in the future.")
         return v
 
 
@@ -204,6 +249,21 @@ class SurveyUpdate(BaseModel):
             if len(v_strip) > 250:
                 raise ValueError("The question cannot exceed 250 characters.")
             return v_strip
+        return v
+
+    @field_validator("expires_at")
+    @classmethod
+    def expires_at_valid(cls, v):
+        if v is not None:
+            if v.tzinfo is not None:
+                from datetime import timezone
+                now = datetime.now(timezone.utc)
+                if v < now:
+                    raise ValueError("Voting deadline must be in the future.")
+            else:
+                now = datetime.now()
+                if v < now:
+                    raise ValueError("Voting deadline must be in the future.")
         return v
 
 

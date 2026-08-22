@@ -153,7 +153,7 @@ def send_otp_email(to_email: str, otp_code: str, otp_type: str, system_name: str
           ⏰ This code expires in <strong style="color: #ffffff;">10 minutes</strong>
         </p>
         <div style="margin: 30px 0; text-align: center;">
-          <a href="https://nestbloq.vercel.app/login" style="background-color: #14B8A6; color: #000000; padding: 12px 24px; font-weight: bold; font-size: 15px; text-decoration: none; border-radius: 8px; display: inline-block; box-shadow: 0 4px 6px rgba(20, 184, 166, 0.25);">
+          <a href="{settings.FRONTEND_URL.rstrip('/')}/login" style="background-color: #14B8A6; color: #000000; padding: 12px 24px; font-weight: bold; font-size: 15px; text-decoration: none; border-radius: 8px; display: inline-block; box-shadow: 0 4px 6px rgba(20, 184, 166, 0.25);">
             Log In to Portal
           </a>
         </div>
@@ -184,7 +184,7 @@ def send_welcome_email(to_email: str, full_name: str) -> bool:
           </p>
         </div>
         <div style="margin: 30px 0; text-align: center;">
-          <a href="https://nestbloq.vercel.app/login" style="background-color: #14B8A6; color: #000000; padding: 12px 24px; font-weight: bold; font-size: 15px; text-decoration: none; border-radius: 8px; display: inline-block; box-shadow: 0 4px 6px rgba(20, 184, 166, 0.25);">
+          <a href="{settings.FRONTEND_URL.rstrip('/')}/login" style="background-color: #14B8A6; color: #000000; padding: 12px 24px; font-weight: bold; font-size: 15px; text-decoration: none; border-radius: 8px; display: inline-block; box-shadow: 0 4px 6px rgba(20, 184, 166, 0.25);">
             Log In to Portal
           </a>
         </div>
@@ -226,7 +226,7 @@ def send_violation_email(
         </p>
 
         <div style="margin: 30px 0; text-align: center;">
-          <a href="https://nestbloq.vercel.app/login" style="background-color: #14B8A6; color: #000000; padding: 12px 24px; font-weight: bold; font-size: 15px; text-decoration: none; border-radius: 8px; display: inline-block; box-shadow: 0 4px 6px rgba(20, 184, 166, 0.25);">
+          <a href="{settings.FRONTEND_URL.rstrip('/')}/login" style="background-color: #14B8A6; color: #000000; padding: 12px 24px; font-weight: bold; font-size: 15px; text-decoration: none; border-radius: 8px; display: inline-block; box-shadow: 0 4px 6px rgba(20, 184, 166, 0.25);">
             Log In to Portal
           </a>
         </div>
@@ -288,7 +288,7 @@ def send_booking_created_email(
         </p>
 
         <div style="margin: 30px 0; text-align: center;">
-          <a href="https://nestbloq.vercel.app/login" style="background-color: #14B8A6; color: #000000; padding: 12px 24px; font-weight: bold; font-size: 15px; text-decoration: none; border-radius: 8px; display: inline-block; box-shadow: 0 4px 6px rgba(20, 184, 166, 0.25);">
+          <a href="{settings.FRONTEND_URL.rstrip('/')}/login" style="background-color: #14B8A6; color: #000000; padding: 12px 24px; font-weight: bold; font-size: 15px; text-decoration: none; border-radius: 8px; display: inline-block; box-shadow: 0 4px 6px rgba(20, 184, 166, 0.25);">
             Log In to Portal
           </a>
         </div>
@@ -334,7 +334,7 @@ def send_payment_received_email(
           Enjoy your reservation! Let us know if you have any questions.
         </p>
         <div style="margin: 30px 0; text-align: center;">
-          <a href="https://nestbloq.vercel.app/login" style="background-color: #14B8A6; color: #000000; padding: 12px 24px; font-weight: bold; font-size: 15px; text-decoration: none; border-radius: 8px; display: inline-block; box-shadow: 0 4px 6px rgba(20, 184, 166, 0.25);">
+          <a href="{settings.FRONTEND_URL.rstrip('/')}/login" style="background-color: #14B8A6; color: #000000; padding: 12px 24px; font-weight: bold; font-size: 15px; text-decoration: none; border-radius: 8px; display: inline-block; box-shadow: 0 4px 6px rgba(20, 184, 166, 0.25);">
             Log In to Portal
           </a>
         </div>
@@ -377,7 +377,7 @@ def send_general_payment_receipt_email(
         </div>
         {escrow_info}
         <div style="margin: 30px 0; text-align: center;">
-          <a href="https://nestbloq.vercel.app/login" style="background-color: #14B8A6; color: #000000; padding: 12px 24px; font-weight: bold; font-size: 15px; text-decoration: none; border-radius: 8px; display: inline-block; box-shadow: 0 4px 6px rgba(20, 184, 166, 0.25);">
+          <a href="{settings.FRONTEND_URL.rstrip('/')}/login" style="background-color: #14B8A6; color: #000000; padding: 12px 24px; font-weight: bold; font-size: 15px; text-decoration: none; border-radius: 8px; display: inline-block; box-shadow: 0 4px 6px rgba(20, 184, 166, 0.25);">
             Log In to Portal
           </a>
         </div>
@@ -419,7 +419,7 @@ def send_due_payment_reminder_email(
           Please log in to the NestBloq portal to complete this payment.
         </p>
         <div style="margin: 30px 0; text-align: center;">
-          <a href="https://nestbloq.vercel.app/login" style="background-color: #14B8A6; color: #000000; padding: 12px 24px; font-weight: bold; font-size: 15px; text-decoration: none; border-radius: 8px; display: inline-block; box-shadow: 0 4px 6px rgba(20, 184, 166, 0.25);">
+          <a href="{settings.FRONTEND_URL.rstrip('/')}/login" style="background-color: #14B8A6; color: #000000; padding: 12px 24px; font-weight: bold; font-size: 15px; text-decoration: none; border-radius: 8px; display: inline-block; box-shadow: 0 4px 6px rgba(20, 184, 166, 0.25);">
             Log In to Portal
           </a>
         </div>
@@ -451,7 +451,7 @@ def send_invite_email(to_email: str, full_name: str, temp_password: str, communi
         </div>
 
         <div style="margin: 30px 0; text-align: center;">
-          <a href="https://nestbloq.vercel.app/login" style="background-color: #14B8A6; color: #000000; padding: 12px 24px; font-weight: bold; font-size: 15px; text-decoration: none; border-radius: 8px; display: inline-block; box-shadow: 0 4px 6px rgba(20, 184, 166, 0.25);">
+          <a href="{settings.FRONTEND_URL.rstrip('/')}/login" style="background-color: #14B8A6; color: #000000; padding: 12px 24px; font-weight: bold; font-size: 15px; text-decoration: none; border-radius: 8px; display: inline-block; box-shadow: 0 4px 6px rgba(20, 184, 166, 0.25);">
             Log In to Portal
           </a>
         </div>
@@ -479,7 +479,7 @@ def send_association_email(to_email: str, full_name: str, community_name: str, r
           Since you already have a registered account on NestBloq Portal, you can log in using your existing credentials.
         </p>
         <div style="margin: 30px 0; text-align: center;">
-          <a href="https://nestbloq.vercel.app/login" style="background-color: #14B8A6; color: #000000; padding: 12px 24px; font-weight: bold; font-size: 15px; text-decoration: none; border-radius: 8px; display: inline-block; box-shadow: 0 4px 6px rgba(20, 184, 166, 0.25);">
+          <a href="{settings.FRONTEND_URL.rstrip('/')}/login" style="background-color: #14B8A6; color: #000000; padding: 12px 24px; font-weight: bold; font-size: 15px; text-decoration: none; border-radius: 8px; display: inline-block; box-shadow: 0 4px 6px rgba(20, 184, 166, 0.25);">
             Log In to Portal
           </a>
         </div>
@@ -529,7 +529,7 @@ def send_pool_status_email(
           </p>
         </div>
         <div style="margin: 30px 0; text-align: center;">
-          <a href="https://nestbloq.vercel.app/login" style="background-color: #14B8A6; color: #000000; padding: 12px 24px; font-weight: bold; font-size: 15px; text-decoration: none; border-radius: 8px; display: inline-block; box-shadow: 0 4px 6px rgba(20, 184, 166, 0.25);">
+          <a href="{settings.FRONTEND_URL.rstrip('/')}/login" style="background-color: #14B8A6; color: #000000; padding: 12px 24px; font-weight: bold; font-size: 15px; text-decoration: none; border-radius: 8px; display: inline-block; box-shadow: 0 4px 6px rgba(20, 184, 166, 0.25);">
             Log In to Portal
           </a>
         </div>
@@ -581,7 +581,7 @@ def send_service_request_created_email(
         </div>
 
         <div style="margin: 30px 0; text-align: center;">
-          <a href="https://nestbloq.vercel.app/login" style="background-color: #14B8A6; color: #000000; padding: 12px 24px; font-weight: bold; font-size: 15px; text-decoration: none; border-radius: 8px; display: inline-block; box-shadow: 0 4px 6px rgba(20, 184, 166, 0.25);">
+          <a href="{settings.FRONTEND_URL.rstrip('/')}/login" style="background-color: #14B8A6; color: #000000; padding: 12px 24px; font-weight: bold; font-size: 15px; text-decoration: none; border-radius: 8px; display: inline-block; box-shadow: 0 4px 6px rgba(20, 184, 166, 0.25);">
             View Request Details
           </a>
         </div>
@@ -647,7 +647,7 @@ def send_service_request_status_update_email(
         {note_section}
 
         <div style="margin: 30px 0; text-align: center;">
-          <a href="https://nestbloq.vercel.app/login" style="background-color: #14B8A6; color: #000000; padding: 12px 24px; font-weight: bold; font-size: 15px; text-decoration: none; border-radius: 8px; display: inline-block; box-shadow: 0 4px 6px rgba(20, 184, 166, 0.25);">
+          <a href="{settings.FRONTEND_URL.rstrip('/')}/login" style="background-color: #14B8A6; color: #000000; padding: 12px 24px; font-weight: bold; font-size: 15px; text-decoration: none; border-radius: 8px; display: inline-block; box-shadow: 0 4px 6px rgba(20, 184, 166, 0.25);">
             View Full Progress History
           </a>
         </div>

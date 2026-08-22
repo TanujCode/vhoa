@@ -332,10 +332,10 @@ def condo_google_auth(request: Request, body: CondoGoogleLoginRequest, db: Sessi
             raise HTTPException(status_code=400, detail="Account is inactive. Contact admin.")
             
         if not user.email_id_is_verified:
-            user.email_id_is_verified = True
-            user.account_status = "ACTIVE"
-            db.commit()
-            db.refresh(user)
+            raise HTTPException(
+                status_code=403,
+                detail="Email not verified. Please verify your email first."
+            )
 
     # 3. Create access token and session token
     role_name = user.role.role_name if user.role else None
