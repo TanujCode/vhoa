@@ -1253,8 +1253,9 @@ export default function LandlordDashboard({
             </div>
 
             <div className="mt-5">
+              <p className="text-[10px] font-bold text-slate-400 dark:text-gray-400 uppercase tracking-widest mb-1">Annual Contracted Revenue</p>
               <span className="text-3xl font-black text-slate-950 dark:text-white font-mono">
-                ${annualGrossRent.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                ${activeLeasesAnnualRent.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </span>
               <span className="text-[10px] font-bold text-emerald-500 block mt-1">
                 +${totalRevenueCollected.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} rent collected to date
@@ -1265,7 +1266,7 @@ export default function LandlordDashboard({
           <div className="mt-5 space-y-3.5">
             <div>
               <div className="flex justify-between items-center text-[10px] font-bold text-gray-400 mb-1">
-                <span>Contracted Rent vs Potential</span>
+                <span>Contracted vs Potential</span>
                 <span>${activeLeasesAnnualRent.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} of ${annualGrossRent.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
               </div>
               <div className="w-full bg-slate-100 dark:bg-white/5 h-2 rounded-full overflow-hidden">
