@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { 
   CreditCard, DollarSign, Activity, Settings2, 
-  ShieldAlert, Sparkles, CheckCircle2, X, Landmark, Edit3
+  ShieldAlert, Sparkles, CheckCircle2, X, Landmark, Edit3,
+  Car, PawPrint, Eye, FileText, Check
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import API from '../../services/api';
@@ -42,6 +43,10 @@ export default function RentLedger({ user, selectedPropertyFilterId = 'all' }) {
   const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [payMethod, setPayMethod] = useState('ACH');
   const [showPayModal, setShowPayModal] = useState(false);
+
+  // Itemized breakdown modal state
+  const [detailsInvoice, setDetailsInvoice] = useState(null);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
 
   // Edit Late Fee states
   const [showEditFeeModal, setShowEditFeeModal] = useState(false);
@@ -323,16 +328,34 @@ export default function RentLedger({ user, selectedPropertyFilterId = 'all' }) {
                     </td>
                     <td className="px-4 py-4 text-xs text-slate-500 dark:text-gray-400 whitespace-nowrap">{inv.due_date}</td>
                     <td className="px-4 py-4">
-                      <div className="font-mono font-bold text-slate-900 dark:text-white">${inv.amount}</div>
-                      {(inv.utilities_charge > 0 || inv.parking_charge > 0 || inv.pet_charge > 0 || inv.maintenance_charge > 0) && (
-                        <div className="text-[9px] text-gray-400 dark:text-gray-500 mt-1 uppercase tracking-wide flex flex-wrap gap-x-2 gap-y-0.5">
-                          {inv.rent_charge > 0 && <span>Rent: ${inv.rent_charge}</span>}
-                          {inv.utilities_charge > 0 && <span>• Util: ${inv.utilities_charge}</span>}
-                          {inv.parking_charge > 0 && <span>• Park: ${inv.parking_charge}</span>}
-                          {inv.pet_charge > 0 && <span>• Pet: ${inv.pet_charge}</span>}
-                          {inv.maintenance_charge > 0 && <span>• Maint: ${inv.maintenance_charge}</span>}
-                        </div>
-                      )}
+                      {(() => {
+                        const parkFee = inv.parking_charge > 0 
+                          ? inv.parking_charge 
+                          : (inv.lease?.parking_fee ? parseFloat(inv.lease.parking_fee) : (inv.lease?.vehicle_details ? inv.lease.vehicle_details.split(';').filter(Boolean).length * 25 : 0));
+
+                        const petFee = inv.pet_charge > 0 
+                          ? inv.pet_charge 
+                          : (inv.lease?.pet_fee ? parseFloat(inv.lease.pet_fee) : (inv.lease?.pet_details ? inv.lease.pet_details.split(';').filter(Boolean).length * 50 : 0));
+
+                        const rentFee = inv.rent_charge > 0 
+                          ? inv.rent_charge 
+                          : (inv.lease?.rent_amount || (inv.amount - (inv.pet_charge || 0) - (inv.parking_charge || 0) - (inv.utilities_charge || 0) - (inv.maintenance_charge || 0)));
+
+                        const totalAmount = rentFee + parkFee + petFee + (inv.utilities_charge || 0) + (inv.maintenance_charge || 0);
+
+                        return (
+                          <div>
+                            <div className="font-mono font-bold text-slate-900 dark:text-white">${totalAmount}</div>
+                            <div className="text-[9px] text-gray-400 dark:text-gray-500 mt-1 uppercase tracking-wide flex flex-wrap gap-x-2 gap-y-0.5 font-medium">
+                              <span>Rent: ${rentFee}</span>
+                              {parkFee > 0 && <span>• Vehicle: ${parkFee}</span>}
+                              {petFee > 0 && <span>• Pet: ${petFee}</span>}
+                              {inv.utilities_charge > 0 && <span>• Util: ${inv.utilities_charge}</span>}
+                              {inv.maintenance_charge > 0 && <span>• Maint: ${inv.maintenance_charge}</span>}
+                            </div>
+                          </div>
+                        );
+                      })()}
                     </td>
                      <td className="px-4 py-4 whitespace-nowrap">
                        <div className="font-mono font-bold text-rose-600 dark:text-rose-400">

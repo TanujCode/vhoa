@@ -1331,7 +1331,7 @@ export default function PropertiesHub({
         /* Premium Dashboard Portfolio View */
         <div className="space-y-6">
           {/* Stats Summary Cards Row */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="p-4 rounded-2xl bg-white dark:bg-[#1E2E42] border border-slate-200/80 dark:border-white/10 flex items-center gap-3 shadow-sm">
               <div className="p-3 rounded-xl bg-blue-500/10 text-blue-500 shrink-0">
                 <Building2 className="w-5 h-5" />
@@ -1350,15 +1350,6 @@ export default function PropertiesHub({
                 <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white mt-0.5 truncate">{sfPropsCount} Homes</h3>
               </div>
             </div>
-            <div className="p-4 rounded-2xl bg-white dark:bg-[#1E2E42] border border-slate-200/80 dark:border-white/10 flex items-center gap-3 shadow-sm">
-              <div className="p-3 rounded-xl bg-indigo-500/10 text-indigo-500 shrink-0">
-                <Building className="w-5 h-5" />
-              </div>
-              <div className="min-w-0">
-                <p className="text-[10px] text-slate-450 dark:text-slate-400 font-bold uppercase tracking-wider truncate">Condos</p>
-                <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white mt-0.5 truncate">{condoPropsCount} Homes</h3>
-              </div>
-            </div>
           </div>
 
 
@@ -1368,8 +1359,7 @@ export default function PropertiesHub({
             <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0 custom-scrollbar shrink-0">
               {[
                 { id: 'all', label: 'All Properties', count: properties.length },
-                { id: 'single', label: 'Single Family', count: sfPropsCount },
-                { id: 'condo', label: 'Condos', count: condoPropsCount }
+                { id: 'single', label: 'Single Family', count: sfPropsCount }
               ].map(tab => (
                 <button
                   key={tab.id}
@@ -1429,11 +1419,24 @@ export default function PropertiesHub({
         <div className="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-white dark:bg-[#1a2736] border border-slate-200 dark:border-white/10 w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden animate-scale-up text-slate-900 dark:text-white text-left flex flex-col max-h-[90vh]">
             
-            {/* Modal Header */}
-            <div className="px-6 py-4 bg-slate-50 dark:bg-black/15 border-b border-slate-200 dark:border-white/5 flex justify-between items-center">
-              <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                <Plus className="w-5 h-5 text-blue-500" /> Add Property Wizard
-              </h3>
+            {/* Modal Header - Premium Gradient */}
+            <div className="relative px-6 py-5 bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-600 flex justify-between items-center overflow-hidden">
+              {/* Background glow orbs */}
+              <div className="absolute -top-4 -right-4 w-24 h-24 bg-white/10 rounded-full blur-2xl pointer-events-none" />
+              <div className="absolute -bottom-6 left-8 w-20 h-20 bg-indigo-400/20 rounded-full blur-2xl pointer-events-none" />
+              <div className="relative z-10">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-white/15 flex items-center justify-center backdrop-blur-sm border border-white/20">
+                    <Plus className="w-4 h-4 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-black text-white tracking-tight leading-none">Add Property</h3>
+                    <p className="text-[10px] text-blue-100/80 font-medium mt-0.5">
+                      {wizardStep === 1 ? 'Step 1 of 2 — Select property type' : 'Step 2 of 2 — Property details'}
+                    </p>
+                  </div>
+                </div>
+              </div>
               <button 
                 onClick={() => { 
                   setShowPropModal(false); 
@@ -1445,38 +1448,55 @@ export default function PropertiesHub({
                   setPropZip('');
                   setWizardUnits([{ unit_number: 'Single Family', rent_amount: '' }]);
                 }} 
-                className="text-slate-400 hover:text-slate-950 dark:text-gray-500 dark:hover:text-white text-2xl font-semibold cursor-pointer"
+                className="relative z-10 w-7 h-7 rounded-lg bg-white/15 hover:bg-white/25 flex items-center justify-center text-white/80 hover:text-white transition-all cursor-pointer border border-white/20 text-lg font-semibold"
               >
                 ×
               </button>
             </div>
 
-            {/* Stepper Progress bar */}
-            <div className="px-6 pt-5 pb-3 bg-white dark:bg-[#1a2736] border-b border-slate-100 dark:border-white/[0.02]">
-              <div className="flex items-center justify-between">
+            {/* Stepper Progress bar - Premium */}
+            <div className="px-6 py-4 bg-slate-50/60 dark:bg-black/10 border-b border-slate-100 dark:border-white/[0.04]">
+              <div className="flex items-center">
                 {[
-                  { step: 1, label: 'Property Type' },
-                  { step: 2, label: 'Address & Name' }
+                  { step: 1, label: 'Property Type', sub: 'Choose type' },
+                  { step: 2, label: 'Address & Name', sub: 'Enter details' }
                 ].map((item, idx) => (
                   <React.Fragment key={item.step}>
-                    <div className="flex items-center gap-2">
-                      <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300 ${
-                        wizardStep >= item.step 
-                          ? 'bg-blue-600 text-white ring-4 ring-blue-500/20' 
-                          : 'bg-slate-100 dark:bg-white/5 text-slate-400 dark:text-slate-500'
+                    <div className="flex items-center gap-3">
+                      <div className={`relative w-9 h-9 rounded-xl flex items-center justify-center text-sm font-black transition-all duration-500 shadow-sm ${
+                        wizardStep > item.step
+                          ? 'bg-emerald-500 text-white shadow-emerald-500/30 shadow-md'
+                          : wizardStep === item.step
+                            ? 'bg-blue-600 text-white shadow-blue-600/30 shadow-md ring-4 ring-blue-500/15'
+                            : 'bg-slate-100 dark:bg-white/[0.06] text-slate-400 dark:text-slate-500'
                       }`}>
-                        {item.step}
+                        {wizardStep > item.step ? (
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                          </svg>
+                        ) : (
+                          item.step
+                        )}
+                        {wizardStep === item.step && (
+                          <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-blue-400 rounded-full border-2 border-white dark:border-[#1a2736] animate-pulse" />
+                        )}
                       </div>
-                      <span className={`text-xs font-semibold hidden sm:inline ${
-                        wizardStep >= item.step ? 'text-slate-800 dark:text-slate-200' : 'text-slate-400 dark:text-slate-500'
-                      }`}>
-                        {item.label}
-                      </span>
+                      <div className="hidden sm:block">
+                        <p className={`text-xs font-bold leading-none transition-colors duration-300 ${
+                          wizardStep >= item.step ? 'text-slate-800 dark:text-slate-100' : 'text-slate-400 dark:text-slate-500'
+                        }`}>{item.label}</p>
+                        <p className={`text-[10px] font-medium mt-0.5 transition-colors duration-300 ${
+                          wizardStep >= item.step ? 'text-slate-400 dark:text-slate-500' : 'text-slate-300 dark:text-slate-600'
+                        }`}>{item.sub}</p>
+                      </div>
                     </div>
                     {idx < 1 && (
-                      <div className={`flex-1 h-0.5 mx-2 transition-all duration-300 ${
-                        wizardStep > item.step ? 'bg-blue-600' : 'bg-slate-150 dark:bg-white/5'
-                      }`} />
+                      <div className="flex-1 mx-4 h-1 rounded-full bg-slate-100 dark:bg-white/[0.05] overflow-hidden">
+                        <div
+                          className="h-full rounded-full bg-gradient-to-r from-blue-600 to-indigo-500 transition-all duration-700 ease-out"
+                          style={{ width: wizardStep > item.step ? '100%' : '0%' }}
+                        />
+                      </div>
                     )}
                   </React.Fragment>
                 ))}
@@ -1515,7 +1535,7 @@ export default function PropertiesHub({
                             modalDropdownOpen ? 'border-blue-500 ring-2 ring-blue-500/20' : 'border-slate-200 dark:border-white/10'
                           } text-slate-800 dark:text-white py-3.5 pl-4 pr-4 rounded-2xl text-sm font-semibold outline-none cursor-pointer shadow-sm transition-all`}
                         >
-                          {propertyType === 'single' ? 'Single-Family Home' : 'Condo'}
+                          Single-Family Home
                         </button>
                         
                         {modalDropdownOpen && (
@@ -1534,34 +1554,15 @@ export default function PropertiesHub({
                             >
                               Single-Family Home
                             </div>
-                            <div
-                              onClick={() => {
-                                setPropertyType('condo');
-                                setWizardUnits([{ unit_number: 'Condo Unit', rent_amount: '' }]);
-                                setModalDropdownOpen(false);
-                              }}
-                              className={`px-4 py-3 text-sm font-semibold cursor-pointer transition-colors border-t border-slate-100/50 dark:border-white/5 ${
-                                propertyType === 'condo'
-                                  ? 'bg-blue-600/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400'
-                                  : 'text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-white/5'
-                              }`}
-                            >
-                              Condo
-                            </div>
+
                           </div>
                         )}
                       </div>
                       
                       <div className="p-4 rounded-2xl bg-blue-500/[0.03] dark:bg-blue-500/[0.02] border border-blue-500/10 dark:border-blue-500/20 text-xs font-medium text-slate-500 dark:text-slate-400 leading-relaxed mt-3">
-                        {propertyType === 'single' ? (
-                          <span>
-                            <strong>Single-Family Home:</strong> Best used for a single-family house. No unit numbers are required.
-                          </span>
-                        ) : (
-                          <span>
-                            <strong>Condo:</strong> Best used for an individual condominium unit.
-                          </span>
-                        )}
+                        <span>
+                          <strong>Single-Family Home:</strong> Best used for a single-family house. No unit numbers are required.
+                        </span>
                       </div>
 
                     </div>
@@ -1570,13 +1571,7 @@ export default function PropertiesHub({
                       <button
                         type="button"
                         onClick={() => {
-                          if (propertyType === 'single') {
-                            setWizardUnits([{ unit_number: 'Single Family', rent_amount: '' }]);
-                          } else if (propertyType === 'condo') {
-                            setWizardUnits([{ unit_number: 'Condo Unit', rent_amount: '' }]);
-                          } else {
-                            setWizardUnits([{ unit_number: '1', rent_amount: '' }]);
-                          }
+                          setWizardUnits([{ unit_number: 'Single Family', rent_amount: '' }]);
                           setWizardStep(2);
                         }}
                         className="bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-6 rounded-xl text-xs transition duration-200 flex items-center gap-1.5 cursor-pointer shadow-md shadow-blue-500/10 font-sans"

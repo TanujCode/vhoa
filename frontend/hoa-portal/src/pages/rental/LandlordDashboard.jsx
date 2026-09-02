@@ -5,7 +5,7 @@ import {
   TrendingUp, Clock, AlertCircle, Sparkles, 
   CheckCircle2, Plus, Filter, Calendar, 
   ChevronDown, DollarSign, Wallet, Percent, Info,
-  Wrench, ShieldAlert
+  Wrench, ShieldAlert, Car, PawPrint
 } from 'lucide-react';
 import API from '../../services/api';
 
@@ -20,6 +20,7 @@ export default function LandlordDashboard({
   const [properties, setProperties] = useState(globalProperties || []);
   const [units, setUnits] = useState([]);
   const [leases, setLeases] = useState([]);
+  const [pendingVehiclePetRequests, setPendingVehiclePetRequests] = useState([]);
   const [ledgers, setLedgers] = useState([]);
   const [maintRequests, setMaintRequests] = useState([]);
   const [applications, setApplications] = useState([]);
@@ -112,6 +113,14 @@ export default function LandlordDashboard({
       // 6. Fetch applications
       const appRes = await API.get('/rental/applications');
       setApplications(appRes.data);
+
+      // 6b. Fetch pending vehicle/pet change requests
+      try {
+        const vpReqRes = await API.get('/rental/leases/pending-vehicle-pet-requests');
+        setPendingVehiclePetRequests(vpReqRes.data || []);
+      } catch (vpErr) {
+        console.error("Failed to load vehicle/pet pending requests:", vpErr);
+      }
 
       // 7. Fetch recent audit logs
       try {
@@ -623,6 +632,34 @@ export default function LandlordDashboard({
             className="w-full sm:w-auto px-5 py-2.5 bg-amber-600 hover:bg-amber-500 text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-amber-600/25 hover:shadow-amber-600/40 shrink-0 cursor-pointer text-center"
           >
             Review & Approve
+          </button>
+        </div>
+      )}
+
+      {/* Vehicle & Pet Change Requests Alert */}
+      {pendingVehiclePetRequests.length > 0 && (
+        <div className="bg-gradient-to-r from-blue-500/10 via-indigo-500/10 to-transparent border border-blue-500/30 dark:border-blue-500/20 rounded-3xl p-5 sm:p-6 text-slate-800 dark:text-white shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4 animate-fade-in mb-6">
+          <div className="flex items-center gap-3.5 text-left">
+            <div className="p-3 bg-blue-500/20 text-blue-600 dark:text-blue-400 rounded-2xl flex items-center justify-center shrink-0">
+              <Car className="w-6 h-6 animate-pulse" />
+            </div>
+            <div>
+              <h4 className="text-sm font-black text-blue-800 dark:text-blue-300">
+                {pendingVehiclePetRequests.length === 1 
+                  ? 'Vehicle & Pet Change Request Pending Review' 
+                  : `${pendingVehiclePetRequests.length} Vehicle & Pet Change Requests Pending Review`
+                }
+              </h4>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                Tenants have submitted updates for vehicle parking permits and pets. Review to automatically update lease agreements and covenants.
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => setActivePage('tenants_hub')}
+            className="w-full sm:w-auto px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-blue-600/25 shrink-0 cursor-pointer text-center"
+          >
+            Review in Tenants Directory
           </button>
         </div>
       )}

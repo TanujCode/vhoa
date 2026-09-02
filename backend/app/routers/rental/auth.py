@@ -6,13 +6,14 @@ import traceback
 from fastapi import APIRouter, Depends, HTTPException, status, Request
 from jose import jwt, JWTError
 from sqlalchemy.orm import Session
+from datetime import datetime, timezone, timedelta
 from pydantic import BaseModel, EmailStr, field_validator, model_validator
 from app.config import settings
 from app.database import get_rental_db
 from app.models.rental.rental_user import RentalUser
 from app.models.hoa.user import Role
 from app.models.rental.lease import Lease
-from app.schemas.auth import SendOtpRequest, PasswordResetRequest, VerifyOtpRequest, RefreshRequest
+from app.schemas.auth import SendOtpRequest, PasswordResetRequest, VerifyOtpRequest, RefreshRequest, Login2FARequest
 from app.services.hoa.auth_service import split_full_name
 from app.services.rental.auth_service import (
     send_rental_otp_for_password_reset,
@@ -20,9 +21,11 @@ from app.services.rental.auth_service import (
     generate_rental_otp,
     verify_rental_otp,
     login_rental_user,
+    MAX_LOGIN_ATTEMPTS,
+    LOCK_DURATION_MINUTES,
 )
 from app.services.hoa.email_service import send_otp_email
-from app.services.hoa.token_service import decode_access_token, decode_session_token, create_access_token, create_session_token, hash_password
+from app.services.hoa.token_service import decode_access_token, decode_session_token, create_access_token, create_session_token, hash_password, verify_password
 from app.utils.user_code import generate_user_code
 from app.services.rental.audit_service import log_rental_action
 from app.routers.rental.dependencies import get_current_rental_user
@@ -217,7 +220,7 @@ def rental_login(
                 user = RentalUser(
                     user_id=hoa_user.user_id,
                     user_code=hoa_user.user_code,
-                    first_name=hoa_user.first_name,
+                    first_name=hoa_user.first_name,  # Copy same details
                     middle_name=hoa_user.middle_name,
                     last_name=hoa_user.last_name,
                     email_id=hoa_user.email_id,
@@ -242,23 +245,95 @@ def rental_login(
         if rental_role_name not in ["landlord", "tenant", "super_admin"]:
             raise HTTPException(status_code=401, detail="This login page is for Rental users. Please use the HOA portal login or register for a rental account first.")
 
-        result = login_rental_user(body.email_id, body.password, db)
-        access_token = create_access_token(user.user_id, user.email_id, rental_role_name, user.email_id_is_verified)
-        session_token = create_session_token(user.user_id, user.email_id, rental_role_name, user.email_id_is_verified)
+        # Credentials check
+        from datetime import datetime, timezone, timedelta
+        if user.account_locked_until:
+            now = datetime.now(timezone.utc)
+            locked_until = user.account_locked_until
+            if locked_until.tzinfo is None:
+                locked_until = locked_until.replace(timezone.utc)
 
-        return {
-            "access_token": access_token,
-            "session_token": session_token,
-            "token_type": "bearer",
-            "role": rental_role_name,
-            "user_id": user.user_id,
-            "full_name": f"{user.first_name or ''} {user.last_name or ''}".strip()
-        }
+            if now < locked_until:
+                remaining = int((locked_until - now).total_seconds() / 60)
+                raise ValueError(f"Account is locked. Try after {remaining} minutes.")
+            else:
+                user.login_attempts = 0
+                user.account_locked_until = None
+                user.account_status = "ACTIVE" if user.email_id_is_verified else "PENDING_VERIFICATION"
+                db.commit()
+
+        if not user.active_status or user.account_status == "INACTIVE":
+            raise ValueError("Account is inactive. Contact support.")
+
+        if not verify_password(body.password, user.password):
+            user.login_attempts = (user.login_attempts or 0) + 1
+
+            if user.login_attempts >= MAX_LOGIN_ATTEMPTS:
+                user.account_locked_until = datetime.now(timezone.utc) + timedelta(minutes=LOCK_DURATION_MINUTES)
+                user.account_status = "LOCKED"
+                db.commit()
+                raise ValueError(f"Account locked for {LOCK_DURATION_MINUTES} minutes due to multiple failed attempts.")
+
+            db.commit()
+            remaining = MAX_LOGIN_ATTEMPTS - user.login_attempts
+            raise ValueError(f"Incorrect email or password. {remaining} attempts left.")
+
+        user.login_attempts = 0
+        user.account_locked_until = None
+        db.commit()
+
+        # Generate 2FA OTP
+        otp_code = generate_rental_otp(user.user_id, "login_2fa", db)
+        print(f"[2FA LOGIN OTP] Rental 2FA OTP for {user.email_id}: {otp_code}")
+
+        # Send OTP email
+        send_otp_email(user.email_id, otp_code, "login_2fa", system_name="Rental Portal")
+
     except Exception as e:
         if isinstance(e, HTTPException):
             raise e
         status_code = 403 if "verified" in str(e).lower() else 401
         raise HTTPException(status_code=status_code, detail=str(e))
+
+    return {
+        "requires_2fa": True,
+        "email_id": user.email_id,
+        "message": "Two-Factor Verification Code sent to email."
+    }
+
+
+@router.post("/auth/login/verify-2fa")
+def verify_2fa_login(
+    body: Login2FARequest,
+    db: Session = Depends(get_rental_db)
+):
+    try:
+        user = verify_rental_otp(body.email_id, body.otp_code, "login_2fa", db)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+    # Successful login actions
+    user.last_login = datetime.now(timezone.utc)
+    if user.email_id_is_verified and user.account_status == "PENDING_VERIFICATION":
+        user.account_status = "ACTIVE"
+    db.commit()
+
+    rental_role_name = user.role.role_name if user.role else ""
+    access_token = create_access_token(user.user_id, user.email_id, rental_role_name, user.email_id_is_verified)
+    session_token = create_session_token(user.user_id, user.email_id, rental_role_name, user.email_id_is_verified)
+
+    from app.utils.encryption import safe_decrypt_field
+    first_dec = safe_decrypt_field(user.first_name) or ""
+    last_dec = safe_decrypt_field(user.last_name) or ""
+
+    return {
+        "access_token": access_token,
+        "session_token": session_token,
+        "token_type": "bearer",
+        "role": rental_role_name,
+        "user_id": user.user_id,
+        "full_name": f"{first_dec} {last_dec}".strip()
+    }
 
 
 
@@ -471,7 +546,7 @@ def rental_google_auth(
 
 @router.post("/auth/otp/send")
 def rental_send_otp(request: Request, body: SendOtpRequest, db: Session = Depends(get_rental_db)):
-    valid_types = {"email_verify", "mobile_verify", "password_reset"}
+    valid_types = {"email_verify", "mobile_verify", "password_reset", "login_2fa"}
     if body.otp_type not in valid_types:
         raise HTTPException(status_code=400, detail=f"otp_type must be one of: {valid_types}")
 

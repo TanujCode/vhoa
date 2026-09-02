@@ -1,7 +1,7 @@
 import os
 import uuid
 from io import BytesIO
-from typing import List
+from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from fastapi.responses import StreamingResponse
@@ -152,6 +152,52 @@ def approve_lease_endpoint(
     try:
         lease_dict = rental_service.landlord_approve_lease(lease_id, current_user.user_id, db)
         log_rental_action(db, "APPROVE_LEASE", "rental", f"Lease {lease_id} approved and activated by landlord {current_user.user_id}.", current_user.user_id)
+        return lease_dict
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.get("/leases/pending-vehicle-pet-requests", response_model=List[LeaseOut])
+def list_pending_vehicle_pet_requests_endpoint(
+    db: Session = Depends(get_rental_db),
+    current_user: RentalUser = Depends(require_rental_role("super_admin", "landlord"))
+):
+    role_name = (current_user.role.role_name if current_user.role else "").lower()
+    is_super_admin = (role_name == "super_admin")
+    return rental_service.get_pending_vehicle_pet_requests(current_user.user_id, db, is_super_admin=is_super_admin)
+
+
+@router.post("/leases/{lease_id}/approve-vehicle-pet-change", response_model=LeaseOut)
+def approve_vehicle_pet_change_endpoint(
+    lease_id: int,
+    db: Session = Depends(get_rental_db),
+    current_user: RentalUser = Depends(require_rental_role("super_admin", "landlord"))
+):
+    try:
+        role_name = (current_user.role.role_name if current_user.role else "").lower()
+        is_super_admin = (role_name == "super_admin")
+        lease_dict = rental_service.landlord_approve_vehicle_pet_change(lease_id, current_user.user_id, db, is_super_admin=is_super_admin)
+        log_rental_action(db, "APPROVE_VEHICLE_PET_CHANGE", "rental", f"Vehicle/Pet changes approved for lease {lease_id} by landlord {current_user.user_id}.", current_user.user_id)
+        return lease_dict
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+class RejectChangeRequest(BaseModel):
+    notes: Optional[str] = ""
+
+@router.post("/leases/{lease_id}/reject-vehicle-pet-change", response_model=LeaseOut)
+def reject_vehicle_pet_change_endpoint(
+    lease_id: int,
+    body: RejectChangeRequest,
+    db: Session = Depends(get_rental_db),
+    current_user: RentalUser = Depends(require_rental_role("super_admin", "landlord"))
+):
+    try:
+        role_name = (current_user.role.role_name if current_user.role else "").lower()
+        is_super_admin = (role_name == "super_admin")
+        lease_dict = rental_service.landlord_reject_vehicle_pet_change(lease_id, current_user.user_id, body.notes, db, is_super_admin=is_super_admin)
+        log_rental_action(db, "REJECT_VEHICLE_PET_CHANGE", "rental", f"Vehicle/Pet changes rejected for lease {lease_id} by landlord {current_user.user_id}.", current_user.user_id)
         return lease_dict
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))

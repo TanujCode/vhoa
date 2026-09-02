@@ -376,13 +376,13 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
   };
 
   const hasVacantUnits = filteredUnits.length === 0 || filteredUnits.some(u => u.status === 'VACANT');
-  const canSignAsPrimary = selectedLease && isLandlord && !selectedLease.landlord_signature;
+  const canSignAsPrimary = selectedLease && isLandlord && !selectedLease.landlord_signature && selectedLease.status === 'PENDING_LANDLORD_APPROVAL';
   const isUserPrimaryLandlord = selectedLease && selectedLease.landlord_signature && 
     (user?.name && (
       selectedLease.landlord_signature.toLowerCase().trim().includes(user.name.toLowerCase().trim()) ||
       user.name.toLowerCase().trim().includes(selectedLease.landlord_signature.toLowerCase().trim())
     ));
-  const canSignAsCo = selectedLease && isLandlord && selectedLease.co_landlord_name && !selectedLease.co_landlord_signature && !isUserPrimaryLandlord;
+  const canSignAsCo = selectedLease && isLandlord && selectedLease.co_landlord_name && !selectedLease.co_landlord_signature && !isUserPrimaryLandlord && selectedLease.status === 'PENDING_LANDLORD_APPROVAL';
   const canSignAsTenant = selectedLease && !isLandlord && !selectedLease.tenant_signature && selectedLease.tenant_id === user?.user_id;
 
   const showSignPad = selectedLease && (canSignAsPrimary || canSignAsCo || canSignAsTenant);
@@ -862,6 +862,18 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
       }
     }
   }, [showCreateModal, user, isLandlord]);
+
+  useEffect(() => {
+    const showUtilityFeeOption = 
+      electricityPayee === 'landlord' || 
+      waterPayee === 'landlord' || 
+      gasPayee === 'landlord' || 
+      internetPayee === 'landlord' || 
+      trashPayee === 'landlord';
+    if (!showUtilityFeeOption) {
+      setHasUtilFee(false);
+    }
+  }, [electricityPayee, waterPayee, gasPayee, internetPayee, trashPayee]);
 
 
   useEffect(() => {
@@ -1366,6 +1378,29 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
     }
   }
 
+  async function handleViewDoc(docId, originalName) {
+    try {
+      const res = await API.get(`/rental/leases/${selectedLease.lease_id}/documents/${docId}/download`, { responseType: 'blob' });
+      let contentType = 'application/octet-stream';
+      const ext = originalName.split('.').pop().toLowerCase();
+      if (ext === 'pdf') {
+        contentType = 'application/pdf';
+      } else if (['jpg', 'jpeg'].includes(ext)) {
+        contentType = 'image/jpeg';
+      } else if (ext === 'png') {
+        contentType = 'image/png';
+      } else if (ext === 'webp') {
+        contentType = 'image/webp';
+      }
+      
+      const file = new Blob([res.data], { type: contentType });
+      const url = window.URL.createObjectURL(file);
+      window.open(url, '_blank');
+    } catch (err) {
+      toast.error("Failed to view document.");
+    }
+  }
+
   async function handleRemoveDoc(docId, docType) {
     if (!window.confirm("Are you sure you want to remove this document?")) return;
     try {
@@ -1540,60 +1575,8 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
         </div>
 
         {tenantOnboardingStep === 1 && (
-          <div className="space-y-4 animate-fade-in">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b dark:border-white/5 pb-3">
-              <div className="space-y-1 text-left">
-                <h3 className="text-sm font-extrabold text-slate-800 dark:text-white uppercase tracking-wider">Step 1: Review Prepared Lease Agreement</h3>
-                <p className="text-xs text-slate-400">Please review all tenancy parameters (rent, deposit, charges, clauses) compiled by the landlord.</p>
-              </div>
-              
-              {/* Reduced Width Status Badge next to Heading */}
-              <div className="shrink-0 text-left space-y-1">
-                <span className="block text-[9px] font-black text-gray-500 dark:text-gray-455 uppercase tracking-wider">Signature Status</span>
-                <span className={`inline-flex items-center gap-1.5 text-xs font-bold py-1.5 px-3.5 rounded-xl border ${
-                  selectedLease.status === 'ACTIVE'
-                    ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-550/20'
-                    : selectedLease.status === 'PENDING_LANDLORD_APPROVAL'
-                      ? 'bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-550/20 animate-pulse'
-                      : 'bg-yellow-500/10 text-yellow-600 dark:text-yellow-405 border-yellow-550/20'
-                }`}>
-                  {selectedLease.status === 'ACTIVE' ? <CheckCircle className="w-3.5 h-3.5" /> : <Clock className="w-3.5 h-3.5" />}
-                  {selectedLease.status === 'PENDING_LANDLORD_APPROVAL' ? 'Ready to Review' : selectedLease.status}
-                </span>
-              </div>
-            </div>
-            <div className="p-4 border border-slate-200 dark:border-white/10 rounded-xl bg-slate-50/40 dark:bg-black/20 text-xs font-mono max-h-72 overflow-y-auto leading-relaxed whitespace-pre-wrap">
-              {selectedLease.lease_agreement_text}
-            </div>
-            {selectedLease.unit_change_requested ? (
-              <div className="p-3 bg-orange-500/10 border border-orange-500/20 text-orange-600 dark:text-orange-400 rounded-xl text-xs font-semibold">
-                ⚠️ You requested a unit change: "{selectedLease.unit_change_request_notes}". The landlord will review and update the unit in the lease agreement.
-              </div>
-            ) : null}
-            <div className="flex justify-between items-center gap-3">
-              {!selectedLease.unit_change_requested && (
-                <button
-                  type="button"
-                  onClick={() => setShowTenantChangeUnitModal(true)}
-                  className="px-4 py-2.5 border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-white/5 rounded-xl text-xs font-bold cursor-pointer transition"
-                >
-                  Request Unit Change (Optional)
-                </button>
-              )}
-              <button
-                type="button"
-                onClick={() => setTenantOnboardingStep(2)}
-                className="px-5 py-2.5 bg-blue-600 hover:bg-blue-750 text-white rounded-xl text-xs font-bold cursor-pointer transition shadow-md shadow-blue-500/10 ml-auto"
-              >
-                Proceed to Details & Docs
-              </button>
-            </div>
-          </div>
-        )}
-
-        {tenantOnboardingStep === 2 && (
-          <div className="space-y-5">
-            <h3 className="text-sm font-extrabold text-slate-800 dark:text-white uppercase tracking-wider">Step 2: Enter Details & Upload Identity Documents</h3>
+          <div className="space-y-5 animate-fade-in">
+            <h3 className="text-sm font-extrabold text-slate-800 dark:text-white uppercase tracking-wider">Step 1: Enter Details & Upload Identity Documents</h3>
             
             {/* Details Form */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -1678,12 +1661,10 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
                   placeholder="Number of minors"
                 />
               </div>
-
             </div>
 
             {/* Parking & Pet Options */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-slate-200 dark:border-white/5">
-              
               {/* Parking */}
               <div className={`p-4 border rounded-2xl transition-all text-left ${tenantHasParking ? 'border-blue-500/30 bg-blue-500/[0.02]' : 'border-slate-200 dark:border-white/5 bg-slate-50/30 dark:bg-slate-950/5'}`}>
                 <div className="flex items-center justify-between gap-4">
@@ -1696,9 +1677,7 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
                       type="button"
                       onClick={() => setTenantHasParking(true)}
                       className={`flex-1 text-[10px] font-bold py-1 rounded-md transition cursor-pointer ${
-                        tenantHasParking 
-                          ? 'bg-blue-600 text-white shadow-sm' 
-                          : 'text-slate-500 hover:text-slate-700 dark:hover:text-white bg-transparent'
+                        tenantHasParking ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-white bg-transparent'
                       }`}
                     >
                       Yes
@@ -1711,9 +1690,7 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
                         setTenantVehicles([{ plate: '', state: 'AL' }]);
                       }}
                       className={`flex-1 text-[10px] font-bold py-1 rounded-md transition cursor-pointer ${
-                        !tenantHasParking 
-                          ? 'bg-blue-600 text-white shadow-sm' 
-                          : 'text-slate-500 hover:text-slate-700 dark:hover:text-white bg-transparent'
+                        !tenantHasParking ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-white bg-transparent'
                       }`}
                     >
                       No
@@ -1724,7 +1701,7 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
                 {tenantHasParking && (
                   <div className="space-y-3 mt-3 pt-3 border-t border-blue-500/10 animate-fade-in">
                     <div>
-                      <label className="block text-[10px] font-bold text-gray-450 uppercase tracking-wider mb-1.5">Number of Cars (1 to 3)</label>
+                      <label className="block text-[10px] font-bold text-gray-455 uppercase tracking-wider mb-1.5 font-sans">Number of Cars (1 to 3)</label>
                       <input 
                         type="number" 
                         min="1"
@@ -1742,15 +1719,14 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
                         className="w-full text-xs px-3 py-2 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none border-slate-200 dark:border-white/10"
                       />
                     </div>
-                    {/* Dynamic per-car vehicle fields */}
                     {Array.from({ length: tenantParkingCarsCount }).map((_, idx) => (
-                      <div key={idx} className="space-y-2 animate-fade-in">
+                      <div key={idx} className="space-y-2 animate-fade-in text-left">
                         {tenantParkingCarsCount > 1 && (
                           <span className="block text-[9px] font-black text-blue-500 uppercase tracking-widest">Car {idx + 1}</span>
                         )}
                         <div className="grid grid-cols-2 gap-3 items-start">
                           <div>
-                            <label className="block text-[10px] font-bold text-gray-450 uppercase tracking-wider mb-1.5 font-sans">License Plate / Model</label>
+                            <label className="block text-[10px] font-bold text-gray-455 uppercase tracking-wider mb-1.5 font-sans">License Plate / Model</label>
                             <div className="relative">
                               <input
                                 type="text"
@@ -1775,7 +1751,7 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
                             </div>
                           </div>
                           <div>
-                            <label className="block text-[10px] font-bold text-gray-450 uppercase tracking-wider mb-1.5 font-sans">Registration State</label>
+                            <label className="block text-[10px] font-bold text-gray-455 uppercase tracking-wider mb-1.5 font-sans">Registration State</label>
                             <select
                               value={tenantVehicles[idx]?.state || 'AL'}
                               onChange={e => {
@@ -1831,9 +1807,7 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
                       type="button"
                       onClick={() => setTenantHasPets(true)}
                       className={`flex-1 text-[10px] font-bold py-1 rounded-md transition cursor-pointer ${
-                        tenantHasPets 
-                          ? 'bg-blue-600 text-white shadow-sm' 
-                          : 'text-slate-500 hover:text-slate-700 dark:hover:text-white bg-transparent'
+                        tenantHasPets ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-white bg-transparent'
                       }`}
                     >
                       Yes
@@ -1847,9 +1821,7 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
                         setTenantPets([{ type: 'Dog' }]);
                       }}
                       className={`flex-1 text-[10px] font-bold py-1 rounded-md transition cursor-pointer ${
-                        !tenantHasPets 
-                          ? 'bg-blue-600 text-white shadow-sm' 
-                          : 'text-slate-500 hover:text-slate-700 dark:hover:text-white bg-transparent'
+                        !tenantHasPets ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-white bg-transparent'
                       }`}
                     >
                       No
@@ -1878,7 +1850,6 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
                         className="w-full text-xs px-3 py-2 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none border-slate-200 dark:border-white/10"
                       />
                     </div>
-                    {/* Dynamic per-pet fields */}
                     {Array.from({ length: tenantPetsCount }).map((_, idx) => (
                       <div key={idx} className="space-y-2 animate-fade-in text-left">
                         {tenantPetsCount > 1 && (
@@ -1914,20 +1885,16 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
                   </div>
                 )}
               </div>
-
             </div>
 
             {/* Document Upload Blocks */}
             <div className="space-y-3 pt-3 border-t dark:border-white/5">
               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">Required Documents (PDF / JPG / PNG / WEBP)</span>
-              
-              {/* Inline upload error - non-blocking, auto-dismisses */}
               {docUploadError && (
                 <div className="mb-2 px-3 py-2 bg-red-500/10 border border-red-500/20 rounded-xl text-[11px] font-semibold text-red-600 dark:text-red-400 flex items-center gap-2">
                   <span>⚠️</span> {docUploadError}
                 </div>
               )}
-
               {["PAY_SLIP", "DRIVING_LICENSE", "ADDRESS_PROOF"].map(type => {
                 const existing = uploadedDocs.find(d => d.doc_type === type);
                 return (
@@ -1940,7 +1907,6 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
                         <span className="text-[10px] text-red-500 block">⚠️ Upload Required (max 10MB)</span>
                       )}
                     </div>
-                    
                     <div>
                       {existing ? (
                         <div className="flex items-center gap-2">
@@ -1954,7 +1920,7 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
                           <button
                             type="button"
                             onClick={() => handleRemoveDoc(existing.document_id, type)}
-                            className="px-3 py-1.5 border border-red-200 hover:border-red-300 dark:border-red-500/20 text-red-600 dark:text-red-450 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-lg text-[10px] font-bold transition cursor-pointer"
+                            className="px-3 py-1.5 border border-red-200 hover:border-red-300 dark:border-red-550/20 text-red-600 dark:text-red-450 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-lg text-[10px] font-bold transition cursor-pointer"
                           >
                             Remove File
                           </button>
@@ -1980,6 +1946,89 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
                   </div>
                 );
               })}
+            </div>
+
+            {formError && (
+              <div className="mb-3 px-3 py-2.5 bg-red-500/10 border border-red-500/20 rounded-xl text-[11px] font-semibold text-red-600 dark:text-red-400 flex items-start gap-2">
+                <span className="mt-0.5">⚠️</span>
+                <span>{formError}</span>
+              </div>
+            )}
+
+            <div className="flex justify-end pt-4 border-t dark:border-white/5">
+              <button
+                type="button"
+                onClick={() => {
+                  setFormError('');
+                  if (!tenantDob) {
+                    setFormError("Please enter your date of birth.");
+                    return;
+                  }
+                  const birthDate = new Date(tenantDob);
+                  const ageDiffMs = Date.now() - birthDate.getTime();
+                  const ageDate = new Date(ageDiffMs);
+                  const age = Math.abs(ageDate.getUTCFullYear() - 1970);
+                  if (age < 18) {
+                    setFormError("You must be 18 years or older to sign a lease.");
+                    return;
+                  }
+                  if (!tenantCurrentAddress.trim() || tenantCurrentAddress.trim().length < 10) {
+                    setFormError("Please enter a valid current address (min 10 characters).");
+                    return;
+                  }
+                  if (!tenantEmergencyContact.trim() || !/^[a-zA-Z\s.-]{2,50}$/.test(tenantEmergencyContact.trim())) {
+                    setFormError("Please enter a valid emergency contact name (letters only, 2–50 characters).");
+                    return;
+                  }
+                  const cleanedPhone = tenantEmergencyPhone.replace(/\D/g, '');
+                  if (!cleanedPhone || cleanedPhone.length !== 10) {
+                    setFormError("Please enter a valid 10-digit US emergency phone number.");
+                    return;
+                  }
+                  if (tenantHasParking) {
+                    for (let i = 0; i < tenantParkingCarsCount; i++) {
+                      if (!tenantVehicles[i]?.plate?.trim() || tenantVehicles[i].plate.trim().length < 3) {
+                        setFormError(`Please enter license plate / model for Car ${i + 1}.`);
+                        return;
+                      }
+                    }
+                  }
+                  if (tenantHasPets) {
+                    for (let i = 0; i < tenantPetsCount; i++) {
+                      if (!tenantPets[i]?.type) {
+                        setFormError(`Please select type for Pet ${i + 1}.`);
+                        return;
+                      }
+                    }
+                  }
+                  const requiredTypes = ["PAY_SLIP", "DRIVING_LICENSE", "ADDRESS_PROOF"];
+                  const missing = requiredTypes.filter(type => !uploadedDocs.some(d => d.doc_type === type));
+                  if (missing.length > 0) {
+                    const labels = { PAY_SLIP: "Pay Slip / Income Proof", DRIVING_LICENSE: "Driving License / National ID", ADDRESS_PROOF: "Notice/Payment Address Proof" };
+                    setFormError(`Please upload required documents: ${missing.map(m => labels[m]).join(", ")}`);
+                    return;
+                  }
+                  setTenantOnboardingStep(2);
+                }}
+                className="px-6 py-2.5 bg-blue-600 hover:bg-blue-750 text-white rounded-xl text-xs font-bold cursor-pointer transition shadow-md shadow-blue-500/10 ml-auto"
+              >
+                Proceed to Review & Sign
+              </button>
+            </div>
+          </div>
+        )}
+
+        {tenantOnboardingStep === 2 && (
+          <div className="space-y-4 animate-fade-in">
+            <div className="border-b dark:border-white/5 pb-3">
+              <div className="space-y-1 text-left">
+                <h3 className="text-sm font-extrabold text-slate-800 dark:text-white uppercase tracking-wider">Step 2: Review Prepared Lease Agreement</h3>
+                <p className="text-xs text-slate-400">Please review all tenancy parameters (rent, deposit, charges, clauses) compiled by the landlord.</p>
+              </div>
+            </div>
+            
+            <div className="p-4 border border-slate-200 dark:border-white/10 rounded-xl bg-slate-50/40 dark:bg-black/20 text-xs font-mono max-h-72 overflow-y-auto leading-relaxed whitespace-pre-wrap">
+              {selectedLease.lease_agreement_text}
             </div>
 
             {/* Signature Input and Verification Consent Checkbox right above buttons */}
@@ -2010,14 +2059,14 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
               </label>
             </div>
 
-                {/* Inline form validation error */}
-                {formError && (
-                  <div className="mb-3 px-3 py-2.5 bg-red-500/10 border border-red-500/20 rounded-xl text-[11px] font-semibold text-red-600 dark:text-red-400 flex items-start gap-2">
-                    <span className="mt-0.5">⚠️</span>
-                    <span>{formError}</span>
-                  </div>
-                )}
-                <div className="flex justify-between items-center pt-4">
+            {formError && (
+              <div className="mb-3 px-3 py-2.5 bg-red-500/10 border border-red-500/20 rounded-xl text-[11px] font-semibold text-red-600 dark:text-red-400 flex items-start gap-2">
+                <span className="mt-0.5">⚠️</span>
+                <span>{formError}</span>
+              </div>
+            )}
+
+            <div className="flex justify-between items-center pt-4">
               <button
                 type="button"
                 onClick={() => setTenantOnboardingStep(1)}
@@ -2029,69 +2078,15 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
                 type="button"
                 onClick={() => {
                   setFormError('');
-                  if (!tenantDob) {
-                    setFormError("Please enter your date of birth.");
-                    return;
-                  }
-                  const birthDate = new Date(tenantDob);
-                  const ageDiffMs = Date.now() - birthDate.getTime();
-                  const ageDate = new Date(ageDiffMs);
-                  const age = Math.abs(ageDate.getUTCFullYear() - 1970);
-                  if (age < 18) {
-                    setFormError("You must be 18 years or older to sign a lease.");
-                    return;
-                  }
-                  if (!tenantCurrentAddress.trim() || tenantCurrentAddress.trim().length < 10) {
-                    setFormError("Please enter a valid current address (min 10 characters).");
-                    return;
-                  }
-                  if (!tenantEmergencyContact.trim() || !/^[a-zA-Z\s.-]{2,50}$/.test(tenantEmergencyContact.trim())) {
-                    setFormError("Please enter a valid emergency contact name (letters only, 2–50 characters).");
-                    return;
-                  }
-                  const cleanedPhone = tenantEmergencyPhone.replace(/\D/g, '');
-                  if (!cleanedPhone || cleanedPhone.length !== 10) {
-                    setFormError("Please enter a valid 10-digit US emergency phone number.");
-                    return;
-                  }
-                  
-                  if (tenantHasParking) {
-                    for (let i = 0; i < tenantParkingCarsCount; i++) {
-                      if (!tenantVehicles[i]?.plate?.trim() || tenantVehicles[i].plate.trim().length < 3) {
-                        setFormError(`Please enter license plate / model for Car ${i + 1}.`);
-                        return;
-                      }
-                    }
-                  }
-                  if (tenantHasPets) {
-                    for (let i = 0; i < tenantPetsCount; i++) {
-                      if (!tenantPets[i]?.type) {
-                        setFormError(`Please select type for Pet ${i + 1}.`);
-                        return;
-                      }
-                    }
-                  }
-                  
-                  // Document uploads validation
-                  const requiredTypes = ["PAY_SLIP", "DRIVING_LICENSE", "ADDRESS_PROOF"];
-                  const missing = requiredTypes.filter(type => !uploadedDocs.some(d => d.doc_type === type));
-                  if (missing.length > 0) {
-                    const labels = { PAY_SLIP: "Pay Slip / Income Proof", DRIVING_LICENSE: "Driving License / National ID", ADDRESS_PROOF: "Notice/Payment Address Proof" };
-                    setFormError(`Please upload required documents: ${missing.map(m => labels[m]).join(", ")}`);
-                    return;
-                  }
-
                   // Signature validation
                   if (!tenantSignatureText.trim() || !/^[a-zA-Z\s]+$/.test(tenantSignatureText.trim()) || tenantSignatureText.trim().length < 3) {
                     setFormError("Please type your full legal name in the signature box (letters only, min 3 chars).");
                     return;
                   }
-                  
                   if (!tenantAgreeTerms) {
                     setFormError("You must check the verification box to agree to the lease terms.");
                     return;
                   }
-
                   handleTenantOnboardingSubmit();
                 }}
                 className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-extrabold cursor-pointer transition shadow-md shadow-emerald-500/10"
@@ -2148,7 +2143,7 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
           {["PAY_SLIP", "DRIVING_LICENSE", "ADDRESS_PROOF"].map(type => {
             const doc = uploadedDocs.find(d => d.doc_type === type);
             return (
-              <div key={type} className="p-3.5 border border-slate-200 dark:border-white/5 rounded-xl flex items-center justify-between gap-4 bg-slate-50/20 dark:bg-white/[0.01]">
+              <div key={type} className="p-3.5 border border-slate-200/5 rounded-xl flex items-center justify-between gap-4 bg-slate-50/20 dark:bg-white/[0.01]">
                 <div className="text-left">
                   <span className="text-xs font-bold text-slate-800 dark:text-white block">{docLabels[type]}</span>
                   {doc ? (
@@ -2158,15 +2153,25 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
                   )}
                 </div>
                 
-                <div>
+                <div className="flex items-center gap-2">
                   {doc && (
-                    <button
-                      type="button"
-                      onClick={() => handleDownloadDoc(doc.document_id, doc.original_name)}
-                      className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition shadow-md shadow-blue-500/10 cursor-pointer"
-                    >
-                      Download File
-                    </button>
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => handleViewDoc(doc.document_id, doc.original_name)}
+                        className="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 text-slate-800 dark:text-white rounded-lg text-xs font-bold transition cursor-pointer"
+                      >
+                        View Document
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDownloadDoc(doc.document_id, doc.original_name)}
+                        className="p-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition shadow-md shadow-blue-500/10 cursor-pointer flex items-center justify-center"
+                        title="Download File"
+                      >
+                        <Download size={14} />
+                      </button>
+                    </>
                   )}
                 </div>
               </div>
@@ -2183,12 +2188,87 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
           <span className="text-[10px] text-slate-400 uppercase font-semibold">U.S. ESIGN Compliant</span>
         </div>
 
+        {/* Landlord Signatures Panel */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t dark:border-white/5 pt-6">
+          {/* Primary Landlord Signature */}
+          <div className="p-4 bg-slate-50/50 dark:bg-white/[0.01] border border-slate-200/60 dark:border-white/[0.03] rounded-xl text-left space-y-3">
+            <span className="text-gray-400 block text-xs mb-1 font-bold uppercase tracking-wider">Primary Landlord Signature</span>
+            {selectedLease.landlord_signature ? (
+              <span className="font-semibold text-gray-900 dark:text-white italic text-lg font-serif">/ {selectedLease.landlord_signature} /</span>
+            ) : (
+              <div className="space-y-3">
+                <span className="text-[10px] text-yellow-550 flex items-center gap-1 font-bold">
+                  <Clock className="w-3.5 h-3.5" /> Pending Signature (Please sign below before approving)
+                </span>
+                <form onSubmit={(e) => handleSignLease(e, 'landlord')} className="flex gap-2">
+                  <input 
+                    required 
+                    type="text" 
+                    value={signature} 
+                    onChange={e => setSignature(e.target.value)} 
+                    className="flex-1 text-xs px-4 py-2.5 border rounded-xl bg-white dark:bg-black/20 text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500" 
+                    placeholder="Type your full legal name to sign" 
+                  />
+                  <button type="submit" className="px-5 py-2.5 bg-blue-600 text-white rounded-xl text-xs font-bold hover:bg-blue-750 cursor-pointer transition shrink-0 shadow-md shadow-blue-500/10">
+                    Sign Contract
+                  </button>
+                </form>
+              </div>
+            )}
+          </div>
+
+          {/* Co-Landlord Signature if configured */}
+          {selectedLease.co_landlord_name && (
+            <div className="p-4 bg-slate-50/50 dark:bg-white/[0.01] border border-slate-200/60 dark:border-white/[0.03] rounded-xl text-left space-y-3">
+              <span className="text-gray-400 block text-xs mb-1 font-bold uppercase tracking-wider">Co-Landlord Signature ({selectedLease.co_landlord_name})</span>
+              {selectedLease.co_landlord_signature ? (
+                <span className="font-semibold text-gray-900 dark:text-white italic text-lg font-serif">/ {selectedLease.co_landlord_signature} /</span>
+              ) : (
+                <div className="space-y-3">
+                  <span className="text-[10px] text-slate-400 flex items-center gap-1 font-medium">
+                    <Clock className="w-3.5 h-3.5" /> Pending Co-Landlord Signature (Optional)
+                  </span>
+                  {selectedLease.landlord_signature && (
+                    <form onSubmit={(e) => handleSignLease(e, 'co_landlord')} className="flex gap-2">
+                      <input 
+                        required 
+                        type="text" 
+                        value={signature} 
+                        onChange={e => setSignature(e.target.value)} 
+                        className="flex-1 text-xs px-4 py-2.5 border rounded-xl bg-white dark:bg-black/20 text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500" 
+                        placeholder="Type your full legal name as Co-Landlord" 
+                      />
+                      <button type="submit" className="px-5 py-2.5 bg-blue-600 text-white rounded-xl text-xs font-bold hover:bg-blue-750 cursor-pointer transition shrink-0 shadow-md shadow-blue-500/10">
+                        Sign
+                      </button>
+                    </form>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
         {/* Action Controls */}
-        <div className="flex justify-end gap-3 pt-3 border-t dark:border-white/5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-3 border-t dark:border-white/5">
+          {!selectedLease.landlord_signature ? (
+            <span className="text-xs text-red-500 font-semibold text-left">
+              ⚠️ You must type your legal name and sign the lease contract above before you can approve and activate it.
+            </span>
+          ) : (
+            <span className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold text-left">
+              ✓ Contract signed. You are ready to approve and activate the lease.
+            </span>
+          )}
           <button
             type="button"
+            disabled={!selectedLease.landlord_signature}
             onClick={handleLandlordApproveLease}
-            className="px-6 py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-extrabold transition shadow-lg shadow-emerald-500/20 cursor-pointer"
+            className={`px-6 py-3 rounded-xl text-xs font-extrabold transition shadow-lg cursor-pointer shrink-0 ml-auto ${
+              selectedLease.landlord_signature 
+                ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-500/20' 
+                : 'bg-slate-200 dark:bg-white/5 text-slate-405 dark:text-slate-500 cursor-not-allowed shadow-none'
+            }`}
           >
             ✓ Approve Submission & Activate Lease
           </button>
@@ -2196,12 +2276,13 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
       </div>
     );
   };
-  async function handleSignLease(e) {
-    e.preventDefault();
+  async function handleSignLease(e, overrideRole = null) {
+    if (e) e.preventDefault();
+    const roleToSign = overrideRole || (isLandlord ? signingAsRole : 'tenant');
     try {
       const res = await API.post(`/rental/leases/${selectedLease.lease_id}/sign`, {
         signature_text: signature,
-        signing_as: isLandlord ? signingAsRole : 'tenant'
+        signing_as: roleToSign
       });
       setLeases(prev => prev.map(l => l.lease_id === selectedLease.lease_id ? res.data : l));
       setSelectedLease(res.data);
@@ -2583,14 +2664,12 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
             </div>
             <div>
               <label className="block text-xs font-bold text-slate-655 dark:text-gray-400 tracking-wider mb-2">LATE FEE TYPE</label>
-              <select 
-                value={feeType} 
-                onChange={e => setFeeType(e.target.value)} 
-                className="w-full text-sm px-3.5 py-3 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none transition focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 border-slate-200 dark:border-white/10"
-              >
-                <option value="FLAT">Flat Fee</option>
-                <option value="PERCENTAGE">Percentage</option>
-              </select>
+              <input 
+                readOnly
+                type="text" 
+                value="Flat Fee" 
+                className="w-full text-sm px-3.5 py-3 border rounded-xl bg-slate-100/50 dark:bg-[#111c2a]/40 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-white/10 outline-none cursor-not-allowed font-semibold"
+              />
             </div>
             <div>
               <label className="block text-xs font-bold text-slate-655 dark:text-gray-400 tracking-wider mb-2">LATE FEE AMOUNT</label>
@@ -2612,88 +2691,117 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
     );
   };
 
-  const renderStep3 = () => (
-    <div className="space-y-5">
-      <div className="border-b dark:border-white/5 pb-3">
-        <span className="text-[10px] uppercase font-bold text-blue-600 dark:text-blue-400 tracking-wider">Step 3 of 5</span>
-        <h4 className="text-lg font-extrabold text-slate-800 dark:text-white mt-1">Utilities & Options</h4>
-        <p className="text-xs text-slate-400">Define utilities coverage, flat monthly utility charges, parking and pet details.</p>
-      </div>
+  const renderStep3 = () => {
+    const showUtilityFeeOption = 
+      electricityPayee === 'landlord' || 
+      waterPayee === 'landlord' || 
+      gasPayee === 'landlord' || 
+      internetPayee === 'landlord' || 
+      trashPayee === 'landlord';
 
-      <div className="space-y-3">
-        <label className="block text-xs font-bold text-slate-655 dark:text-gray-400 tracking-wider mb-2 uppercase text-left">Utilities Responsibility</label>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
-          {[
-            { id: 'electricity', label: 'Electricity', payee: electricityPayee, setPayee: setElectricityPayee },
-            { id: 'water', label: 'Water', payee: waterPayee, setPayee: setWaterPayee },
-            { id: 'gas', label: 'Gas', payee: gasPayee, setPayee: setGasPayee },
-            { id: 'internet', label: 'Internet/Wifi', payee: internetPayee, setPayee: setInternetPayee },
-            { id: 'trash', label: 'Trash Removal', payee: trashPayee, setPayee: setTrashPayee }
-          ].map(util => (
-            <div key={util.id} className="space-y-1.5 text-left bg-slate-50/50 dark:bg-white/[0.01] p-3 rounded-2xl border border-slate-200/60 dark:border-white/[0.03]">
-              <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">{util.label}</span>
-              <select
-                value={util.payee}
-                onChange={e => util.setPayee(e.target.value)}
-                className="w-full text-xs px-3 py-2 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none border-slate-200 dark:border-white/10 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 cursor-pointer font-medium"
-              >
-                <option value="tenant">Paid by Tenant</option>
-                <option value="landlord">Paid by Owner</option>
-              </select>
-            </div>
-          ))}
+    const ownerPaidUtils = [];
+    if (electricityPayee === 'landlord') ownerPaidUtils.push('Electricity');
+    if (waterPayee === 'landlord') ownerPaidUtils.push('Water');
+    if (gasPayee === 'landlord') ownerPaidUtils.push('Gas');
+    if (internetPayee === 'landlord') ownerPaidUtils.push('Internet/Wifi');
+    if (trashPayee === 'landlord') ownerPaidUtils.push('Trash Removal');
+
+    return (
+      <div className="space-y-5">
+        <div className="border-b dark:border-white/5 pb-3">
+          <span className="text-[10px] uppercase font-bold text-blue-600 dark:text-blue-400 tracking-wider">Step 3 of 5</span>
+          <h4 className="text-lg font-extrabold text-slate-800 dark:text-white mt-1">Utilities & Options</h4>
+          <p className="text-xs text-slate-400">Define utilities coverage, flat monthly utility charges, parking and pet details.</p>
         </div>
-      </div>
 
-      <div className={`p-4 border rounded-2xl transition-all text-left ${hasUtilFee ? 'border-blue-500/30 bg-blue-500/[0.02]' : 'border-slate-200 dark:border-white/5 bg-slate-50/30 dark:bg-slate-950/5'}`}>
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <span className="text-xs font-bold text-slate-800 dark:text-white block">Landlord will charge flat monthly utility fee?</span>
-            <span className="text-[10px] text-slate-400">Enable this to add a set utility cost directly to the ledger bill.</span>
-          </div>
-          
-          <div className="flex w-32 rounded-lg overflow-hidden border border-slate-200 dark:border-white/10 p-0.5 bg-white dark:bg-[#132030] shrink-0">
-            <button
-              type="button"
-              onClick={() => setHasUtilFee(true)}
-              className={`flex-1 text-[10px] font-bold py-1.5 rounded-md transition cursor-pointer ${
-                hasUtilFee 
-                  ? 'bg-blue-600 text-white shadow-sm' 
-                  : 'text-slate-500 hover:text-slate-700 dark:hover:text-white bg-transparent'
-              }`}
-            >
-              Yes
-            </button>
-            <button
-              type="button"
-              onClick={() => setHasUtilFee(false)}
-              className={`flex-1 text-[10px] font-bold py-1.5 rounded-md transition cursor-pointer ${
-                !hasUtilFee 
-                  ? 'bg-blue-600 text-white shadow-sm' 
-                  : 'text-slate-500 hover:text-slate-700 dark:hover:text-white bg-transparent'
-              }`}
-            >
-              No
-            </button>
+        <div className="space-y-3">
+          <label className="block text-xs font-bold text-slate-655 dark:text-gray-400 tracking-wider mb-2 uppercase text-left">Utilities Responsibility</label>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
+            {[
+              { id: 'electricity', label: 'Electricity', payee: electricityPayee, setPayee: setElectricityPayee },
+              { id: 'water', label: 'Water', payee: waterPayee, setPayee: setWaterPayee },
+              { id: 'gas', label: 'Gas', payee: gasPayee, setPayee: setGasPayee },
+              { id: 'internet', label: 'Internet/Wifi', payee: internetPayee, setPayee: setInternetPayee },
+              { id: 'trash', label: 'Trash Removal', payee: trashPayee, setPayee: setTrashPayee }
+            ].map(util => (
+              <div key={util.id} className="space-y-1.5 text-left bg-slate-50/50 dark:bg-white/[0.01] p-3 rounded-2xl border border-slate-200/60 dark:border-white/[0.03]">
+                <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">{util.label}</span>
+                <select
+                  value={util.payee}
+                  onChange={e => util.setPayee(e.target.value)}
+                  className="w-full text-xs px-3 py-2 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none border-slate-200 dark:border-white/10 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 cursor-pointer font-medium"
+                >
+                  <option value="tenant">Paid by Tenant</option>
+                  <option value="landlord">Paid by Owner</option>
+                </select>
+              </div>
+            ))}
           </div>
         </div>
-        {hasUtilFee && (
-          <div className="w-full md:w-1/2 pt-3 mt-2 border-t border-blue-500/10 animate-fade-in">
-            <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">Utility Fee Amount ($)</label>
-            <div className="relative">
-              <DollarSign className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
-              <input 
-                type="number" 
-                value={utilFee} 
-                onChange={e => setUtilFee(e.target.value)} 
-                className={`w-full text-sm pl-10 pr-3.5 py-2.5 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none transition focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 border-slate-200 dark:border-white/10 ${formErrors.utilFee ? 'border-red-500 ring-2 ring-red-500/10' : ''}`} 
-                placeholder="e.g. 100" 
-              />
+
+        {showUtilityFeeOption && (
+          <div className={`p-4 border rounded-2xl transition-all text-left ${hasUtilFee ? 'border-blue-500/30 bg-blue-500/[0.02]' : 'border-slate-200 dark:border-white/5 bg-slate-50/30 dark:bg-slate-950/5'} animate-fade-in`}>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <span className="text-xs font-bold text-slate-800 dark:text-white block">Landlord will charge flat monthly utility fee?</span>
+                <div className="flex flex-wrap items-center gap-1.5 mt-1">
+                  <span className="text-[10px] text-slate-400">
+                    Enable this to add a set utility cost directly to the ledger bill.
+                  </span>
+                  {ownerPaidUtils.length > 0 && (
+                    <div className="flex items-center gap-1">
+                      <span className="text-[10px] text-slate-400">•</span>
+                      <span className="text-[10px] bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 font-semibold px-2 py-0.5 rounded-md border border-blue-100 dark:border-blue-900/30">
+                        Covering: {ownerPaidUtils.join(', ')}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+              
+              <div className="flex w-32 rounded-lg overflow-hidden border border-slate-200 dark:border-white/10 p-0.5 bg-white dark:bg-[#132030] shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setHasUtilFee(true)}
+                  className={`flex-1 text-[10px] font-bold py-1.5 rounded-md transition cursor-pointer ${
+                    hasUtilFee 
+                      ? 'bg-blue-600 text-white shadow-sm' 
+                      : 'text-slate-500 hover:text-slate-700 dark:hover:text-white bg-transparent'
+                  }`}
+                >
+                  Yes
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setHasUtilFee(false)}
+                  className={`flex-1 text-[10px] font-bold py-1.5 rounded-md transition cursor-pointer ${
+                    !hasUtilFee 
+                      ? 'bg-blue-600 text-white shadow-sm' 
+                      : 'text-slate-500 hover:text-slate-700 dark:hover:text-white bg-transparent'
+                  }`}
+                >
+                  No
+                </button>
+              </div>
             </div>
-            {formErrors.utilFee && <p className="text-xs text-red-500 mt-1 flex items-center gap-1"><AlertCircle size={12}/>{formErrors.utilFee}</p>}
+            {hasUtilFee && (
+              <div className="w-full md:w-1/2 pt-3 mt-2 border-t border-blue-500/10 animate-fade-in">
+                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">Utility Fee Amount ($)</label>
+                <div className="relative">
+                  <DollarSign className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
+                  <input 
+                    type="number" 
+                    value={utilFee} 
+                    onChange={e => setUtilFee(e.target.value)} 
+                    className={`w-full text-sm pl-10 pr-3.5 py-2.5 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none transition focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 border-slate-200 dark:border-white/10 ${formErrors.utilFee ? 'border-red-500 ring-2 ring-red-500/10' : ''}`} 
+                    placeholder="e.g. 100" 
+                  />
+                </div>
+                {formErrors.utilFee && <p className="text-xs text-red-500 mt-1 flex items-center gap-1"><AlertCircle size={12}/>{formErrors.utilFee}</p>}
+              </div>
+            )}
           </div>
         )}
-      </div>
 
 
 
@@ -2709,6 +2817,7 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
       </div>
     </div>
   );
+};
 
   const renderStep4 = () => (
     <div className="space-y-5">
@@ -3517,7 +3626,8 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
                   {filteredLeases.map(l => (
                     <tr 
                       key={l.lease_id} 
-                      className="hover:bg-slate-50 dark:hover:bg-white/5 transition-colors group"
+                      onClick={() => setSelectedLease(l)}
+                      className="hover:bg-slate-50 dark:hover:bg-white/5 transition-colors group cursor-pointer"
                     >
                       <td className="px-4 py-4 font-mono text-xs font-bold text-indigo-650 dark:text-[#5BA4F5]">Lease #{getLeaseSeqNum(l)}</td>
                       <td className="px-4 py-4 text-slate-600 dark:text-gray-400">{l.tenant_email}</td>
@@ -3559,13 +3669,13 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
                                 ? 'text-amber-600 dark:text-amber-400 bg-amber-500/10 dark:bg-amber-500/20 border-amber-500/20'
                                 : 'text-slate-650 dark:text-slate-400 bg-slate-500/10 dark:bg-slate-500/20 border-slate-500/20'
                         }`}>
-                          {l.status === 'PENDING_LANDLORD_APPROVAL' ? 'Ready to Review' : l.status === 'PENDING_TENANT_REVIEW' ? 'Awaiting Tenant' : l.status}
+                          {l.status === 'PENDING_LANDLORD_APPROVAL' ? (isLandlord ? 'Ready to Review' : 'Sent for Review') : l.status === 'PENDING_TENANT_REVIEW' ? 'Awaiting Tenant' : l.status}
                         </span>
                       </td>
                       <td className="px-4 py-4 text-right whitespace-nowrap space-x-1">
                         <button
                           type="button"
-                          onClick={() => setSelectedLease(l)}
+                          onClick={(e) => { e.stopPropagation(); setSelectedLease(l); }}
                           className="p-1.5 hover:bg-slate-100 dark:hover:bg-white/10 rounded-lg text-slate-400 hover:text-blue-500 transition cursor-pointer"
                           title="Sign / View"
                         >
@@ -3696,6 +3806,51 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
                     renderLandlordApprovalPanel()
                   ) : (
                     <>
+                      {/* Tenant Identity & Income Verification Files */}
+                      {uploadedDocs && uploadedDocs.length > 0 && (() => {
+                        const docLabels = { 
+                          PAY_SLIP: "Pay Slip / Income Proof", 
+                          DRIVING_LICENSE: "Driving License / ID", 
+                          ADDRESS_PROOF: "Address Proof" 
+                        };
+                        return (
+                          <div className="space-y-3 mb-6">
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block text-left">Tenant Identity & Income Verification Files</span>
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                              {["PAY_SLIP", "DRIVING_LICENSE", "ADDRESS_PROOF"].map(type => {
+                                const doc = uploadedDocs.find(d => d.doc_type === type);
+                                if (!doc) return null;
+                                return (
+                                  <div key={type} className="p-3 border border-slate-200/5 rounded-xl flex items-center justify-between gap-3 bg-slate-50/20 dark:bg-white/[0.01]">
+                                    <div className="text-left min-w-0 flex-1">
+                                      <span className="text-xs font-bold text-slate-800 dark:text-white block truncate" title={docLabels[type]}>{docLabels[type]}</span>
+                                      <span className="text-[9px] text-emerald-500 font-semibold block">✓ Uploaded</span>
+                                    </div>
+                                    <div className="flex items-center gap-1.5 shrink-0">
+                                      <button
+                                        type="button"
+                                        onClick={() => handleViewDoc(doc.document_id, doc.original_name)}
+                                        className="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 text-slate-800 dark:text-white rounded-lg text-[10px] font-bold transition cursor-pointer"
+                                      >
+                                        View
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={() => handleDownloadDoc(doc.document_id, doc.original_name)}
+                                        className="p-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition shadow-md shadow-blue-500/10 cursor-pointer flex items-center justify-center"
+                                        title="Download File"
+                                      >
+                                        <Download size={12} />
+                                      </button>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        );
+                      })()}
+
                       {/* Signatures display */}
                       <div className={`grid grid-cols-1 ${selectedLease.co_landlord_name ? 'md:grid-cols-3' : 'md:grid-cols-2'} gap-6 border-t border-gray-100 dark:border-white/5 pt-6 text-sm text-left`}>
                         <div className="p-4 rounded-xl border border-gray-100 dark:border-white/5 bg-gray-50/50 dark:bg-white/[0.01]">

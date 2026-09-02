@@ -350,6 +350,36 @@ def run_db_upgrades():
         "rental_applications.income_proof_url"
     )
 
+    # rental_leases vehicle & pet detail columns (for tenant profile editing)
+    _safe_execute(
+        "ALTER TABLE rental_leases ADD COLUMN IF NOT EXISTS vehicle_details TEXT;",
+        "rental_leases.vehicle_details"
+    )
+    _safe_execute(
+        "ALTER TABLE rental_leases ADD COLUMN IF NOT EXISTS pet_details TEXT;",
+        "rental_leases.pet_details"
+    )
+    _safe_execute(
+        "ALTER TABLE rental_leases ADD COLUMN IF NOT EXISTS pending_vehicle_details TEXT;",
+        "rental_leases.pending_vehicle_details"
+    )
+    _safe_execute(
+        "ALTER TABLE rental_leases ADD COLUMN IF NOT EXISTS pending_pet_details TEXT;",
+        "rental_leases.pending_pet_details"
+    )
+    _safe_execute(
+        "ALTER TABLE rental_leases ADD COLUMN IF NOT EXISTS vehicle_pet_request_status VARCHAR(30);",
+        "rental_leases.vehicle_pet_request_status"
+    )
+    _safe_execute(
+        "ALTER TABLE rental_leases ADD COLUMN IF NOT EXISTS vehicle_pet_request_notes TEXT;",
+        "rental_leases.vehicle_pet_request_notes"
+    )
+    _safe_execute(
+        "ALTER TABLE rental_leases ADD COLUMN IF NOT EXISTS vehicle_pet_requested_at TIMESTAMP WITH TIME ZONE;",
+        "rental_leases.vehicle_pet_requested_at"
+    )
+
     _safe_execute(
         "ALTER TABLE rental_maintenance_requests ADD COLUMN IF NOT EXISTS scope VARCHAR(50) DEFAULT 'INTERNAL';",
         "rental_maintenance_requests.scope"

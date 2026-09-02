@@ -2,7 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { 
   Users, User, Mail, Phone, Edit2, Trash2, 
   Search, Filter, ShieldCheck, ShieldAlert, 
-  Sparkles, CheckCircle2, AlertCircle, X
+  Sparkles, CheckCircle2, AlertCircle, X,
+  Car, PawPrint, Clock, Check, AlertTriangle, ArrowRight, FileText,
+  Eye
 } from 'lucide-react';
 import API from '../../services/api';
 import ConfirmModal from '../../components/ConfirmModal';
@@ -10,9 +12,15 @@ import { formatPhoneAsYouType, formatUsPhone } from '../../utils/phoneFormatter'
 
 export default function TenantsHub({ selectedPropertyFilterId = 'all' }) {
   const [tenants, setTenants] = useState([]);
+  const [pendingRequests, setPendingRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL'); // ALL, ACTIVE, INACTIVE
+
+  // Review / Reject Modal State
+  const [reviewingRequest, setReviewingRequest] = useState(null);
+  const [rejectNotes, setRejectNotes] = useState('');
+  const [actionProcessing, setActionProcessing] = useState(false);
 
   // Edit Modal State
   const [showEditModal, setShowEditModal] = useState(false);
@@ -81,12 +89,52 @@ export default function TenantsHub({ selectedPropertyFilterId = 'all' }) {
   async function fetchTenants() {
     try {
       setLoading(true);
-      const res = await API.get('/rental/tenants');
-      setTenants(res.data);
+      const [tenantsRes, pendingRes] = await Promise.allSettled([
+        API.get('/rental/tenants'),
+        API.get('/rental/leases/pending-vehicle-pet-requests')
+      ]);
+
+      if (tenantsRes.status === 'fulfilled') {
+        setTenants(tenantsRes.value.data);
+      }
+      if (pendingRes.status === 'fulfilled') {
+        setPendingRequests(pendingRes.value.data);
+      }
     } catch (err) {
       console.error("Error fetching tenants:", err);
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleApproveRequest(leaseId) {
+    try {
+      setActionProcessing(true);
+      await API.post(`/rental/leases/${leaseId}/approve-vehicle-pet-change`);
+      showAlert("Success", "Vehicle & Pet changes approved! Active lease covenants and addendum have been updated.", "success");
+      setReviewingRequest(null);
+      fetchTenants();
+      window.dispatchEvent(new CustomEvent('rental-data-changed'));
+    } catch (err) {
+      showAlert("Error", err.response?.data?.detail || "Failed to approve request.", "danger");
+    } finally {
+      setActionProcessing(false);
+    }
+  }
+
+  async function handleRejectRequest(leaseId) {
+    try {
+      setActionProcessing(true);
+      await API.post(`/rental/leases/${leaseId}/reject-vehicle-pet-change`, { notes: rejectNotes });
+      showAlert("Notice", "Vehicle & Pet change request was declined. Tenant has been notified.", "info");
+      setReviewingRequest(null);
+      setRejectNotes('');
+      fetchTenants();
+      window.dispatchEvent(new CustomEvent('rental-data-changed'));
+    } catch (err) {
+      showAlert("Error", err.response?.data?.detail || "Failed to decline request.", "danger");
+    } finally {
+      setActionProcessing(false);
     }
   }
 
@@ -297,6 +345,86 @@ export default function TenantsHub({ selectedPropertyFilterId = 'all' }) {
         </div>
       </div>
 
+      {/* Pending Vehicle & Pet Change Requests Banner */}
+      {pendingRequests.length > 0 && (
+        <div className="p-6 rounded-3xl bg-gradient-to-r from-amber-500/15 via-purple-500/10 to-blue-500/10 border border-amber-500/30 dark:border-amber-500/20 shadow-lg space-y-4 animate-fade-in">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 rounded-2xl bg-amber-500/20 text-amber-600 dark:text-amber-400">
+                <Car className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
+                  Vehicle & Pet Update Requests
+                  <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-500 text-white shadow-sm shadow-amber-500/30">
+                    {pendingRequests.length} Pending Approval
+                  </span>
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  Tenants have requested vehicle or pet changes on their lease. Review and approve to automatically update lease covenants and addenda.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pt-1">
+            {pendingRequests.map(req => (
+              <div key={req.lease_id} className="p-4 rounded-2xl bg-white dark:bg-[#162535] border border-amber-500/25 shadow-sm flex flex-col justify-between space-y-3">
+                <div className="space-y-2">
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <h4 className="font-bold text-sm text-slate-900 dark:text-white">{req.tenant_name || req.tenant_email}</h4>
+                      <span className="text-xs text-slate-400 block">{req.property_name || 'Property'} • Unit {req.unit?.unit_number || '1'}</span>
+                    </div>
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600 font-bold border border-amber-500/20">
+                      Pending
+                    </span>
+                  </div>
+
+                  <div className="text-xs space-y-1.5 bg-slate-50 dark:bg-black/20 p-2.5 rounded-xl border border-slate-100 dark:border-white/5">
+                    <div className="flex items-center gap-1.5 text-slate-700 dark:text-slate-300">
+                      <Car size={13} className="text-blue-500 shrink-0" />
+                      <span className="font-semibold truncate">
+                        {req.pending_vehicle_details || 'No vehicles requested'}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1.5 text-slate-700 dark:text-slate-300">
+                      <PawPrint size={13} className="text-violet-500 shrink-0" />
+                      <span className="font-semibold truncate">
+                        {req.pending_pet_details || 'No pets requested'}
+                      </span>
+                    </div>
+                  </div>
+
+                  {req.vehicle_pet_request_notes && (
+                    <p className="text-[11px] text-slate-500 italic bg-amber-500/5 p-2 rounded-lg border border-amber-500/10">
+                      Note: "{req.vehicle_pet_request_notes}"
+                    </p>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-2 pt-2 border-t border-slate-100 dark:border-white/5">
+                  <button
+                    onClick={() => setReviewingRequest(req)}
+                    className="flex-1 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-500 rounded-xl transition shadow-md shadow-blue-500/10 flex items-center justify-center gap-1.5 cursor-pointer"
+                  >
+                    <Eye size={13} /> Review Details
+                  </button>
+                  <button
+                    disabled={actionProcessing}
+                    onClick={() => handleApproveRequest(req.lease_id)}
+                    className="px-3 py-2 text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 rounded-xl transition cursor-pointer"
+                    title="Quick Approve"
+                  >
+                    <Check size={14} />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Main Directory Table nested inside a single gradient card */}
       <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-xl overflow-hidden shadow-sm">
         
@@ -357,68 +485,82 @@ export default function TenantsHub({ selectedPropertyFilterId = 'all' }) {
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-white/5 text-slate-700 dark:text-gray-300">
               {filteredTenants.length > 0 ? (
-                filteredTenants.map((t) => (
-                  <tr key={t.user_id} className="hover:bg-slate-50 dark:hover:bg-white/5 transition-colors group">
-                    <td className="px-4 py-4 font-mono text-xs font-bold text-indigo-650 dark:text-[#5BA4F5]">{t.user_code}</td>
-                    <td className="px-4 py-4">
-                      <div className="text-slate-900 dark:text-white font-medium group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                        {t.full_name}
-                      </div>
-                    </td>
-                    <td className="px-4 py-4 text-slate-600 dark:text-gray-400">{t.email_id}</td>
-                    <td className="px-4 py-4 text-slate-600 dark:text-gray-400">{formatUsPhone(t.mobile_number)}</td>
-                    <td className="px-4 py-4">
-                      {t.unit_no ? (
-                        t.unit_no === 'Single Family' ? (
-                          <span className="bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-450 px-2.5 py-0.5 rounded text-[10px] font-bold border border-emerald-500/20 whitespace-nowrap inline-block animate-fade-in">
-                            Single Family
-                          </span>
-                        ) : t.unit_no === 'Condo Unit' ? (
-                          <span className="bg-indigo-500/10 text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-400 px-2.5 py-0.5 rounded text-[10px] font-bold border border-indigo-500/20 whitespace-nowrap inline-block animate-fade-in">
-                            Condo
-                          </span>
+                filteredTenants.map((t) => {
+                  const hasPendingReq = pendingRequests.find(
+                    pr => (pr.tenant_email && pr.tenant_email.toLowerCase() === t.email_id?.toLowerCase()) || pr.tenant_id === t.user_id
+                  );
+                  return (
+                    <tr key={t.user_id} className="hover:bg-slate-50 dark:hover:bg-white/5 transition-colors group">
+                      <td className="px-4 py-4 font-mono text-xs font-bold text-indigo-650 dark:text-[#5BA4F5]">{t.user_code}</td>
+                      <td className="px-4 py-4">
+                        <div className="text-slate-900 dark:text-white font-medium group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors flex items-center gap-2">
+                          {t.full_name}
+                          {hasPendingReq && (
+                            <button
+                              onClick={() => setReviewingRequest(hasPendingReq)}
+                              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30 hover:bg-amber-500/25 transition cursor-pointer"
+                              title="Click to review vehicle/pet change request"
+                            >
+                              <Clock size={10} /> Update Requested
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-4 py-4 text-slate-600 dark:text-gray-400">{t.email_id}</td>
+                      <td className="px-4 py-4 text-slate-600 dark:text-gray-400">{formatUsPhone(t.mobile_number)}</td>
+                      <td className="px-4 py-4">
+                        {t.unit_no ? (
+                          t.unit_no === 'Single Family' ? (
+                            <span className="bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-450 px-2.5 py-0.5 rounded text-[10px] font-bold border border-emerald-500/20 whitespace-nowrap inline-block animate-fade-in">
+                              Single Family
+                            </span>
+                          ) : t.unit_no === 'Condo Unit' ? (
+                            <span className="bg-indigo-500/10 text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-400 px-2.5 py-0.5 rounded text-[10px] font-bold border border-indigo-500/20 whitespace-nowrap inline-block animate-fade-in">
+                              Condo
+                            </span>
+                          ) : (
+                            <span className="bg-blue-500/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400 px-2.5 py-0.5 rounded text-[10px] font-bold border border-blue-500/20 whitespace-nowrap inline-block animate-fade-in">
+                              {String(t.unit_no).toLowerCase().startsWith('apt') || String(t.unit_no).toLowerCase().startsWith('unit')
+                                ? t.unit_no
+                                : `Unit ${t.unit_no === 'Entire Property' || !/\d/.test(t.unit_no) ? '1' : t.unit_no}`
+                              }
+                            </span>
+                          )
                         ) : (
-                          <span className="bg-blue-500/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400 px-2.5 py-0.5 rounded text-[10px] font-bold border border-blue-500/20 whitespace-nowrap inline-block animate-fade-in">
-                            {String(t.unit_no).toLowerCase().startsWith('apt') || String(t.unit_no).toLowerCase().startsWith('unit')
-                              ? t.unit_no
-                              : `Unit ${t.unit_no === 'Entire Property' || !/\d/.test(t.unit_no) ? '1' : t.unit_no}`
-                            }
-                          </span>
-                        )
-                      ) : (
-                        <span className="text-slate-450 text-xs italic">Unassigned</span>
-                      )}
-                    </td>
-                    <td className="px-4 py-4 text-right whitespace-nowrap">
-                      <button
-                        onClick={() => handleToggleStatus(t.user_id, t.active_status)}
-                        className={`px-2.5 py-0.5 rounded text-[10px] font-bold border transition ${
-                          t.active_status 
-                            ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 dark:bg-emerald-500/20 border-emerald-500/20 hover:bg-emerald-500/25' 
-                            : 'text-rose-600 dark:text-rose-400 bg-rose-500/10 dark:bg-rose-500/20 border-rose-500/20 hover:bg-rose-500/25'
-                        }`}
-                      >
-                        {t.active_status ? 'ACTIVE' : 'INACTIVE'}
-                      </button>
-                    </td>
-                    <td className="px-4 py-4 text-right whitespace-nowrap space-x-1">
-                      <button
-                        onClick={() => openEditModal(t)}
-                        className="p-1.5 hover:bg-slate-100 dark:hover:bg-white/10 rounded-lg text-slate-400 hover:text-blue-500 transition cursor-pointer"
-                        title="Edit Profile"
-                      >
-                        <Edit2 size={14} />
-                      </button>
-                      <button
-                        onClick={() => handleDeleteTenant(t.user_id)}
-                        className="p-1.5 hover:bg-red-500/10 rounded-lg text-slate-400 hover:text-red-500 transition cursor-pointer"
-                        title="Delete Tenant"
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                    </td>
-                  </tr>
-                ))
+                          <span className="text-slate-450 text-xs italic">Unassigned</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-4 text-right whitespace-nowrap">
+                        <button
+                          onClick={() => handleToggleStatus(t.user_id, t.active_status)}
+                          className={`px-2.5 py-0.5 rounded text-[10px] font-bold border transition ${
+                            t.active_status 
+                              ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 dark:bg-emerald-500/20 border-emerald-500/20 hover:bg-emerald-500/25' 
+                              : 'text-rose-600 dark:text-rose-400 bg-rose-500/10 dark:bg-rose-500/20 border-rose-500/20 hover:bg-rose-500/25'
+                          }`}
+                        >
+                          {t.active_status ? 'ACTIVE' : 'INACTIVE'}
+                        </button>
+                      </td>
+                      <td className="px-4 py-4 text-right whitespace-nowrap space-x-1">
+                        <button
+                          onClick={() => openEditModal(t)}
+                          className="p-1.5 hover:bg-slate-100 dark:hover:bg-white/10 rounded-lg text-slate-400 hover:text-blue-500 transition cursor-pointer"
+                          title="Edit Profile"
+                        >
+                          <Edit2 size={14} />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteTenant(t.user_id)}
+                          className="p-1.5 hover:bg-red-500/10 rounded-lg text-slate-400 hover:text-red-500 transition cursor-pointer"
+                          title="Delete Tenant"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })
               ) : (
                 <tr>
                   <td colSpan="7" className="px-6 py-12 text-center text-slate-500 dark:text-gray-450 italic">
@@ -430,6 +572,226 @@ export default function TenantsHub({ selectedPropertyFilterId = 'all' }) {
           </table>
         </div>
       </div>
+
+      {/* Review Vehicle & Pet Change Request Modal */}
+      {reviewingRequest && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-[#1e2a3b] w-full max-w-2xl rounded-3xl border border-slate-200 dark:border-white/10 shadow-2xl overflow-y-auto max-h-[90vh] text-slate-900 dark:text-white text-left animate-scale-up">
+            <div className="p-6 space-y-6">
+              {/* Header */}
+              <div className="flex justify-between items-start">
+                <div className="flex items-center gap-3">
+                  <div className="p-3 rounded-2xl bg-amber-500/15 text-amber-600 dark:text-amber-400">
+                    <Car className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-black text-slate-900 dark:text-white">
+                      Review Vehicle & Pet Change Request
+                    </h2>
+                    <p className="text-xs text-slate-500 dark:text-gray-400">
+                      Tenant: <strong className="text-slate-800 dark:text-slate-200">{reviewingRequest.tenant_name || reviewingRequest.tenant_email}</strong> • {reviewingRequest.property_name} (Unit {reviewingRequest.unit?.unit_number || '1'})
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => { setReviewingRequest(null); setRejectNotes(''); }}
+                  className="p-1 text-slate-400 hover:text-slate-900 dark:text-gray-500 dark:hover:text-white"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              {/* Side-by-side comparison */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* Current Approved */}
+                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 space-y-3">
+                  <div className="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-white/10">
+                    <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                      Current Approved on Lease
+                    </span>
+                    <span className="text-[10px] font-bold text-slate-500 bg-slate-200 dark:bg-white/10 px-2 py-0.5 rounded-full">
+                      Active
+                    </span>
+                  </div>
+
+                  <div className="space-y-2 text-xs">
+                    <div>
+                      <span className="font-semibold text-slate-700 dark:text-slate-300 block mb-0.5">Vehicles:</span>
+                      <p className="font-mono bg-white dark:bg-black/20 p-2 rounded-lg border border-slate-200 dark:border-white/5 text-slate-800 dark:text-slate-200">
+                        {reviewingRequest.vehicle_details || 'No vehicles registered ($0/mo)'}
+                      </p>
+                    </div>
+
+                    <div>
+                      <span className="font-semibold text-slate-700 dark:text-slate-300 block mb-0.5">Pets:</span>
+                      <p className="bg-white dark:bg-black/20 p-2 rounded-lg border border-slate-200 dark:border-white/5 text-slate-800 dark:text-slate-200">
+                        {reviewingRequest.pet_details || 'No pets registered ($0/mo)'}
+                      </p>
+                    </div>
+
+                    <div className="pt-2 flex items-center justify-between font-medium text-slate-600 dark:text-slate-400">
+                      <span>Current Monthly Fees:</span>
+                      <strong className="text-slate-900 dark:text-white">
+                        ${((reviewingRequest.parking_fee || 0) + (reviewingRequest.pet_fee || 0)).toFixed(2)}/mo
+                      </strong>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Requested Changes */}
+                <div className="p-4 rounded-2xl bg-amber-500/5 dark:bg-amber-500/10 border border-amber-500/30 space-y-3">
+                  <div className="flex items-center justify-between pb-2 border-b border-amber-500/20">
+                    <span className="text-xs font-bold text-amber-800 dark:text-amber-300 uppercase tracking-wider">
+                      Requested Modifications
+                    </span>
+                    <span className="text-[10px] font-bold text-amber-700 bg-amber-500/20 px-2 py-0.5 rounded-full">
+                      Pending Landlord Action
+                    </span>
+                  </div>
+
+                  {(() => {
+                    // Compute vehicle diff
+                    const currV = reviewingRequest.vehicle_details ? reviewingRequest.vehicle_details.split(';').map(s => s.trim()).filter(Boolean) : [];
+                    const pendV = reviewingRequest.pending_vehicle_details ? reviewingRequest.pending_vehicle_details.split(';').map(s => s.trim()).filter(Boolean) : [];
+                    
+                    const addedV = pendV.filter(pv => !currV.includes(pv));
+                    const removedV = currV.filter(cv => !pendV.includes(cv));
+
+                    // Compute pet diff
+                    const currP = reviewingRequest.pet_details ? reviewingRequest.pet_details.split(';').map(s => s.trim()).filter(Boolean) : [];
+                    const pendP = reviewingRequest.pending_pet_details ? reviewingRequest.pending_pet_details.split(';').map(s => s.trim()).filter(Boolean) : [];
+
+                    const addedP = [];
+                    const removedP = [];
+                    const currCounts = {};
+                    currP.forEach(p => { currCounts[p] = (currCounts[p] || 0) + 1; });
+                    const pendCounts = {};
+                    pendP.forEach(p => { pendCounts[p] = (pendCounts[p] || 0) + 1; });
+
+                    Object.keys(pendCounts).forEach(k => {
+                      const diff = pendCounts[k] - (currCounts[k] || 0);
+                      for (let i = 0; i < diff; i++) addedP.push(k);
+                    });
+                    Object.keys(currCounts).forEach(k => {
+                      const diff = currCounts[k] - (pendCounts[k] || 0);
+                      for (let i = 0; i < diff; i++) removedP.push(k);
+                    });
+
+                    const newVCount = pendV.length;
+                    const newPCount = pendP.length;
+                    const newTotal = (newVCount * 25) + (newPCount * 50);
+
+                    return (
+                      <div className="space-y-3 text-xs">
+                        {/* Specific Mod Items */}
+                        <div className="bg-white dark:bg-black/30 p-3 rounded-xl border border-amber-500/20 space-y-2">
+                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Itemized Changes:</span>
+                          
+                          <ul className="space-y-1.5">
+                            {addedP.map((p, i) => (
+                              <li key={`add-p-${i}`} className="font-bold text-emerald-700 dark:text-emerald-400 flex items-center gap-1.5">
+                                <span className="text-xs font-black">+ Added Pet:</span> {p.replace(/^Pet\s*\d+:\s*/i, '')} <span className="text-[10px] font-normal text-emerald-600 dark:text-emerald-400">(+$50.00/mo)</span>
+                              </li>
+                            ))}
+                            {removedP.map((p, i) => (
+                              <li key={`rem-p-${i}`} className="font-bold text-rose-600 dark:text-rose-400 flex items-center gap-1.5">
+                                <span className="text-xs font-black">- Removed Pet:</span> {p.replace(/^Pet\s*\d+:\s*/i, '')} <span className="text-[10px] font-normal text-rose-500">(-$50.00/mo)</span>
+                              </li>
+                            ))}
+
+                            {addedV.map((v, i) => (
+                              <li key={`add-v-${i}`} className="font-bold text-emerald-700 dark:text-emerald-400 flex items-center gap-1.5">
+                                <span className="text-xs font-black">+ Added Vehicle:</span> {v.replace(/^Car\s*\d+:\s*/i, '')} <span className="text-[10px] font-normal text-emerald-600 dark:text-emerald-400">(+$25.00/mo)</span>
+                              </li>
+                            ))}
+                            {removedV.map((v, i) => (
+                              <li key={`rem-v-${i}`} className="font-bold text-rose-600 dark:text-rose-400 flex items-center gap-1.5">
+                                <span className="text-xs font-black">- Removed Vehicle:</span> {v.replace(/^Car\s*\d+:\s*/i, '')} <span className="text-[10px] font-normal text-rose-500">(-$25.00/mo)</span>
+                              </li>
+                            ))}
+
+                            {addedP.length === 0 && removedP.length === 0 && addedV.length === 0 && removedV.length === 0 && (
+                              <li className="text-slate-400 italic">No net changes detected.</li>
+                            )}
+                          </ul>
+                        </div>
+
+                        {/* Calculated New Fee */}
+                        <div className="pt-2 flex items-center justify-between font-medium text-amber-900 dark:text-amber-300 border-t border-amber-500/20">
+                          <span>Updated Monthly Fees (Total):</span>
+                          <strong className="text-base font-black text-amber-600 dark:text-amber-400">
+                            ${newTotal.toFixed(2)}/mo
+                          </strong>
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </div>
+              </div>
+
+              {/* Tenant notes */}
+              {reviewingRequest.vehicle_pet_request_notes && (
+                <div className="p-3.5 rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-xs">
+                  <span className="font-bold text-slate-700 dark:text-slate-300 block mb-1">Tenant Note:</span>
+                  <p className="text-slate-600 dark:text-slate-300 italic">"{reviewingRequest.vehicle_pet_request_notes}"</p>
+                </div>
+              )}
+
+              {/* Legal Note Box */}
+              <div className="p-4 rounded-2xl bg-blue-500/5 dark:bg-blue-500/10 border border-blue-500/20 flex items-start gap-3">
+                <FileText size={18} className="text-blue-500 shrink-0 mt-0.5" />
+                <p className="text-xs text-blue-900 dark:text-blue-200/90 leading-relaxed">
+                  <strong>US Legal & Lease Compliance:</strong> Approving this change will automatically append an official <strong>Lease Addendum: Vehicle & Pet Authorization</strong> into the tenant's legal agreement on file, update their permit registry, and adjust monthly dues.
+                </p>
+              </div>
+
+              {/* Rejection Note Field */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                  Decline Reason (Required only if rejecting):
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. Assigned parking lot is at full capacity / Breed restricted under society bylaws"
+                  value={rejectNotes}
+                  onChange={(e) => setRejectNotes(e.target.value)}
+                  className="w-full border border-slate-300 dark:border-white/20 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-red-500 bg-white dark:bg-[#1E3248] text-slate-900 dark:text-white"
+                />
+              </div>
+
+              {/* Action Buttons */}
+              <div className="pt-2 flex flex-col-reverse sm:flex-row gap-3">
+                <button
+                  type="button"
+                  disabled={actionProcessing}
+                  onClick={() => { setReviewingRequest(null); setRejectNotes(''); }}
+                  className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 text-slate-700 dark:text-white rounded-2xl font-bold transition text-xs cursor-pointer text-center"
+                >
+                  Close
+                </button>
+
+                <button
+                  type="button"
+                  disabled={actionProcessing}
+                  onClick={() => handleRejectRequest(reviewingRequest.lease_id)}
+                  className="flex-1 py-3 bg-rose-50 hover:bg-rose-100 dark:bg-rose-500/10 dark:hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/30 rounded-2xl font-bold transition text-xs cursor-pointer text-center disabled:opacity-50"
+                >
+                  {actionProcessing ? 'Processing...' : 'Decline Request'}
+                </button>
+
+                <button
+                  type="button"
+                  disabled={actionProcessing}
+                  onClick={() => handleApproveRequest(reviewingRequest.lease_id)}
+                  className="flex-1 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-2xl font-bold transition shadow-lg shadow-emerald-500/20 text-xs flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+                >
+                  <Check size={16} /> {actionProcessing ? 'Approving...' : 'Approve & Update Lease'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Edit Tenant Modal */}
       {showEditModal && (

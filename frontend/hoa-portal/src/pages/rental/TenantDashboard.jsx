@@ -384,138 +384,156 @@ export default function TenantDashboard({ user, setUser, setActivePage }) {
         <>
           {/* Premium Stats Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {/* Card 1: Lease Residence */}
-        <div className="group p-5 rounded-3xl bg-white dark:bg-slate-900/60 dark:backdrop-blur-md border border-slate-200/60 dark:border-white/[0.05] shadow-sm hover:shadow-xl hover:border-blue-500/20 hover:-translate-y-1 transition-all duration-300 text-left">
-          <div className="flex justify-between items-center text-slate-450 dark:text-slate-500">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-gray-450">Residence</span>
-            <div className="p-2.5 bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-2xl group-hover:scale-110 transition duration-300">
-              <Home className="w-5 h-5" />
+            {/* Card 1: Lease Residence */}
+            <div 
+              onClick={() => setActivePage('profile')} 
+              className="group p-5 rounded-3xl bg-white dark:bg-slate-900/60 dark:backdrop-blur-md border border-slate-200/60 dark:border-white/[0.05] shadow-sm hover:shadow-xl hover:border-blue-500/20 hover:-translate-y-1 transition-all duration-300 text-left cursor-pointer"
+            >
+              <div className="flex justify-between items-center text-slate-450 dark:text-slate-500">
+                <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-gray-450">Residence</span>
+                <div className="p-2.5 bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-2xl group-hover:scale-110 transition duration-300">
+                  <Home className="w-5 h-5" />
+                </div>
+              </div>
+              <div className="mt-4">
+                <div className="text-2xl font-black text-slate-900 dark:text-white">
+                  {activeLease?.unit?.unit_number === 'Single Family' ? (
+                    'Entire House'
+                  ) : activeLease?.unit?.unit_number === 'Condo Unit' ? (
+                    'Condominium'
+                  ) : (
+                    `${activeLease?.unit?.property_type === 'condo' ? 'Apt' : 'Unit'} ${getCleanUnitNumber(activeLease?.unit?.unit_number)}`
+                  )}
+                </div>
+                <div className="text-xs text-slate-500 dark:text-gray-400 mt-1 font-semibold flex items-center gap-1">
+                  <Building2 size={12} className="text-slate-400" /> {activeLease?.property_name || 'Sunset Heights'}
+                </div>
+              </div>
+            </div>
+
+            {/* Card 2: Monthly Rent */}
+            <div 
+              onClick={() => setActivePage('rent_ledger')} 
+              className="group p-5 rounded-3xl bg-white dark:bg-slate-900/60 dark:backdrop-blur-md border border-slate-200/60 dark:border-white/[0.05] shadow-sm hover:shadow-xl hover:border-emerald-500/20 hover:-translate-y-1 transition-all duration-300 text-left cursor-pointer"
+            >
+              <div className="flex justify-between items-center text-slate-450 dark:text-slate-500">
+                <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-gray-450">Monthly Rent</span>
+                <div className="p-2.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-2xl group-hover:scale-110 transition duration-300">
+                  <CreditCard className="w-5 h-5" />
+                </div>
+              </div>
+              <div className="mt-4">
+                <div className="text-2xl font-black text-slate-900 dark:text-white">
+                  {activeLease?.rent_amount ? `$${activeLease.rent_amount.toLocaleString()}` : '$0'}
+                </div>
+                <div className="text-xs text-slate-550 dark:text-gray-405 mt-1 font-semibold flex items-center gap-1">
+                  <Calendar size={12} className="text-slate-400" /> Due on 1st of month
+                </div>
+              </div>
+            </div>
+
+            {/* Card 3: Lease Status */}
+            <div 
+              onClick={() => setActivePage('leases_hub')} 
+              className="group p-5 rounded-3xl bg-white dark:bg-slate-900/60 dark:backdrop-blur-md border border-slate-200/60 dark:border-white/[0.05] shadow-sm hover:shadow-xl hover:border-violet-500/20 hover:-translate-y-1 transition-all duration-300 text-left cursor-pointer"
+            >
+              <div className="flex justify-between items-center text-slate-450 dark:text-slate-500">
+                <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-gray-450">Lease Agreement</span>
+                <div className="p-2.5 bg-violet-500/10 text-violet-600 dark:text-violet-400 rounded-2xl group-hover:scale-110 transition duration-300">
+                  <FileText className="w-5 h-5" />
+                </div>
+              </div>
+              <div className="mt-4">
+                <div className="flex items-center gap-2">
+                  <span className={`inline-flex items-center gap-1.5 text-xs font-black px-2.5 py-1 rounded-full uppercase tracking-wider ${
+                    activeLease?.status === 'ACTIVE' 
+                      ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20' 
+                      : 'bg-yellow-500/10 text-yellow-600 dark:text-yellow-405 border border-yellow-500/20'
+                  }`}>
+                    {activeLease?.status}
+                    <span className={`w-1.5 h-1.5 rounded-full ${activeLease?.status === 'ACTIVE' ? 'bg-emerald-500 animate-pulse' : 'bg-yellow-500 animate-pulse'}`}></span>
+                  </span>
+                </div>
+                <div className="text-xs text-slate-450 dark:text-slate-500 mt-2 font-mono font-medium">Agreement ID: #{getLeaseSeqNum(activeLease)}</div>
+              </div>
+            </div>
+
+            {/* Card 4: Balance Due */}
+            <div 
+              onClick={() => setActivePage('rent_ledger')} 
+              className="group p-5 rounded-3xl bg-white dark:bg-slate-900/60 dark:backdrop-blur-md border border-slate-200/60 dark:border-white/[0.05] shadow-sm hover:shadow-xl hover:border-rose-500/20 hover:-translate-y-1 transition-all duration-300 text-left cursor-pointer"
+            >
+              <div className="flex justify-between items-center text-slate-450 dark:text-slate-500">
+                <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-gray-450">Balance Due</span>
+                <div className="p-2.5 bg-rose-500/10 text-rose-600 dark:text-rose-400 rounded-2xl group-hover:scale-110 transition duration-300">
+                  <ShieldAlert className="w-5 h-5" />
+                </div>
+              </div>
+              <div className="mt-4">
+                <div className={`text-2xl font-black ${totalUnpaid > 0 ? 'text-rose-600 dark:text-rose-400' : 'text-slate-900 dark:text-white'}`}>
+                  ${totalUnpaid.toLocaleString()}
+                </div>
+                <div className="text-xs text-slate-550 dark:text-gray-405 mt-1 font-semibold flex items-center gap-1">
+                  {totalUnpaid > 0 ? 'Action required immediately' : 'Account fully paid'}
+                </div>
+              </div>
             </div>
           </div>
-          <div className="mt-4">
-            <div className="text-2xl font-black text-slate-900 dark:text-white">
-              {activeLease?.unit?.unit_number === 'Single Family' ? (
-                'Entire House'
-              ) : activeLease?.unit?.unit_number === 'Condo Unit' ? (
-                'Condominium'
+
+          {/* Main Content Layout */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            {/* Left Side: Recent Invoices */}
+            <div className="lg:col-span-8 p-6 rounded-3xl bg-white dark:bg-slate-900/60 dark:backdrop-blur-md border border-slate-200/60 dark:border-white/[0.05] shadow-sm space-y-5">
+              <div className="flex justify-between items-center pb-2 border-b border-slate-100 dark:border-white/5">
+                <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                  <FileText size={18} className="text-blue-500" /> Recent Rent Invoices
+                </h3>
+                <button 
+                  onClick={() => setActivePage('rent_ledger')} 
+                  className="text-xs text-slate-400 hover:text-blue-600 dark:text-gray-500 dark:hover:text-blue-400 font-semibold font-mono transition cursor-pointer"
+                >
+                  Ledger history &rarr;
+                </button>
+              </div>
+
+              {invoices.length === 0 ? (
+                <div className="py-12 text-center text-slate-400 text-sm font-semibold">No invoices generated for this lease yet.</div>
               ) : (
-                `${activeLease?.unit?.property_type === 'condo' ? 'Apt' : 'Unit'} ${getCleanUnitNumber(activeLease?.unit?.unit_number)}`
+                <div className="space-y-3">
+                  {invoices.map(inv => (
+                    <div 
+                      key={inv.invoice_id} 
+                      onClick={() => setActivePage('rent_ledger')}
+                      className="group p-4 rounded-2xl border border-slate-100 dark:border-white/5 hover:border-blue-500/20 bg-slate-50/50 hover:bg-slate-50 dark:bg-white/[0.01] dark:hover:bg-white/[0.03] flex justify-between items-center text-sm transition-all duration-200 cursor-pointer"
+                    >
+                      <div className="flex items-center gap-3 text-left">
+                        <div className="p-2.5 bg-blue-500/5 text-blue-600 dark:text-blue-400 rounded-xl group-hover:scale-110 transition duration-200">
+                          <FileText size={16} />
+                        </div>
+                        <div>
+                          <span className="font-bold text-slate-900 dark:text-white font-mono">Invoice #{inv.seq_num || inv.invoice_id}</span>
+                          <p className="text-xs text-slate-450 dark:text-slate-400 mt-0.5 flex items-center gap-1 font-semibold">
+                            <Calendar size={11} className="text-slate-400" /> Due Date: {new Date(inv.due_date).toLocaleDateString('en-US', {month: 'short', day: 'numeric', year: 'numeric'})}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <span className="font-bold text-slate-900 dark:text-white font-mono text-base">
+                          ${(inv.amount + (inv.late_fee_applied || 0)).toLocaleString()}
+                        </span>
+                        <span className={`text-[9px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider border ${
+                          inv.status === 'PAID' 
+                            ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' 
+                            : 'bg-yellow-500/10 text-yellow-600 border-yellow-500/20'
+                        }`}>
+                          {inv.status}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               )}
             </div>
-            <div className="text-xs text-slate-500 dark:text-gray-400 mt-1 font-semibold flex items-center gap-1">
-              <Building2 size={12} className="text-slate-400" /> {activeLease?.property_name || 'Sunset Heights'}
-            </div>
-          </div>
-        </div>
-
-        {/* Card 2: Monthly Rent */}
-        <div className="group p-5 rounded-3xl bg-white dark:bg-slate-900/60 dark:backdrop-blur-md border border-slate-200/60 dark:border-white/[0.05] shadow-sm hover:shadow-xl hover:border-emerald-500/20 hover:-translate-y-1 transition-all duration-300 text-left">
-          <div className="flex justify-between items-center text-slate-450 dark:text-slate-500">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-gray-450">Monthly Rent</span>
-            <div className="p-2.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-2xl group-hover:scale-110 transition duration-300">
-              <CreditCard className="w-5 h-5" />
-            </div>
-          </div>
-          <div className="mt-4">
-            <div className="text-2xl font-black text-slate-900 dark:text-white">
-              {activeLease?.rent_amount ? `$${activeLease.rent_amount.toLocaleString()}` : '$0'}
-            </div>
-            <div className="text-xs text-slate-550 dark:text-gray-405 mt-1 font-semibold flex items-center gap-1">
-              <Calendar size={12} className="text-slate-400" /> Due on 1st of month
-            </div>
-          </div>
-        </div>
-
-        {/* Card 3: Lease Status */}
-        <div className="group p-5 rounded-3xl bg-white dark:bg-slate-900/60 dark:backdrop-blur-md border border-slate-200/60 dark:border-white/[0.05] shadow-sm hover:shadow-xl hover:border-violet-500/20 hover:-translate-y-1 transition-all duration-300 text-left">
-          <div className="flex justify-between items-center text-slate-450 dark:text-slate-500">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-gray-450">Lease Agreement</span>
-            <div className="p-2.5 bg-violet-500/10 text-violet-600 dark:text-violet-400 rounded-2xl group-hover:scale-110 transition duration-300">
-              <FileText className="w-5 h-5" />
-            </div>
-          </div>
-          <div className="mt-4">
-            <div className="flex items-center gap-2">
-              <span className={`inline-flex items-center gap-1.5 text-xs font-black px-2.5 py-1 rounded-full uppercase tracking-wider ${
-                activeLease?.status === 'ACTIVE' 
-                  ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20' 
-                  : 'bg-yellow-500/10 text-yellow-600 dark:text-yellow-405 border border-yellow-500/20'
-              }`}>
-                {activeLease?.status}
-                <span className={`w-1.5 h-1.5 rounded-full ${activeLease?.status === 'ACTIVE' ? 'bg-emerald-500 animate-pulse' : 'bg-yellow-500 animate-pulse'}`}></span>
-              </span>
-            </div>
-            <div className="text-xs text-slate-450 dark:text-slate-500 mt-2 font-mono font-medium">Agreement ID: #{getLeaseSeqNum(activeLease)}</div>
-          </div>
-        </div>
-
-        {/* Card 4: Balance Due */}
-        <div className="group p-5 rounded-3xl bg-white dark:bg-slate-900/60 dark:backdrop-blur-md border border-slate-200/60 dark:border-white/[0.05] shadow-sm hover:shadow-xl hover:border-rose-500/20 hover:-translate-y-1 transition-all duration-300 text-left">
-          <div className="flex justify-between items-center text-slate-450 dark:text-slate-500">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-gray-450">Balance Due</span>
-            <div className="p-2.5 bg-rose-500/10 text-rose-600 dark:text-rose-400 rounded-2xl group-hover:scale-110 transition duration-300">
-              <ShieldAlert className="w-5 h-5" />
-            </div>
-          </div>
-          <div className="mt-4">
-            <div className={`text-2xl font-black ${totalUnpaid > 0 ? 'text-rose-600 dark:text-rose-400' : 'text-slate-900 dark:text-white'}`}>
-              ${totalUnpaid.toLocaleString()}
-            </div>
-            <div className="text-xs text-slate-550 dark:text-gray-405 mt-1 font-semibold flex items-center gap-1">
-              {totalUnpaid > 0 ? 'Action required immediately' : 'Account fully paid'}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Main Content Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* Left Side: Recent Invoices */}
-        <div className="lg:col-span-8 p-6 rounded-3xl bg-white dark:bg-slate-900/60 dark:backdrop-blur-md border border-slate-200/60 dark:border-white/[0.05] shadow-sm space-y-5">
-          <div className="flex justify-between items-center pb-2 border-b border-slate-100 dark:border-white/5">
-            <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-              <FileText size={18} className="text-blue-500" /> Recent Rent Invoices
-            </h3>
-            <span className="text-xs text-slate-400 dark:text-gray-500 font-semibold font-mono">Ledger history</span>
-          </div>
-
-          {invoices.length === 0 ? (
-            <div className="py-12 text-center text-slate-400 text-sm font-semibold">No invoices generated for this lease yet.</div>
-          ) : (
-            <div className="space-y-3">
-              {invoices.map(inv => (
-                <div 
-                  key={inv.invoice_id} 
-                  className="group p-4 rounded-2xl border border-slate-100 dark:border-white/5 hover:border-blue-500/20 bg-slate-50/50 hover:bg-slate-50 dark:bg-white/[0.01] dark:hover:bg-white/[0.03] flex justify-between items-center text-sm transition-all duration-200"
-                >
-                  <div className="flex items-center gap-3 text-left">
-                    <div className="p-2.5 bg-blue-500/5 text-blue-600 dark:text-blue-400 rounded-xl">
-                      <FileText size={16} />
-                    </div>
-                    <div>
-                      <span className="font-bold text-slate-900 dark:text-white font-mono">Invoice #{inv.seq_num || inv.invoice_id}</span>
-                      <p className="text-xs text-slate-450 dark:text-slate-400 mt-0.5 flex items-center gap-1 font-semibold">
-                        <Calendar size={11} className="text-slate-400" /> Due Date: {new Date(inv.due_date).toLocaleDateString('en-US', {month: 'short', day: 'numeric', year: 'numeric'})}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <span className="font-bold text-slate-900 dark:text-white font-mono text-base">
-                      ${(inv.amount + (inv.late_fee_applied || 0)).toLocaleString()}
-                    </span>
-                    <span className={`text-[9px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider border ${
-                      inv.status === 'PAID' 
-                        ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' 
-                        : 'bg-yellow-500/10 text-yellow-600 border-yellow-500/20'
-                    }`}>
-                      {inv.status}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
 
         {/* Right Side: Quick Action Buttons */}
         <div className="lg:col-span-4 p-6 rounded-3xl bg-white dark:bg-slate-900/60 dark:backdrop-blur-md border border-slate-200/60 dark:border-white/[0.05] shadow-sm space-y-5">

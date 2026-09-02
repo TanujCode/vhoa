@@ -252,6 +252,13 @@ class LeaseOut(BaseModel):
     tenant_emergency_phone: Optional[str] = None
     num_occupants: Optional[int] = 1
     num_minors: Optional[int] = 0
+    vehicle_details: Optional[str] = None
+    pet_details: Optional[str] = None
+    pending_vehicle_details: Optional[str] = None
+    pending_pet_details: Optional[str] = None
+    vehicle_pet_request_status: Optional[str] = None
+    vehicle_pet_request_notes: Optional[str] = None
+    vehicle_pet_requested_at: Optional[datetime] = None
     unit_change_requested: Optional[bool] = False
     unit_change_request_notes: Optional[str] = None
     documents: List[TenantDocumentOut] = []

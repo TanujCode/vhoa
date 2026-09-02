@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import {
   Camera, Mail, Phone, Shield, Clock,
-  CheckCircle, XCircle, Save, Key, Eye, EyeOff, User, Bell, Trash2, ChevronDown, Edit
+  CheckCircle, XCircle, Save, Key, Eye, EyeOff, User, Bell, Trash2, ChevronDown, Edit,
+  Car, PawPrint, Info, Plus, Send, AlertTriangle, AlertCircle, CheckCircle2, X
 } from 'lucide-react';
 import API, { getBaseUrl } from '../../services/api';
 import { formatUsPhone, formatPhoneAsYouType } from '../../utils/phoneFormatter';
@@ -36,6 +37,12 @@ const parsePhoneNumber = (fullNumber) => {
     numberOnly: fullNumber || ''
   };
 };
+
+const US_STATES = [
+  'AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA', 'HI', 'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME', 'MD',
+  'MA', 'MI', 'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 'NJ', 'NM', 'NY', 'NC', 'ND', 'OH', 'OK', 'OR', 'PA', 'RI', 'SC',
+  'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI', 'WY'
+];
 
 const RentalProfile = ({ user, setUser, viewRole }) => {
   // ── Form State ────────────────────────────
@@ -91,6 +98,128 @@ const RentalProfile = ({ user, setUser, viewRole }) => {
   const [activeTab, setActiveTab] = useState('profile');
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+
+  // ── Vehicle & Pets State (structured arrays matching lease signing format) ──
+  const [vehicles, setVehicles] = useState([]);   // [{ plate, state }]
+  const [pets, setPets] = useState([]);            // [{ type }]
+  const [activeVehicles, setActiveVehicles] = useState([]);
+  const [activePets, setActivePets] = useState([]);
+  const [pendingVehicles, setPendingVehicles] = useState([]);
+  const [pendingPets, setPendingPets] = useState([]);
+  const [vpRequestStatus, setVpRequestStatus] = useState(null); // 'PENDING_APPROVAL' | 'APPROVED' | 'REJECTED'
+  const [vpRequestNotes, setVpRequestNotes] = useState('');
+  const [vpRequestedAt, setVpRequestedAt] = useState(null);
+  const [vpTenantNote, setVpTenantNote] = useState('');
+
+  const [vpEditing, setVpEditing] = useState(false);
+  const [vpSaving, setVpSaving] = useState(false);
+  const [vpHasApp, setVpHasApp] = useState(true);
+  const [vpLoaded, setVpLoaded] = useState(false);
+  const [dismissedRejectBanner, setDismissedRejectBanner] = useState(false);
+
+  // Helper: parse "Car 1: ABC-1234 (State: AL); Car 2: ..." → [{plate, state}]
+  const parseVehicles = (str) => {
+    if (!str) return [];
+    return str.split(';').map(s => s.trim()).filter(Boolean).map(part => {
+      const plateMatch = part.match(/:\s*([^(]+)/);
+      const stateMatch = part.match(/\(State:\s*([^)]+)\)/);
+      return {
+        plate: plateMatch ? plateMatch[1].trim() : part,
+        state: stateMatch ? stateMatch[1].trim() : 'AL',
+      };
+    });
+  };
+
+  // Helper: parse "Pet 1: Dog; Pet 2: Cat" → [{type}]
+  const parsePets = (str) => {
+    if (!str) return [];
+    return str.split(';').map(s => s.trim()).filter(Boolean).map(part => {
+      const typeMatch = part.match(/:\s*(.+)/);
+      return { type: typeMatch ? typeMatch[1].trim() : part };
+    });
+  };
+
+  // Helper: serialize [{plate, state}] → string
+  const serializeVehicles = (arr) =>
+    arr.map((v, i) => `Car ${i + 1}: ${v.plate || 'N/A'} (State: ${v.state || 'AL'})`).join('; ');
+
+  // Helper: serialize [{type}] → string
+  const serializePets = (arr) =>
+    arr.map((p, i) => `Pet ${i + 1}: ${p.type || 'Dog'}`).join('; ');
+
+  const fetchVehiclePetInfo = () => {
+    API.get('/rental/user/vehicle-pet-info')
+      .then(res => {
+        const parsedV = parseVehicles(res.data.vehicle_details);
+        const parsedP = parsePets(res.data.pet_details);
+        const parsedPendingV = parseVehicles(res.data.pending_vehicle_details);
+        const parsedPendingP = parsePets(res.data.pending_pet_details);
+
+        setActiveVehicles(parsedV);
+        setActivePets(parsedP);
+        setPendingVehicles(parsedPendingV);
+        setPendingPets(parsedPendingP);
+
+        // If currently editing, we keep drafts, otherwise sync with active or pending
+        if (res.data.vehicle_pet_request_status === 'PENDING_APPROVAL' && parsedPendingV.length > 0) {
+          setVehicles(parsedPendingV);
+          setPets(parsedPendingP);
+        } else {
+          setVehicles(parsedV);
+          setPets(parsedP);
+        }
+
+        setVpRequestStatus(res.data.vehicle_pet_request_status);
+        setVpRequestNotes(res.data.vehicle_pet_request_notes || '');
+        setVpRequestedAt(res.data.vehicle_pet_requested_at);
+        setVpHasApp(res.data.has_application !== false);
+        setVpLoaded(true);
+      })
+      .catch(() => { setVpLoaded(true); });
+  };
+
+  // ── Fetch vehicle/pet info when tab opens ──
+  useEffect(() => {
+    if (activeTab === 'vehicle_pets') {
+      fetchVehiclePetInfo();
+    }
+  }, [activeTab]);
+
+  const handleSaveVehiclePet = async () => {
+    if (vehicles.length > 3) {
+      showMsg('error', 'Maximum limit of 3 vehicles allowed per lease.');
+      return;
+    }
+    if (pets.length > 2) {
+      showMsg('error', 'Maximum limit of 2 household pets allowed per lease.');
+      return;
+    }
+    try {
+      setVpSaving(true);
+      const isTenant = currentRole === 'TENANT';
+      const res = await API.put('/rental/user/vehicle-pet-info', {
+        vehicle_details: serializeVehicles(vehicles),
+        pet_details: serializePets(pets),
+        current_vehicle_details: serializeVehicles(activeVehicles),
+        current_pet_details: serializePets(activePets),
+        notes: vpTenantNote
+      });
+
+      if (isTenant) {
+        showMsg('success', 'Change request submitted for Landlord approval! Your lease agreement will update once approved.');
+      } else {
+        showMsg('success', 'Vehicle & pet details updated successfully!');
+      }
+      setVpEditing(false);
+      setVpTenantNote('');
+      fetchVehiclePetInfo();
+    } catch (err) {
+      const detail = err.response?.data?.detail;
+      showMsg('error', typeof detail === 'string' ? detail : 'Failed to submit change request.');
+    } finally {
+      setVpSaving(false);
+    }
+  };
   const [sendingOtp, setSendingOtp] = useState(false);
   const [otpSent, setOtpSent] = useState(false);
   const [pwdForm, setPwdForm] = useState({ otp_code: '', new_password: '', confirm: '' });
@@ -564,9 +693,10 @@ const RentalProfile = ({ user, setUser, viewRole }) => {
           {/* Tabs */}
           <div className="flex gap-2 mb-5 flex-wrap">
             {[
-              { id: 'profile',      label: 'Edit Profile' },
+              { id: 'profile',       label: 'Edit Profile' },
               { id: 'notifications', label: 'Notifications' },
-              { id: 'password',     label: 'Change Password' },
+              ...(currentRole === 'TENANT' ? [{ id: 'vehicle_pets', label: 'Vehicle & Pets' }] : []),
+              { id: 'password',      label: 'Change Password' },
             ].map(tab => (
               <button
                 key={tab.id}
@@ -641,97 +771,10 @@ const RentalProfile = ({ user, setUser, viewRole }) => {
                 </div>
               </div>
 
-              {currentRole === 'TENANT' && (
-                <div>
-                  <span className="text-xs text-slate-500 dark:text-gray-400 mb-2 block font-medium">Verify Identity & Verification Documents</span>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {/* ID Proof */}
-                    <div className="bg-slate-500/5 border border-slate-200 dark:border-white/5 rounded-3xl p-5 flex flex-col justify-between gap-4 transition hover:shadow-md">
-                      <div>
-                        <div className="flex items-center justify-between mb-3">
-                          <span className="text-xs font-bold text-slate-400 dark:text-gray-400 tracking-wider uppercase">Identity Verification (ID)</span>
-                          {user?.id_proof_url ? (
-                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400 border border-emerald-500/20">
-                              <CheckCircle size={12} /> Uploaded
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400 border border-amber-500/20">
-                              <XCircle size={12} /> Pending
-                            </span>
-                          )}
-                        </div>
-
-                        {user?.id_proof_url ? (
-                          <div className="flex items-center gap-2 mt-2">
-                            <a
-                              href={getBaseUrl(user.id_proof_url)}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1.5 text-xs text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300 font-medium transition bg-blue-500/5 hover:bg-blue-500/10 px-3 py-1.5 rounded-lg border border-blue-500/10"
-                            >
-                              <Eye size={14} /> View Document
-                            </a>
-                          </div>
-                        ) : (
-                          <p className="text-xs text-slate-400 dark:text-gray-500 mt-1">No identity verification document uploaded yet.</p>
-                        )}
-                      </div>
-
-                      <div className="border-t border-slate-100 dark:border-white/5 pt-3 mt-1">
-                        <label className="w-full inline-flex items-center justify-center gap-2 py-2 bg-slate-50 hover:bg-slate-100 dark:bg-[#1E3248] dark:hover:bg-[#253d58] border border-slate-200 dark:border-white/10 text-center rounded-xl text-xs font-semibold text-slate-700 dark:text-white cursor-pointer transition">
-                          {uploadingId ? 'Uploading...' : user?.id_proof_url ? 'Replace Document' : 'Upload ID Proof'}
-                          <input type="file" accept="image/*,application/pdf" onChange={handleIdProofUpload} disabled={uploadingId} className="hidden" />
-                        </label>
-                      </div>
-                    </div>
-
-                    {/* Address Proof */}
-                    <div className="bg-slate-500/5 border border-slate-200 dark:border-white/5 rounded-3xl p-5 flex flex-col justify-between gap-4 transition hover:shadow-md">
-                      <div>
-                        <div className="flex items-center justify-between mb-3">
-                          <span className="text-xs font-bold text-slate-400 dark:text-gray-400 tracking-wider uppercase">Address Proof</span>
-                          {user?.address_proof_url ? (
-                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400 border border-emerald-500/20">
-                              <CheckCircle size={12} /> Uploaded
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400 border border-amber-500/20">
-                              <XCircle size={12} /> Pending
-                            </span>
-                          )}
-                        </div>
-
-                        {user?.address_proof_url ? (
-                          <div className="flex items-center gap-2 mt-2">
-                            <a
-                              href={getBaseUrl(user.address_proof_url)}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1.5 text-xs text-purple-600 hover:text-purple-500 dark:text-purple-400 dark:hover:text-purple-300 font-medium transition bg-purple-500/5 hover:bg-purple-500/10 px-3 py-1.5 rounded-lg border border-purple-500/10"
-                            >
-                              <Eye size={14} /> View Document
-                            </a>
-                          </div>
-                        ) : (
-                          <p className="text-xs text-slate-400 dark:text-gray-500 mt-1">No address verification document uploaded yet.</p>
-                        )}
-                      </div>
-
-                      <div className="border-t border-slate-100 dark:border-white/5 pt-3 mt-1">
-                        <label className="w-full inline-flex items-center justify-center gap-2 py-2 bg-slate-50 hover:bg-slate-100 dark:bg-[#1E3248] dark:hover:bg-[#253d58] border border-slate-200 dark:border-white/10 text-center rounded-xl text-xs font-semibold text-slate-700 dark:text-white cursor-pointer transition">
-                          {uploadingAddr ? 'Uploading...' : user?.address_proof_url ? 'Replace Document' : 'Upload Address Proof'}
-                          <input type="file" accept="image/*,application/pdf" onChange={handleAddressProofUpload} disabled={uploadingAddr} className="hidden" />
-                        </label>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
               {!isEditing ? (
                 <button 
                   onClick={() => setIsEditing(true)} 
-                  className="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl font-medium transition flex items-center justify-center gap-2"
+                  className="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl font-medium transition flex items-center justify-center gap-2 cursor-pointer shadow-md shadow-blue-500/20"
                 >
                   <Edit size={16} /> Edit Profile
                 </button>
@@ -819,6 +862,435 @@ const RentalProfile = ({ user, setUser, viewRole }) => {
                 <Save size={16} />
                 Save Preferences
               </button>
+            </div>
+          )}
+
+          {/* ── Vehicle & Pets Tab ── */}
+          {activeTab === 'vehicle_pets' && (
+            <div className="bg-white dark:bg-[#162535] border border-slate-200 dark:border-white/10 rounded-3xl p-6 space-y-6 text-slate-900 dark:text-white">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                <div>
+                  <h3 className="text-base font-semibold text-slate-900 dark:text-white flex items-center gap-2 mb-1">
+                    <Car size={18} className="text-blue-500" /> Vehicle & Pet Information
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-gray-400">
+                    Update vehicle and pet details listed on your rental lease. Any modifications require landlord review and lease covenant approval.
+                  </p>
+                </div>
+
+                {vpRequestStatus === 'APPROVED' && (
+                  <span className="self-start sm:self-auto inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                    <CheckCircle2 size={13} /> Active & Approved
+                  </span>
+                )}
+              </div>
+
+              {!vpLoaded ? (
+                <div className="flex justify-center py-10">
+                  <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                </div>
+              ) : !vpHasApp ? (
+                <div className="flex items-start gap-3 p-4 rounded-2xl bg-amber-500/5 border border-amber-500/20 text-amber-700 dark:text-amber-400">
+                  <Info size={18} className="mt-0.5 shrink-0" />
+                  <p className="text-sm">
+                    No rental application or active lease found linked to your account yet.
+                  </p>
+                </div>
+              ) : (
+                <>
+                  {/* ── Change Request Status Banner ── */}
+                  {vpRequestStatus === 'PENDING_APPROVAL' && (
+                    <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-amber-500/10 via-amber-500/5 to-transparent border border-amber-500/25 space-y-3">
+                      <div className="flex items-start gap-3">
+                        <div className="p-2 rounded-xl bg-amber-500/20 text-amber-600 dark:text-amber-400 shrink-0">
+                          <Clock size={18} />
+                        </div>
+                        <div className="space-y-1">
+                          <h4 className="text-sm font-bold text-amber-900 dark:text-amber-300 flex items-center gap-2">
+                            Change Request Pending Landlord Approval
+                          </h4>
+                          <p className="text-xs text-amber-700 dark:text-amber-400/90 leading-relaxed">
+                            Your requested vehicle and pet updates were submitted on{' '}
+                            <strong>{vpRequestedAt ? new Date(vpRequestedAt).toLocaleDateString() : 'recent submission'}</strong>.
+                            Your landlord has been alerted. Once approved, your lease agreement and parking covenants will update automatically.
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Pending Modifications Preview Box */}
+                      {(() => {
+                        const addedVehicles = pendingVehicles.filter(
+                          pv => !activeVehicles.some(av => (av.plate || '').trim().toLowerCase() === (pv.plate || '').trim().toLowerCase())
+                        );
+                        const removedVehicles = activeVehicles.filter(
+                          av => !pendingVehicles.some(pv => (pv.plate || '').trim().toLowerCase() === (av.plate || '').trim().toLowerCase())
+                        );
+
+                        // Pets diff
+                        const addedPets = [];
+                        const removedPets = [];
+                        const actCounts = {};
+                        activePets.forEach(p => {
+                          const k = (p.type || '').trim().toLowerCase();
+                          actCounts[k] = (actCounts[k] || 0) + 1;
+                        });
+                        const pendCounts = {};
+                        pendingPets.forEach(p => {
+                          const k = (p.type || '').trim().toLowerCase();
+                          pendCounts[k] = (pendCounts[k] || 0) + 1;
+                        });
+
+                        Object.keys(pendCounts).forEach(k => {
+                          const diff = pendCounts[k] - (actCounts[k] || 0);
+                          if (diff > 0) {
+                            const sample = pendingPets.find(p => (p.type || '').trim().toLowerCase() === k);
+                            for (let i = 0; i < diff; i++) addedPets.push(sample || { type: k });
+                          }
+                        });
+
+                        Object.keys(actCounts).forEach(k => {
+                          const diff = actCounts[k] - (pendCounts[k] || 0);
+                          if (diff > 0) {
+                            const sample = activePets.find(p => (p.type || '').trim().toLowerCase() === k);
+                            for (let i = 0; i < diff; i++) removedPets.push(sample || { type: k });
+                          }
+                        });
+
+                        return (
+                          <div className="mt-2 pt-3 border-t border-amber-500/20 grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                            <div className="bg-white/60 dark:bg-black/20 p-3 rounded-xl border border-amber-500/15">
+                              <span className="text-[10px] font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400 block mb-1.5">
+                                Vehicle Modifications
+                              </span>
+                              {addedVehicles.length > 0 || removedVehicles.length > 0 ? (
+                                <ul className="space-y-1.5">
+                                  {addedVehicles.map((v, i) => (
+                                    <li key={`add-v-${i}`} className="font-bold text-emerald-700 dark:text-emerald-400">
+                                      <span className="text-xs font-black">+ Added:</span> Plate: {v.plate || 'N/A'} ({v.state}) <span className="text-[10px] font-normal text-emerald-600 dark:text-emerald-400">(+$25/mo)</span>
+                                    </li>
+                                  ))}
+                                  {removedVehicles.map((v, i) => (
+                                    <li key={`rem-v-${i}`} className="font-bold text-rose-600 dark:text-rose-400">
+                                      <span className="text-xs font-black">- Removed:</span> Plate: {v.plate || 'N/A'} ({v.state}) <span className="text-[10px] font-normal text-rose-500">(-$25/mo)</span>
+                                    </li>
+                                  ))}
+                                </ul>
+                              ) : (
+                                <span className="text-slate-500 dark:text-slate-400 italic text-[11px]">No vehicle changes requested ({activeVehicles.length} currently active)</span>
+                              )}
+                            </div>
+
+                            <div className="bg-white/60 dark:bg-black/20 p-3 rounded-xl border border-amber-500/15">
+                              <span className="text-[10px] font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400 block mb-1.5">
+                                Pet Modifications
+                              </span>
+                              {addedPets.length > 0 || removedPets.length > 0 ? (
+                                <ul className="space-y-1.5">
+                                  {addedPets.map((p, i) => (
+                                    <li key={`add-p-${i}`} className="font-bold text-emerald-700 dark:text-emerald-400">
+                                      <span className="text-xs font-black">+ Added:</span> {p.type || 'Pet'} <span className="text-[10px] font-normal text-emerald-600 dark:text-emerald-400">(+$50/mo)</span>
+                                    </li>
+                                  ))}
+                                  {removedPets.map((p, i) => (
+                                    <li key={`rem-p-${i}`} className="font-bold text-rose-600 dark:text-rose-400">
+                                      <span className="text-xs font-black">- Removed:</span> {p.type || 'Pet'} <span className="text-[10px] font-normal text-rose-500">(-$50/mo)</span>
+                                    </li>
+                                  ))}
+                                </ul>
+                              ) : (
+                                <span className="text-slate-500 dark:text-slate-400 italic text-[11px]">No pet changes requested ({activePets.length} currently active)</span>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })()}
+                    </div>
+                  )}
+
+                  {vpRequestStatus === 'REJECTED' && !dismissedRejectBanner && (
+                    <div className="p-4 sm:p-5 rounded-2xl bg-red-500/10 border border-red-500/25 flex items-start justify-between gap-3">
+                      <div className="flex items-start gap-3">
+                        <div className="p-2 rounded-xl bg-red-500/20 text-red-600 dark:text-red-400 shrink-0">
+                          <AlertCircle size={18} />
+                        </div>
+                        <div className="space-y-1">
+                          <h4 className="text-sm font-bold text-red-900 dark:text-red-300">
+                            Previous Update Request Declined by Landlord
+                          </h4>
+                          {vpRequestNotes && (
+                            <p className="text-xs text-red-700 dark:text-red-400/90 font-medium">
+                              Reason: "{vpRequestNotes}"
+                            </p>
+                          )}
+                          <p className="text-xs text-red-600 dark:text-red-400">
+                            You can review the feedback, adjust your vehicle/pet details below, and submit a revised change request.
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setDismissedRejectBanner(true)}
+                        className="p-1.5 text-red-400 hover:text-red-700 dark:hover:text-white rounded-lg transition cursor-pointer shrink-0 hover:bg-red-500/10"
+                        title="Dismiss notification"
+                      >
+                        <X size={16} />
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Vehicle Details Section */}
+                  <div className="p-5 rounded-2xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="p-2 bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-xl">
+                          <Car size={16} />
+                        </div>
+                        <div>
+                          <span className="text-sm font-semibold text-slate-800 dark:text-slate-200">
+                            {vpEditing ? 'Authorized Vehicles' : 'Active Registered Vehicles'}
+                          </span>
+                          <span className="text-[11px] text-slate-400 block">$25/month per registered vehicle (Max 3 vehicles)</span>
+                        </div>
+                      </div>
+                      {vpEditing && (
+                        <button
+                          type="button"
+                          disabled={vehicles.length >= 3}
+                          onClick={() => {
+                            if (vehicles.length >= 3) {
+                              showMsg('error', 'Maximum limit of 3 vehicles reached.');
+                              return;
+                            }
+                            setVehicles([...vehicles, { plate: '', state: 'AL' }]);
+                          }}
+                          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-blue-600 dark:text-blue-400 bg-blue-500/5 hover:bg-blue-500/15 border border-blue-500/20 rounded-xl transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          <Plus size={13} /> {vehicles.length >= 3 ? 'Max (3) Reached' : 'Add Vehicle'}
+                        </button>
+                      )}
+                    </div>
+
+                    {!vpEditing ? (
+                      activeVehicles.length > 0 ? (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          {activeVehicles.map((v, i) => (
+                            <div key={i} className="flex items-center justify-between p-3 rounded-xl bg-blue-500/5 border border-blue-500/15">
+                              <div className="flex items-center gap-2">
+                                <Car size={14} className="text-blue-500 shrink-0" />
+                                <span className="text-sm font-medium text-slate-800 dark:text-slate-200">
+                                  Plate: <strong className="font-bold">{v.plate || 'N/A'}</strong> ({v.state})
+                                </span>
+                              </div>
+                              <span className="text-[10px] uppercase font-bold text-blue-600 dark:text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded-full">
+                                Permitted
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-slate-200/60 dark:bg-white/10 text-slate-500 dark:text-gray-400">
+                          No active vehicles registered
+                        </span>
+                      )
+                    ) : (
+                      <div className="space-y-3">
+                        {vehicles.map((v, i) => (
+                          <div key={i} className="flex items-center gap-3">
+                            <input
+                              type="text"
+                              placeholder="License Plate (e.g. ABC-1234)"
+                              value={v.plate}
+                              onChange={(e) => {
+                                const updated = [...vehicles];
+                                updated[i].plate = e.target.value.toUpperCase();
+                                setVehicles(updated);
+                              }}
+                              className="flex-1 border border-slate-300 dark:border-white/20 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500 bg-white dark:bg-[#1E3248] text-slate-900 dark:text-white uppercase font-mono"
+                            />
+                            <select
+                              value={v.state}
+                              onChange={(e) => {
+                                const updated = [...vehicles];
+                                updated[i].state = e.target.value;
+                                setVehicles(updated);
+                              }}
+                              className="w-28 border border-slate-300 dark:border-white/20 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-blue-500 bg-white dark:bg-[#1E3248] text-slate-900 dark:text-white"
+                            >
+                              {US_STATES.map(st => (
+                                <option key={st} value={st}>{st}</option>
+                              ))}
+                            </select>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setVehicles(vehicles.filter((_, idx) => idx !== i));
+                              }}
+                              className="text-red-500 hover:text-red-600 p-2 hover:bg-red-500/10 rounded-xl transition"
+                              title="Remove"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </div>
+                        ))}
+                        {vehicles.length === 0 && (
+                          <p className="text-xs text-slate-400 dark:text-gray-500 text-center py-2">
+                            Click "Add Vehicle" to register a car for parking authorization.
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Pet Details Section */}
+                  <div className="p-5 rounded-2xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="p-2 bg-violet-500/10 text-violet-600 dark:text-violet-400 rounded-xl">
+                          <PawPrint size={16} />
+                        </div>
+                        <div>
+                          <span className="text-sm font-semibold text-slate-800 dark:text-slate-200">
+                            {vpEditing ? 'Authorized Pets' : 'Active Registered Pets'}
+                          </span>
+                          <span className="text-[11px] text-slate-400 block">$50/month per approved pet (Max 2 pets)</span>
+                        </div>
+                      </div>
+                      {vpEditing && (
+                        <button
+                          type="button"
+                          disabled={pets.length >= 2}
+                          onClick={() => {
+                            if (pets.length >= 2) {
+                              showMsg('error', 'Maximum limit of 2 pets reached.');
+                              return;
+                            }
+                            setPets([...pets, { type: 'Dog' }]);
+                          }}
+                          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-violet-600 dark:text-violet-400 bg-violet-500/5 hover:bg-violet-500/15 border border-violet-500/20 rounded-xl transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          <Plus size={13} /> {pets.length >= 2 ? 'Max (2) Reached' : 'Add Pet'}
+                        </button>
+                      )}
+                    </div>
+
+                    {!vpEditing ? (
+                      activePets.length > 0 ? (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          {activePets.map((p, i) => (
+                            <div key={i} className="flex items-center justify-between p-3 rounded-xl bg-violet-500/5 border border-violet-500/15">
+                              <div className="flex items-center gap-2">
+                                <PawPrint size={14} className="text-violet-500 shrink-0" />
+                                <span className="text-sm font-medium text-slate-800 dark:text-slate-200">
+                                  Pet Type: <strong className="font-bold">{p.type || 'N/A'}</strong>
+                                </span>
+                              </div>
+                              <span className="text-[10px] uppercase font-bold text-violet-600 dark:text-violet-400 bg-violet-500/10 px-2 py-0.5 rounded-full">
+                                Permitted
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-slate-200/60 dark:bg-white/10 text-slate-500 dark:text-gray-400">
+                          No active pets registered
+                        </span>
+                      )
+                    ) : (
+                      <div className="space-y-3">
+                        {pets.map((p, i) => (
+                          <div key={i} className="flex items-center gap-3">
+                            <input
+                              type="text"
+                              placeholder="Pet Type (e.g. Dog, Cat, Beagle)"
+                              value={p.type}
+                              onChange={(e) => {
+                                const updated = [...pets];
+                                updated[i].type = e.target.value;
+                                setPets(updated);
+                              }}
+                              className="flex-1 border border-slate-300 dark:border-white/20 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500 bg-white dark:bg-[#1E3248] text-slate-900 dark:text-white"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setPets(pets.filter((_, idx) => idx !== i));
+                              }}
+                              className="text-red-500 hover:text-red-600 p-2 hover:bg-red-500/10 rounded-xl transition"
+                              title="Remove"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </div>
+                        ))}
+                        {pets.length === 0 && (
+                          <p className="text-xs text-slate-400 dark:text-gray-500 text-center py-2">
+                            Click "Add Pet" to register a pet for landlord authorization.
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Note for Landlord Input (when editing) */}
+                  {vpEditing && currentRole === 'TENANT' && (
+                    <div className="p-4 rounded-2xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 space-y-2">
+                      <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                        <Info size={14} className="text-blue-500" /> Note for Landlord (Optional):
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="e.g. Purchased a new vehicle for daily commute / Added a new dog"
+                        value={vpTenantNote}
+                        onChange={(e) => setVpTenantNote(e.target.value)}
+                        className="w-full border border-slate-300 dark:border-white/20 rounded-xl px-4 py-2 text-xs focus:outline-none focus:border-blue-500 bg-white dark:bg-[#1E3248] text-slate-900 dark:text-white"
+                      />
+                    </div>
+                  )}
+
+                  {/* Action Buttons */}
+                  {!vpEditing ? (
+                    <button
+                      onClick={() => {
+                        // Start with current active list when editing
+                        setVehicles(activeVehicles.length > 0 ? activeVehicles : []);
+                        setPets(activePets.length > 0 ? activePets : []);
+                        setVpEditing(true);
+                      }}
+                      className="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl font-medium transition flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-blue-500/10 text-sm"
+                    >
+                      <Edit size={16} /> {vpRequestStatus === 'PENDING_APPROVAL' ? 'Modify Pending Request' : 'Edit / Request Changes'}
+                    </button>
+                  ) : (
+                    <div className="flex flex-col-reverse sm:flex-row gap-3">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setVpEditing(false);
+                          fetchVehiclePetInfo();
+                        }}
+                        className="w-full sm:flex-1 py-3 bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 text-slate-700 dark:text-white rounded-2xl font-medium transition cursor-pointer text-center text-sm"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={handleSaveVehiclePet}
+                        disabled={vpSaving}
+                        className="w-full sm:flex-1 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl font-medium transition disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-blue-500/10 text-sm"
+                      >
+                        {currentRole === 'TENANT' ? (
+                          <>
+                            <Send size={16} /> {vpSaving ? 'Submitting...' : 'Submit for Landlord Approval'}
+                          </>
+                        ) : (
+                          <>
+                            <Save size={16} /> {vpSaving ? 'Saving...' : 'Save Changes'}
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  )}
+                </>
+              )}
             </div>
           )}
 

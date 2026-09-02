@@ -19,6 +19,11 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [errorMsg, setErrorMsg]         = useState('');
   const [successMsg, setSuccessMsg]     = useState('');
+  const [show2FA, setShow2FA]           = useState(false);
+  const [email2FA, setEmail2FA]         = useState('');
+  const [otpFields, setOtpFields]       = useState(['', '', '', '', '', '']);
+  const [verifying2FA, setVerifying2FA] = useState(false);
+  const [resending2FA, setResending2FA] = useState(false);
   const generateLocalCaptcha = () => {
     const num1 = Math.floor(Math.random() * 9) + 1;
     const num2 = Math.floor(Math.random() * 9) + 1;
@@ -71,6 +76,14 @@ export default function LoginPage() {
         captcha_token: captcha.token,
         captcha_answer: data.captchaAnswer,
       });
+
+      if (response.data && response.data.requires_2fa) {
+        setEmail2FA(data.email);
+        setShow2FA(true);
+        setSuccessMsg(response.data.message || 'OTP sent! Please check your email.');
+        setErrorMsg('');
+        return;
+      }
 
       if (response.data && response.data.access_token) {
         const userData = response.data.user;
@@ -208,9 +221,240 @@ export default function LoginPage() {
     googleLogin();
   };
 
+  const handleOtpFieldChange = (index, value) => {
+    const val = value.replace(/\D/g, '');
+    if (!val) {
+      const newFields = [...otpFields];
+      newFields[index] = '';
+      setOtpFields(newFields);
+      return;
+    }
+
+    const digit = val.slice(-1);
+    const newFields = [...otpFields];
+    newFields[index] = digit;
+    setOtpFields(newFields);
+
+    if (index < 5 && digit) {
+      const nextInput = document.getElementById(`otp-input-${index + 1}`);
+      nextInput?.focus();
+    }
+
+    const completedOtp = newFields.join('');
+    if (completedOtp.length === 6) {
+      trigger2FAVerification(completedOtp);
+    }
+  };
+
+  const handleKeyDown = (index, e) => {
+    if (e.key === 'Backspace') {
+      const currentVal = otpFields[index];
+      if (!currentVal && index > 0) {
+        const newFields = [...otpFields];
+        newFields[index - 1] = '';
+        setOtpFields(newFields);
+        const prevInput = document.getElementById(`otp-input-${index - 1}`);
+        prevInput?.focus();
+      } else {
+        const newFields = [...otpFields];
+        newFields[index] = '';
+        setOtpFields(newFields);
+      }
+    }
+  };
+
+  const handlePaste = (e) => {
+    e.preventDefault();
+    const pasteData = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
+    if (pasteData.length === 6) {
+      const newFields = pasteData.split('');
+      setOtpFields(newFields);
+      document.getElementById('otp-input-5')?.focus();
+      trigger2FAVerification(pasteData);
+    } else {
+      const newFields = [...otpFields];
+      for (let i = 0; i < pasteData.length; i++) {
+        newFields[i] = pasteData[i];
+      }
+      setOtpFields(newFields);
+      const nextFocusIndex = Math.min(pasteData.length, 5);
+      document.getElementById(`otp-input-${nextFocusIndex}`)?.focus();
+    }
+  };
+
+  const trigger2FAVerification = async (code) => {
+    setVerifying2FA(true);
+    setErrorMsg('');
+    setSuccessMsg('');
+    try {
+      const res = await API.post('/auth/login/verify-2fa', {
+        email_id: email2FA,
+        otp_code: code,
+      });
+
+      if (res.data && res.data.access_token) {
+        const userData = res.data.user;
+        
+        localStorage.setItem('token', res.data.access_token);
+        if (res.data.session_token) {
+          localStorage.setItem('session_token', res.data.session_token);
+        }
+        localStorage.setItem('user', JSON.stringify(userData));
+
+        sessionStorage.removeItem('token');
+        sessionStorage.removeItem('session_token');
+        sessionStorage.removeItem('user');
+
+        const role = (userData?.role_name || userData?.role || res.data?.role || '').toLowerCase();
+        const communityId = userData?.community_id;
+
+        setSuccessMsg('Verification successful! Logging in...');
+
+        setTimeout(() => {
+          if (role === 'super_admin' || role === 'property_manager' || role === 'board_member') {
+            navigate('/dashboard', { replace: true });
+          } 
+          else if (role === 'resident') {
+            if (!communityId || communityId === null || communityId === 0) {
+              if (userData?.account_status === 'PENDING_APPROVAL') {
+                navigate('/waiting-approval', { replace: true });
+              } else {
+                navigate('/join-community', { replace: true }); 
+              }
+            } else {
+              navigate('/dashboard', { replace: true }); 
+            }
+          } 
+          else {
+            navigate('/dashboard', { replace: true });
+          }
+        }, 1000);
+      }
+    } catch (err) {
+      console.error("2FA Verification Error:", err);
+      const detail = err.response?.data?.detail || "Verification failed";
+      setErrorMsg(typeof detail === 'string' ? detail : JSON.stringify(detail));
+    } finally {
+      setVerifying2FA(false);
+    }
+  };
+
+  const handle2FASubmit = (e) => {
+    e.preventDefault();
+    const completedOtp = otpFields.join('');
+    if (completedOtp.length === 6) {
+      trigger2FAVerification(completedOtp);
+    } else {
+      setErrorMsg('Please enter all 6 digits.');
+    }
+  };
+
+  const handleResend2FA = async () => {
+    setResending2FA(true);
+    setErrorMsg('');
+    setSuccessMsg('');
+    try {
+      await API.post('/auth/otp/send', {
+        email_id: email2FA,
+        otp_type: 'login_2fa'
+      });
+      setSuccessMsg('Code resent successfully! Please check your email.');
+      setOtpFields(['', '', '', '', '', '']);
+      setTimeout(() => document.getElementById('otp-input-0')?.focus(), 100);
+    } catch (err) {
+      console.error("2FA Resend Error:", err);
+      const detail = err.response?.data?.detail || "Resend failed";
+      setErrorMsg(typeof detail === 'string' ? detail : JSON.stringify(detail));
+    } finally {
+      setResending2FA(false);
+    }
+  };
+
+  if (show2FA) {
+    return (
+      <AuthLayout>
+        <div className="mb-8">
+          <h2 className="text-3xl font-bold text-gray-900">
+            Security Verification
+          </h2>
+          <p className="text-gray-600 mt-2 text-sm">
+            We have sent a 6-digit verification code to <span className="font-semibold text-gray-900">{email2FA}</span>. Please enter the code below to complete your login.
+          </p>
+        </div>
+
+        {errorMsg && (
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg">
+            {errorMsg}
+          </div>
+        )}
+        {successMsg && (
+          <div className="mb-4 p-3 bg-green-50 border border-green-200 text-green-600 text-sm rounded-lg">
+            {successMsg}
+          </div>
+        )}
+
+        <form onSubmit={handle2FASubmit} className="space-y-6">
+          <div>
+            <label className="block text-xs font-bold text-gray-700 tracking-wider mb-3 text-center">
+              6-DIGIT VERIFICATION CODE
+            </label>
+            <div className="flex justify-between gap-2 max-w-xs mx-auto">
+              {[0, 1, 2, 3, 4, 5].map((index) => (
+                <input
+                  key={index}
+                  id={`otp-input-${index}`}
+                  type="text"
+                  maxLength="1"
+                  value={otpFields[index]}
+                  onChange={(e) => handleOtpFieldChange(index, e.target.value)}
+                  onKeyDown={(e) => handleKeyDown(index, e)}
+                  onPaste={handlePaste}
+                  className="w-10 h-12 text-center font-mono font-bold text-xl border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none bg-white text-gray-900 shadow-sm transition-all duration-150"
+                  required
+                  autoFocus={index === 0}
+                />
+              ))}
+            </div>
+          </div>
+
+          <button
+            type="submit"
+            disabled={verifying2FA}
+            className="w-full bg-[#0F2D59] hover:bg-[#0c2345] text-white py-2.5 px-4 rounded-lg font-medium transition duration-200 disabled:opacity-50 shadow-md"
+          >
+            {verifying2FA ? 'Verifying...' : 'Verify & Login'}
+          </button>
+
+          <div className="flex flex-col items-center gap-3 text-sm">
+            <button
+              type="button"
+              onClick={handleResend2FA}
+              disabled={resending2FA}
+              className="text-blue-600 hover:text-blue-500 font-medium disabled:opacity-50"
+            >
+              {resending2FA ? 'Resending...' : 'Resend Code'}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setShow2FA(false);
+                setOtpFields(['', '', '', '', '', '']);
+                setErrorMsg('');
+                setSuccessMsg('');
+              }}
+              className="text-gray-500 hover:text-gray-700 font-medium"
+            >
+              Back to Login
+            </button>
+          </div>
+        </form>
+      </AuthLayout>
+    );
+  }
+
   return (
     <AuthLayout>
-      <div className="mb-8">
+      <div className="mb-4">
         <h2 className="text-3xl font-bold text-gray-900">
           Property Login
         </h2>
@@ -290,51 +534,50 @@ export default function LoginPage() {
           </Link>
         </div>
 
-        {/* Captcha Section */}
-        <div className="p-4 bg-slate-50 border border-gray-200 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="flex-1">
-            <label className="block text-xs font-bold text-gray-700 tracking-wider mb-2">CAPTCHA *</label>
-            <div className="flex items-center gap-3">
-              <span className="text-xl font-bold bg-white border border-gray-300 px-4 py-2 rounded-xl text-yellow-600 font-mono tracking-widest select-none">
+        {/* Compact Inline Captcha Section */}
+        <div>
+          <div className="p-2 bg-slate-50 border border-gray-200 rounded-lg flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold text-gray-500 tracking-wider">CAPTCHA:</span>
+              <span className="text-sm font-bold bg-white border border-gray-300 px-2 py-1 rounded text-yellow-600 font-mono tracking-widest select-none">
                 {loadingCaptcha ? '...' : captcha.question}
               </span>
               <button
                 type="button"
                 onClick={fetchCaptcha}
                 disabled={refreshing}
-                className="p-2 bg-slate-100 hover:bg-blue-50 active:scale-95 rounded-xl transition-all duration-150 text-slate-400 hover:text-blue-500 border border-transparent hover:border-blue-200 disabled:opacity-60 disabled:cursor-not-allowed shadow-sm"
+                className="p-1 bg-slate-100 hover:bg-blue-50 active:scale-95 rounded transition-all duration-150 text-slate-400 hover:text-blue-500 disabled:opacity-60 disabled:cursor-not-allowed"
                 title="Refresh Captcha"
               >
                 <RefreshCw
-                  size={16}
+                  size={12}
                   className={`transition-transform duration-500 ${refreshing ? 'animate-spin text-blue-500' : 'hover:rotate-180'}`}
                 />
               </button>
             </div>
+            <div className="flex items-center gap-1.5 w-24">
+              <input
+                type="text"
+                {...register('captchaAnswer', { 
+                  required: 'Answer is required',
+                  pattern: {
+                    value: /^[0-9]+$/,
+                    message: 'Numbers only'
+                  }
+                })}
+                onKeyPress={(e) => {
+                  if (!/[0-9]/.test(e.key)) {
+                    e.preventDefault();
+                  }
+                }}
+                placeholder="Result"
+                className="w-full bg-white border border-gray-300 rounded-lg px-2 py-1 text-xs text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-600 font-mono text-center font-bold"
+              />
+            </div>
           </div>
-          <div className="w-full sm:w-32">
-            <label className="block text-xs font-bold text-gray-700 tracking-wider mb-2">ANSWER *</label>
-            <input
-              type="text"
-              {...register('captchaAnswer', { 
-                required: 'Answer is required',
-                pattern: {
-                  value: /^[0-9]+$/,
-                  message: 'Numbers only'
-                }
-              })}
-              onKeyPress={(e) => {
-                if (!/[0-9]/.test(e.key)) {
-                  e.preventDefault();
-                }
-              }}
-              placeholder="Result"
-              className="w-full bg-white border border-gray-300 rounded-xl px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-600 font-mono text-center font-bold text-lg"
-            />
-            {errors.captchaAnswer && (
-              <p className="text-red-500 text-xs mt-1">{errors.captchaAnswer.message}</p>
-            )}
-          </div>
+          {errors.captchaAnswer && (
+            <p className="text-red-500 text-2xs mt-0.5 ml-1">{errors.captchaAnswer.message}</p>
+          )}
         </div>
 
         <button
@@ -347,7 +590,7 @@ export default function LoginPage() {
       </form>
 
       {/* Google Button */}
-      <div className="relative my-6">
+      <div className="relative my-3">
         <div className="absolute inset-0 flex items-center">
           <div className="w-full border-t border-gray-300"></div>
         </div>
@@ -382,7 +625,7 @@ export default function LoginPage() {
         Sign in with Google
       </button>
 
-      <div className="text-center mt-6 text-sm text-gray-600">
+      <div className="text-center mt-3 text-sm text-gray-600">
         New user?{' '}
         <Link to="/register" className="font-medium text-[#0F2D59] hover:underline">
           Sign Up

@@ -109,7 +109,7 @@ def verify_condo_otp(email_id: str, otp_code: str, purpose: str, db: Session) ->
     if datetime.now(timezone.utc) > expires_at:
         raise ValueError("The OTP has expired.")
 
-    otp_record.is_used = True
+    db.delete(otp_record)
 
     if purpose == "REGISTER":
         user.email_id_is_verified = True
@@ -209,7 +209,7 @@ def reset_condo_password(email_id: str, otp_code: str, new_password: str, db: Se
     if datetime.now(timezone.utc) > expires_at:
         raise ValueError("The OTP has expired.")
 
-    otp_record.is_used = True
+    db.delete(otp_record)
     user.password = hash_password(new_password)
     user.login_attempts = 0
     user.account_locked_until = None

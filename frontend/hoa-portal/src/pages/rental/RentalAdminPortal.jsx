@@ -466,24 +466,31 @@ const RentalAdminPortal = () => {
         if (role === 'landlord') return <LandlordDashboard user={user} setActivePage={setActivePage} selectedPropertyFilterId={selectedPropertyFilterId} setSelectedPropertyFilterId={setSelectedPropertyFilterId} properties={properties} />;
         return <TenantDashboard user={user} setUser={setUser} setActivePage={setActivePage} />;
 
+      case 'properties':
       case 'properties_hub':
         return <PropertiesHub user={user} selectedPropertyFilterId={selectedPropertyFilterId} setSelectedPropertyFilterId={setSelectedPropertyFilterId} properties={properties} setActivePage={setActivePage} onPropertiesChange={handlePropertiesChange} />;
 
+      case 'screening':
       case 'screening_hub':
         return <ScreeningHub user={user} setActivePage={setActivePage} selectedPropertyFilterId={selectedPropertyFilterId} />;
 
+      case 'leases':
       case 'leases_hub':
         return <LeasesHub user={user} selectedPropertyFilterId={selectedPropertyFilterId} />;
 
+      case 'tenants':
       case 'tenants_hub':
         return <TenantsHub user={user} selectedPropertyFilterId={selectedPropertyFilterId} />;
 
+      case 'ledger':
       case 'rent_ledger':
         return <RentLedger user={user} selectedPropertyFilterId={selectedPropertyFilterId} />;
 
+      case 'maintenance':
       case 'servicereq':
         return <RentalMaintenanceDesk user={user} selectedPropertyFilterId={selectedPropertyFilterId} />;
 
+      case 'vendors':
       case 'vendors_hub':
         return <RentalVendors user={user} />;
 

@@ -116,6 +116,11 @@ class LoginRequest(BaseModel):
     captcha_answer: str
 
 
+class Login2FARequest(BaseModel):
+    email_id: EmailStr
+    otp_code: str
+
+
 class GoogleLoginRequest(BaseModel):
     access_token: str
     flow: str = "login"

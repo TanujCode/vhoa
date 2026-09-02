@@ -15,7 +15,7 @@ from app.models.hoa.user import User, Role
 from app.models.hoa.community import Community, Address
 from app.models.hoa.contract import Contract
 from app.schemas.auth import (
-    LoginRequest, NewAccessTokenResponse, PasswordResetRequest,
+    LoginRequest, Login2FARequest, NewAccessTokenResponse, PasswordResetRequest,
     RefreshRequest, RegisterRequest, SendOtpRequest,
     TokenResponse, UserOut, VerifyOtpRequest, ClientOnboardRequest,
     GoogleLoginRequest,
@@ -27,8 +27,12 @@ from app.services.hoa.auth_service import (
     reset_password, 
     verify_otp,
     send_otp_for_password_reset,   
+    MAX_LOGIN_ATTEMPTS,
+    LOCK_DURATION_MINUTES,
 )
-from app.services.hoa.token_service import create_access_token, create_session_token, decode_session_token, hash_password
+from app.services.hoa.token_service import (
+    create_access_token, create_session_token, decode_session_token, hash_password, verify_password
+)
 from app.services.hoa.audit_service import log_action
 from app.services.hoa.email_service import send_otp_email
 from app.services.hoa.service_request_service import seed_default_service_types_for_all_communities   
@@ -142,7 +146,7 @@ def register(request: Request, body: RegisterRequest, db: Session = Depends(get_
     
 
 
-@router.post("/login", response_model=TokenResponse)
+@router.post("/login")
 def login(request: Request, body: LoginRequest, db: Session = Depends(get_db)):
     # 0. Verify captcha
     _verify_captcha(body.captcha_token, body.captcha_answer)
@@ -152,20 +156,61 @@ def login(request: Request, body: LoginRequest, db: Session = Depends(get_db)):
         user = db.query(User).filter(User.email_id == body.email_id.lower().strip()).first()
         
         if not user:
-            raise ValueError("Invalid email or password")
+            raise ValueError("Incorrect email or password.")
 
         role_name = user.role.role_name if user.role else ""
         if role_name in ["landlord", "tenant"]:
             raise ValueError("This login page is for HOA users. Please use the Rental portal login.")
 
         # 2. REAL FIX: Check if verified or not
-        # (Confirm column name according to your DB, usually email_id_is_verified)
         if hasattr(user, 'email_id_is_verified') and not user.email_id_is_verified:
-            # If not verified, throw error
             raise ValueError("Email not verified. Please verify your email first.")
 
-        # 3. If verified, only then call login_user
-        result = login_user(body.email_id, body.password, db)
+        # Lock Check
+        if user.account_locked_until:
+            from datetime import timedelta
+            now = datetime.now(timezone.utc)
+            locked_until = user.account_locked_until
+            if locked_until.tzinfo is None:
+                locked_until = locked_until.replace(tzinfo=timezone.utc)
+
+            if now < locked_until:
+                remaining = int((locked_until - now).total_seconds() / 60)
+                raise ValueError(f"Account is locked. Try after {remaining} minutes.")
+            else:
+                user.login_attempts = 0
+                user.account_locked_until = None
+                user.account_status = "ACTIVE" if user.email_id_is_verified else "PENDING_VERIFICATION"
+                db.commit()
+
+        if not user.active_status or user.account_status == "INACTIVE":
+            raise ValueError("Account is inactive. Contact admin.")
+
+        if not verify_password(body.password, user.password):
+            from datetime import timedelta
+            user.login_attempts = (user.login_attempts or 0) + 1
+
+            if user.login_attempts >= MAX_LOGIN_ATTEMPTS:
+                user.account_locked_until = datetime.now(timezone.utc) + timedelta(minutes=LOCK_DURATION_MINUTES)
+                user.account_status = "LOCKED"
+                db.commit()
+                raise ValueError(f"Account locked for {LOCK_DURATION_MINUTES} minutes due to multiple failed attempts.")
+
+            db.commit()
+            remaining = MAX_LOGIN_ATTEMPTS - user.login_attempts
+            raise ValueError(f"Incorrect email or password. {remaining} attempts left.")
+
+        # Correct credentials - reset attempts
+        user.login_attempts = 0
+        user.account_locked_until = None
+        db.commit()
+
+        # Generate 2FA OTP
+        otp_code = generate_otp(user.user_id, "login_2fa", db)
+        print(f"[2FA LOGIN OTP] HOA 2FA OTP for {user.email_id}: {otp_code}")
+
+        # Send OTP email
+        send_otp_email(user.email_id, otp_code, "login_2fa", system_name="HOA Portal")
 
     except ValueError as e:
         user_obj = db.query(User).filter(User.email_id == body.email_id.lower()).first()
@@ -181,22 +226,42 @@ def login(request: Request, body: LoginRequest, db: Session = Depends(get_db)):
         status_code = 403 if "verified" in str(e).lower() else 401
         raise HTTPException(status_code=status_code, detail=str(e))
 
-    user = result["user"]
+    return {
+        "requires_2fa": True,
+        "email_id": user.email_id,
+        "message": "Two-Factor Verification Code sent to email."
+    }
+
+
+@router.post("/login/verify-2fa", response_model=TokenResponse)
+def verify_2fa_login(request: Request, body: Login2FARequest, db: Session = Depends(get_db)):
+    try:
+        user = verify_otp(body.email_id, body.otp_code, "login_2fa", db)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+    # Successful login actions
+    user.last_login = datetime.now(timezone.utc)
+    db.commit()
+
+    role_name = user.role.role_name if user.role else None
+    email_verified = user.email_id_is_verified
+
     log_action(
         db          = db,
         action      = "LOGIN",
         module      = "auth",
-        description = f"User login: {user.email_id}",
+        description = f"User login via 2FA: {user.email_id}",
         user_id     = user.user_id,
         ip_address  = request.client.host,
     )
 
     return TokenResponse(
-        access_token       = result["access_token"],
-        session_token      = result["session_token"],
-        access_expires_in  = result["access_expires_in"],
-        session_expires_in = result["session_expires_in"],
-        user               = _to_out(user, db) # User info bhi bhejo taaki React role check kar sake
+        access_token       = create_access_token(user.user_id, user.email_id, role_name, email_verified),
+        session_token      = create_session_token(user.user_id, user.email_id, role_name, email_verified),
+        access_expires_in  = settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+        session_expires_in = settings.SESSION_TOKEN_EXPIRE_HOURS * 3600,
+        user               = _to_out(user, db)
     )
 
 

@@ -84,6 +84,11 @@ class CondoLoginRequest(BaseModel):
     captcha_answer: str
 
 
+class CondoLogin2FARequest(BaseModel):
+    email_id: EmailStr
+    otp_code: str
+
+
 class CondoVerifyOtpRequest(BaseModel):
     email_id: EmailStr
     otp_code: str

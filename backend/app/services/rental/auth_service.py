@@ -84,7 +84,7 @@ def verify_rental_otp(email_id: str, otp_code: str, otp_type: str, db: Session) 
     if datetime.now(timezone.utc) > otp_record.expires_at:
         raise ValueError("The OTP has expired. Please request it again.")
 
-    otp_record.is_used = True
+    db.delete(otp_record)
 
     if otp_type == "email_verify":
         user.email_id_is_verified = True
@@ -118,7 +118,7 @@ def reset_rental_password(email_id: str, otp_code: str, new_password: str, db: S
     if datetime.now(timezone.utc) > otp_record.expires_at:
         raise ValueError("The OTP has expired.")
 
-    otp_record.is_used = True
+    db.delete(otp_record)
     user.password = hash_password(new_password)
     user.login_attempts = 0
     user.account_locked_until = None

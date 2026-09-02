@@ -21,15 +21,14 @@ const RentalVerifyOtpPage = () => {
     }
   }, [emailFromState, navigate]);
 
-  const handleVerify = async (e) => {
-    if (e) e.preventDefault();
+  const triggerVerify = async (otpCode) => {
     setLoading(true);
     setErrorMsg('');
     
     try {
       await API.post('/rental/auth/otp/verify', {
         email_id: email,
-        otp_code: otp,
+        otp_code: otpCode,
         otp_type: 'email_verify'
       });
 
@@ -41,6 +40,11 @@ const RentalVerifyOtpPage = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleVerify = async (e) => {
+    if (e) e.preventDefault();
+    await triggerVerify(otp);
   };
 
   const handleResendOtp = async () => {
@@ -98,7 +102,13 @@ const RentalVerifyOtpPage = () => {
               type="text"
               maxLength="6"
               value={otp}
-              onChange={(e) => setOtp(e.target.value)}
+              onChange={(e) => {
+                const val = e.target.value;
+                setOtp(val);
+                if (val.length === 6) {
+                  triggerVerify(val);
+                }
+              }}
               onKeyPress={(e) => {
                 if (!/[0-9]/.test(e.key)) {
                   e.preventDefault();

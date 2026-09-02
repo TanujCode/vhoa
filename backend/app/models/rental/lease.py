@@ -47,7 +47,18 @@ class Lease(Base):
     tenant_emergency_phone = Column(Text, nullable=True)         # encrypted
     num_occupants = Column(Integer, nullable=True, default=1)
     num_minors = Column(Integer, nullable=True, default=0)
-    
+
+    # ── Vehicle & Pet info (filled during lease signing, editable from profile) ──
+    vehicle_details = Column(Text, nullable=True)                # encrypted
+    pet_details = Column(Text, nullable=True)                    # encrypted
+
+    # ── Vehicle & Pet Change Requests (requires Landlord approval) ───────────
+    pending_vehicle_details = Column(Text, nullable=True)        # encrypted
+    pending_pet_details = Column(Text, nullable=True)            # encrypted
+    vehicle_pet_request_status = Column(String(30), nullable=True) # PENDING_APPROVAL | APPROVED | REJECTED
+    vehicle_pet_request_notes = Column(Text, nullable=True)
+    vehicle_pet_requested_at = Column(DateTime(timezone=True), nullable=True)
+
     unit_change_requested = Column(Boolean, default=False)
     unit_change_request_notes = Column(Text, nullable=True)
 

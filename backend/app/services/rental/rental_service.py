@@ -213,7 +213,7 @@ def decrypt_lease_obj(l: Lease) -> dict:
             "uploaded_at": doc.uploaded_at
         })
 
-    return {
+    lease_dict = {
         "lease_id": l.lease_id,
         "landlord_id": l.landlord_id,
         "tenant_id": l.tenant_id,
@@ -226,7 +226,6 @@ def decrypt_lease_obj(l: Lease) -> dict:
         "late_fee_type": l.late_fee_type,
         "late_fee_amount": safe_decrypt_float(l.late_fee_amount),
         "status": l.status,
-        "lease_agreement_text": safe_decrypt_field(l.lease_agreement_text),
         "landlord_signature": safe_decrypt_field(l.landlord_signature),
         "tenant_signature": safe_decrypt_field(l.tenant_signature),
         "co_landlord_name": safe_decrypt_field(l.co_landlord_name),
@@ -243,15 +242,58 @@ def decrypt_lease_obj(l: Lease) -> dict:
         "tenant_emergency_phone": safe_decrypt_field(l.tenant_emergency_phone),
         "num_occupants": l.num_occupants,
         "num_minors": l.num_minors,
+        "vehicle_details": safe_decrypt_field(l.vehicle_details),
+        "pet_details": safe_decrypt_field(l.pet_details),
+        "pending_vehicle_details": safe_decrypt_field(l.pending_vehicle_details),
+        "pending_pet_details": safe_decrypt_field(l.pending_pet_details),
+        "vehicle_pet_request_status": l.vehicle_pet_request_status,
+        "vehicle_pet_request_notes": l.vehicle_pet_request_notes,
+        "vehicle_pet_requested_at": l.vehicle_pet_requested_at,
         "unit_change_requested": l.unit_change_requested,
         "unit_change_request_notes": l.unit_change_request_notes,
         "documents": docs_out,
-
         
         "unit": l.unit,
         "tenant_name": l.tenant_name,
         "tenant_phone": l.tenant_phone
     }
+
+    # Ensure lease agreement text Section 6 accurately reflects active vehicle and pet fees
+    raw_text = safe_decrypt_field(l.lease_agreement_text) or ""
+    v_det = lease_dict.get("vehicle_details") or ""
+    p_det = lease_dict.get("pet_details") or ""
+    p_fee = lease_dict.get("parking_fee") or 0.0
+    pet_fee = lease_dict.get("pet_fee") or 0.0
+
+    if v_det or p_fee > 0:
+        v_count = len([s.strip() for s in v_det.split(';') if s.strip()]) if v_det else 1
+        calc_fee = p_fee if p_fee > 0 else (v_count * 25.0)
+        import re
+        raw_text = re.sub(
+            r"   - Parking Fee: [^\n]+",
+            f"   - Parking Fee: ${calc_fee:.1f}/mo ($25.00/car, {v_count} car(s), Details: {v_det})",
+            raw_text
+        )
+    elif "   - Parking Fee:" in raw_text:
+        import re
+        raw_text = re.sub(r"   - Parking Fee: [^\n]+", "   - Parking Fee: None / Not applicable", raw_text)
+
+    if p_det or pet_fee > 0:
+        p_count = len([s.strip() for s in p_det.split(';') if s.strip()]) if p_det else 1
+        calc_pet_fee = pet_fee if pet_fee > 0 else (p_count * 50.0)
+        import re
+        raw_text = re.sub(
+            r"   - Pet Fee: [^\n]+",
+            f"   - Pet Fee: ${calc_pet_fee:.1f}/mo ($50.00/pet, {p_count} pet(s), Details: {p_det})",
+            raw_text
+        )
+    elif "   - Pet Fee:" in raw_text:
+        import re
+        raw_text = re.sub(r"   - Pet Fee: [^\n]+", "   - Pet Fee: None / Not applicable", raw_text)
+
+    lease_dict["lease_agreement_text"] = raw_text
+    lease_dict["agreement_text"] = raw_text
+    return lease_dict
 
 
 def cleanup_expired_pending_leases(db: Session):
@@ -393,15 +435,15 @@ def create_lease_and_invite(landlord_id: int, data: LeaseCreate, db: Session) ->
         property_desc = f"<strong>Apt {unit_label}</strong> at {unit.property.name}"
 
     email_body = f"""
-    <div style="padding: 30px; font-size: 16px; line-height: 1.6; color: #D1D5DB;">
-      <h2 style="color: #3B82F6; margin-top: 0;">Lease Agreement Prepared</h2>
-      <p>Hello,</p>
-      <p>A lease agreement has been prepared for you for {property_desc}.</p>
-      <p>{email_instruction}</p>
-      <div style="text-align: center; margin: 30px 0;">
-        <a href="{invitation_url}" style="background: #3B82F6; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold; display: inline-block;">{email_action_text}</a>
+    <div style="font-size: 15px; line-height: 1.6; color: #374151;">
+      <h2 style="color: #111827; font-size: 20px; font-weight: bold; margin-top: 0; margin-bottom: 16px;">Lease Agreement Prepared</h2>
+      <p style="margin: 0 0 12px;">Hello,</p>
+      <p style="margin: 0 0 12px;">A lease agreement has been prepared for you for {property_desc}.</p>
+      <p style="margin: 0 0 24px;">{email_instruction}</p>
+      <div style="text-align: center; margin: 24px 0;">
+        <a href="{invitation_url}" style="background-color: #2563eb; color: #ffffff; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold; display: inline-block;">{email_action_text}</a>
       </div>
-      <p style="font-size: 13px; color: #9CA3AF;">If you cannot click the button, copy and paste this URL into your browser:<br/>{invitation_url}</p>
+      <p style="font-size: 12px; color: #6b7280; margin: 24px 0 0;">If you cannot click the button, copy and paste this URL into your browser:<br/><span style="color: #2563eb; word-break: break-all;">{invitation_url}</span></p>
     </div>
     """
     wrapped_html = _wrap_in_responsive_layout(email_body, subtitle="Rental Property Management")
@@ -493,15 +535,15 @@ def update_lease(lease_id: int, landlord_id: int, data: LeaseCreate, db: Session
             property_desc = f"<strong>Apt {unit_display}</strong> at {unit.property.name}"
 
         email_body = f"""
-        <div style="padding: 30px; font-size: 16px; line-height: 1.6; color: #D1D5DB;">
-          <h2 style="color: #3B82F6; margin-top: 0;">Lease Agreement Updated</h2>
-          <p>Hello,</p>
-          <p>The lease agreement for you for {property_desc} has been updated by the landlord.</p>
-          <p>{email_instruction}</p>
-          <div style="text-align: center; margin: 30px 0;">
-            <a href="{invitation_url}" style="background: #3B82F6; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold; display: inline-block;">{email_action_text}</a>
+        <div style="font-size: 15px; line-height: 1.6; color: #374151;">
+          <h2 style="color: #111827; font-size: 20px; font-weight: bold; margin-top: 0; margin-bottom: 16px;">Lease Agreement Updated</h2>
+          <p style="margin: 0 0 12px;">Hello,</p>
+          <p style="margin: 0 0 12px;">The lease agreement for you for {property_desc} has been updated by the landlord.</p>
+          <p style="margin: 0 0 24px;">{email_instruction}</p>
+          <div style="text-align: center; margin: 24px 0;">
+            <a href="{invitation_url}" style="background-color: #2563eb; color: #ffffff; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold; display: inline-block;">{email_action_text}</a>
           </div>
-          <p style="font-size: 13px; color: #9CA3AF;">If you cannot click the button, copy and paste this URL into your browser:<br/>{invitation_url}</p>
+          <p style="font-size: 12px; color: #6b7280; margin: 24px 0 0;">If you cannot click the button, copy and paste this URL into your browser:<br/><span style="color: #2563eb; word-break: break-all;">{invitation_url}</span></p>
         </div>
         """
         wrapped_html = _wrap_in_responsive_layout(email_body, subtitle="Rental Property Management")
@@ -594,6 +636,10 @@ def tenant_submit_lease(lease_id: int, tenant_id: int, data: TenantInfoSubmit, d
     lease.num_occupants = data.num_occupants
     lease.num_minors = data.num_minors
 
+    # Save vehicle & pet details directly on the lease for easy retrieval/editing
+    lease.vehicle_details = encrypt_field(data.vehicle_details) if data.vehicle_details else None
+    lease.pet_details = encrypt_field(data.pet_details) if data.pet_details else None
+
     
     # Save parking & pet choices
     current_text = decrypt_field(lease.lease_agreement_text) or ""
@@ -646,11 +692,11 @@ def tenant_submit_lease(lease_id: int, tenant_id: int, data: TenantInfoSubmit, d
             property_desc = f"<strong>Apt {unit_label}</strong> at {lease.unit.property.name}"
 
         email_body = f"""
-        <div style="padding: 30px; font-size: 16px; line-height: 1.6; color: #D1D5DB;">
-          <h2 style="color: #3B82F6; margin-top: 0;">Lease Signed by Tenant</h2>
-          <p>Hello {landlord_first_name},</p>
-          <p>The tenant has submitted their personal details, documents, and signed the lease agreement for {property_desc}.</p>
-          <p>Please log in to your dashboard to review their submission and approve the lease.</p>
+        <div style="font-size: 15px; line-height: 1.6; color: #374151;">
+          <h2 style="color: #111827; font-size: 20px; font-weight: bold; margin-top: 0; margin-bottom: 16px;">Lease Signed by Tenant</h2>
+          <p style="margin: 0 0 12px;">Hello {landlord_first_name},</p>
+          <p style="margin: 0 0 12px;">The tenant has submitted their personal details, documents, and signed the lease agreement for {property_desc}.</p>
+          <p style="margin: 0;">Please log in to your dashboard to review their submission and approve the lease.</p>
         </div>
         """
         wrapped_html = _wrap_in_responsive_layout(email_body, subtitle="Rental Property Management")
@@ -697,10 +743,13 @@ def delete_lease(lease_id: int, db: Session) -> bool:
         lease.unit.status = "VACANT"
         db.commit()
     
+    from app.models.rental.rental_maintenance import RentalMaintenanceRequest
+    db.query(RentalMaintenanceRequest).filter(RentalMaintenanceRequest.lease_id == lease_id).delete()
     db.query(RentalLedger).filter(RentalLedger.lease_id == lease_id).delete()
     db.delete(lease)
     db.commit()
     return True
+
 
 
 def generate_initial_invoice(lease: Lease, db: Session) -> RentalLedger:
@@ -928,15 +977,15 @@ def invite_tenant_screening(data: RentalApplicationInvite, landlord_id: int, db:
         property_desc = f"<strong>Unit {unit.unit_number}</strong> at {unit.property.name}"
 
     email_body = f"""
-    <div style="padding: 30px; font-size: 16px; line-height: 1.6; color: #D1D5DB;">
-      <h2 style="color: #3B82F6; margin-top: 0;">Tenant Screening Background Check Invitation</h2>
-      <p>Hello {data.full_name},</p>
-      <p>You have been invited by the landlord to complete a tenant screening application and background check for {property_desc}.</p>
-      <p>{email_instruction}</p>
-      <div style="text-align: center; margin: 30px 0;">
-        <a href="{invitation_url}" style="background: #3B82F6; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold; display: inline-block;">{email_action_text}</a>
+    <div style="font-size: 15px; line-height: 1.6; color: #374151;">
+      <h2 style="color: #111827; font-size: 20px; font-weight: bold; margin-top: 0; margin-bottom: 16px;">Tenant Screening Background Check</h2>
+      <p style="margin: 0 0 12px;">Hello {data.full_name},</p>
+      <p style="margin: 0 0 12px;">You have been invited by the landlord to complete a tenant screening application and background check for {property_desc}.</p>
+      <p style="margin: 0 0 24px;">{email_instruction}</p>
+      <div style="text-align: center; margin: 24px 0;">
+        <a href="{invitation_url}" style="background-color: #2563eb; color: #ffffff; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold; display: inline-block;">{email_action_text}</a>
       </div>
-      <p style="font-size: 13px; color: #9CA3AF;">If you cannot click the button, copy and paste this URL into your browser:<br/>{invitation_url}</p>
+      <p style="font-size: 12px; color: #6b7280; margin: 24px 0 0;">If you cannot click the button, copy and paste this URL into your browser:<br/><span style="color: #2563eb; word-break: break-all;">{invitation_url}</span></p>
     </div>
     """
     wrapped_html = _wrap_in_responsive_layout(email_body, subtitle="Rental Property Management")
@@ -1012,6 +1061,28 @@ def get_ledgers_by_lease(lease_id: int, db: Session) -> List[RentalLedger]:
     if len(unpaid_ledgers) > 1:
         for extra in unpaid_ledgers[1:]:
             db.delete(extra)
+        db.commit()
+
+    # Sync latest vehicle & pet authorized fees to unpaid ledgers
+    lease = db.query(Lease).filter(Lease.lease_id == lease_id).first()
+    if lease and unpaid_ledgers:
+        from app.utils.encryption import safe_decrypt_field
+        v_details = safe_decrypt_field(lease.vehicle_details) or ""
+        p_details = safe_decrypt_field(lease.pet_details) or ""
+        v_count = len([s.strip() for s in v_details.split(';') if s.strip()]) if v_details else 0
+        p_count = len([s.strip() for s in p_details.split(';') if s.strip()]) if p_details else 0
+        
+        parking_fee = float(v_count * 25)
+        pet_fee = float(p_count * 50)
+        
+        for ldg in unpaid_ledgers:
+            ldg.parking_charge = parking_fee
+            ldg.pet_charge = pet_fee
+            base_rent = ldg.rent_charge or 0.0
+            util = ldg.utilities_charge or 0.0
+            maint = ldg.maintenance_charge or 0.0
+            late = ldg.late_fee_applied or 0.0
+            ldg.amount = base_rent + util + parking_fee + pet_fee + maint + late
         db.commit()
         
     return db.query(RentalLedger).filter(RentalLedger.lease_id == lease_id).all()
@@ -1343,5 +1414,213 @@ def delete_rental_vendor(vendor_id: int, landlord_id: int, db: Session, is_super
         raise ValueError("Vendor not found.")
     db.delete(vendor)
     db.commit()
+
+
+# --- VEHICLE & PET CHANGE REQUEST WORKFLOW ---
+def get_pending_vehicle_pet_requests(landlord_id: int, db: Session, is_super_admin: bool = False) -> List[dict]:
+    """Retrieve all leases with pending vehicle & pet change requests for landlord review."""
+    query = db.query(Lease).filter(Lease.vehicle_pet_request_status == "PENDING_APPROVAL")
+    if not is_super_admin:
+        query = query.filter(Lease.landlord_id == landlord_id)
+    leases = query.order_by(Lease.vehicle_pet_requested_at.desc()).all()
+    result = []
+    for l in leases:
+        item = decrypt_lease_obj(l)
+        if l.unit and l.unit.property:
+            item["property_name"] = l.unit.property.name
+        result.append(item)
+    return result
+
+
+def landlord_approve_vehicle_pet_change(lease_id: int, landlord_id: int, db: Session, is_super_admin: bool = False) -> dict:
+    """Landlord approves tenant vehicle & pet change request. Updates active lease, covenants, and fees."""
+    from app.utils.encryption import safe_decrypt_field, encrypt_field
+    from app.models.rental.rental_application import RentalApplication
+
+    query = db.query(Lease).filter(Lease.lease_id == lease_id)
+    if not is_super_admin:
+        query = query.filter(Lease.landlord_id == landlord_id)
+    lease = query.first()
+
+    if not lease:
+        raise ValueError("Lease not found or access denied.")
+
+    pending_vehicle = safe_decrypt_field(lease.pending_vehicle_details) or ""
+    pending_pet = safe_decrypt_field(lease.pending_pet_details) or ""
+
+    # Promote pending values to active
+    lease.vehicle_details = lease.pending_vehicle_details
+    lease.pet_details = lease.pending_pet_details
+    lease.pending_vehicle_details = None
+    lease.pending_pet_details = None
+    lease.vehicle_pet_request_status = "APPROVED"
+
+    # Calculate count for parking and pets
+    v_parts = [s.strip() for s in pending_vehicle.split(';') if s.strip()] if pending_vehicle else []
+    p_parts = [s.strip() for s in pending_pet.split(';') if s.strip()] if pending_pet else []
+    v_count = len(v_parts)
+    p_count = len(p_parts)
+
+    total_parking_fee = float(v_count * 25)
+    total_pet_fee = float(p_count * 50)
+    lease.parking_fee = encrypt_field(str(total_parking_fee))
+    lease.pet_fee = encrypt_field(str(total_pet_fee))
+
+    # Update lease agreement text with Section 6 update and official Addendum Stamp
+    current_text = safe_decrypt_field(lease.lease_agreement_text) or ""
+    import re
+    if v_count > 0:
+        current_text = re.sub(
+            r"   - Parking Fee: [^\n]+",
+            f"   - Parking Fee: ${total_parking_fee:.1f}/mo ($25.00/car, {v_count} car(s), Details: {pending_vehicle})",
+            current_text
+        )
+    else:
+        current_text = re.sub(
+            r"   - Parking Fee: [^\n]+",
+            "   - Parking Fee: None / Not applicable",
+            current_text
+        )
+
+    if p_count > 0:
+        current_text = re.sub(
+            r"   - Pet Fee: [^\n]+",
+            f"   - Pet Fee: ${total_pet_fee:.1f}/mo ($50.00/pet, {p_count} pet(s), Details: {pending_pet})",
+            current_text
+        )
+    else:
+        current_text = re.sub(
+            r"   - Pet Fee: [^\n]+",
+            "   - Pet Fee: None / Not applicable",
+            current_text
+        )
+
+    now_str = datetime.utcnow().strftime("%B %d, %Y")
+    addendum_block = f"\n\n========================================\nOFFICIAL LEASE ADDENDUM: VEHICLE & PET AUTHORIZATION\n(Approved by Landlord on {now_str})\n"
+    if v_count > 0:
+        addendum_block += f"• Authorized Parking Vehicles ({v_count} car(s)): {pending_vehicle}\n  Monthly Parking Fee: ${total_parking_fee:.2f}/mo ($25.00/car)\n"
+    else:
+        addendum_block += "• Authorized Parking Vehicles: None / Discharged\n  Monthly Parking Fee: $0.00/mo\n"
+
+    if p_count > 0:
+        addendum_block += f"• Authorized Household Pets ({p_count} pet(s)): {pending_pet}\n  Monthly Pet Fee: ${total_pet_fee:.2f}/mo ($50.00/pet)\n"
+    else:
+        addendum_block += "• Authorized Household Pets: None / Discharged\n  Monthly Pet Fee: $0.00/mo\n"
+    addendum_block += "========================================\n"
+
+    current_text += addendum_block
+    lease.lease_agreement_text = encrypt_field(current_text)
+
+    # Sync to application if exists
+    email = safe_decrypt_field(lease.tenant_email)
+    if email:
+        app = db.query(RentalApplication).filter(
+            (RentalApplication.tenant_email == email.lower().strip()) |
+            (RentalApplication.unit_id == lease.unit_id)
+        ).first()
+        if app:
+            app.vehicle_details = lease.vehicle_details
+            app.pet_details = lease.pet_details
+
+    # Immediately sync charges to any active UNPAID or OVERDUE ledgers for this lease
+    unpaid_ledgers = db.query(RentalLedger).filter(
+        RentalLedger.lease_id == lease.lease_id,
+        RentalLedger.status.in_(["UNPAID", "OVERDUE"])
+    ).all()
+    for ldg in unpaid_ledgers:
+        ldg.parking_charge = total_parking_fee
+        ldg.pet_charge = total_pet_fee
+        base_rent = ldg.rent_charge or 0.0
+        util = ldg.utilities_charge or 0.0
+        maint = ldg.maintenance_charge or 0.0
+        late = ldg.late_fee_applied or 0.0
+        ldg.amount = base_rent + util + total_parking_fee + total_pet_fee + maint + late
+
+    db.commit()
+    db.refresh(lease)
+
+    # Send Approval Email to Tenant
+    try:
+        tenant_email = safe_decrypt_field(lease.tenant_email) or (lease.tenant.email_id if lease.tenant else None)
+        if tenant_email:
+            tenant_name = (lease.tenant.full_name if lease.tenant else None) or safe_decrypt_field(lease.tenant_name) or "Tenant"
+            unit_name = lease.unit.unit_number if lease.unit else "Assigned Unit"
+            prop_name = lease.unit.property.property_name if (lease.unit and lease.unit.property) else "Property"
+            base_rent = safe_decrypt_float(lease.rent_amount) or 0.0
+            total_monthly = base_rent + total_parking_fee + total_pet_fee + (safe_decrypt_float(lease.utilities_fee) or 0.0)
+            
+            html_body = f"""
+            <h2 style="font-size: 20px; font-weight: 700; color: #059669; margin: 0 0 12px 0;">Vehicle & Pet Updates Approved!</h2>
+            <p style="font-size: 14px; color: #4b5563; line-height: 1.5; margin: 0 0 16px 0;">
+              Hello <strong>{tenant_name}</strong>,<br/>
+              Great news! Your landlord has reviewed and approved your requested vehicle & pet updates for <strong>{unit_name} ({prop_name})</strong>.
+            </p>
+            <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 14px; margin-bottom: 16px;">
+              <div style="font-size: 11px; font-weight: 700; color: #166534; text-transform: uppercase; margin-bottom: 8px;">Authorized Status & Breakdown</div>
+              <ul style="margin: 0; padding-left: 18px; font-size: 13px; color: #374151; line-height: 1.6;">
+                <li><strong>Authorized Parking Vehicles ({v_count}):</strong> {pending_vehicle or 'None ($0.00/mo)'} (${total_parking_fee:.2f}/mo)</li>
+                <li><strong>Authorized Pets ({p_count}):</strong> {pending_pet or 'None ($0.00/mo)'} (${total_pet_fee:.2f}/mo)</li>
+                <li><strong>Updated Monthly Rent Total:</strong> <span style="font-weight: 700; color: #059669;">${total_monthly:.2f}/mo</span></li>
+              </ul>
+            </div>
+            <p style="font-size: 13px; color: #6b7280; margin-bottom: 20px;">
+              An official <strong>Lease Addendum: Vehicle & Pet Authorization</strong> has been signed into your Lease Agreement contract.
+            </p>
+            """
+            wrapped = _wrap_in_responsive_layout(html_body, subtitle="Rental Management Hub")
+            send_email(tenant_email, f"Approved: Vehicle & Pet Change Request - {unit_name}", wrapped)
+    except Exception as e:
+        print(f"[email] Failed to send tenant approval email: {e}")
+
+    return decrypt_lease_obj(lease)
+
+
+def landlord_reject_vehicle_pet_change(lease_id: int, landlord_id: int, notes: str, db: Session, is_super_admin: bool = False) -> dict:
+    """Landlord rejects tenant vehicle & pet change request."""
+    from app.utils.encryption import safe_decrypt_field
+    query = db.query(Lease).filter(Lease.lease_id == lease_id)
+    if not is_super_admin:
+        query = query.filter(Lease.landlord_id == landlord_id)
+    lease = query.first()
+
+    if not lease:
+        raise ValueError("Lease not found or access denied.")
+
+    lease.pending_vehicle_details = None
+    lease.pending_pet_details = None
+    lease.vehicle_pet_request_status = "REJECTED"
+    lease.vehicle_pet_request_notes = notes or "Request rejected by Landlord."
+
+    db.commit()
+    db.refresh(lease)
+
+    # Send Rejection Email to Tenant
+    try:
+        tenant_email = safe_decrypt_field(lease.tenant_email) or (lease.tenant.email_id if lease.tenant else None)
+        if tenant_email:
+            tenant_name = (lease.tenant.full_name if lease.tenant else None) or safe_decrypt_field(lease.tenant_name) or "Tenant"
+            unit_name = lease.unit.unit_number if lease.unit else "Assigned Unit"
+            
+            html_body = f"""
+            <h2 style="font-size: 20px; font-weight: 700; color: #dc2626; margin: 0 0 12px 0;">Vehicle & Pet Request Update</h2>
+            <p style="font-size: 14px; color: #4b5563; line-height: 1.5; margin: 0 0 16px 0;">
+              Hello <strong>{tenant_name}</strong>,<br/>
+              Your landlord has reviewed your requested vehicle & pet updates for <strong>{unit_name}</strong> and declined the request.
+            </p>
+            <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 14px; margin-bottom: 16px;">
+              <div style="font-size: 11px; font-weight: 700; color: #991b1b; text-transform: uppercase; margin-bottom: 6px;">Landlord Feedback</div>
+              <p style="margin: 0; font-size: 13px; color: #b91c1c; font-style: italic;">"{notes or 'Request rejected by Landlord.'}"</p>
+            </div>
+            <p style="font-size: 13px; color: #6b7280; margin-bottom: 20px;">
+              You may sign in to your Tenant Portal, adjust your details based on this feedback, and re-submit a change request.
+            </p>
+            """
+            wrapped = _wrap_in_responsive_layout(html_body, subtitle="Rental Management Hub")
+            send_email(tenant_email, f"Declined: Vehicle & Pet Change Request - {unit_name}", wrapped)
+    except Exception as e:
+        print(f"[email] Failed to send tenant rejection email: {e}")
+
+    return decrypt_lease_obj(lease)
+
 
 

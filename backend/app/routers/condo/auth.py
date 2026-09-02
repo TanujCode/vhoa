@@ -20,7 +20,7 @@ from app.models.condo.condo_contract import CondoContract
 from app.schemas.condo_auth import (
     CondoRegisterRequest, CondoLoginRequest, CondoVerifyOtpRequest,
     CondoOtpSendRequest, CondoForgotPasswordRequest, CondoResetPasswordRequest,
-    CondoUserOut, CondoGoogleLoginRequest
+    CondoUserOut, CondoGoogleLoginRequest, CondoLogin2FARequest
 )
 from app.schemas.condo_onboard import CondoClientOnboardRequest
 from app.services.condo.auth_service import (
@@ -212,24 +212,93 @@ def login(request: Request, body: CondoLoginRequest, db: Session = Depends(get_d
                 db.execute(text("SELECT setval('condo_users_user_id_seq', COALESCE((SELECT MAX(user_id) FROM condo_users), 1) + 1, false)"))
                 db.commit()
 
-        result = login_condo_user(body.email_id, body.password, db)
-        
-        user = result["user"]
+        if not user:
+            raise ValueError("Incorrect email or password.")
+
+        # Lock Check
+        if user.account_locked_until:
+            from datetime import timedelta
+            now = datetime.now(timezone.utc)
+            locked_until = user.account_locked_until
+            if locked_until.tzinfo is None:
+                locked_until = locked_until.replace(tzinfo=timezone.utc)
+
+            if now < locked_until:
+                remaining = int((locked_until - now).total_seconds() / 60)
+                raise ValueError(f"Account is locked. Try after {remaining} minutes.")
+            else:
+                user.login_attempts = 0
+                user.account_locked_until = None
+                user.account_status = "ACTIVE" if user.email_id_is_verified else "PENDING_VERIFICATION"
+                db.commit()
+
+        if not user.active_status or user.account_status == "INACTIVE":
+            raise ValueError("Account is deactivated. Contact support.")
+
+        if not verify_password(body.password, user.password):
+            from datetime import timedelta
+            from app.services.condo.auth_service import MAX_LOGIN_ATTEMPTS, LOCK_DURATION_MINUTES
+            user.login_attempts = (user.login_attempts or 0) + 1
+            if user.login_attempts >= MAX_LOGIN_ATTEMPTS:
+                user.account_locked_until = datetime.now(timezone.utc) + timedelta(minutes=LOCK_DURATION_MINUTES)
+                user.account_status = "LOCKED"
+                db.commit()
+                raise ValueError(f"Account locked for {LOCK_DURATION_MINUTES} minutes due to multiple failed attempts.")
+            
+            db.commit()
+            remaining = MAX_LOGIN_ATTEMPTS - user.login_attempts
+            raise ValueError(f"Incorrect email or password. {remaining} attempts left.")
+
+        user.login_attempts = 0
+        user.account_locked_until = None
+        db.commit()
+
         if not user.email_id_is_verified:
             raise HTTPException(
                 status_code=403,
                 detail="Email not verified. Please verify your email first."
             )
-            
-        return {
-            "access_token": result["access_token"],
-            "session_token": result["session_token"],
-            "access_expires_in": result["access_expires_in"],
-            "session_expires_in": result["session_expires_in"],
-            "user": condo_user_to_out(user, db)
-        }
+
+        # Generate 2FA OTP
+        otp_code = generate_condo_otp(user.email_id, "LOGIN", db)
+        print(f"[2FA LOGIN OTP] Condo 2FA OTP for {user.email_id}: {otp_code}")
+
+        # Send OTP email
+        send_otp_email(user.email_id, otp_code, "login_2fa", system_name="Condo Portal")
+
     except ValueError as e:
         raise HTTPException(status_code=401, detail=str(e))
+
+    return {
+        "requires_2fa": True,
+        "email_id": user.email_id,
+        "message": "Two-Factor Verification Code sent to email."
+    }
+
+
+@router.post("/login/verify-2fa")
+def verify_2fa_login(request: Request, body: CondoLogin2FARequest, db: Session = Depends(get_db)):
+    try:
+        user = verify_condo_otp(body.email_id, body.otp_code, "LOGIN", db)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+    # Successful login actions
+    user.last_login = datetime.now(timezone.utc)
+    if user.email_id_is_verified and user.account_status == "PENDING_VERIFICATION":
+        user.account_status = "ACTIVE"
+    db.commit()
+
+    role_name = user.role.role_name if user.role else None
+    email_verified = user.email_id_is_verified
+
+    return {
+        "access_token": create_access_token(user.user_id, user.email_id, role_name, email_verified),
+        "session_token": create_session_token(user.user_id, user.email_id, role_name, email_verified),
+        "access_expires_in": settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+        "session_expires_in": settings.SESSION_TOKEN_EXPIRE_HOURS * 3600,
+        "user": condo_user_to_out(user, db)
+    }
 
 
 @router.post("/google")
@@ -372,6 +441,9 @@ def send_otp(request: Request, body: CondoOtpSendRequest, db: Session = Depends(
         elif body.otp_type == "mobile_verify":
             purpose = "mobile_verify"
             otp_label = "mobile_verify"
+        elif body.otp_type == "login_2fa":
+            purpose = "LOGIN"
+            otp_label = "login_2fa"
 
         otp_code = generate_condo_otp(body.email_id, purpose, db)
         success = send_otp_email(body.email_id, otp_code, otp_label, "Condo Management System")

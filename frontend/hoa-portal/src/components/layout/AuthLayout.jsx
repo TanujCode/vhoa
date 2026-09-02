@@ -26,24 +26,14 @@ export default function AuthLayout({ children }) {
   }, []);
 
   return (
-    <div className="min-h-screen flex flex-col md:flex-row font-sans">
+    <div className="min-h-screen md:h-screen md:overflow-hidden flex flex-col md:flex-row font-sans">
       {/* Left Form Container */}
-      <div className="w-full md:w-1/2 flex flex-col justify-center items-center p-8 bg-white relative">
-        {/* Back to website button */}
-        <div className="w-full max-w-md mb-8">
-          <Link
-            to="/"
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-650 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 transition-all duration-300 shadow-sm border border-slate-200"
-          >
-            <ArrowLeft size={14} />
-            <span>Back to website</span>
-          </Link>
-        </div>
+      <div className="w-full md:w-1/2 flex flex-col justify-center items-center p-6 md:p-8 bg-white relative md:h-full">
         <div className="w-full max-w-md">{children}</div>
       </div>
 
       {/* Right Hero / Branding Container */}
-      <div className="hidden md:flex md:w-1/2 bg-[#0A2240] text-white flex-col justify-center items-center p-12 relative overflow-hidden">
+      <div className="hidden md:flex md:w-1/2 bg-[#0A2240] text-white flex-col justify-center items-center p-12 relative overflow-hidden md:h-full">
         <div className="max-w-md text-center">
           <div className="flex justify-center mb-6">
             <Link to="/" title="Back to website">
