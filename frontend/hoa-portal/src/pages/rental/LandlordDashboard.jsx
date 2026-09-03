@@ -219,6 +219,7 @@ export default function LandlordDashboard({
   const tenantsCount = new Set(
     leases
       .filter(propertyFilter)
+      .filter(l => ['ACTIVE', 'ACTIVE_LEASE', 'SIGNED', 'APPROVED'].includes((l.status || '').toUpperCase()))
       .map(l => l.tenant_email)
       .filter(Boolean)
   ).size;

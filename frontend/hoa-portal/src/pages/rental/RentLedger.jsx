@@ -113,17 +113,20 @@ export default function RentLedger({ user, selectedPropertyFilterId = 'all' }) {
       setLoading(true);
       // Fetch leases to get invoices
       const leaseRes = await API.get('/rental/leases');
-      setLeases(leaseRes.data);
+      const allLeases = leaseRes.data || [];
+      setLeases(allLeases);
       
       const allInvoices = [];
-      const activeId = localStorage.getItem('tenant_active_lease_id');
-      const tenantLeases = !isLandlord && activeId
-        ? leaseRes.data.filter(l => String(l.lease_id) === String(activeId))
-        : leaseRes.data;
+      const validLeases = allLeases.filter(l => !['CANCELLED', 'REJECTED', 'TERMINATED', 'VOID', 'EXPIRED'].includes((l.status || '').toUpperCase()));
+      const tenantLeases = validLeases.length > 0 ? validLeases : allLeases;
 
       for (const lease of tenantLeases) {
-        const ledgerRes = await API.get(`/rental/leases/${lease.lease_id}/ledgers`);
-        allInvoices.push(...ledgerRes.data.map(i => ({ ...i, lease })));
+        try {
+          const ledgerRes = await API.get(`/rental/leases/${lease.lease_id}/ledgers`);
+          allInvoices.push(...ledgerRes.data.map(i => ({ ...i, lease })));
+        } catch (lErr) {
+          console.warn("Could not fetch ledgers for lease", lease.lease_id, lErr);
+        }
       }
       // Sort by invoice_id ascending
       allInvoices.sort((a, b) => a.invoice_id - b.invoice_id);
@@ -289,7 +292,30 @@ export default function RentLedger({ user, selectedPropertyFilterId = 'all' }) {
             return selectedPropertyFilterId === 'all' || String(inv.lease?.unit?.property_id) === String(selectedPropertyFilterId);
           });
 
+          const pendingLease = leases.find(l => ['PENDING_TENANT_REVIEW', 'PENDING_SIGNATURE'].includes((l.status || '').toUpperCase()));
+
           if (filteredInvoices.length === 0) {
+            if (pendingLease && !isLandlord) {
+              return (
+                <div className="py-16 px-6 text-center space-y-4 max-w-md mx-auto">
+                  <div className="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-500 flex items-center justify-center mx-auto">
+                    <FileText size={24} />
+                  </div>
+                  <div className="space-y-1">
+                    <h4 className="text-base font-bold text-slate-900 dark:text-white">Lease Signature Required</h4>
+                    <p className="text-xs text-slate-500 dark:text-gray-400 leading-relaxed">
+                      Your lease agreement for <strong>{pendingLease.property_name || 'your property'}</strong> is awaiting your signature. Once signed and approved, your monthly rent invoices will appear here for online payment.
+                    </p>
+                  </div>
+                  <a
+                    href="/rental/dashboard?tab=leases_hub"
+                    className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold transition shadow-md shadow-blue-500/20"
+                  >
+                    <Edit3 size={14} /> Review & Sign Lease
+                  </a>
+                </div>
+              );
+            }
             return <div className="py-20 text-center text-slate-400 text-sm">No transaction invoices generated in ledger records.</div>;
           }
 

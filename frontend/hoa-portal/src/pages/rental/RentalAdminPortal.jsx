@@ -420,46 +420,6 @@ const RentalAdminPortal = () => {
 
     const role = (user?.role || 'tenant').toLowerCase();
 
-    // Landlord onboarding flow locking
-    if (role === 'landlord') {
-      // Case 1: No properties registered yet -> Force show Property Creation Wizard inline
-      if (properties.length === 0) {
-        return (
-          <PropertiesHub 
-            user={user} 
-            selectedPropertyFilterId={selectedPropertyFilterId} 
-            setSelectedPropertyFilterId={setSelectedPropertyFilterId} 
-            properties={properties} 
-            setActivePage={setActivePage} 
-            onPropertiesChange={handlePropertiesChange}
-            leases={leasesList}
-          />
-        );
-      }
-
-      // Case 2: Properties exist, but no tenant is active yet (no occupied units) → Force onboarding setup screen (PropertiesHub)
-      if (!hasOccupiedUnit) {
-        if (activePage === 'leases_hub') {
-          return <LeasesHub user={user} selectedPropertyFilterId={selectedPropertyFilterId} initialShowCreate={leasesList.length === 0} onLeaseCreated={(leases) => setLeasesList(leases || [])} />;
-        }
-        if (activePage === 'profile') {
-          return <RentalProfile user={user} setUser={setUser} viewRole={role} />;
-        }
-        // Force properties setup hub content to act as Dashboard
-        return (
-          <PropertiesHub 
-            user={user} 
-            selectedPropertyFilterId={selectedPropertyFilterId} 
-            setSelectedPropertyFilterId={setSelectedPropertyFilterId} 
-            properties={properties} 
-            setActivePage={setActivePage} 
-            onPropertiesChange={handlePropertiesChange}
-            leases={leasesList}
-          />
-        );
-      }
-    }
-
     switch (activePage) {
       case 'dashboard':
         if (role === 'super_admin') return <SuperAdminDashboard user={user} setActivePage={setActivePage} />;

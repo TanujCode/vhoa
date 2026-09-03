@@ -931,7 +931,6 @@ export default function LandingPage() {
   // Portal data configuration
   const dashboardData = [
     {
-      url: 'app.nestbloq.com/hoa/dashboard',
       managerName: 'John Smith',
       managerRole: 'PROPERTY MANAGER',
       managerInitials: 'JS',
@@ -955,7 +954,6 @@ export default function LandingPage() {
       rightPanelSub: 'View Calendar',
     },
     {
-      url: 'app.nestbloq.com/rental/dashboard',
       managerName: 'James Mitchell',
       managerRole: 'LANDLORD',
       managerInitials: 'JM',
@@ -979,7 +977,6 @@ export default function LandingPage() {
       rightPanelSub: 'Tenant Requests ●4',
     },
     {
-      url: 'app.nestbloq.com/condo/dashboard',
       managerName: 'Robert Hayes',
       managerRole: 'CONDO MANAGER',
       managerInitials: 'RH',
@@ -1524,18 +1521,17 @@ export default function LandingPage() {
             >
 
               {/* Browser top bar */}
-              <div className="flex items-center gap-2 px-4 py-3 bg-slate-100 dark:bg-[#0D1B2A] border-b border-slate-200/60 dark:border-white/[0.06]">
+              <div className="flex items-center justify-between px-4 py-3 bg-slate-100 dark:bg-[#0D1B2A] border-b border-slate-200/60 dark:border-white/[0.06]">
                 <div className="flex gap-1.5">
                   <div className="w-3 h-3 rounded-full bg-red-400" />
                   <div className="w-3 h-3 rounded-full bg-amber-400" />
                   <div className="w-3 h-3 rounded-full bg-emerald-400" />
                 </div>
-                <div className="flex-1 mx-4">
-                  <div className="bg-white dark:bg-[#090F16] rounded-md px-3 py-1 text-[10px] text-slate-400 dark:text-slate-500 flex items-center gap-2 max-w-xs mx-auto border border-slate-200 dark:border-white/[0.06]">
-                    <div className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
-                    {pd.url}
-                  </div>
+                <div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-600 dark:text-slate-300">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                  <span>NestBloq Management Dashboard</span>
                 </div>
+                <div className="w-8" />
               </div>
 
               {/* Dashboard Layout — fades between portals */}
@@ -1981,7 +1977,8 @@ export default function LandingPage() {
                 icon: Users,
                 colorClass: 'text-indigo-600 dark:text-indigo-400 bg-indigo-500/10 dark:bg-indigo-500/20 border-indigo-500/20',
                 cardBg: 'hover:border-indigo-500/40 dark:hover:border-indigo-500/35 hover:shadow-indigo-500/5',
-                textColor: 'text-indigo-600 dark:text-indigo-400'
+                textColor: 'text-indigo-600 dark:text-indigo-400',
+                link: '/solutions/hoa'
               },
               {
                 title: 'Rental Property Management',
@@ -1990,7 +1987,8 @@ export default function LandingPage() {
                 icon: Wallet,
                 colorClass: 'text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 dark:bg-emerald-500/20 border-emerald-500/20',
                 cardBg: 'hover:border-emerald-500/40 dark:hover:border-emerald-500/35 hover:shadow-emerald-500/5',
-                textColor: 'text-emerald-600 dark:text-emerald-400'
+                textColor: 'text-emerald-600 dark:text-emerald-400',
+                link: '/solutions/rental'
               },
               {
                 title: 'Condo Association Management',
@@ -1999,7 +1997,8 @@ export default function LandingPage() {
                 icon: CalendarRange,
                 colorClass: 'text-violet-600 dark:text-violet-400 bg-violet-500/10 dark:bg-violet-500/20 border-violet-500/20',
                 cardBg: 'hover:border-violet-500/40 dark:hover:border-violet-500/35 hover:shadow-violet-500/5',
-                textColor: 'text-violet-650 dark:text-violet-400'
+                textColor: 'text-violet-650 dark:text-violet-400',
+                link: '/solutions/condo'
               }
             ].map((solution, i) => {
               const IconComponent = solution.icon;
@@ -2028,10 +2027,13 @@ export default function LandingPage() {
                   </div>
 
                   <div className="pt-4 border-t border-slate-100 dark:border-white/5 mt-4 flex items-center justify-between">
-                    <span className={`inline-flex items-center gap-1.5 text-xs font-bold transition-all uppercase tracking-wider ${solution.textColor}`}>
+                    <Link
+                      to={solution.link}
+                      className={`inline-flex items-center gap-1.5 text-xs font-bold transition-all uppercase tracking-wider ${solution.textColor}`}
+                    >
                       Explore Portal
                       <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
-                    </span>
+                    </Link>
                   </div>
                 </div>
               );

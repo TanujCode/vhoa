@@ -1,170 +1,213 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Shield, Users, Zap, Maximize, CheckCircle2, Heart, HelpCircle, ArrowUpRight } from 'lucide-react';
+import { 
+  Shield, 
+  Users, 
+  Zap, 
+  Layers, 
+  Home, 
+  Building2, 
+  KeyRound, 
+  TrendingUp, 
+  Banknote,
+  Sparkles
+} from 'lucide-react';
 import Navbar from '../../components/marketing/Navbar';
 import Footer from '../../components/marketing/Footer';
+import InteractiveAssistant from '../../components/marketing/InteractiveAssistant';
 import { useTheme } from '../../context/ThemeContext';
-
-// Asset imports
-import aboutHero from '../../assets/about_hero.png';
-import solutionHoa from '../../assets/solution_hoa.png';
-import aboutTeamCulture from '../../assets/about_team_culture.png';
-import aboutCommunityMeeting from '../../assets/about_community_meeting.png';
-import aboutModernTownhomes from '../../assets/about_modern_townhomes.png';
 
 export default function AboutPage() {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
 
-  const values = [
+  const coreValues = [
     {
       title: "Security First",
-      desc: "Every feature we build starts with security. SSL, data encryption, captcha verification - non-negotiable for us.",
+      desc: "Bank-level encryption and rigorous compliance protocols protect your community's financial and personal data at all times.",
       icon: Shield,
-      color: "text-blue-500 bg-blue-500/15 dark:text-blue-300 dark:bg-blue-500/20 border-blue-400/30",
-      cardBg: "bg-gradient-to-br from-blue-50 to-indigo-100/60 dark:from-blue-950/50 dark:to-indigo-950/40 border-blue-200/60 dark:border-blue-500/20 hover:border-blue-400/50 dark:hover:border-blue-400/30",
-      titleColor: "text-blue-900 dark:text-blue-100",
-      descColor: "text-blue-700/80 dark:text-blue-300/70"
+      iconColor: "text-blue-600 dark:text-blue-400",
+      iconBg: "bg-blue-50 dark:bg-blue-950/50",
     },
     {
-      title: "Community driven",
-      desc: "NestBloq is built based on real feedback from HOA boards, admins, and members across the US.",
+      title: "Community Driven",
+      desc: "Designed with input from board members, landlords, and residents to ensure every feature solves real-world neighborhood challenges.",
       icon: Users,
-      color: "text-indigo-600 bg-indigo-500/15 dark:text-indigo-300 dark:bg-indigo-500/20 border-indigo-400/30",
-      cardBg: "bg-gradient-to-br from-indigo-50 to-blue-100/60 dark:from-indigo-950/50 dark:to-blue-950/40 border-indigo-200/60 dark:border-indigo-500/20 hover:border-indigo-400/50 dark:hover:border-indigo-400/30",
-      titleColor: "text-indigo-900 dark:text-indigo-100",
-      descColor: "text-indigo-700/80 dark:text-indigo-300/70"
+      iconColor: "text-indigo-600 dark:text-indigo-400",
+      iconBg: "bg-indigo-50 dark:bg-indigo-950/50",
     },
     {
-      title: "Speed & simplicity",
-      desc: "Complex HOA operations made simple. We choose clear menus, reducing clicks, and saving time.",
+      title: "Speed & Simplicity",
+      desc: "An intuitive interface that reduces administrative overhead, allowing managers to complete tasks in clicks, not hours.",
       icon: Zap,
-      color: "text-violet-600 bg-violet-500/15 dark:text-violet-300 dark:bg-violet-500/20 border-violet-400/30",
-      cardBg: "bg-gradient-to-br from-violet-50 to-purple-100/60 dark:from-violet-950/50 dark:to-purple-950/40 border-violet-200/60 dark:border-violet-500/20 hover:border-violet-400/50 dark:hover:border-violet-400/30",
-      titleColor: "text-violet-900 dark:text-violet-100",
-      descColor: "text-violet-700/80 dark:text-violet-300/70"
+      iconColor: "text-violet-600 dark:text-violet-400",
+      iconBg: "bg-violet-50 dark:bg-violet-950/50",
     },
     {
-      title: "Built to scale",
-      desc: "From 50 units to 5,000 - NestBloq grows with your community, without extra complexity.",
-      icon: Maximize,
-      color: "text-blue-650 bg-blue-500/15 dark:text-blue-300 dark:bg-blue-500/20 border-blue-400/30",
-      cardBg: "bg-gradient-to-br from-blue-50 to-indigo-100/60 dark:from-blue-950/50 dark:to-indigo-950/40 border-blue-200/60 dark:border-blue-500/20 hover:border-blue-400/50 dark:hover:border-blue-400/30",
-      titleColor: "text-blue-900 dark:text-blue-100",
-      descColor: "text-blue-700/80 dark:text-blue-300/70"
+      title: "Built to Scale",
+      desc: "From a single ten-unit building to multi-state portfolios, our infrastructure seamlessly handles growth without compromise.",
+      icon: Layers,
+      iconColor: "text-teal-600 dark:text-teal-400",
+      iconBg: "bg-teal-50 dark:bg-teal-950/50",
+    }
+  ];
+
+  // Strictly Ordered: 1. HOA -> 2. Rental -> 3. Condo (Condo is last)
+  const propertyTypes = [
+    {
+      title: "HOA Communities",
+      badge: "Single Family & Subdivisions",
+      desc: "Streamline violations, architectural requests, and dues collection for single-family home developments.",
+      icon: Home,
+      iconColor: "text-indigo-600 dark:text-indigo-400",
+      iconBg: "bg-indigo-50 dark:bg-indigo-950/60",
+      link: "/solutions/hoa"
+    },
+    {
+      title: "Rental Portfolios",
+      badge: "Landlords & Multi-Unit Portfolios",
+      desc: "Handle multi-unit lease tracking, automated payment reminders, and tenant communications.",
+      icon: KeyRound,
+      iconColor: "text-purple-600 dark:text-purple-400",
+      iconBg: "bg-purple-50 dark:bg-purple-950/60",
+      link: "/solutions/rental"
+    },
+    {
+      title: "Condo Associations",
+      badge: "High-Rise & Multi-Unit Towers",
+      desc: "Manage shared amenities, elevator bookings, and complex maintenance reserves with precision.",
+      icon: Building2,
+      iconColor: "text-blue-600 dark:text-blue-400",
+      iconBg: "bg-blue-50 dark:bg-blue-950/60",
+      link: "/solutions/condo"
     }
   ];
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-[#120824] transition-colors duration-250 font-sans text-slate-900 dark:text-slate-100">
+    <div className="min-h-screen flex flex-col bg-[#F9FAFB] dark:bg-[#0f0720] transition-colors duration-300 font-sans text-slate-900 dark:text-slate-100 selection:bg-indigo-500 selection:text-white">
+      {/* Top Navbar matching Homepage */}
       <Navbar />
 
-      <div className="flex-1 overflow-x-hidden">
+      <main className="flex-1 overflow-x-hidden">
 
-        {/* --- Page Header Banner with Background Image --- */}
-        <header className="relative w-full overflow-hidden py-14 sm:py-20 border-b border-slate-200/50 dark:border-white/[0.04] bg-slate-50 dark:bg-slate-950">
-          {/* Background Image of Modern Apartments */}
-          <div className="absolute inset-0 z-0">
-            <img
-              src={aboutHero}
-              alt="Modern Residential Communities"
-              className="w-full h-full object-cover object-center opacity-15 dark:opacity-20 blur-[2px] select-none pointer-events-none"
-            />
-            {/* Glowing navy/sky-blue overlay */}
-            <div className="absolute inset-0 bg-gradient-to-r from-slate-50/90 via-sky-50/30 to-slate-50/90 dark:from-slate-950/90 dark:via-sky-900/40 dark:to-slate-950/90" />
-          </div>
+        {/* ─── SECTION 1: HERO / OUR MISSION ─── */}
+        <section className="relative pt-3 sm:pt-5 lg:pt-6 pb-10 sm:pb-14 max-w-7xl mx-auto px-5 sm:px-8">
+          {/* Ambient Background Glows */}
+          <div className="absolute top-2 left-1/4 w-80 h-80 bg-indigo-500/10 dark:bg-indigo-500/15 rounded-full blur-3xl pointer-events-none -z-10" />
+          <div className="absolute top-8 right-10 w-80 h-80 bg-purple-500/10 dark:bg-purple-500/15 rounded-full blur-3xl pointer-events-none -z-10" />
 
-          <div className="relative z-10 max-w-5xl mx-auto px-5 sm:px-8 text-center space-y-6">
-            <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-sky-500/10 dark:bg-sky-500/20 border border-sky-300/30 dark:border-sky-400/30 text-sky-600 dark:text-sky-200 text-[10px] font-extrabold tracking-widest uppercase">
-              OUR STORY
-            </div>
-
-            <h1 className="text-4xl sm:text-5xl font-black text-slate-900 dark:text-white tracking-tight leading-tight max-w-3xl mx-auto">
-              Built for communities. <br className="hidden sm:inline" />Driven by purpose.
-            </h1>
-
-            <p className="text-base sm:text-lg text-slate-600 dark:text-slate-300 max-w-xl mx-auto leading-relaxed">
-              NestBloq was born from a simple belief: every HOA community deserves modern, affordable tools.
-            </p>
-          </div>
-        </header>
-
-        {/* --- Our Mission Section --- */}
-        <section className="py-24 max-w-7xl mx-auto px-5 sm:px-8 w-full relative z-10">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-
-            {/* Left Block: Image Preview with glowing effect */}
-            <div className="lg:col-span-6 flex justify-center relative">
-              <div className="absolute -inset-2 bg-gradient-to-r from-violet-500 to-indigo-500 rounded-3xl blur-xl opacity-20 dark:opacity-25" />
-              <div className="relative border border-slate-200 dark:border-white/[0.06] bg-white dark:bg-slate-950 rounded-3xl p-2 shadow-2xl overflow-hidden hover:scale-[1.01] transition-transform duration-300">
-                <img
-                  src={solutionHoa}
-                  alt="Modern HOA Residential Development"
-                  className="rounded-2xl w-full max-w-[540px] h-auto object-cover object-center pointer-events-none select-none shadow-md"
-                />
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+            
+            {/* Left Content Column */}
+            <div className="lg:col-span-6 space-y-3.5 sm:space-y-4 text-left">
+              
+              {/* Rounded Badge with Sparkle */}
+              <div className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-violet-500/10 border border-violet-500/20 text-[10px] sm:text-xs font-bold text-violet-600 dark:text-violet-400 uppercase tracking-wider w-fit">
+                <Sparkles className="w-3.5 h-3.5 animate-pulse" />
+                OUR MISSION
               </div>
-            </div>
 
-            {/* Right Block: Content & Stats */}
-            <div className="lg:col-span-6 space-y-8 text-left">
-              <div className="space-y-4">
-                <span className="text-indigo-605 dark:text-indigo-400 text-xs font-extrabold tracking-widest uppercase">
-                  OUR MISSION
-                </span>
-                <h2 className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight leading-tight">
-                  Empowering HOA communities across the USA
-                </h2>
-                <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed font-normal">
-                  Most HOA communities rely on expensive management companies or outdated portals that don't talk to each other. We're changing that - one platform, every function, built for self-management.
+              {/* Main Headline */}
+              <h1 className="text-2xl sm:text-3xl lg:text-[38px] font-bold text-slate-900 dark:text-white tracking-tight leading-[1.25]">
+                Empowering <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 via-purple-600 to-violet-500 dark:from-indigo-400 dark:via-purple-300 dark:to-violet-400">HOA, Rental & Condo</span> communities across the USA
+              </h1>
+
+              {/* Narrative Paragraphs */}
+              <div className="space-y-3 text-slate-600 dark:text-slate-300 text-xs sm:text-sm lg:text-[14.5px] leading-relaxed font-normal">
+                <p>
+                  Nestbloq was founded with a singular vision: to simplify the complex world of property management across <strong className="font-semibold text-slate-900 dark:text-white">HOA Communities, Rental Portfolios, and Condo Associations</strong>. We believe that community leaders, property managers, and board members should spend less time wrestling with outdated software and more time building thriving neighborhoods.
                 </p>
-                <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed font-normal">
-                  We believe community management should be transparent, accessible, and affordable for every homeowner - not just large complexes with big budgets.
+                <p>
+                  By bringing intuitive design and powerful automation tailored specifically for HOA governance, rental lease operations, and condo amenity tracking, we are setting a new standard for transparency, efficiency, and resident satisfaction across the nation.
                 </p>
               </div>
 
-              {/* Glowing Stats Cards */}
-              <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-200 dark:border-white/[0.05]">
-                <div className="p-5 rounded-2xl bg-white dark:bg-white/[0.02] border border-slate-200/60 dark:border-white/[0.04] shadow-sm">
-                  <p className="text-3xl font-extrabold font-mono text-indigo-600 dark:text-indigo-400">500+</p>
-                  <p className="text-[10px] text-slate-400 dark:text-slate-500 font-extrabold uppercase mt-1 tracking-wider">Active Communities</p>
+            </div>
+
+            {/* Right Card Column (Proportional Gradient Card with Floating Glassmorphic Badges) */}
+            <div className="lg:col-span-6 flex justify-center lg:justify-end">
+              <div className="relative w-full max-w-[400px] aspect-[4/4.5] rounded-[30px] bg-gradient-to-b from-[#6366F1] via-[#7048E8] to-[#845EF7] shadow-xl shadow-indigo-500/25 overflow-hidden flex flex-col justify-center items-center p-6 sm:p-7 select-none border border-white/20">
+                
+                {/* Background Ambient Particles / Glowing Orbs */}
+                <div className="absolute top-8 left-10 w-2 h-2 rounded-full bg-white/90 blur-[1px] shadow-[0_0_12px_#fff] animate-pulse" />
+                <div className="absolute top-20 right-12 w-2.5 h-2.5 rounded-full bg-white/80 blur-[1px] shadow-[0_0_14px_#fff]" />
+                <div className="absolute bottom-12 right-14 w-2 h-2 rounded-full bg-white/90 blur-[1px] shadow-[0_0_10px_#fff] animate-ping" />
+                <div className="absolute bottom-20 left-10 w-1.5 h-1.5 rounded-full bg-white/70 blur-[1px]" />
+                
+                {/* Subtle soft gradient background flares */}
+                <div className="absolute -top-12 -right-12 w-48 h-48 bg-white/20 rounded-full blur-2xl pointer-events-none" />
+                <div className="absolute -bottom-12 -left-12 w-48 h-48 bg-indigo-900/40 rounded-full blur-2xl pointer-events-none" />
+
+                {/* Floating Glassmorphism Cards */}
+                <div className="relative z-10 w-full flex flex-col items-center gap-4.5">
+                  
+                  {/* Floating Card 1 (Growth Rate) */}
+                  <div className="w-[85%] max-w-[245px] -mr-6 sm:-mr-8 backdrop-blur-xl bg-white/20 hover:bg-white/25 border border-white/35 rounded-2xl p-3.5 text-white shadow-lg shadow-black/10 transition-all duration-300 hover:scale-[1.03] cursor-default">
+                    <div className="flex items-center gap-2 text-white/90 text-[10px] sm:text-[11px] font-bold tracking-widest uppercase">
+                      <TrendingUp className="w-3.5 h-3.5 text-white" />
+                      <span>GROWTH RATE</span>
+                    </div>
+                    <div className="text-lg sm:text-xl font-black tracking-tight text-white mt-1">
+                      312%
+                    </div>
+                  </div>
+
+                  {/* Floating Card 2 (Processed Annually) */}
+                  <div className="w-[88%] max-w-[255px] -ml-6 sm:-ml-8 backdrop-blur-xl bg-white/20 hover:bg-white/25 border border-white/35 rounded-2xl p-3.5 text-white shadow-lg shadow-black/10 transition-all duration-300 hover:scale-[1.03] cursor-default">
+                    <div className="flex items-center gap-2 text-white/90 text-[10px] sm:text-[11px] font-bold tracking-widest uppercase">
+                      <Banknote className="w-3.5 h-3.5 text-white" />
+                      <span>PROCESSED ANNUALLY</span>
+                    </div>
+                    <div className="text-lg sm:text-xl font-black tracking-tight text-white mt-1">
+                      $1.2B
+                    </div>
+                  </div>
+
                 </div>
-                <div className="p-5 rounded-2xl bg-white dark:bg-white/[0.02] border border-slate-200/60 dark:border-white/[0.04] shadow-sm">
-                  <p className="text-3xl font-extrabold font-mono text-violet-500 dark:text-violet-400">40,000+</p>
-                  <p className="text-[10px] text-slate-400 dark:text-slate-500 font-extrabold uppercase mt-1 tracking-wider">Homes Onboarded</p>
-                </div>
+
               </div>
             </div>
+
           </div>
         </section>
 
-        {/* --- Core Values Section --- */}
-        <section className="py-24 bg-white dark:bg-[#180a2d]/45 border-y border-slate-200/60 dark:border-white/[0.04] relative z-10 transition-colors duration-200">
-          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-violet-600/[0.03] dark:bg-violet-600/8 font-bold rounded-full blur-[120px] pointer-events-none" />
-          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-indigo-500/[0.02] dark:bg-indigo-500/6 rounded-full blur-[120px] pointer-events-none" />
 
+        {/* ─── SECTION 2: WHAT WE STAND FOR (OUR CORE VALUES) ─── */}
+        <section className="py-14 sm:py-16 bg-white/60 dark:bg-white/[0.02] border-y border-slate-200/70 dark:border-white/[0.06] relative">
           <div className="max-w-7xl mx-auto px-5 sm:px-8">
-            <div className="text-center space-y-3 mb-16">
-              <span className="text-violet-500 dark:text-violet-400 text-xs font-extrabold tracking-widest uppercase">
+            
+            {/* Section Header */}
+            <div className="text-center space-y-2 mb-10 sm:mb-12">
+              <div className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-violet-500/10 border border-violet-500/20 text-[10px] sm:text-xs font-bold text-violet-600 dark:text-violet-400 uppercase tracking-wider">
+                <Sparkles className="w-3.5 h-3.5 animate-pulse" />
                 WHAT WE STAND FOR
-              </span>
-              <h2 className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight">Our core values</h2>
-              <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-md mx-auto">The principles that guide how we design features, manage data, and support our users.</p>
+              </div>
+              
+              <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white tracking-tight">
+                Our Core Values
+              </h2>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-              {values.map((item, idx) => {
+            {/* 2x2 Values Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 max-w-4xl mx-auto">
+              {coreValues.map((item, idx) => {
                 const Icon = item.icon;
                 return (
                   <div
                     key={idx}
-                    className={`group p-6 border rounded-2xl flex items-start gap-4 transition-all duration-300 hover:shadow-xl hover:-translate-y-1 ${item.cardBg}`}
+                    className="group bg-white dark:bg-[#180d2e]/70 border border-slate-200/80 dark:border-white/10 rounded-2xl p-5 sm:p-6 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.03)] hover:shadow-xl hover:border-indigo-300 dark:hover:border-indigo-500/40 hover:-translate-y-1 transition-all duration-300 flex items-start gap-4"
                   >
-                    <div className={`w-12 h-12 rounded-xl shrink-0 flex items-center justify-center border transition-transform duration-300 group-hover:scale-110 shadow-sm ${item.color}`}>
+                    {/* Icon Badge */}
+                    <div className={`w-11 h-11 rounded-2xl shrink-0 flex items-center justify-center transition-transform duration-300 group-hover:scale-110 ${item.iconBg} ${item.iconColor}`}>
                       <Icon className="w-5 h-5" />
                     </div>
-                    <div className="space-y-1.5 text-left">
-                      <h3 className={`font-bold text-base ${item.titleColor}`}>{item.title}</h3>
-                      <p className={`text-xs leading-relaxed font-normal ${item.descColor}`}>
+
+                    {/* Content */}
+                    <div className="space-y-1 text-left">
+                      <h3 className="font-bold text-sm sm:text-base text-slate-900 dark:text-white">
+                        {item.title}
+                      </h3>
+                      <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 leading-relaxed font-normal">
                         {item.desc}
                       </p>
                     </div>
@@ -172,116 +215,109 @@ export default function AboutPage() {
                 );
               })}
             </div>
+
           </div>
         </section>
 
-        {/* --- Creator Studio Section (Dark Indigo Card) --- */}
-        <section className="py-24 max-w-7xl mx-auto px-5 sm:px-8 w-full relative z-10">
-          <div className="relative overflow-hidden rounded-3xl p-8 sm:p-12 text-left bg-gradient-to-br from-indigo-950 via-slate-950 to-[#120824] border border-white/10 shadow-2xl">
-            {/* Overlay grid lines */}
-            <div className="absolute inset-0 opacity-[0.03] select-none pointer-events-none" style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)', backgroundSize: '32px 32px' }} />
-            <div className="absolute right-0 top-0 w-96 h-96 bg-violet-600/10 rounded-full blur-3xl pointer-events-none" />
 
-            <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-
-              {/* Left Content */}
-              <div className="lg:col-span-7 space-y-5">
-                <span className="text-indigo-400 text-[10px] font-extrabold tracking-widest uppercase">
-                  THE TEAM BEHIND NESTBLOQ
-                </span>
-                <h3 className="text-2xl sm:text-3xl font-black text-white tracking-tight leading-tight">
-                  Built by Crestcode Product Studio
-                </h3>
-                <p className="text-sm text-slate-300 leading-relaxed font-normal max-w-xl">
-                  NestBloq is a product of Crestcode Product Studio - a modern software product studio that partners with founders and builders to build high-quality digital products.
-                </p>
-                <div className="pt-2">
-                  <a
-                    href="https://cctps.com/"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 text-xs text-indigo-400 hover:text-indigo-300 font-bold group"
-                  >
-                    Learn about the Studio
-                    <ArrowUpRight className="w-3.5 h-3.5 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-                  </a>
-                </div>
-              </div>
-
-              {/* Right Checklist */}
-              <div className="lg:col-span-5 p-6 rounded-2xl bg-white/[0.02] border border-white/5 space-y-3.5 backdrop-blur-md">
-                {[
-                  "Focus on resident needs",
-                  "Rapid product development",
-                  "Future-proof features"
-                ].map((text, i) => (
-                  <div key={i} className="flex items-center gap-3 text-xs text-slate-300">
-                    <CheckCircle2 className="w-4 h-4 text-indigo-500 dark:text-indigo-400 shrink-0" />
-                    <span className="font-semibold">{text}</span>
-                  </div>
-                ))}
-              </div>
-
+        {/* ─── SECTION 3: ONE PLATFORM, EVERY PROPERTY TYPE (Strict Order: HOA -> Rental -> Condo) ─── */}
+        <section className="py-14 sm:py-16 max-w-7xl mx-auto px-5 sm:px-8">
+          {/* Section Header */}
+          <div className="text-center space-y-2 mb-10 sm:mb-12">
+            <div className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-violet-500/10 border border-violet-500/20 text-[10px] sm:text-xs font-bold text-violet-600 dark:text-violet-400 uppercase tracking-wider">
+              <Sparkles className="w-3.5 h-3.5 animate-pulse" />
+              SOLUTIONS FOR EVERY PROPERTY TYPE
             </div>
-          </div>
-        </section>
 
-        {/* --- Image Gallery Row --- */}
-        <section className="py-8 pb-16 max-w-7xl mx-auto px-5 sm:px-8 w-full relative z-10">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-            {[
-              { img: aboutTeamCulture, title: "Our Team & Culture" },
-              { img: aboutCommunityMeeting, title: "Community Governance" },
-              { img: aboutModernTownhomes, title: "Premium Neighborhoods" }
-            ].map((item, i) => (
-              <div key={i} className="group relative overflow-hidden rounded-2xl border border-slate-200/80 dark:border-white/5 shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
-                <div className="aspect-[16/10] overflow-hidden">
-                  <img
-                    src={item.img}
-                    alt={item.title}
-                    className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
-                  />
-                </div>
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/20 to-transparent opacity-80 group-hover:opacity-90 transition-opacity" />
-                <div className="absolute bottom-4 left-4 text-left">
-                  <p className="text-xs font-bold text-white uppercase tracking-wider">{item.title}</p>
-                  <p className="text-[10px] text-slate-300 mt-0.5">NestBloq Communities</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* --- Bottom CTA Section --- */}
-        <section className="py-20 max-w-7xl mx-auto px-5 sm:px-8 w-full text-center relative z-10 border-t border-slate-200/50 dark:border-white/[0.04]">
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-indigo-500/[0.03] dark:bg-indigo-500/8 rounded-full blur-3xl -z-10 pointer-events-none" />
-
-          <div className="max-w-2xl mx-auto space-y-6">
-            <h2 className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight leading-tight">
-              Ready to Try NestBloq?
+            <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white tracking-tight">
+              One Platform, Every Property Type
             </h2>
-            <p className="text-sm text-slate-500 dark:text-slate-400 max-w-md mx-auto leading-relaxed">
-              Get started for free today, or request a customized setup plan to present directly to your community board.
+            <p className="text-slate-500 dark:text-slate-400 text-xs sm:text-sm sm:max-w-xl mx-auto leading-relaxed">
+              Tailored workflows designed for the unique structural needs of different community associations and rental operations.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center pt-2">
+          </div>
+
+          {/* 3-Column Grid: 1. HOA | 2. Rental | 3. Condo */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+            {propertyTypes.map((type, idx) => {
+              const Icon = type.icon;
+              return (
+                <div
+                  key={idx}
+                  className="group bg-white dark:bg-[#180d2e]/70 border border-slate-200/80 dark:border-white/10 rounded-2xl p-6 sm:p-7 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.03)] hover:shadow-xl hover:border-indigo-300 dark:hover:border-indigo-500/40 hover:-translate-y-1.5 transition-all duration-300 flex flex-col items-center text-center"
+                >
+                  {/* Icon Badge */}
+                  <div className={`w-13 h-13 p-3.5 rounded-2xl flex items-center justify-center transition-transform duration-300 group-hover:scale-110 ${type.iconBg} ${type.iconColor}`}>
+                    <Icon className="w-6 h-6" />
+                  </div>
+
+                  {/* Title */}
+                  <h3 className="font-bold text-base sm:text-lg text-slate-900 dark:text-white mt-4 mb-1.5">
+                    {type.title}
+                  </h3>
+
+                  {/* Badge */}
+                  <span className="text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/60 px-2.5 py-0.5 rounded-full mb-3">
+                    {type.badge}
+                  </span>
+
+                  {/* Description */}
+                  <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 leading-relaxed font-normal mb-4">
+                    {type.desc}
+                  </p>
+
+                  {/* Explore Link */}
+                  <Link
+                    to={type.link}
+                    className="inline-flex items-center gap-1.5 text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 transition-colors uppercase tracking-wider mt-auto"
+                  >
+                    Explore Portal
+                    <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                  </Link>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+
+
+        {/* ─── SECTION 4: CALL TO ACTION (CTA) ─── */}
+        <section className="py-12 sm:py-14 border-t border-slate-200/70 dark:border-white/[0.06] bg-white/40 dark:bg-white/[0.01]">
+          <div className="max-w-3xl mx-auto px-5 sm:px-8 text-center space-y-4">
+            
+            <div className="space-y-1">
+              <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white tracking-tight">
+                Ready to Try Nestbloq?
+              </h2>
+              <p className="text-slate-500 dark:text-slate-400 text-xs sm:text-sm max-w-md mx-auto leading-relaxed">
+                Join hundreds of HOA, Rental, and Condo communities modernizing their management operations today.
+              </p>
+            </div>
+
+            {/* CTA Buttons */}
+            <div className="flex flex-wrap items-center justify-center gap-3.5 pt-2">
               <Link
                 to="/portal-select"
-                className="px-6 py-3.5 bg-gradient-to-r from-violet-500 to-indigo-650 hover:from-violet-600 hover:to-indigo-700 text-white font-extrabold text-xs uppercase tracking-wider rounded-xl shadow-lg shadow-violet-500/20 transition-all active:scale-95 text-center"
+                className="px-8 py-3 bg-gradient-to-r from-violet-600 via-indigo-600 to-purple-600 hover:from-violet-500 hover:via-indigo-500 hover:to-purple-500 text-white font-bold text-xs sm:text-sm rounded-full shadow-sm transition-all active:scale-95 text-center"
               >
                 Get Started Now
               </Link>
               <Link
                 to="/contact"
-                className="px-6 py-3.5 bg-white dark:bg-white/[0.02] text-slate-800 dark:text-white border border-slate-250 dark:border-white/[0.08] hover:border-violet-500 dark:hover:border-violet-500 hover:bg-slate-100 dark:hover:bg-white/[0.04] font-extrabold text-xs uppercase tracking-wider rounded-xl transition-all active:scale-95 flex items-center justify-center gap-1.5"
+                className="px-8 py-3 bg-white dark:bg-white/[0.05] text-slate-700 dark:text-slate-200 border border-slate-250 dark:border-white/15 hover:border-slate-400 dark:hover:border-white/30 hover:bg-slate-50 dark:hover:bg-white/10 font-bold text-xs sm:text-sm rounded-full shadow-sm hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-1.5"
               >
-                Contact Sales <ArrowRight className="w-3.5 h-3.5" />
+                Contact Sales
               </Link>
             </div>
+
           </div>
         </section>
 
-        <Footer />
-      </div>
+      </main>
+
+      {/* Bottom Footer & Interactive Assistant matching Homepage */}
+      <Footer />
+      <InteractiveAssistant />
     </div>
   );
 }

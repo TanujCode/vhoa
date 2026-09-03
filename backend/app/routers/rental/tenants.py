@@ -37,13 +37,17 @@ def get_tenants(
     user_by_id = {u.user_id: u for u in registered_users}
 
     tenant_map = {}
+    active_lease_statuses = {"ACTIVE", "SIGNED", "APPROVED", "ACTIVE_LEASE", "PENDING_SIGNATURE", "PENDING_LANDLORD_APPROVAL", "PENDING_TENANT_REVIEW"}
 
-    # A. Process all leases first so every lease tenant gets exact unit_no and property_id
+    # A. Process valid active leases first so only actual lease tenants are listed
     for l in leases:
+        status = (l.get("status") or "").upper()
+        if status in ["CANCELLED", "REJECTED", "TERMINATED", "EXPIRED", "VOID"]:
+            continue
+
         tenant_email = l.get("tenant_email")
         tenant_id = l.get("tenant_id")
         lease_id = l.get("lease_id")
-        status = l.get("status")
         created_date = l.get("created_date")
         unit_obj = l.get("unit")
 
@@ -62,8 +66,10 @@ def get_tenants(
         key = email_clean or (f"id_{tenant_id}" if tenant_id else f"lease_{lease_id}")
 
         from app.utils.encryption import safe_decrypt_field
+        is_active_renter = status in {"ACTIVE", "SIGNED", "APPROVED", "ACTIVE_LEASE"} and (linked_user.active_status if linked_user else True)
+
         if linked_user:
-            first_dec = safe_decrypt_field(linked_user.first_name) or ""
+            first_dec = safe_decrypt_field(linked_user.first_dec if hasattr(linked_user, 'first_dec') else linked_user.first_name) or ""
             middle_dec = safe_decrypt_field(linked_user.middle_name)
             last_dec = safe_decrypt_field(linked_user.last_name) or ""
             phone_dec = safe_decrypt_field(linked_user.mobile_number)
@@ -76,7 +82,7 @@ def get_tenants(
                 "full_name": f"{first_dec} {last_dec}".strip(),
                 "email_id": linked_user.email_id,
                 "mobile_number": phone_dec,
-                "active_status": linked_user.active_status,
+                "active_status": is_active_renter,
                 "account_status": linked_user.account_status,
                 "unit_no": unit_number,
                 "property_id": property_id,
@@ -93,30 +99,39 @@ def get_tenants(
                 "full_name": name_part.capitalize(),
                 "email_id": tenant_email,
                 "mobile_number": None,
-                "active_status": (status or "").upper() == "ACTIVE",
+                "active_status": is_active_renter,
                 "account_status": status,
                 "unit_no": unit_number,
                 "property_id": property_id,
                 "created_date": created_date.isoformat() if hasattr(created_date, 'isoformat') else created_date
             }
 
-    # B. Also include any registered users with role "tenant" who don't have a lease yet but have applied
+    # B. Also include any registered users with approved screening who don't have a rejected lease
     from app.models.rental.rental_application import RentalApplication
     from app.models.rental.unit import Unit
     from app.models.rental.property import Property
 
+    rejected_emails = {
+        (l.get("tenant_email") or "").strip().lower() 
+        for l in leases 
+        if (l.get("status") or "").upper() in ["CANCELLED", "REJECTED", "TERMINATED", "EXPIRED", "VOID"]
+    }
+
     if is_super:
-        apps = db.query(RentalApplication).all()
+        apps = db.query(RentalApplication).filter(RentalApplication.screening_status.in_(["APPROVED", "ACCEPTED"])).all()
     else:
-        apps = db.query(RentalApplication).join(Unit, RentalApplication.unit_id == Unit.unit_id).join(Property, Unit.property_id == Property.property_id).filter(Property.landlord_id == current_user.user_id).all()
+        apps = db.query(RentalApplication).join(Unit, RentalApplication.unit_id == Unit.unit_id).join(Property, Unit.property_id == Property.property_id).filter(
+            Property.landlord_id == current_user.user_id,
+            RentalApplication.screening_status.in_(["APPROVED", "ACCEPTED"])
+        ).all()
     
-    app_tenant_emails = {a.tenant_email.strip().lower() for a in apps if a.tenant_email}
+    app_tenant_emails = {a.tenant_email.strip().lower() for a in apps if a.tenant_email and a.tenant_email.strip().lower() not in rejected_emails}
 
     for t in registered_users:
         role_name = t.role.role_name if t.role else ""
         if role_name == "tenant":
             e_clean = t.email_id.strip().lower() if t.email_id else ""
-            if e_clean in app_tenant_emails:
+            if e_clean in app_tenant_emails and e_clean not in rejected_emails:
                 key_check = e_clean or f"id_{t.user_id}"
                 if key_check not in tenant_map:
                     app = next((a for a in apps if a.tenant_email.strip().lower() == e_clean), None)
@@ -137,6 +152,11 @@ def get_tenants(
                         "full_name": f"{first_dec} {last_dec}".strip(),
                         "email_id": t.email_id,
                         "mobile_number": phone_dec,
+                        "active_status": False,
+                        "account_status": "APPROVED_APPLICANT",
+                        "unit_no": unit_no,
+                        "property_id": prop_id,
+                        "created_date": t.created_date.isoformat() if t.created_date else None
                     }
 
     tenants_list = list(tenant_map.values())

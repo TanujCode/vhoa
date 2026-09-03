@@ -32,16 +32,12 @@ export default function TenantDashboard({ user, setUser, setActivePage }) {
       setLoading(true);
       // Fetch leases for current tenant
       const leaseRes = await API.get('/rental/leases');
-      setLeases(leaseRes.data);
+      const allLeases = leaseRes.data || [];
+      const validLeases = allLeases.filter(l => !['CANCELLED', 'REJECTED', 'TERMINATED', 'VOID', 'EXPIRED'].includes((l.status || '').toUpperCase()));
+      const displayLeases = validLeases.length > 0 ? validLeases : allLeases;
+      setLeases(displayLeases);
       
-      const savedLeaseId = localStorage.getItem('tenant_active_lease_id');
-      let active = null;
-      if (savedLeaseId) {
-        active = leaseRes.data.find(l => String(l.lease_id) === String(savedLeaseId));
-      }
-      if (!active) {
-        active = leaseRes.data.find(l => l.status === 'ACTIVE') || leaseRes.data[0];
-      }
+      let active = displayLeases.find(l => l.status === 'ACTIVE') || displayLeases.find(l => !['CANCELLED', 'REJECTED', 'TERMINATED'].includes(l.status)) || displayLeases[0];
       if (active) {
         setActiveLease(active);
         // Fetch ledger invoices for active lease
@@ -303,16 +299,6 @@ export default function TenantDashboard({ user, setUser, setActivePage }) {
             Manage your lease contracts, review recent invoicing history, submit maintenance requests, and track utility charges all in one place.
           </p>
         </div>
-
-        {hasMultipleProperties && (
-          <button
-            onClick={handleSwitchProperty}
-            className="relative z-10 flex items-center gap-2 px-5 py-3 bg-blue-600 hover:bg-blue-500 active:scale-95 text-white rounded-2xl font-bold text-xs cursor-pointer whitespace-nowrap transition-all shadow-lg shadow-blue-500/20 border border-transparent"
-          >
-            <Building2 className="w-4 h-4" />
-            Switch Property Portal
-          </button>
-        )}
       </div>
 
       {/* Pending Invites, Reviews, & Signature alerts */}
@@ -454,7 +440,6 @@ export default function TenantDashboard({ user, setUser, setActivePage }) {
                     <span className={`w-1.5 h-1.5 rounded-full ${activeLease?.status === 'ACTIVE' ? 'bg-emerald-500 animate-pulse' : 'bg-yellow-500 animate-pulse'}`}></span>
                   </span>
                 </div>
-                <div className="text-xs text-slate-450 dark:text-slate-500 mt-2 font-mono font-medium">Agreement ID: #{getLeaseSeqNum(activeLease)}</div>
               </div>
             </div>
 

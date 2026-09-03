@@ -64,7 +64,17 @@ export default function LoginPage() {
   useEffect(() => {
     // Ping backend in background on mount to wake it up from cold-start sleep
     API.get('/auth/captcha', { timeout: 2000 }).catch(() => {});
-  }, []);
+
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const emailParam = params.get('email');
+      if (emailParam) {
+        setValue('email', emailParam);
+      }
+    } catch (e) {
+      console.warn("Could not read url params:", e);
+    }
+  }, [setValue]);
 
   const onSubmit = async (data) => {
     try {
@@ -102,8 +112,15 @@ export default function LoginPage() {
         const role = (userData?.role_name || userData?.role || response.data?.role || '').toLowerCase();
         const communityId = userData?.community_id;
 
-        //  ROLE-BASED EXACT REDIRECTS
-        if (role === 'super_admin' || role === 'property_manager' || role === 'board_member') {
+        // ROLE-BASED EXACT REDIRECTS
+        const params = new URLSearchParams(window.location.search);
+        const redirectParam = params.get('redirect');
+
+        if (redirectParam) {
+          navigate(redirectParam, { replace: true });
+        } else if (role === 'landlord' || role === 'tenant') {
+          navigate('/rental/dashboard', { replace: true });
+        } else if (role === 'super_admin' || role === 'property_manager' || role === 'board_member') {
           navigate('/dashboard', { replace: true });
         } 
         else if (role === 'resident') {
@@ -311,7 +328,14 @@ export default function LoginPage() {
         setSuccessMsg('Verification successful! Logging in...');
 
         setTimeout(() => {
-          if (role === 'super_admin' || role === 'property_manager' || role === 'board_member') {
+          const params = new URLSearchParams(window.location.search);
+          const redirectParam = params.get('redirect');
+
+          if (redirectParam) {
+            navigate(redirectParam, { replace: true });
+          } else if (role === 'landlord' || role === 'tenant') {
+            navigate('/rental/dashboard', { replace: true });
+          } else if (role === 'super_admin' || role === 'property_manager' || role === 'board_member') {
             navigate('/dashboard', { replace: true });
           } 
           else if (role === 'resident') {

@@ -1,57 +1,75 @@
-import React, { useState } from 'react';
-import { Mail, Phone, MapPin, CheckCircle, AlertCircle, Sparkles, ChevronDown, ChevronUp } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { 
+  Mail, 
+  Phone, 
+  MapPin, 
+  CheckCircle, 
+  Sparkles, 
+  Zap, 
+  Lock, 
+  UserCheck, 
+  Share2, 
+  Globe, 
+  Send,
+  Check,
+  ChevronDown
+} from 'lucide-react';
 import Navbar from '../../components/marketing/Navbar';
 import Footer from '../../components/marketing/Footer';
+import InteractiveAssistant from '../../components/marketing/InteractiveAssistant';
 import { useTheme } from '../../context/ThemeContext';
-
-// Import image assets
-import contactHero from '../../assets/contact_hero.png';
-import contactRooftopTerrace from '../../assets/contact_rooftop_terrace.png';
-import contactFitnessGym from '../../assets/contact_fitness_gym.png';
-import contactCommunityPool from '../../assets/contact_community_pool.png';
 
 export default function ContactPage() {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
+  const formRef = useRef(null);
 
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
-    email: '',
-    subject: 'General Inquiry',
+    workEmail: '',
+    phone: '',
+    communityName: '',
+    subject: 'Technical Support',
     message: ''
   });
 
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [openFaqIndex, setOpenFaqIndex] = useState(null);
+  const [submitted, setSubmitted] = useState(false);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
+    setFormData(prev => ({ ...prev, [name]: value }));
     if (errors[name]) {
-      setErrors({ ...errors, [name]: '' });
+      setErrors(prev => ({ ...prev, [name]: '' }));
     }
   };
 
-  const toggleFaq = (index) => {
-    setOpenFaqIndex(openFaqIndex === index ? null : index);
+  const scrollToForm = () => {
+    formRef.current?.scrollIntoView({ behavior: 'smooth' });
+    const firstInput = document.getElementById('firstName');
+    firstInput?.focus();
+  };
+
+  const handleBookDemo = () => {
+    setFormData(prev => ({ ...prev, subject: 'Sales & Demo' }));
+    scrollToForm();
   };
 
   const validate = () => {
-    let tempErrors = {};
-    if (!formData.firstName.trim()) tempErrors.firstName = "First name is required";
-    if (!formData.lastName.trim()) tempErrors.lastName = "Last name is required";
-    if (!formData.email.trim()) {
-      tempErrors.email = "Email is required";
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      tempErrors.email = "Invalid email address";
+    let temp = {};
+    if (!formData.firstName.trim()) temp.firstName = "First name is required";
+    if (!formData.lastName.trim()) temp.lastName = "Last name is required";
+    if (!formData.workEmail.trim()) {
+      temp.workEmail = "Work email is required";
+    } else if (!/\S+@\S+\.\S+/.test(formData.workEmail)) {
+      temp.workEmail = "Invalid email format";
     }
-    if (!formData.message.trim()) tempErrors.message = "Message details are required";
+    if (!formData.message.trim()) temp.message = "Please write your message";
 
-    setErrors(tempErrors);
-    return Object.keys(tempErrors).length === 0;
+    setErrors(temp);
+    return Object.keys(temp).length === 0;
   };
 
   const handleSubmit = (e) => {
@@ -60,316 +78,415 @@ export default function ContactPage() {
       setIsSubmitting(true);
       setTimeout(() => {
         setIsSubmitting(false);
-        setShowSuccessModal(true);
-        setFormData({
-          firstName: '',
-          lastName: '',
-          email: '',
-          subject: 'General Inquiry',
-          message: ''
-        });
-      }, 1200);
+        setSubmitted(true);
+        setTimeout(() => {
+          setSubmitted(false);
+          setFormData({
+            firstName: '',
+            lastName: '',
+            workEmail: '',
+            phone: '',
+            communityName: '',
+            subject: 'Technical Support',
+            message: ''
+          });
+        }, 4000);
+      }, 1000);
     }
   };
 
-  const galleryImages = [
-    {
-      src: contactRooftopTerrace,
-      label: "Rooftop Terraces"
-    },
-    {
-      src: contactFitnessGym,
-      label: "Fitness Centers"
-    },
-    {
-      src: contactCommunityPool,
-      label: "Community Pools"
-    }
-  ];
-
-  const faqs = [
-    {
-      question: "How quickly can we expect a response?",
-      answer: "Our onboarding team typically responds within 2-4 business hours. Technical and billing support is active 24/7."
-    },
-    {
-      question: "Can residents submit maintenance tickets directly?",
-      answer: "Yes! The NestBloq portal includes a dedicated resident login where members can log requests, track tickets, and pay dues."
-    },
-    {
-      question: "Is our community's financial data secure?",
-      answer: "Absolutely. We employ bank-grade SHA-256 encryption and partner with PCI-DSS compliant payment gateways (ACH/Card) for security."
-    },
-    {
-      question: "Can we migrate our existing registry records?",
-      answer: "Yes, we support bulk imports via CSV/Excel and provide free hands-on assistant guides to help move rosters easily."
-    }
-  ];
-
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-[#120824] transition-colors duration-250 font-sans text-slate-900 dark:text-slate-100">
+    <div className="min-h-screen flex flex-col bg-[#F9FAFB] dark:bg-[#0f0720] transition-colors duration-300 font-sans text-slate-900 dark:text-slate-100 selection:bg-indigo-500 selection:text-white">
+      {/* Top Navbar */}
       <Navbar />
 
-      <div className="flex-1 overflow-x-hidden">
+      <main className="flex-1 overflow-x-hidden">
 
-        {/* --- Page Header Banner --- */}
-        <header className="relative w-full overflow-hidden py-12 border-b border-slate-200/50 dark:border-white/[0.04] bg-slate-50 dark:bg-slate-950">
-          <div className="absolute inset-0 z-0">
-            <img
-              src={contactHero}
-              alt="Modern Residential Complexes"
-              className="w-full h-full object-cover object-center opacity-15 dark:opacity-20 blur-[2px] select-none pointer-events-none"
-            />
-            {/* Glowing navy/sky-blue overlay */}
-            <div className="absolute inset-0 bg-gradient-to-r from-slate-50/90 via-indigo-50/30 to-slate-50/90 dark:from-slate-950/90 dark:via-indigo-950/40 dark:to-slate-950/90" />
+        {/* ─── SECTION 1: HEADER & INTRO ─── */}
+        <section className="relative pt-4 sm:pt-6 lg:pt-8 pb-8 sm:pb-10 max-w-5xl mx-auto px-5 sm:px-8 text-center space-y-4 sm:space-y-5">
+          {/* Ambient Background Glows */}
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-96 h-80 bg-indigo-500/10 dark:bg-indigo-500/15 rounded-full blur-3xl pointer-events-none -z-10" />
+
+          {/* Badge Pill */}
+          <div className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-violet-500/10 border border-violet-500/20 text-[10px] sm:text-xs font-bold text-violet-600 dark:text-violet-400 uppercase tracking-wider">
+            <Sparkles className="w-3.5 h-3.5 animate-pulse" />
+            GET IN TOUCH
           </div>
 
-          <div className="relative z-10 max-w-5xl mx-auto px-5 sm:px-8 text-center space-y-4">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-violet-500/10 dark:bg-violet-500/20 border border-violet-300/30 dark:border-violet-500/30 text-violet-650 dark:text-violet-300 text-[10px] font-extrabold tracking-widest uppercase">
-              Get in touch
-            </span>
-            <h1 className="text-4xl sm:text-5xl font-black text-slate-900 dark:text-white tracking-tight leading-tight max-w-3xl mx-auto">
-              We're Here to Support Your Community
-            </h1>
-            <p className="text-base sm:text-lg text-slate-650 dark:text-slate-300 max-w-xl mx-auto leading-relaxed">
-              Have questions about our platform or need technical assistance? Our team is ready to help.
-            </p>
-          </div>
-        </header>
+          {/* Main Title */}
+          <h1 className="text-2xl sm:text-3xl lg:text-[36px] font-bold text-slate-900 dark:text-white tracking-tight leading-tight">
+            We're Here to Support Your <span className="italic text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 via-purple-600 to-violet-500 dark:from-indigo-400 dark:via-purple-300 dark:to-violet-400">Community</span>
+          </h1>
 
-        {/* --- Main Section split in two columns --- */}
-        <section className="py-16 max-w-7xl mx-auto px-5 sm:px-8 w-full flex-1 relative z-10">
-          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-violet-600/[0.03] dark:bg-violet-600/8 rounded-full blur-[120px] pointer-events-none" />
-          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-indigo-500/[0.03] dark:bg-indigo-500/6 rounded-full blur-[120px] pointer-events-none" />
+          {/* Subtitle */}
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-2xl mx-auto leading-relaxed font-normal">
+            Whether you need technical assistance, want to explore our premium features, or just have a quick question, our concierge team is ready to assist.
+          </p>
 
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-stretch relative z-10">
-
-            {/* Column 1: Contact Details */}
-            <div className="lg:col-span-5 space-y-6 flex flex-col justify-start">
-
-              {/* Card 1: Email Us */}
-              <div className="bg-white dark:bg-[#180a2d]/40 border border-slate-200/80 dark:border-white/[0.06] rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow flex items-start gap-4 text-left">
-                <div className="w-10 h-10 bg-violet-500/10 text-violet-600 dark:text-violet-400 rounded-xl flex items-center justify-center shrink-0 border border-violet-500/20">
-                  <Mail className="w-5 h-5" />
-                </div>
-                <div>
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-505">Email Us</h4>
-                  <p className="text-sm font-semibold text-slate-800 dark:text-slate-100 mt-1">support@nestbloq.com</p>
-                  <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">sales@nestbloq.com</p>
-                </div>
-              </div>
-
-              {/* Card 2: Call Us */}
-              <div className="bg-white dark:bg-[#180a2d]/40 border border-slate-200/80 dark:border-white/[0.06] rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow flex items-start gap-4 text-left">
-                <div className="w-10 h-10 bg-violet-500/10 text-violet-600 dark:text-violet-400 rounded-xl flex items-center justify-center shrink-0 border border-violet-500/20">
-                  <Phone className="w-5 h-5" />
-                </div>
-                <div>
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-550">Call Us</h4>
-                  <p className="text-sm font-semibold text-slate-800 dark:text-slate-100 mt-1">+91 6264885353</p>
-                  <p className="text-xs text-slate-500 mt-0.5 font-medium">Mon-Fri, 9am - 6pm</p>
-                </div>
-              </div>
-
-              {/* Card 3: Office */}
-              <div className="bg-white dark:bg-[#180a2d]/40 border border-slate-200/80 dark:border-white/[0.06] rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow flex items-start gap-4 text-left">
-                <div className="w-10 h-10 bg-violet-500/10 text-violet-600 dark:text-violet-400 rounded-xl flex items-center justify-center shrink-0 border border-violet-500/20">
-                  <MapPin className="w-5 h-5" />
-                </div>
-                <div>
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-550">Office</h4>
-                  <p className="text-sm font-semibold text-slate-800 dark:text-slate-100 mt-1">123 Community Blvd, Suite 400</p>
-                  <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">Betul, 460001</p>
-                </div>
-              </div>
-
-            </div>
-
-            {/* Column 2: Inquiry Form */}
-            <div className="lg:col-span-7 bg-white dark:bg-[#180a2d]/40 border border-slate-200/80 dark:border-white/[0.06] p-6 sm:p-8 rounded-3xl shadow-sm text-left relative overflow-hidden">
-              <h3 className="text-xl font-black text-slate-900 dark:text-white tracking-tight mb-6">Send us a message</h3>
-
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-
-                  {/* First name */}
-                  <div>
-                    <label className="block text-[10px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">First Name *</label>
-                    <input
-                      type="text"
-                      name="firstName"
-                      value={formData.firstName}
-                      onChange={handleInputChange}
-                      placeholder="Jane"
-                      className={`w-full px-4 py-2.5 bg-slate-50/50 dark:bg-slate-900 border text-sm rounded-xl outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent text-slate-900 dark:text-slate-100 ${errors.firstName ? 'border-red-500' : 'border-slate-200/80 dark:border-white/[0.08]'
-                        }`}
-                    />
-                    {errors.firstName && <p className="text-red-500 text-[10px] font-semibold mt-1 flex items-center gap-1"><AlertCircle size={10} /> {errors.firstName}</p>}
-                  </div>
-
-                  {/* Last name */}
-                  <div>
-                    <label className="block text-[10px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Last Name *</label>
-                    <input
-                      type="text"
-                      name="lastName"
-                      value={formData.lastName}
-                      onChange={handleInputChange}
-                      placeholder="Doe"
-                      className={`w-full px-4 py-2.5 bg-slate-50/50 dark:bg-slate-900 border text-sm rounded-xl outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent text-slate-900 dark:text-slate-100 ${errors.lastName ? 'border-red-500' : 'border-slate-200/80 dark:border-white/[0.08]'
-                        }`}
-                    />
-                    {errors.lastName && <p className="text-red-500 text-[10px] font-semibold mt-1 flex items-center gap-1"><AlertCircle size={10} /> {errors.lastName}</p>}
-                  </div>
-
-                </div>
-
-                {/* Email */}
-                <div>
-                  <label className="block text-[10px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Work Email *</label>
-                  <input
-                    type="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleInputChange}
-                    placeholder="jane.doe@ourcommunityemail.com"
-                    className={`w-full px-4 py-2.5 bg-slate-50/50 dark:bg-slate-900 border text-sm rounded-xl outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent text-slate-900 dark:text-slate-100 ${errors.email ? 'border-red-500' : 'border-slate-200/80 dark:border-white/[0.08]'
-                      }`}
-                  />
-                  {errors.email && <p className="text-red-500 text-[10px] font-semibold mt-1 flex items-center gap-1"><AlertCircle size={10} /> {errors.email}</p>}
-                </div>
-
-                {/* Subject dropdown */}
-                <div>
-                  <label className="block text-[10px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Subject *</label>
-                  <select
-                    name="subject"
-                    value={formData.subject}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-2.5 bg-slate-50/50 dark:bg-slate-900 border border-slate-200/80 dark:border-white/[0.08] text-sm rounded-xl outline-none focus:ring-2 focus:ring-violet-500 text-slate-900 dark:text-slate-200 font-semibold"
-                  >
-                    <option value="General Inquiry">General Inquiry</option>
-                    <option value="Sales Presentation">Sales Presentation / Custom Proposal</option>
-                    <option value="Billing & Accounts">Billing & Accounts</option>
-                    <option value="Technical Help">Technical & Admin Support</option>
-                  </select>
-                </div>
-
-                {/* Message Details */}
-                <div>
-                  <label className="block text-[10px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Message *</label>
-                  <textarea
-                    name="message"
-                    rows="4"
-                    value={formData.message}
-                    onChange={handleInputChange}
-                    placeholder="How can we help you today?"
-                    className={`w-full px-4 py-2.5 bg-slate-50/50 dark:bg-slate-900 border text-sm rounded-xl outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent text-slate-900 dark:text-slate-100 resize-none ${errors.message ? 'border-red-500' : 'border-slate-200/80 dark:border-white/[0.08]'
-                      }`}
-                  />
-                  {errors.message && <p className="text-red-500 text-[10px] font-semibold mt-1 flex items-center gap-1"><AlertCircle size={10} /> {errors.message}</p>}
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="w-full py-3.5 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-750 hover:to-indigo-750 text-white font-extrabold text-xs uppercase tracking-wider rounded-xl shadow-md hover:shadow-lg hover:shadow-violet-500/10 active:scale-95 transition-all disabled:opacity-50"
-                >
-                  {isSubmitting ? "Sending Message..." : "Send Message"}
-                </button>
-              </form>
-            </div>
-
+          {/* Top Action Buttons with Brand Glow */}
+          <div className="flex flex-wrap items-center justify-center gap-3 pt-1">
+            <button
+              onClick={scrollToForm}
+              className="px-6 py-2.5 bg-gradient-to-r from-violet-600 via-indigo-600 to-purple-600 hover:from-violet-500 hover:via-indigo-500 hover:to-purple-500 text-white font-semibold text-xs sm:text-sm rounded-full shadow-sm transition-all active:scale-95 cursor-pointer"
+            >
+              Send us a Message
+            </button>
+            <button
+              onClick={handleBookDemo}
+              className="px-6 py-2.5 bg-white dark:bg-white/[0.05] text-slate-700 dark:text-slate-200 border border-slate-250 dark:border-white/15 hover:border-slate-400 dark:hover:border-white/30 hover:bg-slate-50 dark:hover:bg-white/10 font-semibold text-xs sm:text-sm rounded-full shadow-sm transition-all hover:scale-[1.02] active:scale-95 cursor-pointer"
+            >
+              Book a Demo
+            </button>
           </div>
         </section>
 
-        {/* --- Property Gallery Row --- */}
-        <section className="py-12 max-w-7xl mx-auto px-5 sm:px-8 w-full relative z-10 border-t border-slate-200/60 dark:border-white/[0.04]">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-            {galleryImages.map((img, i) => (
-              <div key={i} className="group relative overflow-hidden rounded-2xl border border-slate-200/60 dark:border-white/[0.05] bg-white dark:bg-slate-900 p-2 shadow-xs transition-all duration-300 hover:scale-[1.01]">
-                <div className="relative aspect-[1.6] w-full overflow-hidden rounded-xl">
-                  <img
-                    src={img.src}
-                    alt={img.label}
-                    className="w-full h-full object-cover object-center select-none pointer-events-none transition-transform duration-500 group-hover:scale-105"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-transparent opacity-80" />
-                  <span className="absolute bottom-3 left-3 text-xs font-bold text-white uppercase tracking-wider bg-slate-900/60 backdrop-blur-md px-3 py-1 rounded-full border border-white/10">
-                    {img.label}
-                  </span>
-                </div>
+
+        {/* ─── SECTION 2: 3 VALUE / PROMISE CARDS ─── */}
+        <section className="max-w-5xl mx-auto px-5 sm:px-8 mb-10 sm:mb-12">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-5">
+            
+            {/* Card 1: Response Within 2 Hours */}
+            <div className="bg-white dark:bg-[#180d2e]/70 border border-slate-200/80 dark:border-white/10 rounded-2xl p-5 sm:p-6 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.03)] hover:shadow-lg transition-all duration-300 text-left space-y-3">
+              <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200/50 dark:border-indigo-500/20 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
+                <Zap className="w-5 h-5" />
               </div>
-            ))}
-          </div>
-        </section>
-
-        {/* --- Frequently Asked Questions Section --- */}
-        <section className="py-16 max-w-4xl mx-auto px-5 sm:px-8 w-full relative z-10 border-t border-slate-200/60 dark:border-white/[0.04] pb-24">
-          <div className="text-center space-y-3 mb-10">
-            <span className="text-violet-600 dark:text-violet-400 text-[10px] font-extrabold tracking-widest uppercase">Support Center</span>
-            <h2 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">Frequently Asked Questions</h2>
-            <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-medium">Find quick answers to common support and onboarding questions</p>
-          </div>
-
-          <div className="space-y-4 text-left">
-            {faqs.map((faq, i) => {
-              const isOpen = openFaqIndex === i;
-              return (
-                <div
-                  key={i}
-                  className="bg-white dark:bg-[#180a2d]/30 border border-slate-200/80 dark:border-white/[0.06] rounded-2xl overflow-hidden shadow-xs transition-all"
-                >
-                  <button
-                    onClick={() => toggleFaq(i)}
-                    className="w-full px-6 py-4 flex items-center justify-between gap-4 font-bold text-sm text-slate-800 dark:text-slate-200 focus:outline-none hover:bg-slate-50 dark:hover:bg-white/[0.02]"
-                  >
-                    <span>{faq.question}</span>
-                    {isOpen ? (
-                      <ChevronUp className="w-4 h-4 text-violet-500 shrink-0" />
-                    ) : (
-                      <ChevronDown className="w-4 h-4 text-slate-400 dark:text-slate-550 shrink-0" />
-                    )}
-                  </button>
-
-                  {isOpen && (
-                    <div className="px-6 pb-5 pt-1 text-xs text-slate-555 dark:text-slate-400 leading-relaxed border-t border-slate-100 dark:border-white/[0.04] bg-slate-50/50 dark:bg-black/10">
-                      {faq.answer}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </section>
-        {/* --- SUCCESS MODAL OVERLAY --- */}
-        {showSuccessModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm animate-fade-in">
-            <div className="bg-white dark:bg-slate-950 rounded-3xl max-w-md w-full border border-slate-100 dark:border-white/10 p-8 text-center space-y-5 shadow-2xl relative">
-              <div className="w-16 h-16 bg-violet-500/10 text-violet-600 dark:text-violet-400 rounded-full flex items-center justify-center mx-auto">
-                <CheckCircle className="w-8 h-8" />
-              </div>
-              <div className="space-y-2">
-                <h3 className="text-xl font-bold text-slate-900 dark:text-white flex justify-center items-center gap-1.5">
-                  Inquiry Received!
-                  <Sparkles size={16} className="text-yellow-500" />
+              <div>
+                <h3 className="font-bold text-base text-slate-900 dark:text-white">
+                  Response Within 2 Hours
                 </h3>
-                <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
-                  Thank you! Your message has been sent successfully. One of our onboarding experts will review your details and get back to you via email within the next 24 hours.
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                  Mon–Fri, 9AM–6PM IST
                 </p>
               </div>
-              <button
-                onClick={() => setShowSuccessModal(false)}
-                className="w-full py-3 bg-gradient-to-r from-violet-600 to-indigo-600 text-white font-bold text-xs uppercase tracking-wider rounded-xl shadow-md transition-all active:scale-95"
-              >
-                Back to Contact
-              </button>
             </div>
-          </div>
-        )}
 
-        <Footer />
-      </div>
+            {/* Card 2: Your Data Stays Private */}
+            <div className="bg-white dark:bg-[#180d2e]/70 border border-slate-200/80 dark:border-white/10 rounded-2xl p-5 sm:p-6 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.03)] hover:shadow-lg transition-all duration-300 text-left space-y-3">
+              <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-950/60 border border-blue-200/50 dark:border-blue-500/20 flex items-center justify-center text-blue-600 dark:text-blue-400">
+                <Lock className="w-4.5 h-4.5" />
+              </div>
+              <div>
+                <h3 className="font-bold text-base text-slate-900 dark:text-white">
+                  Your Data Stays Private
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                  Encrypted & confidential
+                </p>
+              </div>
+            </div>
+
+            {/* Card 3: Dedicated Account Manager */}
+            <div className="bg-white dark:bg-[#180d2e]/70 border border-slate-200/80 dark:border-white/10 rounded-2xl p-5 sm:p-6 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.03)] hover:shadow-lg transition-all duration-300 text-left space-y-3">
+              <div className="w-10 h-10 rounded-xl bg-purple-50 dark:bg-purple-950/60 border border-purple-200/50 dark:border-purple-500/20 flex items-center justify-center text-purple-600 dark:text-purple-400">
+                <UserCheck className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="font-bold text-base text-slate-900 dark:text-white">
+                  Dedicated Account Manager
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                  Named contact for premium plans
+                </p>
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+
+        {/* ─── SECTION 3: CONTACT INFO & SEND US A MESSAGE FORM ─── */}
+        <section ref={formRef} className="max-w-5xl mx-auto px-5 sm:px-8 pb-16 sm:pb-20">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-start">
+            
+            {/* Left Column: Direct Contact Details */}
+            <div className="lg:col-span-4 space-y-6 text-left pt-2">
+              
+              {/* Item 1: Email Us */}
+              <div className="space-y-1.5">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200/50 dark:border-indigo-500/20 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shrink-0">
+                    <Mail className="w-4.5 h-4.5" />
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                      Email Us
+                    </h4>
+                    <a href="mailto:support@nestbloq.com" className="text-sm font-bold text-slate-900 dark:text-white hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
+                      support@nestbloq.com
+                    </a>
+                  </div>
+                </div>
+                <p className="text-xs text-slate-500 dark:text-slate-400 pl-13 font-normal">
+                  For general inquiries and support requests.
+                </p>
+              </div>
+
+              {/* Item 2: Call Us */}
+              <div className="space-y-1.5">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200/50 dark:border-indigo-500/20 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shrink-0">
+                    <Phone className="w-4.5 h-4.5" />
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                      Call Us
+                    </h4>
+                    <a href="tel:+18001234567" className="text-sm font-bold text-slate-900 dark:text-white hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
+                      +1 (800) 123-4567
+                    </a>
+                  </div>
+                </div>
+                <p className="text-xs text-slate-500 dark:text-slate-400 pl-13 font-normal">
+                  Available Mon–Fri, 9AM–6PM IST.
+                </p>
+              </div>
+
+              {/* Item 3: Headquarters */}
+              <div className="space-y-1.5">
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200/50 dark:border-indigo-500/20 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shrink-0 mt-0.5">
+                    <MapPin className="w-4.5 h-4.5" />
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                      Headquarters
+                    </h4>
+                    <p className="text-sm font-bold text-slate-900 dark:text-white leading-snug">
+                      123 Innovation Drive, Tech Park<br />
+                      Bengaluru, KA 560001<br />
+                      India
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Bottom Social / Web Icons */}
+              <div className="flex items-center gap-2.5 pt-4">
+                <button
+                  type="button"
+                  title="Share"
+                  onClick={() => {
+                    if (navigator.share) {
+                      navigator.share({ title: 'NestBloq', url: window.location.href });
+                    } else {
+                      navigator.clipboard.writeText(window.location.href);
+                      alert('Link copied to clipboard!');
+                    }
+                  }}
+                  className="w-9 h-9 rounded-full bg-white dark:bg-white/[0.04] border border-slate-200/80 dark:border-white/10 flex items-center justify-center text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:border-indigo-300 dark:hover:border-indigo-500/40 shadow-sm transition-all cursor-pointer"
+                >
+                  <Share2 className="w-4 h-4" />
+                </button>
+                <a
+                  href="https://nestbloq.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title="Website"
+                  className="w-9 h-9 rounded-full bg-white dark:bg-white/[0.04] border border-slate-200/80 dark:border-white/10 flex items-center justify-center text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:border-indigo-300 dark:hover:border-indigo-500/40 shadow-sm transition-all cursor-pointer"
+                >
+                  <Globe className="w-4 h-4" />
+                </a>
+              </div>
+
+            </div>
+
+            {/* Right Column: Send Us A Message Form */}
+            <div className="lg:col-span-8 bg-white dark:bg-[#180d2e]/70 border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 sm:p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-none text-left">
+              
+              <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white tracking-tight mb-6">
+                Send us a message
+              </h2>
+
+              {submitted ? (
+                <div className="py-12 flex flex-col items-center text-center space-y-3">
+                  <div className="w-14 h-14 rounded-full bg-emerald-100 dark:bg-emerald-950/60 border border-emerald-300 text-emerald-600 dark:text-emerald-400 flex items-center justify-center animate-bounce">
+                    <Check className="w-7 h-7" />
+                  </div>
+                  <h3 className="text-xl font-bold text-slate-900 dark:text-white">Message Sent Successfully!</h3>
+                  <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-sm">
+                    Thank you for reaching out. Our team will review your inquiry and get back to you within 2 hours.
+                  </p>
+                </div>
+              ) : (
+                <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
+                  
+                  {/* Row 1: First Name & Last Name */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label htmlFor="firstName" className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                        First Name
+                      </label>
+                      <input
+                        id="firstName"
+                        type="text"
+                        name="firstName"
+                        value={formData.firstName}
+                        onChange={handleInputChange}
+                        placeholder="Jane"
+                        className={`w-full px-4 py-2.5 text-xs sm:text-sm rounded-xl border bg-slate-50/50 dark:bg-white/[0.02] text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all ${
+                          errors.firstName ? 'border-rose-400 dark:border-rose-500' : 'border-slate-200 dark:border-white/10'
+                        }`}
+                      />
+                      {errors.firstName && <span className="text-[11px] text-rose-500 mt-1 block">{errors.firstName}</span>}
+                    </div>
+
+                    <div>
+                      <label htmlFor="lastName" className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                        Last Name
+                      </label>
+                      <input
+                        id="lastName"
+                        type="text"
+                        name="lastName"
+                        value={formData.lastName}
+                        onChange={handleInputChange}
+                        placeholder="Doe"
+                        className={`w-full px-4 py-2.5 text-xs sm:text-sm rounded-xl border bg-slate-50/50 dark:bg-white/[0.02] text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all ${
+                          errors.lastName ? 'border-rose-400 dark:border-rose-500' : 'border-slate-200 dark:border-white/10'
+                        }`}
+                      />
+                      {errors.lastName && <span className="text-[11px] text-rose-500 mt-1 block">{errors.lastName}</span>}
+                    </div>
+                  </div>
+
+                  {/* Row 2: Work Email & Phone Number */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label htmlFor="workEmail" className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                        Work Email
+                      </label>
+                      <input
+                        id="workEmail"
+                        type="email"
+                        name="workEmail"
+                        value={formData.workEmail}
+                        onChange={handleInputChange}
+                        placeholder="jane@community.com"
+                        className={`w-full px-4 py-2.5 text-xs sm:text-sm rounded-xl border bg-slate-50/50 dark:bg-white/[0.02] text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all ${
+                          errors.workEmail ? 'border-rose-400 dark:border-rose-500' : 'border-slate-200 dark:border-white/10'
+                        }`}
+                      />
+                      {errors.workEmail && <span className="text-[11px] text-rose-500 mt-1 block">{errors.workEmail}</span>}
+                    </div>
+
+                    <div>
+                      <label htmlFor="phone" className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                        Phone Number
+                      </label>
+                      <input
+                        id="phone"
+                        type="tel"
+                        name="phone"
+                        value={formData.phone}
+                        onChange={handleInputChange}
+                        placeholder="+1 (555) 000-0000"
+                        className="w-full px-4 py-2.5 text-xs sm:text-sm rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50/50 dark:bg-white/[0.02] text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Row 3: Community / Company Name */}
+                  <div>
+                    <label htmlFor="communityName" className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                      Community / Company Name
+                    </label>
+                    <input
+                      id="communityName"
+                      type="text"
+                      name="communityName"
+                      value={formData.communityName}
+                      onChange={handleInputChange}
+                      placeholder="Oakwood Estates HOA"
+                      className="w-full px-4 py-2.5 text-xs sm:text-sm rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50/50 dark:bg-white/[0.02] text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+                    />
+                  </div>
+
+                  {/* Row 4: Subject Dropdown */}
+                  <div>
+                    <label htmlFor="subject" className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                      Subject
+                    </label>
+                    <div className="relative">
+                      <select
+                        id="subject"
+                        name="subject"
+                        value={formData.subject}
+                        onChange={handleInputChange}
+                        className="w-full px-4 py-2.5 text-xs sm:text-sm rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50/50 dark:bg-[#180d2e] text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 appearance-none pr-10 cursor-pointer transition-all"
+                      >
+                        <option value="Technical Support">Technical Support</option>
+                        <option value="Sales & Demo">Sales & Demo</option>
+                        <option value="Billing & Invoices">Billing & Invoices</option>
+                        <option value="General Inquiry">General Inquiry</option>
+                        <option value="Partnership">Partnership</option>
+                      </select>
+                      <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    </div>
+                  </div>
+
+                  {/* Row 5: Message Textarea */}
+                  <div>
+                    <label htmlFor="message" className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                      Message
+                    </label>
+                    <textarea
+                      id="message"
+                      name="message"
+                      rows={4}
+                      value={formData.message}
+                      onChange={handleInputChange}
+                      placeholder="How can we help you today?"
+                      className={`w-full px-4 py-2.5 text-xs sm:text-sm rounded-xl border bg-slate-50/50 dark:bg-white/[0.02] text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all resize-none ${
+                        errors.message ? 'border-rose-400 dark:border-rose-500' : 'border-slate-200 dark:border-white/10'
+                      }`}
+                    />
+                    {errors.message && <span className="text-[11px] text-rose-500 mt-1 block">{errors.message}</span>}
+                  </div>
+
+                  {/* Submit Button */}
+                  <div className="pt-2">
+                    <button
+                      type="submit"
+                      disabled={isSubmitting}
+                      className="w-full py-3.5 bg-gradient-to-r from-violet-600 via-indigo-600 to-purple-600 hover:from-violet-500 hover:via-indigo-500 hover:to-purple-500 text-white font-bold text-xs uppercase tracking-widest rounded-xl shadow-sm transition-all active:scale-[0.99] flex items-center justify-center gap-2 cursor-pointer disabled:opacity-70"
+                    >
+                      {isSubmitting ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                          <span>SENDING...</span>
+                        </>
+                      ) : (
+                        <span>SEND MESSAGE</span>
+                      )}
+                    </button>
+                  </div>
+
+                  {/* Privacy Policy & Turnaround Disclaimer */}
+                  <div className="text-center pt-2 space-y-1">
+                    <p className="text-[11px] text-slate-400 dark:text-slate-500">
+                      By submitting, you agree to our{' '}
+                      <a href="#" className="underline text-indigo-600 dark:text-indigo-400 hover:opacity-80">
+                        Privacy Policy
+                      </a>.
+                    </p>
+                    <p className="text-[11px] text-slate-400 dark:text-slate-500">
+                      We aim to respond to all inquiries within 2 hours.
+                    </p>
+                  </div>
+
+                </form>
+              )}
+
+            </div>
+
+          </div>
+        </section>
+
+      </main>
+
+      {/* Bottom Footer & Interactive Assistant matching Homepage */}
+      <Footer />
+      <InteractiveAssistant />
     </div>
   );
 }

@@ -12,7 +12,7 @@ from app.database import get_rental_db
 from app.models.rental.rental_user import RentalUser
 from app.models.rental.tenant_document import TenantDocument
 from app.models.rental.lease import Lease
-from app.schemas.rental import LeaseCreate, LeaseOut, LeaseSignRequest, TenantInfoSubmit, TenantDocumentOut
+from app.schemas.rental import LeaseCreate, LeaseOut, LeaseSignRequest, TenantInfoSubmit, TenantDocumentOut, LeaseCancelRequest
 from app.services.rental import rental_service
 from app.services.rental.audit_service import log_rental_action
 from app.routers.rental.dependencies import require_rental_role, get_verified_rental_user
@@ -152,6 +152,21 @@ def approve_lease_endpoint(
     try:
         lease_dict = rental_service.landlord_approve_lease(lease_id, current_user.user_id, db)
         log_rental_action(db, "APPROVE_LEASE", "rental", f"Lease {lease_id} approved and activated by landlord {current_user.user_id}.", current_user.user_id)
+        return lease_dict
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.post("/leases/{lease_id}/cancel", response_model=LeaseOut)
+def cancel_lease_endpoint(
+    lease_id: int,
+    body: LeaseCancelRequest,
+    db: Session = Depends(get_rental_db),
+    current_user: RentalUser = Depends(require_rental_role("super_admin", "landlord"))
+):
+    try:
+        lease_dict = rental_service.landlord_cancel_or_reject_lease(lease_id, current_user.user_id, body.reason, db)
+        log_rental_action(db, "CANCEL_LEASE", "rental", f"Lease {lease_id} cancelled/rejected by landlord {current_user.user_id}. Reason: {body.reason}", current_user.user_id)
         return lease_dict
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))

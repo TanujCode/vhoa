@@ -13,11 +13,11 @@ export default function PropertiesHub({
   onPropertiesChange,
   leases = []
 }) {
-  const [properties, setProperties] = useState([]);
+  const [properties, setProperties] = useState(globalProperties || []);
   const [selectedProperty, setSelectedProperty] = useState(null);
   const [createdPropertySuccess, setCreatedPropertySuccess] = useState(null);
   const [units, setUnits] = useState([]);
-  const [loadingProps, setLoadingProps] = useState(true);
+  const [loadingProps, setLoadingProps] = useState(false);
   const [loadingUnits, setLoadingUnits] = useState(false);
   const [confirmConfig, setConfirmConfig] = useState({ isOpen: false, title: '', message: '', onConfirm: null });
   const [showPropDropdown, setShowPropDropdown] = useState(false);
@@ -500,6 +500,12 @@ export default function PropertiesHub({
       window.removeEventListener('rental-data-changed', handleGlobalUpdate);
     };
   }, []);
+
+  useEffect(() => {
+    if (globalProperties && Array.isArray(globalProperties) && globalProperties.length > 0) {
+      setProperties(globalProperties);
+    }
+  }, [globalProperties]);
 
   useEffect(() => {
     if (selectedPropertyFilterId && selectedPropertyFilterId !== 'all') {
@@ -1145,7 +1151,6 @@ export default function PropertiesHub({
                     setErrorMsg('');
                     setPropertyType('single');
                     setWizardUnits([{ unit_number: 'Single Family', rent_amount: '' }]);
-                    setWizardStep(1);
                     setShowPropModal(true);
                   }}
                   className="w-full md:w-auto bg-blue-600 hover:bg-blue-500 text-white font-bold py-3.5 px-6 rounded-2xl text-xs transition duration-200 flex items-center justify-center gap-1.5 cursor-pointer shadow-lg shadow-blue-500/10 font-sans"
@@ -1414,7 +1419,7 @@ export default function PropertiesHub({
         </div>
       )}
 
-      {/* Property Creation Modal (Stepper Wizard) */}
+      {/* Property Creation Modal (Single Step) */}
       {showPropModal && (
         <div className="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-white dark:bg-[#1a2736] border border-slate-200 dark:border-white/10 w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden animate-scale-up text-slate-900 dark:text-white text-left flex flex-col max-h-[90vh]">
@@ -1432,7 +1437,7 @@ export default function PropertiesHub({
                   <div>
                     <h3 className="text-base font-black text-white tracking-tight leading-none">Add Property</h3>
                     <p className="text-[10px] text-blue-100/80 font-medium mt-0.5">
-                      {wizardStep === 1 ? 'Step 1 of 2 — Select property type' : 'Step 2 of 2 — Property details'}
+                      Enter property details
                     </p>
                   </div>
                 </div>
@@ -1440,67 +1445,18 @@ export default function PropertiesHub({
               <button 
                 onClick={() => { 
                   setShowPropModal(false); 
-                  setWizardStep(1); 
                   setPropName('');
                   setPropAddress('');
                   setPropCity('');
                   setPropState('');
                   setPropZip('');
+                  setPropertyType('single');
                   setWizardUnits([{ unit_number: 'Single Family', rent_amount: '' }]);
                 }} 
                 className="relative z-10 w-7 h-7 rounded-lg bg-white/15 hover:bg-white/25 flex items-center justify-center text-white/80 hover:text-white transition-all cursor-pointer border border-white/20 text-lg font-semibold"
               >
                 ×
               </button>
-            </div>
-
-            {/* Stepper Progress bar - Premium */}
-            <div className="px-6 py-4 bg-slate-50/60 dark:bg-black/10 border-b border-slate-100 dark:border-white/[0.04]">
-              <div className="flex items-center">
-                {[
-                  { step: 1, label: 'Property Type', sub: 'Choose type' },
-                  { step: 2, label: 'Address & Name', sub: 'Enter details' }
-                ].map((item, idx) => (
-                  <React.Fragment key={item.step}>
-                    <div className="flex items-center gap-3">
-                      <div className={`relative w-9 h-9 rounded-xl flex items-center justify-center text-sm font-black transition-all duration-500 shadow-sm ${
-                        wizardStep > item.step
-                          ? 'bg-emerald-500 text-white shadow-emerald-500/30 shadow-md'
-                          : wizardStep === item.step
-                            ? 'bg-blue-600 text-white shadow-blue-600/30 shadow-md ring-4 ring-blue-500/15'
-                            : 'bg-slate-100 dark:bg-white/[0.06] text-slate-400 dark:text-slate-500'
-                      }`}>
-                        {wizardStep > item.step ? (
-                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                          </svg>
-                        ) : (
-                          item.step
-                        )}
-                        {wizardStep === item.step && (
-                          <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-blue-400 rounded-full border-2 border-white dark:border-[#1a2736] animate-pulse" />
-                        )}
-                      </div>
-                      <div className="hidden sm:block">
-                        <p className={`text-xs font-bold leading-none transition-colors duration-300 ${
-                          wizardStep >= item.step ? 'text-slate-800 dark:text-slate-100' : 'text-slate-400 dark:text-slate-500'
-                        }`}>{item.label}</p>
-                        <p className={`text-[10px] font-medium mt-0.5 transition-colors duration-300 ${
-                          wizardStep >= item.step ? 'text-slate-400 dark:text-slate-500' : 'text-slate-300 dark:text-slate-600'
-                        }`}>{item.sub}</p>
-                      </div>
-                    </div>
-                    {idx < 1 && (
-                      <div className="flex-1 mx-4 h-1 rounded-full bg-slate-100 dark:bg-white/[0.05] overflow-hidden">
-                        <div
-                          className="h-full rounded-full bg-gradient-to-r from-blue-600 to-indigo-500 transition-all duration-700 ease-out"
-                          style={{ width: wizardStep > item.step ? '100%' : '0%' }}
-                        />
-                      </div>
-                    )}
-                  </React.Fragment>
-                ))}
-              </div>
             </div>
 
             {/* Error Indicator */}
@@ -1513,217 +1469,152 @@ export default function PropertiesHub({
               </div>
             )}
 
-            {/* Wizard Body content */}
+            {/* Form Body content */}
             <div className="p-6 overflow-y-auto flex-1 custom-scrollbar">
-              <form onSubmit={handleWizardSubmit} className="space-y-5">
+              <form onSubmit={handleWizardSubmit} className="space-y-5 animate-fade-in text-left">
                 
-                {/* STEP 1: Property Type Selection */}
-                {wizardStep === 1 && (
-                  <div className="space-y-6 py-4 animate-fade-in text-left">
-                    <div className="space-y-2">
-                      <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
-                        SELECT PROPERTY TYPE *
-                      </label>
-                      <div className="relative">
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setModalDropdownOpen(!modalDropdownOpen);
-                          }}
-                          className={`w-full text-left bg-slate-50 dark:bg-[#1E2E42] border ${
-                            modalDropdownOpen ? 'border-blue-500 ring-2 ring-blue-500/20' : 'border-slate-200 dark:border-white/10'
-                          } text-slate-800 dark:text-white py-3.5 pl-4 pr-4 rounded-2xl text-sm font-semibold outline-none cursor-pointer shadow-sm transition-all`}
-                        >
-                          Single-Family Home
-                        </button>
-                        
-                        {modalDropdownOpen && (
-                          <div className="absolute left-0 right-0 mt-2 bg-white dark:bg-[#1E2E42] border border-slate-200 dark:border-white/10 rounded-2xl shadow-xl z-50 overflow-hidden">
-                            <div
-                              onClick={() => {
-                                setPropertyType('single');
-                                setWizardUnits([{ unit_number: 'Single Family', rent_amount: '' }]);
-                                setModalDropdownOpen(false);
-                              }}
-                              className={`px-4 py-3 text-sm font-semibold cursor-pointer transition-colors ${
-                                propertyType === 'single'
-                                  ? 'bg-blue-600/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400'
-                                  : 'text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-white/5'
-                              }`}
-                            >
-                              Single-Family Home
-                            </div>
-
-                          </div>
-                        )}
+                <div className="space-y-4 relative">
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5 font-sans">Property Type</label>
+                    <div className="flex items-center justify-between w-full bg-slate-100 dark:bg-[#111c2a]/60 border border-slate-200 dark:border-white/10 rounded-lg px-3.5 py-2.5 text-sm text-slate-800 dark:text-slate-200 font-semibold cursor-default">
+                      <div className="flex items-center gap-2">
+                        <Home className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                        <span>Single-Family Home</span>
                       </div>
-                      
-                      <div className="p-4 rounded-2xl bg-blue-500/[0.03] dark:bg-blue-500/[0.02] border border-blue-500/10 dark:border-blue-500/20 text-xs font-medium text-slate-500 dark:text-slate-400 leading-relaxed mt-3">
-                        <span>
-                          <strong>Single-Family Home:</strong> Best used for a single-family house. No unit numbers are required.
-                        </span>
-                      </div>
-
-                    </div>
-
-                    <div className="pt-4 flex justify-end">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setWizardUnits([{ unit_number: 'Single Family', rent_amount: '' }]);
-                          setWizardStep(2);
-                        }}
-                        className="bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-6 rounded-xl text-xs transition duration-200 flex items-center gap-1.5 cursor-pointer shadow-md shadow-blue-500/10 font-sans"
-                      >
-                        Next <ArrowRight className="w-4 h-4" />
-                      </button>
+                      <span className="text-[10px] font-bold uppercase tracking-wider bg-blue-500/10 text-blue-600 dark:text-blue-400 px-2 py-0.5 rounded-full border border-blue-500/20">
+                        Default
+                      </span>
                     </div>
                   </div>
-                )}
 
-                {/* STEP 2: Address and Property Name */}
-                {wizardStep === 2 && (
-                  <div className="space-y-5 animate-fade-in text-left">
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5 font-sans">Property Name / Portfolio *</label>
+                    <input 
+                      required 
+                      type="text" 
+                      value={propName} 
+                      onChange={e => setPropName(e.target.value)} 
+                      className="w-full bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 focus:border-blue-500 rounded-lg px-3.5 py-2.5 text-sm text-slate-900 dark:text-white outline-none" 
+                      placeholder="e.g. Greenwood Villa or Oakwood Complex" 
+                    />
+                  </div>
+                  
+                  <div className="relative">
+                    <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5 font-sans">Street Address *</label>
+                    <input 
+                      required 
+                      type="text" 
+                      value={propAddress} 
+                      onChange={e => handleAddressChange(e.target.value)} 
+                      onBlur={handleAddressBlur}
+                      className="w-full bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 focus:border-blue-500 rounded-lg px-3.5 py-2.5 text-sm text-slate-900 dark:text-white outline-none" 
+                      placeholder="e.g. 1600 Amphitheatre Pkwy" 
+                    />
                     
-                    <div className="space-y-4 relative">
-                      <div>
-                        <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5 font-sans">Property Name / Portfolio *</label>
-                        <input 
-                          required 
-                          type="text" 
-                          value={propName} 
-                          onChange={e => setPropName(e.target.value)} 
-                          className="w-full bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 focus:border-blue-500 rounded-lg px-3.5 py-2.5 text-sm text-slate-900 dark:text-white outline-none" 
-                          placeholder="e.g. Greenwood Villa or Oakwood Complex" 
-                        />
-                      </div>
-                      
-                      <div className="relative">
-                        <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5 font-sans">Street Address *</label>
-                        <input 
-                          required 
-                          type="text" 
-                          value={propAddress} 
-                          onChange={e => handleAddressChange(e.target.value)} 
-                          onBlur={handleAddressBlur}
-                          className="w-full bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 focus:border-blue-500 rounded-lg px-3.5 py-2.5 text-sm text-slate-900 dark:text-white outline-none" 
-                          placeholder="e.g. 1600 Amphitheatre Pkwy" 
-                        />
-                        
-                        {addressSuggestions.length > 0 && (
-                          <div className="absolute left-0 right-0 top-full mt-1 bg-white dark:bg-[#1D2B3A] border border-slate-200 dark:border-white/10 rounded-xl shadow-xl z-50 max-h-48 overflow-y-auto custom-scrollbar">
-                            {addressSuggestions.map((suggestion, idx) => (
-                              <div
-                                key={idx}
-                                onClick={() => handleSelectSuggestion(suggestion)}
-                                className="px-4 py-3 hover:bg-slate-50 dark:hover:bg-white/5 cursor-pointer text-left text-xs font-semibold border-b border-slate-100 dark:border-white/[0.03] last:border-none text-slate-700 dark:text-slate-350"
-                              >
-                                {suggestion.street}, {suggestion.city}, {suggestion.state} {suggestion.zip}
-                              </div>
-                            ))}
+                    {addressSuggestions.length > 0 && (
+                      <div className="absolute left-0 right-0 top-full mt-1 bg-white dark:bg-[#1D2B3A] border border-slate-200 dark:border-white/10 rounded-xl shadow-xl z-50 max-h-48 overflow-y-auto custom-scrollbar">
+                        {addressSuggestions.map((suggestion, idx) => (
+                          <div
+                            key={idx}
+                            onClick={() => handleSelectSuggestion(suggestion)}
+                            className="px-4 py-3 hover:bg-slate-50 dark:hover:bg-white/5 cursor-pointer text-left text-xs font-semibold border-b border-slate-100 dark:border-white/[0.03] last:border-none text-slate-700 dark:text-slate-350"
+                          >
+                            {suggestion.street}, {suggestion.city}, {suggestion.state} {suggestion.zip}
                           </div>
-                        )}
+                        ))}
                       </div>
-
-                      {propertyType === 'condo' && (
-                        <div>
-                          <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5 font-sans">Unit / Apt Number *</label>
-                          <input 
-                            required 
-                            type="text" 
-                            value={condoUnitNo} 
-                            onChange={e => setCondoUnitNo(e.target.value)} 
-                            className="w-full bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 focus:border-blue-500 rounded-lg px-3.5 py-2.5 text-sm text-slate-900 dark:text-white outline-none" 
-                            placeholder="e.g. Apt 4B or Unit 102" 
-                          />
-                        </div>
-                      )}
-
-                      <div className="grid grid-cols-4 gap-3">
-                        <div>
-                          <label className="block text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 font-sans">City</label>
-                          <input 
-                            required 
-                            readOnly 
-                            type="text" 
-                            value={propCity} 
-                            className="w-full bg-slate-100 dark:bg-[#111c2a]/40 border border-slate-200 dark:border-white/10 rounded-lg px-3.5 py-2.5 text-xs text-slate-500 dark:text-slate-400 outline-none cursor-not-allowed" 
-                            placeholder="City" 
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 font-sans">State</label>
-                          <input 
-                            required 
-                            readOnly 
-                            type="text" 
-                            value={propState} 
-                            className="w-full bg-slate-100 dark:bg-[#111c2a]/40 border border-slate-200 dark:border-white/10 rounded-lg px-3.5 py-2.5 text-xs text-slate-500 dark:text-slate-400 outline-none cursor-not-allowed" 
-                            placeholder="State" 
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 font-sans">Zip Code</label>
-                          <input 
-                            required 
-                            readOnly 
-                            type="text" 
-                            value={propZip} 
-                            className="w-full bg-slate-100 dark:bg-[#111c2a]/40 border border-slate-200 dark:border-white/10 rounded-lg px-3.5 py-2.5 text-xs text-slate-500 dark:text-slate-400 outline-none cursor-not-allowed" 
-                            placeholder="Zip" 
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 font-sans">Country</label>
-                          <input 
-                            readOnly 
-                            type="text" 
-                            value="USA" 
-                            className="w-full bg-slate-100 dark:bg-[#111c2a]/40 border border-slate-200 dark:border-white/10 rounded-lg px-3.5 py-2.5 text-xs text-slate-500 dark:text-slate-400 outline-none cursor-not-allowed font-bold" 
-                            placeholder="Country" 
-                          />
-                        </div>
-                      </div>
-
-                      {propAddress.trim().length > 0 && (
-                        <div className="text-[10px] font-semibold font-sans">
-                          {propCity && propState && /^\d{5}(-\d{4})?$/.test(propZip) ? (
-                            <span className="text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
-                              ✓ Address verified (United States)
-                            </span>
-                          ) : (
-                            <span className="text-red-500 dark:text-red-400 flex items-center gap-1">
-                              ⚠️ Invalid US Address. Please select a valid US address from the suggestions or type a fully formatted address.
-                            </span>
-                          )}
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="pt-4 flex gap-3 border-t dark:border-white/5">
-                      <button 
-                        type="button" 
-                        onClick={() => setWizardStep(1)} 
-                        className="flex-1 bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-800 dark:text-white font-bold py-3 rounded-xl text-xs transition duration-200 cursor-pointer flex items-center justify-center gap-1 font-sans"
-                      >
-                        <ArrowLeft className="w-4 h-4" /> Back
-                      </button>
-                      <button 
-                        type="submit"
-                        disabled={!(propName.trim() && propCity && propState && /^\d{5}(-\d{4})?$/.test(propZip) && (propertyType !== 'condo' || condoUnitNo.trim()))}
-                        className={`flex-1 font-bold py-3 rounded-xl text-xs transition duration-200 flex items-center justify-center gap-1.5 font-sans ${
-                          propName.trim() && propCity && propState && /^\d{5}(-\d{4})?$/.test(propZip) && (propertyType !== 'condo' || condoUnitNo.trim())
-                            ? 'bg-blue-600 hover:bg-blue-500 text-white cursor-pointer shadow-md shadow-blue-500/10'
-                            : 'bg-slate-200 dark:bg-white/5 text-slate-400 dark:text-slate-600 cursor-not-allowed'
-                        }`}
-                      >
-                        Create Property <Check className="w-4 h-4" />
-                      </button>
-                    </div>
-
+                    )}
                   </div>
-                )}
+
+                  <div className="grid grid-cols-4 gap-3">
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 font-sans">City</label>
+                      <input 
+                        required 
+                        readOnly 
+                        type="text" 
+                        value={propCity} 
+                        className="w-full bg-slate-100 dark:bg-[#111c2a]/40 border border-slate-200 dark:border-white/10 rounded-lg px-3.5 py-2.5 text-xs text-slate-500 dark:text-slate-400 outline-none cursor-not-allowed" 
+                        placeholder="City" 
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 font-sans">State</label>
+                      <input 
+                        required 
+                        readOnly 
+                        type="text" 
+                        value={propState} 
+                        className="w-full bg-slate-100 dark:bg-[#111c2a]/40 border border-slate-200 dark:border-white/10 rounded-lg px-3.5 py-2.5 text-xs text-slate-500 dark:text-slate-400 outline-none cursor-not-allowed" 
+                        placeholder="State" 
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 font-sans">Zip Code</label>
+                      <input 
+                        required 
+                        readOnly 
+                        type="text" 
+                        value={propZip} 
+                        className="w-full bg-slate-100 dark:bg-[#111c2a]/40 border border-slate-200 dark:border-white/10 rounded-lg px-3.5 py-2.5 text-xs text-slate-500 dark:text-slate-400 outline-none cursor-not-allowed" 
+                        placeholder="Zip" 
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 font-sans">Country</label>
+                      <input 
+                        readOnly 
+                        type="text" 
+                        value="USA" 
+                        className="w-full bg-slate-100 dark:bg-[#111c2a]/40 border border-slate-200 dark:border-white/10 rounded-lg px-3.5 py-2.5 text-xs text-slate-500 dark:text-slate-400 outline-none cursor-not-allowed font-bold" 
+                        placeholder="Country" 
+                      />
+                    </div>
+                  </div>
+
+                  {propAddress.trim().length > 0 && (
+                    <div className="text-[10px] font-semibold font-sans">
+                      {propCity && propState && /^\d{5}(-\d{4})?$/.test(propZip) ? (
+                        <span className="text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                          ✓ Address verified (United States)
+                        </span>
+                      ) : (
+                        <span className="text-red-500 dark:text-red-400 flex items-center gap-1">
+                          ⚠️ Invalid US Address. Please select a valid US address from the suggestions or type a fully formatted address.
+                        </span>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                <div className="pt-4 flex gap-3 border-t dark:border-white/5">
+                  <button 
+                    type="button" 
+                    onClick={() => {
+                      setShowPropModal(false);
+                      setPropName('');
+                      setPropAddress('');
+                      setPropCity('');
+                      setPropState('');
+                      setPropZip('');
+                    }} 
+                    className="flex-1 bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-800 dark:text-white font-bold py-3 rounded-xl text-xs transition duration-200 cursor-pointer flex items-center justify-center gap-1 font-sans"
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    type="submit"
+                    disabled={!(propName.trim() && propCity && propState && /^\d{5}(-\d{4})?$/.test(propZip))}
+                    className={`flex-1 font-bold py-3 rounded-xl text-xs transition duration-200 flex items-center justify-center gap-1.5 font-sans ${
+                      propName.trim() && propCity && propState && /^\d{5}(-\d{4})?$/.test(propZip)
+                        ? 'bg-blue-600 hover:bg-blue-500 text-white cursor-pointer shadow-md shadow-blue-500/10'
+                        : 'bg-slate-200 dark:bg-white/5 text-slate-400 dark:text-slate-600 cursor-not-allowed'
+                    }`}
+                  >
+                    Create Property <Check className="w-4 h-4" />
+                  </button>
+                </div>
+
               </form>
             </div>
           </div>

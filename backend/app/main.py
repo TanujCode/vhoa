@@ -308,6 +308,11 @@ def run_db_upgrades():
         "rental_leases.unit_change_request_notes"
     )
 
+    _safe_execute(
+        "ALTER TABLE rental_leases ADD COLUMN IF NOT EXISTS rejection_reason TEXT;",
+        "rental_leases.rejection_reason"
+    )
+
 
     # ── rental_leases: convert financial Double columns → TEXT (for encryption) ─
     for col_name in [

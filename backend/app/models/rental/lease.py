@@ -61,6 +61,7 @@ class Lease(Base):
 
     unit_change_requested = Column(Boolean, default=False)
     unit_change_request_notes = Column(Text, nullable=True)
+    rejection_reason = Column(Text, nullable=True)
 
     # Relationships
     landlord = relationship("RentalUser", foreign_keys=[landlord_id])

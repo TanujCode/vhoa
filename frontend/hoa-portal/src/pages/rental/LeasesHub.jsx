@@ -149,6 +149,11 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
   const [disclosureMold, setDisclosureMold] = useState(false);
   const [disclosureBedBugs, setDisclosureBedBugs] = useState(false);
 
+  // Reject / Cancel Lease Reason State
+  const [showCancelReasonModal, setShowCancelReasonModal] = useState(false);
+  const [cancelReasonText, setCancelReasonText] = useState('');
+  const [isSubmittingCancel, setIsSubmittingCancel] = useState(false);
+
   const handleUploadClick = () => {
     if (fileInputRef.current) {
       fileInputRef.current.click();
@@ -1116,23 +1121,10 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
       }
 
       if (!isLandlord) {
-        const activeId = localStorage.getItem('tenant_active_lease_id');
-        const hasActiveIdInRes = res.data.some(l => String(l.lease_id) === String(activeId));
-        if (activeId && hasActiveIdInRes) {
-          setLeases(res.data.filter(l => 
-            String(l.lease_id) === String(activeId) ||
-            String(l.lease_id) === String(pendingLeaseId) ||
-            l.status === 'PENDING_TENANT_REVIEW' ||
-            l.status === 'PENDING_SIGNATURE' ||
-            l.status === 'PENDING_LANDLORD_APPROVAL'
-          ));
-        } else {
-          if (res.data.length > 0) {
-            localStorage.setItem('tenant_active_lease_id', String(res.data[0].lease_id));
-          } else {
-            localStorage.removeItem('tenant_active_lease_id');
-          }
-          setLeases(res.data);
+        setLeases(res.data);
+        const pendingToSign = res.data.find(l => l.status === 'PENDING_TENANT_REVIEW' || l.status === 'PENDING_SIGNATURE');
+        if (pendingToSign && !selectedLease) {
+          setSelectedLease(pendingToSign);
         }
       } else {
         setLeases(res.data);
@@ -2260,22 +2252,70 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
               ✓ Contract signed. You are ready to approve and activate the lease.
             </span>
           )}
-          <button
-            type="button"
-            disabled={!selectedLease.landlord_signature}
-            onClick={handleLandlordApproveLease}
-            className={`px-6 py-3 rounded-xl text-xs font-extrabold transition shadow-lg cursor-pointer shrink-0 ml-auto ${
-              selectedLease.landlord_signature 
-                ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-500/20' 
-                : 'bg-slate-200 dark:bg-white/5 text-slate-405 dark:text-slate-500 cursor-not-allowed shadow-none'
-            }`}
-          >
-            ✓ Approve Submission & Activate Lease
-          </button>
+          <div className="flex items-center gap-3 shrink-0 ml-auto">
+            <button
+              type="button"
+              onClick={() => {
+                setCancelReasonText('');
+                setShowCancelReasonModal(true);
+              }}
+              className="px-5 py-3 rounded-xl text-xs font-bold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20 transition cursor-pointer"
+            >
+              Reject / Cancel Lease
+            </button>
+            <button
+              type="button"
+              disabled={!selectedLease.landlord_signature}
+              onClick={handleLandlordApproveLease}
+              className={`px-6 py-3 rounded-xl text-xs font-extrabold transition shadow-lg cursor-pointer shrink-0 ${
+                selectedLease.landlord_signature 
+                  ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-500/20' 
+                  : 'bg-slate-200 dark:bg-white/5 text-slate-405 dark:text-slate-500 cursor-not-allowed shadow-none'
+              }`}
+            >
+              ✓ Approve Submission & Activate Lease
+            </button>
+          </div>
         </div>
       </div>
     );
   };
+
+  async function handleLandlordApproveLease() {
+    if (!selectedLease) return;
+    try {
+      const res = await API.post(`/rental/leases/${selectedLease.lease_id}/approve`);
+      setLeases(prev => prev.map(l => l.lease_id === selectedLease.lease_id ? res.data : l));
+      setSelectedLease(res.data);
+      toast.success('Lease approved and activated successfully!');
+    } catch (err) {
+      toast.error(err.response?.data?.detail || "Failed to approve lease.");
+    }
+  }
+
+  async function handleLandlordCancelLease(e) {
+    if (e) e.preventDefault();
+    if (!selectedLease) return;
+    if (!cancelReasonText.trim()) {
+      toast.error("Please provide a reason for cancelling this lease.");
+      return;
+    }
+    try {
+      setIsSubmittingCancel(true);
+      const res = await API.post(`/rental/leases/${selectedLease.lease_id}/cancel`, {
+        reason: cancelReasonText.trim()
+      });
+      setLeases(prev => prev.map(l => l.lease_id === selectedLease.lease_id ? res.data : l));
+      setSelectedLease(res.data);
+      setShowCancelReasonModal(false);
+      setCancelReasonText('');
+      toast.success('Lease agreement has been cancelled and notification sent to tenant.');
+    } catch (err) {
+      toast.error(err.response?.data?.detail || "Failed to cancel lease.");
+    } finally {
+      setIsSubmittingCancel(false);
+    }
+  }
   async function handleSignLease(e, overrideRole = null) {
     if (e) e.preventDefault();
     const roleToSign = overrideRole || (isLandlord ? signingAsRole : 'tenant');
@@ -3613,7 +3653,6 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
               <table className="w-full text-sm text-left">
                 <thead className="bg-slate-50 dark:bg-white/5 border-b border-slate-200 dark:border-white/10 uppercase text-[10px] tracking-wider font-bold text-slate-500 dark:text-gray-400">
                   <tr>
-                    <th className="px-4 py-4">Agreement ID</th>
                     <th className="px-4 py-4">Tenant Email</th>
                     <th className="px-4 py-4">Applied Unit</th>
                     <th className="px-4 py-4">Monthly Rent</th>
@@ -3629,8 +3668,7 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
                       onClick={() => setSelectedLease(l)}
                       className="hover:bg-slate-50 dark:hover:bg-white/5 transition-colors group cursor-pointer"
                     >
-                      <td className="px-4 py-4 font-mono text-xs font-bold text-indigo-650 dark:text-[#5BA4F5]">Lease #{getLeaseSeqNum(l)}</td>
-                      <td className="px-4 py-4 text-slate-600 dark:text-gray-400">{l.tenant_email}</td>
+                      <td className="px-4 py-4 text-slate-600 dark:text-gray-400 font-medium">{l.tenant_email}</td>
                       <td className="px-4 py-4">
                         <div className="flex flex-col items-start gap-1">
                           {l.unit?.unit_number === 'Single Family' ? (
@@ -3749,6 +3787,21 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
                 renderTenantOnboardingFlow()
               ) : (
                 <>
+                  {/* Cancellation Reason Alert */}
+                  {selectedLease.status === 'CANCELLED' && (
+                    <div className="p-4 rounded-xl border border-rose-500/20 bg-rose-500/10 text-left space-y-1.5 animate-fade-in mb-4">
+                      <div className="flex items-center gap-2 text-rose-600 dark:text-rose-400 font-bold text-xs uppercase tracking-wider">
+                        <AlertCircle className="w-4 h-4 shrink-0" />
+                        <span>Lease Agreement Cancelled / Rejected</span>
+                      </div>
+                      {selectedLease.rejection_reason && (
+                        <p className="text-xs text-rose-800 dark:text-rose-200 leading-relaxed font-medium pl-6">
+                          <strong>Reason from Landlord:</strong> "{selectedLease.rejection_reason}"
+                        </p>
+                      )}
+                    </div>
+                  )}
+
                   {/* Lease parameters grid */}
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm bg-gray-50/50 dark:bg-white/[0.01] p-4 rounded-xl border border-gray-200/60 dark:border-white/[0.03] text-left">
                     <div>
@@ -3982,6 +4035,69 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
               <div className="pt-2 flex gap-3">
                 <button type="button" onClick={() => setShowTenantChangeUnitModal(false)} className="flex-1 py-2.5 rounded-xl text-xs font-semibold border border-slate-200 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors">Cancel</button>
                 <button type="submit" className="flex-1 py-2.5 bg-blue-600 text-white rounded-xl text-xs font-semibold hover:bg-blue-500 transition-all shadow-md shadow-blue-500/25">Submit Request</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Reject / Cancel Lease Reason Modal */}
+      {showCancelReasonModal && (
+        <div className="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
+          <div className="bg-white dark:bg-[#1a2736] border border-slate-200 dark:border-white/10 w-full max-w-md rounded-2xl shadow-2xl overflow-hidden animate-scale-up text-slate-900 dark:text-white text-left p-6 space-y-4">
+            <div className="flex items-center justify-between border-b dark:border-white/5 pb-3">
+              <div className="flex items-center gap-2 text-rose-600 dark:text-rose-400">
+                <AlertCircle className="w-5 h-5" />
+                <h3 className="text-base font-bold text-slate-900 dark:text-white">Reject & Cancel Lease</h3>
+              </div>
+              <button 
+                type="button" 
+                onClick={() => setShowCancelReasonModal(false)}
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-white text-lg font-bold cursor-pointer"
+              >
+                ×
+              </button>
+            </div>
+
+            <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+              Please provide a specific reason for rejecting/cancelling this lease agreement. This explanation will be automatically emailed to the tenant and displayed on their portal.
+            </p>
+
+            <form onSubmit={handleLandlordCancelLease} className="space-y-4">
+              <div>
+                <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5 font-sans">
+                  Reason for Cancellation *
+                </label>
+                <textarea
+                  required
+                  rows={4}
+                  value={cancelReasonText}
+                  onChange={e => setCancelReasonText(e.target.value)}
+                  placeholder="e.g. Identity proof is unverified / blurred, income requirement not met, or incorrect personal information."
+                  className="w-full bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 focus:border-rose-500 rounded-xl p-3 text-xs text-slate-900 dark:text-white outline-none resize-none font-sans"
+                />
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowCancelReasonModal(false)}
+                  disabled={isSubmittingCancel}
+                  className="flex-1 py-2.5 rounded-xl text-xs font-semibold border border-slate-250 dark:border-white/10 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 transition-all cursor-pointer"
+                >
+                  Go Back
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmittingCancel || !cancelReasonText.trim()}
+                  className={`flex-1 py-2.5 rounded-xl text-xs font-bold text-white transition-all shadow-md cursor-pointer ${
+                    cancelReasonText.trim() && !isSubmittingCancel
+                      ? 'bg-rose-600 hover:bg-rose-500 shadow-rose-500/20'
+                      : 'bg-slate-300 dark:bg-white/10 text-slate-400 dark:text-slate-600 cursor-not-allowed shadow-none'
+                  }`}
+                >
+                  {isSubmittingCancel ? 'Cancelling...' : 'Confirm Cancellation'}
+                </button>
               </div>
             </form>
           </div>

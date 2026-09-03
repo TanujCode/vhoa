@@ -261,6 +261,7 @@ class LeaseOut(BaseModel):
     vehicle_pet_requested_at: Optional[datetime] = None
     unit_change_requested: Optional[bool] = False
     unit_change_request_notes: Optional[str] = None
+    rejection_reason: Optional[str] = None
     documents: List[TenantDocumentOut] = []
 
 
@@ -271,6 +272,10 @@ class LeaseOut(BaseModel):
 class LeaseSignRequest(BaseModel):
     signature_text: str
     signing_as: Optional[str] = "PRIMARY"
+
+
+class LeaseCancelRequest(BaseModel):
+    reason: str
 
 
 # --- RENTAL APPLICATION SCHEMAS ---

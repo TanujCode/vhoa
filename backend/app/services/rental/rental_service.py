@@ -17,22 +17,24 @@ from app.utils.encryption import safe_decrypt_float
 
 
 # --- PROPERTY CRUD ---
-def create_property(landlord_id: int, data: PropertyCreate, db: Session) -> Property:
-    current_properties_count = db.query(func.count(Property.property_id)).filter(
-        Property.landlord_id == landlord_id,
-        Property.active_status == True
-    ).scalar() or 0
-    if current_properties_count >= 2:
-        raise ValueError("Property limit reached. A landlord can register a maximum of 2 properties.")
+def create_property(landlord_id: int, data: PropertyCreate, db: Session, is_super_admin: bool = False) -> Property:
+    if not is_super_admin:
+        current_properties_count = db.query(func.count(Property.property_id)).filter(
+            Property.landlord_id == landlord_id,
+            Property.active_status == True
+        ).scalar() or 0
+        if current_properties_count >= 2:
+            raise ValueError("Property limit reached. A landlord can register a maximum of 2 properties.")
 
-    # Check for duplicate active properties (case-insensitive name and address)
+    # Check for duplicate active properties for this landlord (case-insensitive name and address)
     existing = db.query(Property).filter(
         func.lower(Property.name) == func.lower(data.name.strip()),
         func.lower(Property.address) == func.lower(data.address.strip()),
+        Property.landlord_id == landlord_id,
         Property.active_status == True
     ).first()
     if existing:
-        raise ValueError("A property with the same name and address already exists.")
+        raise ValueError("A property with the same name and address already exists in your account.")
 
     new_prop = Property(
         name=data.name.strip(),
@@ -251,6 +253,7 @@ def decrypt_lease_obj(l: Lease) -> dict:
         "vehicle_pet_requested_at": l.vehicle_pet_requested_at,
         "unit_change_requested": l.unit_change_requested,
         "unit_change_request_notes": l.unit_change_request_notes,
+        "rejection_reason": l.rejection_reason if hasattr(l, "rejection_reason") else None,
         "documents": docs_out,
         
         "unit": l.unit,
@@ -422,10 +425,20 @@ def create_lease_and_invite(landlord_id: int, data: LeaseCreate, db: Session) ->
 
     from app.config import settings
     import urllib.parse
-    name_qs = f"&name={urllib.parse.quote(data.tenant_name)}" if data.tenant_name else ""
-    invitation_url = f"{settings.FRONTEND_URL}/rental/register?email={data.tenant_email}&role=tenant&lease_id={new_lease.lease_id}{name_qs}"
-    email_action_text = "Register & Review Lease"
-    email_instruction = "Please click the button below to register your tenant account, verify details, and sign your lease:"
+    
+    existing_user = db.query(RentalUser).filter(RentalUser.email_id == data.tenant_email.lower().strip()).first()
+    if existing_user:
+        new_lease.tenant_id = existing_user.user_id
+        db.commit()
+        db.refresh(new_lease)
+        invitation_url = f"{settings.FRONTEND_URL}/rental/login?email={data.tenant_email}&redirect=/rental/dashboard?tab=leases_hub"
+        email_action_text = "Login & Review Lease"
+        email_instruction = "Your landlord has prepared a new lease agreement for you. Please click below to log in to your account and review / sign your lease:"
+    else:
+        name_qs = f"&name={urllib.parse.quote(data.tenant_name)}" if data.tenant_name else ""
+        invitation_url = f"{settings.FRONTEND_URL}/rental/register?email={data.tenant_email}&role=tenant&lease_id={new_lease.lease_id}{name_qs}"
+        email_action_text = "Register & Review Lease"
+        email_instruction = "Please click the button below to register your tenant account, verify details, and sign your lease:"
 
     if unit.unit_number == 'Single Family':
         property_desc = f"the property at <strong>{unit.property.name}</strong>"
@@ -733,6 +746,69 @@ def landlord_approve_lease(lease_id: int, landlord_id: int, db: Session) -> dict
     return decrypt_lease_obj(lease)
 
 
+def landlord_cancel_or_reject_lease(lease_id: int, landlord_id: int, reason: str, db: Session) -> dict:
+    lease = db.query(Lease).filter(Lease.lease_id == lease_id).first()
+    if not lease:
+        raise ValueError("Lease not found.")
+        
+    if lease.landlord_id != landlord_id:
+        landlord_user = db.query(RentalUser).filter(RentalUser.user_id == landlord_id).first()
+        role_name = (landlord_user.role.role_name if landlord_user.role else "").lower()
+        if role_name != "super_admin":
+            raise ValueError("Unauthorized to cancel this lease.")
+
+    clean_reason = reason.strip() if reason else "Incomplete or unverified information."
+    lease.status = "CANCELLED"
+    lease.rejection_reason = clean_reason
+    if lease.unit:
+        lease.unit.status = "VACANT"
+
+    # Send Notification Email to Tenant
+    from app.utils.encryption import safe_decrypt_field
+    tenant_email = None
+    if lease.tenant and lease.tenant.email_id:
+        tenant_email = lease.tenant.email_id
+    elif lease.tenant_email:
+        tenant_email = safe_decrypt_field(lease.tenant_email)
+
+    if tenant_email:
+        tenant_first_name = "Resident"
+        if lease.tenant and lease.tenant.first_name:
+            tenant_first_name = safe_decrypt_field(lease.tenant.first_name) or "Resident"
+        elif lease.tenant_name:
+            tenant_first_name = lease.tenant_name.split()[0]
+
+        if lease.unit.unit_number == 'Single Family':
+            property_desc = f"the single-family property at <strong>{lease.unit.property.name}</strong>"
+        elif lease.unit.unit_number == 'Condo Unit':
+            property_desc = f"the Condominium at <strong>{lease.unit.property.name}</strong>"
+        else:
+            unit_label = get_unit_display_number(lease.unit.unit_number)
+            property_desc = f"<strong>Apt {unit_label}</strong> at {lease.unit.property.name}"
+
+        email_body = f"""
+        <div style="font-size: 15px; line-height: 1.6; color: #374151;">
+          <h2 style="color: #DC2626; font-size: 20px; font-weight: bold; margin-top: 0; margin-bottom: 16px;">Lease Application Cancelled</h2>
+          <p style="margin: 0 0 12px;">Hello {tenant_first_name},</p>
+          <p style="margin: 0 0 12px;">Your lease agreement submission for {property_desc} has been cancelled / rejected by the property manager.</p>
+          
+          <div style="background-color: #FEF2F2; border-left: 4px solid #EF4444; padding: 14px 16px; border-radius: 8px; margin: 16px 0;">
+            <p style="margin: 0; font-size: 12px; font-weight: bold; color: #991B1B; text-transform: uppercase; letter-spacing: 0.5px;">Reason Provided by Landlord:</p>
+            <p style="margin: 6px 0 0; font-size: 14px; color: #7F1D1D; font-style: italic;">"{clean_reason}"</p>
+          </div>
+
+          <p style="margin: 0 0 12px;">You can log in to your tenant portal at any time to review your application status or reach out to your property management team.</p>
+          <p style="margin: 0; color: #6B7280; font-size: 13px;">Thank you for using NestBloq Property Management.</p>
+        </div>
+        """
+        wrapped_html = _wrap_in_responsive_layout(email_body, subtitle="Rental Property Management")
+        send_email(tenant_email.lower().strip(), "Update Regarding Your Lease Agreement - Cancelled", wrapped_html)
+
+    db.commit()
+    db.refresh(lease)
+    return decrypt_lease_obj(lease)
+
+
 def delete_lease(lease_id: int, db: Session) -> bool:
     lease = db.query(Lease).filter(Lease.lease_id == lease_id).first()
     if not lease:
@@ -964,10 +1040,17 @@ def invite_tenant_screening(data: RentalApplicationInvite, landlord_id: int, db:
 
     from app.config import settings
     import urllib.parse
-    name_qs = f"&name={urllib.parse.quote(data.full_name)}" if data.full_name else ""
-    invitation_url = f"{settings.FRONTEND_URL}/rental/register?email={data.tenant_email}&role=tenant{name_qs}"
-    email_action_text = "Complete Application"
-    email_instruction = "Please click the button below to register/log in and submit your screening application details:"
+    
+    existing_user = db.query(RentalUser).filter(RentalUser.email_id == data.tenant_email.lower().strip()).first()
+    if existing_user:
+        invitation_url = f"{settings.FRONTEND_URL}/rental/login?email={data.tenant_email}&redirect=/rental/dashboard"
+        email_action_text = "Login & Complete Application"
+        email_instruction = "You have been invited to complete a tenant screening application. Please click the button below to log in and submit your details:"
+    else:
+        name_qs = f"&name={urllib.parse.quote(data.full_name)}" if data.full_name else ""
+        invitation_url = f"{settings.FRONTEND_URL}/rental/register?email={data.tenant_email}&role=tenant{name_qs}"
+        email_action_text = "Register & Complete Application"
+        email_instruction = "Please click the button below to register your account and submit your screening application details:"
 
     if unit.unit_number == 'Single Family':
         property_desc = f"the property at <strong>{unit.property.name}</strong>"

@@ -57,26 +57,14 @@ const RentalSidebar = ({ activePage, setActivePage, isOpen, setIsOpen, user, pro
     { id: 'servicereq', label: 'Maintenance Request', icon: Wrench },
   ];
 
-  const hasNoProperties = (userRole === 'landlord' || userRole === 'super_admin') && properties.length === 0;
-
-  // When landlord has properties but no lease created yet, show limited sidebar
-  const isLandlordNoLease = userRole === 'landlord' && properties.length > 0 && !hasLease;
-
   let navItems = tenantNavItems;
   if (userRole === 'super_admin') {
-    navItems = hasNoProperties ? superAdminNavItems.filter(item => item.id === 'dashboard') : superAdminNavItems;
+    navItems = superAdminNavItems;
   } else if (userRole === 'landlord') {
-    if (hasNoProperties) {
-      navItems = landlordNavItems.filter(item => item.id === 'dashboard');
-    } else if (isLandlordNoLease) {
-      // Only show Dashboard + Lease Agreements until a lease is created
-      navItems = landlordNavItems.filter(item => item.id === 'dashboard' || item.id === 'leases_hub');
-    } else {
-      navItems = landlordNavItems;
-    }
+    navItems = landlordNavItems;
   } else if (userRole === 'tenant') {
     if (!hasLease) {
-      // For tenant with no active lease, only show Dashboard and Lease Agreements
+      // For tenant with no active lease, show Dashboard and Lease Agreements
       navItems = tenantNavItems.filter(item => item.id === 'dashboard' || item.id === 'leases_hub');
     } else {
       navItems = tenantNavItems;
@@ -137,7 +125,7 @@ const RentalSidebar = ({ activePage, setActivePage, isOpen, setIsOpen, user, pro
                 <User size={18} /> My Profile
               </div>
 
-              {(userRole === 'landlord' || userRole === 'super_admin') && !hasNoProperties && !isLandlordNoLease && (
+              {(userRole === 'landlord' || userRole === 'super_admin') && (
                 <div
                   onClick={() => { setActivePage('audit'); setIsOpen(false); }}
                   className={getNavItemClass('audit')}

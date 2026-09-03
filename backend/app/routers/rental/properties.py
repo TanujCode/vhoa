@@ -21,17 +21,21 @@ def create_property_with_units(
         from app.models.rental.unit import Unit
         from sqlalchemy import func
         
-        # Check property count limit
-        current_properties_count = db.query(func.count(Property.property_id)).filter(
-            Property.landlord_id == current_user.user_id,
-            Property.active_status == True
-        ).scalar() or 0
-        if current_properties_count >= 2:
-            raise ValueError("Property limit reached. A landlord can register a maximum of 2 properties.")
+        role_name = (current_user.role.role_name if current_user.role else "").lower()
+        is_super_admin = role_name in ["super_admin", "admin"]
+
+        # Check property count limit for standard landlords (Max 2 properties)
+        if not is_super_admin:
+            current_properties_count = db.query(func.count(Property.property_id)).filter(
+                Property.landlord_id == current_user.user_id,
+                Property.active_status == True
+            ).scalar() or 0
+            if current_properties_count >= 2:
+                raise ValueError("Property limit reached. A landlord can register a maximum of 2 properties.")
             
         requested_units_count = len(body.units)
-        if requested_units_count > 5:
-            raise ValueError(f"Unit limit reached. A property can have a maximum of 5 units. You requested {requested_units_count} units.")
+        if requested_units_count > 50:
+            raise ValueError(f"Unit limit reached. A property can have a maximum of 50 units. You requested {requested_units_count} units.")
 
         prop_data = PropertyCreate(
             name=body.name,
@@ -41,7 +45,7 @@ def create_property_with_units(
             zip_code=body.zip_code,
             property_type=body.property_type
         )
-        prop = rental_service.create_property(current_user.user_id, prop_data, db)
+        prop = rental_service.create_property(current_user.user_id, prop_data, db, is_super_admin=is_super_admin)
 
         log_rental_action(db, "CREATE_PROPERTY", "rental", f"Property '{prop.name}' created via wizard.", current_user.user_id)
         
@@ -70,7 +74,9 @@ def create_property(
     current_user: RentalUser = Depends(require_rental_role("super_admin", "landlord"))
 ):
     try:
-        prop = rental_service.create_property(current_user.user_id, body, db)
+        role_name = (current_user.role.role_name if current_user.role else "").lower()
+        is_super_admin = role_name in ["super_admin", "admin"]
+        prop = rental_service.create_property(current_user.user_id, body, db, is_super_admin=is_super_admin)
         log_rental_action(db, "CREATE_PROPERTY", "rental", f"Property '{prop.name}' created.", current_user.user_id)
         return prop
     except Exception as e:
@@ -82,11 +88,11 @@ def list_properties(
     db: Session = Depends(get_rental_db),
     current_user: RentalUser = Depends(require_rental_role("super_admin", "landlord", "tenant"))
 ):
-    rental_role = current_user.role.role_name if current_user.role else ""
+    rental_role = (current_user.role.role_name if current_user.role else "").lower()
     if rental_role == "tenant":
         from app.models.rental.property import Property
         return db.query(Property).filter(Property.active_status == True).order_by(Property.property_id.asc()).all()
-    is_super_admin = (rental_role == "super_admin")
+    is_super_admin = rental_role in ["super_admin", "admin"]
     return rental_service.get_properties(current_user.user_id, db, is_super_admin=is_super_admin)
 
 

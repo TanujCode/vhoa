@@ -84,6 +84,7 @@ def run_db_upgrades():
         db.execute(text("ALTER TABLE rental_leases ADD COLUMN IF NOT EXISTS num_occupants INTEGER DEFAULT 1;"))
         db.execute(text("ALTER TABLE rental_leases ADD COLUMN IF NOT EXISTS unit_change_requested BOOLEAN DEFAULT FALSE;"))
         db.execute(text("ALTER TABLE rental_leases ADD COLUMN IF NOT EXISTS unit_change_request_notes TEXT;"))
+        db.execute(text("ALTER TABLE rental_leases ADD COLUMN IF NOT EXISTS rejection_reason TEXT;"))
 
         # Add property_type to rental_properties
         db.execute(text("ALTER TABLE rental_properties ADD COLUMN IF NOT EXISTS property_type VARCHAR(50) DEFAULT 'single_family';"))
