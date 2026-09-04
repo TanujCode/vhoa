@@ -16,7 +16,8 @@ class Lease(Base):
     start_date = Column(Date, nullable=False)
     end_date = Column(Date, nullable=False)
     grace_period_days = Column(Integer, default=5)
-    late_fee_type = Column(String(20), default="FLAT")          # FLAT | PERCENTAGE
+    late_fee_type = Column(String(20), default="FLAT")          # FLAT
+    recurring_late_fee_frequency = Column(String(20), default="WEEKLY")  # WEEKLY | DAILY | NONE
     status = Column(String(30), default="PENDING_TENANT_REVIEW")
     # Statuses: PENDING_TENANT_REVIEW | PENDING_LANDLORD_APPROVAL | ACTIVE | EXPIRED | TERMINATED
     created_date = Column(DateTime(timezone=True), server_default=func.now())
@@ -29,7 +30,8 @@ class Lease(Base):
     # Financial (stored encrypted; API returns decrypted floats)
     rent_amount = Column(Text, default=None)                     # encrypted float
     security_deposit = Column(Text, default=None)                # encrypted float
-    late_fee_amount = Column(Text, default=None)                 # encrypted float
+    late_fee_amount = Column(Text, default=None)                 # encrypted float (initial flat late fee)
+    recurring_late_fee_amount = Column(Text, default=None)       # encrypted float (recurring overdue fee)
     utilities_fee = Column(Text, default=None)                   # encrypted float
     parking_fee = Column(Text, default=None)                     # encrypted float
     pet_fee = Column(Text, default=None)                         # encrypted float

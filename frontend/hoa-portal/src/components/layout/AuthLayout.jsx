@@ -28,7 +28,7 @@ export default function AuthLayout({ children }) {
   return (
     <div className="min-h-screen md:h-screen md:overflow-hidden flex flex-col md:flex-row font-sans">
       {/* Left Form Container */}
-      <div className="w-full md:w-1/2 flex flex-col justify-center items-center p-6 md:p-8 bg-white relative md:h-full">
+      <div className="w-full md:w-1/2 flex flex-col justify-center items-center p-3.5 sm:p-6 md:p-8 bg-white relative md:h-full">
         <div className="w-full max-w-md">{children}</div>
       </div>
 

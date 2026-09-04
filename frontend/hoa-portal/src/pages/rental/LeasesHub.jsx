@@ -104,6 +104,8 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
   const [gracePeriod, setGracePeriod] = useState('5');
   const [feeType, setFeeType] = useState('FLAT');
   const [feeAmount, setFeeAmount] = useState('50');
+  const [recurringFeeAmount, setRecurringFeeAmount] = useState('25');
+  const [recurringFeeFrequency, setRecurringFeeFrequency] = useState('WEEKLY');
   const [leaseText, setLeaseText] = useState('');
   const [utilFee, setUtilFee] = useState('0');
   const [parkingFee, setParkingFee] = useState('0');
@@ -411,6 +413,8 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
     setGracePeriod('5');
     setFeeType('FLAT');
     setFeeAmount('50');
+    setRecurringFeeAmount('25');
+    setRecurringFeeFrequency('WEEKLY');
     setLeaseText('');
     setUtilFee('0');
     setParkingFee('0');
@@ -499,8 +503,10 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
     setRentAmount(lease.rent_amount?.toString() || '');
     setDeposit(lease.security_deposit?.toString() || '0');
     setGracePeriod(lease.grace_period_days?.toString() || '5');
-    setFeeType(lease.late_fee_type || 'FLAT');
+    setFeeType('FLAT');
     setFeeAmount(lease.late_fee_amount?.toString() || '50');
+    setRecurringFeeAmount(lease.recurring_late_fee_amount?.toString() || '25');
+    setRecurringFeeFrequency(lease.recurring_late_fee_frequency || 'WEEKLY');
     setLeaseText(lease.lease_agreement_text || '');
     
     const utilVal = parseFloat(lease.utilities_fee || 0);
@@ -764,8 +770,11 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
     compiled += `   - Rent Due Date: Rent is due on the ${rentDueDate || '1st'} day of each calendar month.\n`;
     compiled += `   - Security Deposit: \$${deposit || '0.00'}\n`;
     if (parseFloat(moveInFee) > 0) compiled += `   - Move-in Fee: \$${moveInFee}\n`;
-    if (parseFloat(moveOutFee) > 0) compiled += `   - Move-out Fee: \$${moveOutFee}\n`;
-    compiled += `   - Late Fee: Past due rent will incur a late fee of \$${feeAmount || '50'} (${feeType === 'FLAT' ? 'Flat Fee' : 'Percentage'}) after a grace period of ${gracePeriod || '5'} days.\n\n`;
+    compiled += `   - Late Fee Policy (USA Standard): Past due rent after a ${gracePeriod || '5'}-day grace period will incur an Initial Flat Late Fee of \$${feeAmount || '50'}.`;
+    if (parseFloat(recurringFeeAmount) > 0 && recurringFeeFrequency !== 'NONE') {
+      compiled += ` Additionally, a recurring overdue fee of \$${recurringFeeAmount} per ${recurringFeeFrequency === 'DAILY' ? 'day' : 'week'} will accumulate until the entire delinquent balance is satisfied in full.`;
+    }
+    compiled += `\n\n`;
     
     compiled += `5. UTILITIES RESPONSIBILITY:\n`;
     compiled += `   - Electricity: Paid by ${electricityPayee === 'landlord' ? 'Landlord' : 'Tenant'}\n`;
@@ -1263,8 +1272,10 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
         rent_amount: parseFloat(rentAmount),
         security_deposit: parseFloat(deposit || 0),
         grace_period_days: parseInt(gracePeriod),
-        late_fee_type: feeType,
-        late_fee_amount: parseFloat(feeAmount),
+        late_fee_type: 'FLAT',
+        late_fee_amount: parseFloat(feeAmount || 0),
+        recurring_late_fee_amount: parseFloat(recurringFeeAmount || 0),
+        recurring_late_fee_frequency: recurringFeeFrequency || 'WEEKLY',
         lease_agreement_text: leaseText,
         utilities_fee: calculatedUtilFee,
         parking_fee: calculatedParkingFee,
@@ -2679,15 +2690,15 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
           </div>
         </div>
 
-        {/* Section 4: Grace Period & Late Fee Guidelines */}
+        {/* Section 4: Grace Period & Late Fee Guidelines (USA Property Standard) */}
         <div className="space-y-3 pt-4">
           <div className="flex items-center gap-2 border-b border-slate-100 dark:border-white/5 pb-1.5">
             <div className="h-3.5 w-1 bg-blue-600 rounded-full"></div>
             <h5 className="text-[10px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-widest">
-              Grace Days & Late Fee Guidelines
+              Grace Days & Late Fee Guidelines (USA Standard)
             </h5>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
               <label className="block text-xs font-bold text-slate-655 dark:text-gray-400 tracking-wider mb-2">GRACE DAYS</label>
               <div className="relative">
@@ -2695,35 +2706,73 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
                 <input 
                   required 
                   type="number" 
+                  min="0"
                   value={gracePeriod} 
                   onChange={e => setGracePeriod(e.target.value)} 
                   className={`w-full text-sm pl-10 pr-3.5 py-3 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none transition focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 border-slate-200 dark:border-white/10 ${formErrors.gracePeriod ? 'border-red-500 ring-2 ring-red-500/10' : ''}`} 
+                  placeholder="5"
                 />
               </div>
               {formErrors.gracePeriod && <p className="text-xs text-red-500 mt-1.5 flex items-center gap-1.5"><AlertCircle size={13}/>{formErrors.gracePeriod}</p>}
             </div>
+
             <div>
-              <label className="block text-xs font-bold text-slate-655 dark:text-gray-400 tracking-wider mb-2">LATE FEE TYPE</label>
-              <input 
-                readOnly
-                type="text" 
-                value="Flat Fee" 
-                className="w-full text-sm px-3.5 py-3 border rounded-xl bg-slate-100/50 dark:bg-[#111c2a]/40 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-white/10 outline-none cursor-not-allowed font-semibold"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-slate-655 dark:text-gray-400 tracking-wider mb-2">LATE FEE AMOUNT</label>
+              <label className="block text-xs font-bold text-slate-655 dark:text-gray-400 tracking-wider mb-2">INITIAL LATE FEE ($)</label>
               <div className="relative">
                 <DollarSign className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
                 <input 
                   required 
                   type="number" 
+                  min="0"
                   value={feeAmount} 
                   onChange={e => setFeeAmount(e.target.value)} 
                   className={`w-full text-sm pl-10 pr-3.5 py-3 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none transition focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 border-slate-200 dark:border-white/10 ${formErrors.feeAmount ? 'border-red-500 ring-2 ring-red-500/10' : ''}`} 
+                  placeholder="50"
                 />
               </div>
               {formErrors.feeAmount && <p className="text-xs text-red-500 mt-1.5 flex items-center gap-1.5"><AlertCircle size={13}/>{formErrors.feeAmount}</p>}
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-655 dark:text-gray-400 tracking-wider mb-2">RECURRING FEE ($)</label>
+              <div className="relative">
+                <DollarSign className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
+                <input 
+                  type="number" 
+                  min="0"
+                  value={recurringFeeAmount} 
+                  onChange={e => setRecurringFeeAmount(e.target.value)} 
+                  className="w-full text-sm pl-10 pr-3.5 py-3 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none transition focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 border-slate-200 dark:border-white/10" 
+                  placeholder="25"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-655 dark:text-gray-400 tracking-wider mb-2">RECURRING FREQUENCY</label>
+              <div className="relative">
+                <Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
+                <select 
+                  value={recurringFeeFrequency} 
+                  onChange={e => setRecurringFeeFrequency(e.target.value)} 
+                  className="w-full text-sm pl-10 pr-3.5 py-3 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none transition focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 border-slate-200 dark:border-white/10 font-medium"
+                >
+                  <option value="WEEKLY">Weekly (Every 7 Days)</option>
+                  <option value="DAILY">Daily (Every Day)</option>
+                  <option value="NONE">None (One-time Only)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/5 flex items-start gap-2.5 text-xs text-slate-600 dark:text-slate-400">
+            <Info size={16} className="text-blue-500 mt-0.5 shrink-0" />
+            <div>
+              <strong className="text-slate-900 dark:text-white">Late Fee Policy Rule:</strong> If rent is unpaid after the <strong>{gracePeriod || '5'}-day</strong> grace period, an initial flat fee of <strong>${feeAmount || '50'}</strong> is assessed immediately. {recurringFeeFrequency !== 'NONE' && parseFloat(recurringFeeAmount) > 0 ? (
+                <span>Additionally, an overdue penalty of <strong>${recurringFeeAmount}</strong> will be added automatically every <strong>{recurringFeeFrequency === 'DAILY' ? 'day' : 'week'}</strong> until the balance is paid.</span>
+              ) : (
+                <span>No recurring additional penalties will be assessed.</span>
+              )}
             </div>
           </div>
         </div>

@@ -1483,7 +1483,7 @@ export default function LandingPage() {
             <div className="absolute -inset-x-20 -bottom-10 h-40 bg-gradient-to-t from-violet-600/20 via-indigo-500/10 to-transparent blur-2xl pointer-events-none rounded-full" />
 
             {/* Portal Tab Switcher */}
-            <div className="flex items-center justify-center gap-2 mb-4">
+            <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 mb-4 px-2">
               {[
                 { label: '🏘️ HOA Portal', color: 'violet' },
                 { label: '🔑 Rental Portal', color: 'teal' },
@@ -1492,7 +1492,7 @@ export default function LandingPage() {
                 <button
                   key={idx}
                   onClick={() => { setDashboardFading(true); setTimeout(() => { setActiveDashboard(idx); setDashboardFading(false); }, 200); }}
-                  className={`px-3 py-1.5 rounded-full text-[11px] font-bold border transition-all duration-300 ${
+                  className={`px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full text-[10px] sm:text-[11px] font-bold border transition-all duration-300 ${
                     activeDashboard === idx
                       ? tab.color === 'violet' ? 'bg-violet-600 text-white border-violet-600 shadow-md shadow-violet-500/30'
                         : tab.color === 'teal' ? 'bg-teal-600 text-white border-teal-600 shadow-md shadow-teal-500/30'
@@ -1504,10 +1504,10 @@ export default function LandingPage() {
                 </button>
               ))}
               {/* Auto-cycle indicator dots */}
-              <div className="flex items-center gap-1 ml-2">
+              <div className="flex items-center gap-1 ml-1 sm:ml-2">
                 {[0,1,2].map(i => (
                   <div key={i} className={`rounded-full transition-all duration-300 ${
-                    activeDashboard === i ? 'w-4 h-1.5 bg-violet-500' : 'w-1.5 h-1.5 bg-slate-300 dark:bg-slate-600'
+                    activeDashboard === i ? 'w-3.5 sm:w-4 h-1 sm:h-1.5 bg-violet-500' : 'w-1 sm:w-1.5 h-1 sm:h-1.5 bg-slate-300 dark:bg-slate-600'
                   }`} />
                 ))}
               </div>
@@ -1521,22 +1521,22 @@ export default function LandingPage() {
             >
 
               {/* Browser top bar */}
-              <div className="flex items-center justify-between px-4 py-3 bg-slate-100 dark:bg-[#0D1B2A] border-b border-slate-200/60 dark:border-white/[0.06]">
-                <div className="flex gap-1.5">
-                  <div className="w-3 h-3 rounded-full bg-red-400" />
-                  <div className="w-3 h-3 rounded-full bg-amber-400" />
-                  <div className="w-3 h-3 rounded-full bg-emerald-400" />
+              <div className="flex items-center justify-between px-3 sm:px-4 py-2 sm:py-3 bg-slate-100 dark:bg-[#0D1B2A] border-b border-slate-200/60 dark:border-white/[0.06]">
+                <div className="flex gap-1.5 shrink-0">
+                  <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-red-400" />
+                  <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-amber-400" />
+                  <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-emerald-400" />
                 </div>
-                <div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-600 dark:text-slate-300">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                  <span>NestBloq Management Dashboard</span>
+                <div className="flex items-center gap-1.5 text-[10px] sm:text-[11px] font-bold text-slate-600 dark:text-slate-300 truncate px-2">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
+                  <span className="truncate">NestBloq Management Dashboard</span>
                 </div>
-                <div className="w-8" />
+                <div className="w-6 sm:w-8 shrink-0" />
               </div>
 
               {/* Dashboard Layout — fades between portals */}
               <div
-                className="flex h-[480px] overflow-hidden bg-slate-50 dark:bg-[#090F16] transition-opacity duration-300"
+                className="flex h-[520px] sm:h-[480px] overflow-hidden bg-slate-50 dark:bg-[#090F16] transition-opacity duration-300"
                 style={{ opacity: dashboardFading ? 0 : 1 }}
               >
                 {/* ── Sidebar ── */}
@@ -1608,61 +1608,61 @@ export default function LandingPage() {
                 </aside>
 
                 {/* ── Main Content ── */}
-                <div className="flex-1 flex flex-col overflow-hidden">
+                <div className="flex-1 flex flex-col overflow-hidden min-w-0">
                   {/* Topbar */}
-                  <div className={`px-4 py-2.5 flex items-center justify-between shrink-0 transition-colors duration-300 border-b ${
+                  <div className={`px-3 sm:px-4 py-2 sm:py-2.5 flex items-center justify-between shrink-0 transition-colors duration-300 border-b gap-2 ${
                     isDark ? 'bg-[#0B132B] border-white/[0.06]' : 'bg-white border-slate-200/80 shadow-sm'
                   }`}>
-                    <div className="flex items-center gap-3">
-                      <div className="w-6 h-6 rounded-lg bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center text-blue-600 dark:text-blue-400"><Building size={12} /></div>
-                      <div className="text-left">
-                        <span className="text-[6px] font-extrabold text-slate-400 uppercase tracking-widest block leading-none">{pd.contextLabel}</span>
-                        <div className="flex items-center gap-1 mt-0.5">
-                          <span className={`text-xs font-black ${isDark ? 'text-white' : 'text-slate-800'}`}>{pd.communityName}</span>
-                          <span className={`text-[7px] font-extrabold px-1.5 py-0.5 rounded font-mono border ${isDark ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' : 'bg-blue-50 text-blue-600 border-blue-500/20'}`}>{pd.communityCode}</span>
+                    <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                      <div className="w-6 h-6 rounded-lg bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center text-blue-600 dark:text-blue-400 shrink-0"><Building size={12} /></div>
+                      <div className="text-left min-w-0">
+                        <span className="text-[6px] font-extrabold text-slate-400 uppercase tracking-widest block leading-none truncate">{pd.contextLabel}</span>
+                        <div className="flex items-center gap-1 mt-0.5 min-w-0">
+                          <span className={`text-[11px] sm:text-xs font-black truncate max-w-[100px] sm:max-w-none ${isDark ? 'text-white' : 'text-slate-800'}`}>{pd.communityName}</span>
+                          <span className={`text-[7px] font-extrabold px-1.5 py-0.5 rounded font-mono border shrink-0 ${isDark ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' : 'bg-blue-50 text-blue-600 border-blue-500/20'}`}>{pd.communityCode}</span>
                         </div>
                       </div>
                     </div>
-                    <div className="flex items-center gap-3">
-                      <div className={`flex items-center gap-2 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                    <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+                      <div className={`flex items-center gap-1.5 sm:gap-2 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
                         <Sun size={12} />
                         <div className="relative"><Bell size={12} /><span className={`absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-red-500 rounded-full border ${isDark ? 'border-[#0B132B]' : 'border-white'}`} /></div>
                       </div>
-                      <div className={`flex items-center gap-2 pl-3 border-l ${isDark ? 'border-white/[0.06]' : 'border-slate-200'}`}>
+                      <div className={`flex items-center gap-2 pl-2 sm:pl-3 border-l ${isDark ? 'border-white/[0.06]' : 'border-slate-200'}`}>
                         <div className="hidden sm:block text-right">
                           <p className={`text-[8px] font-bold leading-none ${isDark ? 'text-white' : 'text-slate-800'}`}>{pd.managerName}</p>
                           <span className={`text-[6px] font-extrabold uppercase tracking-wider ${isDark ? 'text-blue-400' : 'text-blue-600'}`}>{pd.managerRole}</span>
                         </div>
-                        <div className={`w-6 h-6 rounded-lg flex items-center justify-center text-[9px] font-black text-white ${pd.managerColor}`}>{pd.managerInitials}</div>
+                        <div className={`w-6 h-6 rounded-lg flex items-center justify-center text-[9px] font-black text-white shrink-0 ${pd.managerColor}`}>{pd.managerInitials}</div>
                       </div>
                     </div>
                   </div>
 
                   {/* Dashboard body */}
-                  <div className={`flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar transition-colors duration-300 ${
+                  <div className={`flex-1 overflow-y-auto p-2.5 sm:p-4 space-y-3 sm:space-y-4 custom-scrollbar transition-colors duration-300 ${
                     isDark ? 'bg-[#090F16]' : 'bg-slate-50'
                   }`}>
 
                     {/* Welcome + Stats Header Card */}
-                    <div className={`rounded-2xl p-4 border flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 ${
+                    <div className={`rounded-2xl p-3 sm:p-4 border flex flex-col lg:flex-row justify-between items-start lg:items-center gap-3 sm:gap-4 ${
                       isDark ? 'bg-gradient-to-r from-[#1E2E42] via-[#162535] to-[#121B2A] border-white/[0.06]' : 'bg-white border-slate-200/80 shadow-sm'
                     }`}>
-                      <div className="flex-1 min-w-0 text-left">
-                        <h2 className={`text-sm font-black tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>{pd.welcomeMsg}</h2>
+                      <div className="flex-1 min-w-0 text-left w-full">
+                        <h2 className={`text-xs sm:text-sm font-black tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>{pd.welcomeMsg}</h2>
                         <p className={`text-[8px] mt-0.5 font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{pd.subMsg}</p>
                         <div className="flex flex-wrap items-center gap-1.5 mt-2">
                           <span className={`inline-flex items-center text-[7px] font-bold px-2 py-0.5 rounded-lg border ${pd.badge1color}`}>{pd.badge1}</span>
                           <span className={`inline-flex items-center text-[7px] font-black px-2 py-0.5 rounded-lg border ${pd.badge2color}`}>{pd.badge2}</span>
-                          <span className={`inline-flex items-center gap-1 text-[7px] font-semibold px-2 py-0.5 rounded-lg border ${isDark ? 'bg-white/[0.02] text-gray-300 border-white/5' : 'bg-slate-50 text-slate-600 border-slate-200/40'}`}>
-                            <MapPin size={8} />{pd.address}
+                          <span className={`inline-flex items-center gap-1 text-[7px] font-semibold px-2 py-0.5 rounded-lg border truncate max-w-full ${isDark ? 'bg-white/[0.02] text-gray-300 border-white/5' : 'bg-slate-50 text-slate-600 border-slate-200/40'}`}>
+                            <MapPin size={8} className="shrink-0" /><span className="truncate">{pd.address}</span>
                           </span>
                         </div>
                       </div>
-                      <div className="flex flex-row gap-6 sm:gap-8">
+                      <div className="grid grid-cols-4 sm:flex sm:flex-row gap-2 sm:gap-6 lg:gap-8 w-full lg:w-auto pt-1 lg:pt-0 border-t lg:border-t-0 border-slate-200/50 dark:border-white/5">
                         {pd.stats.map((s, i) => (
-                          <div key={i} className="text-center min-w-[36px]">
-                            <p className={`text-base font-black font-mono ${s.color}`}>{s.val}</p>
-                            <p className={`text-[6px] font-extrabold uppercase tracking-wider mt-0.5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{s.label}</p>
+                          <div key={i} className="text-center min-w-0 flex-1 sm:flex-initial">
+                            <p className={`text-xs sm:text-base font-black font-mono truncate ${s.color}`}>{s.val}</p>
+                            <p className={`text-[6px] font-extrabold uppercase tracking-wider mt-0.5 truncate ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{s.label}</p>
                           </div>
                         ))}
                       </div>
@@ -1672,16 +1672,16 @@ export default function LandingPage() {
                     {activeDashboard === 0 && (
                       <div className="grid grid-cols-1 lg:grid-cols-12 gap-3">
                         {/* HOA Left Panel: Quick Links */}
-                        <div className={`lg:col-span-7 border rounded-2xl p-4 flex flex-col gap-3.5 ${isDark ? 'bg-[#1E2E42] border-white/[0.06]' : 'bg-white border-slate-200/80 shadow-sm'}`}>
-                          <div className="flex items-center justify-between mb-3 pb-2 border-b border-slate-200/50 dark:border-white/[0.05] text-left">
+                        <div className={`lg:col-span-7 border rounded-2xl p-3 sm:p-4 flex flex-col gap-3 sm:gap-3.5 ${isDark ? 'bg-[#1E2E42] border-white/[0.06]' : 'bg-white border-slate-200/80 shadow-sm'}`}>
+                          <div className="flex flex-wrap items-center justify-between gap-1.5 mb-2 sm:mb-3 pb-2 border-b border-slate-200/50 dark:border-white/[0.05] text-left">
                             <h3 className={`font-extrabold text-[9px] uppercase tracking-wider ${isDark ? 'text-white' : 'text-slate-900'}`}>QUICK LINKS</h3>
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-1.5 flex-wrap">
                               <span className="text-[7px] font-bold text-slate-400 uppercase tracking-widest font-mono hidden sm:inline">AUGUST 2026</span>
-                              <button className={`px-2 py-0.5 rounded border text-[7.5px] font-bold ${isDark ? 'bg-white/5 border-white/10 text-white' : 'bg-slate-100 border-slate-200 text-slate-700'}`}>All Communities</button>
-                              <button className="px-2.5 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-[7.5px] font-extrabold flex items-center gap-1 shadow-sm"><Download size={10} />Export Report</button>
+                              <button className={`px-1.5 sm:px-2 py-0.5 rounded border text-[7px] sm:text-[7.5px] font-bold ${isDark ? 'bg-white/5 border-white/10 text-white' : 'bg-slate-100 border-slate-200 text-slate-700'}`}>All Communities</button>
+                              <button className="px-2 py-0.5 sm:py-1 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-[7px] sm:text-[7.5px] font-extrabold flex items-center gap-1 shadow-sm"><Download size={9} />Export</button>
                             </div>
                           </div>
-                          <div className="grid grid-cols-3 gap-2.5">
+                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-2.5">
                             {[
                               { label: 'Service Req', icon: <Wrench size={12} className="text-amber-500" />, badge: 2 },
                               { label: 'Vendor List', icon: <Users size={12} className="text-blue-500" /> },
@@ -1693,31 +1693,31 @@ export default function LandingPage() {
                               { label: 'Members', icon: <UserPlus size={12} className="text-purple-500" />, badge: 4 },
                               { label: 'Reports', icon: <TrendingUp size={12} className="text-purple-500" /> },
                             ].map((btn, idx) => (
-                              <div key={idx} className={`relative p-3 rounded-xl border flex flex-col justify-between h-16 text-left ${isDark ? 'border-white/[0.04] bg-white/[0.01]' : 'border-slate-200/60 bg-slate-50/50'}`}>
+                              <div key={idx} className={`relative p-2.5 sm:p-3 rounded-xl border flex flex-col justify-between h-14 sm:h-16 text-left ${isDark ? 'border-white/[0.04] bg-white/[0.01]' : 'border-slate-200/60 bg-slate-50/50'}`}>
                                 <div className="flex justify-between items-start">
                                   <div className={`p-1 rounded-lg ${isDark ? 'bg-white/5' : 'bg-slate-100'}`}>{btn.icon}</div>
                                   {btn.badge && <span className="bg-red-500 text-white text-[7px] font-black px-1.5 py-0.5 rounded-full">{btn.badge}</span>}
                                 </div>
-                                <span className={`text-[8px] font-bold ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>{btn.label}</span>
+                                <span className={`text-[7.5px] sm:text-[8px] font-bold truncate ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>{btn.label}</span>
                               </div>
                             ))}
                           </div>
                         </div>
 
                         {/* HOA Right Panel: Calendar Schedule */}
-                        <div className={`lg:col-span-5 border rounded-2xl p-4 text-left flex flex-col gap-3 ${isDark ? 'bg-[#1E2E42] border-white/[0.06]' : 'bg-white border-slate-200/80 shadow-sm'}`}>
-                          <div className="flex items-center justify-between mb-3 pb-2 border-b border-slate-200/50 dark:border-white/[0.05]">
+                        <div className={`lg:col-span-5 border rounded-2xl p-3 sm:p-4 text-left flex flex-col gap-3 ${isDark ? 'bg-[#1E2E42] border-white/[0.06]' : 'bg-white border-slate-200/80 shadow-sm'}`}>
+                          <div className="flex items-center justify-between mb-2 sm:mb-3 pb-2 border-b border-slate-200/50 dark:border-white/[0.05]">
                             <h3 className={`font-extrabold text-[9px] uppercase tracking-wider ${isDark ? 'text-white' : 'text-slate-900'}`}>CALENDAR SCHEDULE</h3>
                             <span className="text-[7.5px] font-bold text-blue-600 hover:underline cursor-pointer">View Calendar</span>
                           </div>
                           
                           {/* Calendar navigation */}
-                          <div className="bg-slate-50/40 dark:bg-slate-900/40 backdrop-blur-sm border border-slate-200/50 dark:border-white/[0.04] rounded-2xl p-3 shadow-sm mb-3 w-full">
+                          <div className="bg-slate-50/40 dark:bg-slate-900/40 backdrop-blur-sm border border-slate-200/50 dark:border-white/[0.04] rounded-2xl p-2.5 sm:p-3 shadow-sm mb-2 sm:mb-3 w-full">
                             <div className="flex items-center justify-between mb-2 pb-1.5 border-b border-slate-200/50 dark:border-white/[0.04]">
-                              <span className="text-[9px] font-bold text-slate-800 dark:text-slate-250 uppercase tracking-wider">August 2026</span>
+                              <span className="text-[8.5px] sm:text-[9px] font-bold text-slate-800 dark:text-slate-250 uppercase tracking-wider">August 2026</span>
                               <div className="flex gap-1.5">
                                 <button className="p-0.5 hover:bg-slate-100 dark:hover:bg-white/10 rounded text-slate-500 transition"><ChevronLeft size={10} /></button>
-                                <span className="px-1.5 py-0.5 bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded text-[8px] font-black uppercase tracking-wider">Today</span>
+                                <span className="px-1.5 py-0.5 bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded text-[7.5px] sm:text-[8px] font-black uppercase tracking-wider">Today</span>
                                 <button className="p-0.5 hover:bg-slate-100 dark:hover:bg-white/10 rounded text-slate-500 transition"><ChevronRight size={10} /></button>
                               </div>
                             </div>
@@ -1727,13 +1727,13 @@ export default function LandingPage() {
                             </div>
                             
                             <div className="grid grid-cols-7 gap-1">
-                              {Array(6).fill(null).map((_, i) => <div key={`b-${i}`} className="h-6" />)}
+                              {Array(6).fill(null).map((_, i) => <div key={`b-${i}`} className="h-5 sm:h-6" />)}
                               {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => {
                                 const isToday = day === 7;
                                 return (
                                   <div
                                     key={day}
-                                    className={`h-6 flex flex-col items-center justify-center text-[9px] font-semibold rounded-lg relative ${
+                                    className={`h-5 sm:h-6 flex flex-col items-center justify-center text-[8px] sm:text-[9px] font-semibold rounded-lg relative ${
                                       isToday
                                         ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400 font-bold border border-blue-500/25'
                                         : 'text-slate-700 dark:text-gray-300'
@@ -1753,20 +1753,20 @@ export default function LandingPage() {
                           <div className="space-y-2 mt-1">
                             <span className="text-[8px] font-bold text-slate-400 dark:text-gray-500 uppercase tracking-widest block font-mono">Upcoming Events & Tasks</span>
                             
-                            <div className="flex gap-2.5 items-center p-2.5 bg-white/40 dark:bg-white/[0.01] border border-slate-200/60 dark:border-white/[0.04] rounded-xl hover:border-blue-500/20 transition-all duration-200">
-                              <div className="w-6 h-6 rounded-lg flex items-center justify-center font-bold text-xs bg-blue-500/10 text-blue-600 dark:text-blue-400">
+                            <div className="flex gap-2.5 items-center p-2 sm:p-2.5 bg-white/40 dark:bg-white/[0.01] border border-slate-200/60 dark:border-white/[0.04] rounded-xl hover:border-blue-500/20 transition-all duration-200">
+                              <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-lg flex items-center justify-center font-bold text-xs bg-blue-500/10 text-blue-600 dark:text-blue-400 shrink-0">
                                 1
                               </div>
                               <div className="flex-1 min-w-0 text-left">
-                                <p className="text-[10px] font-extrabold text-slate-850 dark:text-slate-250 truncate">Gym Booking</p>
-                                <span className="text-[8.5px] text-slate-405 dark:text-gray-500 font-semibold">Sep 10, 2026</span>
+                                <p className="text-[9.5px] sm:text-[10px] font-extrabold text-slate-850 dark:text-slate-250 truncate">Gym Booking</p>
+                                <span className="text-[8px] sm:text-[8.5px] text-slate-405 dark:text-gray-500 font-semibold truncate block">Sep 10, 2026</span>
                               </div>
-                              <span className="text-[8px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider bg-blue-500/10 text-blue-600 dark:text-blue-400">
+                              <span className="text-[7.5px] sm:text-[8px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider bg-blue-500/10 text-blue-600 dark:text-blue-400 shrink-0">
                                 Booking
                               </span>
                             </div>
                             
-                            <button className="w-full py-1.5 bg-blue-50/50 dark:bg-white/5 text-blue-600 dark:text-blue-400 rounded-lg text-[9px] font-black transition border border-blue-200/30 dark:border-white/5 text-center uppercase tracking-wider">
+                            <button className="w-full py-1.5 bg-blue-50/50 dark:bg-white/5 text-blue-600 dark:text-blue-400 rounded-lg text-[8.5px] sm:text-[9px] font-black transition border border-blue-200/30 dark:border-white/5 text-center uppercase tracking-wider">
                               + View All 4 Events
                             </button>
                           </div>
@@ -1775,40 +1775,40 @@ export default function LandingPage() {
                     )}
 
                     {activeDashboard === 1 && (
-                      <div className="space-y-4">
-                        {/* 4 Cards Grid - Matching Real Landlord Dashboard exactly */}
-                        <div className="grid grid-cols-4 gap-3 text-left">
-                          <div className={`p-3 rounded-xl border flex flex-col gap-1 shadow-sm ${isDark ? 'bg-[#111C2A]/60 border-white/5' : 'bg-white border-slate-200/80'}`}>
-                            <span className="text-[7px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wider block">RENT RECEIVED</span>
-                            <span className="text-base font-black text-slate-900 dark:text-white font-mono">$3,100.00</span>
-                            <span className="text-[6px] text-emerald-600 dark:text-emerald-400 font-bold">Collection Rate: 39%</span>
+                      <div className="space-y-3 sm:space-y-4">
+                        {/* 4 Cards Grid - Responsive 2-col on mobile, 4-col on tablet/desktop */}
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 text-left">
+                          <div className={`p-2 sm:p-3 rounded-xl border flex flex-col gap-0.5 sm:gap-1 shadow-sm min-w-0 ${isDark ? 'bg-[#111C2A]/60 border-white/5' : 'bg-white border-slate-200/80'}`}>
+                            <span className="text-[6.5px] sm:text-[7px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wider block truncate">RENT RECEIVED</span>
+                            <span className="text-xs sm:text-base font-black text-slate-900 dark:text-white font-mono truncate">$3,100.00</span>
+                            <span className="text-[5.5px] sm:text-[6px] text-emerald-600 dark:text-emerald-400 font-bold truncate">Collection Rate: 39%</span>
                           </div>
-                          <div className={`p-3 rounded-xl border flex flex-col gap-1 shadow-sm ${isDark ? 'bg-[#111C2A]/60 border-white/5' : 'bg-white border-slate-200/80'}`}>
-                            <span className="text-[7px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wider block">UNPAID EXPENSES</span>
-                            <span className="text-base font-black text-slate-900 dark:text-white font-mono">$100.00</span>
-                            <span className="text-[6px] text-red-600 dark:text-red-400 font-bold">Active Invoices</span>
+                          <div className={`p-2 sm:p-3 rounded-xl border flex flex-col gap-0.5 sm:gap-1 shadow-sm min-w-0 ${isDark ? 'bg-[#111C2A]/60 border-white/5' : 'bg-white border-slate-200/80'}`}>
+                            <span className="text-[6.5px] sm:text-[7px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wider block truncate">UNPAID EXPENSES</span>
+                            <span className="text-xs sm:text-base font-black text-slate-900 dark:text-white font-mono truncate">$100.00</span>
+                            <span className="text-[5.5px] sm:text-[6px] text-red-600 dark:text-red-400 font-bold truncate">Active Invoices</span>
                           </div>
-                          <div className={`p-3 rounded-xl border flex flex-col gap-1 shadow-sm ${isDark ? 'bg-[#111C2A]/60 border-white/5' : 'bg-white border-slate-200/80'}`}>
-                            <span className="text-[7px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wider block">OVERDUE RENT</span>
-                            <span className="text-base font-black text-slate-955 dark:text-white font-mono">$5,000.00</span>
-                            <span className="text-[6px] text-amber-600 dark:text-amber-500 font-bold">Overdue Invoices</span>
+                          <div className={`p-2 sm:p-3 rounded-xl border flex flex-col gap-0.5 sm:gap-1 shadow-sm min-w-0 ${isDark ? 'bg-[#111C2A]/60 border-white/5' : 'bg-white border-slate-200/80'}`}>
+                            <span className="text-[6.5px] sm:text-[7px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wider block truncate">OVERDUE RENT</span>
+                            <span className="text-xs sm:text-base font-black text-slate-955 dark:text-white font-mono truncate">$5,000.00</span>
+                            <span className="text-[5.5px] sm:text-[6px] text-amber-600 dark:text-amber-500 font-bold truncate">Overdue Invoices</span>
                           </div>
-                          <div className={`p-3 rounded-xl border flex flex-col gap-1 shadow-sm ${isDark ? 'bg-[#111C2A]/60 border-white/5' : 'bg-white border-slate-200/80'}`}>
-                            <span className="text-[7px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wider block">UPCOMING EXPENSES</span>
-                            <span className="text-base font-black text-slate-900 dark:text-white font-mono">$100.00</span>
-                            <span className="text-[6px] text-blue-600 dark:text-blue-400 font-bold font-sans">Open Tickets</span>
+                          <div className={`p-2 sm:p-3 rounded-xl border flex flex-col gap-0.5 sm:gap-1 shadow-sm min-w-0 ${isDark ? 'bg-[#111C2A]/60 border-white/5' : 'bg-white border-slate-200/80'}`}>
+                            <span className="text-[6.5px] sm:text-[7px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wider block truncate">UPCOMING EXPENSES</span>
+                            <span className="text-xs sm:text-base font-black text-slate-900 dark:text-white font-mono truncate">$100.00</span>
+                            <span className="text-[5.5px] sm:text-[6px] text-blue-600 dark:text-blue-400 font-bold font-sans truncate">Open Tickets</span>
                           </div>
                         </div>
 
                         {/* Cashflow Summary & Action Required Grid */}
-                        <div className="grid grid-cols-12 gap-3 text-left">
-                          {/* Cashflow chart (7 Cols) */}
-                          <div className={`col-span-7 border rounded-2xl p-3 flex flex-col gap-3 ${isDark ? 'bg-[#1E2E42] border-white/[0.06]' : 'bg-white border-slate-200/80 shadow-sm'}`}>
+                        <div className="grid grid-cols-1 md:grid-cols-12 gap-3 text-left">
+                          {/* Cashflow chart (7 Cols on desktop, full on mobile) */}
+                          <div className={`md:col-span-7 border rounded-2xl p-3 flex flex-col gap-3 ${isDark ? 'bg-[#1E2E42] border-white/[0.06]' : 'bg-white border-slate-200/80 shadow-sm'}`}>
                             <div className="flex justify-between items-center pb-2 border-b border-slate-200/40 dark:border-white/5">
                               <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">Cashflow Summary</span>
                               <span className="text-[6px] text-slate-500">Real-time Income vs Expense</span>
                             </div>
-                            <div className="flex items-end justify-between h-24 pt-4 px-2">
+                            <div className="flex items-end justify-between h-20 sm:h-24 pt-3 sm:pt-4 px-2">
                               {[
                                 { month: 'Mar', inc: 10, exp: 5 },
                                 { month: 'Apr', inc: 15, exp: 8 },
@@ -1818,7 +1818,7 @@ export default function LandingPage() {
                                 { month: 'Aug', inc: 20, exp: 10 },
                               ].map((d, idx) => (
                                 <div key={idx} className="flex flex-col items-center gap-1.5 flex-1">
-                                  <div className="w-full flex items-end justify-center gap-1 h-14">
+                                  <div className="w-full flex items-end justify-center gap-1 h-12 sm:h-14">
                                     <div className="w-1.5 bg-emerald-500 rounded-t-sm" style={{ height: `${d.inc}%` }} />
                                     <div className="w-1.5 bg-amber-500 rounded-t-sm" style={{ height: `${d.exp}%` }} />
                                   </div>
@@ -1828,24 +1828,24 @@ export default function LandingPage() {
                             </div>
                           </div>
 
-                          {/* Action Required: Tenant requests (5 Cols) */}
-                          <div className={`col-span-5 border rounded-2xl p-3 flex flex-col justify-between ${isDark ? 'bg-[#1E2E42] border-white/[0.06]' : 'bg-white border-slate-200/80 shadow-sm'}`}>
+                          {/* Action Required: Tenant requests (5 Cols on desktop, full on mobile) */}
+                          <div className={`md:col-span-5 border rounded-2xl p-3 flex flex-col justify-between gap-2.5 ${isDark ? 'bg-[#1E2E42] border-white/[0.06]' : 'bg-white border-slate-200/80 shadow-sm'}`}>
                             <div className="flex justify-between items-center pb-2 border-b border-slate-200/40 dark:border-white/5">
                               <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">Action Required</span>
                               <span className="text-[6px] text-blue-600 font-bold">Tenant Requests</span>
                             </div>
-                            <div className="space-y-2 py-1.5 flex-1 flex flex-col justify-center">
+                            <div className="space-y-2 py-1 flex-1 flex flex-col justify-center">
                               <div className={`p-2 border rounded-xl flex items-center justify-between gap-2 ${isDark ? 'bg-[#111C2A]/60 border-red-500/20' : 'bg-red-50/50 border-red-100'}`}>
                                 <div className="min-w-0 flex-1">
                                   <h4 className="text-[8px] font-bold text-slate-800 dark:text-red-300 truncate">Electrician</h4>
-                                  <p className="text-[6px] text-slate-505 dark:text-slate-450 mt-0.5">Unit 102 — Priority: NORMAL</p>
+                                  <p className="text-[6px] text-slate-505 dark:text-slate-450 mt-0.5 truncate">Unit 102 — Priority: NORMAL</p>
                                 </div>
                                 <button className="bg-red-500 hover:bg-red-600 text-white font-bold text-[7px] px-2 py-1 rounded shrink-0 transition-colors shadow-sm">Assign</button>
                               </div>
                               <div className={`p-2 border rounded-xl flex items-center justify-between gap-2 ${isDark ? 'bg-[#111C2A]/60 border-white/5' : 'bg-slate-50 border-slate-200/50'}`}>
                                 <div className="min-w-0 flex-1">
                                   <h4 className="text-[8px] font-bold text-slate-800 dark:text-slate-200 truncate">Plumber</h4>
-                                  <p className="text-[6px] text-slate-505 dark:text-slate-450 mt-0.5">Unit 104 — Pipe Leak Report</p>
+                                  <p className="text-[6px] text-slate-505 dark:text-slate-450 mt-0.5 truncate">Unit 104 — Pipe Leak Report</p>
                                 </div>
                                 <button className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-[7px] px-2 py-1 rounded shrink-0 transition-colors shadow-sm">Assign</button>
                               </div>
@@ -1858,12 +1858,12 @@ export default function LandingPage() {
                     {activeDashboard === 2 && (
                       <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 text-left">
                         {/* Condo Left Panel: Quick Actions */}
-                        <div className={`lg:col-span-7 border rounded-2xl p-4 flex flex-col gap-3.5 ${isDark ? 'bg-[#1E2E42] border-white/[0.06]' : 'bg-white border-slate-200/80 shadow-sm'}`}>
-                          <div className="flex items-center justify-between mb-3 pb-2 border-b border-slate-200/50 dark:border-white/[0.05]">
+                        <div className={`lg:col-span-7 border rounded-2xl p-3 sm:p-4 flex flex-col gap-3 sm:gap-3.5 ${isDark ? 'bg-[#1E2E42] border-white/[0.06]' : 'bg-white border-slate-200/80 shadow-sm'}`}>
+                          <div className="flex items-center justify-between mb-2 sm:mb-3 pb-2 border-b border-slate-200/50 dark:border-white/[0.05]">
                             <h3 className={`font-extrabold text-[9px] uppercase tracking-wider ${isDark ? 'text-white' : 'text-slate-900'}`}>Quick Actions</h3>
                             <button className="px-2 py-0.5 bg-blue-600 text-white rounded text-[7.5px] font-black">+ Invite Resident</button>
                           </div>
-                          <div className="grid grid-cols-3 gap-2.5">
+                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-2.5">
                             {[
                               { label: 'Residents Directory', icon: <Users size={12} className="text-blue-500" /> },
                               { label: 'Documents Center', icon: <FileText size={12} className="text-purple-500" /> },
@@ -1872,20 +1872,20 @@ export default function LandingPage() {
                               { label: 'Parking Allocations', icon: <Building2 size={12} className="text-emerald-500" /> },
                               { label: 'Visitor Passes', icon: <Zap size={12} className="text-rose-500" />, badge: 1 },
                             ].map((btn, idx) => (
-                              <div key={idx} className={`relative p-3 rounded-xl border flex flex-col justify-between h-16 text-left ${isDark ? 'border-white/[0.04] bg-white/[0.01]' : 'border-slate-200/60 bg-slate-50/50'}`}>
+                              <div key={idx} className={`relative p-2.5 sm:p-3 rounded-xl border flex flex-col justify-between h-14 sm:h-16 text-left ${isDark ? 'border-white/[0.04] bg-white/[0.01]' : 'border-slate-200/60 bg-slate-50/50'}`}>
                                 <div className="flex justify-between items-start">
                                   <div className={`p-1 rounded-lg ${isDark ? 'bg-white/5' : 'bg-slate-100'}`}>{btn.icon}</div>
                                   {btn.badge && <span className="bg-red-500 text-white text-[7px] font-black px-1.5 py-0.5 rounded-full">{btn.badge}</span>}
                                 </div>
-                                <span className={`text-[8px] font-bold ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>{btn.label}</span>
+                                <span className={`text-[7.5px] sm:text-[8px] font-bold truncate ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>{btn.label}</span>
                               </div>
                             ))}
                           </div>
                         </div>
 
                         {/* Condo Right Panel: Operations Monitor */}
-                        <div className={`lg:col-span-5 border rounded-2xl p-4 flex flex-col gap-3 ${isDark ? 'bg-[#1E2E42] border-white/[0.06]' : 'bg-white border-slate-200/80 shadow-sm'}`}>
-                          <div className="flex items-center justify-between mb-3 pb-2 border-b border-slate-200/50 dark:border-white/[0.05]">
+                        <div className={`lg:col-span-5 border rounded-2xl p-3 sm:p-4 flex flex-col gap-3 ${isDark ? 'bg-[#1E2E42] border-white/[0.06]' : 'bg-white border-slate-200/80 shadow-sm'}`}>
+                          <div className="flex items-center justify-between mb-2 sm:mb-3 pb-2 border-b border-slate-200/50 dark:border-white/[0.05]">
                             <h3 className={`font-extrabold text-[9px] uppercase tracking-wider ${isDark ? 'text-white' : 'text-slate-900'}`}>Operations Monitor</h3>
                             <span className="text-[7.5px] font-mono text-emerald-500 flex items-center gap-1">
                               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse inline-block" /> Live
@@ -1917,11 +1917,11 @@ export default function LandingPage() {
                             
                             {/* Join Request Queue */}
                             <div className="p-2 bg-white/70 dark:bg-white/[0.01] border border-slate-200/40 dark:border-white/[0.03] rounded-xl flex items-center justify-between">
-                              <div>
-                                <span className="text-[7.5px] font-bold text-slate-400 tracking-wider uppercase block">Join Requests Queue</span>
-                                <span className="text-[9px] font-extrabold text-slate-850 dark:text-slate-250">3 requests awaiting review</span>
+                              <div className="min-w-0 flex-1 mr-2">
+                                <span className="text-[7.5px] font-bold text-slate-400 tracking-wider uppercase block truncate">Join Requests Queue</span>
+                                <span className="text-[8.5px] sm:text-[9px] font-extrabold text-slate-850 dark:text-slate-250 truncate block">3 requests awaiting review</span>
                               </div>
-                              <span className="px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-600 text-[7px] font-black uppercase">Review Needed</span>
+                              <span className="px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-600 text-[7px] font-black uppercase shrink-0">Review Needed</span>
                             </div>
                           </div>
                         </div>

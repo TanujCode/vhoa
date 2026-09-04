@@ -390,6 +390,38 @@ def run_db_upgrades():
         "rental_maintenance_requests.scope"
     )
 
+    # ── rental_leases: recurring late fee columns ─────────────────
+    _safe_execute(
+        "ALTER TABLE rental_leases ADD COLUMN IF NOT EXISTS recurring_late_fee_amount TEXT;",
+        "rental_leases.recurring_late_fee_amount"
+    )
+    _safe_execute(
+        "ALTER TABLE rental_leases ADD COLUMN IF NOT EXISTS recurring_late_fee_frequency VARCHAR(20) DEFAULT 'WEEKLY';",
+        "rental_leases.recurring_late_fee_frequency"
+    )
+
+    # ── rental_ledgers: initial/recurring late fee, breakdown json & reminder flag ───
+    _safe_execute(
+        "ALTER TABLE rental_ledgers ADD COLUMN IF NOT EXISTS initial_late_fee_applied DOUBLE PRECISION DEFAULT 0.0;",
+        "rental_ledgers.initial_late_fee_applied"
+    )
+    _safe_execute(
+        "ALTER TABLE rental_ledgers ADD COLUMN IF NOT EXISTS recurring_late_fee_applied DOUBLE PRECISION DEFAULT 0.0;",
+        "rental_ledgers.recurring_late_fee_applied"
+    )
+    _safe_execute(
+        "ALTER TABLE rental_ledgers ADD COLUMN IF NOT EXISTS overdue_days_count INTEGER DEFAULT 0;",
+        "rental_ledgers.overdue_days_count"
+    )
+    _safe_execute(
+        "ALTER TABLE rental_ledgers ADD COLUMN IF NOT EXISTS fee_breakdown_json TEXT;",
+        "rental_ledgers.fee_breakdown_json"
+    )
+    _safe_execute(
+        "ALTER TABLE rental_ledgers ADD COLUMN IF NOT EXISTS reminder_email_sent BOOLEAN DEFAULT FALSE;",
+        "rental_ledgers.reminder_email_sent"
+    )
+
     # rental_otp_tokens (user_id)
     _safe_execute("ALTER TABLE rental_otp_tokens DROP CONSTRAINT IF EXISTS rental_otp_tokens_user_id_fkey;", "drop_otp_user_fk")
     _safe_execute("ALTER TABLE rental_otp_tokens ADD CONSTRAINT rental_otp_tokens_user_id_fkey FOREIGN KEY (user_id) REFERENCES rental_users(user_id) ON DELETE CASCADE;", "add_otp_user_fk")
@@ -455,6 +487,22 @@ def run_db_upgrades():
             WHERE property_id IN (
                 SELECT DISTINCT property_id FROM rental_units WHERE unit_number ILIKE '%condo%'
             );
+        """))
+
+        # Clean up maintenance_charge from rental_ledgers
+        db.execute(text("""
+            DELETE FROM rental_ledgers 
+            WHERE (rent_charge IS NULL OR rent_charge = 0) 
+              AND (utilities_charge IS NULL OR utilities_charge = 0) 
+              AND (parking_charge IS NULL OR parking_charge = 0) 
+              AND (pet_charge IS NULL OR pet_charge = 0) 
+              AND maintenance_charge > 0;
+        """))
+        db.execute(text("""
+            UPDATE rental_ledgers 
+            SET maintenance_charge = 0.0,
+                amount = COALESCE(rent_charge, 0.0) + COALESCE(utilities_charge, 0.0) + COALESCE(parking_charge, 0.0) + COALESCE(pet_charge, 0.0)
+            WHERE maintenance_charge > 0;
         """))
 
         db.commit()

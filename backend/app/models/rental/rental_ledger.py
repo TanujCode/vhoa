@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, Double, ForeignKey, Date
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, Double, ForeignKey, Date, Text
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from app.database import Base
@@ -12,6 +12,11 @@ class RentalLedger(Base):
     due_date = Column(Date, nullable=False)
     amount = Column(Double, default=0.0)
     late_fee_applied = Column(Double, default=0.0)
+    initial_late_fee_applied = Column(Double, default=0.0)
+    recurring_late_fee_applied = Column(Double, default=0.0)
+    overdue_days_count = Column(Integer, default=0)
+    fee_breakdown_json = Column(Text, nullable=True)  # Stores JSON array of dated assessment events
+    reminder_email_sent = Column(Boolean, default=False)
     
     rent_charge = Column(Double, default=0.0)
     utilities_charge = Column(Double, default=0.0)

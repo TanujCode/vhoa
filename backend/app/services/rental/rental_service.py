@@ -200,6 +200,14 @@ def update_unit(unit_id: int, landlord_id: int, data: UnitCreate, db: Session, i
 
 # --- LEASE SERVICES ---
 
+def get_unit_display_number(unit_num: str | None) -> str:
+    if not unit_num:
+        return "1"
+    import re
+    clean = re.sub(r"^(apt|apartment|unit|room|suite)\.?\s*", "", str(unit_num), flags=re.IGNORECASE).strip()
+    return clean or "1"
+
+
 def decrypt_lease_obj(l: Lease) -> dict:
     """Helper to decrypt and map database Lease model to schema dictionary."""
     from app.utils.encryption import safe_decrypt_field, safe_decrypt_float
@@ -225,8 +233,10 @@ def decrypt_lease_obj(l: Lease) -> dict:
         "rent_amount": safe_decrypt_float(l.rent_amount),
         "security_deposit": safe_decrypt_float(l.security_deposit),
         "grace_period_days": l.grace_period_days,
-        "late_fee_type": l.late_fee_type,
+        "late_fee_type": l.late_fee_type or "FLAT",
         "late_fee_amount": safe_decrypt_float(l.late_fee_amount),
+        "recurring_late_fee_amount": safe_decrypt_float(l.recurring_late_fee_amount) or 0.0,
+        "recurring_late_fee_frequency": l.recurring_late_fee_frequency or "WEEKLY",
         "status": l.status,
         "landlord_signature": safe_decrypt_field(l.landlord_signature),
         "tenant_signature": safe_decrypt_field(l.tenant_signature),
@@ -385,6 +395,7 @@ def create_lease_and_invite(landlord_id: int, data: LeaseCreate, db: Session) ->
     enc_rent = encrypt_float(data.rent_amount)
     enc_deposit = encrypt_float(data.security_deposit)
     enc_late_fee = encrypt_float(data.late_fee_amount)
+    enc_recurring_late_fee = encrypt_float(data.recurring_late_fee_amount or 0.0)
     unit_label = get_unit_display_number(unit.unit_number)
     default_lease_text = f"Standard Lease Agreement for the property" if unit.unit_number in ["Single Family", "Condo Unit"] else f"Standard Lease Agreement for Apt {unit_label}"
     enc_lease_text = encrypt_field(data.lease_agreement_text or default_lease_text)
@@ -402,8 +413,10 @@ def create_lease_and_invite(landlord_id: int, data: LeaseCreate, db: Session) ->
         rent_amount=enc_rent,
         security_deposit=enc_deposit,
         grace_period_days=data.grace_period_days,
-        late_fee_type=data.late_fee_type,
+        late_fee_type=data.late_fee_type or "FLAT",
         late_fee_amount=enc_late_fee,
+        recurring_late_fee_amount=enc_recurring_late_fee,
+        recurring_late_fee_frequency=data.recurring_late_fee_frequency or "WEEKLY",
         status="PENDING_TENANT_REVIEW",
         lease_agreement_text=enc_lease_text,
         co_landlord_name=enc_co_landlord
@@ -506,8 +519,10 @@ def update_lease(lease_id: int, landlord_id: int, data: LeaseCreate, db: Session
         lease.unit.rent_amount = data.rent_amount
     lease.security_deposit = encrypt_float(data.security_deposit)
     lease.grace_period_days = data.grace_period_days
-    lease.late_fee_type = data.late_fee_type
+    lease.late_fee_type = data.late_fee_type or "FLAT"
     lease.late_fee_amount = encrypt_float(data.late_fee_amount)
+    lease.recurring_late_fee_amount = encrypt_float(data.recurring_late_fee_amount or 0.0)
+    lease.recurring_late_fee_frequency = data.recurring_late_fee_frequency or "WEEKLY"
     lease.co_landlord_name = encrypt_field(data.co_landlord_name)
     if data.lease_agreement_text:
         lease.lease_agreement_text = encrypt_field(data.lease_agreement_text)
@@ -1135,7 +1150,224 @@ def complete_rental_application(application_id: int, data: RentalApplicationComp
 
 
 # --- LEDGER & PAYMENTS ---
+# --- LEDGER & PAYMENTS ---
+
+def calculate_invoice_overdue_and_timeline(inv: RentalLedger, lease: Lease, as_of_date: date = None) -> dict:
+    """Calculate USA standard flat late fee + recurring overdue penalties and generate itemized timeline."""
+    import json
+    if as_of_date is None:
+        as_of_date = date.today()
+
+    grace_days = lease.grace_period_days if lease.grace_period_days is not None else 5
+    grace_cutoff_date = inv.due_date + timedelta(days=grace_days)
+
+    rent = inv.rent_charge or 0.0
+    util = inv.utilities_charge or 0.0
+    park = inv.parking_charge or 0.0
+    pet = inv.pet_charge or 0.0
+    base_charges = rent + util + park + pet
+
+    initial_fee_rate = safe_decrypt_float(lease.late_fee_amount, 50.0) or 50.0
+    recurring_fee_rate = safe_decrypt_float(getattr(lease, "recurring_late_fee_amount", None), 25.0) or 25.0
+    recurring_freq = (getattr(lease, "recurring_late_fee_frequency", None) or "WEEKLY").upper()
+
+    timeline = []
+    # 1. Base rent invoiced event
+    addon_sum = util + park + pet
+    desc_str = f"Monthly base rent (${rent:,.2f})"
+    if addon_sum > 0:
+        desc_str += f" + Add-on services (${addon_sum:,.2f})"
+
+    timeline.append({
+        "date": inv.due_date.isoformat(),
+        "type": "INVOICED",
+        "title": "Monthly Rent Due",
+        "description": desc_str,
+        "amount": round(base_charges, 2),
+        "running_total": round(base_charges, 2)
+    })
+
+    # If invoice is not past grace period or is already paid before grace date
+    if as_of_date <= grace_cutoff_date:
+        return {
+            "is_overdue": False,
+            "overdue_days": 0,
+            "initial_late_fee": 0.0,
+            "recurring_late_fee": 0.0,
+            "total_late_fee": 0.0,
+            "total_amount_due": round(base_charges, 2),
+            "grace_cutoff_date": grace_cutoff_date.isoformat(),
+            "timeline": timeline
+        }
+
+    # Past grace period -> Overdue!
+    days_past_grace = (as_of_date - grace_cutoff_date).days
+
+    # 2. Initial Flat Late Fee assessed on (grace_cutoff_date + 1 day)
+    initial_fee_date = grace_cutoff_date + timedelta(days=1)
+    initial_fee_applied = initial_fee_rate
+    current_total = base_charges + initial_fee_applied
+
+    timeline.append({
+        "date": initial_fee_date.isoformat(),
+        "type": "INITIAL_LATE_FEE",
+        "title": "Grace Period Expired - Initial Late Fee",
+        "description": f"Assessed automatically after {grace_days}-day grace period expired.",
+        "amount": round(initial_fee_applied, 2),
+        "running_total": round(current_total, 2)
+    })
+
+    # 3. Recurring Overdue Fees
+    recurring_fee_applied = 0.0
+    if recurring_fee_rate > 0 and recurring_freq != "NONE":
+        if recurring_freq == "WEEKLY":
+            weeks_past = days_past_grace // 7
+            for w in range(1, weeks_past + 1):
+                rec_date = initial_fee_date + timedelta(days=w * 7)
+                recurring_fee_applied += recurring_fee_rate
+                current_total += recurring_fee_rate
+                timeline.append({
+                    "date": rec_date.isoformat(),
+                    "type": "RECURRING_LATE_FEE",
+                    "title": f"Week {w} Overdue Penalty",
+                    "description": f"Assessed for continued non-payment (+{w * 7} days past grace cutoff).",
+                    "amount": round(recurring_fee_rate, 2),
+                    "running_total": round(current_total, 2)
+                })
+        elif recurring_freq == "DAILY":
+            for d in range(1, days_past_grace + 1):
+                rec_date = initial_fee_date + timedelta(days=d)
+                recurring_fee_applied += recurring_fee_rate
+                current_total += recurring_fee_rate
+                timeline.append({
+                    "date": rec_date.isoformat(),
+                    "type": "RECURRING_LATE_FEE",
+                    "title": f"Day {d} Overdue Penalty",
+                    "description": f"Daily overdue penalty assessed (${recurring_fee_rate:,.2f}/day).",
+                    "amount": round(recurring_fee_rate, 2),
+                    "running_total": round(current_total, 2)
+                })
+
+    total_late_fee = initial_fee_applied + recurring_fee_applied
+    return {
+        "is_overdue": True,
+        "overdue_days": days_past_grace,
+        "initial_late_fee": round(initial_fee_applied, 2),
+        "recurring_late_fee": round(recurring_fee_applied, 2),
+        "total_late_fee": round(total_late_fee, 2),
+        "total_amount_due": round(base_charges + total_late_fee, 2),
+        "grace_cutoff_date": grace_cutoff_date.isoformat(),
+        "timeline": timeline
+    }
+
+
+def send_rent_pre_due_warning_email(lease: Lease, inv: RentalLedger, days_remaining: int, grace_cutoff_date: date) -> bool:
+    from app.utils.encryption import safe_decrypt_field
+    from app.config import settings
+    tenant_email = safe_decrypt_field(lease.tenant_email)
+    if not tenant_email:
+        return False
+        
+    prop_name = lease.unit.property.name if (lease.unit and lease.unit.property) else "Rental Property"
+    unit_no = lease.unit.unit_number if lease.unit else "1"
+    unit_label = f"Apt {get_unit_display_number(unit_no)}" if unit_no not in ["Single Family", "Condo Unit"] else prop_name
+    
+    total_amount = (inv.rent_charge or 0.0) + (inv.utilities_charge or 0.0) + (inv.parking_charge or 0.0) + (inv.pet_charge or 0.0)
+    initial_fee = safe_decrypt_float(lease.late_fee_amount, 50.0) or 50.0
+    recurring_fee = safe_decrypt_float(getattr(lease, "recurring_late_fee_amount", None), 25.0) or 25.0
+    portal_url = f"{settings.FRONTEND_URL}/rental/login?redirect=/rental/dashboard"
+    
+    subject = f"Friendly Reminder: Rent Due Soon for {unit_label} - Avoid Late Fees"
+    body = f"""
+    <div style="font-size: 15px; line-height: 1.6; color: #374151;">
+      <h2 style="color: #1e3a8a; font-size: 20px; font-weight: bold; margin-top: 0; margin-bottom: 12px;">Rent Payment Reminder</h2>
+      <p style="margin: 0 0 12px;">Hello,</p>
+      <p style="margin: 0 0 16px;">This is a friendly reminder that your monthly rent payment for <strong>{unit_label} ({prop_name})</strong> is pending.</p>
+      
+      <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; margin: 20px 0;">
+        <table style="width: 100%; border-collapse: collapse;">
+          <tr>
+            <td style="padding: 6px 0; color: #64748b; font-size: 13px;">Current Balance:</td>
+            <td style="padding: 6px 0; font-weight: bold; color: #0f172a; text-align: right; font-size: 16px;">${total_amount:,.2f}</td>
+          </tr>
+          <tr>
+            <td style="padding: 6px 0; color: #64748b; font-size: 13px;">Grace Period Expiration:</td>
+            <td style="padding: 6px 0; font-weight: bold; color: #dc2626; text-align: right; font-size: 13px;">{grace_cutoff_date.strftime('%b %d, %Y')} ({days_remaining} day{'s' if days_remaining != 1 else ''} left)</td>
+          </tr>
+          <tr>
+            <td style="padding: 6px 0; color: #64748b; font-size: 13px;">Impending Late Penalty:</td>
+            <td style="padding: 6px 0; font-weight: bold; color: #dc2626; text-align: right; font-size: 13px;">+${initial_fee:,.2f} (plus ${recurring_fee:,.2f}/wk recurring)</td>
+          </tr>
+        </table>
+      </div>
+
+      <p style="margin: 0 0 24px;">Please submit payment before the grace period cutoff date to avoid automatic late fee assessment.</p>
+      <div style="text-align: center; margin: 24px 0;">
+        <a href="{portal_url}" style="background-color: #2563eb; color: #ffffff; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-weight: bold; display: inline-block;">Pay Rent Online</a>
+      </div>
+      <p style="font-size: 12px; color: #94a3b8; margin: 24px 0 0;">NestBloq Property Management Accounting</p>
+    </div>
+    """
+    wrapped = _wrap_in_responsive_layout(body, subtitle="Rental Property Management")
+    return send_email(tenant_email, subject, wrapped)
+
+
+def send_late_fee_assessed_email(lease: Lease, inv: RentalLedger, calc: dict) -> bool:
+    from app.utils.encryption import safe_decrypt_field
+    from app.config import settings
+    tenant_email = safe_decrypt_field(lease.tenant_email)
+    if not tenant_email:
+        return False
+        
+    prop_name = lease.unit.property.name if (lease.unit and lease.unit.property) else "Rental Property"
+    unit_no = lease.unit.unit_number if lease.unit else "1"
+    unit_label = f"Apt {get_unit_display_number(unit_no)}" if unit_no not in ["Single Family", "Condo Unit"] else prop_name
+    
+    total_due = calc.get("total_amount_due", inv.amount + inv.late_fee_applied)
+    initial_fee = calc.get("initial_late_fee", 50.0)
+    recurring_fee = calc.get("recurring_late_fee", 0.0)
+    portal_url = f"{settings.FRONTEND_URL}/rental/login?redirect=/rental/dashboard"
+    
+    recurring_row = f"<tr><td style='padding: 6px 0; color: #dc2626; font-size: 13px;'>Recurring Overdue Penalty:</td><td style='padding: 6px 0; font-weight: bold; color: #dc2626; text-align: right; font-size: 13px;'>+${recurring_fee:,.2f}</td></tr>" if recurring_fee > 0 else ""
+
+    subject = f"Notice of Late Fee Assessment: {unit_label}"
+    body = f"""
+    <div style="font-size: 15px; line-height: 1.6; color: #374151;">
+      <h2 style="color: #b91c1c; font-size: 20px; font-weight: bold; margin-top: 0; margin-bottom: 12px;">Notice of Late Fee Assessment</h2>
+      <p style="margin: 0 0 12px;">Hello,</p>
+      <p style="margin: 0 0 16px;">The grace period for your rent payment for <strong>{unit_label} ({prop_name})</strong> has expired without receipt of payment. In accordance with your lease agreement, a late fee penalty has been assessed to your account.</p>
+      
+      <div style="background-color: #fef2f2; border: 1px solid #fecaca; border-radius: 12px; padding: 16px; margin: 20px 0;">
+        <table style="width: 100%; border-collapse: collapse;">
+          <tr>
+            <td style="padding: 6px 0; color: #64748b; font-size: 13px;">Base Rent & Charges:</td>
+            <td style="padding: 6px 0; font-weight: bold; color: #0f172a; text-align: right; font-size: 13px;">${inv.amount:,.2f}</td>
+          </tr>
+          <tr>
+            <td style="padding: 6px 0; color: #dc2626; font-size: 13px;">Initial Flat Late Fee:</td>
+            <td style="padding: 6px 0; font-weight: bold; color: #dc2626; text-align: right; font-size: 13px;">+${initial_fee:,.2f}</td>
+          </tr>
+          {recurring_row}
+          <tr style="border-top: 1px solid #fca5a5;">
+            <td style="padding: 10px 0 4px; font-weight: bold; color: #991b1b; font-size: 14px;">Total Balance Due:</td>
+            <td style="padding: 10px 0 4px; font-weight: bold; color: #991b1b; text-align: right; font-size: 17px;">${total_due:,.2f}</td>
+          </tr>
+        </table>
+      </div>
+
+      <p style="margin: 0 0 24px;">Please submit payment immediately to avoid additional recurring overdue penalties.</p>
+      <div style="text-align: center; margin: 24px 0;">
+        <a href="{portal_url}" style="background-color: #dc2626; color: #ffffff; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-weight: bold; display: inline-block;">Review & Pay Balance</a>
+      </div>
+      <p style="font-size: 12px; color: #94a3b8; margin: 24px 0 0;">NestBloq Property Management Accounting</p>
+    </div>
+    """
+    wrapped = _wrap_in_responsive_layout(body, subtitle="Rental Property Management")
+    return send_email(tenant_email, subject, wrapped)
+
+
 def get_ledgers_by_lease(lease_id: int, db: Session) -> List[RentalLedger]:
+    import json
     unpaid_ledgers = db.query(RentalLedger).filter(
         RentalLedger.lease_id == lease_id,
         RentalLedger.status.in_(["UNPAID", "OVERDUE"])
@@ -1146,7 +1378,6 @@ def get_ledgers_by_lease(lease_id: int, db: Session) -> List[RentalLedger]:
             db.delete(extra)
         db.commit()
 
-    # Sync latest vehicle & pet authorized fees to unpaid ledgers
     lease = db.query(Lease).filter(Lease.lease_id == lease_id).first()
     if lease and unpaid_ledgers:
         from app.utils.encryption import safe_decrypt_field
@@ -1157,15 +1388,31 @@ def get_ledgers_by_lease(lease_id: int, db: Session) -> List[RentalLedger]:
         
         parking_fee = float(v_count * 25)
         pet_fee = float(p_count * 50)
+        today = date.today()
         
         for ldg in unpaid_ledgers:
             ldg.parking_charge = parking_fee
             ldg.pet_charge = pet_fee
             base_rent = ldg.rent_charge or 0.0
             util = ldg.utilities_charge or 0.0
-            maint = ldg.maintenance_charge or 0.0
-            late = ldg.late_fee_applied or 0.0
-            ldg.amount = base_rent + util + parking_fee + pet_fee + maint + late
+            
+            # Recalculate dynamic timeline and late fee breakdown
+            calc = calculate_invoice_overdue_and_timeline(ldg, lease, as_of_date=today)
+            if calc["is_overdue"]:
+                ldg.status = "OVERDUE"
+                ldg.initial_late_fee_applied = calc["initial_late_fee"]
+                ldg.recurring_late_fee_applied = calc["recurring_late_fee"]
+                ldg.late_fee_applied = calc["total_late_fee"]
+                ldg.overdue_days_count = calc["overdue_days"]
+                ldg.fee_breakdown_json = json.dumps(calc["timeline"])
+            else:
+                ldg.initial_late_fee_applied = 0.0
+                ldg.recurring_late_fee_applied = 0.0
+                ldg.late_fee_applied = 0.0
+                ldg.overdue_days_count = 0
+                ldg.fee_breakdown_json = json.dumps(calc["timeline"])
+
+            ldg.amount = base_rent + util + parking_fee + pet_fee
         db.commit()
         
     return db.query(RentalLedger).filter(RentalLedger.lease_id == lease_id).all()
@@ -1188,12 +1435,12 @@ def pay_rental_invoice(invoice_id: int, payment_method: str, db: Session) -> Ren
 # --- SCHEDULERS & ENGINE SIMULATIONS ---
 def generate_monthly_invoices(db: Session):
     """Simulates monthly invoicing on 1st of every month for active leases."""
+    import json
     active_leases = db.query(Lease).filter(Lease.status == "ACTIVE").all()
     today = date.today()
     invoices_created = 0
     
     for lease in active_leases:
-        # Check if an invoice for the current month already exists
         start_of_month = date(today.year, today.month, 1)
         end_of_month = (start_of_month + timedelta(days=32)).replace(day=1) - timedelta(days=1)
         
@@ -1204,12 +1451,20 @@ def generate_monthly_invoices(db: Session):
         ).first()
         
         if not exists:
-            # Create invoice with extra charges
-            rent = lease.rent_amount
-            util = lease.utilities_fee or 0.0
-            parking = lease.parking_fee or 0.0
-            pet = lease.pet_fee or 0.0
+            rent = safe_decrypt_float(lease.rent_amount) or 0.0
+            util = safe_decrypt_float(lease.utilities_fee) or 0.0
+            parking = safe_decrypt_float(lease.parking_fee) or 0.0
+            pet = safe_decrypt_float(lease.pet_fee) or 0.0
             total = rent + util + parking + pet
+
+            initial_timeline = [{
+                "date": start_of_month.isoformat(),
+                "type": "INVOICED",
+                "title": "Monthly Rent Due",
+                "description": f"Base rent (${rent:,.2f})",
+                "amount": round(total, 2),
+                "running_total": round(total, 2)
+            }]
 
             new_ledger = RentalLedger(
                 lease_id=lease.lease_id,
@@ -1220,6 +1475,11 @@ def generate_monthly_invoices(db: Session):
                 parking_charge=parking,
                 pet_charge=pet,
                 late_fee_applied=0.0,
+                initial_late_fee_applied=0.0,
+                recurring_late_fee_applied=0.0,
+                overdue_days_count=0,
+                fee_breakdown_json=json.dumps(initial_timeline),
+                reminder_email_sent=False,
                 status="UNPAID"
             )
             db.add(new_ledger)
@@ -1230,31 +1490,66 @@ def generate_monthly_invoices(db: Session):
 
 
 def apply_late_fees(db: Session):
-    """Check unpaid ledgers that are past their due_date + grace_period and apply late fee."""
+    """Check unpaid ledgers that are past their due_date + grace_period and apply USA-standard late fee + recurring penalty."""
+    import json
     today = date.today()
-    unpaid_invoices = db.query(RentalLedger).filter(RentalLedger.status == "UNPAID").all()
-    late_fees_applied = 0
+    unpaid_invoices = db.query(RentalLedger).filter(RentalLedger.status.in_(["UNPAID", "OVERDUE"])).all()
+    late_fees_applied_count = 0
     
     for inv in unpaid_invoices:
         lease = inv.lease
-        grace_date = inv.due_date + timedelta(days=lease.grace_period_days)
-        if today > grace_date:
+        if not lease:
+            continue
+            
+        calc = calculate_invoice_overdue_and_timeline(inv, lease, as_of_date=today)
+        if calc["is_overdue"]:
+            was_unpaid = inv.status == "UNPAID"
             inv.status = "OVERDUE"
+            inv.initial_late_fee_applied = calc["initial_late_fee"]
+            inv.recurring_late_fee_applied = calc["recurring_late_fee"]
+            inv.late_fee_applied = calc["total_late_fee"]
+            inv.overdue_days_count = calc["overdue_days"]
+            inv.fee_breakdown_json = json.dumps(calc["timeline"])
+            late_fees_applied_count += 1
             
-            # Apply late fee — late_fee_amount is stored encrypted, must decrypt first
-            fee = safe_decrypt_float(lease.late_fee_amount, 0.0)
-            if lease.late_fee_type == "PERCENTAGE":
-                fee = inv.amount * (fee / 100.0)
+            if was_unpaid:
+                send_late_fee_assessed_email(lease, inv, calc)
                 
-            inv.late_fee_applied = fee
-            late_fees_applied += 1
-            
     db.commit()
-    return late_fees_applied
+    return late_fees_applied_count
+
+
+def send_rent_pre_due_reminder_emails(db: Session):
+    """Scan unpaid invoices approaching grace period expiration and send warning reminder emails."""
+    today = date.today()
+    unpaid_invoices = db.query(RentalLedger).filter(
+        RentalLedger.status == "UNPAID",
+        RentalLedger.reminder_email_sent == False
+    ).all()
+    reminders_sent = 0
+    
+    for inv in unpaid_invoices:
+        lease = inv.lease
+        if not lease:
+            continue
+            
+        grace_days = lease.grace_period_days if lease.grace_period_days is not None else 5
+        grace_cutoff_date = inv.due_date + timedelta(days=grace_days)
+        
+        days_until_grace_end = (grace_cutoff_date - today).days
+        if 0 <= days_until_grace_end <= 3:
+            sent = send_rent_pre_due_warning_email(lease, inv, days_until_grace_end, grace_cutoff_date)
+            if sent:
+                inv.reminder_email_sent = True
+                reminders_sent += 1
+                
+    db.commit()
+    return reminders_sent
 
 
 def apply_late_fee_to_invoice(invoice_id: int, db: Session):
     """Force apply late fee to a specific unpaid/overdue invoice."""
+    import json
     inv = db.query(RentalLedger).filter(RentalLedger.invoice_id == invoice_id).first()
     if not inv:
         raise ValueError("Invoice not found.")
@@ -1265,14 +1560,19 @@ def apply_late_fee_to_invoice(invoice_id: int, db: Session):
     if not lease:
         raise ValueError("Associated lease not found.")
         
-    inv.status = "OVERDUE"
+    calc = calculate_invoice_overdue_and_timeline(inv, lease, as_of_date=date.today())
+    # If not overdue by date, force assessment with at least initial late fee
+    initial_fee = calc["initial_late_fee"] if calc["is_overdue"] else (safe_decrypt_float(lease.late_fee_amount, 50.0) or 50.0)
+    recurring_fee = calc["recurring_late_fee"] if calc["is_overdue"] else 0.0
+    total_fee = initial_fee + recurring_fee
     
-    # Calculate fee — late_fee_amount is stored encrypted, must decrypt first
-    fee = safe_decrypt_float(lease.late_fee_amount, 0.0)
-    if lease.late_fee_type == "PERCENTAGE":
-        fee = inv.amount * (fee / 100.0)
-        
-    inv.late_fee_applied = fee
+    inv.status = "OVERDUE"
+    inv.initial_late_fee_applied = initial_fee
+    inv.recurring_late_fee_applied = recurring_fee
+    inv.late_fee_applied = total_fee
+    inv.overdue_days_count = max(calc["overdue_days"], 1)
+    inv.fee_breakdown_json = json.dumps(calc["timeline"])
+    
     db.commit()
     db.refresh(inv)
     return inv
@@ -1280,6 +1580,7 @@ def apply_late_fee_to_invoice(invoice_id: int, db: Session):
 
 def revert_late_fee_from_invoice(invoice_id: int, db: Session):
     """Revert late fee from a specific overdue invoice and reset to UNPAID."""
+    import json
     inv = db.query(RentalLedger).filter(RentalLedger.invoice_id == invoice_id).first()
     if not inv:
         raise ValueError("Invoice not found.")
@@ -1288,6 +1589,21 @@ def revert_late_fee_from_invoice(invoice_id: int, db: Session):
         
     inv.status = "UNPAID"
     inv.late_fee_applied = 0.0
+    inv.initial_late_fee_applied = 0.0
+    inv.recurring_late_fee_applied = 0.0
+    inv.overdue_days_count = 0
+    
+    # Reset timeline to just base invoiced event
+    base_charges = (inv.rent_charge or 0.0) + (inv.utilities_charge or 0.0) + (inv.parking_charge or 0.0) + (inv.pet_charge or 0.0)
+    inv.fee_breakdown_json = json.dumps([{
+        "date": inv.due_date.isoformat(),
+        "type": "INVOICED",
+        "title": "Monthly Rent Due",
+        "description": f"Base rent (${inv.rent_charge:,.2f})",
+        "amount": round(base_charges, 2),
+        "running_total": round(base_charges, 2)
+    }])
+    
     db.commit()
     db.refresh(inv)
     return inv
@@ -1295,6 +1611,7 @@ def revert_late_fee_from_invoice(invoice_id: int, db: Session):
 
 def edit_late_fee_on_invoice(invoice_id: int, amount: float, db: Session):
     """Manually override the late fee amount on an invoice."""
+    import json
     inv = db.query(RentalLedger).filter(RentalLedger.invoice_id == invoice_id).first()
     if not inv:
         raise ValueError("Invoice not found.")
@@ -1304,8 +1621,33 @@ def edit_late_fee_on_invoice(invoice_id: int, amount: float, db: Session):
         raise ValueError("Late fee amount cannot be negative.")
 
     inv.late_fee_applied = amount
+    inv.initial_late_fee_applied = amount
+    inv.recurring_late_fee_applied = 0.0
     if amount > 0:
         inv.status = "OVERDUE"
+    else:
+        inv.status = "UNPAID"
+        
+    base_charges = (inv.rent_charge or 0.0) + (inv.utilities_charge or 0.0) + (inv.parking_charge or 0.0) + (inv.pet_charge or 0.0)
+    inv.fee_breakdown_json = json.dumps([
+        {
+            "date": inv.due_date.isoformat(),
+            "type": "INVOICED",
+            "title": "Monthly Rent Due",
+            "description": f"Base rent (${inv.rent_charge:,.2f})",
+            "amount": round(base_charges, 2),
+            "running_total": round(base_charges, 2)
+        },
+        {
+            "date": date.today().isoformat(),
+            "type": "MANUAL_ADJUSTMENT",
+            "title": "Manual Late Fee Adjustment",
+            "description": f"Adjusted by property manager.",
+            "amount": round(amount, 2),
+            "running_total": round(base_charges + amount, 2)
+        }
+    ])
+    
     db.commit()
     db.refresh(inv)
     return inv
@@ -1426,8 +1768,6 @@ def pay_maintenance_request(request_id: int, payment_method: str, db: Session) -
         raise ValueError("No cost associated with this maintenance request to pay.")
 
     import secrets
-    from datetime import date
-    from app.models.rental.rental_ledger import RentalLedger
     
     txn_id = f"txn_{secrets.token_hex(8)}"
     req.payment_status = "PAID"
@@ -1435,21 +1775,6 @@ def pay_maintenance_request(request_id: int, payment_method: str, db: Session) -
     req.transaction_id = txn_id
     req.status = "COMPLETED"
     
-    # Log in RentalLedger
-    ledger_entry = RentalLedger(
-        lease_id=req.lease_id,
-        due_date=date.today(),
-        amount=req.estimated_cost,
-        rent_charge=0.0,
-        utilities_charge=0.0,
-        parking_charge=0.0,
-        pet_charge=0.0,
-        maintenance_charge=req.estimated_cost,
-        status="PAID",
-        payment_method=payment_method,
-        transaction_id=txn_id
-    )
-    db.add(ledger_entry)
     db.commit()
     db.refresh(req)
     return req
@@ -1615,9 +1940,8 @@ def landlord_approve_vehicle_pet_change(lease_id: int, landlord_id: int, db: Ses
         ldg.pet_charge = total_pet_fee
         base_rent = ldg.rent_charge or 0.0
         util = ldg.utilities_charge or 0.0
-        maint = ldg.maintenance_charge or 0.0
         late = ldg.late_fee_applied or 0.0
-        ldg.amount = base_rent + util + total_parking_fee + total_pet_fee + maint + late
+        ldg.amount = base_rent + util + total_parking_fee + total_pet_fee + late
 
     db.commit()
     db.refresh(lease)
@@ -1704,6 +2028,118 @@ def landlord_reject_vehicle_pet_change(lease_id: int, landlord_id: int, notes: s
         print(f"[email] Failed to send tenant rejection email: {e}")
 
     return decrypt_lease_obj(lease)
+
+
+# --- RENTAL TRANSACTIONS UNIFIED LOGS ---
+def get_rental_transactions(user_id: int, role_name: str, db: Session) -> List[dict]:
+    """Retrieve unified transaction logs for Rent Invoices, Maintenance Payments, etc."""
+    from app.utils.encryption import safe_decrypt_field
+    transactions = []
+    
+    # 1. Paid Rent Ledgers
+    ledger_query = db.query(RentalLedger).filter(RentalLedger.status == "PAID")
+    if role_name == "landlord":
+        ledger_query = ledger_query.join(Lease).filter(Lease.landlord_id == user_id)
+    elif role_name == "tenant":
+        tenant_user = db.query(RentalUser).filter(RentalUser.user_id == user_id).first()
+        tenant_email = tenant_user.email_id.lower().strip() if tenant_user else ""
+        ledger_query = ledger_query.join(Lease).filter(
+            (Lease.tenant_id == user_id) | 
+            (Lease.tenant_email == tenant_email)
+        )
+    
+    paid_ledgers = ledger_query.all()
+    for ldg in paid_ledgers:
+        lease = ldg.lease
+        tenant_name = "Tenant"
+        prop_name = "Property"
+        unit_name = "Unit"
+        if lease:
+            tenant_name = safe_decrypt_field(lease.tenant_name) or (lease.tenant.full_name if lease.tenant else "Tenant")
+            if lease.unit:
+                unit_name = f"{'Apt' if lease.unit.property_type == 'condo' else 'Unit'} {lease.unit.unit_number}"
+                if lease.unit.property:
+                    prop_name = lease.unit.property.name
+                    
+        total_amt = (ldg.amount or 0.0) + (ldg.late_fee_applied or 0.0)
+        pay_dt = ldg.created_date.isoformat() if ldg.created_date else str(ldg.due_date)
+        
+        transactions.append({
+            "transaction_id": ldg.transaction_id or f"txn_rent_{ldg.invoice_id}",
+            "payment_id": ldg.invoice_id,
+            "category": "RENT",
+            "purpose": "Monthly Rent",
+            "item_title": f"Monthly Rent Invoice #{ldg.invoice_id} ({unit_name})",
+            "reference_id": ldg.invoice_id,
+            "paid_by": tenant_name,
+            "payer_role": "Tenant",
+            "property_name": prop_name,
+            "unit_number": unit_name,
+            "payment_date": pay_dt,
+            "payment_method": ldg.payment_method or "ACH",
+            "amount": round(total_amt, 2),
+            "status": "COMPLETED",
+            "breakdown": {
+                "rent": ldg.rent_charge or 0.0,
+                "parking": ldg.parking_charge or 0.0,
+                "pet": ldg.pet_charge or 0.0,
+                "utilities": ldg.utilities_charge or 0.0,
+                "late_fee": ldg.late_fee_applied or 0.0
+            }
+        })
+        
+    # 2. Paid Maintenance Requests
+    maint_query = db.query(RentalMaintenanceRequest).filter(RentalMaintenanceRequest.payment_status == "PAID")
+    if role_name == "landlord":
+        maint_query = maint_query.join(Lease).filter(Lease.landlord_id == user_id)
+    elif role_name == "tenant":
+        tenant_user = db.query(RentalUser).filter(RentalUser.user_id == user_id).first()
+        tenant_email = tenant_user.email_id.lower().strip() if tenant_user else ""
+        maint_query = maint_query.join(Lease).filter(
+            (Lease.tenant_id == user_id) | 
+            (Lease.tenant_email == tenant_email)
+        )
+        
+    paid_maint = maint_query.all()
+    for req in paid_maint:
+        lease = req.lease
+        tenant_name = "Tenant"
+        prop_name = "Property"
+        unit_name = "Unit"
+        if lease:
+            tenant_name = safe_decrypt_field(lease.tenant_name) or (lease.tenant.full_name if lease.tenant else "Tenant")
+            if lease.unit:
+                unit_name = f"{'Apt' if lease.unit.property_type == 'condo' else 'Unit'} {lease.unit.unit_number}"
+                if lease.unit.property:
+                    prop_name = lease.unit.property.name
+                    
+        pay_dt = req.created_date.isoformat() if hasattr(req, 'created_date') and req.created_date else str(date.today())
+        
+        transactions.append({
+            "transaction_id": req.transaction_id or f"txn_maint_{req.request_id}",
+            "payment_id": req.request_id,
+            "category": "MAINTENANCE",
+            "purpose": "Maintenance Repair",
+            "item_title": f"Maintenance: {req.title} ({unit_name})",
+            "reference_id": req.request_id,
+            "paid_by": tenant_name,
+            "payer_role": "Tenant",
+            "property_name": prop_name,
+            "unit_number": unit_name,
+            "payment_date": pay_dt,
+            "payment_method": req.payment_method or "ACH",
+            "amount": round(req.estimated_cost or 0.0, 2),
+            "status": "COMPLETED",
+            "breakdown": {
+                "repair_cost": req.estimated_cost or 0.0,
+                "scope": req.scope or "INTERNAL"
+            }
+        })
+        
+    # Sort by payment_date descending
+    transactions.sort(key=lambda x: str(x.get("payment_date", "")), reverse=True)
+    return transactions
+
 
 
 

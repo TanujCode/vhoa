@@ -55,6 +55,15 @@ def run_late_fee_simulation(
     return {"message": f"Late fee simulation complete. Applied late fees to {fees_count} overdue invoices."}
 
 
+@router.post("/simulate/send-reminders", status_code=200)
+def run_due_reminder_simulation(
+    db: Session = Depends(get_rental_db),
+    current_user: RentalUser = Depends(require_rental_role("super_admin", "landlord"))
+):
+    reminders_count = rental_service.send_rent_pre_due_reminder_emails(db)
+    return {"message": f"Pre-due reminder process complete. Sent {reminders_count} email notifications to tenants."}
+
+
 @router.post("/ledgers/{invoice_id}/apply-late-fee", response_model=RentalLedgerOut)
 def apply_single_late_fee(
     invoice_id: int,
@@ -97,4 +106,15 @@ def edit_late_fee(
         return ledger
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.get("/transactions")
+def list_rental_transactions(
+    db: Session = Depends(get_rental_db),
+    current_user: RentalUser = Depends(get_verified_rental_user)
+):
+    """Unified transaction logs for Rent Invoices, Maintenance Payments, etc."""
+    role_name = (current_user.role.role_name if current_user.role else "tenant").lower()
+    return rental_service.get_rental_transactions(current_user.user_id, role_name, db)
+
 

@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form';
 import { Mail, Lock, User, Eye, EyeOff, Phone, RefreshCw } from 'lucide-react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import AuthLayout from '../../components/layout/AuthLayout';
+import CaptchaBox from '../../components/common/CaptchaBox';
 import API from '../../services/api';
 import { useGoogleLogin } from '@react-oauth/google';
 import { validateEmail } from '../../utils/emailValidation';
@@ -382,51 +383,17 @@ export default function RegisterPage() {
           )}
         </div>
 
-        {/* Compact Inline Captcha Section */}
-        <div>
-          <div className="p-2 bg-slate-50 border border-gray-200 rounded-lg flex items-center justify-between gap-3">
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-bold text-gray-500 tracking-wider">CAPTCHA:</span>
-              <span className="text-sm font-bold bg-white border border-gray-300 px-2 py-1 rounded text-yellow-600 font-mono tracking-widest select-none">
-                {loadingCaptcha ? '...' : captcha.question}
-              </span>
-              <button
-                type="button"
-                onClick={fetchCaptcha}
-                disabled={refreshing}
-                className="p-1 bg-slate-100 hover:bg-blue-50 active:scale-95 rounded transition-all duration-150 text-slate-400 hover:text-blue-500 disabled:opacity-60 disabled:cursor-not-allowed"
-                title="Refresh Captcha"
-              >
-                <RefreshCw
-                  size={12}
-                  className={`transition-transform duration-500 ${refreshing ? 'animate-spin text-blue-500' : 'hover:rotate-180'}`}
-                />
-              </button>
-            </div>
-            <div className="flex items-center gap-1.5 w-24">
-              <input
-                type="text"
-                {...register('captchaAnswer', { 
-                  required: 'Answer is required',
-                  pattern: {
-                    value: /^[0-9]+$/,
-                    message: 'Numbers only'
-                  }
-                })}
-                onKeyPress={(e) => {
-                  if (!/[0-9]/.test(e.key)) {
-                    e.preventDefault();
-                  }
-                }}
-                placeholder="Result"
-                className="w-full bg-white border border-gray-300 rounded-lg px-2 py-1 text-xs text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-600 font-mono text-center font-bold"
-              />
-            </div>
-          </div>
-          {errors.captchaAnswer && (
-            <p className="text-red-500 text-2xs mt-0.5 ml-1">{errors.captchaAnswer.message}</p>
-          )}
-        </div>
+        {/* Anti-Bot Security Verification */}
+        <CaptchaBox
+          question={captcha.question}
+          loading={loadingCaptcha}
+          refreshing={refreshing}
+          onRefresh={fetchCaptcha}
+          register={register}
+          error={errors.captchaAnswer}
+          label="ENTER CAPTCHA"
+          helperText="Solve the calculation in the box above."
+        />
 
         <button
           type="submit"

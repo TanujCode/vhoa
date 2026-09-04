@@ -211,6 +211,8 @@ class LeaseCreate(BaseModel):
     grace_period_days: int = 5
     late_fee_type: str = "FLAT"
     late_fee_amount: float = 50.0
+    recurring_late_fee_amount: float = 25.0
+    recurring_late_fee_frequency: str = "WEEKLY"
     lease_agreement_text: Optional[str] = None
     utilities_fee: float = 0.0
     parking_fee: float = 0.0
@@ -230,6 +232,8 @@ class LeaseOut(BaseModel):
     grace_period_days: int
     late_fee_type: str
     late_fee_amount: float
+    recurring_late_fee_amount: Optional[float] = 0.0
+    recurring_late_fee_frequency: Optional[str] = "WEEKLY"
     status: str
     lease_agreement_text: Optional[str] = None
     landlord_signature: Optional[str] = None
@@ -339,6 +343,11 @@ class RentalLedgerOut(BaseModel):
     due_date: date
     amount: float
     late_fee_applied: float
+    initial_late_fee_applied: Optional[float] = 0.0
+    recurring_late_fee_applied: Optional[float] = 0.0
+    overdue_days_count: Optional[int] = 0
+    fee_breakdown_json: Optional[str] = None
+    reminder_email_sent: Optional[bool] = False
     rent_charge: float
     utilities_charge: float
     parking_charge: float

@@ -30,7 +30,7 @@ const RentalSidebar = ({ activePage, setActivePage, isOpen, setIsOpen, user, pro
     { id: 'properties_hub', label: 'All Properties & Apartments', icon: Globe },
     { id: 'leases_hub', label: 'Lease Agreements', icon: FileText },
     { id: 'tenants_hub', label: 'Tenants Directory', icon: Users },
-    { id: 'rent_ledger', label: 'Payments Ledger', icon: CreditCard },
+    { id: 'rent_ledger', label: 'Payments Hub', icon: CreditCard },
     { id: 'servicereq', label: 'Maintenance Desk', icon: Wrench },
     { id: 'vendors_hub', label: 'Contractors / Vendors', icon: Truck },
     { id: 'reports', label: 'Reports', icon: BarChart2 },
@@ -43,7 +43,7 @@ const RentalSidebar = ({ activePage, setActivePage, isOpen, setIsOpen, user, pro
     { id: 'leases_hub', label: 'Lease Agreements', icon: FileText },
     { id: 'tenants_hub', label: 'Tenants', icon: Users },
 
-    { id: 'rent_ledger', label: 'Payments Ledger', icon: CreditCard },
+    { id: 'rent_ledger', label: 'Payments Hub', icon: CreditCard },
     { id: 'servicereq', label: 'Maintenance Desk', icon: Wrench },
     { id: 'vendors_hub', label: 'Contractors / Vendors', icon: Truck },
     { id: 'reports', label: 'Reports', icon: BarChart2 },
@@ -53,7 +53,7 @@ const RentalSidebar = ({ activePage, setActivePage, isOpen, setIsOpen, user, pro
   const tenantNavItems = [
     { id: 'dashboard', label: 'My Rental Portal', icon: Home },
     { id: 'leases_hub', label: 'My Lease Agreement', icon: FileText },
-    { id: 'rent_ledger', label: 'Pay Rent Ledger', icon: CreditCard },
+    { id: 'rent_ledger', label: 'Payments & Ledger', icon: CreditCard },
     { id: 'servicereq', label: 'Maintenance Request', icon: Wrench },
   ];
 

@@ -208,33 +208,33 @@ const CondoForgotPassword = () => {
             </div>
 
             {/* Captcha Section */}
-            <div className="p-4 bg-slate-50 border border-gray-200 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="p-3 sm:p-4 bg-slate-50 border border-gray-200 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
               <div className="flex-1">
-                <label className="block text-xs font-bold text-gray-700 tracking-wider mb-2">CAPTCHA *</label>
-                <div className="flex items-center gap-3">
-                  <span className="text-xl font-bold bg-white border border-gray-300 px-4 py-2 rounded-xl text-yellow-600 font-mono tracking-widest select-none">
+                <label className="block text-xs font-bold text-gray-700 tracking-wider mb-1.5">CAPTCHA *</label>
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <span className="text-base sm:text-xl font-bold bg-white border border-gray-300 px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl text-yellow-600 font-mono tracking-widest select-none shadow-sm">
                     {loadingCaptcha ? '...' : captcha.question}
                   </span>
                   <button
                     type="button"
                     onClick={fetchCaptcha}
                     disabled={refreshing}
-                    className="p-2 text-gray-500 hover:text-blue-600 hover:bg-gray-100 rounded-xl transition duration-150 cursor-pointer disabled:opacity-50"
+                    className="p-1.5 sm:p-2 text-gray-500 hover:text-blue-600 hover:bg-gray-100 rounded-xl transition duration-150 cursor-pointer disabled:opacity-50"
                     title="Refresh CAPTCHA"
                   >
-                    <RefreshCw size={16} className={refreshing ? "animate-spin" : ""} />
+                    <RefreshCw size={15} className={refreshing ? "animate-spin text-blue-500" : ""} />
                   </button>
                 </div>
               </div>
               <div className="w-full sm:w-32">
-                <label className="block text-xs font-bold text-gray-700 tracking-wider mb-2">ANSWER *</label>
+                <label className="block text-xs font-bold text-gray-700 tracking-wider mb-1.5">ANSWER *</label>
                 <input
                   type="text"
                   value={captchaAnswer}
                   onChange={(e) => setCaptchaAnswer(e.target.value)}
                   placeholder="Result"
                   required
-                  className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none text-sm text-center font-bold text-gray-950 bg-white"
+                  className="w-full px-3 py-1.5 sm:px-4 sm:py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none text-sm text-center font-bold text-gray-955 bg-white shadow-sm"
                 />
               </div>
             </div>
