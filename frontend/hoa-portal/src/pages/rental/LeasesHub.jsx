@@ -41,6 +41,12 @@ const INITIAL_RULES = [
 
 const INITIAL_ATTACHMENTS = [];
 
+const DOC_TYPE_LABELS = {
+  PAY_SLIP: "Pay Slip / Income Proof",
+  DRIVING_LICENSE: "Driving License / National ID",
+  ADDRESS_PROOF: "Notice/Payment Address Proof"
+};
+
 export default function LeasesHub({ user, selectedPropertyFilterId = 'all', initialShowCreate = false, onLeaseCreated }) {
   const isLandlord = user?.role === 'landlord' || user?.role_name === 'landlord' || user?.role_id === 1;
 
@@ -63,7 +69,6 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
   const [uploadedDocs, setUploadedDocs] = useState([]); // Array of { document_id, doc_type, original_name }
   const [uploadingDoc, setUploadingDoc] = useState(null); // 'PAY_SLIP' | 'DRIVING_LICENSE' etc.
   const [docUploadError, setDocUploadError] = useState(''); // Inline upload error (non-blocking)
-  const [formError, setFormError] = useState(''); // Inline submit validation error (non-blocking)
   const [tenantHasParking, setTenantHasParking] = useState(false);
   const [tenantParkingCarsCount, setTenantParkingCarsCount] = useState(1);
   const [tenantVehicles, setTenantVehicles] = useState([{ plate: '', state: 'AL' }]);
@@ -73,6 +78,8 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
   const [tenantPets, setTenantPets] = useState([{ type: 'Dog' }]);
   const [numOccupants, setNumOccupants] = useState(1);
   const [numMinors, setNumMinors] = useState(0);
+  const [previewDoc, setPreviewDoc] = useState(null); // { url, title, originalName, isPdf, isImage }
+  const loadedLeaseIdRef = useRef(null);
 
 
   const getLeaseSeqNum = (lease) => {
@@ -1043,77 +1050,86 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
 
   useEffect(() => {
     if (selectedLease) {
+      const isNewLease = loadedLeaseIdRef.current !== selectedLease.lease_id;
+
       if (selectedLease.landlord_signature && !selectedLease.co_landlord_signature) {
         setSigningAsRole('co_landlord');
       } else {
         setSigningAsRole('landlord');
       }
-      setTenantDob(selectedLease.tenant_dob || '');
-      setTenantCurrentAddress(selectedLease.tenant_current_address || '');
-      setTenantEmergencyContact(selectedLease.tenant_emergency_contact || '');
-      setTenantEmergencyPhone(selectedLease.tenant_emergency_phone || '');
-      setTenantSignatureText(selectedLease.tenant_signature || '');
-      setNumOccupants(selectedLease.num_occupants || 1);
-      setNumMinors(selectedLease.num_minors || 0);
 
       setUploadedDocs(selectedLease.documents || []);
-      setTenantOnboardingStep(1);
-      setTenantAgreeTerms(false);
 
-      const hasPark = parseFloat(selectedLease.parking_fee || 0) > 0;
-      setTenantHasParking(hasPark);
-      const carCount = hasPark ? Math.round(parseFloat(selectedLease.parking_fee) / 25) : 1;
-      const safeCarCount = carCount > 0 ? carCount : 1;
-      setTenantParkingCarsCount(safeCarCount);
-      
-      const parsedVehicles = [];
-      if (selectedLease.vehicle_details) {
-        const parts = selectedLease.vehicle_details.split(';');
-        parts.forEach(part => {
-          const match = part.match(/Car \d+:\s*(.*?)\s*\(State:\s*(.*?)\)/i);
-          if (match && match[1]) {
-            parsedVehicles.push({
-              plate: match[1] === 'N/A' ? '' : match[1].trim(),
-              state: match[2] ? match[2].trim() : 'AL'
-            });
-          } else {
-            const simplePart = part.trim();
-            if (simplePart) {
-              parsedVehicles.push({ plate: simplePart, state: 'AL' });
+      if (isNewLease) {
+        loadedLeaseIdRef.current = selectedLease.lease_id;
+        setTenantDob(selectedLease.tenant_dob || '');
+        setTenantCurrentAddress(selectedLease.tenant_current_address || '');
+        setTenantEmergencyContact(selectedLease.tenant_emergency_contact || '');
+        setTenantEmergencyPhone(selectedLease.tenant_emergency_phone || '');
+        setTenantSignatureText(selectedLease.tenant_signature || '');
+        setNumOccupants(selectedLease.num_occupants || 1);
+        setNumMinors(selectedLease.num_minors || 0);
+
+        setTenantOnboardingStep(1);
+        setTenantAgreeTerms(false);
+
+        const hasPark = parseFloat(selectedLease.parking_fee || 0) > 0;
+        setTenantHasParking(hasPark);
+        const carCount = hasPark ? Math.round(parseFloat(selectedLease.parking_fee) / 25) : 1;
+        const safeCarCount = carCount > 0 ? carCount : 1;
+        setTenantParkingCarsCount(safeCarCount);
+        
+        const parsedVehicles = [];
+        if (selectedLease.vehicle_details) {
+          const parts = selectedLease.vehicle_details.split(';');
+          parts.forEach(part => {
+            const match = part.match(/Car \d+:\s*(.*?)\s*\(State:\s*(.*?)\)/i);
+            if (match && match[1]) {
+              parsedVehicles.push({
+                plate: match[1] === 'N/A' ? '' : match[1].trim(),
+                state: match[2] ? match[2].trim() : 'AL'
+              });
+            } else {
+              const simplePart = part.trim();
+              if (simplePart) {
+                parsedVehicles.push({ plate: simplePart, state: 'AL' });
+              }
             }
-          }
-        });
-      }
-      while (parsedVehicles.length < safeCarCount) {
-        parsedVehicles.push({ plate: '', state: 'AL' });
-      }
-      setTenantVehicles(parsedVehicles.slice(0, safeCarCount));
+          });
+        }
+        while (parsedVehicles.length < safeCarCount) {
+          parsedVehicles.push({ plate: '', state: 'AL' });
+        }
+        setTenantVehicles(parsedVehicles.slice(0, safeCarCount));
 
-      const hasPetsVal = parseFloat(selectedLease.pet_fee || 0) > 0;
-      setTenantHasPets(hasPetsVal);
-      const petCount = hasPetsVal ? Math.round(parseFloat(selectedLease.pet_fee) / 50) : 1;
-      const safePetCount = petCount > 0 ? petCount : 1;
-      setTenantPetsCount(safePetCount);
-      
-      const parsedPets = [];
-      if (selectedLease.pet_details) {
-        const parts = selectedLease.pet_details.split(';');
-        parts.forEach(part => {
-          const match = part.match(/Pet \d+:\s*(.*)/i);
-          if (match && match[1]) {
-            parsedPets.push({ type: match[1].trim() });
-          } else if (part.trim()) {
-            parsedPets.push({ type: part.trim() });
-          }
-        });
+        const hasPetsVal = parseFloat(selectedLease.pet_fee || 0) > 0;
+        setTenantHasPets(hasPetsVal);
+        const petCount = hasPetsVal ? Math.round(parseFloat(selectedLease.pet_fee) / 50) : 1;
+        const safePetCount = petCount > 0 ? petCount : 1;
+        setTenantPetsCount(safePetCount);
+        
+        const parsedPets = [];
+        if (selectedLease.pet_details) {
+          const parts = selectedLease.pet_details.split(';');
+          parts.forEach(part => {
+            const match = part.match(/Pet \d+:\s*(.*)/i);
+            if (match && match[1]) {
+              parsedPets.push({ type: match[1].trim() });
+            } else if (part.trim()) {
+              parsedPets.push({ type: part.trim() });
+            }
+          });
+        }
+        while (parsedPets.length < safePetCount) {
+          parsedPets.push({ type: 'Dog' });
+        }
+        setTenantPets(parsedPets.slice(0, safePetCount));
+        setTenantPetDetails(selectedLease.pet_fee ? 'Dog' : 'Dog');
       }
-      while (parsedPets.length < safePetCount) {
-        parsedPets.push({ type: 'Dog' });
-      }
-      setTenantPets(parsedPets.slice(0, safePetCount));
-      setTenantPetDetails(selectedLease.pet_fee ? 'Dog' : 'Dog');
+    } else {
+      loadedLeaseIdRef.current = null;
     }
-  }, [selectedLease]);
+  }, [selectedLease?.lease_id]);
 
   async function fetchLeases(isSilent = false) {
     try {
@@ -1321,14 +1337,26 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
   }
 
   // --- NEW WORKFLOW API HANDLERS ---
+  const handleClosePreview = () => {
+    if (previewDoc?.url) {
+      window.URL.revokeObjectURL(previewDoc.url);
+    }
+    setPreviewDoc(null);
+  };
+
   async function handleTenantDocUpload(e, docType) {
-    const file = e.target.files[0];
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    const file = e.target.files?.[0];
     if (!file) return;
     
     // Size check
     if (file.size > 10 * 1024 * 1024) {
       setDocUploadError("File size exceeds 10MB limit. Max allowed is 10MB.");
       setTimeout(() => setDocUploadError(''), 4000);
+      if (e.target) e.target.value = '';
       return;
     }
     
@@ -1337,6 +1365,7 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
     if (!allowed.includes(file.type)) {
       setDocUploadError("Invalid file format. Please upload PDF, JPG, PNG or WEBP.");
       setTimeout(() => setDocUploadError(''), 4000);
+      if (e.target) e.target.value = '';
       return;
     }
 
@@ -1348,20 +1377,31 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
       const res = await API.post(`/rental/leases/${selectedLease.lease_id}/documents?doc_type=${docType}`, formData, {
         headers: { "Content-Type": "multipart/form-data" }
       });
-      // No blocking alert — uploaded status shows inline with green ✓ text
-      setUploadedDocs(prev => [...prev, {
+      const newDocItem = {
         document_id: res.data.document_id,
         doc_type: docType,
         original_name: file.name
-      }]);
+      };
+      setUploadedDocs(prev => [...prev.filter(d => d.doc_type !== docType), newDocItem]);
+      setSelectedLease(prev => {
+        if (!prev) return prev;
+        const currentDocs = prev.documents || [];
+        return {
+          ...prev,
+          documents: [...currentDocs.filter(d => d.doc_type !== docType), newDocItem]
+        };
+      });
+      toast.success(`${DOC_TYPE_LABELS[docType] || 'Document'} attached successfully!`);
     } catch (err) {
-      // Use console + inline — avoid window.alert which closes the modal
-      const errMsg = err.response?.data?.detail || "Failed to upload document.";
-      console.error("Doc upload error:", errMsg);
+      const errMsg = err.response?.data?.detail || err.message || "Failed to upload document.";
+      console.error("Doc upload error:", err);
       setDocUploadError(errMsg);
       setTimeout(() => setDocUploadError(''), 4000);
     } finally {
       setUploadingDoc(null);
+      if (e?.target) {
+        e.target.value = '';
+      }
     }
   }
 
@@ -1381,12 +1421,15 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
     }
   }
 
-  async function handleViewDoc(docId, originalName) {
+  async function handleViewDoc(docId, originalName, docTitle = "Document") {
     try {
-      const res = await API.get(`/rental/leases/${selectedLease.lease_id}/documents/${docId}/download`, { responseType: 'blob' });
+      const res = await API.get(`/rental/leases/${selectedLease.lease_id}/documents/${docId}/download?preview=true`, { responseType: 'blob' });
       let contentType = 'application/octet-stream';
       const ext = originalName.split('.').pop().toLowerCase();
-      if (ext === 'pdf') {
+      const isPdf = ext === 'pdf';
+      const isImage = ['jpg', 'jpeg', 'png', 'webp'].includes(ext);
+
+      if (isPdf) {
         contentType = 'application/pdf';
       } else if (['jpg', 'jpeg'].includes(ext)) {
         contentType = 'image/jpeg';
@@ -1398,29 +1441,59 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
       
       const file = new Blob([res.data], { type: contentType });
       const url = window.URL.createObjectURL(file);
-      window.open(url, '_blank');
+      setPreviewDoc({ url, title: docTitle, originalName, isPdf, isImage });
     } catch (err) {
-      toast.error("Failed to view document.");
+      toast.error("Failed to preview document.");
     }
   }
 
-  async function handleRemoveDoc(docId, docType) {
-    if (!window.confirm("Are you sure you want to remove this document?")) return;
-    try {
-      await API.delete(`/rental/leases/${selectedLease.lease_id}/documents/${docId}`);
-      toast.success("Document removed successfully!");
-      setUploadedDocs(prev => prev.filter(d => d.document_id !== docId));
-    } catch (err) {
-      toast.error(err.response?.data?.detail || "Failed to remove document.");
-    }
+  function handleRemoveDoc(docId, docType) {
+    const docLabel = DOC_TYPE_LABELS[docType] || "Document";
+    setConfirmConfig({
+      isOpen: true,
+      title: "Remove Document",
+      message: `Are you sure you want to remove "${docLabel}"? You will need to upload a valid file before submitting the lease.`,
+      confirmText: "Remove Document",
+      cancelText: "Cancel",
+      type: "danger",
+      onConfirm: async () => {
+        try {
+          await API.delete(`/rental/leases/${selectedLease.lease_id}/documents/${docId}`);
+          toast.success(`${docLabel} removed successfully!`);
+          setUploadedDocs(prev => prev.filter(d => d.document_id !== docId && d.doc_type !== docType));
+          setSelectedLease(prev => {
+            if (!prev) return prev;
+            const currentDocs = prev.documents || [];
+            return {
+              ...prev,
+              documents: currentDocs.filter(d => d.document_id !== docId && d.doc_type !== docType)
+            };
+          });
+        } catch (err) {
+          toast.error(err.response?.data?.detail || "Failed to remove document.");
+        }
+      }
+    });
   }
 
   async function handleTenantOnboardingSubmit(e) {
     if (e) e.preventDefault();
     
+    const showCenterAlert = (title, message) => {
+      setConfirmConfig({
+        isOpen: true,
+        title: title,
+        message: message,
+        confirmText: "Understood",
+        type: "warning",
+        singleButton: true,
+        onConfirm: () => {}
+      });
+    };
+
     // Validate Step 2 details
     if (!tenantDob) {
-      toast.error("Please enter your date of birth.");
+      showCenterAlert("Date of Birth Required", "Please enter your date of birth.");
       return;
     }
     
@@ -1430,23 +1503,23 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
     const ageDate = new Date(ageDiffMs);
     const age = Math.abs(ageDate.getUTCFullYear() - 1970);
     if (age < 18) {
-      toast.error("You must be 18 years or older to sign a lease.");
+      showCenterAlert("Age Requirement (18+)", "You must be 18 years or older to sign a lease.");
       return;
     }
 
     if (!tenantCurrentAddress.trim() || tenantCurrentAddress.length < 10) {
-      toast.error("Please enter a valid current address (min 10 chars).");
+      showCenterAlert("Current Address Required", "Please enter a valid current physical address (min 10 characters).");
       return;
     }
 
     if (!tenantEmergencyContact.trim() || !/^[a-zA-Z\s.-]{2,50}$/.test(tenantEmergencyContact.trim())) {
-      toast.error("Please enter a valid emergency contact name (letters only).");
+      showCenterAlert("Emergency Contact Required", "Please enter a valid emergency contact name (letters only, 2–50 characters).");
       return;
     }
 
     const cleanedPhone = tenantEmergencyPhone.replace(/\D/g, '');
     if (!cleanedPhone || cleanedPhone.length !== 10) {
-      toast.error("Please enter a valid 10-digit US emergency phone number.");
+      showCenterAlert("Emergency Phone Required", "Please enter a valid 10-digit US emergency phone number.");
       return;
     }
 
@@ -1454,19 +1527,18 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
     const requiredTypes = ["PAY_SLIP", "DRIVING_LICENSE", "ADDRESS_PROOF"];
     const missing = requiredTypes.filter(type => !uploadedDocs.some(d => d.doc_type === type));
     if (missing.length > 0) {
-      const labels = { PAY_SLIP: "Pay Slip", DRIVING_LICENSE: "Driving License / ID", ADDRESS_PROOF: "Address Proof" };
-      toast.error(`Please upload: ${missing.map(m => labels[m]).join(", ")}`);
+      showCenterAlert("Required Documents Missing", `Please upload required documents: ${missing.map(m => DOC_TYPE_LABELS[m] || m).join(", ")}`);
       return;
     }
 
     // Step 3 validation (Signature)
     if (!tenantSignatureText.trim() || !/^[a-zA-Z\s]+$/.test(tenantSignatureText.trim()) || tenantSignatureText.trim().length < 3) {
-      toast.error("Please enter your full legal name to sign (letters only, min 3 chars).");
+      showCenterAlert("Digital Signature Required", "Please enter your full legal name to digitally sign the lease (letters only, min 3 characters).");
       return;
     }
 
     if (!tenantAgreeTerms) {
-      toast.error("You must agree to the terms in the lease contract.");
+      showCenterAlert("Terms Agreement Required", "You must agree to the terms in the lease contract before submitting.");
       return;
     }
 
@@ -1901,35 +1973,39 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
               {["PAY_SLIP", "DRIVING_LICENSE", "ADDRESS_PROOF"].map(type => {
                 const existing = uploadedDocs.find(d => d.doc_type === type);
                 return (
-                  <div key={type} className="p-3 border border-slate-200 dark:border-white/5 rounded-xl flex items-center justify-between gap-4 bg-slate-50/20 dark:bg-white/[0.01]">
-                    <div className="text-left">
-                      <span className="text-xs font-bold text-slate-800 dark:text-white block">{docLabels[type]}</span>
+                  <div key={type} className="p-3.5 border border-slate-200 dark:border-white/5 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50/20 dark:bg-white/[0.01]">
+                    <div className="text-left min-w-0 flex-1">
+                      <span className="text-xs font-bold text-slate-800 dark:text-white block">{DOC_TYPE_LABELS[type] || type}</span>
                       {existing ? (
-                        <span className="text-[10px] text-emerald-500 font-semibold block">✓ Uploaded: {existing.original_name}</span>
+                        <span className="text-[10px] text-emerald-500 font-semibold block truncate">✓ Uploaded: {existing.original_name}</span>
                       ) : (
                         <span className="text-[10px] text-red-500 block">⚠️ Upload Required (max 10MB)</span>
                       )}
                     </div>
-                    <div>
+                    <div className="flex items-center gap-2 shrink-0 flex-wrap">
                       {existing ? (
-                        <div className="flex items-center gap-2">
+                        <>
                           <button
                             type="button"
-                            onClick={() => handleDownloadDoc(existing.document_id, existing.original_name)}
-                            className="px-3 py-1.5 border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-350 hover:bg-slate-100 dark:hover:bg-white/5 rounded-lg text-[10px] font-bold transition cursor-pointer"
+                            onClick={() => handleViewDoc(existing.document_id, existing.original_name, DOC_TYPE_LABELS[type])}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 rounded-lg text-[10px] font-bold transition cursor-pointer"
+                            title="Preview Document"
                           >
-                            Verify File
+                            <Eye size={13} className="text-blue-500" />
+                            <span>View</span>
                           </button>
                           <button
                             type="button"
                             onClick={() => handleRemoveDoc(existing.document_id, type)}
-                            className="px-3 py-1.5 border border-red-200 hover:border-red-300 dark:border-red-550/20 text-red-600 dark:text-red-450 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-lg text-[10px] font-bold transition cursor-pointer"
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-red-200 hover:border-red-300 dark:border-red-500/20 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-lg text-[10px] font-bold transition cursor-pointer"
+                            title="Remove Document"
                           >
-                            Remove File
+                            <Trash2 size={12} />
+                            <span>Remove File</span>
                           </button>
-                        </div>
+                        </>
                       ) : (
-                        <div className="relative group">
+                        <div className="relative group w-full sm:w-auto">
                           <input
                             type="file"
                             onChange={e => handleTenantDocUpload(e, type)}
@@ -1939,7 +2015,7 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
                           <button
                             type="button"
                             disabled={uploadingDoc === type}
-                            className="px-3 py-1.5 bg-blue-600 group-hover:bg-blue-700 text-white rounded-lg text-[10px] font-bold transition cursor-pointer pointer-events-none"
+                            className="w-full sm:w-auto px-4 py-2 bg-blue-600 group-hover:bg-blue-700 text-white rounded-lg text-[10px] font-bold transition cursor-pointer pointer-events-none text-center"
                           >
                             {uploadingDoc === type ? "Uploading..." : "Upload File"}
                           </button>
@@ -1951,20 +2027,24 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
               })}
             </div>
 
-            {formError && (
-              <div className="mb-3 px-3 py-2.5 bg-red-500/10 border border-red-500/20 rounded-xl text-[11px] font-semibold text-red-600 dark:text-red-400 flex items-start gap-2">
-                <span className="mt-0.5">⚠️</span>
-                <span>{formError}</span>
-              </div>
-            )}
-
             <div className="flex justify-end pt-4 border-t dark:border-white/5">
               <button
                 type="button"
                 onClick={() => {
-                  setFormError('');
+                  const showValidationAlert = (title, message) => {
+                    setConfirmConfig({
+                      isOpen: true,
+                      title: title,
+                      message: message,
+                      confirmText: "Understood",
+                      type: "warning",
+                      singleButton: true,
+                      onConfirm: () => {}
+                    });
+                  };
+
                   if (!tenantDob) {
-                    setFormError("Please enter your date of birth.");
+                    showValidationAlert("Date of Birth Required", "Please enter your date of birth.");
                     return;
                   }
                   const birthDate = new Date(tenantDob);
@@ -1972,26 +2052,26 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
                   const ageDate = new Date(ageDiffMs);
                   const age = Math.abs(ageDate.getUTCFullYear() - 1970);
                   if (age < 18) {
-                    setFormError("You must be 18 years or older to sign a lease.");
+                    showValidationAlert("Age Requirement (18+)", "You must be 18 years or older to sign a lease.");
                     return;
                   }
                   if (!tenantCurrentAddress.trim() || tenantCurrentAddress.trim().length < 10) {
-                    setFormError("Please enter a valid current address (min 10 characters).");
+                    showValidationAlert("Current Address Required", "Please enter a valid current physical address (min 10 characters).");
                     return;
                   }
                   if (!tenantEmergencyContact.trim() || !/^[a-zA-Z\s.-]{2,50}$/.test(tenantEmergencyContact.trim())) {
-                    setFormError("Please enter a valid emergency contact name (letters only, 2–50 characters).");
+                    showValidationAlert("Emergency Contact Required", "Please enter a valid emergency contact name (letters only, 2–50 characters).");
                     return;
                   }
                   const cleanedPhone = tenantEmergencyPhone.replace(/\D/g, '');
                   if (!cleanedPhone || cleanedPhone.length !== 10) {
-                    setFormError("Please enter a valid 10-digit US emergency phone number.");
+                    showValidationAlert("Emergency Phone Required", "Please enter a valid 10-digit US emergency phone number.");
                     return;
                   }
                   if (tenantHasParking) {
                     for (let i = 0; i < tenantParkingCarsCount; i++) {
                       if (!tenantVehicles[i]?.plate?.trim() || tenantVehicles[i].plate.trim().length < 3) {
-                        setFormError(`Please enter license plate / model for Car ${i + 1}.`);
+                        showValidationAlert("Vehicle Details Required", `Please enter license plate / model for Car ${i + 1}.`);
                         return;
                       }
                     }
@@ -1999,7 +2079,7 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
                   if (tenantHasPets) {
                     for (let i = 0; i < tenantPetsCount; i++) {
                       if (!tenantPets[i]?.type) {
-                        setFormError(`Please select type for Pet ${i + 1}.`);
+                        showValidationAlert("Pet Details Required", `Please select type for Pet ${i + 1}.`);
                         return;
                       }
                     }
@@ -2007,13 +2087,12 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
                   const requiredTypes = ["PAY_SLIP", "DRIVING_LICENSE", "ADDRESS_PROOF"];
                   const missing = requiredTypes.filter(type => !uploadedDocs.some(d => d.doc_type === type));
                   if (missing.length > 0) {
-                    const labels = { PAY_SLIP: "Pay Slip / Income Proof", DRIVING_LICENSE: "Driving License / National ID", ADDRESS_PROOF: "Notice/Payment Address Proof" };
-                    setFormError(`Please upload required documents: ${missing.map(m => labels[m]).join(", ")}`);
+                    showValidationAlert("Required Documents Missing", `Please upload required documents: ${missing.map(m => DOC_TYPE_LABELS[m] || m).join(", ")}`);
                     return;
                   }
                   setTenantOnboardingStep(2);
                 }}
-                className="px-6 py-2.5 bg-blue-600 hover:bg-blue-750 text-white rounded-xl text-xs font-bold cursor-pointer transition shadow-md shadow-blue-500/10 ml-auto"
+                className="w-full sm:w-auto px-6 py-2.5 bg-blue-600 hover:bg-blue-750 text-white rounded-xl text-xs font-bold cursor-pointer transition shadow-md shadow-blue-500/10 text-center"
               >
                 Proceed to Review & Sign
               </button>
@@ -2062,37 +2141,41 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
               </label>
             </div>
 
-            {formError && (
-              <div className="mb-3 px-3 py-2.5 bg-red-500/10 border border-red-500/20 rounded-xl text-[11px] font-semibold text-red-600 dark:text-red-400 flex items-start gap-2">
-                <span className="mt-0.5">⚠️</span>
-                <span>{formError}</span>
-              </div>
-            )}
-
-            <div className="flex justify-between items-center pt-4">
+            <div className="flex flex-col-reverse sm:flex-row justify-between items-center gap-3 pt-4 border-t dark:border-white/5">
               <button
                 type="button"
                 onClick={() => setTenantOnboardingStep(1)}
-                className="px-4 py-2 border border-slate-250 dark:border-white/10 text-slate-650 dark:text-slate-400 rounded-xl text-xs font-bold cursor-pointer transition"
+                className="w-full sm:w-auto px-4 py-2 border border-slate-250 dark:border-white/10 text-slate-650 dark:text-slate-400 rounded-xl text-xs font-bold cursor-pointer transition text-center"
               >
                 Back
               </button>
               <button
                 type="button"
                 onClick={() => {
-                  setFormError('');
+                  const showCenterAlert = (title, message) => {
+                    setConfirmConfig({
+                      isOpen: true,
+                      title: title,
+                      message: message,
+                      confirmText: "Understood",
+                      type: "warning",
+                      singleButton: true,
+                      onConfirm: () => {}
+                    });
+                  };
+
                   // Signature validation
                   if (!tenantSignatureText.trim() || !/^[a-zA-Z\s]+$/.test(tenantSignatureText.trim()) || tenantSignatureText.trim().length < 3) {
-                    setFormError("Please type your full legal name in the signature box (letters only, min 3 chars).");
+                    showCenterAlert("Digital Signature Required", "Please type your full legal name in the signature box (letters only, min 3 chars).");
                     return;
                   }
                   if (!tenantAgreeTerms) {
-                    setFormError("You must check the verification box to agree to the lease terms.");
+                    showCenterAlert("Verification Required", "You must check the verification box to agree to the lease terms.");
                     return;
                   }
                   handleTenantOnboardingSubmit();
                 }}
-                className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-extrabold cursor-pointer transition shadow-md shadow-emerald-500/10"
+                className="w-full sm:w-auto px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-extrabold cursor-pointer transition shadow-md shadow-emerald-500/10 text-center"
               >
                 Submit Signed Agreement
               </button>
@@ -2161,10 +2244,12 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
                     <>
                       <button
                         type="button"
-                        onClick={() => handleViewDoc(doc.document_id, doc.original_name)}
-                        className="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 text-slate-800 dark:text-white rounded-lg text-xs font-bold transition cursor-pointer"
+                        onClick={() => handleViewDoc(doc.document_id, doc.original_name, docLabels[type])}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 text-slate-800 dark:text-white rounded-lg text-xs font-bold transition cursor-pointer"
+                        title="Preview Document"
                       >
-                        View Document
+                        <Eye size={13} className="text-blue-500" />
+                        <span>View</span>
                       </button>
                       <button
                         type="button"
@@ -3801,8 +3886,8 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
 
         {/* Lease Viewer & Digital Signature Modal */}
         {selectedLease && (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-white/[0.08] w-full max-w-4xl rounded-2xl p-6 space-y-6 shadow-2xl animate-scale-up max-h-[90vh] overflow-y-auto">
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4">
+            <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-white/[0.08] w-full max-w-4xl rounded-2xl sm:rounded-3xl p-4 sm:p-6 space-y-4 sm:space-y-6 shadow-2xl animate-scale-up max-h-[92vh] overflow-y-auto">
               <div className="flex justify-between items-center border-b dark:border-white/5 pb-3">
                 <div>
                   <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
@@ -3931,10 +4016,12 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
                                     <div className="flex items-center gap-1.5 shrink-0">
                                       <button
                                         type="button"
-                                        onClick={() => handleViewDoc(doc.document_id, doc.original_name)}
-                                        className="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 text-slate-800 dark:text-white rounded-lg text-[10px] font-bold transition cursor-pointer"
+                                        onClick={() => handleViewDoc(doc.document_id, doc.original_name, docLabels[type])}
+                                        className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 text-slate-800 dark:text-white rounded-lg text-[10px] font-bold transition cursor-pointer"
+                                        title="Preview Document"
                                       >
-                                        View
+                                        <Eye size={12} className="text-blue-500" />
+                                        <span>View</span>
                                       </button>
                                       <button
                                         type="button"
@@ -4153,10 +4240,88 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
         </div>
       )}
 
+      {/* In-App Document Preview Modal */}
+      {previewDoc && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-[60] flex items-center justify-center p-4 animate-fade-in">
+          <div className="bg-white dark:bg-[#152332] border border-slate-200 dark:border-white/10 w-full max-w-4xl rounded-2xl shadow-2xl overflow-hidden animate-scale-up flex flex-col max-h-[92vh]">
+            {/* Header */}
+            <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-[#0f1a26]">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="w-8 h-8 rounded-lg bg-blue-500/10 text-blue-500 flex items-center justify-center shrink-0">
+                  <Eye size={16} />
+                </div>
+                <div className="min-w-0 text-left">
+                  <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white truncate">
+                    {previewDoc.title || "Document Preview"}
+                  </h4>
+                  <p className="text-[10px] text-slate-400 truncate">
+                    {previewDoc.originalName}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 shrink-0">
+                <a
+                  href={previewDoc.url}
+                  download={previewDoc.originalName}
+                  className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 dark:bg-white/10 hover:bg-slate-200 dark:hover:bg-white/15 text-slate-700 dark:text-slate-200 transition flex items-center gap-1.5 cursor-pointer"
+                  title="Download Copy"
+                >
+                  <Download size={13} />
+                  <span className="hidden sm:inline">Download</span>
+                </a>
+                <button
+                  onClick={handleClosePreview}
+                  className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-600 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-white/10 transition text-lg cursor-pointer"
+                  title="Close Preview"
+                >
+                  ×
+                </button>
+              </div>
+            </div>
+
+            {/* Body / Content */}
+            <div className="flex-1 overflow-auto p-4 sm:p-6 bg-slate-100/50 dark:bg-[#0a111a] flex items-center justify-center min-h-[350px]">
+              {previewDoc.isPdf ? (
+                <iframe
+                  src={previewDoc.url}
+                  title={previewDoc.title}
+                  className="w-full h-[72vh] rounded-xl border border-slate-200 dark:border-white/10 bg-white"
+                />
+              ) : previewDoc.isImage ? (
+                <div className="max-w-full max-h-[72vh] flex items-center justify-center overflow-auto">
+                  <img
+                    src={previewDoc.url}
+                    alt={previewDoc.title}
+                    className="max-h-[72vh] max-w-full object-contain rounded-xl shadow-lg border border-slate-200/50 dark:border-white/10"
+                  />
+                </div>
+              ) : (
+                <div className="text-center p-8 space-y-3">
+                  <FileText size={48} className="mx-auto text-slate-400" />
+                  <p className="text-xs text-slate-500">Preview not supported for this file format.</p>
+                  <a
+                    href={previewDoc.url}
+                    download={previewDoc.originalName}
+                    className="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 text-white rounded-xl text-xs font-bold shadow-md hover:bg-blue-700 transition"
+                  >
+                    <Download size={14} /> Download File
+                  </a>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       <ConfirmModal
         isOpen={confirmConfig.isOpen}
         title={confirmConfig.title}
         message={confirmConfig.message}
+        confirmText={confirmConfig.confirmText || 'OK'}
+        cancelText={confirmConfig.cancelText || 'Cancel'}
+        type={confirmConfig.type || 'danger'}
+        singleButton={confirmConfig.singleButton || false}
         onConfirm={() => {
           confirmConfig.onConfirm?.();
           setConfirmConfig(prev => ({ ...prev, isOpen: false }));

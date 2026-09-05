@@ -115,7 +115,7 @@ export default function ContactPage() {
 
           {/* Main Title */}
           <h1 className="text-2xl sm:text-3xl lg:text-[36px] font-bold text-slate-900 dark:text-white tracking-tight leading-tight">
-            We're Here to Support Your <span className="italic text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 via-purple-600 to-violet-500 dark:from-indigo-400 dark:via-purple-300 dark:to-violet-400">Community</span>
+            We're Here to Support Your <span className="gradient-text">Community</span>
           </h1>
 
           {/* Subtitle */}

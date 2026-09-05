@@ -83,7 +83,7 @@ API.interceptors.response.use(
   (response) => {
     const method = response.config?.method?.toLowerCase();
     const url = response.config?.url || '';
-    if (method && ['post', 'put', 'delete', 'patch'].includes(method) && url.includes('/rental/')) {
+    if (method && ['post', 'put', 'delete', 'patch'].includes(method) && url.includes('/rental/') && !url.includes('/documents')) {
       try {
         window.dispatchEvent(new CustomEvent('rental-data-changed'));
       } catch (e) {

@@ -35,11 +35,12 @@ export default function Navbar() {
       e.preventDefault();
       const targetId = link.path.substring(1);
       
-      if (window.location.pathname === '/') {
+      if (location.pathname === '/' || window.location.pathname === '/') {
         // If already on landing page, scroll smoothly
         const element = document.getElementById(targetId);
         if (element) {
           element.scrollIntoView({ behavior: 'smooth' });
+          window.history.pushState(null, '', link.path);
         }
       } else {
         // Redirect to home page with hash

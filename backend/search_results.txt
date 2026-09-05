@@ -1,2 +1,0 @@
-d:\Vhoa_Management\backend\app\main.py
-d:\Vhoa_Management\backend\app\routers\hoa\location.py

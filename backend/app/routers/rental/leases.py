@@ -16,6 +16,7 @@ from app.schemas.rental import LeaseCreate, LeaseOut, LeaseSignRequest, TenantIn
 from app.services.rental import rental_service
 from app.services.rental.audit_service import log_rental_action
 from app.routers.rental.dependencies import require_rental_role, get_verified_rental_user
+from app.utils.encryption import decrypt_field, encrypt_field, decrypt_file_bytes, encrypt_file_bytes
 router = APIRouter(prefix="/rental", tags=["Rental - Lease Agreements"])
 
 
@@ -272,6 +273,7 @@ async def upload_tenant_document(
 def download_tenant_document(
     lease_id: int,
     document_id: int,
+    preview: bool = False,
     db: Session = Depends(get_rental_db),
     current_user: RentalUser = Depends(get_verified_rental_user)
 ):
@@ -287,13 +289,13 @@ def download_tenant_document(
     is_authorized = (
         role_name in ["super_admin", "landlord"] or
         doc.tenant_id == current_user.user_id or
-        doc.lease.tenant_id == current_user.user_id
+        (doc.lease and doc.lease.tenant_id == current_user.user_id) or
+        (doc.lease and doc.lease.tenant_email and current_user.email and doc.lease.tenant_email.lower() == current_user.email.lower())
     )
     if not is_authorized:
-        raise HTTPException(status_code=403, detail="Unauthorized to download this document.")
+        raise HTTPException(status_code=403, detail="Unauthorized to access this document.")
 
     # Decrypt file_url to locate on disk
-    from app.utils.encryption import decrypt_field, decrypt_file_bytes
     decrypted_url = decrypt_field(doc.file_url)
     if not decrypted_url:
         raise HTTPException(status_code=500, detail="Failed to decrypt file path.")
@@ -315,12 +317,13 @@ def download_tenant_document(
         raise HTTPException(status_code=500, detail="Failed to decrypt file content.")
 
     # Decrypt original name
-    original_name = decrypt_field(doc.original_name) or "download.bin"
+    original_name = decrypt_field(doc.original_name) or "document.bin"
+    disp = "inline" if preview else "attachment"
 
     return StreamingResponse(
         BytesIO(decrypted_contents),
         media_type=doc.mime_type or "application/octet-stream",
-        headers={"Content-Disposition": f'attachment; filename="{original_name}"'}
+        headers={"Content-Disposition": f'{disp}; filename="{original_name}"'}
     )
 
 
@@ -341,7 +344,9 @@ def delete_tenant_document(
     role_name = (current_user.role.role_name if current_user.role else "").lower()
     is_authorized = (
         role_name in ["super_admin", "landlord"] or
-        doc.tenant_id == current_user.user_id
+        doc.tenant_id == current_user.user_id or
+        (doc.lease and doc.lease.tenant_id == current_user.user_id) or
+        (doc.lease and doc.lease.tenant_email and current_user.email and doc.lease.tenant_email.lower() == current_user.email.lower())
     )
     if not is_authorized:
         raise HTTPException(status_code=403, detail="Unauthorized to delete this document.")

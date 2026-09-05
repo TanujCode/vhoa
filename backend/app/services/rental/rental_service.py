@@ -1187,8 +1187,9 @@ def calculate_invoice_overdue_and_timeline(inv: RentalLedger, lease: Lease, as_o
         "running_total": round(base_charges, 2)
     })
 
-    # If invoice is not past grace period or is already paid before grace date
-    if as_of_date <= grace_cutoff_date:
+    # If invoice is marked OVERDUE or is past grace cutoff date
+    is_overdue = (as_of_date > grace_cutoff_date) or (inv.status == "OVERDUE") or (inv.late_fee_applied and inv.late_fee_applied > 0)
+    if not is_overdue:
         return {
             "is_overdue": False,
             "overdue_days": 0,
@@ -1201,25 +1202,25 @@ def calculate_invoice_overdue_and_timeline(inv: RentalLedger, lease: Lease, as_o
         }
 
     # Past grace period -> Overdue!
-    days_past_grace = (as_of_date - grace_cutoff_date).days
+    days_past_grace = max((as_of_date - grace_cutoff_date).days, 0)
 
-    # 2. Initial Flat Late Fee assessed on (grace_cutoff_date + 1 day)
-    initial_fee_date = grace_cutoff_date + timedelta(days=1)
-    initial_fee_applied = initial_fee_rate
+    # 2. Initial Flat Late Fee assessed on (grace_cutoff_date + 1 day) or today
+    initial_fee_date = (grace_cutoff_date + timedelta(days=1)) if as_of_date > grace_cutoff_date else as_of_date
+    initial_fee_applied = (inv.initial_late_fee_applied if (inv.initial_late_fee_applied and inv.initial_late_fee_applied > 0) else initial_fee_rate)
     current_total = base_charges + initial_fee_applied
 
     timeline.append({
         "date": initial_fee_date.isoformat(),
         "type": "INITIAL_LATE_FEE",
-        "title": "Grace Period Expired - Initial Late Fee",
-        "description": f"Assessed automatically after {grace_days}-day grace period expired.",
+        "title": "Initial Late Fee Penalty",
+        "description": f"Assessed per lease terms (${initial_fee_applied:,.2f}).",
         "amount": round(initial_fee_applied, 2),
         "running_total": round(current_total, 2)
     })
 
     # 3. Recurring Overdue Fees
     recurring_fee_applied = 0.0
-    if recurring_fee_rate > 0 and recurring_freq != "NONE":
+    if days_past_grace > 0 and recurring_fee_rate > 0 and recurring_freq != "NONE":
         if recurring_freq == "WEEKLY":
             weeks_past = days_past_grace // 7
             for w in range(1, weeks_past + 1):
@@ -1251,7 +1252,7 @@ def calculate_invoice_overdue_and_timeline(inv: RentalLedger, lease: Lease, as_o
     total_late_fee = initial_fee_applied + recurring_fee_applied
     return {
         "is_overdue": True,
-        "overdue_days": days_past_grace,
+        "overdue_days": max(days_past_grace, 1),
         "initial_late_fee": round(initial_fee_applied, 2),
         "recurring_late_fee": round(recurring_fee_applied, 2),
         "total_late_fee": round(total_late_fee, 2),
@@ -1406,6 +1407,7 @@ def get_ledgers_by_lease(lease_id: int, db: Session) -> List[RentalLedger]:
                 ldg.overdue_days_count = calc["overdue_days"]
                 ldg.fee_breakdown_json = json.dumps(calc["timeline"])
             else:
+                ldg.status = "UNPAID"
                 ldg.initial_late_fee_applied = 0.0
                 ldg.recurring_late_fee_applied = 0.0
                 ldg.late_fee_applied = 0.0

@@ -12,10 +12,12 @@ from app.models.rental.rental_maintenance import RentalMaintenanceRequest
 from app.models.rental.rental_application import RentalApplication
 from app.models.rental.rental_otp import RentalOtpToken
 from app.models.rental.rental_vendor import RentalVendor
+from app.models.rental.tenant_document import TenantDocument
 from app.models.rental.rental_audit_log import RentalAuditLog
 from app.models.hoa.user import Role
 from app.services.rental.audit_service import log_rental_action
 from app.routers.rental.dependencies import require_rental_role
+from app.utils.encryption import safe_decrypt_field
 
 router = APIRouter(prefix="/rental", tags=["Rental - Super Admin"])
 
@@ -38,27 +40,27 @@ def get_superadmin_rental_stats(
         Role.role_name == "tenant"
     ).count()
 
-    # 3. Total Properties & Units
-    total_properties = db.query(Property).filter(Property.active_status == True).count()
-    total_units = db.query(Unit).filter(Unit.active_status == True).count()
+    # 3. Total Properties
+    total_properties = db.query(Property).count()
 
-    # 4. Total Leases
-    total_active_leases = db.query(Lease).filter(Lease.status == "ACTIVE").count()
+    # 4. Total Units
+    total_units = db.query(Unit).count()
+
+    # 5. Total Leases
     total_leases = db.query(Lease).count()
+    active_leases = db.query(Lease).filter(Lease.status == "ACTIVE").count()
 
-    # 5. Financial volume from rental ledgers
-    gross_collected = db.query(func.sum(RentalLedger.amount)).filter(
-        RentalLedger.status == "PAID"
-    ).scalar() or 0.0
+    # 6. Occupancy Rate
+    occupancy_rate = round((active_leases / total_units * 100), 1) if total_units > 0 else 0
 
     return {
         "total_landlords": total_landlords,
         "total_tenants": total_tenants,
         "total_properties": total_properties,
         "total_units": total_units,
-        "total_active_leases": total_active_leases,
         "total_leases": total_leases,
-        "gross_collected": float(gross_collected)
+        "active_leases": active_leases,
+        "occupancy_rate": occupancy_rate
     }
 
 
@@ -72,59 +74,55 @@ def get_all_landlords(
     """
     landlords = db.query(RentalUser).join(Role, RentalUser.role_id == Role.role_id).filter(
         Role.role_name == "landlord"
-    ).all()
+    ).order_by(RentalUser.created_date.desc()).all()
 
-    res = []
+    result = []
     for l in landlords:
         # Properties count for this landlord
-        props = db.query(Property).filter(
+        prop_ids = [p.property_id for p in db.query(Property.property_id).filter(
             Property.landlord_id == l.user_id,
             Property.active_status == True
-        ).all()
-        prop_count = len(props)
+        ).all()]
 
-        prop_ids = [p.property_id for p in props]
-        unit_count = 0
-        active_tenants = 0
-
+        # Units count across all properties
+        units_count = 0
+        active_tenants_count = 0
         if prop_ids:
-            unit_count = db.query(Unit).filter(
-                Unit.property_id.in_(prop_ids),
-                Unit.active_status == True
-            ).count()
+            units = db.query(Unit).filter(Unit.property_id.in_(prop_ids)).all()
+            units_count = len(units)
+            unit_ids = [u.unit_id for u in units]
 
             # Active leases for landlord's properties
-            unit_ids = [u.unit_id for u in db.query(Unit.unit_id).filter(Unit.property_id.in_(prop_ids)).all()]
             if unit_ids:
-                active_tenants = db.query(Lease).filter(
+                active_tenants_count = db.query(Lease).filter(
                     Lease.unit_id.in_(unit_ids),
-                    Lease.status == "ACTIVE"
+                    Lease.status.in_(["ACTIVE", "SIGNED"])
                 ).count()
 
-        from app.utils.encryption import safe_decrypt_field
-        first_dec = safe_decrypt_field(l.first_name) or ""
-        middle_dec = safe_decrypt_field(l.middle_name)
-        last_dec = safe_decrypt_field(l.last_name) or ""
-        phone_dec = safe_decrypt_field(l.mobile_number)
+        # Monthly income generated
+        total_monthly_rent = 0
+        if prop_ids:
+            active_leases = db.query(Lease).join(Unit).filter(
+                Unit.property_id.in_(prop_ids),
+                Lease.status == "ACTIVE"
+            ).all()
+            total_monthly_rent = sum(float(lease.rent_amount or 0) for lease in active_leases)
 
-        res.append({
+        result.append({
             "user_id": l.user_id,
-            "user_code": l.user_code or f"LND{l.user_id:04d}",
-            "first_name": first_dec,
-            "middle_name": middle_dec,
-            "last_name": last_dec,
-            "full_name": f"{first_dec} {last_dec}".strip(),
-            "email_id": l.email_id,
-            "mobile_number": phone_dec,
+            "full_name": l.full_name,
+            "email": l.email_id,
+            "mobile_number": safe_decrypt_field(l.mobile_number),
             "active_status": l.active_status,
-            "account_status": l.account_status,
-            "properties_count": prop_count,
-            "units_count": unit_count,
-            "active_tenants_count": active_tenants,
-            "created_date": l.created_date.isoformat() if l.created_date else None
+            "created_at": l.created_date.isoformat() if l.created_date else None,
+            "last_login": l.last_login.isoformat() if l.last_login else None,
+            "properties_count": len(prop_ids),
+            "units_count": units_count,
+            "active_tenants_count": active_tenants_count,
+            "total_monthly_income": total_monthly_rent
         })
 
-    return res
+    return result
 
 
 @router.put("/landlords/{landlord_id}/status")
@@ -162,7 +160,8 @@ def delete_landlord(
     current_user: RentalUser = Depends(require_rental_role("super_admin"))
 ):
     """
-    Hard delete a Landlord account and all associated properties, units, leases, ledgers, maintenance requests, applications, OTP tokens, and vendors.
+    Hard delete a Landlord account and all associated properties, units, leases, ledgers, maintenance requests,
+    applications, OTP tokens, vendors, and exclusive tenants.
     """
     landlord = db.query(RentalUser).filter(RentalUser.user_id == landlord_id).first()
     if not landlord:
@@ -172,6 +171,8 @@ def delete_landlord(
     props = db.query(Property).filter(Property.landlord_id == landlord_id).all()
     prop_ids = [p.property_id for p in props]
 
+    candidate_tenant_ids = []
+
     # Find units, leases, ledgers, maintenance requests, and applications
     unit_ids = []
     lease_ids = []
@@ -180,13 +181,21 @@ def delete_landlord(
         unit_ids = [u.unit_id for u in units]
 
         if unit_ids:
-            # Delete rental applications
-            db.query(RentalApplication).filter(RentalApplication.unit_id.in_(unit_ids)).delete(synchronize_session=False)
-            
-            # Find leases
+            # Find leases and collect tenant IDs/emails
             leases = db.query(Lease).filter(Lease.unit_id.in_(unit_ids)).all()
             lease_ids = [l.lease_id for l in leases]
+
+            for l in leases:
+                if l.tenant_id:
+                    candidate_tenant_ids.append(l.tenant_id)
+                if l.tenant_email:
+                    matched_tenant = db.query(RentalUser).filter(func.lower(RentalUser.email_id) == l.tenant_email.lower().strip()).first()
+                    if matched_tenant:
+                        candidate_tenant_ids.append(matched_tenant.user_id)
+
             if lease_ids:
+                # Delete tenant documents for these leases
+                db.query(TenantDocument).filter(TenantDocument.lease_id.in_(lease_ids)).delete(synchronize_session=False)
                 # Delete maintenance requests
                 db.query(RentalMaintenanceRequest).filter(RentalMaintenanceRequest.lease_id.in_(lease_ids)).delete(synchronize_session=False)
                 # Delete ledgers (RentalLedger uses lease_id, not unit_id)
@@ -194,11 +203,34 @@ def delete_landlord(
                 # Delete leases
                 db.query(Lease).filter(Lease.lease_id.in_(lease_ids)).delete(synchronize_session=False)
 
+            # Delete rental applications
+            db.query(RentalApplication).filter(RentalApplication.unit_id.in_(unit_ids)).delete(synchronize_session=False)
+
             # Delete units
             db.query(Unit).filter(Unit.property_id.in_(prop_ids)).delete(synchronize_session=False)
 
         # Delete properties
         db.query(Property).filter(Property.landlord_id == landlord_id).delete(synchronize_session=False)
+
+    # Delete exclusive tenants who don't have leases with any other landlord
+    unique_candidate_tenant_ids = list(set(candidate_tenant_ids))
+    for tid in unique_candidate_tenant_ids:
+        if tid == landlord_id:
+            continue
+        # Check if tenant has any other active or pending lease with another landlord
+        other_lease = db.query(Lease).filter(
+            Lease.tenant_id == tid,
+            Lease.landlord_id != landlord_id
+        ).first()
+        if not other_lease:
+            # Delete remaining tenant documents
+            db.query(TenantDocument).filter(TenantDocument.tenant_id == tid).delete(synchronize_session=False)
+            # Delete tenant OTP tokens
+            db.query(RentalOtpToken).filter(RentalOtpToken.user_id == tid).delete(synchronize_session=False)
+            # Nullify audit logs
+            db.query(RentalAuditLog).filter(RentalAuditLog.user_id == tid).update({RentalAuditLog.user_id: None}, synchronize_session=False)
+            # Delete tenant user record
+            db.query(RentalUser).filter(RentalUser.user_id == tid).delete(synchronize_session=False)
 
     # Delete landlord vendors
     db.query(RentalVendor).filter(RentalVendor.landlord_id == landlord_id).delete(synchronize_session=False)
@@ -214,7 +246,7 @@ def delete_landlord(
         db,
         "DELETE_LANDLORD",
         "rental",
-        f"Landlord '{landlord.full_name}' was deleted.",
+        f"Landlord '{landlord.full_name}' and associated records were deleted.",
         current_user.user_id
     )
 
@@ -222,4 +254,4 @@ def delete_landlord(
     db.delete(landlord)
     db.commit()
 
-    return {"detail": "Landlord deleted successfully"}
+    return {"detail": "Landlord and associated tenants deleted successfully"}

@@ -1947,7 +1947,7 @@ export default function LandingPage() {
       <section 
         id="solutions" 
         ref={solutionsSectionRef}
-        className="relative py-8 sm:py-10 px-5 sm:px-8 border-t border-slate-200/40 dark:border-white/[0.06] overflow-hidden bg-white dark:bg-[#090F16]"
+        className="scroll-mt-16 sm:scroll-mt-20 relative py-8 sm:py-10 px-5 sm:px-8 border-t border-slate-200/40 dark:border-white/[0.06] overflow-hidden bg-white dark:bg-[#090F16]"
       >
         {/* Background glow effects */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[600px] bg-gradient-radial from-violet-500/[0.03] dark:from-violet-500/[0.06] to-transparent rounded-full blur-3xl pointer-events-none" />
@@ -2045,7 +2045,7 @@ export default function LandingPage() {
       {/* ═══════════════════════════════════════════════════════
           CORE CAPABILITIES (3D Tilt & Flip Showcase)
       ═══════════════════════════════════════════════════════ */}
-      <section id="features-grid" className="relative py-10 sm:py-12 px-5 sm:px-8 bg-slate-50/60 dark:bg-[#0B1420]/70 border-t border-slate-200/40 dark:border-white/[0.06] overflow-hidden">
+      <section id="features" className="scroll-mt-16 sm:scroll-mt-20 relative py-10 sm:py-12 px-5 sm:px-8 bg-slate-50/60 dark:bg-[#0B1420]/70 border-t border-slate-200/40 dark:border-white/[0.06] overflow-hidden">
         <div className="max-w-7xl mx-auto relative z-10">
           <div className="text-center max-w-3xl mx-auto mb-7 space-y-2">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-500 text-[10px] sm:text-xs font-semibold">
