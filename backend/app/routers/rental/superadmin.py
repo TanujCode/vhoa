@@ -17,7 +17,7 @@ from app.models.rental.rental_audit_log import RentalAuditLog
 from app.models.hoa.user import Role
 from app.services.rental.audit_service import log_rental_action
 from app.routers.rental.dependencies import require_rental_role
-from app.utils.encryption import safe_decrypt_field
+from app.utils.encryption import safe_decrypt_field, safe_decrypt_float
 
 router = APIRouter(prefix="/rental", tags=["Rental - Super Admin"])
 
@@ -106,7 +106,7 @@ def get_all_landlords(
                 Unit.property_id.in_(prop_ids),
                 Lease.status == "ACTIVE"
             ).all()
-            total_monthly_rent = sum(float(lease.rent_amount or 0) for lease in active_leases)
+            total_monthly_rent = sum(safe_decrypt_float(lease.rent_amount) for lease in active_leases)
 
         result.append({
             "user_id": l.user_id,
