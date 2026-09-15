@@ -4,6 +4,7 @@ import { toast } from 'react-hot-toast';
 import API from '../../services/api';
 import ConfirmModal from '../../components/ConfirmModal';
 import { formatPhoneAsYouType, formatUsPhone } from '../../utils/phoneFormatter';
+import PhoneInputWithCountry from '../../components/common/PhoneInputWithCountry';
 
 const LEASE_TEMPLATES = {
   standard: `STANDARD RESIDENTIAL LEASE AGREEMENT
@@ -103,7 +104,7 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
   const [deposit, setDeposit] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
-  const [duration, setDuration] = useState('12');
+  const [duration, setDuration] = useState('11');
   const [customDuration, setCustomDuration] = useState('');
   const [rentDueDate, setRentDueDate] = useState('1');
   const [moveInFee, setMoveInFee] = useState('0');
@@ -412,7 +413,7 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
     setDeposit('');
     setStartDate('');
     setEndDate('');
-    setDuration('12');
+    setDuration('11');
     setCustomDuration('');
     setRentDueDate('1');
     setMoveInFee('0');
@@ -495,16 +496,10 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
       const start = new Date(lease.start_date);
       const end = new Date(lease.end_date);
       const diffMonths = (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth());
-      if (diffMonths === 12 || diffMonths === 6 || diffMonths === 1 || diffMonths === 24) {
-        setDuration(diffMonths.toString());
-        setCustomDuration('');
-      } else {
-        setDuration('custom');
-        setCustomDuration(diffMonths.toString());
-      }
+      const num = Math.min(11, Math.max(1, diffMonths || 11));
+      setDuration(num.toString());
     } else {
-      setDuration('12');
-      setCustomDuration('');
+      setDuration('11');
     }
 
     setRentAmount(lease.rent_amount?.toString() || '');
@@ -578,9 +573,9 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
         errors.startDate = 'Start date cannot be in the past.';
       }
 
-      const numMonths = duration === 'custom' ? parseInt(customDuration) : parseInt(duration);
-      if (isNaN(numMonths) || numMonths < 1) {
-        errors.duration = 'Please provide a valid duration of at least 1 month.';
+      const numMonths = parseInt(duration);
+      if (isNaN(numMonths) || numMonths < 1 || numMonths > 11) {
+        errors.duration = 'Lease duration must be between 1 and 11 months.';
       }
       const rent = parseFloat(rentAmount);
       if (!rentAmount || isNaN(rent) || rent <= 0) {
@@ -609,9 +604,10 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
     }
     
     if (step === 3) {
-      if (hasUtilFee) {
+      const isAnyOwnerUtil = electricityPayee === 'landlord' || waterPayee === 'landlord' || gasPayee === 'landlord' || internetPayee === 'landlord' || trashPayee === 'landlord';
+      if (isAnyOwnerUtil && utilFee) {
         const util = parseFloat(utilFee);
-        if (!utilFee || isNaN(util) || util < 0) {
+        if (isNaN(util) || util < 0) {
           errors.utilFee = 'Utility fee must be 0 or positive.';
         }
       }
@@ -789,8 +785,9 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
     compiled += `   - Gas: Paid by ${gasPayee === 'landlord' ? 'Landlord' : 'Tenant'}\n`;
     compiled += `   - Internet: Paid by ${internetPayee === 'landlord' ? 'Landlord' : 'Tenant'}\n`;
     compiled += `   - Trash Removal: Paid by ${trashPayee === 'landlord' ? 'Landlord' : 'Tenant'}\n`;
-    if (hasUtilFee && parseFloat(utilFee) > 0) {
-      compiled += `   - Flat Utility Fee Charged by Landlord: \$${utilFee}/month\n`;
+    const isAnyOwnerUtil = electricityPayee === 'landlord' || waterPayee === 'landlord' || gasPayee === 'landlord' || internetPayee === 'landlord' || trashPayee === 'landlord';
+    if (isAnyOwnerUtil && parseFloat(utilFee || 0) > 0) {
+      compiled += `   - Flat Utility Fee Charged by Landlord: \$${utilFee}/month (Covering: ${ownerPaidUtils.join(', ')})\n`;
     }
     compiled += `\n`;
     
@@ -975,7 +972,7 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
       return;
     }
     
-    const numMonths = duration === 'custom' ? parseInt(customDuration) : parseInt(duration);
+    const numMonths = parseInt(duration);
     if (isNaN(numMonths) || numMonths < 1) {
       setEndDate('');
       return;
@@ -995,7 +992,7 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
     const mm = String(end.getMonth() + 1).padStart(2, '0');
     const dd = String(end.getDate()).padStart(2, '0');
     setEndDate(`${yyyy}-${mm}-${dd}`);
-  }, [startDate, duration, customDuration]);
+  }, [startDate, duration]);
 
   useEffect(() => {
     if (editingLeaseId) return; // Do not overwrite values when editing a lease!
@@ -1275,7 +1272,8 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
         }
       }
 
-      const calculatedUtilFee = hasUtilFee ? parseFloat(utilFee || 0) : 0;
+      const isAnyOwnerUtil = electricityPayee === 'landlord' || waterPayee === 'landlord' || gasPayee === 'landlord' || internetPayee === 'landlord' || trashPayee === 'landlord';
+      const calculatedUtilFee = isAnyOwnerUtil ? parseFloat(utilFee || 0) : 0;
       const calculatedParkingFee = hasParkingFee ? (parseFloat(parkingFeePerCar || 0) * parseInt(parkingCarsCount || 1)) : 0;
       const calculatedPetFee = hasPetFee ? (parseFloat(petFeePerPet || 0) * parseInt(petsCount || 1)) : 0;
 
@@ -1702,11 +1700,9 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
 
               <div>
                 <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">Emergency Phone Number</label>
-                <input
-                  type="tel"
+                <PhoneInputWithCountry
                   value={tenantEmergencyPhone}
-                  onChange={e => setTenantEmergencyPhone(formatPhoneAsYouType(e.target.value))}
-                  className="w-full text-xs px-3.5 py-2.5 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none border-slate-200 dark:border-white/10 focus:ring-2 focus:ring-blue-500/20"
+                  onChange={(e, val) => setTenantEmergencyPhone(val)}
                   placeholder="(555) 555-5555"
                 />
               </div>
@@ -2481,7 +2477,7 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
         {/* Row 1: Tenant Name & Tenant Email */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <div>
-            <label className="block text-xs font-bold text-slate-655 dark:text-gray-400 tracking-wider mb-2">TENANT NAME</label>
+            <label className="block text-xs font-bold text-slate-700 dark:text-slate-200 tracking-wider mb-2">TENANT NAME</label>
             <div className="relative">
               <User className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
               <input 
@@ -2494,7 +2490,7 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
                     setTenantName(val);
                   }
                 }} 
-                className={`w-full text-sm pl-10 pr-3.5 py-3 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none transition focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 border-slate-200 dark:border-white/10 ${formErrors.tenantName ? 'border-red-500 ring-2 ring-red-500/10' : ''}`} 
+                className={`w-full text-sm pl-10 pr-3.5 py-3 border rounded-xl bg-white dark:bg-[#253346] text-slate-900 dark:text-white outline-none transition focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 border-slate-200 dark:border-slate-600 ${formErrors.tenantName ? 'border-red-500 ring-2 ring-red-500/10' : ''}`} 
                 placeholder="John Doe" 
               />
             </div>
@@ -2502,7 +2498,7 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-slate-655 dark:text-gray-400 tracking-wider mb-2">TENANT EMAIL</label>
+            <label className="block text-xs font-bold text-slate-700 dark:text-slate-200 tracking-wider mb-2">TENANT EMAIL</label>
             <div className="relative">
               <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
               <input 
@@ -2511,8 +2507,8 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
                 type="email" 
                 value={tenantEmail} 
                 onChange={e => setTenantEmail(e.target.value)} 
-                className={`w-full text-sm pl-10 pr-3.5 py-3 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none transition focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 ${
-                  prefilledFromApp ? 'opacity-80 cursor-not-allowed bg-slate-100 dark:bg-slate-950 border-slate-200 dark:border-white/5' : 'border-slate-200 dark:border-white/10'
+                className={`w-full text-sm pl-10 pr-3.5 py-3 border rounded-xl bg-white dark:bg-[#253346] text-slate-900 dark:text-white outline-none transition focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 ${
+                  prefilledFromApp ? 'opacity-80 cursor-not-allowed bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700' : 'border-slate-200 dark:border-slate-600'
                 } ${formErrors.tenantEmail ? 'border-red-500 ring-2 ring-red-500/10' : ''}`} 
                 placeholder="tenant@example.com" 
               />
@@ -2524,7 +2520,7 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
         {/* Row 2: Select Apartment & Tenant Phone */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <div>
-            <label className="block text-xs font-bold text-slate-655 dark:text-gray-400 tracking-wider mb-2">
+            <label className="block text-xs font-bold text-slate-700 dark:text-slate-200 tracking-wider mb-2">
               {selectedUnitObj?.property_type === 'condo' || selectedUnitObj?.unit_number === 'Condo Unit' ? 'CONDO UNIT / APT NUMBER' : isSingleFamilyOrCondo ? 'PROPERTY TYPE' : 'SELECT APARTMENT'}
             </label>
             <div className="relative">
@@ -2534,7 +2530,7 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
                   type="text"
                   value={customUnitNo}
                   onChange={e => setCustomUnitNo(e.target.value)}
-                  className="w-full text-sm pl-10 pr-3.5 py-3 border rounded-xl bg-white dark:bg-[#132030] border-slate-200 dark:border-white/10 text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-bold"
+                  className="w-full text-sm pl-10 pr-3.5 py-3 border rounded-xl bg-white dark:bg-[#253346] border-slate-200 dark:border-slate-600 text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-bold"
                   placeholder="e.g. Apt 5, Apt 6, 7"
                 />
               ) : isSingleFamilyOrCondo ? (
@@ -2542,7 +2538,7 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
                   type="text"
                   readOnly
                   value='Single Family Home (Entire Property)'
-                  className="w-full text-sm pl-10 pr-3.5 py-3 border rounded-xl bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-white/5 text-slate-500 dark:text-slate-400 outline-none cursor-not-allowed font-bold"
+                  className="w-full text-sm pl-10 pr-3.5 py-3 border rounded-xl bg-slate-50 dark:bg-[#253346]/60 border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 outline-none cursor-not-allowed font-bold"
                 />
               ) : (
                 <select 
@@ -2550,8 +2546,8 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
                   disabled={prefilledFromApp}
                   value={selectedUnitId} 
                   onChange={e => setSelectedUnitId(e.target.value)} 
-                  className={`w-full text-sm pl-10 pr-3.5 py-3 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none transition focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 ${
-                    prefilledFromApp ? 'opacity-80 cursor-not-allowed bg-slate-100 dark:bg-slate-950 border-slate-200 dark:border-white/5' : 'border-slate-200 dark:border-white/10'
+                  className={`w-full text-sm pl-10 pr-3.5 py-3 border rounded-xl bg-white dark:bg-[#253346] text-slate-900 dark:text-white outline-none transition focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 ${
+                    prefilledFromApp ? 'opacity-80 cursor-not-allowed bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700' : 'border-slate-200 dark:border-slate-600'
                   } ${formErrors.selectedUnitId ? 'border-red-500 ring-2 ring-red-500/10' : ''}`}
                 >
                   <option value="">-- Select an Apartment --</option>
@@ -2570,21 +2566,19 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
 
 
         <div>
-          <label className="block text-xs font-bold text-slate-655 dark:text-gray-400 tracking-wider mb-2">TENANT PHONE</label>
-          <div className="relative">
-            <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
-            <input 
-              required 
-              type="text" 
-              value={tenantPhone} 
-              maxLength={15} 
-              onChange={e => {
-                setTenantPhone(formatPhoneAsYouType(e.target.value));
-              }} 
-              className={`w-full text-sm pl-10 pr-3.5 py-3 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none transition focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 border-slate-200 dark:border-white/10 ${formErrors.tenantPhone ? 'border-red-500 ring-2 ring-red-500/10' : ''}`} 
-              placeholder="+1 (555) 000-0000" 
-            />
-          </div>
+          <label className="block text-xs font-bold text-slate-700 dark:text-slate-200 tracking-wider mb-2">TENANT PHONE</label>
+          <PhoneInputWithCountry
+            required
+            value={tenantPhone}
+            error={!!formErrors.tenantPhone}
+            onChange={(e, val) => {
+              setTenantPhone(val);
+              if (formErrors.tenantPhone) {
+                setFormErrors(prev => ({ ...prev, tenantPhone: '' }));
+              }
+            }}
+            placeholder="(555) 000-0000"
+          />
           {formErrors.tenantPhone && <p className="text-xs text-red-500 mt-1.5 flex items-center gap-1.5"><AlertCircle size={13}/>{formErrors.tenantPhone}</p>}
         </div>
       </div>
@@ -2636,7 +2630,7 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
                   min={editingLeaseId ? undefined : new Date().toISOString().split('T')[0]} 
                   value={startDate} 
                   onChange={e => setStartDate(e.target.value)} 
-                  className={`w-full text-sm pl-10 pr-3.5 py-3 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none transition focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 border-slate-200 dark:border-white/10 ${formErrors.startDate ? 'border-red-500 ring-2 ring-red-500/10' : ''}`} 
+                  className={`w-full text-sm pl-10 pr-3.5 py-3 border rounded-xl bg-white dark:bg-[#253346] text-slate-900 dark:text-white outline-none transition focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 border-slate-200 dark:border-slate-600 ${formErrors.startDate ? 'border-red-500 ring-2 ring-red-500/10' : ''}`} 
                 />
               </div>
               {formErrors.startDate && <p className="text-xs text-red-500 mt-1.5 flex items-center gap-1.5"><AlertCircle size={13}/>{formErrors.startDate}</p>}
@@ -2649,31 +2643,23 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
                 <select 
                   value={duration} 
                   onChange={e => setDuration(e.target.value)} 
-                  className="w-full text-sm pl-10 pr-3.5 py-3 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none transition focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 border-slate-200 dark:border-white/10"
+                  className="w-full text-sm pl-10 pr-3.5 py-3 border rounded-xl bg-white dark:bg-[#253346] text-slate-900 dark:text-white outline-none transition focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 border-slate-200 dark:border-slate-600 font-medium"
                 >
-                  <option value="12">12 Months (1 Year)</option>
+                  <option value="11">11 Months (Standard)</option>
+                  <option value="10">10 Months</option>
+                  <option value="9">9 Months</option>
+                  <option value="8">8 Months</option>
+                  <option value="7">7 Months</option>
                   <option value="6">6 Months</option>
-                  <option value="24">24 Months (2 Years)</option>
-                  <option value="custom">Custom Months</option>
+                  <option value="5">5 Months</option>
+                  <option value="4">4 Months</option>
+                  <option value="3">3 Months</option>
+                  <option value="2">2 Months</option>
+                  <option value="1">1 Month</option>
                 </select>
               </div>
             </div>
           </div>
-
-          {duration === 'custom' && (
-            <div className="w-full md:w-1/2">
-              <label className="block text-xs font-bold text-slate-655 dark:text-gray-400 tracking-wider mb-2">CUSTOM DURATION (MONTHS)</label>
-              <input 
-                type="number" 
-                min="1" 
-                value={customDuration} 
-                onChange={e => setCustomDuration(e.target.value)} 
-                placeholder="Enter number of months" 
-                className={`w-full text-sm px-3.5 py-3 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white border-slate-200 dark:border-white/10 ${formErrors.duration ? 'border-red-500 ring-2 ring-red-500/10' : ''}`} 
-              />
-              {formErrors.duration && <p className="text-xs text-red-500 mt-1.5 flex items-center gap-1.5"><AlertCircle size={13}/>{formErrors.duration}</p>}
-            </div>
-          )}
         </div>
         
         {/* Section 2: Monthly Rent Settings */}
@@ -2694,7 +2680,7 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
                   type="number" 
                   value={rentAmount} 
                   onChange={e => setRentAmount(e.target.value)} 
-                  className={`w-full text-sm pl-10 pr-3.5 py-3 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none transition focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 border-slate-200 dark:border-white/10 ${formErrors.rentAmount ? 'border-red-500 ring-2 ring-red-500/10' : ''}`} 
+                  className={`w-full text-sm pl-10 pr-3.5 py-3 border rounded-xl bg-white dark:bg-[#253346] text-slate-900 dark:text-white outline-none transition focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 border-slate-200 dark:border-slate-600 ${formErrors.rentAmount ? 'border-red-500 ring-2 ring-red-500/10' : ''}`} 
                   placeholder="1500" 
                 />
               </div>
@@ -2708,7 +2694,7 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
                 <select 
                   value={rentDueDate} 
                   onChange={e => setRentDueDate(e.target.value)} 
-                  className="w-full text-sm pl-10 pr-3.5 py-3 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none transition focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 border-slate-200 dark:border-white/10"
+                  className="w-full text-sm pl-10 pr-3.5 py-3 border rounded-xl bg-white dark:bg-[#253346] text-slate-900 dark:text-white outline-none transition focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 border-slate-200 dark:border-slate-600"
                 >
                   {[...Array(28).keys()].map(x => (
                     <option key={x + 1} value={String(x + 1)}>{x + 1}{x === 0 ? 'st' : x === 1 ? 'nd' : x === 2 ? 'rd' : 'th'} day of month</option>
@@ -2737,7 +2723,7 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
                   type="number" 
                   value={deposit} 
                   onChange={e => setDeposit(e.target.value)} 
-                  className={`w-full text-sm pl-10 pr-3.5 py-3 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none transition focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 border-slate-200 dark:border-white/10 ${formErrors.deposit ? 'border-red-500 ring-2 ring-red-500/10' : ''}`} 
+                  className={`w-full text-sm pl-10 pr-3.5 py-3 border rounded-xl bg-white dark:bg-[#253346] text-slate-900 dark:text-white outline-none transition focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 border-slate-200 dark:border-slate-600 ${formErrors.deposit ? 'border-red-500 ring-2 ring-red-500/10' : ''}`} 
                   placeholder="1500" 
                 />
               </div>
@@ -2753,7 +2739,7 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
                     type="number" 
                     value={moveInFee} 
                     onChange={e => setMoveInFee(e.target.value)} 
-                    className={`w-full text-sm pl-7 pr-3 py-3 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none transition focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 border-slate-200 dark:border-white/10 ${formErrors.moveInFee ? 'border-red-500 ring-2 ring-red-500/10' : ''}`} 
+                    className={`w-full text-sm pl-7 pr-3 py-3 border rounded-xl bg-white dark:bg-[#253346] text-slate-900 dark:text-white outline-none transition focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 border-slate-200 dark:border-slate-600 ${formErrors.moveInFee ? 'border-red-500 ring-2 ring-red-500/10' : ''}`} 
                   />
                 </div>
                 {formErrors.moveInFee && <p className="text-xs text-red-500 mt-1.5 flex items-center gap-1.5"><AlertCircle size={13}/>{formErrors.moveInFee}</p>}
@@ -2766,7 +2752,7 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
                     type="number" 
                     value={moveOutFee} 
                     onChange={e => setMoveOutFee(e.target.value)} 
-                    className={`w-full text-sm pl-7 pr-3 py-3 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none transition focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 border-slate-200 dark:border-white/10 ${formErrors.moveOutFee ? 'border-red-500 ring-2 ring-red-500/10' : ''}`} 
+                    className={`w-full text-sm pl-7 pr-3 py-3 border rounded-xl bg-white dark:bg-[#253346] text-slate-900 dark:text-white outline-none transition focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 border-slate-200 dark:border-slate-600 ${formErrors.moveOutFee ? 'border-red-500 ring-2 ring-red-500/10' : ''}`} 
                   />
                 </div>
                 {formErrors.moveOutFee && <p className="text-xs text-red-500 mt-1.5 flex items-center gap-1.5"><AlertCircle size={13}/>{formErrors.moveOutFee}</p>}
@@ -2794,7 +2780,7 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
                   min="0"
                   value={gracePeriod} 
                   onChange={e => setGracePeriod(e.target.value)} 
-                  className={`w-full text-sm pl-10 pr-3.5 py-3 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none transition focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 border-slate-200 dark:border-white/10 ${formErrors.gracePeriod ? 'border-red-500 ring-2 ring-red-500/10' : ''}`} 
+                  className={`w-full text-sm pl-10 pr-3.5 py-3 border rounded-xl bg-white dark:bg-[#253346] text-slate-900 dark:text-white outline-none transition focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 border-slate-200 dark:border-slate-600 ${formErrors.gracePeriod ? 'border-red-500 ring-2 ring-red-500/10' : ''}`} 
                   placeholder="5"
                 />
               </div>
@@ -2811,7 +2797,7 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
                   min="0"
                   value={feeAmount} 
                   onChange={e => setFeeAmount(e.target.value)} 
-                  className={`w-full text-sm pl-10 pr-3.5 py-3 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none transition focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 border-slate-200 dark:border-white/10 ${formErrors.feeAmount ? 'border-red-500 ring-2 ring-red-500/10' : ''}`} 
+                  className={`w-full text-sm pl-10 pr-3.5 py-3 border rounded-xl bg-white dark:bg-[#253346] text-slate-900 dark:text-white outline-none transition focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 border-slate-200 dark:border-slate-600 ${formErrors.feeAmount ? 'border-red-500 ring-2 ring-red-500/10' : ''}`} 
                   placeholder="50"
                 />
               </div>
@@ -2827,7 +2813,7 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
                   min="0"
                   value={recurringFeeAmount} 
                   onChange={e => setRecurringFeeAmount(e.target.value)} 
-                  className="w-full text-sm pl-10 pr-3.5 py-3 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none transition focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 border-slate-200 dark:border-white/10" 
+                  className="w-full text-sm pl-10 pr-3.5 py-3 border rounded-xl bg-white dark:bg-[#253346] text-slate-900 dark:text-white outline-none transition focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 border-slate-200 dark:border-slate-600" 
                   placeholder="25"
                 />
               </div>
@@ -2840,7 +2826,7 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
                 <select 
                   value={recurringFeeFrequency} 
                   onChange={e => setRecurringFeeFrequency(e.target.value)} 
-                  className="w-full text-sm pl-10 pr-3.5 py-3 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none transition focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 border-slate-200 dark:border-white/10 font-medium"
+                  className="w-full text-sm pl-10 pr-3.5 py-3 border rounded-xl bg-white dark:bg-[#253346] text-slate-900 dark:text-white outline-none transition focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 border-slate-200 dark:border-slate-600 font-medium"
                 >
                   <option value="WEEKLY">Weekly (Every 7 Days)</option>
                   <option value="DAILY">Daily (Every Day)</option>
@@ -2850,7 +2836,7 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
             </div>
           </div>
 
-          <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/5 flex items-start gap-2.5 text-xs text-slate-600 dark:text-slate-400">
+          <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-[#253346] border border-slate-200 dark:border-slate-600 flex items-start gap-2.5 text-xs text-slate-600 dark:text-slate-300">
             <Info size={16} className="text-blue-500 mt-0.5 shrink-0" />
             <div>
               <strong className="text-slate-900 dark:text-white">Late Fee Policy Rule:</strong> If rent is unpaid after the <strong>{gracePeriod || '5'}-day</strong> grace period, an initial flat fee of <strong>${feeAmount || '50'}</strong> is assessed immediately. {recurringFeeFrequency !== 'NONE' && parseFloat(recurringFeeAmount) > 0 ? (
@@ -2903,7 +2889,7 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
                 <select
                   value={util.payee}
                   onChange={e => util.setPayee(e.target.value)}
-                  className="w-full text-xs px-3 py-2 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none border-slate-200 dark:border-white/10 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 cursor-pointer font-medium"
+                  className="w-full text-xs px-3 py-2 border rounded-xl bg-white dark:bg-[#253346] text-slate-900 dark:text-white outline-none border-slate-200 dark:border-slate-600 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 cursor-pointer font-medium"
                 >
                   <option value="tenant">Paid by Tenant</option>
                   <option value="landlord">Paid by Owner</option>
@@ -2914,66 +2900,45 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
         </div>
 
         {showUtilityFeeOption && (
-          <div className={`p-4 border rounded-2xl transition-all text-left ${hasUtilFee ? 'border-blue-500/30 bg-blue-500/[0.02]' : 'border-slate-200 dark:border-white/5 bg-slate-50/30 dark:bg-slate-950/5'} animate-fade-in`}>
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="p-4 border rounded-2xl bg-blue-50/60 dark:bg-[#253346]/50 border-blue-200/80 dark:border-slate-600 transition-all text-left animate-fade-in space-y-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div>
-                <span className="text-xs font-bold text-slate-800 dark:text-white block">Landlord will charge flat monthly utility fee?</span>
-                <div className="flex flex-wrap items-center gap-1.5 mt-1">
-                  <span className="text-[10px] text-slate-400">
-                    Enable this to add a set utility cost directly to the ledger bill.
-                  </span>
-                  {ownerPaidUtils.length > 0 && (
-                    <div className="flex items-center gap-1">
-                      <span className="text-[10px] text-slate-400">•</span>
-                      <span className="text-[10px] bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 font-semibold px-2 py-0.5 rounded-md border border-blue-100 dark:border-blue-900/30">
-                        Covering: {ownerPaidUtils.join(', ')}
-                      </span>
-                    </div>
-                  )}
-                </div>
+                <span className="text-xs font-bold text-slate-900 dark:text-white block">
+                  Owner-Paid Utilities Monthly Fee
+                </span>
+                <span className="text-[11px] text-slate-500 dark:text-slate-300">
+                  Direct monthly utility cost added to tenant ledger for owner-managed utilities.
+                </span>
               </div>
-              
-              <div className="flex w-32 rounded-lg overflow-hidden border border-slate-200 dark:border-white/10 p-0.5 bg-white dark:bg-[#132030] shrink-0">
-                <button
-                  type="button"
-                  onClick={() => setHasUtilFee(true)}
-                  className={`flex-1 text-[10px] font-bold py-1.5 rounded-md transition cursor-pointer ${
-                    hasUtilFee 
-                      ? 'bg-blue-600 text-white shadow-sm' 
-                      : 'text-slate-500 hover:text-slate-700 dark:hover:text-white bg-transparent'
-                  }`}
-                >
-                  Yes
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setHasUtilFee(false)}
-                  className={`flex-1 text-[10px] font-bold py-1.5 rounded-md transition cursor-pointer ${
-                    !hasUtilFee 
-                      ? 'bg-blue-600 text-white shadow-sm' 
-                      : 'text-slate-500 hover:text-slate-700 dark:hover:text-white bg-transparent'
-                  }`}
-                >
-                  No
-                </button>
-              </div>
+              {ownerPaidUtils.length > 0 && (
+                <span className="text-[10px] bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300 font-bold px-2.5 py-1 rounded-lg border border-blue-200 dark:border-blue-700/50 shrink-0">
+                  Covering: {ownerPaidUtils.join(', ')}
+                </span>
+              )}
             </div>
-            {hasUtilFee && (
-              <div className="w-full md:w-1/2 pt-3 mt-2 border-t border-blue-500/10 animate-fade-in">
-                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">Utility Fee Amount ($)</label>
-                <div className="relative">
-                  <DollarSign className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
-                  <input 
-                    type="number" 
-                    value={utilFee} 
-                    onChange={e => setUtilFee(e.target.value)} 
-                    className={`w-full text-sm pl-10 pr-3.5 py-2.5 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none transition focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 border-slate-200 dark:border-white/10 ${formErrors.utilFee ? 'border-red-500 ring-2 ring-red-500/10' : ''}`} 
-                    placeholder="e.g. 100" 
-                  />
-                </div>
-                {formErrors.utilFee && <p className="text-xs text-red-500 mt-1 flex items-center gap-1"><AlertCircle size={12}/>{formErrors.utilFee}</p>}
+
+            <div className="w-full md:w-1/2 pt-1">
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-200 tracking-wider mb-1.5 uppercase">
+                Utility Fee Amount ($)
+              </label>
+              <div className="relative">
+                <DollarSign className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
+                <input 
+                  type="number" 
+                  min="0"
+                  value={utilFee} 
+                  onChange={e => {
+                    setUtilFee(e.target.value);
+                    if (formErrors.utilFee) {
+                      setFormErrors(prev => ({ ...prev, utilFee: '' }));
+                    }
+                  }} 
+                  className={`w-full text-sm pl-10 pr-3.5 py-2.5 border rounded-xl bg-white dark:bg-[#1e293b] text-slate-900 dark:text-white outline-none transition focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 border-slate-200 dark:border-slate-600 ${formErrors.utilFee ? 'border-red-500 ring-2 ring-red-500/10' : ''}`} 
+                  placeholder="0 (if included in rent for free)" 
+                />
               </div>
-            )}
+              {formErrors.utilFee && <p className="text-xs text-red-500 mt-1 flex items-center gap-1"><AlertCircle size={12}/>{formErrors.utilFee}</p>}
+            </div>
           </div>
         )}
 
@@ -2985,7 +2950,7 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
           value={keyExchangeNotes} 
           onChange={e => setKeyExchangeNotes(e.target.value)} 
           maxLength={500}
-          className="w-full text-sm px-3.5 py-2.5 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white border-slate-200 dark:border-white/10 h-20 resize-none outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" 
+          className="w-full text-sm px-3.5 py-2.5 border rounded-xl bg-white dark:bg-[#253346] text-slate-900 dark:text-white border-slate-200 dark:border-slate-600 h-20 resize-none outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" 
           placeholder="e.g. Keys will be left in lockbox code 1234, or pick up from office."
         />
       </div>
@@ -3339,7 +3304,7 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
                   setFormErrors(prev => ({ ...prev, lessorFullName: '' }));
                 }
               }} 
-              className={`w-full text-sm pl-10 pr-3.5 py-3 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none transition focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 border-slate-200 dark:border-white/10 ${formErrors.lessorFullName ? 'border-red-500 ring-2 ring-red-500/10' : ''}`} 
+              className={`w-full text-sm pl-10 pr-3.5 py-3 border rounded-xl bg-white dark:bg-[#253346] text-slate-900 dark:text-white outline-none transition focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 border-slate-200 dark:border-slate-600 ${formErrors.lessorFullName ? 'border-red-500 ring-2 ring-red-500/10' : ''}`} 
               placeholder="First and Last name" 
             />
           </div>
@@ -3360,7 +3325,7 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
                   setFormErrors(prev => ({ ...prev, coLandlordName: '' }));
                 }
               }} 
-              className={`w-full text-sm pl-10 pr-3.5 py-3 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none transition focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 border-slate-200 dark:border-white/10 ${formErrors.coLandlordName ? 'border-red-500 ring-2 ring-red-500/10' : ''}`} 
+              className={`w-full text-sm pl-10 pr-3.5 py-3 border rounded-xl bg-white dark:bg-[#253346] text-slate-900 dark:text-white outline-none transition focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 border-slate-200 dark:border-slate-600 ${formErrors.coLandlordName ? 'border-red-500 ring-2 ring-red-500/10' : ''}`} 
               placeholder="e.g. Joint Owner Name" 
             />
           </div>
@@ -3371,23 +3336,18 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         <div>
           <label className="block text-xs font-bold text-slate-655 dark:text-gray-400 tracking-wider mb-2">CONTACT PHONE</label>
-          <div className="relative">
-            <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
-            <input 
-              required 
-              type="tel" 
-              value={lessorPhone} 
-              onChange={e => {
-                const val = formatPhoneAsYouType(e.target.value);
-                setLessorPhone(val);
-                if (formErrors.lessorPhone) {
-                  setFormErrors(prev => ({ ...prev, lessorPhone: '' }));
-                }
-              }} 
-              className={`w-full text-sm pl-10 pr-3.5 py-3 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none transition focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 border-slate-200 dark:border-white/10 ${formErrors.lessorPhone ? 'border-red-500 ring-2 ring-red-500/10' : ''}`} 
-              placeholder="10-digit phone number" 
-            />
-          </div>
+          <PhoneInputWithCountry
+            required
+            value={lessorPhone}
+            error={!!formErrors.lessorPhone}
+            onChange={(e, val) => {
+              setLessorPhone(val);
+              if (formErrors.lessorPhone) {
+                setFormErrors(prev => ({ ...prev, lessorPhone: '' }));
+              }
+            }}
+            placeholder="(555) 000-0000"
+          />
           {formErrors.lessorPhone && <p className="text-xs text-red-500 mt-1.5 flex items-center gap-1.5"><AlertCircle size={13}/>{formErrors.lessorPhone}</p>}
         </div>
 
@@ -3406,7 +3366,7 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
                   setFormErrors(prev => ({ ...prev, lessorEmail: '' }));
                 }
               }} 
-              className={`w-full text-sm pl-10 pr-3.5 py-3 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none transition focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 border-slate-200 dark:border-white/10 ${formErrors.lessorEmail ? 'border-red-500 ring-2 ring-red-500/10' : ''}`} 
+              className={`w-full text-sm pl-10 pr-3.5 py-3 border rounded-xl bg-white dark:bg-[#253346] text-slate-900 dark:text-white outline-none transition focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 border-slate-200 dark:border-slate-600 ${formErrors.lessorEmail ? 'border-red-500 ring-2 ring-red-500/10' : ''}`} 
               placeholder="landlord@example.com" 
             />
           </div>
@@ -3427,7 +3387,7 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
                 setFormErrors(prev => ({ ...prev, lessorAddress: '' }));
               }
             }} 
-            className={`w-full text-sm pl-10 pr-3.5 py-3 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none transition focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 border-slate-200 dark:border-white/10 ${formErrors.lessorAddress ? 'border-red-500 ring-2 ring-red-500/10' : ''}`} 
+            className={`w-full text-sm pl-10 pr-3.5 py-3 border rounded-xl bg-white dark:bg-[#253346] text-slate-900 dark:text-white outline-none transition focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 border-slate-200 dark:border-slate-600 ${formErrors.lessorAddress ? 'border-red-500 ring-2 ring-red-500/10' : ''}`} 
             placeholder="Official address to send checks/notices" 
           />
           
@@ -3451,40 +3411,40 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
   );
 
   const renderStep9 = () => (
-    <div className="space-y-5">
-      <div className="border-b dark:border-white/5 pb-3">
+    <div className="space-y-6 pb-2">
+      <div className="border-b border-slate-200 dark:border-slate-700/60 pb-3">
         <span className="text-[10px] uppercase font-bold text-blue-600 dark:text-blue-400 tracking-wider">Step 5 of 5</span>
-        <h4 className="text-lg font-extrabold text-slate-800 dark:text-white mt-1">Terms Agreement & Final Review</h4>
-        <p className="text-xs text-slate-400">Customize property rules, review the compiled agreement draft, and sign to finalize.</p>
+        <h4 className="text-lg font-extrabold text-slate-900 dark:text-white mt-1">Terms Agreement & Final Review</h4>
+        <p className="text-xs text-slate-500 dark:text-slate-400">Customize property rules, review the compiled agreement draft, and sign to finalize.</p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* Rules & Policies Column */}
-        <div className="lg:col-span-5 flex flex-col bg-slate-50/30 dark:bg-slate-900/30 border border-slate-200/60 dark:border-white/5 rounded-2xl p-4 lg:h-[calc(100vh-295px)] min-h-[420px] lg:min-h-0">
-          <div className="flex justify-between items-center text-left border-b dark:border-white/5 pb-2.5 shrink-0">
+        <div className="lg:col-span-5 flex flex-col bg-slate-50/90 dark:bg-[#253346]/40 border border-slate-200 dark:border-slate-600 rounded-2xl p-4 space-y-3">
+          <div className="flex justify-between items-center text-left border-b border-slate-200 dark:border-slate-600/70 pb-2.5">
             <div>
-              <span className="text-xs font-bold text-slate-800 dark:text-white block">Rules & Policies</span>
-              <span className="text-[10px] text-slate-400">Customize rules for residents.</span>
+              <span className="text-xs font-bold text-slate-900 dark:text-white block">Rules & Policies</span>
+              <span className="text-[10px] text-slate-500 dark:text-slate-400">Customize rules for residents.</span>
             </div>
             <button
               type="button"
               onClick={() => setRules(INITIAL_RULES)}
-              className="text-[9px] uppercase px-2.5 py-1.5 border border-slate-200 dark:border-white/10 rounded-lg hover:bg-slate-100 dark:hover:bg-white/5 font-extrabold text-slate-600 dark:text-slate-400 transition cursor-pointer"
+              className="text-[9px] uppercase px-2.5 py-1.5 border border-slate-200 dark:border-slate-600 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700/60 font-extrabold text-slate-600 dark:text-slate-300 transition cursor-pointer"
             >
               Restore Defaults
             </button>
           </div>
 
-          <div className="flex-1 overflow-y-auto pr-1 space-y-2.5 py-3 custom-scrollbar text-left">
+          <div className="max-h-[320px] overflow-y-auto pr-1 space-y-2.5 custom-scrollbar text-left">
             {rules.map((rule, idx) => (
-              <div key={idx} className="p-3 border border-slate-200/80 dark:border-white/[0.08] rounded-xl bg-slate-50/20 dark:bg-slate-950/10 flex flex-col justify-between gap-2.5 hover:shadow-sm transition-all animate-fade-in">
-                <div className="text-xs text-slate-800 dark:text-slate-200">
+              <div key={idx} className="p-3 border border-slate-200 dark:border-slate-600/80 rounded-xl bg-white dark:bg-[#1e293b] flex flex-col justify-between gap-2.5 shadow-xs hover:shadow transition-all animate-fade-in">
+                <div className="text-xs text-slate-900 dark:text-slate-100">
                   {editingRuleIndex === idx ? (
                     <div className="space-y-2">
                       <textarea
                         value={editingRuleText}
                         onChange={e => setEditingRuleText(e.target.value)}
-                        className="w-full text-xs p-2.5 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white border-slate-200 dark:border-white/10 h-16 resize-none outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                        className="w-full text-xs p-2.5 border rounded-xl bg-white dark:bg-[#253346] text-slate-900 dark:text-white border-slate-200 dark:border-slate-600 h-16 resize-none outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                       />
                       <div className="flex gap-2 justify-end">
                         <button
@@ -3502,7 +3462,7 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
                         <button
                           type="button"
                           onClick={() => setEditingRuleIndex(null)}
-                          className="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-white/5 text-slate-700 dark:text-slate-350 text-[9px] font-bold rounded-lg transition cursor-pointer"
+                          className="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 text-[9px] font-bold rounded-lg transition cursor-pointer"
                         >
                           Cancel
                         </button>
@@ -3510,20 +3470,20 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
                     </div>
                   ) : (
                     <div className="leading-relaxed">
-                      <span className="font-bold mr-1.5 text-slate-400 dark:text-slate-500">{idx + 1}.</span>
+                      <span className="font-bold mr-1.5 text-blue-600 dark:text-blue-400">{idx + 1}.</span>
                       {rule}
                     </div>
                   )}
                 </div>
                 {editingRuleIndex !== idx && (
-                  <div className="flex items-center gap-1.5 justify-end shrink-0 border-t dark:border-white/5 pt-1.5">
+                  <div className="flex items-center gap-1.5 justify-end shrink-0 border-t border-slate-100 dark:border-slate-700/60 pt-1.5">
                     <button
                       type="button"
                       onClick={() => {
                         setEditingRuleIndex(idx);
                         setEditingRuleText(rule);
                       }}
-                      className="w-6 h-6 flex items-center justify-center border border-slate-200 dark:border-white/10 rounded-full hover:bg-slate-100 dark:hover:bg-white/5 text-blue-600 dark:text-blue-400 transition cursor-pointer"
+                      className="w-6 h-6 flex items-center justify-center border border-slate-200 dark:border-slate-600 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 text-blue-600 dark:text-blue-400 transition cursor-pointer"
                       title="Edit Rule"
                     >
                       <Edit3 size={10} />
@@ -3533,7 +3493,7 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
                       onClick={() => {
                         setRules(rules.filter((_, i) => i !== idx));
                       }}
-                      className="w-6 h-6 flex items-center justify-center border border-slate-200 dark:border-white/10 rounded-full hover:bg-red-50 dark:hover:bg-red-500/10 text-red-500 transition cursor-pointer"
+                      className="w-6 h-6 flex items-center justify-center border border-slate-200 dark:border-slate-600 rounded-full hover:bg-red-50 dark:hover:bg-red-500/10 text-red-500 transition cursor-pointer"
                       title="Delete Rule"
                     >
                       <Trash2 size={10} />
@@ -3544,7 +3504,7 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
             ))}
           </div>
 
-          <div className="pt-2.5 border-t dark:border-white/5 shrink-0">
+          <div className="pt-2 border-t border-slate-200 dark:border-slate-600/70">
             <button
               type="button"
               onClick={() => {
@@ -3553,7 +3513,7 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
                 setEditingRuleIndex(rules.length);
                 setEditingRuleText(newRule);
               }}
-              className="w-full py-2.5 border border-dashed border-blue-500/40 hover:border-blue-500 text-blue-600 dark:text-blue-400 hover:bg-blue-50/20 dark:hover:bg-blue-500/[0.01] text-[11px] font-bold rounded-xl transition flex items-center justify-center gap-1.5 cursor-pointer"
+              className="w-full py-2.5 border border-dashed border-blue-500/40 hover:border-blue-500 text-blue-600 dark:text-blue-400 hover:bg-blue-50/20 dark:hover:bg-blue-500/10 text-[11px] font-bold rounded-xl transition flex items-center justify-center gap-1.5 cursor-pointer"
             >
               <Plus size={12} /> Add Custom Rule
             </button>
@@ -3561,30 +3521,42 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
         </div>
 
         {/* Live Draft and Terms Column */}
-        <div className="lg:col-span-7 flex flex-col lg:h-[calc(100vh-295px)] min-h-[420px] lg:min-h-0 space-y-4">
-          <div className="flex-1 flex flex-col min-h-0 text-left">
-            <label className="block text-xs font-bold text-blue-600 dark:text-blue-400 tracking-wider mb-2 uppercase text-left shrink-0">Live Compiled Lease Text</label>
+        <div className="lg:col-span-7 flex flex-col space-y-4">
+          <div className="text-left">
+            <label className="block text-xs font-bold text-blue-600 dark:text-blue-400 tracking-wider mb-2 uppercase text-left">
+              Live Compiled Lease Text
+            </label>
             <textarea 
               value={leaseText} 
               onChange={e => setLeaseText(e.target.value)} 
-              className="flex-1 w-full p-4 border border-blue-500/20 dark:border-white/10 rounded-2xl bg-slate-50 dark:bg-slate-950/40 text-xs font-mono text-slate-800 dark:text-slate-350 leading-relaxed overflow-y-auto shadow-inner resize-none focus:outline-none focus:border-blue-500 min-h-0" 
+              className="w-full h-64 sm:h-72 p-4 border border-slate-200 dark:border-slate-600 rounded-2xl bg-slate-50 dark:bg-[#132030] text-xs font-mono text-slate-900 dark:text-slate-100 leading-relaxed overflow-y-auto shadow-inner resize-none focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20" 
             />
           </div>
 
-          <div className="p-3 bg-slate-50/50 dark:bg-slate-950/10 border border-slate-200 dark:border-white/5 rounded-xl text-left shrink-0">
-            <label className="flex items-start gap-2.5 cursor-pointer">
+          {/* Prominent Terms Agreement Verification Box */}
+          <div className="p-4 rounded-2xl bg-blue-50/90 dark:bg-[#1f2f44] border-2 border-blue-300 dark:border-blue-500/40 text-left shadow-sm">
+            <label className="flex items-start gap-3 cursor-pointer select-none">
               <input 
                 type="checkbox" 
                 checked={termsAgreed} 
                 onChange={e => setTermsAgreed(e.target.checked)} 
-                className="w-3.5 h-3.5 text-blue-600 border-slate-300 rounded focus:ring-blue-500 mt-0.5" 
+                className="w-5 h-5 text-blue-600 bg-white dark:bg-[#253346] border-slate-300 dark:border-slate-500 rounded focus:ring-blue-500 mt-0.5 shrink-0 cursor-pointer" 
               />
-              <div>
-                <span className="text-[11px] font-bold text-slate-800 dark:text-white block">I verify and agree to the terms in this lease agreement.</span>
-                <span className="text-[9px] text-slate-400">Checking this will finalize the agreement and send an official invitation to the tenant.</span>
+              <div className="space-y-0.5">
+                <span className="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white block leading-snug">
+                  I verify and agree to the terms in this lease agreement.
+                </span>
+                <p className="text-[11px] sm:text-xs text-slate-600 dark:text-slate-300 font-medium leading-relaxed">
+                  Checking this will finalize the agreement and send an official invitation to the tenant.
+                </p>
               </div>
             </label>
-            {formErrors.termsAgreed && <p className="text-[10px] text-red-500 mt-1 flex items-center gap-1"><AlertCircle size={11}/>{formErrors.termsAgreed}</p>}
+            {formErrors.termsAgreed && (
+              <p className="text-xs text-red-500 font-bold mt-2 flex items-center gap-1.5">
+                <AlertCircle size={13}/>
+                {formErrors.termsAgreed}
+              </p>
+            )}
           </div>
         </div>
       </div>
@@ -3602,9 +3574,9 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
   if (showCreateModal) {
     return (
       <div className="p-2 relative text-slate-900 dark:text-white text-left animate-fade-in">
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl overflow-hidden shadow-sm flex flex-col h-[calc(100vh-220px)] lg:h-[calc(100vh-240px)] min-h-[420px]">
+        <div className="bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-600 rounded-2xl overflow-hidden shadow-xl flex flex-col h-[calc(100vh-220px)] lg:h-[calc(100vh-240px)] min-h-[420px]">
           {/* Top Navigation / Progress Bar */}
-          <div className="w-full bg-slate-50 dark:bg-[#0B1520] border-b border-slate-200 dark:border-white/5 px-6 py-4 flex items-center justify-between gap-4 select-none">
+          <div className="w-full bg-slate-50 dark:bg-[#28384f] border-b border-slate-200 dark:border-slate-600 px-6 py-4 flex items-center justify-between gap-4 select-none">
             {/* Column 1: Title */}
             <div className="text-left shrink-0 w-32">
               <h3 className="text-xs font-black text-blue-600 dark:text-blue-400 tracking-widest uppercase">
@@ -3638,7 +3610,7 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
                           ? 'bg-blue-600 text-white border-blue-600 ring-4 ring-blue-500/20 shadow-md shadow-blue-500/10' 
                           : isCompleted
                             ? 'bg-emerald-500 text-white border-emerald-500 shadow-md shadow-emerald-500/10'
-                            : 'bg-white dark:bg-[#132030] text-slate-500 dark:text-slate-400 border-slate-200 dark:border-white/10 hover:border-slate-350 dark:hover:border-white/20'
+                            : 'bg-white dark:bg-[#33445c] text-slate-500 dark:text-slate-200 border-slate-200 dark:border-slate-500 hover:border-slate-350 dark:hover:border-slate-400'
                       }`}>
                         {isCompleted ? '✓' : step.number}
                       </div>
@@ -3646,7 +3618,7 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
 
                     {/* Connector Line */}
                     {idx < 4 && (
-                      <div className="w-10 sm:w-16 h-0.5 bg-slate-200 dark:bg-white/10 relative shrink-0">
+                      <div className="w-10 sm:w-16 h-0.5 bg-slate-200 dark:bg-slate-600 relative shrink-0">
                         <div className={`absolute inset-y-0 left-0 bg-blue-600 transition-all duration-300 ${
                           step.number < currentStep ? 'w-full' : 'w-0'
                         }`} />
@@ -3662,7 +3634,7 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
               <button
                 type="button"
                 onClick={() => { resetWizardForm(); setShowCreateModal(false); }}
-                className="px-3.5 py-1.5 border border-slate-200 dark:border-white/10 rounded-xl text-[10px] uppercase tracking-wider hover:bg-slate-100 dark:hover:bg-white/5 text-slate-550 dark:text-slate-400 font-extrabold transition cursor-pointer"
+                className="px-3.5 py-1.5 border border-slate-200 dark:border-slate-600 rounded-xl text-[10px] uppercase tracking-wider hover:bg-slate-100 dark:hover:bg-white/10 text-slate-600 dark:text-slate-200 font-extrabold transition cursor-pointer"
               >
                 Cancel
               </button>
@@ -3670,7 +3642,7 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
           </div>
 
           {/* Active Step Panel */}
-          <div className="flex-grow flex-shrink flex flex-col justify-between bg-white dark:bg-slate-900 min-h-0 overflow-hidden">
+          <div className="flex-grow flex-shrink flex flex-col justify-between bg-white dark:bg-[#1e293b] min-h-0 overflow-hidden">
             {/* Form Content Area */}
             <div className="flex-grow p-6 text-left overflow-y-auto">
               {errorMsg && <p className="text-xs text-red-500 bg-red-50 dark:bg-red-500/10 p-3 rounded-xl mb-4 border border-red-500/20">{errorMsg}</p>}
@@ -3689,13 +3661,13 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
             </div>
 
             {/* Wizard Footer Controls */}
-            <div className="p-4 border-t border-slate-200 dark:border-white/5 bg-slate-50/50 dark:bg-slate-950/20 flex justify-end items-center shrink-0">
+            <div className="p-4 border-t border-slate-200 dark:border-slate-600 bg-slate-50/50 dark:bg-[#28384f]/80 flex justify-end items-center shrink-0">
               <div className="flex gap-2">
                 {currentStep > 1 && (
                   <button
                     type="button"
                     onClick={handleBack}
-                    className="px-4 py-2 bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-350 hover:bg-slate-200 dark:hover:bg-white/10 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
+                    className="px-4 py-2 bg-slate-100 dark:bg-white/10 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-white/20 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
                   >
                     <ArrowLeft size={14} /> Back
                   </button>
