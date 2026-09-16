@@ -22,9 +22,9 @@ print(f"[email_service] Logo path: {_LOGO_PATH}")
 
 
 def _send_email_thread(to_email: str, subject: str, html_body: str, from_name: str = None):
-    username = settings.MAIL_USERNAME.strip('"').strip("'")
-    password = settings.MAIL_PASSWORD.strip('"').strip("'")
-    mail_from = settings.MAIL_FROM.strip('"').strip("'")
+    username = settings.MAIL_USERNAME.strip('"').strip("'").strip()
+    password = settings.MAIL_PASSWORD.strip('"').strip("'").replace(" ", "").strip()
+    mail_from = settings.MAIL_FROM.strip('"').strip("'").strip()
     if not from_name:
         from_name = settings.MAIL_FROM_NAME.strip('"').strip("'")
 

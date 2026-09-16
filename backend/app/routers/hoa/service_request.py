@@ -231,11 +231,13 @@ def delete(
 def _get_full_name(user) -> str | None:
     if not user:
         return None
-    parts = [user.first_name]
-    if user.middle_name:
-        parts.append(user.middle_name)
-    parts.append(user.last_name)
-    return " ".join(parts)
+    if hasattr(user, 'full_name') and user.full_name:
+        return user.full_name
+    from app.utils.encryption import safe_decrypt_field
+    fn = safe_decrypt_field(getattr(user, 'first_name', '')) or ''
+    ln = safe_decrypt_field(getattr(user, 'last_name', '')) or ''
+    res = f"{fn} {ln}".strip()
+    return res if res else None
 
 
 def _note_to_out(note) -> NoteOut:
@@ -322,22 +324,19 @@ def get_history(
 def _to_audit_out(log) -> AuditLogOut:
     user_name = None
     if log.user:
-        parts = [log.user.first_name]
-        if log.user.middle_name:
-            parts.append(log.user.middle_name)
-        parts.append(log.user.last_name)
-        user_name = " ".join(parts)
+        user_name = _get_full_name(log.user)
 
+    from app.utils.encryption import decrypt_text_tokens
     return AuditLogOut(
         audit_id     = log.audit_id,
         user_id      = log.user_id,
         action       = log.action,
         module       = log.module,
-        description  = log.description,
+        description  = decrypt_text_tokens(log.description),
         community_id = log.community_id,
         ip_address   = log.ip_address,
-        old_value    = log.old_value,
-        new_value    = log.new_value,
+        old_value    = decrypt_text_tokens(log.old_value),
+        new_value    = decrypt_text_tokens(log.new_value),
         created_at   = log.created_at,
         user_name    = user_name,
     )

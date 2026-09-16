@@ -8,6 +8,7 @@ import { toast } from 'react-hot-toast';
 import API from '../../services/api';
 import { formatPhoneAsYouType } from '../../utils/phoneFormatter';
 import ConfirmModal from '../../components/ConfirmModal';
+import PhoneInputWithCountry from '../../components/common/PhoneInputWithCountry';
 
 export default function CondoVisitors({ community, user }) {
   const [passes, setPasses] = useState([]);
@@ -52,6 +53,7 @@ export default function CondoVisitors({ community, user }) {
 
   // Form state
   const [guestName, setGuestName] = useState('');
+  const [guestPhoneCountryCode, setGuestPhoneCountryCode] = useState('+1');
   const [guestPhone, setGuestPhone] = useState('');
   const [vehicleNo, setVehicleNo] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -95,9 +97,9 @@ export default function CondoVisitors({ community, user }) {
     if (guestPhone.trim()) {
       const cleanPhone = guestPhone.replace(/\D/g, '');
       if (cleanPhone.length !== 10) {
-        return showAlert("Validation Error", "USA phone number must be exactly 10 digits", "warning");
+        return showAlert("Validation Error", "Phone number must be exactly 10 digits", "warning");
       }
-      finalPhone = `+1${cleanPhone}`;
+      finalPhone = `${guestPhoneCountryCode}${cleanPhone}`;
     }
 
     let finalVehicle = null;
@@ -121,6 +123,7 @@ export default function CondoVisitors({ community, user }) {
 
       showAlert("Pass Generated", `Visitor Pass generated successfully! Access Code: ${res.data.otp_code}`, "success");
       setGuestName('');
+      setGuestPhoneCountryCode('+1');
       setGuestPhone('');
       setVehicleNo('');
       setShowAddModal(false);
@@ -500,17 +503,13 @@ export default function CondoVisitors({ community, user }) {
 
               <div>
                 <label className="block text-xs font-bold text-slate-500 dark:text-gray-400 uppercase tracking-wider mb-2">Guest Phone Number (Optional)</label>
-                <div className="relative">
-                  <span className="absolute left-4 top-3 text-sm text-slate-400 font-mono">+1</span>
-                  <input 
-                    type="text"
-                    maxLength={14}
-                    placeholder="(555) 019-2834"
-                    value={guestPhone}
-                    onChange={e => setGuestPhone(formatPhoneAsYouType(e.target.value))}
-                    className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl pl-10 pr-4 py-3 text-sm text-slate-905 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all font-mono"
-                  />
-                </div>
+                <PhoneInputWithCountry
+                  value={guestPhone}
+                  countryCode={guestPhoneCountryCode}
+                  onCountryChange={(code) => setGuestPhoneCountryCode(code)}
+                  onChange={(e, formatted) => setGuestPhone(formatted)}
+                  placeholder="(555) 000-0000"
+                />
               </div>
 
               <div>

@@ -71,7 +71,7 @@ def run_db_upgrades():
 
         # Note: Do not copy existing user unit numbers globally to user_communities,
         # as some user_communities associations (like property managers) are intentionally NULL.
-        db.execute(text("ALTER TABLE leases ADD COLUMN IF NOT EXISTS tenant_email VARCHAR(255);"))
+        db.execute(text("ALTER TABLE rental_leases ADD COLUMN IF NOT EXISTS tenant_email TEXT;"))
         
         # Add columns to rental_leases table for co-landlord support
         columns_to_add_co_landlord = [
@@ -99,12 +99,28 @@ def run_db_upgrades():
 
 
 
-        # Add columns to rental_users and condo_users tables
-        db.execute(text("ALTER TABLE rental_users ADD COLUMN IF NOT EXISTS id_proof_url TEXT;"))
-        db.execute(text("ALTER TABLE rental_users ADD COLUMN IF NOT EXISTS address_proof_url TEXT;"))
-        db.execute(text("ALTER TABLE condo_users ADD COLUMN IF NOT EXISTS id_proof_url TEXT;"))
-        db.execute(text("ALTER TABLE condo_users ADD COLUMN IF NOT EXISTS address_proof_url TEXT;"))
-        
+        # Clean existing audit logs if they contain ciphertext tokens
+        try:
+            from app.models.hoa.audit_log import AuditLog
+            from app.utils.encryption import decrypt_text_tokens
+            logs = db.query(AuditLog).all()
+            for l in logs:
+                if l.description:
+                    new_desc = decrypt_text_tokens(l.description)
+                    if new_desc != l.description:
+                        l.description = new_desc
+                if l.old_value:
+                    new_old = decrypt_text_tokens(l.old_value)
+                    if new_old != l.old_value:
+                        l.old_value = new_old
+                if l.new_value:
+                    new_new = decrypt_text_tokens(l.new_value)
+                    if new_new != l.new_value:
+                        l.new_value = new_new
+            db.commit()
+        except Exception as err:
+            print(f"Audit log sanitize error: {err}")
+
         db.commit()
         print(" Database DDL upgrades completed.")
     except Exception as e:

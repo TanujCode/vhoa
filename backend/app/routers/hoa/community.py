@@ -198,7 +198,7 @@ def get_pending_requests(
         results.append({
             "request_id": r.request_id,
             "user_id": r.user_id,
-            "full_name": f"{user.first_name or ''} {user.last_name or ''}".strip() if user else "Unknown User",
+            "full_name": user.full_name if user else "Unknown User",
             "email": user.email_id if user else None,
             "email_id": user.email_id if user else None,
             "created_at": r.created_date,
@@ -461,6 +461,7 @@ def _to_out(c) -> CommunityOut:
         except Exception:
             pass
 
+    from app.utils.encryption import safe_decrypt_field
     return CommunityOut(
         community_id             = c.community_id,
         name                     = c.name,
@@ -469,7 +470,7 @@ def _to_out(c) -> CommunityOut:
         license_status           = c.license_status,
         community_size           = c.community_size,
         total_owners             = c.total_owners,
-        contact_person           = c.contact_person,
+        contact_person           = safe_decrypt_field(c.contact_person),
         time_zone                = c.time_zone,
         plan_expire_date         = c.plan_expire_date,
         amenity_fee_enabled      = c.amenity_fee_enabled or False,
@@ -477,10 +478,10 @@ def _to_out(c) -> CommunityOut:
         late_fee_enabled         = c.late_fee_enabled or False,
         late_fee_days            = c.late_fee_days if c.late_fee_days is not None else 7,
         late_fee_amount          = c.late_fee_amount if c.late_fee_amount is not None else 25.0,
-        bank_name                = c.bank_name,
-        bank_account_no          = c.bank_account_no,
-        bank_routing_no          = c.bank_routing_no,
-        bank_account_name        = c.bank_account_name,
+        bank_name                = safe_decrypt_field(c.bank_name),
+        bank_account_no          = safe_decrypt_field(c.bank_account_no),
+        bank_routing_no          = safe_decrypt_field(c.bank_routing_no),
+        bank_account_name        = safe_decrypt_field(c.bank_account_name),
         president_email_id       = c.president_email_id,
         president_invite_status  = c.president_invite_status,
         secretary_email_id       = c.secretary_email_id,
@@ -524,11 +525,11 @@ def _req_to_out(r, db: Session) -> CommunityChangeRequestOut:
     
     requested_by_name = "Unknown"
     if r.requested_by:
-        requested_by_name = f"{r.requested_by.first_name or ''} {r.requested_by.last_name or ''}".strip() or r.requested_by.email_id
+        requested_by_name = r.requested_by.full_name or r.requested_by.email_id
         
     reviewed_by_name = None
     if r.reviewed_by:
-        reviewed_by_name = f"{r.reviewed_by.first_name or ''} {r.reviewed_by.last_name or ''}".strip() or r.reviewed_by.email_id
+        reviewed_by_name = r.reviewed_by.full_name or r.reviewed_by.email_id
 
     return CommunityChangeRequestOut(
         id=r.id,
@@ -608,7 +609,7 @@ def create_change_request(
     db.refresh(req)
 
     # Log action so Super Admin sees it in notifications
-    requester_name = f"{current_user.first_name or ''} {current_user.last_name or ''}".strip() or current_user.email_id
+    requester_name = current_user.full_name or current_user.email_id
     changes_summary = []
     if body.requested_name and body.requested_name.strip() != community.name:
         changes_summary.append(f"name → '{body.requested_name.strip()}'")

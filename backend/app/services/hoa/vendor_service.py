@@ -21,17 +21,18 @@ def _generate_code(prefix: str, length: int = 8) -> str:
 
 #  VENDOR CRUD
 def create_vendor(data: VendorCreate, added_by_id: int, db: Session) -> Vendor:
+    from app.utils.encryption import encrypt_field
     vendor = Vendor(
         community_id   = data.community_id,
-        company_name   = data.company_name,
-        contact_person = data.contact_person,
-        email          = data.email,
-        phone          = data.phone,
+        company_name   = encrypt_field(data.company_name.strip()),
+        contact_person = encrypt_field(data.contact_person.strip()),
+        email          = encrypt_field(data.email.strip()),
+        phone          = encrypt_field(data.phone.strip()),
         zip_code       = data.zip_code,
         category       = data.category,
-        license_number = data.license_number,
+        license_number = encrypt_field(data.license_number.strip()) if data.license_number else None,
         license_expiry = data.license_expiry,
-        insurance_number = data.insurance_number,
+        insurance_number = encrypt_field(data.insurance_number.strip()) if data.insurance_number else None,
         insurance_expiry = data.insurance_expiry,
         onboard_status = "ACTIVE",
         active_status  = True,
@@ -75,15 +76,16 @@ def update_vendor(
     modified_by_id: int, db: Session
 ) -> Vendor:
     vendor = get_vendor_by_id(vendor_id, db)
+    from app.utils.encryption import encrypt_field
 
-    if data.company_name is not None:     vendor.company_name = data.company_name
-    if data.contact_person is not None:   vendor.contact_person = data.contact_person
-    if data.phone is not None:            vendor.phone = data.phone
+    if data.company_name is not None:     vendor.company_name = encrypt_field(data.company_name.strip())
+    if data.contact_person is not None:   vendor.contact_person = encrypt_field(data.contact_person.strip())
+    if data.phone is not None:            vendor.phone = encrypt_field(data.phone.strip())
     if data.zip_code is not None:         vendor.zip_code = data.zip_code
     if data.category is not None:         vendor.category = data.category.upper()
-    if data.license_number is not None:   vendor.license_number = data.license_number
+    if data.license_number is not None:   vendor.license_number = encrypt_field(data.license_number.strip()) if data.license_number else None
     if data.license_expiry is not None:   vendor.license_expiry = data.license_expiry
-    if data.insurance_number is not None: vendor.insurance_number = data.insurance_number
+    if data.insurance_number is not None: vendor.insurance_number = encrypt_field(data.insurance_number.strip()) if data.insurance_number else None
     if data.insurance_expiry is not None: vendor.insurance_expiry = data.insurance_expiry
     if data.onboard_status is not None:   vendor.onboard_status = data.onboard_status
     if data.active_status is not None:    vendor.active_status = data.active_status

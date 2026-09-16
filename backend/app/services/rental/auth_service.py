@@ -79,7 +79,7 @@ def verify_rental_otp(email_id: str, otp_code: str, otp_type: str, db: Session) 
     ).first()
 
     if not otp_record:
-        raise ValueError("The OTP is incorrect or has already been used.")
+        raise ValueError("The OTP is incorrect.")
 
     if datetime.now(timezone.utc) > otp_record.expires_at:
         raise ValueError("The OTP has expired. Please request it again.")

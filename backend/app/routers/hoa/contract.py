@@ -19,6 +19,10 @@ router = APIRouter(prefix="/contracts", tags=["Contracts"])
 
 
 
+from app.utils.decryption_helpers import decrypt_hoa_contract
+from app.utils.encryption import safe_decrypt_field
+
+
 @router.post("", response_model=ContractOut, status_code=201)
 def create_new_contract(
     body: ContractCreate,
@@ -26,7 +30,8 @@ def create_new_contract(
     current_user: User = Depends(require_role("super_admin", "sales_admin")),
 ):
     try:
-        return create_contract(body, current_user.user_id, db)
+        created = create_contract(body, current_user.user_id, db)
+        return decrypt_hoa_contract(created)
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
@@ -38,7 +43,8 @@ def get_contracts(
     db: Session = Depends(get_db),
     current_user: User = Depends(require_role("super_admin", "sales_admin")),
 ):
-    return get_all_contracts(db, skip, limit)
+    contracts = get_all_contracts(db, skip, limit)
+    return [decrypt_hoa_contract(c) for c in contracts]
 
 
 
@@ -54,11 +60,15 @@ def verify_contract_code_public(contract_code: str, db: Session = Depends(get_db
             detail=f"This contract code is currently in '{contract.status}' status and cannot be onboarded.",
         )
 
+    client_first_name = safe_decrypt_field(contract.client_first_name) or ""
+    client_last_name = safe_decrypt_field(contract.client_last_name) or ""
+    business_name = safe_decrypt_field(contract.business_name) or ""
+
     # Return safe, non-sensitive summary details
     return {
         "contract_code": contract.contract_code,
-        "client_name": f"{contract.client_first_name or ''} {contract.client_last_name or ''}".strip(),
-        "business_name": contract.business_name,
+        "client_name": f"{client_first_name} {client_last_name}".strip(),
+        "business_name": business_name,
         "size_of_the_community": contract.size_of_the_community,
         "plan_selected": contract.plan_selected,
         "one_time_set_up": float(contract.one_time_set_up or 0),
@@ -77,7 +87,7 @@ def get_contract(
     contract = get_contract_by_id(contract_id, db)
     if not contract:
         raise HTTPException(status_code=404, detail="Contract not found.")
-    return contract
+    return decrypt_hoa_contract(contract)
 
 
 @router.put("/{contract_id}", response_model=ContractOut)
@@ -90,7 +100,7 @@ def update_existing_contract(
     contract = update_contract(contract_id, body, current_user.user_id, db)
     if not contract:
         raise HTTPException(status_code=404, detail="Contract not found.")
-    return contract
+    return decrypt_hoa_contract(contract)
 
 
 @router.delete("/{contract_id}")

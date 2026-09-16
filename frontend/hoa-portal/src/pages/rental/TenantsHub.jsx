@@ -9,6 +9,7 @@ import {
 import API from '../../services/api';
 import ConfirmModal from '../../components/ConfirmModal';
 import { formatPhoneAsYouType, formatUsPhone } from '../../utils/phoneFormatter';
+import PhoneInputWithCountry from '../../components/common/PhoneInputWithCountry';
 
 export default function TenantsHub({ selectedPropertyFilterId = 'all' }) {
   const [tenants, setTenants] = useState([]);
@@ -850,13 +851,11 @@ export default function TenantsHub({ selectedPropertyFilterId = 'all' }) {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Mobile Number</label>
-                    <input
-                      type="text"
+                    <PhoneInputWithCountry
+                      size="sm"
                       value={editPhone}
-                      onChange={e => {
-                        setEditPhone(formatPhoneAsYouType(e.target.value));
-                      }}
-                      className={`w-full bg-slate-50 dark:bg-[#111c2a] border ${formErrors.phone ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/10 focus:border-blue-500'} rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none`}
+                      error={!!formErrors.phone}
+                      onChange={(e, val) => setEditPhone(val)}
                       placeholder="(555) 555-5555"
                     />
                     {formErrors.phone && <p className="text-[10px] text-red-550 mt-0.5">{formErrors.phone}</p>}

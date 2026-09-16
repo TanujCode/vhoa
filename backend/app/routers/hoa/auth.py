@@ -324,20 +324,20 @@ def google_auth(request: Request, body: GoogleLoginRequest, db: Session = Depend
         from app.utils.user_code import generate_user_code
         u_code = generate_user_code(db, first_name, last_name, community_id)
         
+        from app.utils.encryption import encrypt_field
         user = User(
-            first_name=first_name,
-            middle_name=middle_name,
-            last_name=last_name,
+            first_name=encrypt_field(first_name),
+            middle_name=encrypt_field(middle_name) if middle_name else None,
+            last_name=encrypt_field(last_name),
             user_code=u_code,
             email_id=email,
             password=hash_password(random_password),
             role_id=role.role_id,
-            is_client=True,
             active_status=True,
             account_status="ACTIVE",
             email_id_is_verified=True,
             mobile_is_verified=False,
-            user_profile_url=google_user.get("picture"),
+            user_profile_url=encrypt_field(google_user.get("picture")) if google_user.get("picture") else None,
             time_zone="America/New_York",
             login_attempts=0,
             community_id=community_id
@@ -495,24 +495,33 @@ def get_me(
     from app.models.hoa.user import UserCommunity
     assoc_ids = [r.community_id for r in db.query(UserCommunity).filter(UserCommunity.user_id == user.user_id).all()]
 
+    from app.utils.encryption import safe_decrypt_field
+    first_name_dec = safe_decrypt_field(user.first_name) or ""
+    middle_name_dec = safe_decrypt_field(user.middle_name)
+    last_name_dec = safe_decrypt_field(user.last_name) or ""
+    mobile_dec = safe_decrypt_field(user.mobile_number)
+    profile_url_dec = safe_decrypt_field(user.user_profile_url)
+    id_proof_dec = safe_decrypt_field(id_proof)
+    address_proof_dec = safe_decrypt_field(address_proof)
+
     return UserOut(
         user_id              = user.user_id,
         user_code            = user.user_code,
-        first_name           = user.first_name,
-        middle_name          = user.middle_name,
-        last_name            = user.last_name,
-        full_name            = f"{user.first_name or ''} {user.last_name or ''}".strip(),
+        first_name           = first_name_dec,
+        middle_name          = middle_name_dec,
+        last_name            = last_name_dec,
+        full_name            = f"{first_name_dec} {last_name_dec}".strip(),
         email_id             = user.email_id,
-        mobile_number        = user.mobile_number,
+        mobile_number        = mobile_dec,
         mobile_is_verified   = user.mobile_is_verified,
         email_id_is_verified = user.email_id_is_verified,
-        is_client            = user.is_client,
+        is_client            = False,
         active_status        = user.active_status,
         account_status       = user.account_status or "PENDING_VERIFICATION",
         time_zone            = user.time_zone or "Asia/Kolkata",
         role_id              = user.role_id,
         role_name            = user.role.role_name if user.role else None,
-        user_profile_url     = user.user_profile_url,
+        user_profile_url     = profile_url_dec,
         created_date         = user.created_date,
         last_login           = user.last_login,
         # Include community_id and name
@@ -520,8 +529,8 @@ def get_me(
         community_name       = community_name,
         unit_no              = unit_no,
         unit_no_2            = unit_no_2,
-        id_proof_url         = id_proof,
-        address_proof_url    = address_proof,
+        id_proof_url         = id_proof_dec,
+        address_proof_url    = address_proof_dec,
         associated_community_ids = assoc_ids,
     )
 
@@ -529,7 +538,7 @@ def get_me(
 #  OTP SEND (UPDATED)
 @router.post("/otp/send")
 def send_otp(request: Request, body: SendOtpRequest, db: Session = Depends(get_db)):
-    valid_types = {"email_verify", "mobile_verify", "password_reset"}
+    valid_types = {"email_verify", "mobile_verify", "password_reset", "login_2fa"}
     if body.otp_type not in valid_types:
         raise HTTPException(status_code=400, detail=f"otp_type must be one of: {valid_types}")
 
@@ -630,10 +639,18 @@ def logout(request: Request, current_user: User = Depends(get_current_user), db:
 
 
 def _to_out(user: User, db: Session | None = None, community_id: int | None = None) -> UserOut:
-    parts = [user.first_name]
-    if user.middle_name:
-        parts.append(user.middle_name)
-    parts.append(user.last_name)
+    from app.utils.encryption import safe_decrypt_field
+    first_name_dec = safe_decrypt_field(user.first_name) or ""
+    middle_name_dec = safe_decrypt_field(user.middle_name)
+    last_name_dec = safe_decrypt_field(user.last_name) or ""
+    mobile_dec = safe_decrypt_field(user.mobile_number)
+    profile_url_dec = safe_decrypt_field(user.user_profile_url)
+
+    parts = [first_name_dec]
+    if middle_name_dec:
+        parts.append(middle_name_dec)
+    if last_name_dec:
+        parts.append(last_name_dec)
 
     comm_id = community_id or getattr(user, 'community_id', None)
 
@@ -693,29 +710,29 @@ def _to_out(user: User, db: Session | None = None, community_id: int | None = No
     return UserOut(
         user_id              = user.user_id,
         user_code            = user.user_code,
-        first_name           = user.first_name,
-        middle_name          = user.middle_name,
-        last_name            = user.last_name,
-        full_name            = " ".join(parts),
+        first_name           = first_name_dec,
+        middle_name          = middle_name_dec,
+        last_name            = last_name_dec,
+        full_name            = " ".join(parts).strip(),
         email_id             = user.email_id,
-        mobile_number        = user.mobile_number,
+        mobile_number        = mobile_dec,
         mobile_is_verified   = user.mobile_is_verified,
         email_id_is_verified = user.email_id_is_verified,
-        is_client            = user.is_client,
+        is_client            = False,
         active_status        = user.active_status,
         account_status       = account_status,
         time_zone            = user.time_zone or "Asia/Kolkata",
         role_id              = user.role_id,
         role_name            = role_name,
-        user_profile_url     = user.user_profile_url,
+        user_profile_url     = profile_url_dec,
         created_date         = user.created_date,
         last_login           = user.last_login,
         community_id         = user.community_id,
         community_name       = None,
         unit_no              = unit_no,
         unit_no_2            = unit_no_2,
-        id_proof_url         = id_proof,
-        address_proof_url    = address_proof,
+        id_proof_url         = safe_decrypt_field(id_proof),
+        address_proof_url    = safe_decrypt_field(address_proof),
         associated_community_ids = assoc_ids,
     )
 
@@ -808,7 +825,7 @@ def onboard_client(request: Request, body: ClientOnboardRequest, db: Session = D
             plan_expire_date=plan_expire,
             license_status="ACTIVE",
             community_size=contract.size_of_the_community or 0,
-            contact_person=f"{body.first_name} {body.last_name}",
+            contact_person=encrypt_field(f"{body.first_name} {body.last_name}".strip()),
             contract_id=contract.contract_id,
         )
         db.add(community)
@@ -819,17 +836,17 @@ def onboard_client(request: Request, body: ClientOnboardRequest, db: Session = D
         from app.utils.user_code import generate_user_code
         u_code = generate_user_code(db, body.first_name, body.last_name, community.community_id)
 
+        from app.utils.encryption import encrypt_field
         # Create client user
         user = User(
-            first_name=body.first_name.strip(),
-            middle_name=body.middle_name.strip() if body.middle_name else None,
-            last_name=body.last_name.strip(),
+            first_name=encrypt_field(body.first_name.strip()),
+            middle_name=encrypt_field(body.middle_name.strip()) if body.middle_name else None,
+            last_name=encrypt_field(body.last_name.strip()),
             user_code=u_code,
             email_id=body.email_id.lower().strip(),
-            mobile_number=body.mobile_number,
+            mobile_number=encrypt_field(body.mobile_number) if body.mobile_number else None,
             password=hash_password(body.password),
             role_id=role.role_id,
-            is_client=True,
             active_status=True,
             account_status="PENDING_VERIFICATION",  # Must verify email first
             email_id_is_verified=False,  # Email must be verified before login

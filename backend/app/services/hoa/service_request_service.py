@@ -140,7 +140,7 @@ def create_service_request(
         
         # Resident info
         submitted_by = db.query(User).filter(User.user_id == submitted_by_id).first()
-        resident_name = f"{submitted_by.first_name} {submitted_by.last_name}".strip() if submitted_by else "Resident"
+        resident_name = submitted_by.full_name if submitted_by else "Resident"
         
         community = db.query(Community).filter(Community.community_id == data.community_id).first()
         community_name = community.name if community else "Community"
@@ -274,7 +274,7 @@ def update_status(
 
     # 2. Build audit changes trail
     user = db.query(User).filter(User.user_id == user_id).first()
-    user_name = f"{user.first_name} {user.last_name}" if user else "Unknown User"
+    user_name = user.full_name if user else "Unknown User"
     user_email = user.email_id if user else "unknown@email.com"
     user_details_str = f"User: {user_name} (ID: {user_id}, Email: {user_email}, Role: {user_role})"
 
@@ -354,7 +354,7 @@ def update_status(
         try:
             resident = request.submitted_by
             if resident and resident.email_id:
-                resident_name = f"{resident.first_name} {resident.last_name}".strip()
+                resident_name = resident.full_name or "Resident"
                 community_name = request.community.name if request.community else "Community"
                 
                 from app.services.hoa.email_service import send_service_request_status_update_email
@@ -392,7 +392,7 @@ def update_service_request(
     # 2. Build changes diff for audit log
     changes = []
     user = db.query(User).filter(User.user_id == user_id).first()
-    user_name = f"{user.first_name} {user.last_name}" if user else "Unknown User"
+    user_name = user.full_name if user else "Unknown User"
     user_email = user.email_id if user else "unknown@email.com"
     user_details_str = f"User: {user_name} (ID: {user_id}, Email: {user_email}, Role: {user_role})"
 

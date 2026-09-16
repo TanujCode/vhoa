@@ -31,13 +31,13 @@ export default {
           textSecondary: "#64748b",
           hover: "#f1f5f9",
         },
-        // Dark Mode Colors (already jo tum use kar rahe ho)
+        // Dark Mode Colors
         dark: {
-          bg: "#0D1B2A",
-          card: "#162535",
+          bg: "#0f172a",
+          card: "#1e293b",
           border: "#334155",
-          text: "#f1f5f9",
-          textSecondary: "#94a3b8",
+          text: "#f8fafc",
+          textSecondary: "#cbd5e1",
         }
       }
     },

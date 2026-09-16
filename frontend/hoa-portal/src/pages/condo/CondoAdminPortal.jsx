@@ -286,7 +286,7 @@ export default function CondoAdminPortal() {
           setSelectedCommunityId={setSelectedCommunityId}
         />
 
-        <main className="flex-1 overflow-auto pt-2 sm:pt-3 lg:pt-4 px-3 sm:px-4 lg:px-6 pb-6 bg-white dark:bg-[#0D1B2A] custom-scrollbar">
+        <main className="flex-1 overflow-auto pt-2 sm:pt-3 lg:pt-4 px-3 sm:px-4 lg:px-6 pb-6 bg-white dark:bg-[#0f172a] custom-scrollbar">
           <div className="max-w-[1600px] mx-auto">
             {renderPage()}
           </div>

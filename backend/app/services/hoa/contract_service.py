@@ -6,6 +6,9 @@ from app.models.hoa.user import User
 from app.schemas.contract import ContractCreate, ContractUpdate
 
 
+from app.utils.encryption import encrypt_field
+
+
 def generate_unique_contract_code(db: Session) -> str:
     """Generates a unique contract code like CON-F3A8D2"""
     while True:
@@ -20,7 +23,7 @@ def create_contract(data: ContractCreate, agent_id: int, db: Session) -> Contrac
     agent = db.query(User).filter(User.user_id == agent_id).first()
     agent_name = ""
     if agent:
-        agent_name = f"{agent.first_name or ''} {agent.last_name or ''}".strip() or agent.email_id
+        agent_name = agent.full_name or agent.email_id
 
     contract_code = generate_unique_contract_code(db)
 
@@ -29,18 +32,18 @@ def create_contract(data: ContractCreate, agent_id: int, db: Session) -> Contrac
         sales_agent_id=agent_id,
         sales_agent_name=agent_name,
         status=data.status,
-        client_first_name=data.client_first_name,
-        client_middle_name=data.client_middle_name,
-        client_last_name=data.client_last_name,
-        client_address=data.client_address,
+        client_first_name=encrypt_field(data.client_first_name) if data.client_first_name else None,
+        client_middle_name=encrypt_field(data.client_middle_name) if data.client_middle_name else None,
+        client_last_name=encrypt_field(data.client_last_name) if data.client_last_name else None,
+        client_address=encrypt_field(data.client_address) if data.client_address else None,
         client_city=data.client_city,
         client_zip_code=data.client_zip_code,
         client_country=data.client_country,
-        client_phone_number=data.client_phone_number,
-        client_email_address=data.client_email_address,
-        business_name=data.business_name,
-        business_address=data.business_address,
-        business_phone_number=data.business_phone_number,
+        client_phone_number=encrypt_field(data.client_phone_number) if data.client_phone_number else None,
+        client_email_address=encrypt_field(data.client_email_address) if data.client_email_address else None,
+        business_name=encrypt_field(data.business_name) if data.business_name else None,
+        business_address=encrypt_field(data.business_address) if data.business_address else None,
+        business_phone_number=encrypt_field(data.business_phone_number) if data.business_phone_number else None,
         client_preferred_communication_channel=data.client_preferred_communication_channel,
         plan_selected=data.plan_selected,
         annual_renewal_fee=data.annual_renewal_fee,
@@ -73,8 +76,18 @@ def update_contract(contract_id: int, data: ContractUpdate, user_id: int, db: Se
     if not contract:
         return None
 
+    sensitive_fields = {
+        "client_first_name", "client_middle_name", "client_last_name",
+        "client_address", "client_phone_number", "client_email_address",
+        "business_name", "business_address", "business_phone_number",
+        "payment_method_details"
+    }
+
     for field, val in data.model_dump(exclude_unset=True).items():
-        setattr(contract, field, val)
+        if field in sensitive_fields and val is not None:
+            setattr(contract, field, encrypt_field(val))
+        else:
+            setattr(contract, field, val)
 
     contract.last_updated_by_id = user_id
     db.commit()

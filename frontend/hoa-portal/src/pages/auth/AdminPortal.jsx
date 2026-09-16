@@ -638,7 +638,7 @@ const AdminPortal = () => {
   }
 
   return (
-    <div className="flex h-screen bg-white dark:bg-[#0D1B2A] text-gray-900 dark:text-white overflow-hidden font-sans">
+    <div className="flex h-screen bg-white dark:bg-[#0f172a] text-gray-900 dark:text-white overflow-hidden font-sans">
       <Sidebar
         activePage={activePage}
         setActivePage={setActivePage}
@@ -670,7 +670,7 @@ const AdminPortal = () => {
           onBack={handleBack}
         />
 
-        <main className="flex-1 overflow-auto p-5 lg:p-7 bg-white dark:bg-[#0D1B2A] custom-scrollbar">
+        <main className="flex-1 overflow-auto p-5 lg:p-7 bg-white dark:bg-[#0f172a] custom-scrollbar">
           <div className="max-w-[1600px] mx-auto">
             {renderPage()}
           </div>

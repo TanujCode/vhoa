@@ -111,11 +111,11 @@ def run_db_upgrades():
         "idx_users_user_code"
     )
 
-    # ── rental_role_id column (allows same email in HOA + Rental) ─
-    _safe_execute(
-        "ALTER TABLE users ADD COLUMN IF NOT EXISTS rental_role_id INTEGER REFERENCES roles(role_id) ON DELETE SET NULL;",
-        "users.rental_role_id"
-    )
+    # ── Drop unused / legacy columns ──────────────────────────────
+    _safe_execute("ALTER TABLE users DROP COLUMN IF EXISTS is_client;", "users.drop_is_client")
+    _safe_execute("ALTER TABLE users DROP COLUMN IF EXISTS rental_role_id;", "users.drop_rental_role_id")
+    _safe_execute("ALTER TABLE communities DROP COLUMN IF EXISTS plan_id;", "communities.drop_plan_id")
+    _safe_execute("ALTER TABLE communities DROP COLUMN IF EXISTS contract_id;", "communities.drop_contract_id")
 
     # ── community_join_requests table ────────────────────────────
     _safe_execute(
@@ -430,6 +430,100 @@ def run_db_upgrades():
     _safe_execute("ALTER TABLE rental_vendors DROP CONSTRAINT IF EXISTS rental_vendors_landlord_id_fkey;", "drop_vendor_landlord_fk")
     _safe_execute("ALTER TABLE rental_vendors ADD CONSTRAINT rental_vendors_landlord_id_fkey FOREIGN KEY (landlord_id) REFERENCES rental_users(user_id) ON DELETE CASCADE;", "add_vendor_landlord_fk")
 
+    # ── HOA & Condo AES-256 Encryption DDL Upgrades ───────────────
+    # Users table
+    _safe_execute("ALTER TABLE users ALTER COLUMN mobile_number TYPE TEXT;", "users.mobile_number_to_text")
+    _safe_execute("ALTER TABLE users ALTER COLUMN first_name TYPE TEXT;", "users.first_name_to_text")
+    _safe_execute("ALTER TABLE users ALTER COLUMN middle_name TYPE TEXT;", "users.middle_name_to_text")
+    _safe_execute("ALTER TABLE users ALTER COLUMN last_name TYPE TEXT;", "users.last_name_to_text")
+    _safe_execute("ALTER TABLE users ALTER COLUMN user_profile_url TYPE TEXT;", "users.user_profile_url_to_text")
+    _safe_execute("ALTER TABLE users ALTER COLUMN id_proof_url TYPE TEXT;", "users.id_proof_url_to_text")
+    _safe_execute("ALTER TABLE users ALTER COLUMN address_proof_url TYPE TEXT;", "users.address_proof_url_to_text")
+    _safe_execute("ALTER TABLE users DROP CONSTRAINT IF EXISTS users_mobile_number_key;", "drop_users_mobile_number_key")
+    _safe_execute("ALTER TABLE users DROP CONSTRAINT IF EXISTS uq_users_mobile_number;", "drop_uq_users_mobile_number")
+    _safe_execute("DROP INDEX IF EXISTS idx_users_mobile_number;", "drop_idx_users_mobile_number")
+
+    # Communities table
+    _safe_execute("ALTER TABLE communities ALTER COLUMN contact_person TYPE TEXT;", "communities.contact_person_to_text")
+    _safe_execute("ALTER TABLE communities ALTER COLUMN bank_name TYPE TEXT;", "communities.bank_name_to_text")
+    _safe_execute("ALTER TABLE communities ALTER COLUMN bank_account_no TYPE TEXT;", "communities.bank_account_no_to_text")
+    _safe_execute("ALTER TABLE communities ALTER COLUMN bank_routing_no TYPE TEXT;", "communities.bank_routing_no_to_text")
+    _safe_execute("ALTER TABLE communities ALTER COLUMN bank_account_name TYPE TEXT;", "communities.bank_account_name_to_text")
+
+    # Vendors table
+    _safe_execute("ALTER TABLE vendors ALTER COLUMN company_name TYPE TEXT;", "vendors.company_name_to_text")
+    _safe_execute("ALTER TABLE vendors ALTER COLUMN contact_person TYPE TEXT;", "vendors.contact_person_to_text")
+    _safe_execute("ALTER TABLE vendors ALTER COLUMN email TYPE TEXT;", "vendors.email_to_text")
+    _safe_execute("ALTER TABLE vendors ALTER COLUMN phone TYPE TEXT;", "vendors.phone_to_text")
+    _safe_execute("ALTER TABLE vendors ALTER COLUMN license_number TYPE TEXT;", "vendors.license_number_to_text")
+    _safe_execute("ALTER TABLE vendors ALTER COLUMN insurance_number TYPE TEXT;", "vendors.insurance_number_to_text")
+    _safe_execute("ALTER TABLE vendors ALTER COLUMN license_doc_url TYPE TEXT;", "vendors.license_doc_url_to_text")
+    _safe_execute("ALTER TABLE vendors ALTER COLUMN insurance_doc_url TYPE TEXT;", "vendors.insurance_doc_url_to_text")
+
+    # Contracts table
+    _safe_execute("ALTER TABLE contracts ALTER COLUMN client_first_name TYPE TEXT;", "contracts.client_first_name_to_text")
+    _safe_execute("ALTER TABLE contracts ALTER COLUMN client_middle_name TYPE TEXT;", "contracts.client_middle_name_to_text")
+    _safe_execute("ALTER TABLE contracts ALTER COLUMN client_last_name TYPE TEXT;", "contracts.client_last_name_to_text")
+    _safe_execute("ALTER TABLE contracts ALTER COLUMN client_address TYPE TEXT;", "contracts.client_address_to_text")
+    _safe_execute("ALTER TABLE contracts ALTER COLUMN client_phone_number TYPE TEXT;", "contracts.client_phone_number_to_text")
+    _safe_execute("ALTER TABLE contracts ALTER COLUMN client_email_address TYPE TEXT;", "contracts.client_email_address_to_text")
+    _safe_execute("ALTER TABLE contracts ALTER COLUMN business_name TYPE TEXT;", "contracts.business_name_to_text")
+    _safe_execute("ALTER TABLE contracts ALTER COLUMN business_address TYPE TEXT;", "contracts.business_address_to_text")
+    _safe_execute("ALTER TABLE contracts ALTER COLUMN business_phone_number TYPE TEXT;", "contracts.business_phone_number_to_text")
+    _safe_execute("ALTER TABLE contracts ALTER COLUMN payment_method_details TYPE TEXT;", "contracts.payment_method_details_to_text")
+
+    # Payments & Recurring Payments
+    _safe_execute("ALTER TABLE payments ALTER COLUMN payer_bank_name TYPE TEXT;", "payments.payer_bank_name_to_text")
+    _safe_execute("ALTER TABLE payments ALTER COLUMN payer_account_no TYPE TEXT;", "payments.payer_account_no_to_text")
+    _safe_execute("ALTER TABLE recurring_payments ALTER COLUMN payer_bank_name TYPE TEXT;", "recurring_payments.payer_bank_name_to_text")
+    _safe_execute("ALTER TABLE recurring_payments ALTER COLUMN payer_account_no TYPE TEXT;", "recurring_payments.payer_account_no_to_text")
+
+    # Condo Users table
+    _safe_execute("ALTER TABLE condo_users ALTER COLUMN mobile_number TYPE TEXT;", "condo_users.mobile_number_to_text")
+    _safe_execute("ALTER TABLE condo_users ALTER COLUMN first_name TYPE TEXT;", "condo_users.first_name_to_text")
+    _safe_execute("ALTER TABLE condo_users ALTER COLUMN middle_name TYPE TEXT;", "condo_users.middle_name_to_text")
+    _safe_execute("ALTER TABLE condo_users ALTER COLUMN last_name TYPE TEXT;", "condo_users.last_name_to_text")
+    _safe_execute("ALTER TABLE condo_users ALTER COLUMN user_profile_url TYPE TEXT;", "condo_users.user_profile_url_to_text")
+    _safe_execute("ALTER TABLE condo_users ALTER COLUMN id_proof_url TYPE TEXT;", "condo_users.id_proof_url_to_text")
+    _safe_execute("ALTER TABLE condo_users ALTER COLUMN address_proof_url TYPE TEXT;", "condo_users.address_proof_url_to_text")
+    _safe_execute("ALTER TABLE condo_users DROP CONSTRAINT IF EXISTS condo_users_mobile_number_key;", "drop_condo_users_mobile_number_key")
+    _safe_execute("ALTER TABLE condo_users DROP CONSTRAINT IF EXISTS uq_condo_users_mobile_number;", "drop_uq_condo_users_mobile_number")
+    _safe_execute("DROP INDEX IF EXISTS idx_condo_users_mobile_number;", "drop_idx_condo_users_mobile_number")
+
+    # Condo Communities table
+    _safe_execute("ALTER TABLE condo_communities ALTER COLUMN contact_person TYPE TEXT;", "condo_communities.contact_person_to_text")
+    _safe_execute("ALTER TABLE condo_communities ALTER COLUMN bank_name TYPE TEXT;", "condo_communities.bank_name_to_text")
+    _safe_execute("ALTER TABLE condo_communities ALTER COLUMN bank_account_no TYPE TEXT;", "condo_communities.bank_account_no_to_text")
+    _safe_execute("ALTER TABLE condo_communities ALTER COLUMN bank_routing_no TYPE TEXT;", "condo_communities.bank_routing_no_to_text")
+    _safe_execute("ALTER TABLE condo_communities ALTER COLUMN bank_account_name TYPE TEXT;", "condo_communities.bank_account_name_to_text")
+
+    # Condo Vendors table
+    _safe_execute("ALTER TABLE condo_vendors ALTER COLUMN company_name TYPE TEXT;", "condo_vendors.company_name_to_text")
+    _safe_execute("ALTER TABLE condo_vendors ALTER COLUMN contact_person TYPE TEXT;", "condo_vendors.contact_person_to_text")
+    _safe_execute("ALTER TABLE condo_vendors ALTER COLUMN email TYPE TEXT;", "condo_vendors.email_to_text")
+    _safe_execute("ALTER TABLE condo_vendors ALTER COLUMN phone TYPE TEXT;", "condo_vendors.phone_to_text")
+    _safe_execute("ALTER TABLE condo_vendors ALTER COLUMN license_number TYPE TEXT;", "condo_vendors.license_number_to_text")
+    _safe_execute("ALTER TABLE condo_vendors ALTER COLUMN insurance_number TYPE TEXT;", "condo_vendors.insurance_number_to_text")
+    _safe_execute("ALTER TABLE condo_vendors ALTER COLUMN license_doc_url TYPE TEXT;", "condo_vendors.license_doc_url_to_text")
+    _safe_execute("ALTER TABLE condo_vendors ALTER COLUMN insurance_doc_url TYPE TEXT;", "condo_vendors.insurance_doc_url_to_text")
+
+    # Condo Contracts table
+    _safe_execute("ALTER TABLE condo_contracts ALTER COLUMN client_first_name TYPE TEXT;", "condo_contracts.client_first_name_to_text")
+    _safe_execute("ALTER TABLE condo_contracts ALTER COLUMN client_middle_name TYPE TEXT;", "condo_contracts.client_middle_name_to_text")
+    _safe_execute("ALTER TABLE condo_contracts ALTER COLUMN client_last_name TYPE TEXT;", "condo_contracts.client_last_name_to_text")
+    _safe_execute("ALTER TABLE condo_contracts ALTER COLUMN client_address TYPE TEXT;", "condo_contracts.client_address_to_text")
+    _safe_execute("ALTER TABLE condo_contracts ALTER COLUMN client_phone_number TYPE TEXT;", "condo_contracts.client_phone_number_to_text")
+    _safe_execute("ALTER TABLE condo_contracts ALTER COLUMN client_email_address TYPE TEXT;", "condo_contracts.client_email_address_to_text")
+    _safe_execute("ALTER TABLE condo_contracts ALTER COLUMN business_name TYPE TEXT;", "condo_contracts.business_name_to_text")
+    _safe_execute("ALTER TABLE condo_contracts ALTER COLUMN business_address TYPE TEXT;", "condo_contracts.business_address_to_text")
+    _safe_execute("ALTER TABLE condo_contracts ALTER COLUMN business_phone_number TYPE TEXT;", "condo_contracts.business_phone_number_to_text")
+    _safe_execute("ALTER TABLE condo_contracts ALTER COLUMN payment_method_details TYPE TEXT;", "condo_contracts.payment_method_details_to_text")
+
+    # Condo Visitor Passes
+    _safe_execute("ALTER TABLE condo_visitor_passes ALTER COLUMN guest_name TYPE TEXT;", "condo_visitor_passes.guest_name_to_text")
+    _safe_execute("ALTER TABLE condo_visitor_passes ALTER COLUMN guest_phone TYPE TEXT;", "condo_visitor_passes.guest_phone_to_text")
+    _safe_execute("ALTER TABLE condo_visitor_passes ALTER COLUMN vehicle_no TYPE TEXT;", "condo_visitor_passes.vehicle_no_to_text")
+
     # ── Data migrations (run in one transaction) ──────────────────
     db = SessionLocal()
     try:
@@ -497,8 +591,6 @@ def run_db_upgrades():
               AND (parking_charge IS NULL OR parking_charge = 0) 
               AND (pet_charge IS NULL OR pet_charge = 0) 
               AND maintenance_charge > 0;
-        """))
-        db.execute(text("""
             UPDATE rental_ledgers 
             SET maintenance_charge = 0.0,
                 amount = COALESCE(rent_charge, 0.0) + COALESCE(utilities_charge, 0.0) + COALESCE(parking_charge, 0.0) + COALESCE(pet_charge, 0.0)
@@ -515,6 +607,155 @@ def run_db_upgrades():
         db.close()
 
 run_db_upgrades()
+
+
+def migrate_encrypt_hoa_condo_data():
+    """One-time encryption migration for existing plaintext HOA & Condo rows."""
+    from app.utils.encryption import encrypt_field, is_encrypted
+    from app.models.hoa.user import User
+    from app.models.hoa.community import Community
+    from app.models.hoa.vendor import Vendor
+    from app.models.hoa.contract import Contract
+    from app.models.hoa.payment import Payment, RecurringPayment
+    from app.models.condo.condo_user import CondoUser
+    from app.models.condo.condo_community import CondoCommunity
+    from app.models.condo.condo_vendor import CondoVendor
+    from app.models.condo.condo_contract import CondoContract
+    from app.models.condo.condo_visitor import CondoVisitorPass
+
+    db = SessionLocal()
+    try:
+        # 1. HOA Users
+        users = db.query(User).all()
+        for u in users:
+            for field in ["first_name", "middle_name", "last_name", "mobile_number", "user_profile_url", "id_proof_url", "address_proof_url"]:
+                val = getattr(u, field, None)
+                if val and not is_encrypted(val):
+                    setattr(u, field, encrypt_field(val))
+        
+        # 2. HOA Communities
+        comms = db.query(Community).all()
+        for c in comms:
+            for field in ["contact_person", "bank_name", "bank_account_no", "bank_routing_no", "bank_account_name"]:
+                val = getattr(c, field, None)
+                if val and not is_encrypted(val):
+                    setattr(c, field, encrypt_field(val))
+
+        # 3. HOA Vendors
+        vendors = db.query(Vendor).all()
+        for v in vendors:
+            for field in ["company_name", "contact_person", "email", "phone", "license_number", "insurance_number", "license_doc_url", "insurance_doc_url"]:
+                val = getattr(v, field, None)
+                if val and not is_encrypted(val):
+                    setattr(v, field, encrypt_field(val))
+
+        # 4. HOA Contracts
+        contracts = db.query(Contract).all()
+        for con in contracts:
+            for field in ["client_first_name", "client_middle_name", "client_last_name", "client_address", "client_phone_number", "client_email_address", "business_name", "business_address", "business_phone_number", "payment_method_details"]:
+                val = getattr(con, field, None)
+                if val and not is_encrypted(val):
+                    setattr(con, field, encrypt_field(val))
+
+        # 5. HOA Payments & Recurring
+        payments = db.query(Payment).all()
+        for p in payments:
+            for field in ["payer_bank_name", "payer_account_no"]:
+                val = getattr(p, field, None)
+                if val and not is_encrypted(val):
+                    setattr(p, field, encrypt_field(val))
+
+        recurring = db.query(RecurringPayment).all()
+        for rp in recurring:
+            for field in ["payer_bank_name", "payer_account_no"]:
+                val = getattr(rp, field, None)
+                if val and not is_encrypted(val):
+                    setattr(rp, field, encrypt_field(val))
+
+        # 6. Condo Users
+        condo_users = db.query(CondoUser).all()
+        for cu in condo_users:
+            for field in ["first_name", "middle_name", "last_name", "mobile_number", "user_profile_url", "id_proof_url", "address_proof_url"]:
+                val = getattr(cu, field, None)
+                if val and not is_encrypted(val):
+                    setattr(cu, field, encrypt_field(val))
+
+        # 7. Condo Communities
+        c_comms = db.query(CondoCommunity).all()
+        for cc in c_comms:
+            for field in ["contact_person", "bank_name", "bank_account_no", "bank_routing_no", "bank_account_name"]:
+                val = getattr(cc, field, None)
+                if val and not is_encrypted(val):
+                    setattr(cc, field, encrypt_field(val))
+
+        # 8. Condo Vendors
+        c_vendors = db.query(CondoVendor).all()
+        for cv in c_vendors:
+            for field in ["company_name", "contact_person", "email", "phone", "license_number", "insurance_number", "license_doc_url", "insurance_doc_url"]:
+                val = getattr(cv, field, None)
+                if val and not is_encrypted(val):
+                    setattr(cv, field, encrypt_field(val))
+
+        # 9. Condo Contracts
+        c_contracts = db.query(CondoContract).all()
+        for cc in c_contracts:
+            for field in ["client_first_name", "client_middle_name", "client_last_name", "client_address", "client_phone_number", "client_email_address", "business_name", "business_address", "business_phone_number", "payment_method_details"]:
+                val = getattr(cc, field, None)
+                if val and not is_encrypted(val):
+                    setattr(cc, field, encrypt_field(val))
+
+        # 10. Condo Visitor Passes
+        visitors = db.query(CondoVisitorPass).all()
+        for vp in visitors:
+            for field in ["guest_name", "guest_phone", "vehicle_no"]:
+                val = getattr(vp, field, None)
+                if val and not is_encrypted(val):
+                    setattr(vp, field, encrypt_field(val))
+
+        # 11. Audit Logs sanitization (Clean any ciphertext tokens from past logs)
+        from app.models.hoa.audit_log import AuditLog
+        from app.models.condo.condo_audit_log import CondoAuditLog
+        from app.utils.encryption import decrypt_text_tokens
+        
+        logs = db.query(AuditLog).all()
+        for l in logs:
+            if l.description:
+                new_desc = decrypt_text_tokens(l.description)
+                if new_desc != l.description:
+                    l.description = new_desc
+            if l.old_value:
+                new_old = decrypt_text_tokens(l.old_value)
+                if new_old != l.old_value:
+                    l.old_value = new_old
+            if l.new_value:
+                new_new = decrypt_text_tokens(l.new_value)
+                if new_new != l.new_value:
+                    l.new_value = new_new
+
+        condo_logs = db.query(CondoAuditLog).all()
+        for cl in condo_logs:
+            if cl.description:
+                new_desc = decrypt_text_tokens(cl.description)
+                if new_desc != cl.description:
+                    cl.description = new_desc
+            if cl.old_value:
+                new_old = decrypt_text_tokens(cl.old_value)
+                if new_old != cl.old_value:
+                    cl.old_value = new_old
+            if cl.new_value:
+                new_new = decrypt_text_tokens(cl.new_value)
+                if new_new != cl.new_value:
+                    cl.new_value = new_new
+
+        db.commit()
+        print("[SUCCESS] Encrypted legacy HOA & Condo PII and bank details, sanitized audit logs.")
+    except Exception as e:
+        db.rollback()
+        print(f"[WARNING] HOA & Condo encryption backfill encountered an issue: {e}")
+    finally:
+        db.close()
+
+migrate_encrypt_hoa_condo_data()
 
 
 def backfill_user_codes():
@@ -543,15 +784,16 @@ def backfill_user_codes():
         print(f"[INFO] ORM found {len(users_without_code)} user(s) to backfill")
 
         count = 0
+        from app.utils.encryption import safe_decrypt_field
         for user in users_without_code:
             try:
-                code = generate_user_code(db, user.first_name, user.last_name, signup_date=user.created_date)
+                code = generate_user_code(db, safe_decrypt_field(user.first_name), safe_decrypt_field(user.last_name), signup_date=user.created_date)
                 user.user_code = code
                 db.flush()
                 count += 1
             except Exception as ue:
                 db.rollback()
-                print(f"  [WARNING] Could not generate code for user {user.user_id} ({user.first_name}): {ue}")
+                print(f"  [WARNING] Could not generate code for user {user.user_id}: {ue}")
         db.commit()
         print(f"[SUCCESS] Backfilled user_code for {count} existing user(s).")
     except Exception as e:
@@ -567,6 +809,7 @@ backfill_user_codes()
 def migrate_duplicate_suffixes():
     """Migrate user codes to ensure unique sequential suffixes globally if duplicate 0001 suffixes exist."""
     from datetime import datetime
+    from app.utils.encryption import safe_decrypt_field
     db = SessionLocal()
     try:
         from app.models.hoa.user import User
@@ -593,10 +836,12 @@ def migrate_duplicate_suffixes():
                     if code and len(code.strip()) >= 2:
                         country_code = code.strip().upper()[:2]
 
-            # 2. First 4 letters of the name
-            name_str = "".join(c for c in (user.first_name or "") if c.isalpha()).upper()
+            # 2. First 4 letters of the decrypted name
+            first_name_dec = safe_decrypt_field(user.first_name) or ""
+            last_name_dec = safe_decrypt_field(user.last_name) or ""
+            name_str = "".join(c for c in first_name_dec if c.isalpha()).upper()
             if len(name_str) < 4:
-                last_clean = "".join(c for c in (user.last_name or "") if c.isalpha()).upper()
+                last_clean = "".join(c for c in last_name_dec if c.isalpha()).upper()
                 name_str += last_clean
             name_str = (name_str + "XXXX")[:4]
 
@@ -609,7 +854,7 @@ def migrate_duplicate_suffixes():
             new_code = f"{prefix}{seq_str}"
             
             user.user_code = new_code
-            print(f"  Updating user {user.user_id} ({user.first_name} {user.last_name}): -> {new_code}")
+            print(f"  Updating user {user.user_id}: -> {new_code}")
             
         db.commit()
         print("[SUCCESS] User code sequence migration completed successfully.")
@@ -782,7 +1027,6 @@ def seed_custom_users():
                     email_id=super_admin_email,
                     password=hash_password("Super1234"),
                     role_id=super_admin_role.role_id,
-                    is_client=False,
                     active_status=True,
                     account_status="ACTIVE",
                     email_id_is_verified=True,
@@ -816,7 +1060,6 @@ def seed_custom_users():
                     email_id=sales_email,
                     password=hash_password("Sales1234"),
                     role_id=sales_role.role_id,
-                    is_client=False,
                     active_status=True,
                     account_status="ACTIVE",
                     email_id_is_verified=True,

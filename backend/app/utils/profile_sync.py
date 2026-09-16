@@ -1,4 +1,5 @@
 from sqlalchemy.orm import Session
+from app.utils.encryption import encrypt_field
 
 def sync_profile_update(
     db: Session,
@@ -39,31 +40,30 @@ def sync_profile_update(
     if not is_super_admin:
         return
 
-    # Update HOA User record
+    # Update HOA User record (Encrypted AES-256-GCM)
     if hoa_user:
-        if first_name is not None: hoa_user.first_name = first_name
-        if middle_name is not None: hoa_user.middle_name = middle_name
-        if last_name is not None: hoa_user.last_name = last_name
-        if mobile_number is not None: hoa_user.mobile_number = mobile_number
+        if first_name is not None: hoa_user.first_name = encrypt_field(first_name)
+        if middle_name is not None: hoa_user.middle_name = encrypt_field(middle_name) if middle_name else None
+        if last_name is not None: hoa_user.last_name = encrypt_field(last_name)
+        if mobile_number is not None: hoa_user.mobile_number = encrypt_field(mobile_number) if mobile_number else None
         if time_zone is not None: hoa_user.time_zone = time_zone
 
-    # Update Rental User record
+    # Update Rental User record (Encrypted AES-256-GCM)
     rental_user = db.query(RentalUser).filter(RentalUser.email_id.ilike(email_lower)).first()
     if rental_user:
-        from app.utils.encryption import encrypt_field
         if first_name is not None: rental_user.first_name = encrypt_field(first_name)
-        if middle_name is not None: rental_user.middle_name = encrypt_field(middle_name)
+        if middle_name is not None: rental_user.middle_name = encrypt_field(middle_name) if middle_name else None
         if last_name is not None: rental_user.last_name = encrypt_field(last_name)
-        if mobile_number is not None: rental_user.mobile_number = encrypt_field(mobile_number)
+        if mobile_number is not None: rental_user.mobile_number = encrypt_field(mobile_number) if mobile_number else None
         if time_zone is not None: rental_user.time_zone = time_zone
 
-    # Update Condo User record
+    # Update Condo User record (Encrypted AES-256-GCM)
     condo_user = db.query(CondoUser).filter(CondoUser.email_id.ilike(email_lower)).first()
     if condo_user:
-        if first_name is not None: condo_user.first_name = first_name
-        if middle_name is not None: condo_user.middle_name = middle_name
-        if last_name is not None: condo_user.last_name = last_name
-        if mobile_number is not None: condo_user.mobile_number = mobile_number
+        if first_name is not None: condo_user.first_name = encrypt_field(first_name)
+        if middle_name is not None: condo_user.middle_name = encrypt_field(middle_name) if middle_name else None
+        if last_name is not None: condo_user.last_name = encrypt_field(last_name)
+        if mobile_number is not None: condo_user.mobile_number = encrypt_field(mobile_number) if mobile_number else None
         if time_zone is not None: condo_user.time_zone = time_zone
 
 
@@ -98,17 +98,16 @@ def sync_profile_picture_update(db: Session, email_id: str, picture_url: str | N
     if not is_super_admin:
         return
 
-    # Update HOA User picture
+    # Update HOA User picture (Encrypted AES-256-GCM)
     if hoa_user:
-        hoa_user.user_profile_url = picture_url
+        hoa_user.user_profile_url = encrypt_field(picture_url) if picture_url else None
 
-    # Update Rental User picture
+    # Update Rental User picture (Encrypted AES-256-GCM)
     rental_user = db.query(RentalUser).filter(RentalUser.email_id.ilike(email_lower)).first()
     if rental_user:
-        from app.utils.encryption import encrypt_field
         rental_user.user_profile_url = encrypt_field(picture_url) if picture_url else None
 
-    # Update Condo User picture
+    # Update Condo User picture (Encrypted AES-256-GCM)
     condo_user = db.query(CondoUser).filter(CondoUser.email_id.ilike(email_lower)).first()
     if condo_user:
-        condo_user.user_profile_url = picture_url
+        condo_user.user_profile_url = encrypt_field(picture_url) if picture_url else None

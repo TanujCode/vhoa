@@ -114,7 +114,7 @@ const RentalTopbar = ({
               </p>
               <div className="flex items-center gap-2 min-w-0">
                 <span className="text-[14px] xs:text-[16px] sm:text-lg font-bold text-slate-900 dark:text-white leading-tight truncate">
-                  {user?.property_name || 'Tenant Rental Portal'}
+                  {user?.property_name || (user?.role === 'landlord' || user?.role === 'super_admin' ? 'Landlord Rental Portal' : 'Tenant Rental Portal')}
                 </span>
                 {user?.unit_number ? (
                   <span className="hidden sm:inline-block text-[9px] sm:text-[10px] font-bold px-2 py-0.5 bg-indigo-50 text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-400 rounded-lg border border-indigo-200 dark:border-indigo-500/20 flex-shrink-0 ml-1 shadow-sm uppercase animate-fade-in">

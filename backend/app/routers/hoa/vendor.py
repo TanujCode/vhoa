@@ -284,21 +284,22 @@ def give_feedback(
 
 #  HELPERS
 def _to_out(v, db) -> VendorOut:
+    from app.utils.encryption import safe_decrypt_field
     return VendorOut(
         vendor_id          = v.vendor_id,
         community_id       = v.community_id,
-        company_name       = v.company_name,
-        contact_person     = v.contact_person,
-        email              = v.email,
-        phone              = v.phone,
+        company_name       = safe_decrypt_field(v.company_name) or "",
+        contact_person     = safe_decrypt_field(v.contact_person) or "",
+        email              = safe_decrypt_field(v.email) or "",
+        phone              = safe_decrypt_field(v.phone) or "",
         zip_code           = v.zip_code,
         category           = v.category,
-        license_number     = v.license_number,
+        license_number     = safe_decrypt_field(v.license_number),
         license_expiry     = v.license_expiry,
-        insurance_number   = v.insurance_number,
+        insurance_number   = safe_decrypt_field(v.insurance_number),
         insurance_expiry   = v.insurance_expiry,
-        license_doc_url    = v.license_doc_url,
-        insurance_doc_url  = v.insurance_doc_url,
+        license_doc_url    = safe_decrypt_field(v.license_doc_url),
+        insurance_doc_url  = safe_decrypt_field(v.insurance_doc_url),
         vendor_access_code = v.vendor_access_code,
         access_code_used   = v.access_code_used,
         access_code_expiry = v.access_code_expiry,
@@ -311,10 +312,14 @@ def _to_out(v, db) -> VendorOut:
 
 
 def _assignment_to_out(a) -> AssignmentOut:
+    from app.utils.encryption import safe_decrypt_field
+    company_name = None
+    if a.vendor:
+        company_name = safe_decrypt_field(a.vendor.company_name)
     return AssignmentOut(
         assignment_id     = a.assignment_id,
         vendor_id         = a.vendor_id,
-        company_name      = a.vendor.company_name if a.vendor else None,
+        company_name      = company_name,
         request_id        = a.request_id,
         community_id      = a.community_id,
         quote_amount      = a.quote_amount,

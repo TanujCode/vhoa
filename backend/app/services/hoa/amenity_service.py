@@ -332,10 +332,7 @@ def create_booking(
 
     # ── Email Notifications ──
     booked_by = db.query(User).filter(User.user_id == booked_by_id).first()
-    booked_by_name = ""
-    if booked_by:
-        parts = [booked_by.first_name, booked_by.middle_name, booked_by.last_name]
-        booked_by_name = " ".join(filter(None, parts))
+    booked_by_name = booked_by.full_name if booked_by else ""
 
     status_type = "PAYMENT_DUE" if fee_amount > 0 else "CONFIRMED"
     due_date_str = str(payment_due) if payment_due else "N/A"
@@ -541,10 +538,7 @@ def pay_booking(booking_id: int, user_id: int, db: Session) -> AmenityBooking:
 
     # Send confirmation emails
     booked_by = db.query(User).filter(User.user_id == booking.booked_by_id).first()
-    booked_by_name = ""
-    if booked_by:
-        parts = [booked_by.first_name, booked_by.middle_name, booked_by.last_name]
-        booked_by_name = " ".join(filter(None, parts))
+    booked_by_name = booked_by.full_name if booked_by else ""
 
     slot_time_str = f"{booking.slot_start} - {booking.slot_end}"
 

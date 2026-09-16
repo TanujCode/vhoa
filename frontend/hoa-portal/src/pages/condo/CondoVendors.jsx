@@ -5,6 +5,7 @@ import ConfirmModal from "../../components/ConfirmModal";
 import { toast } from 'react-hot-toast';
 import { formatUsPhone, formatPhoneAsYouType } from '../../utils/phoneFormatter';
 import { checkEmail } from '../../utils/emailValidation';
+import PhoneInputWithCountry from '../../components/common/PhoneInputWithCountry';
 import {
   getCondoVendors,
   onboardCondoVendor,
@@ -22,6 +23,7 @@ export default function CondoVendors({ communityId, userRole, user }) {
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [accessCode, setAccessCode] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
+  const [phoneCountryCode, setPhoneCountryCode] = useState('+1');
   const [phoneOnly, setPhoneOnly] = useState('');
 
   // Form State - Matches HOA Vendors schema
@@ -176,17 +178,14 @@ export default function CondoVendors({ communityId, userRole, user }) {
       const trimmed = value.trim();
       const hasMinDigits = (trimmed.replace(/\D/g, '').length >= 3);
       const hasRepeatingChars = /(.)\1{3,}/.test(trimmed);
-      const hasConsecutiveLetters = /[a-zA-Z]{5,}/.test(trimmed);
-      if (!trimmed) {
-        errorMsg = 'Insurance policy number is required';
-      } else if (!/^[a-zA-Z0-9-]{5,25}$/.test(trimmed) || !hasMinDigits || hasRepeatingChars || hasConsecutiveLetters) {
-        errorMsg = 'Insurance policy number must be 5-25 alphanumeric characters/hyphens, containing at least 3 digits, without long repeating characters or 5+ consecutive letters';
-      }
+      if (!value.trim()) errorMsg = 'Insurance policy number is required';
     } else if (name === 'expiry') {
-      if (value) {
-        const selDate = new Date(value);
+      if (!value) {
+        errorMsg = 'Expiry date is required';
+      } else {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
+        const selDate = new Date(value);
         if (selDate <= today) {
           errorMsg = 'License expiry date must be in the future';
         }
@@ -198,18 +197,8 @@ export default function CondoVendors({ communityId, userRole, user }) {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    if (name === 'phoneOnly') {
-      const formatted = formatPhoneAsYouType(value);
-      setPhoneOnly(formatted);
-      validateField('phoneOnly', formatted);
-      setFormData(prev => ({
-        ...prev,
-        phone: `+1${formatted.replace(/\D/g, '')}`
-      }));
-    } else {
-      setFormData(prev => ({ ...prev, [name]: value }));
-      validateField(name, value);
-    }
+    setFormData(prev => ({ ...prev, [name]: value }));
+    validateField(name, value);
   };
 
   const handleOnboardSubmit = async (e) => {
@@ -235,7 +224,7 @@ export default function CondoVendors({ communityId, userRole, user }) {
         company_name: formData.company_name.trim(),
         contact_person: formData.contact_person.trim(),
         email: formData.email.trim(),
-        phone: `+1${phoneOnly.replace(/\D/g, '')}`,
+        phone: `${phoneCountryCode}${phoneOnly.replace(/\D/g, '')}`,
         category: formData.category,
         license_number: formData.license_number.trim(),
         license_expiry: formData.expiry || null,
@@ -534,15 +523,18 @@ export default function CondoVendors({ communityId, userRole, user }) {
 
                 <div>
                   <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Phone <span className="text-red-500">*</span></label>
-                  <input
-                    type="text"
+                  <PhoneInputWithCountry
                     required
-                    maxLength={14}
-                    name="phoneOnly"
                     value={phoneOnly}
-                    onChange={handleInputChange}
-                    className={`w-full bg-slate-50 dark:bg-[#111c2a] border ${errors.phoneOnly ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/10 focus:border-blue-500'} rounded-lg px-3 py-2 text-sm font-sans text-slate-900 dark:text-white outline-none`}
-                    placeholder="(123) 456-7890"
+                    countryCode={phoneCountryCode}
+                    onCountryChange={(code) => setPhoneCountryCode(code)}
+                    onChange={(e, formatted) => {
+                      setPhoneOnly(formatted);
+                      validateField('phoneOnly', formatted);
+                    }}
+                    size="sm"
+                    error={!!errors.phoneOnly}
+                    placeholder="(555) 000-0000"
                   />
                   {errors.phoneOnly && <p className="text-red-500 text-xs mt-1">{errors.phoneOnly}</p>}
                 </div>

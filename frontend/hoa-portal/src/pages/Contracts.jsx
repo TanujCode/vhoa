@@ -13,6 +13,7 @@ import {
   onlyLettersKeyPress, onlyZipKeyPress, onlyDigitsKeyPress, onlyDecimalKeyPress
 } from '../utils/fieldValidators';
 import { formatPhoneAsYouType } from '../utils/phoneFormatter';
+import PhoneInputWithCountry from '../components/common/PhoneInputWithCountry';
 
 export default function Contracts() {
   const [contracts, setContracts] = useState([]);
@@ -37,6 +38,9 @@ export default function Contracts() {
   const [businessAddressSuggestions, setBusinessAddressSuggestions] = useState([]);
   const [searchingBusinessAddress, setSearchingBusinessAddress] = useState(false);
   const businessAddressTimeoutRef = useRef(null);
+
+  const [clientPhoneCountryCode, setClientPhoneCountryCode] = useState('+1');
+  const [businessPhoneCountryCode, setBusinessPhoneCountryCode] = useState('+1');
 
   const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm({
     mode: 'onTouched',
@@ -273,8 +277,8 @@ export default function Contracts() {
       // Clean numeric inputs
       const payload = {
         ...data,
-        client_phone_number: data.client_phone_only ? `+1${data.client_phone_only.replace(/\D/g, '')}` : '',
-        business_phone_number: data.business_phone_only ? `+1${data.business_phone_only.replace(/\D/g, '')}` : '',
+        client_phone_number: data.client_phone_only ? `${clientPhoneCountryCode}${data.client_phone_only.replace(/\D/g, '')}` : '',
+        business_phone_number: data.business_phone_only ? `${businessPhoneCountryCode}${data.business_phone_only.replace(/\D/g, '')}` : '',
         annual_renewal_fee: data.annual_renewal_fee ? parseFloat(data.annual_renewal_fee) : null,
         one_time_set_up: data.one_time_set_up ? parseFloat(data.one_time_set_up) : null,
         size_of_the_community: data.size_of_the_community ? parseInt(data.size_of_the_community, 10) : null,
@@ -643,29 +647,15 @@ export default function Contracts() {
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-slate-500 dark:text-gray-400 mb-1">Client Phone *</label>
-                    <div className="relative">
-                      <input
-                        type="text"
-                        maxLength={14}
-                        {...register('client_phone_only', { 
-                          required: 'Phone number is required',
-                          validate: (val) => {
-                            if (!val) return 'Phone number is required';
-                            const digits = val.replace(/\D/g, '');
-                            if (digits.length !== 10) {
-                              return 'Phone must be exactly 10 digits';
-                            }
-                            return true;
-                          }
-                        })}
-                        onChange={(e) => {
-                          const formatted = formatPhoneAsYouType(e.target.value);
-                          setValue('client_phone_only', formatted);
-                        }}
-                        placeholder="(123) 456-7890"
-                        className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl px-4 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-[#1D68DF] placeholder-slate-400 dark:placeholder-gray-500"
-                      />
-                    </div>
+                    <PhoneInputWithCountry
+                      value={watch('client_phone_only') || ''}
+                      countryCode={clientPhoneCountryCode}
+                      onCountryChange={(code) => setClientPhoneCountryCode(code)}
+                      onChange={(e, formatted) => setValue('client_phone_only', formatted, { shouldValidate: true })}
+                      size="sm"
+                      error={!!errors.client_phone_only}
+                      placeholder="(555) 000-0000"
+                    />
                     {errors.client_phone_only && <span className="text-xs text-red-400 mt-1">{errors.client_phone_only.message}</span>}
                   </div>
                 </div>
@@ -814,28 +804,15 @@ export default function Contracts() {
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-slate-500 dark:text-gray-400 mb-1">Business Phone</label>
-                    <div className="relative">
-                      <input
-                        type="text"
-                        maxLength={14}
-                        {...register('business_phone_only', {
-                          validate: (val) => {
-                            if (!val) return true; // Optional field
-                            const digits = val.replace(/\D/g, '');
-                            if (digits.length !== 10) {
-                              return 'Phone must be exactly 10 digits';
-                            }
-                            return true;
-                          }
-                        })}
-                        onChange={(e) => {
-                          const formatted = formatPhoneAsYouType(e.target.value);
-                          setValue('business_phone_only', formatted);
-                        }}
-                        placeholder="(123) 456-7890"
-                        className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl px-4 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-[#1D68DF] placeholder-slate-400 dark:placeholder-gray-500"
-                      />
-                    </div>
+                    <PhoneInputWithCountry
+                      value={watch('business_phone_only') || ''}
+                      countryCode={businessPhoneCountryCode}
+                      onCountryChange={(code) => setBusinessPhoneCountryCode(code)}
+                      onChange={(e, formatted) => setValue('business_phone_only', formatted, { shouldValidate: true })}
+                      size="sm"
+                      error={!!errors.business_phone_only}
+                      placeholder="(555) 000-0000"
+                    />
                     {errors.business_phone_only && <span className="text-xs text-red-400 mt-1">{errors.business_phone_only.message}</span>}
                   </div>
                 </div>

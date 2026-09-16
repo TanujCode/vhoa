@@ -89,8 +89,6 @@ class Community(Base):
     admin_user_id       = Column(Integer, ForeignKey("users.user_id"), nullable=True)
 
     # ── Plan / Subscription 
-    plan_id          = Column(Integer, nullable=True)
-    # From the Foreign key Plans Table — Will add later.
     plan_expire_date = Column(Date, nullable=True)
     license_status   = Column(String(20), default="ACTIVE")
     # "ACTIVE" | "EXPIRED" | "SUSPENDED"
@@ -98,7 +96,7 @@ class Community(Base):
     # ── Community Info ────────────────────────
     community_size = Column(Integer, nullable=True)   # total units/homes
     total_owners   = Column(Integer, nullable=True)   # total registered owners
-    contact_person = Column(String(255), nullable=True)
+    contact_person = Column(Text, nullable=True)
     time_zone      = Column(String(50), default="America/New_York")
     # USA timezones: America/New_York, America/Chicago, America/Denver, America/Los_Angeles
 
@@ -109,14 +107,13 @@ class Community(Base):
     late_fee_days = Column(Integer, default=7)
     late_fee_amount = Column(Double, default=25.0)
 
-    # ── HOA Escrow Bank Details ───────────────
-    bank_name = Column(String(255), nullable=True)
-    bank_account_no = Column(String(255), nullable=True)
-    bank_routing_no = Column(String(255), nullable=True)
-    bank_account_name = Column(String(255), nullable=True)
+    # ── HOA Escrow Bank Details (Encrypted AES-256-GCM) ───
+    bank_name = Column(Text, nullable=True)
+    bank_account_no = Column(Text, nullable=True)
+    bank_routing_no = Column(Text, nullable=True)
+    bank_account_name = Column(Text, nullable=True)
 
-    # ── Contract ─────────────────────────────
-    contract_id    = Column(Integer, nullable=True)
+    # ── Visibility ───────────────────────────
     visible_tabs   = Column(Text, nullable=True)
 
     # ── Status & Audit ────────────────────────

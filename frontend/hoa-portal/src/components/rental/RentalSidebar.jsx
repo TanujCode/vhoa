@@ -61,7 +61,24 @@ const RentalSidebar = ({ activePage, setActivePage, isOpen, setIsOpen, user, pro
   if (userRole === 'super_admin') {
     navItems = superAdminNavItems;
   } else if (userRole === 'landlord') {
-    navItems = landlordNavItems;
+    if (!hasLease) {
+      if ((properties || []).length > 0) {
+        // When landlord has registered properties, unlock Lease Agreements too
+        navItems = [
+          { id: 'dashboard', label: 'Landlord Dashboard', icon: Layout },
+          { id: 'properties_hub', label: 'Properties & Apartments', icon: Globe },
+          { id: 'leases_hub', label: 'Lease Agreements', icon: FileText },
+        ];
+      } else {
+        // When landlord has no properties yet
+        navItems = [
+          { id: 'dashboard', label: 'Landlord Dashboard', icon: Layout },
+          { id: 'properties_hub', label: 'Properties & Apartments', icon: Globe },
+        ];
+      }
+    } else {
+      navItems = landlordNavItems;
+    }
   } else if (userRole === 'tenant') {
     if (!hasLease) {
       // For tenant with no active lease, show Dashboard and Lease Agreements

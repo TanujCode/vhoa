@@ -32,11 +32,11 @@ class CondoCommunity(Base):
     late_fee_days           = Column(Integer, default=5)
     late_fee_amount         = Column(Double, default=50.0)
 
-    # Bank Settings
-    bank_name           = Column(String(255), nullable=True)
-    bank_account_no     = Column(String(255), nullable=True)
-    bank_routing_no     = Column(String(255), nullable=True)
-    bank_account_name   = Column(String(255), nullable=True)
+    # Bank Settings (Encrypted AES-256-GCM)
+    bank_name           = Column(Text, nullable=True)
+    bank_account_no     = Column(Text, nullable=True)
+    bank_routing_no     = Column(Text, nullable=True)
+    bank_account_name   = Column(Text, nullable=True)
 
     active_status       = Column(Boolean, default=True)
     created_date        = Column(DateTime(timezone=True), server_default=func.now())

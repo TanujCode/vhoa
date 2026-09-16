@@ -123,6 +123,34 @@ export default function PropertiesHub({
   const [modalDropdownOpen, setModalDropdownOpen] = useState(false);
 
 
+  const handleClosePropModal = () => {
+    setShowPropModal(false);
+    setErrorMsg('');
+    setPropName('');
+    setPropAddress('');
+    setPropCity('');
+    setPropState('');
+    setPropZip('');
+    setPropertyType('single');
+    setWizardUnits([{ unit_number: 'Single Family', rent_amount: '' }]);
+    if ((properties || []).length === 0 && setActivePage) {
+      setActivePage('dashboard');
+    }
+  };
+
+  useEffect(() => {
+    if ((properties || []).length === 0) {
+      setShowPropModal(true);
+    }
+  }, [(properties || []).length]);
+
+  useEffect(() => {
+    if (localStorage.getItem('open_add_property_modal') === 'true') {
+      localStorage.removeItem('open_add_property_modal');
+      setShowPropModal(true);
+    }
+  }, []);
+
   useEffect(() => {
     const handleOutsideClick = () => {
       setOnboardDropdownOpen(false);
@@ -891,199 +919,26 @@ export default function PropertiesHub({
 
 
 
-  // CASE 2: Property exists but no tenant/lease is registered - Lock view to success onboarding banner
-  if (properties.length > 0 && !hasOccupiedUnit) {
-    const onboardingProperty = createdPropertySuccess || properties[0];
-    const leasesAwaitingApproval = (leases || []).filter(l => l.status === 'PENDING_LANDLORD_APPROVAL');
-    return (
-      <div className="space-y-6 text-left animate-fade-in">
-        {/* Leases Awaiting Approval Alert */}
-        {leasesAwaitingApproval.length > 0 && (
-          <div className="bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/30 dark:border-amber-500/20 rounded-3xl p-5 sm:p-6 text-slate-800 dark:text-white shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4 animate-fade-in mb-6">
-            <div className="flex items-center gap-3.5 text-left">
-              <div className="p-3 bg-amber-500/20 text-amber-600 dark:text-amber-400 rounded-2xl flex items-center justify-center shrink-0">
-                <FileText className="w-6 h-6 animate-pulse" />
-              </div>
-              <div>
-                <h4 className="text-sm font-black text-amber-800 dark:text-amber-400">Lease Agreement Awaiting Your Review</h4>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                  {leasesAwaitingApproval.length === 1 
-                    ? `A tenant has signed the lease terms and submitted onboarding details. Please review and approve to activate.`
-                    : `${leasesAwaitingApproval.length} lease agreements have been signed by tenants and are awaiting your final approval.`
-                  }
-                </p>
-              </div>
-            </div>
-            <button
-              onClick={() => setActivePage('leases_hub')}
-              className="w-full sm:w-auto px-5 py-2.5 bg-amber-600 hover:bg-amber-500 text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-amber-600/25 hover:shadow-amber-600/40 shrink-0 cursor-pointer text-center"
-            >
-              Review & Approve
-            </button>
-          </div>
-        )}
 
-        {/* Horizontal Onboarding Success Banner */}
-        <div className="w-full bg-white dark:bg-[#1E2E42] border border-slate-200 dark:border-white/10 rounded-3xl p-8 sm:p-10 shadow-sm relative overflow-hidden text-slate-900 dark:text-white animate-scale-up">
-          {/* Subtle background gradient glow */}
-          <div className="absolute top-0 right-0 w-80 h-80 bg-blue-500/[0.02] dark:bg-blue-500/[0.01] rounded-full blur-3xl pointer-events-none" />
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center relative z-10">
-            
-            {/* Left Column - Onboarding Messages */}
-            <div className="space-y-5 text-left">
-              <div className="space-y-2.5">
-                <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight leading-tight">
-                  Hello, {user?.first_name || user?.name?.split(' ')[0] || 'Landlord'}!
-                </h2>
-                <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-medium leading-relaxed max-w-md">
-                  Your new property has been successfully registered. To start managing tenants, rent collections, and logs, let's set up a lease agreement.
-                </p>
-              </div>
-
-              <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-50/80 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 rounded-xl border border-blue-100 dark:border-blue-900/30 text-xs font-bold w-fit">
-                <Sparkles className="w-4 h-4 animate-pulse shrink-0" />
-                <span>Let's create your lease</span>
-              </div>
-            </div>
-
-            {/* Right Column - Registered Property Details & Action */}
-            <div className="space-y-6 text-left md:border-l md:border-slate-100 md:dark:border-white/5 md:pl-10">
-              <div className="space-y-1">
-                <span className="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest font-sans">Registered Property</span>
-                <h3 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white leading-tight">
-                  {onboardingProperty.name}
-                </h3>
-                <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-medium leading-relaxed">
-                  {formatAddressWithUnit(onboardingProperty)}
-                </p>
-
-              </div>
-
-              <div className="pt-2 flex justify-start">
-                <button
-                  type="button"
-                  onClick={() => {
-                    localStorage.setItem('open_create_lease_modal', 'true');
-                    setCreatedPropertySuccess(null);
-                    if (setActivePage) {
-                      setActivePage('leases_hub');
-                    }
-                  }}
-                  className="bg-blue-600 hover:bg-blue-500 text-white rounded-xl px-10 py-2.5 text-xs font-bold transition shadow-md hover:shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30 cursor-pointer text-center uppercase tracking-wider animate-pulse inline-flex items-center justify-center border border-transparent"
-                >
-                  Start
-                </button>
-              </div>
-            </div>
-
-          </div>
-        </div>
-
-        {/* ── Lease Creation Flow Guide ── */}
-        <div className="w-full bg-white dark:bg-[#1E2E42] border border-slate-200 dark:border-white/10 rounded-3xl p-8 shadow-sm">
-          <div className="mb-6">
-            <h3 className="text-base font-black text-slate-800 dark:text-white tracking-tight">How to Create a Lease — 4 Simple Steps</h3>
-            <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">Everything is handled from one screen. Takes about 2 minutes.</p>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-            {[
-              {
-                step: 1, Icon: Building2, title: 'Select Apartment',
-                desc: 'Choose the property and specific apartment you want to lease out.',
-                bg: 'bg-blue-50 dark:bg-blue-950/40', border: 'border-blue-100 dark:border-blue-900/30',
-                iconColor: 'text-blue-600 dark:text-blue-400', num: 'bg-blue-600',
-              },
-
-              {
-                step: 2, Icon: Users, title: 'Add Tenant',
-                desc: 'Enter tenant name, contact details and ID documents.',
-                bg: 'bg-violet-50 dark:bg-violet-950/40', border: 'border-violet-100 dark:border-violet-900/30',
-                iconColor: 'text-violet-600 dark:text-violet-400', num: 'bg-violet-600',
-              },
-              {
-                step: 3, Icon: FileText, title: 'Set Lease Terms',
-                desc: 'Define rent amount, due date, lease duration and deposit.',
-                bg: 'bg-amber-50 dark:bg-amber-950/40', border: 'border-amber-100 dark:border-amber-900/30',
-                iconColor: 'text-amber-600 dark:text-amber-400', num: 'bg-amber-500',
-              },
-              {
-                step: 4, Icon: Key, title: 'Activate Lease',
-                desc: 'Review and confirm — unit is marked occupied instantly.',
-                bg: 'bg-emerald-50 dark:bg-emerald-950/40', border: 'border-emerald-100 dark:border-emerald-900/30',
-                iconColor: 'text-emerald-600 dark:text-emerald-400', num: 'bg-emerald-600',
-              },
-            ].map(({ step, Icon, title, desc, bg, border, iconColor, num }, i, arr) => (
-              <div key={step} className="relative flex flex-col">
-                {i < arr.length - 1 && (
-                  <div className="hidden lg:flex absolute top-9 left-full w-4 z-10 items-center justify-center">
-                    <ArrowRight size={12} className="text-slate-300 dark:text-white/20" />
-                  </div>
-                )}
-                <div className={`${bg} ${border} border rounded-2xl p-5 flex-1 flex flex-col gap-3 hover:shadow-md transition-shadow duration-200`}>
-                  <div className="flex items-center gap-3">
-                    <div className={`w-6 h-6 rounded-full ${num} text-white text-[10px] font-black flex items-center justify-center shrink-0`}>
-                      {step}
-                    </div>
-                    <div className={`w-8 h-8 rounded-xl ${bg} ${border} border flex items-center justify-center`}>
-                      <Icon size={16} className={iconColor} />
-                    </div>
-                  </div>
-                  <div>
-                    <div className={`text-sm font-bold ${iconColor} mb-1`}>{title}</div>
-                    <div className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">{desc}</div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-5 border-t border-slate-100 dark:border-white/5">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-100 dark:border-emerald-900/30 flex items-center justify-center">
-                <CheckCircle size={16} className="text-emerald-600 dark:text-emerald-400" />
-              </div>
-              <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-                No paperwork needed — digital lease created &amp; stored automatically.
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={() => {
-                localStorage.setItem('open_create_lease_modal', 'true');
-                setCreatedPropertySuccess(null);
-                if (setActivePage) {
-                  setActivePage('leases_hub');
-                }
-              }}
-              className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl px-6 py-2.5 text-xs font-bold transition shadow-md hover:shadow-lg shadow-blue-500/20 cursor-pointer uppercase tracking-wider shrink-0"
-            >
-              <Sparkles size={14} />
-              Create Lease Agreement
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
 
   return (
     <div className="space-y-6 text-left animate-fade-in">
-      {/* Header Row - Only show if properties exist */}
-      {properties.length > 0 && (
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div>
-            <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">
-              {selectedProperty ? `${selectedProperty.name} Details` : 'Properties & Units Hub'}
-            </h1>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-              {selectedProperty 
-                ? 'Manage individual units, edit property details, and check vacancy status.' 
-                : 'Add rental portfolios and register distinct rooms/apartments.'}
-            </p>
-          </div>
+      {/* Header Row */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+            {selectedProperty ? `${selectedProperty.name} Details` : 'Properties & Apartments'}
+          </h1>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+            {selectedProperty 
+              ? 'Manage individual units, edit property details, and check vacancy status.' 
+              : properties.length === 0
+                ? 'Register your first rental property to get started with your portfolio.'
+                : 'Manage your rental portfolio, multi-unit buildings, and individual units.'}
+          </p>
+        </div>
+        {properties.length > 0 && (
           <div className="flex items-center gap-3 w-full sm:w-auto self-stretch sm:self-auto justify-end">
             {selectedProperty && (
               <button 
@@ -1115,51 +970,25 @@ export default function PropertiesHub({
               <Plus className="w-4 h-4" /> Add Property
             </button>
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
       {properties.length === 0 ? (
-        <div className="py-6 animate-fade-in text-left">
-          <div className="w-full bg-white dark:bg-[#1E2E42] border border-slate-200 dark:border-white/10 rounded-3xl p-6 sm:p-8 md:p-10 shadow-sm relative overflow-hidden text-slate-900 dark:text-white animate-scale-up">
-            <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-              
-              {/* Left Column: Welcome Text & Badge */}
-              <div className="space-y-4 max-w-2xl">
-                <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-slate-900 dark:text-white">
-                  Welcome, {user?.full_name || 'Landlord'}!
-                </h1>
-                <p className="text-sm font-medium text-slate-500 dark:text-slate-400 leading-relaxed">
-                  Manage your tenants, collect rent online, track maintenance requests, and keep your property portfolios organized all in one place. Let's register your very first property to unlock the full potential of NestBloq!
-                </p>
-                
-                <div className="pt-2">
-                  <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-500/10 text-blue-600 dark:text-blue-400 text-xs font-bold rounded-lg border border-blue-500/20">
-                    <Sparkles className="w-3.5 h-3.5" /> Let's register your first property
-                  </div>
-                </div>
-              </div>
-              
-              {/* Right Column: Just the Add Property Button */}
-              <div className="shrink-0 w-full md:w-auto">
-                <button
-                  onClick={() => {
-                    const activePropertiesCount = (properties || []).filter(p => p.active_status !== false).length;
-                    if (activePropertiesCount >= 2) {
-                      setShowUpgradeModal(true);
-                      return;
-                    }
-                    setErrorMsg('');
-                    setPropertyType('single');
-                    setWizardUnits([{ unit_number: 'Single Family', rent_amount: '' }]);
-                    setShowPropModal(true);
-                  }}
-                  className="w-full md:w-auto bg-blue-600 hover:bg-blue-500 text-white font-bold py-3.5 px-6 rounded-2xl text-xs transition duration-200 flex items-center justify-center gap-1.5 cursor-pointer shadow-lg shadow-blue-500/10 font-sans"
-                >
-                  <Plus className="w-4 h-4" /> Add Property
-                </button>
-              </div>
-
+        <div className="py-12 animate-fade-in text-center">
+          <div className="max-w-md mx-auto p-8 rounded-3xl bg-white dark:bg-[#1E2E42] border border-slate-200 dark:border-white/10 shadow-sm space-y-4">
+            <div className="w-14 h-14 rounded-2xl bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center mx-auto mb-2">
+              <Building className="w-7 h-7 stroke-[1.75]" />
             </div>
+            <h3 className="text-lg font-black text-slate-900 dark:text-white">No Properties Added Yet</h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed font-medium">
+              Register your first rental property to initialize your portfolio and start managing units.
+            </p>
+            <button
+              onClick={() => setShowPropModal(true)}
+              className="mt-2 bg-blue-600 hover:bg-blue-500 text-white font-bold py-2.5 px-5 rounded-xl text-xs transition duration-200 inline-flex items-center gap-2 cursor-pointer shadow-md shadow-blue-500/15"
+            >
+              <Plus className="w-4 h-4" /> Add Property
+            </button>
           </div>
         </div>
       ) : selectedProperty ? (
@@ -1182,7 +1011,16 @@ export default function PropertiesHub({
               <p className="text-xs text-slate-450 dark:text-slate-400 mt-1 font-medium">{formatAddressWithUnit(selectedProperty)}</p>
 
             </div>
-            <div className="flex items-center gap-2 self-stretch sm:self-auto">
+            <div className="flex items-center gap-2 self-stretch sm:self-auto flex-wrap">
+              <button
+                onClick={() => {
+                  localStorage.setItem('open_create_lease_modal', 'true');
+                  if (setActivePage) setActivePage('leases_hub');
+                }}
+                className="flex-1 sm:flex-none px-3.5 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl flex items-center justify-center gap-1.5 text-xs font-bold transition duration-200 shadow-md shadow-blue-500/20 cursor-pointer"
+              >
+                <FileText className="w-4 h-4" /> Create Lease
+              </button>
               <button
                 onClick={() => openEditModal(selectedProperty)}
                 className="flex-1 sm:flex-none px-3.5 py-1.5 border border-slate-200 dark:border-white/10 rounded-xl flex items-center justify-center gap-1.5 hover:bg-slate-50 dark:hover:bg-white/5 text-xs font-semibold text-slate-700 dark:text-slate-350 transition duration-200 cursor-pointer"
@@ -1259,6 +1097,20 @@ export default function PropertiesHub({
                         </p>
                       </div>
                     </div>
+
+                    {u.status === 'VACANT' && (
+                      <div className="shrink-0">
+                        <button
+                          onClick={() => {
+                            localStorage.setItem('open_create_lease_modal', 'true');
+                            if (setActivePage) setActivePage('leases_hub');
+                          }}
+                          className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold transition duration-200 shadow-md shadow-blue-500/20 flex items-center gap-1.5 cursor-pointer"
+                        >
+                          <FileText className="w-3.5 h-3.5" /> Draft Lease Agreement
+                        </button>
+                      </div>
+                    )}
                   </div>
                 );
               }
@@ -1443,16 +1295,7 @@ export default function PropertiesHub({
                 </div>
               </div>
               <button 
-                onClick={() => { 
-                  setShowPropModal(false); 
-                  setPropName('');
-                  setPropAddress('');
-                  setPropCity('');
-                  setPropState('');
-                  setPropZip('');
-                  setPropertyType('single');
-                  setWizardUnits([{ unit_number: 'Single Family', rent_amount: '' }]);
-                }} 
+                onClick={handleClosePropModal} 
                 className="relative z-10 w-7 h-7 rounded-lg bg-white/15 hover:bg-white/25 flex items-center justify-center text-white/80 hover:text-white transition-all cursor-pointer border border-white/20 text-lg font-semibold"
               >
                 ×
@@ -1590,14 +1433,7 @@ export default function PropertiesHub({
                 <div className="pt-4 flex gap-3 border-t dark:border-white/5">
                   <button 
                     type="button" 
-                    onClick={() => {
-                      setShowPropModal(false);
-                      setPropName('');
-                      setPropAddress('');
-                      setPropCity('');
-                      setPropState('');
-                      setPropZip('');
-                    }} 
+                    onClick={handleClosePropModal} 
                     className="flex-1 bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-800 dark:text-white font-bold py-3 rounded-xl text-xs transition duration-200 cursor-pointer flex items-center justify-center gap-1 font-sans"
                   >
                     Cancel

@@ -60,6 +60,22 @@ const RentalForgotPassword = () => {
   const handleResetPassword = async (e) => {
     e.preventDefault();
 
+    if (newPassword.length < 8) {
+      showMsg('error', "Password must be at least 8 characters long.");
+      return;
+    }
+    if (!/[A-Z]/.test(newPassword)) {
+      showMsg('error', "Password must contain at least one uppercase letter.");
+      return;
+    }
+    if (!/\d/.test(newPassword)) {
+      showMsg('error', "Password must contain at least one number.");
+      return;
+    }
+    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?`~]/.test(newPassword)) {
+      showMsg('error', "Password must contain at least one special character (!@#$%^&* etc.).");
+      return;
+    }
     if (newPassword !== confirmPassword) {
       showMsg('error', "Passwords do not match!");
       return;

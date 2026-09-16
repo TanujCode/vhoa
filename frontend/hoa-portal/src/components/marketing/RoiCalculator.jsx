@@ -17,7 +17,7 @@ export default function RoiCalculator() {
   }).format(annualSavings);
 
   return (
-    <div className="w-full bg-gradient-to-br from-white to-slate-50/50 dark:from-[#180a2d] dark:to-[#120824]/40 rounded-3xl border border-slate-200/80 dark:border-white/[0.05] shadow-xl overflow-hidden p-6 md:p-8 transition-colors duration-200">
+    <div className="w-full bg-gradient-to-br from-white to-slate-50/50 dark:from-[#1e293b] dark:to-[#162032] rounded-3xl border border-slate-200/80 dark:border-slate-700 shadow-xl overflow-hidden p-6 md:p-8 transition-colors duration-200">
       
       {/* Title Header */}
       <div className="flex items-center gap-3 mb-6 text-left">
@@ -98,12 +98,12 @@ export default function RoiCalculator() {
         </div>
 
         {/* Results Container */}
-        <div className="bg-slate-100/50 dark:bg-[#0a0414]/50 rounded-2xl border border-slate-200/50 dark:border-white/[0.04] p-6 flex flex-col justify-between gap-6">
+        <div className="bg-slate-100/50 dark:bg-[#0f172a]/70 rounded-2xl border border-slate-200/50 dark:border-slate-700 p-6 flex flex-col justify-between gap-6">
           
           <div className="space-y-5">
             
             {/* Metric 1: Hours Saved */}
-            <div className="p-4 bg-white dark:bg-[#1a102b] rounded-xl border border-slate-150 dark:border-white/[0.06] shadow-sm flex items-center justify-between">
+            <div className="p-4 bg-white dark:bg-[#1e293b] rounded-xl border border-slate-150 dark:border-slate-700 shadow-sm flex items-center justify-between">
               <div className="text-left">
                 <p className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Hours Saved / Month</p>
                 <p className="text-3xl font-extrabold text-[#00A878] tracking-tight mt-1">{hoursSavedPerMonth} Hrs</p>
@@ -114,7 +114,7 @@ export default function RoiCalculator() {
             </div>
 
             {/* Metric 2: Cost Savings */}
-            <div className="p-4 bg-white dark:bg-[#1a102b] rounded-xl border border-slate-150 dark:border-white/[0.06] shadow-sm flex items-center justify-between">
+            <div className="p-4 bg-white dark:bg-[#1e293b] rounded-xl border border-slate-150 dark:border-slate-700 shadow-sm flex items-center justify-between">
               <div className="text-left">
                 <p className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Estimated Annual Savings</p>
                 <p className="text-3xl font-extrabold bg-gradient-to-r from-slate-900 to-[#0A2240] dark:from-white dark:to-blue-100 bg-clip-text text-transparent tracking-tight mt-1 animate-pulse">

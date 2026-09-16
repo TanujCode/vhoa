@@ -14,6 +14,7 @@ import { useTheme } from '../../context/ThemeContext';
 import Logo from '../../components/marketing/Logo';
 import Navbar from '../../components/marketing/Navbar';
 import Footer from '../../components/marketing/Footer';
+import FaqSection from '../../components/marketing/FaqSection';
 import InteractiveAssistant from '../../components/marketing/InteractiveAssistant';
 
 import heroParkLight from '../../assets/hero_park_light.png';
@@ -250,154 +251,154 @@ function StatCounter({ end, suffix = '', prefix = '', duration = 1800 }) {
 const featureList = [
   {
     number: '01',
-    title: 'Violations',
-    tagline: 'Fair community compliance',
-    desc: 'Easily log society violations, manage automatic due dates, send email alerts, and govern fair disputes within a structured 30-day window.',
-    icon: Scale,
-    gradient: 'from-red-500 to-rose-600',
-    textColor: 'text-red-500',
-    glowRgb: 'rgba(239, 68, 68, 0.2)',
-    borderClass: 'border-red-500/20 dark:border-red-500/10 hover:border-red-500/50',
-    shadowColor: 'hover:shadow-red-500/10',
-    cardBg: 'bg-gradient-to-br from-red-500/[0.04] via-transparent to-rose-950/[0.04] dark:from-red-950/20 dark:via-transparent dark:to-rose-950/15',
+    title: 'Rental Properties Hub',
+    tagline: 'Centralized property directory',
+    desc: 'Add and organize your rental properties and residential homes. Track occupancy status, monthly rental rates, and property addresses seamlessly.',
+    icon: Building2,
+    gradient: 'from-cyan-500 to-sky-600',
+    textColor: 'text-cyan-500',
+    glowRgb: 'rgba(6, 182, 212, 0.25)',
+    borderClass: 'border-cyan-500/20 dark:border-cyan-500/10 hover:border-cyan-500/50',
+    shadowColor: 'hover:shadow-cyan-500/10',
+    cardBg: 'bg-gradient-to-br from-cyan-500/[0.04] via-transparent to-sky-950/[0.04] dark:from-cyan-950/20 dark:via-transparent dark:to-sky-950/15',
     details: [
-      'Instant Issue & Violation logs',
-      'Structured 30-day Dispute system',
-      'Automatic Due dates & Late fees',
-      'Integrated Email notifications'
+      'Residential property setup',
+      'Real-time Vacant/Occupied status',
+      'Property addresses & rent rates',
+      'Portfolio-wide property overview'
     ]
   },
   {
     number: '02',
     title: 'Maintenance Desk',
     tagline: 'Smart ticket management',
-    desc: 'Log service requests, dispatch vendors, track statuses end-to-end, and notify residents in real-time.',
+    desc: 'Log repair requests, dispatch certified contractors, track resolution progress end-to-end, and notify tenants in real-time.',
     icon: Wrench,
     gradient: 'from-blue-500 to-indigo-600',
     textColor: 'text-blue-500',
-    glowRgb: 'rgba(59, 130, 246, 0.2)',
+    glowRgb: 'rgba(59, 130, 246, 0.25)',
     borderClass: 'border-blue-500/20 dark:border-blue-500/10 hover:border-blue-500/50',
     shadowColor: 'hover:shadow-blue-500/10',
     cardBg: 'bg-gradient-to-br from-blue-500/[0.04] via-transparent to-indigo-950/[0.04] dark:from-blue-950/20 dark:via-transparent dark:to-indigo-950/15',
     details: [
-      'RBAC-based repair workflow',
-      'Direct Vendor ticket assignment',
-      'Real-time Status tracking log',
-      'Private Admin resolution notes'
+      'Tenant repair request submission',
+      'Direct Contractor ticket dispatch',
+      'Real-time status tracking log',
+      'Photo attachment & issue notes'
     ]
   },
   {
     number: '03',
-    title: 'Amenity Booking',
-    tagline: 'Sleek facility reservation',
-    desc: 'Enable residents to reserve clubhouses, pools, and courts. Protect slots from race conditions and automate board approvals.',
-    icon: CalendarRange,
+    title: 'Lease Agreements',
+    tagline: 'Digital contract management',
+    desc: 'Draft and manage active tenant leases with custom rent amounts, security deposits, validity periods, and digital archives.',
+    icon: FileText,
     gradient: 'from-amber-500 to-orange-600',
     textColor: 'text-amber-500',
-    glowRgb: 'rgba(245, 158, 11, 0.2)',
+    glowRgb: 'rgba(245, 158, 11, 0.25)',
     borderClass: 'border-amber-500/20 dark:border-amber-500/10 hover:border-amber-500/50',
     shadowColor: 'hover:shadow-amber-500/10',
     cardBg: 'bg-gradient-to-br from-amber-500/[0.04] via-transparent to-orange-950/[0.04] dark:from-amber-950/20 dark:via-transparent dark:to-orange-950/15',
     details: [
-      'Max 2 Booking slots per day',
-      'Race condition protection',
-      'Custom Fee configuration rules',
-      'Multi-stage Board Approval flow'
+      'Digital lease drafting & storage',
+      'Rent & security deposit terms',
+      'Lease validity & expiry tracking',
+      'Direct tenant property linking'
     ]
   },
   {
     number: '04',
-    title: 'RBAC Security',
-    tagline: 'Role-based workspaces',
-    desc: 'Granular permissions for Board Presidents, Property Managers, Auditors, and Homeowners with fully isolated data.',
-    icon: Shield,
+    title: 'Tenants Directory',
+    tagline: 'Resident profiles & rosters',
+    desc: 'Maintain complete tenant directories with verified contact information, active lease links, and structured resident profiles.',
+    icon: Users,
     gradient: 'from-indigo-500 to-purple-600',
     textColor: 'text-indigo-500',
-    glowRgb: 'rgba(99, 102, 241, 0.2)',
+    glowRgb: 'rgba(99, 102, 241, 0.25)',
     borderClass: 'border-indigo-500/20 dark:border-indigo-500/10 hover:border-indigo-500/50',
     shadowColor: 'hover:shadow-indigo-500/10',
     cardBg: 'bg-gradient-to-br from-indigo-500/[0.04] via-transparent to-purple-950/[0.04] dark:from-indigo-950/20 dark:via-transparent dark:to-purple-950/15',
     details: [
-      '100% Isolated community data',
-      'Granular role-based permissions',
-      'Multi-factor auth & verification',
-      'Compliance & access audit logs'
+      'Complete tenant contact profiles',
+      'Active lease & property association',
+      'Tenant portal access management',
+      'Direct onboarding status'
     ]
   },
   {
     number: '05',
-    title: 'Finance & Dues',
+    title: 'Rent Ledger',
     tagline: 'Automated billing engine',
-    desc: 'Send invoices, track collections, manage payment ledgers, and auto-reconcile with PCI-DSS compliant gateways.',
+    desc: 'Send invoices, track rent collections, manage payment ledgers, and auto-reconcile with PCI-DSS compliant gateways.',
     icon: Wallet,
     gradient: 'from-emerald-500 to-teal-600',
     textColor: 'text-emerald-500',
-    glowRgb: 'rgba(16, 185, 129, 0.2)',
+    glowRgb: 'rgba(16, 185, 129, 0.25)',
     borderClass: 'border-emerald-500/20 dark:border-emerald-500/10 hover:border-emerald-500/50',
     shadowColor: 'hover:shadow-emerald-500/10',
     cardBg: 'bg-gradient-to-br from-emerald-500/[0.04] via-transparent to-teal-950/[0.04] dark:from-emerald-950/20 dark:via-transparent dark:to-teal-950/15',
     details: [
-      '45% faster dues collections',
-      'Automated recurring invoices',
-      'Real-time cashflow ledger',
-      'PCI-DSS compliant payment sync'
+      'Paid, pending & overdue filters',
+      'Monthly rent billing tracker',
+      'Real-time collection rate metrics',
+      'Property-level accounting balances'
     ]
   },
   {
     number: '06',
-    title: 'Payments',
-    tagline: 'Automated society billing',
-    desc: 'Send automatic invoices for monthly dues, collect facility fees, process violation fines, and integrate with secure payment gateways.',
+    title: 'Payments Hub',
+    tagline: 'Digital & manual records',
+    desc: 'Log online digital transactions and manual cash or check receipts with instant verification and complete payment history.',
     icon: CreditCard,
-    gradient: 'from-blue-500 to-blue-700',
-    textColor: 'text-blue-500',
-    glowRgb: 'rgba(20, 184, 166, 0.2)',
-    borderClass: 'border-blue-500/20 dark:border-blue-500/10 hover:border-blue-500/50',
-    shadowColor: 'hover:shadow-blue-500/10',
-    cardBg: 'bg-gradient-to-br from-blue-500/[0.04] via-transparent to-emerald-950/[0.04] dark:from-blue-950/20 dark:via-transparent dark:to-emerald-950/15',
+    gradient: 'from-rose-500 to-red-600',
+    textColor: 'text-rose-500',
+    glowRgb: 'rgba(244, 63, 94, 0.25)',
+    borderClass: 'border-rose-500/20 dark:border-rose-500/10 hover:border-rose-500/50',
+    shadowColor: 'hover:shadow-rose-500/10',
+    cardBg: 'bg-gradient-to-br from-rose-500/[0.04] via-transparent to-red-950/[0.04] dark:from-rose-950/20 dark:via-transparent dark:to-red-950/15',
     details: [
-      'Automatic Annual HOA fees',
-      'Violation Fine processing logs',
-      'Amenity Booking payment checks',
-      'Direct PayPal sync integration'
+      'Digital payment gateway sync',
+      'Manual cash & check entry',
+      'Downloadable payment receipts',
+      'Verified transaction archives'
     ]
   },
   {
     number: '07',
-    title: 'NestBloq Assistant',
-    tagline: '24/7 intelligent assistant',
-    desc: 'Conversational AI that answers bylaws queries, books amenities, and logs maintenance requests automatically.',
-    icon: Activity,
-    gradient: 'from-purple-500 to-pink-600',
-    textColor: 'text-purple-500',
-    glowRgb: 'rgba(168, 85, 247, 0.2)',
-    borderClass: 'border-purple-500/20 dark:border-purple-500/10 hover:border-purple-500/50',
-    shadowColor: 'hover:shadow-purple-500/10',
-    cardBg: 'bg-gradient-to-br from-purple-500/[0.04] via-transparent to-pink-950/[0.04] dark:from-purple-950/20 dark:via-transparent dark:to-pink-950/15',
+    title: 'Contractors / Vendors',
+    tagline: 'Certified vendor dispatch',
+    desc: 'Manage electricians, plumbers, and maintenance specialists. Assign work orders and monitor resolution speed.',
+    icon: Truck,
+    gradient: 'from-fuchsia-500 to-pink-600',
+    textColor: 'text-fuchsia-500',
+    glowRgb: 'rgba(217, 70, 239, 0.25)',
+    borderClass: 'border-fuchsia-500/20 dark:border-fuchsia-500/10 hover:border-fuchsia-500/50',
+    shadowColor: 'hover:shadow-fuchsia-500/10',
+    cardBg: 'bg-gradient-to-br from-fuchsia-500/[0.04] via-transparent to-pink-950/[0.04] dark:from-fuchsia-950/20 dark:via-transparent dark:to-pink-950/15',
     details: [
-      '85% query automation',
-      'Instant bylaws & FAQs answer engine',
-      'Automated service request creation',
-      'Multi-channel resident notifications'
+      'Certified contractor directory',
+      'Direct ticket assignment flow',
+      'Contact & trade categorization',
+      'Work completion tracking'
     ]
   },
   {
     number: '08',
-    title: 'Settings & Audits',
-    tagline: 'Configure rules & track logs',
-    desc: 'Configure late fees, toggle page tabs, set timezones, and audit system activities with secure IP address logs.',
-    icon: Sliders,
+    title: 'Reports & Analytics',
+    tagline: 'Portfolio cashflow & metrics',
+    desc: 'Generate real-time cashflow summaries, track rental income vs expenses, and export complete audit packages anytime.',
+    icon: TrendingUp,
     gradient: 'from-violet-600 to-purple-700',
     textColor: 'text-violet-600',
-    glowRgb: 'rgba(109, 40, 217, 0.2)',
+    glowRgb: 'rgba(139, 92, 246, 0.25)',
     borderClass: 'border-violet-500/20 dark:border-violet-500/10 hover:border-violet-500/50',
     shadowColor: 'hover:shadow-violet-600/10',
     cardBg: 'bg-gradient-to-br from-violet-600/[0.04] via-transparent to-purple-950/[0.04] dark:from-violet-950/20 dark:via-transparent dark:to-purple-950/15',
     details: [
-      'Tab Visibility Toggle controls',
-      'Global Late fee configuration',
-      'Society Timezone management',
-      'Action audit logs & IP tracking'
+      'Real-time Income vs Expense chart',
+      'Rent collection efficiency rate',
+      '1-Click CSV/PDF report exports',
+      'Action audit logs & history'
     ]
   }
 ];
@@ -559,10 +560,10 @@ function TestimonialCard({ testimonial }) {
         </div>
       </div>
 
-      {/* Floating unit scale badge */}
+      {/* Floating portfolio scale badge */}
       <div className="absolute top-4 right-6 z-20">
         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full border text-[9px] font-extrabold tracking-wide uppercase backdrop-blur-md bg-white/40 dark:bg-white/[0.02] border-slate-200 dark:border-white/[0.08] ${testimonial.textColor}`}>
-          {testimonial.units}
+          {testimonial.portfolio}
         </span>
       </div>
 
@@ -589,50 +590,44 @@ function TestimonialCard({ testimonial }) {
   );
 }
 
-/* ─── Meetings Operations Console ─── */
-function MeetingsOperationsConsole() {
+/* ─── Lease Agreements Console ─── */
+function LeaseOperationsConsole() {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
 
   return (
-    <div className={`w-full rounded-2xl overflow-hidden shadow-xl border transition-all ${isDark ? 'shadow-violet-900/30 border-white/[0.08]' : 'shadow-slate-200/80 border-slate-200'} relative h-[340px] sm:h-[350px] flex flex-col justify-between`} style={{ background: isDark ? 'linear-gradient(145deg, #0a0618 0%, #0d1030 50%, #080e1a 100%)' : 'linear-gradient(145deg, #f8fafc 0%, #f1f5f9 50%, #e2e8f0 100%)' }}>
-
-      {/* Ambient glow orbs inside the card */}
+    <div className={`w-full rounded-2xl overflow-hidden shadow-xl border transition-all ${isDark ? 'shadow-indigo-900/30 border-white/[0.08]' : 'shadow-slate-200/80 border-slate-200'} relative h-[340px] sm:h-[350px] flex flex-col justify-between`} style={{ background: isDark ? 'linear-gradient(145deg, #090a1f 0%, #101438 50%, #060817 100%)' : 'linear-gradient(145deg, #f8fafc 0%, #eef2ff 50%, #e2e8f0 100%)' }}>
       {isDark && (
         <>
-          <div className="absolute top-0 right-1/4 w-64 h-64 bg-violet-600/10 rounded-full blur-[80px] pointer-events-none" />
-          <div className="absolute bottom-0 left-1/4 w-48 h-48 bg-indigo-500/10 rounded-full blur-[60px] pointer-events-none" />
+          <div className="absolute top-0 right-1/4 w-64 h-64 bg-indigo-600/10 rounded-full blur-[80px] pointer-events-none" />
+          <div className="absolute bottom-0 left-1/4 w-48 h-48 bg-violet-500/10 rounded-full blur-[60px] pointer-events-none" />
         </>
       )}
 
       {/* Header */}
       <div className={`relative px-4 py-2.5 flex items-center justify-between border-b shrink-0 h-[52px] ${isDark ? 'bg-white/[0.03] border-white/[0.06]' : 'bg-slate-50/50 border-slate-200'}`}>
         <div className="flex items-center gap-2.5">
-          <div className="relative">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center shadow-md shadow-violet-500/30">
-              <Users width="16" height="16" className="text-white" />
-            </div>
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-md shadow-indigo-500/30">
+            <FileText size={16} className="text-white" />
           </div>
           <div className="text-left">
-            <h3 className={`font-bold text-xs sm:text-sm leading-none ${isDark ? 'text-white' : 'text-slate-800'}`}>Meetings & Surveys</h3>
-            <p className="text-[9.5px] text-slate-400 mt-0.5">E-voting, RSVP and audio logs</p>
+            <h3 className={`font-bold text-xs sm:text-sm leading-none ${isDark ? 'text-white' : 'text-slate-800'}`}>Lease Agreements</h3>
+            <p className="text-[9.5px] text-slate-400 mt-0.5">Active contracts & tenant terms</p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <span className="flex items-center gap-1.5 text-[9.5px] font-bold text-violet-600 dark:text-violet-350 bg-violet-500/10 border border-violet-500/20 px-2 py-0.5 rounded-full">
-            Active Resol.
-          </span>
-        </div>
+        <span className="flex items-center gap-1 text-[9.5px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 px-2 py-0.5 rounded-full">
+          Active Leases
+        </span>
       </div>
 
       {/* Main Content Body */}
-      <div className="p-3.5 flex-1 flex flex-col justify-center space-y-1.5 text-left overflow-hidden">
-        {/* Integrated Metrics Row */}
+      <div className="p-3.5 flex-1 flex flex-col justify-center space-y-2 text-left overflow-hidden">
+        {/* Metrics Row */}
         <div className={`grid grid-cols-3 rounded-lg border ${isDark ? 'divide-x divide-white/[0.05] bg-white/[0.02] border-white/[0.05]' : 'divide-x divide-slate-200/80 bg-white border-slate-200/80'} shadow-sm`}>
           {[
-            { label: 'RSVP Rate', val: '92.5%', color: 'text-violet-600 dark:text-violet-400' },
-            { label: 'Transcribed', val: '14 Mtgs', color: 'text-emerald-600 dark:text-emerald-400' },
-            { label: 'Quorum Met', val: '100%', color: 'text-amber-600 dark:text-amber-400' }
+            { label: 'Occupancy', val: '100%', color: 'text-indigo-600 dark:text-indigo-400' },
+            { label: 'Avg Rent', val: '$1,900', color: 'text-emerald-600 dark:text-emerald-400' },
+            { label: 'Deposits', val: '$5,700', color: 'text-amber-600 dark:text-amber-400' }
           ].map((m, i) => (
             <div key={i} className="p-1 text-center">
               <div className={`text-[11px] font-black ${m.color} tracking-tight`}>{m.val}</div>
@@ -641,57 +636,47 @@ function MeetingsOperationsConsole() {
           ))}
         </div>
 
-        {/* E-Voting Log */}
-        <div className={`rounded-lg overflow-hidden border ${isDark ? 'bg-white/[0.03] border-white/[0.06]' : 'bg-white border-slate-200'}`}>
-          <div className={`flex items-center justify-between px-2.5 py-1 border-b ${isDark ? 'border-white/[0.04]' : 'border-slate-100'}`}>
-            <div className="flex items-center gap-1.5">
-              <span className="text-[8.5px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Active Survey</span>
-              <span className="w-1 h-1 rounded-full bg-slate-400 dark:bg-slate-600" />
-              <span className="text-[8.5px] text-slate-400 dark:text-slate-500 font-mono font-bold truncate">Q3 Budget</span>
+        {/* Leases List */}
+        <div className="space-y-1.5">
+          {[
+            { tenant: 'Sarah Jenkins', prop: '742 Evergreen Terrace', rent: '$1,850/mo', exp: 'Expires Jun 2027', status: 'Active', badgeColor: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20' },
+            { tenant: 'David Miller', prop: '128 Oakwood Blvd', rent: '$2,200/mo', exp: 'Expires Dec 2026', status: 'Active', badgeColor: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20' },
+            { tenant: 'Emily Zhang', prop: '500 Sunset Way', rent: '$1,650/mo', exp: 'Expires in 28 days', status: 'Renewal Due', badgeColor: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20' }
+          ].map((item, idx) => (
+            <div key={idx} className={`p-2 rounded-xl border flex items-center justify-between gap-3 text-[9.5px] ${
+              isDark ? 'bg-white/[0.02] border-white/5' : 'bg-white border-slate-200 shadow-sm'
+            }`}>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-1.5">
+                  <span className={`font-bold ${isDark ? 'text-white' : 'text-slate-800'}`}>{item.tenant}</span>
+                  <span className="text-[8px] text-slate-400">· {item.exp}</span>
+                </div>
+                <p className="text-[8.5px] text-slate-400 truncate">{item.prop}</p>
+              </div>
+              <div className="text-right shrink-0">
+                <span className="font-extrabold text-indigo-600 dark:text-indigo-400 block text-[10px]">{item.rent}</span>
+                <span className={`text-[7px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded border inline-block mt-0.5 ${item.badgeColor}`}>
+                  {item.status}
+                </span>
+              </div>
             </div>
-            <span className="text-[7.5px] font-extrabold text-emerald-600 dark:text-emerald-300 bg-emerald-500/15 border border-emerald-500/25 px-1.5 py-0.5 rounded-full uppercase">Quorum Reached</span>
-          </div>
-          <div className="px-2.5 py-1 space-y-0.5 text-left text-xs">
-            <div className="flex justify-between items-center text-[9px] text-slate-600 dark:text-slate-300 font-bold">
-              <span>Option A (Approve)</span>
-              <span className="text-emerald-600">82.4%</span>
-            </div>
-            <div className="w-full bg-slate-100 dark:bg-[#0D1B2A] h-1 rounded-full overflow-hidden">
-              <div className="bg-emerald-500 h-full rounded-full" style={{ width: '82.4%' }} />
-            </div>
-          </div>
-        </div>
-
-        {/* Audio Diarization Log */}
-        <div className={`rounded-lg overflow-hidden border ${isDark ? 'bg-white/[0.03] border-indigo-500/25' : 'bg-white border-indigo-200'}`}>
-          <div className={`flex items-center justify-between px-2.5 py-1 border-b ${isDark ? 'border-white/[0.04]' : 'border-slate-100'}`}>
-            <div className="flex items-center gap-1.5">
-              <span className="text-[8.5px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-widest">Transcript</span>
-              <span className="w-1 h-1 rounded-full bg-slate-400 dark:bg-slate-600" />
-              <span className="text-[8.5px] text-slate-400 dark:text-slate-500 font-mono font-bold">Auto-Diarized</span>
-            </div>
-            <span className="text-[7.5px] font-extrabold text-indigo-600 dark:text-indigo-300 bg-indigo-500/15 border border-indigo-500/25 px-1.5 py-0.5 rounded-full uppercase">Processed</span>
-          </div>
-          <div className="px-2.5 py-1 space-y-0.5 text-left">
-            <p className="text-[9px] text-slate-700 dark:text-slate-300 leading-tight truncate"><strong className="text-slate-900 dark:text-white">Speaker 1:</strong> "Voting begins on clubhouse fencing."</p>
-            <p className="text-[9px] text-slate-500 dark:text-slate-400 leading-tight truncate"><strong className="text-slate-800 dark:text-slate-200">Speaker 2:</strong> "Both quotes within Q3 reserves."</p>
-          </div>
+          ))}
         </div>
       </div>
 
       {/* Footer bar */}
       <div className={`px-4 py-2 flex items-center justify-between border-t shrink-0 h-[46px] ${isDark ? 'border-white/[0.05] bg-white/[0.02]' : 'border-slate-200 bg-slate-50'}`}>
-        <span className="text-[9px] text-slate-500 dark:text-slate-400">SHA-256 voting records</span>
-        <span className="flex items-center gap-1 text-[9px] text-violet-600 dark:text-violet-400 font-bold">
-          <span className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-pulse" />
-          Verified Assemblies
+        <span className="text-[9.5px] text-slate-500 dark:text-slate-400">Digital signatures & lease agreements</span>
+        <span className="flex items-center gap-1 text-[9.5px] text-indigo-600 dark:text-indigo-400 font-bold cursor-pointer hover:underline">
+          View All Leases →
         </span>
       </div>
     </div>
   );
 }
 
-function CalendarOperationsConsole() {
+/* ─── Properties Console ─── */
+function PropertiesOperationsConsole() {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
 
@@ -704,58 +689,61 @@ function CalendarOperationsConsole() {
       {/* Header */}
       <div className={`relative px-4 py-2.5 flex items-center justify-between border-b shrink-0 h-[52px] ${isDark ? 'bg-white/[0.03] border-white/[0.06]' : 'bg-slate-50/50 border-slate-200'}`}>
         <div className="flex items-center gap-2.5 text-left">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-md shadow-blue-500/30">
-            <CalendarRange size={16} className="text-white" />
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-600 flex items-center justify-center shadow-md shadow-blue-500/30">
+            <Building2 size={16} className="text-white" />
           </div>
           <div>
-            <h3 className={`font-bold text-xs sm:text-sm leading-none ${isDark ? 'text-white' : 'text-slate-800'}`}>Amenity Bookings</h3>
-            <p className="text-[9.5px] text-slate-400 mt-0.5">Real-time facility reservations</p>
+            <h3 className={`font-bold text-xs sm:text-sm leading-none ${isDark ? 'text-white' : 'text-slate-800'}`}>Property Portfolio</h3>
+            <p className="text-[9.5px] text-slate-400 mt-0.5">Residential rental properties & addresses</p>
           </div>
         </div>
         <span className="flex items-center gap-1 text-[9.5px] font-bold text-blue-600 dark:text-blue-400 bg-blue-500/10 border border-blue-500/20 px-2 py-0.5 rounded-full">
-          July 2026
+          3 Properties
         </span>
       </div>
 
-      {/* Calendar Grid Preview */}
-      <div className="p-3 flex-1 flex flex-col justify-center text-left overflow-hidden">
-        <div className="grid grid-cols-7 gap-1 text-center text-[8px] font-black text-slate-400 dark:text-gray-500 mb-1 uppercase tracking-wider">
-          {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d, i) => <div key={i}>{d}</div>)}
-        </div>
-        <div className="grid grid-cols-7 gap-1">
-          {Array.from({ length: 35 }).map((_, idx) => {
-            const dayNum = idx - 2;
-            const isDay = dayNum > 0 && dayNum <= 31;
-            const isToday = dayNum === 3;
-            const isSelected = dayNum === 10;
-            const hasBooking = dayNum === 3 || dayNum === 10;
-            return (
-              <div
-                key={idx}
-                className={`h-7 sm:h-8 rounded-lg flex flex-col items-center justify-between p-0.5 border transition-all ${
-                  !isDay ? 'opacity-0 border-transparent' :
-                  isSelected ? 'bg-blue-600 border-blue-600 text-white font-bold shadow-sm shadow-blue-500/20' :
-                  isToday ? 'bg-blue-500/10 border-blue-500/35 text-blue-600 dark:text-blue-400 font-bold' :
-                  'bg-white/40 dark:bg-white/[0.01] border-slate-200/50 dark:border-white/[0.03] text-slate-800 dark:text-slate-200'
-                }`}
-              >
-                <span className="text-[9px] font-mono leading-none">{isDay ? dayNum : ''}</span>
-                {isDay && hasBooking && (
-                  <span className={`w-1 h-1 rounded-full ${isSelected ? 'bg-white' : 'bg-purple-500 dark:bg-purple-400'}`} />
-                )}
+      {/* Property Cards */}
+      <div className="p-3.5 flex-1 flex flex-col justify-center space-y-2 text-left overflow-hidden">
+        {[
+          { name: "Evergreen Terrace Villa", type: "Single Family", address: "742 Evergreen Terrace, Portland, OR", tenant: "Tenant: Sarah Jenkins", revenue: "$1,850/mo", status: "Occupied" },
+          { name: "Oakwood Residential Home", type: "Single Family", address: "128 Oakwood Blvd, Seattle, WA", tenant: "Tenant: David Miller", revenue: "$2,200/mo", status: "Occupied" },
+          { name: "Sunset Hill Residence", type: "Single Family", address: "500 Sunset Way, Austin, TX", tenant: "Tenant: Vacant / Listed", revenue: "$1,650/mo", status: "Vacant" }
+        ].map((prop, i) => (
+          <div key={i} className={`p-2.5 rounded-xl border transition-all ${
+            isDark ? 'bg-white/[0.02] border-white/5' : 'bg-white border-slate-200 shadow-sm'
+          }`}>
+            <div className="flex items-center justify-between">
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2">
+                  <h4 className={`text-[11px] font-bold truncate ${isDark ? 'text-white' : 'text-slate-800'}`}>{prop.name}</h4>
+                  <span className="text-[8px] font-medium text-slate-400">· {prop.type}</span>
+                </div>
+                <p className="text-[8.5px] text-slate-400 flex items-center gap-1 mt-0.5">
+                  <MapPin size={10} className="text-blue-500 shrink-0" />
+                  <span className="truncate">{prop.address}</span>
+                </p>
               </div>
-            );
-          })}
-        </div>
+              <div className="text-right shrink-0">
+                <span className="font-extrabold text-blue-600 dark:text-blue-400 text-[10.5px] block">{prop.revenue}</span>
+                <span className={`text-[7.5px] font-extrabold px-1.5 py-0.5 rounded border uppercase tracking-wider ${
+                  prop.status === 'Occupied' 
+                    ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
+                    : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20'
+                }`}>
+                  {prop.status}
+                </span>
+              </div>
+            </div>
+          </div>
+        ))}
       </div>
 
       {/* Footer bar */}
       <div className={`px-4 py-2 flex items-center justify-between border-t shrink-0 h-[46px] ${isDark ? 'border-white/[0.05] bg-white/[0.02]' : 'border-slate-200 bg-slate-50'}`}>
-        <div className="min-w-0 flex-1 text-left">
-          <h4 className={`text-[10.5px] font-bold truncate ${isDark ? 'text-white' : 'text-slate-800'}`}>Clubhouse Reservation</h4>
-          <p className="text-[8.5px] text-slate-400">July 3, 2026 • Unit 104</p>
-        </div>
-        <span className="bg-purple-100 dark:bg-purple-500/10 text-purple-600 dark:text-purple-400 text-[8px] font-black px-1.5 py-0.5 rounded border border-purple-200/30 uppercase shrink-0">APPROVED</span>
+        <span className="text-[9.5px] text-slate-500 dark:text-slate-400">3 Properties · Real-time occupancy tracking</span>
+        <span className="flex items-center gap-1 text-[9.5px] text-blue-600 dark:text-blue-400 font-bold cursor-pointer hover:underline">
+          Manage Properties →
+        </span>
       </div>
     </div>
   );
@@ -779,8 +767,8 @@ function MaintenanceOperationsConsole() {
             <Wrench size={16} className="text-white" />
           </div>
           <div>
-            <h3 className={`font-bold text-xs sm:text-sm leading-none ${isDark ? 'text-white' : 'text-slate-800'}`}>Maintenance Kanban</h3>
-            <p className="text-[9.5px] text-slate-400 mt-0.5">Active work orders & dispatches</p>
+            <h3 className={`font-bold text-xs sm:text-sm leading-none ${isDark ? 'text-white' : 'text-slate-800'}`}>Maintenance Desk</h3>
+            <p className="text-[9.5px] text-slate-400 mt-0.5">Active work orders & vendor dispatches</p>
           </div>
         </div>
         <span className="flex items-center gap-1 text-[9.5px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full">
@@ -791,10 +779,10 @@ function MaintenanceOperationsConsole() {
       {/* Work Orders */}
       <div className="p-3 flex-1 space-y-1.5 flex flex-col justify-center text-left overflow-hidden">
         {[
-          { text: "Repair leaking main valve in Courtyard B", done: false, badge: "In Progress" },
-          { text: "Inspect clubhouse elevator certificate", done: true, badge: "Completed" },
-          { text: "Replace broken lights in North Parking", done: false, badge: "Open" },
-          { text: "Repair damaged lock on courtyard gate", done: true, badge: "Completed" }
+          { text: "742 Evergreen Terrace: Kitchen sink faucet repair", done: false, badge: "In Progress" },
+          { text: "128 Oakwood Blvd: Annual HVAC filter check & tune-up", done: true, badge: "Completed" },
+          { text: "500 Sunset Way: Electronic front door smart lock battery", done: false, badge: "Open" },
+          { text: "312 Pine Street: Water heater pressure relief inspection", done: true, badge: "Completed" }
         ].map((item, i) => (
           <div key={i} className={`p-2 rounded-xl border flex items-center justify-between gap-3 transition-all ${
             item.done 
@@ -848,12 +836,12 @@ function PaymentsOperationsConsole() {
             <Wallet size={16} className="text-white" />
           </div>
           <div>
-            <h3 className={`font-bold text-xs sm:text-sm leading-none ${isDark ? 'text-white' : 'text-slate-800'}`}>Dues & Invoices</h3>
-            <p className="text-[9.5px] text-slate-400 mt-0.5">Automated accounting ledger</p>
+            <h3 className={`font-bold text-xs sm:text-sm leading-none ${isDark ? 'text-white' : 'text-slate-800'}`}>Rent Ledger & Invoices</h3>
+            <p className="text-[9.5px] text-slate-400 mt-0.5">Automated rent collection ledger</p>
           </div>
         </div>
         <span className="flex items-center gap-1 text-[9.5px] font-bold text-teal-600 dark:text-teal-400 bg-teal-500/10 border border-teal-500/20 px-2 py-0.5 rounded-full">
-          Q3 Billing Active
+          Current Month
         </span>
       </div>
 
@@ -863,20 +851,20 @@ function PaymentsOperationsConsole() {
           <div className="relative w-9 h-9 shrink-0">
             <svg viewBox="0 0 36 36" className="w-9 h-9 -rotate-90">
               <circle cx="18" cy="18" r="14.5" fill="none" stroke={isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.04)"} strokeWidth="3.5" />
-              <circle cx="18" cy="18" r="14.5" fill="none" stroke="#14B8A6" strokeWidth="3.5" strokeDasharray="78 100" strokeLinecap="round" />
+              <circle cx="18" cy="18" r="14.5" fill="none" stroke="#14B8A6" strokeWidth="3.5" strokeDasharray="88 100" strokeLinecap="round" />
             </svg>
-            <div className={`absolute inset-0 flex items-center justify-center text-[9px] font-black ${isDark ? 'text-white' : 'text-slate-800'}`}>78%</div>
+            <div className={`absolute inset-0 flex items-center justify-center text-[9px] font-black ${isDark ? 'text-white' : 'text-slate-800'}`}>88%</div>
           </div>
           <div>
-            <p className={`text-xs sm:text-sm font-black leading-none ${isDark ? 'text-white' : 'text-slate-800'}`}>$19,227.00 Collected</p>
-            <p className="text-[8.5px] text-slate-400 mt-0.5">$3,800 Pending • $1,623 Overdue</p>
+            <p className={`text-xs sm:text-sm font-black leading-none ${isDark ? 'text-white' : 'text-slate-800'}`}>$23,350.00 Collected</p>
+            <p className="text-[8.5px] text-slate-400 mt-0.5">$1,850 Pending • $1,650 Overdue</p>
           </div>
         </div>
 
         <div className="space-y-1 text-left">
           {[
-            { title: "Unit 104 Q3 Maintenance Dues", desc: "Digital bank transfer", amt: "+$150.00", status: "Paid" },
-            { title: "Unit 305 Late Payment Fine", desc: "Overdue fee notice", amt: "+$25.00 Fine", status: "Overdue" }
+            { title: "742 Evergreen Terrace (Sarah Jenkins) - Monthly Rent", desc: "Digital bank transfer (Stripe)", amt: "+$1,850.00", status: "Paid" },
+            { title: "500 Sunset Way (Late Rent + $50 Late Fee)", desc: "Automated payment reminder sent", amt: "+$1,700.00", status: "Overdue" }
           ].map((item, idx) => (
             <div key={idx} className={`p-1.5 rounded-lg border flex items-center justify-between text-[9.5px] ${
               isDark ? 'bg-white/[0.01] border-white/5' : 'bg-slate-50 border-slate-200'
@@ -887,7 +875,7 @@ function PaymentsOperationsConsole() {
               </div>
               <div className="text-right shrink-0">
                 <span className="font-extrabold text-teal-600 dark:text-teal-400 block">{item.amt}</span>
-                <span className="text-[7.5px] font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400">{item.status}</span>
+                <span className={`text-[7.5px] font-black uppercase tracking-wider ${item.status === 'Paid' ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'}`}>{item.status}</span>
               </div>
             </div>
           ))}
@@ -896,7 +884,7 @@ function PaymentsOperationsConsole() {
 
       {/* Footer bar */}
       <div className={`px-4 py-2 flex items-center justify-between border-t shrink-0 h-[46px] ${isDark ? 'border-white/[0.05] bg-white/[0.02]' : 'border-slate-200 bg-slate-50'}`}>
-        <span className="text-[9.5px] text-slate-500 dark:text-slate-400">Verified Ledger</span>
+        <span className="text-[9.5px] text-slate-500 dark:text-slate-400">Verified Rental Ledger</span>
         <span className="flex items-center gap-1 text-[8.5px] font-extrabold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/25 px-1.5 py-0.5 rounded uppercase tracking-wider shrink-0">
           Audited
         </span>
@@ -912,107 +900,46 @@ export default function LandingPage() {
   const [activeFeature, setActiveFeature] = useState(0);
   const [activeSlide, setActiveSlide] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
-  const [activeDashboard, setActiveDashboard] = useState(0);
-  const [dashboardFading, setDashboardFading] = useState(false);
-  const [isDashboardHovered, setIsDashboardHovered] = useState(false);
   
-  // Auto-cycle dashboard portal every 5.0s, paused on hover
-  useEffect(() => {
-    if (isDashboardHovered) return;
-    const timer = setInterval(() => {
-      setDashboardFading(true);
-      setTimeout(() => {
-        setActiveDashboard(prev => (prev + 1) % 3);
-        setDashboardFading(false);
-      }, 350);
-    }, 5000);
-    return () => clearInterval(timer);
-  }, [isDashboardHovered]);
-  // Portal data configuration
-  const dashboardData = [
-    {
-      managerName: 'John Smith',
-      managerRole: 'PROPERTY MANAGER',
-      managerInitials: 'JS',
-      managerColor: 'bg-blue-500',
-      contextLabel: 'MY COMMUNITY',
-      communityName: 'Willow Creek Community',
-      communityCode: 'VIK774 ▾',
-      welcomeMsg: 'Welcome back, John! 🏘️',
-      subMsg: "Here is a summary of your community's active operations today.",
-      badge1: 'Code: VIK774', badge1color: isDark ? 'bg-white/5 text-slate-300 border-white/10' : 'bg-slate-100 text-slate-600 border-slate-200',
-      badge2: 'ACTIVE PM LICENSE', badge2color: 'text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 border-emerald-500/20',
-      address: '123 Willow Creek Way, Sunnyvale, CA 94086',
-      stats: [
-        { val: '4', label: 'Members', color: 'text-blue-600 dark:text-blue-400' },
-        { val: '5', label: 'Violations', color: 'text-amber-600 dark:text-amber-500' },
-        { val: '2', label: 'Service Req', color: 'text-blue-600 dark:text-blue-400' },
-        { val: '1000', label: 'Total Units', color: 'text-indigo-600 dark:text-indigo-400' },
-      ],
-      leftPanelTitle: 'Quick Links',
-      rightPanelTitle: 'Calendar Schedule',
-      rightPanelSub: 'View Calendar',
-    },
-    {
-      managerName: 'James Mitchell',
-      managerRole: 'LANDLORD',
-      managerInitials: 'JM',
-      managerColor: 'bg-teal-500',
-      contextLabel: 'MY PORTFOLIO',
-      communityName: 'All Properties',
-      communityCode: '3 Props ▾',
-      welcomeMsg: 'Welcome back, James! 🔑',
-      subMsg: 'Rental Portfolio Summary · Real-Time Property Overview',
-      badge1: 'Props Loan: 3', badge1color: isDark ? 'bg-white/5 text-slate-300 border-white/10' : 'bg-slate-100 text-slate-600 border-slate-200',
-      badge2: 'ACTIVE', badge2color: 'text-teal-700 dark:text-teal-400 bg-teal-500/10 border-teal-500/20',
-      address: '742 Evergreen Terrace, Portland, OR 97201',
-      stats: [
-        { val: '3', label: 'Properties', color: 'text-teal-600 dark:text-teal-400' },
-        { val: '6', label: 'Total Units', color: 'text-blue-600 dark:text-blue-400' },
-        { val: '4', label: 'Tenants', color: 'text-violet-600 dark:text-violet-400' },
-        { val: '2', label: 'Open Tickets', color: 'text-amber-600 dark:text-amber-400' },
-      ],
-      leftPanelTitle: 'Rent Overview',
-      rightPanelTitle: 'Action Required',
-      rightPanelSub: 'Tenant Requests ●4',
-    },
-    {
-      managerName: 'Robert Hayes',
-      managerRole: 'CONDO MANAGER',
-      managerInitials: 'RH',
-      managerColor: 'bg-amber-500',
-      contextLabel: 'MY BUILDING',
-      communityName: 'The Meridian Tower',
-      communityCode: 'MDN-01 ▾',
-      welcomeMsg: 'Welcome back, Robert! 🏙️',
-      subMsg: 'Condo Operations Overview · Building & Unit Management',
-      badge1: 'Bldg: MDN-01', badge1color: isDark ? 'bg-white/5 text-slate-300 border-white/10' : 'bg-slate-100 text-slate-600 border-slate-200',
-      badge2: 'FULLY OCCUPIED', badge2color: 'text-amber-700 dark:text-amber-400 bg-amber-500/10 border-amber-500/20',
-      address: '1450 Harbor Blvd, San Diego, CA 92101',
-      stats: [
-        { val: '3', label: 'Repairs', color: 'text-red-600 dark:text-red-400' },
-        { val: '12', label: 'Parcels', color: 'text-emerald-600 dark:text-emerald-450' },
-        { val: '120', label: 'Total Units', color: 'text-indigo-600 dark:text-indigo-400' },
-      ],
-      leftPanelTitle: 'Unit Status Board',
-      rightPanelTitle: 'Upcoming Bookings',
-      rightPanelSub: 'View All',
-    },
-  ];
-  const pd = dashboardData[activeDashboard];
+  // Landlord Rental dashboard data
+  const pd = {
+    managerName: 'James Mitchell',
+    managerRole: 'LANDLORD',
+    managerInitials: 'JM',
+    managerColor: 'bg-teal-500',
+    contextLabel: 'MY PORTFOLIO',
+    communityName: 'All Properties',
+    communityCode: '3 Props ▾',
+    welcomeMsg: 'Welcome back, James! 🔑',
+    subMsg: 'Rental Portfolio Summary · Real-Time Property Overview',
+    badge1: 'Props Loan: 3',
+    badge1color: isDark ? 'bg-white/5 text-slate-300 border-white/10' : 'bg-slate-100 text-slate-600 border-slate-200',
+    badge2: 'ACTIVE',
+    badge2color: 'text-teal-700 dark:text-teal-400 bg-teal-500/10 border-teal-500/20',
+    address: '742 Evergreen Terrace, Portland, OR 97201',
+    stats: [
+      { val: '3', label: 'Properties', color: 'text-teal-600 dark:text-teal-400' },
+      { val: '3', label: 'Active Leases', color: 'text-blue-600 dark:text-blue-400' },
+      { val: '3', label: 'Tenants', color: 'text-violet-600 dark:text-violet-400' },
+      { val: '2', label: 'Open Tickets', color: 'text-amber-600 dark:text-amber-400' },
+    ],
+    leftPanelTitle: 'Rent Overview',
+    rightPanelTitle: 'Action Required',
+    rightPanelSub: 'Tenant Requests ●4',
+  };
 
   const automationSlides = [
     {
-      tabLabel: " Maintenance Kanban",
-      badge: "Service Requests",
-      title: "Visual Kanban Board",
-      subtitle: "for maintenance dispatches.",
-      desc: "Coordinate community repairs and work orders. Track issues in real-time, dispatch jobs to vendors, and manage task columns from a simple interactive board.",
+      tabLabel: "🔧 Maintenance Kanban",
+      badge: "Work Orders & Repairs",
+      title: "Interactive Kanban Desk",
+      subtitle: "for rental maintenance dispatches.",
+      desc: "Coordinate rental repairs and tenant service requests. Track issues in real-time, dispatch jobs directly to certified contractors, and manage task statuses from an intuitive board.",
       points: [
-        { icon: '', text: 'Drag-and-drop repair ticket workflow' },
-        { icon: '️', text: 'Assign tasks to external community vendors' },
-        { icon: '', text: 'Log private manager notes and action steps' },
-        { icon: '', text: 'Instantly update residents on repair status' }
+        { icon: '🔧', text: 'Drag-and-drop repair ticket triage & status updates' },
+        { icon: '👷', text: 'Assign work orders directly to verified vendors' },
+        { icon: '📝', text: 'Attach repair photos and landlord internal notes' },
+        { icon: '⚡', text: 'Real-time tenant status updates upon job completion' }
       ],
       linkText: "Explore Maintenance Features",
       linkTo: "/features",
@@ -1022,56 +949,56 @@ export default function LandingPage() {
       component: <MaintenanceOperationsConsole />
     },
     {
-      tabLabel: " Amenity Booking",
-      badge: "Facility Scheduler",
-      title: "Sleek reservation",
-      subtitle: "and booking approvals.",
-      desc: "Enable residents to reserve clubhouses, pools, gyms, or tennis courts. Prevent double bookings, manage slot constraints, and handle board approvals.",
+      tabLabel: "📄 Lease Agreements",
+      badge: "Digital Leases & Contracts",
+      title: "Active Lease Tracking",
+      subtitle: "and automated renewals.",
+      desc: "Create, monitor, and organize digital tenant leases. Keep track of start and end dates, security deposit balances, monthly rent terms, and renewal timelines.",
       points: [
-        { icon: '', text: 'Double-booking protection for all time slots' },
-        { icon: '', text: 'Customizable daily slot booking limits' },
-        { icon: '️', text: 'Seamless board approval and verification gates' },
-        { icon: '', text: 'Real-time visual slot availability calendar' }
+        { icon: '📄', text: 'Store 12-month and custom residential lease agreements' },
+        { icon: '💰', text: 'Record security deposits, monthly rent and fee terms' },
+        { icon: '👤', text: 'Centralized tenant directory linked to individual properties' },
+        { icon: '🔔', text: 'Automated 30-day and 60-day lease expiration alerts' }
       ],
-      linkText: "Explore Bookings",
+      linkText: "Explore Leases",
+      linkTo: "/features",
+      badgeColor: "bg-indigo-500/10 border-indigo-500/25 text-indigo-600 dark:text-indigo-400",
+      btnColor: "bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-500/25",
+      image: featureSecurity,
+      component: <LeaseOperationsConsole />
+    },
+    {
+      tabLabel: "🏠 Property Portfolio",
+      badge: "Properties & Addresses",
+      title: "Property Portfolio Hub",
+      subtitle: "with live occupancy tracking.",
+      desc: "Organize your residential rental properties and homes in a single workspace. Monitor real-time rental rates, tenant occupancy, and property addresses.",
+      points: [
+        { icon: '🏠', text: 'Residential rental properties & addresses management' },
+        { icon: '📊', text: 'Live occupancy & vacancy tracking across all properties' },
+        { icon: '📍', text: 'Complete property location and tenant mapping' },
+        { icon: '🏷️', text: 'Monthly rental pricing and security deposit records' }
+      ],
+      linkText: "Explore Properties",
       linkTo: "/features",
       badgeColor: "bg-blue-500/10 border-blue-500/25 text-blue-600 dark:text-blue-400",
       btnColor: "bg-blue-600 hover:bg-blue-700 text-white shadow-blue-500/25",
       image: featureCopilot,
-      component: <CalendarOperationsConsole />
+      component: <PropertiesOperationsConsole />
     },
     {
-      tabLabel: "️ Meetings & Surveys",
-      badge: "E-Voting & Assemblies",
-      title: "Community assemblies",
-      subtitle: "and resident surveys.",
-      desc: "Schedule and organize board meetings, general assemblies, and resident opinion polls. Enable secure voting on resolutions with absolute transparency.",
+      tabLabel: "💼 Rent Ledger",
+      badge: "Rent Collection & Accounting",
+      title: "Rent Collection Ledger",
+      subtitle: "and cashflow accounting.",
+      desc: "Track monthly tenant rental payments on a centralized accounting ledger. Issue invoices, record bank payments, manage deposits, and generate income reports.",
       points: [
-        { icon: '️', text: 'Run online community voting on key resolutions' },
-        { icon: '️', text: 'Meeting audio recording and speaker diarization' },
-        { icon: '', text: 'Collaborative RSVP tracker for board assemblies' },
-        { icon: '', text: 'Real-time survey response analysis and logs' }
+        { icon: '💳', text: 'Real-time record of paid, pending, and overdue rent' },
+        { icon: '📈', text: 'Automated cashflow metrics tracking net rental income' },
+        { icon: '🏦', text: 'Direct logging of digital transfers, cash, and checks' },
+        { icon: '📋', text: 'Clean financial audit trails linked to each unit' }
       ],
-      linkText: "Explore Meetings & Surveys",
-      linkTo: "/features",
-      badgeColor: "bg-violet-500/10 border-violet-500/25 text-violet-650 dark:text-violet-400",
-      btnColor: "bg-violet-600 hover:bg-violet-700 text-white shadow-violet-500/25",
-      image: featureSecurity,
-      component: <MeetingsOperationsConsole />
-    },
-    {
-      tabLabel: " Dues & Payments",
-      badge: "Financial Ledger",
-      title: "Seamless collections",
-      subtitle: "and automated accounting.",
-      desc: "Track outstanding HOA dues and resident payments on a centralized ledger. Log payments, issue invoices, and manage community financial accounts.",
-      points: [
-        { icon: '', text: 'Keep clear record of paid, pending, and overdue invoices' },
-        { icon: '', text: 'Financial metrics showing total collected funds' },
-        { icon: '', text: 'Direct logging of manual checks and digital payments' },
-        { icon: '', text: 'Clear audit trails linked to units and owner files' }
-      ],
-      linkText: "Explore Payments",
+      linkText: "Explore Rent Ledger",
       linkTo: "/features",
       badgeColor: "bg-teal-500/10 border-teal-500/25 text-teal-650 dark:text-teal-400",
       btnColor: "bg-teal-600 hover:bg-teal-700 text-white shadow-teal-500/25",
@@ -1088,46 +1015,17 @@ export default function LandingPage() {
     return () => clearInterval(timer);
   }, [isAutoPlaying]);
 
-  const rotatingWords = [
-    "HOA Management",
-    "Rental Property Management",
-    "Condo Management"
-  ];
-  const [wordIndex, setWordIndex] = useState(0);
   const [typedText, setTypedText] = useState("");
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [typingSpeed, setTypingSpeed] = useState(120);
 
   useEffect(() => {
-    let timer;
-    const handleTyping = () => {
-      const fullWord = rotatingWords[wordIndex];
-      
-      if (!isDeleting) {
-        // Typing state
+    const fullWord = "Rental Property Management";
+    if (typedText.length < fullWord.length) {
+      const timer = setTimeout(() => {
         setTypedText(fullWord.substring(0, typedText.length + 1));
-        setTypingSpeed(100);
-        if (typedText === fullWord) {
-          // Finished typing: pause
-          timer = setTimeout(() => setIsDeleting(true), 2000);
-          return;
-        }
-      } else {
-        // Deleting state
-        setTypedText(fullWord.substring(0, typedText.length - 1));
-        setTypingSpeed(45);
-        if (typedText === "") {
-          setIsDeleting(false);
-          setWordIndex((prevIndex) => (prevIndex + 1) % rotatingWords.length);
-        }
-      }
-
-      timer = setTimeout(handleTyping, typingSpeed);
-    };
-
-    timer = setTimeout(handleTyping, typingSpeed);
-    return () => clearTimeout(timer);
-  }, [typedText, isDeleting, wordIndex]);
+      }, 60);
+      return () => clearTimeout(timer);
+    }
+  }, [typedText]);
 
   const location = useLocation();
   const solutionsSectionRef = useRef(null);
@@ -1296,13 +1194,13 @@ export default function LandingPage() {
 
   const testimonials = [
     {
-      name: 'Sarah L.',
-      role: 'HOA Secretary',
-      society: 'Sunrise Heights',
+      name: 'Sarah Jenkins',
+      role: 'Portfolio Landlord',
+      society: 'Highland Residential Rentals',
       rating: 5,
-      comment: 'NestBloq completely transformed our community operations. Automated payments, zero midnight bylaws queries, and an interactive dashboard the whole board loves. Absolutely brilliant platform!',
-      avatar: 'SL',
-      units: '120+ Units',
+      comment: 'NestBloq completely transformed our rental operations. Automated online rent collection, digital lease tracking, and instant tenant maintenance dispatches. Absolutely brilliant platform!',
+      avatar: 'SJ',
+      portfolio: '4 Properties',
       gradient: 'from-violet-500 to-indigo-600',
       glowColor: 'group-hover:shadow-[0_20px_40px_rgba(124,58,237,0.15)]',
       glowRgb: 'rgba(124,58,237,0.15)',
@@ -1311,13 +1209,13 @@ export default function LandingPage() {
       borderColor: 'border-violet-500/20 dark:border-violet-500/10 hover:border-violet-500/40 dark:hover:border-violet-500/30'
     },
     {
-      name: 'Rajesh K.',
-      role: 'Board President',
-      society: 'Green Park Residency',
+      name: 'Robert Mitchell',
+      role: 'Residential Property Owner',
+      society: 'Oakridge Rental Portfolio',
       rating: 5,
-      comment: 'Onboarding was incredibly seamless — units, resident directories, and maintenance tracking were all live in under 48 hours. The setup support was exceptionally cooperative and professional.',
-      avatar: 'RK',
-      units: '500+ Units',
+      comment: 'Onboarding our entire rental portfolio was seamless — property listings, active lease terms, tenant directories, and contractor dispatch were live in under 48 hours. The landlord dashboard is second to none.',
+      avatar: 'RM',
+      portfolio: '8 Properties',
       gradient: 'from-emerald-500 to-blue-600',
       glowColor: 'group-hover:shadow-[0_20px_40px_rgba(16,185,129,0.15)]',
       glowRgb: 'rgba(16,185,129,0.15)',
@@ -1326,13 +1224,13 @@ export default function LandingPage() {
       borderColor: 'border-emerald-500/20 dark:border-emerald-500/10 hover:border-emerald-500/40 dark:hover:border-emerald-500/30'
     },
     {
-      name: 'Priya Patel',
-      role: 'Property Manager',
-      society: 'Maple Heights Enclave',
+      name: 'Emily Parker',
+      role: 'Rental Property Manager',
+      society: 'Sunset Property Holdings',
       rating: 5,
-      comment: 'Isolated community databases gave our board complete trust. Dues are collected 45% faster and service requests are auto-dispatched from raise to resolve. Zero hassle operations.',
-      avatar: 'PP',
-      units: '2,600+ Units',
+      comment: 'Direct tenant portals and the real-time rent collection ledger gave our team complete financial control. Rent collections are 45% faster and repair tickets are resolved with zero friction.',
+      avatar: 'EP',
+      portfolio: '12 Properties',
       gradient: 'from-amber-500 to-orange-600',
       glowColor: 'group-hover:shadow-[0_20px_40px_rgba(245,158,11,0.15)]',
       glowRgb: 'rgba(245,158,11,0.15)',
@@ -1370,22 +1268,97 @@ export default function LandingPage() {
     },
     {
       icon: Shield, title: 'RBAC Security', tagline: 'Role-based workspaces', color: 'indigo',
-      desc: 'Granular permissions for Board Presidents, Property Managers, Auditors, and Homeowners with fully isolated data.',
+      desc: 'Granular permissions for Landlords, Property Managers, Accountants, Contractors, and Tenants with fully isolated data.',
       stats: '100% data isolation'
     },
     {
       icon: Activity, title: 'NestBloq Assistant', tagline: '24/7 intelligent assistant', color: 'rose',
-      desc: 'Conversational AI that answers bylaws queries, books amenities, and logs maintenance requests automatically.',
+      desc: 'Conversational AI that answers tenant queries, collects repair photos, and logs maintenance work orders automatically.',
       stats: '85% query automation'
     }
   ];
 
-  const faqs = [
-    { q: 'How does the NestBloq Resident Assistant work?', a: 'Our NestBloq Assistant runs on advanced conversational models trained for property management. It auto-answers resident queries about bylaws, trash schedules, and amenity bookings. When a resident reports an issue, AI gathers details and submits service requests directly into the manager portal.' },
-    { q: 'Is our financial data secure on NestBloq?', a: 'Yes, security is our absolute priority. We use bank-grade AES-256 encryption for all records. Online dues are processed via PCI-DSS compliant payment gateways — credit card and bank details are never stored on our servers.' },
-    { q: 'Can NestBloq integrate with our existing accounting system?', a: 'Absolutely. NestBloq provides seamless integrations with QuickBooks, Yardi, AppFolio, and direct banking sync for quick reconciliation.' },
-    { q: 'What is the onboarding process like?', a: 'Onboarding typically takes less than 48 hours. Our customer success team handles importing resident rosters, outstanding balances, and amenities, then guides your board through a full walkthrough.' },
-    { q: 'How does the invitation system work for members?', a: 'The Property Manager or Board President generates a unique invite link from the admin panel. Members receive an email invite, register under the correct community, and are automatically assigned their role-based workspace.' }
+  const landingFaqs = [
+    {
+      id: 1,
+      category: "General",
+      q: "How does the NestBloq Rental Assistant work?",
+      answerParts: [
+        "Our **NestBloq Rental Assistant** runs on advanced conversational AI trained specifically for rental operations and property management.",
+        "It instantly answers tenant queries about lease terms, rent payment schedules, and maintenance issues 24/7. When a tenant reports an issue, AI automatically triages the problem, collects photos, and generates a structured work order in the landlord portal."
+      ]
+    },
+    {
+      id: 2,
+      category: "Security",
+      q: "Is our financial data and tenant registry secure on NestBloq?",
+      answerParts: [
+        "**Yes, security is our foundational priority.** We enforce bank-grade **AES-256 encryption at rest** and **TLS 1.3 in transit** for all property databases.",
+        "Online rent collection is handled through **Stripe's PCI-DSS Level 1** certified gateway using end-to-end tokenization. Credit cards and bank account credentials are never stored on internal servers."
+      ]
+    },
+    {
+      id: 3,
+      category: "Technical",
+      q: "Can NestBloq integrate with our existing accounting and property systems?",
+      answerParts: [
+        "**Absolutely.** NestBloq features native 1-click synchronization with **QuickBooks Online, Yardi, AppFolio**, and direct bank feeds (Plaid / ACH).",
+        "You can also export full GL ledgers, invoices, rent payment histories, and tenant rosters in standard CSV, Excel, JSON, and PDF audit packages anytime."
+      ]
+    },
+    {
+      id: 4,
+      category: "General",
+      q: "What is the onboarding process and timeline for new landlords and portfolios?",
+      answerParts: [
+        "Onboarding typically completes in **less than 48 hours** with zero downtime.",
+        "Our dedicated customer success team handles importing your existing property portfolios, unit rosters, active lease agreements, and vendor directories, followed by a personalized walkthrough."
+      ]
+    },
+    {
+      id: 5,
+      category: "General",
+      q: "How does the invitation and role assignment system work for tenants?",
+      answerParts: [
+        "Landlords or Property Managers can trigger automated email invites or generate secure one-time onboarding links directly from the admin panel.",
+        "When tenants join, the system automatically assigns their role-based permissions (Landlord, Property Manager, Tenant, Contractor, or Accountant) ensuring complete data privacy and isolation."
+      ]
+    },
+    {
+      id: 6,
+      category: "Security",
+      q: "How does NestBloq safeguard rental financial transactions and audit records?",
+      answerParts: [
+        "Every rent payment, security deposit refund, maintenance log, and digital lease agreement is recorded with a **cryptographic SHA-256 audit fingerprint**.",
+        "Ledger records are maintained on an append-only transaction stream that prevents retroactive tampering, unauthorized balance changes, or lost records."
+      ]
+    },
+    {
+      id: 7,
+      category: "Technical",
+      q: "Where is our property portfolio database hosted and what is your uptime SLA?",
+      answerParts: [
+        "All NestBloq data is hosted on **Amazon Web Services (AWS)** multi-region cloud infrastructure in the **US-East** region, backed by a **99.9% uptime SLA**.",
+        "We maintain automated multi-zone failover and hourly encrypted snapshot backups retained for 30 days."
+      ]
+    },
+    {
+      id: 8,
+      category: "Data & Privacy",
+      q: "Can we export our rental data if we ever decide to leave?",
+      answerParts: [
+        "**Yes, 100%.** You retain complete ownership of your portfolio data.",
+        "Admins can export full tenant rosters, accounting logs, maintenance archives, and lease document vaults in standard open formats at any time with one click."
+      ]
+    },
+    {
+      id: 9,
+      category: "Data & Privacy",
+      q: "Is our financial or tenant data shared or monetized with third parties?",
+      answerParts: [
+        "**Never.** We do not sell, rent, or share rental financial ledgers, tenant rosters, or personally identifiable information (PII) with third-party advertisers or data brokers."
+      ]
+    }
   ];
 
 
@@ -1413,7 +1386,7 @@ export default function LandingPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-white dark:bg-[#090F16] font-sans transition-colors duration-300">
+    <div className="min-h-screen flex flex-col bg-white dark:bg-[#0f172a] font-sans transition-colors duration-300">
       <Navbar />
 
       <div className="flex-1 overflow-x-hidden">
@@ -1477,46 +1450,13 @@ export default function LandingPage() {
             ))}
           </div>
 
-          {/* ── DASHBOARD BROWSER MOCKUP — AUTO-ROTATING 3 PORTALS ── */}
-          <div className="relative mt-14 animate-fade-in-up-delay-2">
+          {/* ── DASHBOARD BROWSER MOCKUP — RENTAL PORTAL ── */}
+          <div className="relative mt-10 animate-fade-in-up-delay-2">
             {/* Glow beneath the browser */}
-            <div className="absolute -inset-x-20 -bottom-10 h-40 bg-gradient-to-t from-violet-600/20 via-indigo-500/10 to-transparent blur-2xl pointer-events-none rounded-full" />
-
-            {/* Portal Tab Switcher */}
-            <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 mb-4 px-2">
-              {[
-                { label: '🏘️ HOA Portal', color: 'violet' },
-                { label: '🔑 Rental Portal', color: 'teal' },
-                { label: '🏙️ Condo Portal', color: 'amber' }
-              ].map((tab, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => { setDashboardFading(true); setTimeout(() => { setActiveDashboard(idx); setDashboardFading(false); }, 200); }}
-                  className={`px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full text-[10px] sm:text-[11px] font-bold border transition-all duration-300 ${
-                    activeDashboard === idx
-                      ? tab.color === 'violet' ? 'bg-violet-600 text-white border-violet-600 shadow-md shadow-violet-500/30'
-                        : tab.color === 'teal' ? 'bg-teal-600 text-white border-teal-600 shadow-md shadow-teal-500/30'
-                        : 'bg-amber-500 text-white border-amber-500 shadow-md shadow-amber-500/30'
-                      : isDark ? 'bg-white/5 text-slate-400 border-white/10 hover:bg-white/10' : 'bg-slate-100 text-slate-500 border-slate-200 hover:bg-slate-200'
-                  }`}
-                >
-                  {tab.label}
-                </button>
-              ))}
-              {/* Auto-cycle indicator dots */}
-              <div className="flex items-center gap-1 ml-1 sm:ml-2">
-                {[0,1,2].map(i => (
-                  <div key={i} className={`rounded-full transition-all duration-300 ${
-                    activeDashboard === i ? 'w-3.5 sm:w-4 h-1 sm:h-1.5 bg-violet-500' : 'w-1 sm:w-1.5 h-1 sm:h-1.5 bg-slate-300 dark:bg-slate-600'
-                  }`} />
-                ))}
-              </div>
-            </div>
+            <div className="absolute -inset-x-20 -bottom-10 h-40 bg-gradient-to-t from-teal-600/20 via-blue-500/10 to-transparent blur-2xl pointer-events-none rounded-full" />
 
             {/* Browser chrome wrapper */}
             <div 
-              onMouseEnter={() => setIsDashboardHovered(true)}
-              onMouseLeave={() => setIsDashboardHovered(false)}
               className="relative rounded-t-2xl overflow-hidden border border-slate-200/60 dark:border-white/[0.08] shadow-[0_32px_80px_rgba(0,0,0,0.12)] dark:shadow-[0_32px_80px_rgba(0,0,0,0.5)] bg-white dark:bg-[#0B1929]"
             >
 
@@ -1529,15 +1469,14 @@ export default function LandingPage() {
                 </div>
                 <div className="flex items-center gap-1.5 text-[10px] sm:text-[11px] font-bold text-slate-600 dark:text-slate-300 truncate px-2">
                   <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
-                  <span className="truncate">NestBloq Management Dashboard</span>
+                  <span className="truncate">NestBloq Rental Management Dashboard</span>
                 </div>
                 <div className="w-6 sm:w-8 shrink-0" />
               </div>
 
-              {/* Dashboard Layout — fades between portals */}
+              {/* Dashboard Layout */}
               <div
-                className="flex h-[520px] sm:h-[480px] overflow-hidden bg-slate-50 dark:bg-[#090F16] transition-opacity duration-300"
-                style={{ opacity: dashboardFading ? 0 : 1 }}
+                className="flex h-[520px] sm:h-[480px] overflow-hidden bg-slate-50 dark:bg-[#090F16]"
               >
                 {/* ── Sidebar ── */}
                 <aside className={`hidden sm:flex w-44 shrink-0 border-r flex flex-col transition-colors duration-300 ${
@@ -1550,19 +1489,7 @@ export default function LandingPage() {
                     <span className={`text-[7px] font-extrabold uppercase tracking-widest ${isDark ? 'text-slate-500' : 'text-slate-600'}`}>MAIN MENU</span>
                   </div>
                   <nav className="flex-1 px-2 pb-2 space-y-0.5 text-[9px] font-medium overflow-y-auto custom-scrollbar">
-                    {(activeDashboard === 0 ? [
-                      { label: 'Dashboard', icon: LayoutDashboard, active: true },
-                      { label: 'Members', icon: Users, active: false },
-                      { label: 'Violations', icon: Scale, active: false },
-                      { label: 'Service Requests', icon: Wrench, active: false },
-                      { label: 'Vendors', icon: Truck, active: false },
-                      { label: 'Manage Amenities', icon: Building2, active: false },
-                      { label: 'Payments', icon: Wallet, active: false },
-                      { label: 'Documents', icon: Folder, active: false },
-                      { label: 'Reports', icon: TrendingUp, active: false },
-                      { label: 'Meetings & Surveys', icon: CalendarRange, active: false },
-                      { label: 'News & Announcements', icon: Megaphone, active: false },
-                    ] : activeDashboard === 1 ? [
+                    {[
                       { label: 'Landlord Dashboard', icon: LayoutDashboard, active: true },
                       { label: 'Properties & Units', icon: Building2, active: false },
                       { label: 'Tenant Screening', icon: UserCheck, active: false },
@@ -1572,22 +1499,12 @@ export default function LandingPage() {
                       { label: 'Maintenance Desk', icon: Wrench, active: false },
                       { label: 'Contractors / Vendors', icon: Truck, active: false },
                       { label: 'Reports', icon: TrendingUp, active: false },
-                    ] : [
-                      { label: 'Condo Dashboard', icon: LayoutDashboard, active: true },
-                      { label: 'Unit Owners', icon: Users, active: false },
-                      { label: 'Amenity Booking', icon: CalendarRange, active: false },
-                      { label: 'Guest Access & OTPs', icon: Shield, active: false },
-                      { label: 'Maintenance', icon: Wrench, active: false },
-                      { label: 'Dues & Payments', icon: Wallet, active: false },
-                      { label: 'Building Notices', icon: Megaphone, active: false },
-                      { label: 'Documents', icon: Folder, active: false },
-                      { label: 'Reports', icon: TrendingUp, active: false },
-                    ]).map((item) => {
+                    ].map((item) => {
                       const Icon = item.icon;
                       return (
                         <div key={item.label} className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg transition-colors ${
                           item.active
-                            ? isDark ? 'bg-blue-500/10 text-blue-400 font-semibold border-l-2 border-blue-500' : 'bg-white text-blue-600 font-semibold border-l-2 border-blue-600 shadow-sm'
+                            ? isDark ? 'bg-teal-500/10 text-teal-400 font-semibold border-l-2 border-teal-500' : 'bg-white text-teal-600 font-semibold border-l-2 border-teal-600 shadow-sm'
                             : isDark ? 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/20' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50'
                         }`}>
                           <Icon size={11} className="shrink-0" />
@@ -1601,7 +1518,7 @@ export default function LandingPage() {
                       <div className={`w-6 h-6 rounded-lg flex items-center justify-center text-[9px] font-black text-white ${pd.managerColor}`}>{pd.managerInitials}</div>
                       <div className="min-w-0">
                         <div className={`text-[8px] font-bold truncate ${isDark ? 'text-white' : 'text-slate-800'}`}>{pd.managerName}</div>
-                        <div className={`text-[6px] font-extrabold uppercase tracking-widest truncate ${isDark ? 'text-blue-400' : 'text-blue-600'}`}>{pd.managerRole}</div>
+                        <div className={`text-[6px] font-extrabold uppercase tracking-widest truncate ${isDark ? 'text-teal-400' : 'text-teal-600'}`}>{pd.managerRole}</div>
                       </div>
                     </div>
                   </div>
@@ -1614,12 +1531,12 @@ export default function LandingPage() {
                     isDark ? 'bg-[#0B132B] border-white/[0.06]' : 'bg-white border-slate-200/80 shadow-sm'
                   }`}>
                     <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-                      <div className="w-6 h-6 rounded-lg bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center text-blue-600 dark:text-blue-400 shrink-0"><Building size={12} /></div>
+                      <div className="w-6 h-6 rounded-lg bg-teal-100 dark:bg-teal-900/40 flex items-center justify-center text-teal-600 dark:text-teal-400 shrink-0"><Building size={12} /></div>
                       <div className="text-left min-w-0">
                         <span className="text-[6px] font-extrabold text-slate-400 uppercase tracking-widest block leading-none truncate">{pd.contextLabel}</span>
                         <div className="flex items-center gap-1 mt-0.5 min-w-0">
                           <span className={`text-[11px] sm:text-xs font-black truncate max-w-[100px] sm:max-w-none ${isDark ? 'text-white' : 'text-slate-800'}`}>{pd.communityName}</span>
-                          <span className={`text-[7px] font-extrabold px-1.5 py-0.5 rounded font-mono border shrink-0 ${isDark ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' : 'bg-blue-50 text-blue-600 border-blue-500/20'}`}>{pd.communityCode}</span>
+                          <span className={`text-[7px] font-extrabold px-1.5 py-0.5 rounded font-mono border shrink-0 ${isDark ? 'bg-teal-500/10 text-teal-400 border-teal-500/20' : 'bg-teal-50 text-teal-600 border-teal-500/20'}`}>{pd.communityCode}</span>
                         </div>
                       </div>
                     </div>
@@ -1631,7 +1548,7 @@ export default function LandingPage() {
                       <div className={`flex items-center gap-2 pl-2 sm:pl-3 border-l ${isDark ? 'border-white/[0.06]' : 'border-slate-200'}`}>
                         <div className="hidden sm:block text-right">
                           <p className={`text-[8px] font-bold leading-none ${isDark ? 'text-white' : 'text-slate-800'}`}>{pd.managerName}</p>
-                          <span className={`text-[6px] font-extrabold uppercase tracking-wider ${isDark ? 'text-blue-400' : 'text-blue-600'}`}>{pd.managerRole}</span>
+                          <span className={`text-[6px] font-extrabold uppercase tracking-wider ${isDark ? 'text-teal-400' : 'text-teal-600'}`}>{pd.managerRole}</span>
                         </div>
                         <div className={`w-6 h-6 rounded-lg flex items-center justify-center text-[9px] font-black text-white shrink-0 ${pd.managerColor}`}>{pd.managerInitials}</div>
                       </div>
@@ -1668,265 +1585,85 @@ export default function LandingPage() {
                       </div>
                     </div>
 
-                    {/* DYNAMIC DASHBOARD PORTALS LAYOUTS */}
-                    {activeDashboard === 0 && (
-                      <div className="grid grid-cols-1 lg:grid-cols-12 gap-3">
-                        {/* HOA Left Panel: Quick Links */}
-                        <div className={`lg:col-span-7 border rounded-2xl p-3 sm:p-4 flex flex-col gap-3 sm:gap-3.5 ${isDark ? 'bg-[#1E2E42] border-white/[0.06]' : 'bg-white border-slate-200/80 shadow-sm'}`}>
-                          <div className="flex flex-wrap items-center justify-between gap-1.5 mb-2 sm:mb-3 pb-2 border-b border-slate-200/50 dark:border-white/[0.05] text-left">
-                            <h3 className={`font-extrabold text-[9px] uppercase tracking-wider ${isDark ? 'text-white' : 'text-slate-900'}`}>QUICK LINKS</h3>
-                            <div className="flex items-center gap-1.5 flex-wrap">
-                              <span className="text-[7px] font-bold text-slate-400 uppercase tracking-widest font-mono hidden sm:inline">AUGUST 2026</span>
-                              <button className={`px-1.5 sm:px-2 py-0.5 rounded border text-[7px] sm:text-[7.5px] font-bold ${isDark ? 'bg-white/5 border-white/10 text-white' : 'bg-slate-100 border-slate-200 text-slate-700'}`}>All Communities</button>
-                              <button className="px-2 py-0.5 sm:py-1 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-[7px] sm:text-[7.5px] font-extrabold flex items-center gap-1 shadow-sm"><Download size={9} />Export</button>
-                            </div>
+                    {/* Rental Dashboard Content */}
+                    <div className="space-y-3 sm:space-y-4">
+                      {/* 4 Cards Grid */}
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 text-left">
+                        <div className={`p-2 sm:p-3 rounded-xl border flex flex-col gap-0.5 sm:gap-1 shadow-sm min-w-0 ${isDark ? 'bg-[#111C2A]/60 border-white/5' : 'bg-white border-slate-200/80'}`}>
+                          <span className="text-[6.5px] sm:text-[7px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wider block truncate">RENT RECEIVED</span>
+                          <span className="text-xs sm:text-base font-black text-slate-900 dark:text-white font-mono truncate">$3,100.00</span>
+                          <span className="text-[5.5px] sm:text-[6px] text-emerald-600 dark:text-emerald-400 font-bold truncate">Collection Rate: 39%</span>
+                        </div>
+                        <div className={`p-2 sm:p-3 rounded-xl border flex flex-col gap-0.5 sm:gap-1 shadow-sm min-w-0 ${isDark ? 'bg-[#111C2A]/60 border-white/5' : 'bg-white border-slate-200/80'}`}>
+                          <span className="text-[6.5px] sm:text-[7px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wider block truncate">UNPAID EXPENSES</span>
+                          <span className="text-xs sm:text-base font-black text-slate-900 dark:text-white font-mono truncate">$100.00</span>
+                          <span className="text-[5.5px] sm:text-[6px] text-red-600 dark:text-red-400 font-bold truncate">Active Invoices</span>
+                        </div>
+                        <div className={`p-2 sm:p-3 rounded-xl border flex flex-col gap-0.5 sm:gap-1 shadow-sm min-w-0 ${isDark ? 'bg-[#111C2A]/60 border-white/5' : 'bg-white border-slate-200/80'}`}>
+                          <span className="text-[6.5px] sm:text-[7px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wider block truncate">OVERDUE RENT</span>
+                          <span className="text-xs sm:text-base font-black text-slate-955 dark:text-white font-mono truncate">$5,000.00</span>
+                          <span className="text-[5.5px] sm:text-[6px] text-amber-600 dark:text-amber-500 font-bold truncate">Overdue Invoices</span>
+                        </div>
+                        <div className={`p-2 sm:p-3 rounded-xl border flex flex-col gap-0.5 sm:gap-1 shadow-sm min-w-0 ${isDark ? 'bg-[#111C2A]/60 border-white/5' : 'bg-white border-slate-200/80'}`}>
+                          <span className="text-[6.5px] sm:text-[7px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wider block truncate">UPCOMING EXPENSES</span>
+                          <span className="text-xs sm:text-base font-black text-slate-900 dark:text-white font-mono truncate">$100.00</span>
+                          <span className="text-[5.5px] sm:text-[6px] text-blue-600 dark:text-blue-400 font-bold font-sans truncate">Open Tickets</span>
+                        </div>
+                      </div>
+
+                      {/* Cashflow Summary & Action Required Grid */}
+                      <div className="grid grid-cols-1 md:grid-cols-12 gap-3 text-left">
+                        {/* Cashflow chart */}
+                        <div className={`md:col-span-7 border rounded-2xl p-3 flex flex-col gap-3 ${isDark ? 'bg-[#1E2E42] border-white/[0.06]' : 'bg-white border-slate-200/80 shadow-sm'}`}>
+                          <div className="flex justify-between items-center pb-2 border-b border-slate-200/40 dark:border-white/5">
+                            <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">Cashflow Summary</span>
+                            <span className="text-[6px] text-slate-500">Real-time Income vs Expense</span>
                           </div>
-                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-2.5">
+                          <div className="flex items-end justify-between h-20 sm:h-24 pt-3 sm:pt-4 px-2">
                             {[
-                              { label: 'Service Req', icon: <Wrench size={12} className="text-amber-500" />, badge: 2 },
-                              { label: 'Vendor List', icon: <Users size={12} className="text-blue-500" /> },
-                              { label: 'Violations', icon: <AlertTriangle size={12} className="text-red-500" />, badge: 5 },
-                              { label: 'Amenities', icon: <Building2 size={12} className="text-blue-500" /> },
-                              { label: 'Payments', icon: <Wallet size={12} className="text-emerald-500" /> },
-                              { label: 'Documents', icon: <Folder size={12} className="text-slate-500" /> },
-                              { label: 'News & Announce', icon: <Megaphone size={12} className="text-orange-500" /> },
-                              { label: 'Members', icon: <UserPlus size={12} className="text-purple-500" />, badge: 4 },
-                              { label: 'Reports', icon: <TrendingUp size={12} className="text-purple-500" /> },
-                            ].map((btn, idx) => (
-                              <div key={idx} className={`relative p-2.5 sm:p-3 rounded-xl border flex flex-col justify-between h-14 sm:h-16 text-left ${isDark ? 'border-white/[0.04] bg-white/[0.01]' : 'border-slate-200/60 bg-slate-50/50'}`}>
-                                <div className="flex justify-between items-start">
-                                  <div className={`p-1 rounded-lg ${isDark ? 'bg-white/5' : 'bg-slate-100'}`}>{btn.icon}</div>
-                                  {btn.badge && <span className="bg-red-500 text-white text-[7px] font-black px-1.5 py-0.5 rounded-full">{btn.badge}</span>}
+                              { month: 'Mar', inc: 10, exp: 5 },
+                              { month: 'Apr', inc: 15, exp: 8 },
+                              { month: 'May', inc: 35, exp: 20 },
+                              { month: 'Jun', inc: 40, exp: 12 },
+                              { month: 'Jul', inc: 75, exp: 40 },
+                              { month: 'Aug', inc: 20, exp: 10 },
+                            ].map((d, idx) => (
+                              <div key={idx} className="flex flex-col items-center gap-1.5 flex-1">
+                                <div className="w-full flex items-end justify-center gap-1 h-12 sm:h-14">
+                                  <div className="w-1.5 bg-emerald-500 rounded-t-sm" style={{ height: `${d.inc}%` }} />
+                                  <div className="w-1.5 bg-amber-500 rounded-t-sm" style={{ height: `${d.exp}%` }} />
                                 </div>
-                                <span className={`text-[7.5px] sm:text-[8px] font-bold truncate ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>{btn.label}</span>
+                                <span className="text-[7px] font-semibold text-slate-400">{d.month}</span>
                               </div>
                             ))}
                           </div>
                         </div>
 
-                        {/* HOA Right Panel: Calendar Schedule */}
-                        <div className={`lg:col-span-5 border rounded-2xl p-3 sm:p-4 text-left flex flex-col gap-3 ${isDark ? 'bg-[#1E2E42] border-white/[0.06]' : 'bg-white border-slate-200/80 shadow-sm'}`}>
-                          <div className="flex items-center justify-between mb-2 sm:mb-3 pb-2 border-b border-slate-200/50 dark:border-white/[0.05]">
-                            <h3 className={`font-extrabold text-[9px] uppercase tracking-wider ${isDark ? 'text-white' : 'text-slate-900'}`}>CALENDAR SCHEDULE</h3>
-                            <span className="text-[7.5px] font-bold text-blue-600 hover:underline cursor-pointer">View Calendar</span>
+                        {/* Action Required: Tenant requests */}
+                        <div className={`md:col-span-5 border rounded-2xl p-3 flex flex-col justify-between gap-2.5 ${isDark ? 'bg-[#1E2E42] border-white/[0.06]' : 'bg-white border-slate-200/80 shadow-sm'}`}>
+                          <div className="flex justify-between items-center pb-2 border-b border-slate-200/40 dark:border-white/5">
+                            <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">Action Required</span>
+                            <span className="text-[6px] text-blue-600 font-bold">Tenant Requests</span>
                           </div>
-                          
-                          {/* Calendar navigation */}
-                          <div className="bg-slate-50/40 dark:bg-slate-900/40 backdrop-blur-sm border border-slate-200/50 dark:border-white/[0.04] rounded-2xl p-2.5 sm:p-3 shadow-sm mb-2 sm:mb-3 w-full">
-                            <div className="flex items-center justify-between mb-2 pb-1.5 border-b border-slate-200/50 dark:border-white/[0.04]">
-                              <span className="text-[8.5px] sm:text-[9px] font-bold text-slate-800 dark:text-slate-250 uppercase tracking-wider">August 2026</span>
-                              <div className="flex gap-1.5">
-                                <button className="p-0.5 hover:bg-slate-100 dark:hover:bg-white/10 rounded text-slate-500 transition"><ChevronLeft size={10} /></button>
-                                <span className="px-1.5 py-0.5 bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded text-[7.5px] sm:text-[8px] font-black uppercase tracking-wider">Today</span>
-                                <button className="p-0.5 hover:bg-slate-100 dark:hover:bg-white/10 rounded text-slate-500 transition"><ChevronRight size={10} /></button>
+                          <div className="space-y-2 py-1 flex-1 flex flex-col justify-center">
+                            <div className={`p-2 border rounded-xl flex items-center justify-between gap-2 ${isDark ? 'bg-[#111C2A]/60 border-red-500/20' : 'bg-red-50/50 border-red-100'}`}>
+                              <div className="min-w-0 flex-1">
+                                <h4 className="text-[8px] font-bold text-slate-800 dark:text-red-300 truncate">Electrician</h4>
+                                <p className="text-[6px] text-slate-505 dark:text-slate-450 mt-0.5 truncate">Unit 102 — Priority: NORMAL</p>
                               </div>
+                              <button className="bg-red-500 hover:bg-red-600 text-white font-bold text-[7px] px-2 py-1 rounded shrink-0 transition-colors shadow-sm">Assign</button>
                             </div>
-                            
-                            <div className="grid grid-cols-7 gap-1 text-center text-[8px] font-bold text-slate-400 dark:text-gray-500 mb-1.5">
-                              {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d, i) => <div key={i}>{d}</div>)}
-                            </div>
-                            
-                            <div className="grid grid-cols-7 gap-1">
-                              {Array(6).fill(null).map((_, i) => <div key={`b-${i}`} className="h-5 sm:h-6" />)}
-                              {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => {
-                                const isToday = day === 7;
-                                return (
-                                  <div
-                                    key={day}
-                                    className={`h-5 sm:h-6 flex flex-col items-center justify-center text-[8px] sm:text-[9px] font-semibold rounded-lg relative ${
-                                      isToday
-                                        ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400 font-bold border border-blue-500/25'
-                                        : 'text-slate-700 dark:text-gray-300'
-                                    }`}
-                                  >
-                                    <span className="leading-none">{day}</span>
-                                    {day === 7 && (
-                                      <span className="absolute bottom-0.5 w-1 h-1 rounded-full bg-blue-500"></span>
-                                    )}
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          </div>
-
-                          {/* Upcoming Events List */}
-                          <div className="space-y-2 mt-1">
-                            <span className="text-[8px] font-bold text-slate-400 dark:text-gray-500 uppercase tracking-widest block font-mono">Upcoming Events & Tasks</span>
-                            
-                            <div className="flex gap-2.5 items-center p-2 sm:p-2.5 bg-white/40 dark:bg-white/[0.01] border border-slate-200/60 dark:border-white/[0.04] rounded-xl hover:border-blue-500/20 transition-all duration-200">
-                              <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-lg flex items-center justify-center font-bold text-xs bg-blue-500/10 text-blue-600 dark:text-blue-400 shrink-0">
-                                1
+                            <div className={`p-2 border rounded-xl flex items-center justify-between gap-2 ${isDark ? 'bg-[#111C2A]/60 border-white/5' : 'bg-slate-50 border-slate-200/50'}`}>
+                              <div className="min-w-0 flex-1">
+                                <h4 className="text-[8px] font-bold text-slate-800 dark:text-slate-200 truncate">Plumber</h4>
+                                <p className="text-[6px] text-slate-505 dark:text-slate-450 mt-0.5 truncate">Unit 104 — Pipe Leak Report</p>
                               </div>
-                              <div className="flex-1 min-w-0 text-left">
-                                <p className="text-[9.5px] sm:text-[10px] font-extrabold text-slate-850 dark:text-slate-250 truncate">Gym Booking</p>
-                                <span className="text-[8px] sm:text-[8.5px] text-slate-405 dark:text-gray-500 font-semibold truncate block">Sep 10, 2026</span>
-                              </div>
-                              <span className="text-[7.5px] sm:text-[8px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider bg-blue-500/10 text-blue-600 dark:text-blue-400 shrink-0">
-                                Booking
-                              </span>
-                            </div>
-                            
-                            <button className="w-full py-1.5 bg-blue-50/50 dark:bg-white/5 text-blue-600 dark:text-blue-400 rounded-lg text-[8.5px] sm:text-[9px] font-black transition border border-blue-200/30 dark:border-white/5 text-center uppercase tracking-wider">
-                              + View All 4 Events
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                    {activeDashboard === 1 && (
-                      <div className="space-y-3 sm:space-y-4">
-                        {/* 4 Cards Grid - Responsive 2-col on mobile, 4-col on tablet/desktop */}
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 text-left">
-                          <div className={`p-2 sm:p-3 rounded-xl border flex flex-col gap-0.5 sm:gap-1 shadow-sm min-w-0 ${isDark ? 'bg-[#111C2A]/60 border-white/5' : 'bg-white border-slate-200/80'}`}>
-                            <span className="text-[6.5px] sm:text-[7px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wider block truncate">RENT RECEIVED</span>
-                            <span className="text-xs sm:text-base font-black text-slate-900 dark:text-white font-mono truncate">$3,100.00</span>
-                            <span className="text-[5.5px] sm:text-[6px] text-emerald-600 dark:text-emerald-400 font-bold truncate">Collection Rate: 39%</span>
-                          </div>
-                          <div className={`p-2 sm:p-3 rounded-xl border flex flex-col gap-0.5 sm:gap-1 shadow-sm min-w-0 ${isDark ? 'bg-[#111C2A]/60 border-white/5' : 'bg-white border-slate-200/80'}`}>
-                            <span className="text-[6.5px] sm:text-[7px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wider block truncate">UNPAID EXPENSES</span>
-                            <span className="text-xs sm:text-base font-black text-slate-900 dark:text-white font-mono truncate">$100.00</span>
-                            <span className="text-[5.5px] sm:text-[6px] text-red-600 dark:text-red-400 font-bold truncate">Active Invoices</span>
-                          </div>
-                          <div className={`p-2 sm:p-3 rounded-xl border flex flex-col gap-0.5 sm:gap-1 shadow-sm min-w-0 ${isDark ? 'bg-[#111C2A]/60 border-white/5' : 'bg-white border-slate-200/80'}`}>
-                            <span className="text-[6.5px] sm:text-[7px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wider block truncate">OVERDUE RENT</span>
-                            <span className="text-xs sm:text-base font-black text-slate-955 dark:text-white font-mono truncate">$5,000.00</span>
-                            <span className="text-[5.5px] sm:text-[6px] text-amber-600 dark:text-amber-500 font-bold truncate">Overdue Invoices</span>
-                          </div>
-                          <div className={`p-2 sm:p-3 rounded-xl border flex flex-col gap-0.5 sm:gap-1 shadow-sm min-w-0 ${isDark ? 'bg-[#111C2A]/60 border-white/5' : 'bg-white border-slate-200/80'}`}>
-                            <span className="text-[6.5px] sm:text-[7px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wider block truncate">UPCOMING EXPENSES</span>
-                            <span className="text-xs sm:text-base font-black text-slate-900 dark:text-white font-mono truncate">$100.00</span>
-                            <span className="text-[5.5px] sm:text-[6px] text-blue-600 dark:text-blue-400 font-bold font-sans truncate">Open Tickets</span>
-                          </div>
-                        </div>
-
-                        {/* Cashflow Summary & Action Required Grid */}
-                        <div className="grid grid-cols-1 md:grid-cols-12 gap-3 text-left">
-                          {/* Cashflow chart (7 Cols on desktop, full on mobile) */}
-                          <div className={`md:col-span-7 border rounded-2xl p-3 flex flex-col gap-3 ${isDark ? 'bg-[#1E2E42] border-white/[0.06]' : 'bg-white border-slate-200/80 shadow-sm'}`}>
-                            <div className="flex justify-between items-center pb-2 border-b border-slate-200/40 dark:border-white/5">
-                              <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">Cashflow Summary</span>
-                              <span className="text-[6px] text-slate-500">Real-time Income vs Expense</span>
-                            </div>
-                            <div className="flex items-end justify-between h-20 sm:h-24 pt-3 sm:pt-4 px-2">
-                              {[
-                                { month: 'Mar', inc: 10, exp: 5 },
-                                { month: 'Apr', inc: 15, exp: 8 },
-                                { month: 'May', inc: 35, exp: 20 },
-                                { month: 'Jun', inc: 40, exp: 12 },
-                                { month: 'Jul', inc: 75, exp: 40 },
-                                { month: 'Aug', inc: 20, exp: 10 },
-                              ].map((d, idx) => (
-                                <div key={idx} className="flex flex-col items-center gap-1.5 flex-1">
-                                  <div className="w-full flex items-end justify-center gap-1 h-12 sm:h-14">
-                                    <div className="w-1.5 bg-emerald-500 rounded-t-sm" style={{ height: `${d.inc}%` }} />
-                                    <div className="w-1.5 bg-amber-500 rounded-t-sm" style={{ height: `${d.exp}%` }} />
-                                  </div>
-                                  <span className="text-[7px] font-semibold text-slate-400">{d.month}</span>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-
-                          {/* Action Required: Tenant requests (5 Cols on desktop, full on mobile) */}
-                          <div className={`md:col-span-5 border rounded-2xl p-3 flex flex-col justify-between gap-2.5 ${isDark ? 'bg-[#1E2E42] border-white/[0.06]' : 'bg-white border-slate-200/80 shadow-sm'}`}>
-                            <div className="flex justify-between items-center pb-2 border-b border-slate-200/40 dark:border-white/5">
-                              <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">Action Required</span>
-                              <span className="text-[6px] text-blue-600 font-bold">Tenant Requests</span>
-                            </div>
-                            <div className="space-y-2 py-1 flex-1 flex flex-col justify-center">
-                              <div className={`p-2 border rounded-xl flex items-center justify-between gap-2 ${isDark ? 'bg-[#111C2A]/60 border-red-500/20' : 'bg-red-50/50 border-red-100'}`}>
-                                <div className="min-w-0 flex-1">
-                                  <h4 className="text-[8px] font-bold text-slate-800 dark:text-red-300 truncate">Electrician</h4>
-                                  <p className="text-[6px] text-slate-505 dark:text-slate-450 mt-0.5 truncate">Unit 102 — Priority: NORMAL</p>
-                                </div>
-                                <button className="bg-red-500 hover:bg-red-600 text-white font-bold text-[7px] px-2 py-1 rounded shrink-0 transition-colors shadow-sm">Assign</button>
-                              </div>
-                              <div className={`p-2 border rounded-xl flex items-center justify-between gap-2 ${isDark ? 'bg-[#111C2A]/60 border-white/5' : 'bg-slate-50 border-slate-200/50'}`}>
-                                <div className="min-w-0 flex-1">
-                                  <h4 className="text-[8px] font-bold text-slate-800 dark:text-slate-200 truncate">Plumber</h4>
-                                  <p className="text-[6px] text-slate-505 dark:text-slate-450 mt-0.5 truncate">Unit 104 — Pipe Leak Report</p>
-                                </div>
-                                <button className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-[7px] px-2 py-1 rounded shrink-0 transition-colors shadow-sm">Assign</button>
-                              </div>
+                              <button className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-[7px] px-2 py-1 rounded shrink-0 transition-colors shadow-sm">Assign</button>
                             </div>
                           </div>
                         </div>
                       </div>
-                    )}
-
-                    {activeDashboard === 2 && (
-                      <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 text-left">
-                        {/* Condo Left Panel: Quick Actions */}
-                        <div className={`lg:col-span-7 border rounded-2xl p-3 sm:p-4 flex flex-col gap-3 sm:gap-3.5 ${isDark ? 'bg-[#1E2E42] border-white/[0.06]' : 'bg-white border-slate-200/80 shadow-sm'}`}>
-                          <div className="flex items-center justify-between mb-2 sm:mb-3 pb-2 border-b border-slate-200/50 dark:border-white/[0.05]">
-                            <h3 className={`font-extrabold text-[9px] uppercase tracking-wider ${isDark ? 'text-white' : 'text-slate-900'}`}>Quick Actions</h3>
-                            <button className="px-2 py-0.5 bg-blue-600 text-white rounded text-[7.5px] font-black">+ Invite Resident</button>
-                          </div>
-                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-2.5">
-                            {[
-                              { label: 'Residents Directory', icon: <Users size={12} className="text-blue-500" /> },
-                              { label: 'Documents Center', icon: <FileText size={12} className="text-purple-500" /> },
-                              { label: 'Service Requests', icon: <Wrench size={12} className="text-amber-500" />, badge: 3 },
-                              { label: 'Payments Ledger', icon: <Wallet size={12} className="text-indigo-500" /> },
-                              { label: 'Parking Allocations', icon: <Building2 size={12} className="text-emerald-500" /> },
-                              { label: 'Visitor Passes', icon: <Zap size={12} className="text-rose-500" />, badge: 1 },
-                            ].map((btn, idx) => (
-                              <div key={idx} className={`relative p-2.5 sm:p-3 rounded-xl border flex flex-col justify-between h-14 sm:h-16 text-left ${isDark ? 'border-white/[0.04] bg-white/[0.01]' : 'border-slate-200/60 bg-slate-50/50'}`}>
-                                <div className="flex justify-between items-start">
-                                  <div className={`p-1 rounded-lg ${isDark ? 'bg-white/5' : 'bg-slate-100'}`}>{btn.icon}</div>
-                                  {btn.badge && <span className="bg-red-500 text-white text-[7px] font-black px-1.5 py-0.5 rounded-full">{btn.badge}</span>}
-                                </div>
-                                <span className={`text-[7.5px] sm:text-[8px] font-bold truncate ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>{btn.label}</span>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-
-                        {/* Condo Right Panel: Operations Monitor */}
-                        <div className={`lg:col-span-5 border rounded-2xl p-3 sm:p-4 flex flex-col gap-3 ${isDark ? 'bg-[#1E2E42] border-white/[0.06]' : 'bg-white border-slate-200/80 shadow-sm'}`}>
-                          <div className="flex items-center justify-between mb-2 sm:mb-3 pb-2 border-b border-slate-200/50 dark:border-white/[0.05]">
-                            <h3 className={`font-extrabold text-[9px] uppercase tracking-wider ${isDark ? 'text-white' : 'text-slate-900'}`}>Operations Monitor</h3>
-                            <span className="text-[7.5px] font-mono text-emerald-500 flex items-center gap-1">
-                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse inline-block" /> Live
-                            </span>
-                          </div>
-                          
-                          <div className="space-y-3.5 flex-1 flex flex-col justify-center text-left">
-                            {/* Service Clear Rate */}
-                            <div className="space-y-1">
-                              <div className="flex justify-between items-center text-[8.5px] font-bold">
-                                <span className="text-slate-505 uppercase tracking-wider">Service Clear Rate</span>
-                                <span className="text-slate-900 dark:text-white">75% Resolved</span>
-                              </div>
-                              <div className="w-full bg-slate-100 dark:bg-white/[0.05] h-1.5 rounded-full overflow-hidden">
-                                <div className="bg-gradient-to-r from-blue-500 to-indigo-500 h-full rounded-full" style={{ width: '75%' }} />
-                              </div>
-                            </div>
-                            
-                            {/* Mail Pickup Rate */}
-                            <div className="space-y-1">
-                              <div className="flex justify-between items-center text-[8.5px] font-bold">
-                                <span className="text-slate-505 uppercase tracking-wider">Mail Pickup Rate</span>
-                                <span className="text-slate-900 dark:text-white">92% Collected</span>
-                              </div>
-                              <div className="w-full bg-slate-100 dark:bg-white/[0.05] h-1.5 rounded-full overflow-hidden">
-                                <div className="bg-gradient-to-r from-emerald-500 to-teal-500 h-full rounded-full" style={{ width: '92%' }} />
-                              </div>
-                            </div>
-                            
-                            {/* Join Request Queue */}
-                            <div className="p-2 bg-white/70 dark:bg-white/[0.01] border border-slate-200/40 dark:border-white/[0.03] rounded-xl flex items-center justify-between">
-                              <div className="min-w-0 flex-1 mr-2">
-                                <span className="text-[7.5px] font-bold text-slate-400 tracking-wider uppercase block truncate">Join Requests Queue</span>
-                                <span className="text-[8.5px] sm:text-[9px] font-extrabold text-slate-850 dark:text-slate-250 truncate block">3 requests awaiting review</span>
-                              </div>
-                              <span className="px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-600 text-[7px] font-black uppercase shrink-0">Review Needed</span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    )}
+                    </div>
 
                   </div>
                 </div>
@@ -1947,7 +1684,7 @@ export default function LandingPage() {
       <section 
         id="solutions" 
         ref={solutionsSectionRef}
-        className="scroll-mt-16 sm:scroll-mt-20 relative py-8 sm:py-10 px-5 sm:px-8 border-t border-slate-200/40 dark:border-white/[0.06] overflow-hidden bg-white dark:bg-[#090F16]"
+        className="scroll-mt-16 sm:scroll-mt-20 relative py-8 sm:py-10 px-5 sm:px-8 border-t border-slate-200/40 dark:border-white/[0.06] overflow-hidden bg-white dark:bg-[#0f172a]"
       >
         {/* Background glow effects */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[600px] bg-gradient-radial from-violet-500/[0.03] dark:from-violet-500/[0.06] to-transparent rounded-full blur-3xl pointer-events-none" />
@@ -1956,49 +1693,49 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto relative z-10">
           {/* Header */}
           <div className="text-center max-w-3xl mx-auto mb-6 sm:mb-8 space-y-2">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-violet-500/10 border border-violet-500/20 text-[10px] sm:text-xs font-bold text-violet-600 dark:text-violet-400 uppercase tracking-wider">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[10px] sm:text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">
               <Sparkles className="w-3.5 h-3.5 animate-pulse" />
-              Solutions for Every Property Type
+              Purpose-Built Rental Solutions
             </div>
             <h2 className="text-2xl sm:text-3xl lg:text-[32px] font-black text-slate-900 dark:text-white tracking-tight leading-tight">
-              Tailored Portals for <span className="gradient-text">Your Community Scale.</span>
+              Complete Control for <span className="gradient-text">Your Rental Portfolio.</span>
             </h2>
             <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-normal leading-relaxed max-w-2xl mx-auto">
-              NestBloq unifies administrative workflow and resident experiences across all community frameworks. Explore our specialized portals tailored to your specific community scale.
+              Manage properties, active lease agreements, rent payments ledger, and maintenance work orders in one unified landlord & tenant portal.
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5 sm:gap-6">
             {[
               {
-                title: 'Homeowner Association (HOA)',
-                tagline: 'Assemblies & e-Voting',
-                desc: 'E-voting on society resolutions, bylaws audits, and quarterly security audits with absolute transparency.',
-                icon: Users,
-                colorClass: 'text-indigo-600 dark:text-indigo-400 bg-indigo-500/10 dark:bg-indigo-500/20 border-indigo-500/20',
-                cardBg: 'hover:border-indigo-500/40 dark:hover:border-indigo-500/35 hover:shadow-indigo-500/5',
-                textColor: 'text-indigo-600 dark:text-indigo-400',
-                link: '/solutions/hoa'
+                title: 'Rental Properties Hub',
+                tagline: 'Properties & Addresses',
+                desc: 'Add and organize your rental properties and residential homes. Track occupancy status, monthly rental rates, and property addresses seamlessly.',
+                icon: Building2,
+                colorClass: 'text-teal-600 dark:text-teal-400 bg-teal-500/10 dark:bg-teal-500/20 border-teal-500/20',
+                cardBg: 'hover:border-teal-500/40 dark:hover:border-teal-500/35 hover:shadow-teal-500/5',
+                textColor: 'text-teal-600 dark:text-teal-400',
+                link: '/solutions/rental'
               },
               {
-                title: 'Rental Property Management',
-                tagline: 'Rent Roll & Vacancy Tracker',
-                desc: 'Automating rent collection schedules, payment reminders, and tenant portals with zero friction.',
-                icon: Wallet,
+                title: 'Lease Agreements & Tenants',
+                tagline: 'Leases & Tenant Registry',
+                desc: 'Create structured lease agreements, set monthly rent amounts and deposits, track lease validity dates, and maintain verified tenant directories.',
+                icon: FileText,
                 colorClass: 'text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 dark:bg-emerald-500/20 border-emerald-500/20',
                 cardBg: 'hover:border-emerald-500/40 dark:hover:border-emerald-500/35 hover:shadow-emerald-500/5',
                 textColor: 'text-emerald-600 dark:text-emerald-400',
                 link: '/solutions/rental'
               },
               {
-                title: 'Condo Association Management',
-                tagline: 'Shared Amenity Scheduler',
-                desc: 'Enable seamless slot reservations for shared facilities like swimming pools, clubhouses, and gyms.',
-                icon: CalendarRange,
-                colorClass: 'text-violet-600 dark:text-violet-400 bg-violet-500/10 dark:bg-violet-500/20 border-violet-500/20',
-                cardBg: 'hover:border-violet-500/40 dark:hover:border-violet-500/35 hover:shadow-violet-500/5',
-                textColor: 'text-violet-650 dark:text-violet-400',
-                link: '/solutions/condo'
+                title: 'Rent Ledger & Maintenance Desk',
+                tagline: 'Payments & Work Orders',
+                desc: 'Monitor real-time paid, pending, and overdue rent. Receive repair requests with photo attachments and assign tickets to contractors.',
+                icon: Wallet,
+                colorClass: 'text-blue-600 dark:text-blue-400 bg-blue-500/10 dark:bg-blue-500/20 border-blue-500/20',
+                cardBg: 'hover:border-blue-500/40 dark:hover:border-blue-500/35 hover:shadow-blue-500/5',
+                textColor: 'text-blue-600 dark:text-blue-400',
+                link: '/solutions/rental'
               }
             ].map((solution, i) => {
               const IconComponent = solution.icon;
@@ -2017,7 +1754,7 @@ export default function LandingPage() {
                       <div className="flex items-center gap-2">
                         <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500">{solution.tagline}</span>
                       </div>
-                      <h3 className="font-display font-black text-base sm:text-lg text-slate-900 dark:text-white leading-snug group-hover:text-violet-500 dark:group-hover:text-violet-400 transition-colors">
+                      <h3 className="font-display font-black text-base sm:text-lg text-slate-900 dark:text-white leading-snug group-hover:text-emerald-500 dark:group-hover:text-emerald-400 transition-colors">
                         {solution.title}
                       </h3>
                       <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed pt-1 font-normal">
@@ -2045,7 +1782,7 @@ export default function LandingPage() {
       {/* ═══════════════════════════════════════════════════════
           CORE CAPABILITIES (3D Tilt & Flip Showcase)
       ═══════════════════════════════════════════════════════ */}
-      <section id="features" className="scroll-mt-16 sm:scroll-mt-20 relative py-10 sm:py-12 px-5 sm:px-8 bg-slate-50/60 dark:bg-[#0B1420]/70 border-t border-slate-200/40 dark:border-white/[0.06] overflow-hidden">
+      <section id="features" className="scroll-mt-16 sm:scroll-mt-20 relative py-10 sm:py-12 px-5 sm:px-8 bg-slate-50/60 dark:bg-[#162032] border-t border-slate-200/40 dark:border-white/[0.06] overflow-hidden">
         <div className="max-w-7xl mx-auto relative z-10">
           <div className="text-center max-w-3xl mx-auto mb-7 space-y-2">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-500 text-[10px] sm:text-xs font-semibold">
@@ -2054,7 +1791,7 @@ export default function LandingPage() {
             </div>
             <h2 className="font-display text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight leading-tight">
               Powerful modules for{' '}
-              <span className="gradient-text">complete HOA control</span>
+              <span className="gradient-text">complete rental control</span>
             </h2>
             <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-normal leading-relaxed max-w-xl mx-auto">
               Hover to tilt cards in 3D and click to reveal detailed modules, rules, and configurations.
@@ -2073,7 +1810,7 @@ export default function LandingPage() {
       {/* ═══════════════════════════════════════════════════════
           AI COPILOT
       ═══════════════════════════════════════════════════════ */}
-      <section id="ai" className="relative py-16 px-5 sm:px-8 overflow-hidden bg-white dark:bg-[#090F16] border-t border-slate-200/40 dark:border-white/[0.06]">
+      <section id="ai" className="relative py-16 px-5 sm:px-8 overflow-hidden bg-white dark:bg-[#0f172a] border-t border-slate-200/40 dark:border-white/[0.06]">
         {/* Soft glow orbs — light & subtle */}
         <div className="absolute -top-20 left-1/3 w-80 h-80 bg-violet-400/[0.06] dark:bg-violet-500/[0.08] rounded-full blur-3xl pointer-events-none" />
         <div className="absolute bottom-0 right-1/4 w-72 h-72 bg-indigo-400/[0.05] dark:bg-indigo-500/[0.07] rounded-full blur-3xl pointer-events-none" />
@@ -2084,10 +1821,10 @@ export default function LandingPage() {
             {automationSlides.map((slide, idx) => {
               const isActive = activeSlide === idx;
               let activeColors = "";
-              if (idx === 0) activeColors = "bg-emerald-500/10 border-emerald-500/40 text-emerald-750 dark:text-emerald-300";
-              if (idx === 1) activeColors = "bg-blue-500/10 border-blue-500/40 text-blue-700 dark:text-blue-300";
-              if (idx === 2) activeColors = "bg-violet-500/10 border-violet-500/40 text-violet-750 dark:text-violet-300";
-              if (idx === 3) activeColors = "bg-teal-500/10 border-teal-500/40 text-teal-650 dark:text-teal-450";
+              if (idx === 0) activeColors = "bg-emerald-500/10 border-emerald-500/40 text-emerald-600 dark:text-emerald-400";
+              if (idx === 1) activeColors = "bg-indigo-500/10 border-indigo-500/40 text-indigo-600 dark:text-indigo-400";
+              if (idx === 2) activeColors = "bg-blue-500/10 border-blue-500/40 text-blue-600 dark:text-blue-400";
+              if (idx === 3) activeColors = "bg-teal-500/10 border-teal-500/40 text-teal-600 dark:text-teal-400";
               return (
                 <button
                   key={idx}
@@ -2204,7 +1941,7 @@ export default function LandingPage() {
       {/* ═══════════════════════════════════════════════════════
           TESTIMONIALS (Clean Balanced 3-Column Layout)
       ═══════════════════════════════════════════════════════ */}
-      <section id="testimonials" className="relative py-10 sm:py-12 px-5 sm:px-8 bg-slate-50/60 dark:bg-[#0B1420]/70 border-t border-slate-200/40 dark:border-white/[0.06] overflow-hidden">
+      <section id="testimonials" className="relative py-10 sm:py-12 px-5 sm:px-8 bg-slate-50/60 dark:bg-[#162032] border-t border-slate-200/40 dark:border-white/[0.06] overflow-hidden">
         <div className="max-w-7xl mx-auto relative z-10">
           <div className="text-center max-w-3xl mx-auto mb-7 space-y-2">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-500 text-[10px] sm:text-xs font-semibold">
@@ -2212,10 +1949,10 @@ export default function LandingPage() {
               Client Testimonials
             </div>
             <h2 className="font-display text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight leading-tight">
-              What community leaders say
+              What landlords & property managers say
             </h2>
             <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-normal leading-relaxed max-w-xl mx-auto">
-              Discover how board members, property managers, and community secretaries are streamlining their daily operations with NestBloq.
+              Discover how landlords, rental property managers, and investors are streamlining their daily leasing operations and rent collections with NestBloq.
             </p>
           </div>
 
@@ -2232,38 +1969,20 @@ export default function LandingPage() {
       {/* ═══════════════════════════════════════════════════════
           FAQ
       ═══════════════════════════════════════════════════════ */}
-      <section id="faq" className="relative py-10 sm:py-12 px-5 sm:px-8 overflow-hidden bg-white dark:bg-[#090F16] border-t border-slate-200/40 dark:border-white/[0.06]">
-        <div className="max-w-3xl mx-auto relative z-10">
-          <div className="text-center max-w-2xl mx-auto mb-7 space-y-2">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-500 text-[10px] sm:text-xs font-semibold">
-              <MessageSquare className="w-3.5 h-3.5" />
-              FAQs
-            </div>
-            <h2 className="font-display text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight leading-tight">Everything you need to know</h2>
-            <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-normal leading-relaxed">Can't find an answer? <Link to="/contact" className="text-violet-500 hover:text-violet-600 font-medium">Contact our team →</Link></p>
-          </div>
-          <div className="space-y-2.5">
-            {faqs.map((faq, i) => (
-              <div key={i} className={`rounded-2xl border overflow-hidden transition-all duration-200 ${openFaq === i ? 'border-violet-500/30 bg-violet-500/[0.03] dark:bg-[#0D1B2A]' : 'border-slate-200 dark:border-white/[0.08] bg-white dark:bg-[#0D1B2A] hover:border-violet-200 dark:hover:border-violet-500/30'}`}>
-                <button onClick={() => toggleFaq(i)} className="w-full flex items-center justify-between px-5 py-4 text-left gap-4">
-                  <span className={`font-semibold text-xs sm:text-sm ${openFaq === i ? 'text-slate-900 dark:text-white' : 'text-slate-700 dark:text-slate-300'}`}>{faq.q}</span>
-                  <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 transition-all ${openFaq === i ? 'bg-violet-500 text-white' : 'bg-slate-100 dark:bg-white/5 text-slate-400'}`}>
-                    {openFaq === i ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-                  </div>
-                </button>
-                {openFaq === i && (
-                  <div className="px-5 pb-5 text-xs sm:text-sm text-slate-500 dark:text-slate-400 leading-relaxed animate-float-up border-t border-violet-500/10 pt-3">{faq.a}</div>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+      <FaqSection
+        id="faq"
+        badgeText="FREQUENTLY ASKED QUESTIONS"
+        title="Everything you need to know"
+        subtitlePrefix="Have questions about how NestBloq powers modern rental property portfolios?"
+        contactText="Contact our team →"
+        contactLink="/contact"
+        items={landingFaqs}
+      />
 
       {/* ═══════════════════════════════════════════════════════
           CTA BANNER
       ═══════════════════════════════════════════════════════ */}
-      <section className="relative py-10 sm:py-12 px-5 sm:px-8 border-t border-slate-200/40 dark:border-white/[0.06] overflow-hidden bg-slate-50/60 dark:bg-[#0B1420]/70">
+      <section className="relative py-10 sm:py-12 px-5 sm:px-8 border-t border-slate-200/40 dark:border-white/[0.06] overflow-hidden bg-slate-50/60 dark:bg-[#162032]">
         <div className="max-w-4xl mx-auto relative z-10">
           <div className="relative overflow-hidden rounded-3xl p-8 sm:p-12 text-center" style={{ background: 'linear-gradient(135deg, #4c1d95 0%, #5b21b6 25%, #4338ca 60%, #3730a3 100%)' }}>
             {/* Grid overlay */}
@@ -2279,10 +1998,10 @@ export default function LandingPage() {
                 No credit card required · Free 30-day trial
               </div>
               <h2 className="font-display text-2xl sm:text-3xl lg:text-[34px] font-black text-white leading-tight">
-                Ready to transform your<br />community?
+                Ready to transform your<br />rental portfolio?
               </h2>
               <p className="text-white/80 text-xs sm:text-sm max-w-lg mx-auto leading-relaxed">
-                Join 500+ communities on NestBloq. Get your community live in under 48 hours with full setup support.
+                Join 500+ landlords and property managers on NestBloq. Get your properties, leases, and tenants live in under 48 hours with full setup support.
               </p>
               <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
                 <Link to="/portal-select" className="px-7 py-3 bg-white text-violet-700 font-black text-xs sm:text-sm rounded-xl hover:bg-white/95 shadow-xl shadow-black/20 transition-all hover:-translate-y-0.5 flex items-center justify-center gap-2 group">

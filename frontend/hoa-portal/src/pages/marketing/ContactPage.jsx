@@ -18,6 +18,7 @@ import Navbar from '../../components/marketing/Navbar';
 import Footer from '../../components/marketing/Footer';
 import InteractiveAssistant from '../../components/marketing/InteractiveAssistant';
 import { useTheme } from '../../context/ThemeContext';
+import PhoneInputWithCountry from '../../components/common/PhoneInputWithCountry';
 
 export default function ContactPage() {
   const { theme } = useTheme();
@@ -96,7 +97,7 @@ export default function ContactPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#F9FAFB] dark:bg-[#0f0720] transition-colors duration-300 font-sans text-slate-900 dark:text-slate-100 selection:bg-indigo-500 selection:text-white">
+    <div className="min-h-screen flex flex-col bg-[#F9FAFB] dark:bg-[#0f172a] transition-colors duration-300 font-sans text-slate-900 dark:text-slate-100 selection:bg-indigo-500 selection:text-white">
       {/* Top Navbar */}
       <Navbar />
 
@@ -114,7 +115,7 @@ export default function ContactPage() {
           </div>
 
           {/* Main Title */}
-          <h1 className="text-2xl sm:text-3xl lg:text-[36px] font-bold text-slate-900 dark:text-white tracking-tight leading-tight">
+          <h1 className="font-display text-2xl sm:text-3xl lg:text-[36px] font-black text-slate-900 dark:text-white tracking-tight leading-tight">
             We're Here to Support Your <span className="gradient-text">Community</span>
           </h1>
 
@@ -146,12 +147,12 @@ export default function ContactPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-5">
             
             {/* Card 1: Response Within 2 Hours */}
-            <div className="bg-white dark:bg-[#180d2e]/70 border border-slate-200/80 dark:border-white/10 rounded-2xl p-5 sm:p-6 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.03)] hover:shadow-lg transition-all duration-300 text-left space-y-3">
+            <div className="bg-white dark:bg-[#1e293b] border border-slate-200/80 dark:border-white/10 rounded-2xl p-5 sm:p-6 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.03)] hover:shadow-lg transition-all duration-300 text-left space-y-3">
               <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200/50 dark:border-indigo-500/20 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
                 <Zap className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="font-bold text-base text-slate-900 dark:text-white">
+                <h3 className="font-display font-bold text-base text-slate-900 dark:text-white">
                   Response Within 2 Hours
                 </h3>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
@@ -161,12 +162,12 @@ export default function ContactPage() {
             </div>
 
             {/* Card 2: Your Data Stays Private */}
-            <div className="bg-white dark:bg-[#180d2e]/70 border border-slate-200/80 dark:border-white/10 rounded-2xl p-5 sm:p-6 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.03)] hover:shadow-lg transition-all duration-300 text-left space-y-3">
+            <div className="bg-white dark:bg-[#1e293b] border border-slate-200/80 dark:border-white/10 rounded-2xl p-5 sm:p-6 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.03)] hover:shadow-lg transition-all duration-300 text-left space-y-3">
               <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-950/60 border border-blue-200/50 dark:border-blue-500/20 flex items-center justify-center text-blue-600 dark:text-blue-400">
                 <Lock className="w-4.5 h-4.5" />
               </div>
               <div>
-                <h3 className="font-bold text-base text-slate-900 dark:text-white">
+                <h3 className="font-display font-bold text-base text-slate-900 dark:text-white">
                   Your Data Stays Private
                 </h3>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
@@ -176,12 +177,12 @@ export default function ContactPage() {
             </div>
 
             {/* Card 3: Dedicated Account Manager */}
-            <div className="bg-white dark:bg-[#180d2e]/70 border border-slate-200/80 dark:border-white/10 rounded-2xl p-5 sm:p-6 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.03)] hover:shadow-lg transition-all duration-300 text-left space-y-3">
+            <div className="bg-white dark:bg-[#1e293b] border border-slate-200/80 dark:border-white/10 rounded-2xl p-5 sm:p-6 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.03)] hover:shadow-lg transition-all duration-300 text-left space-y-3">
               <div className="w-10 h-10 rounded-xl bg-purple-50 dark:bg-purple-950/60 border border-purple-200/50 dark:border-purple-500/20 flex items-center justify-center text-purple-600 dark:text-purple-400">
                 <UserCheck className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="font-bold text-base text-slate-900 dark:text-white">
+                <h3 className="font-display font-bold text-base text-slate-900 dark:text-white">
                   Dedicated Account Manager
                 </h3>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
@@ -291,9 +292,9 @@ export default function ContactPage() {
             </div>
 
             {/* Right Column: Send Us A Message Form */}
-            <div className="lg:col-span-8 bg-white dark:bg-[#180d2e]/70 border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 sm:p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-none text-left">
+            <div className="lg:col-span-8 bg-white dark:bg-[#1e293b] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 sm:p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-none text-left">
               
-              <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white tracking-tight mb-6">
+              <h2 className="font-display text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight mb-6">
                 Send us a message
               </h2>
 
@@ -373,14 +374,13 @@ export default function ContactPage() {
                       <label htmlFor="phone" className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                         Phone Number
                       </label>
-                      <input
+                      <PhoneInputWithCountry
                         id="phone"
-                        type="tel"
                         name="phone"
                         value={formData.phone}
-                        onChange={handleInputChange}
-                        placeholder="+1 (555) 000-0000"
-                        className="w-full px-4 py-2.5 text-xs sm:text-sm rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50/50 dark:bg-white/[0.02] text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+                        onChange={(e, formatted) => setFormData(prev => ({ ...prev, phone: formatted }))}
+                        size="sm"
+                        placeholder="(555) 000-0000"
                       />
                     </div>
                   </div>

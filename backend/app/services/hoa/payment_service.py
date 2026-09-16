@@ -201,8 +201,7 @@ def get_payment_history(db: Session, community_id: int, user_id: int | None = No
                 payer_user = db.query(User).filter(User.user_id == v.client_id).first()
 
         if payer_user:
-            full = f"{payer_user.first_name or ''} {payer_user.last_name or ''}".strip()
-            p.payer_name = full if full else (payer_user.full_name or payer_user.username or payer_user.email_id)
+            p.payer_name = payer_user.full_name or payer_user.email_id or "Resident"
             p.payer_role = payer_user.role.role_name.replace('_', ' ').title() if payer_user.role else "Resident"
         else:
             p.payer_name = f"Resident (ID #{p.user_id})" if p.user_id else "Resident"

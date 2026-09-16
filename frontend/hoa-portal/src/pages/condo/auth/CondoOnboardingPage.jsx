@@ -16,6 +16,7 @@ import {
   onlyLettersKeyPress, onlyZipKeyPress, onlyDigitsKeyPress
 } from '../../../utils/fieldValidators';
 import { formatPhoneAsYouType } from '../../../utils/phoneFormatter';
+import PhoneInputWithCountry from '../../../components/common/PhoneInputWithCountry';
 
 const STEPS = [
   { id: 1, label: 'Verify', icon: Key },
@@ -37,6 +38,7 @@ export default function CondoOnboardingPage() {
   const [zipLoading, setZipLoading] = useState(false);
   const [captcha, setCaptcha] = useState({ question: '', token: '' });
   const [refreshingCaptcha, setRefreshingCaptcha] = useState(false);
+  const [phoneCountryCode, setPhoneCountryCode] = useState('+1');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
@@ -208,7 +210,7 @@ export default function CondoOnboardingPage() {
         contract_code: data.contract_code.trim().toUpperCase(),
         first_name: data.first_name.trim(), middle_name: data.middle_name?.trim() || null,
         last_name: data.last_name.trim(), email_id: data.email_id.toLowerCase().trim(),
-        mobile_number: data.mobile_number_only ? `+1${data.mobile_number_only.replace(/\D/g, '')}` : null,
+        mobile_number: data.mobile_number_only ? `${phoneCountryCode}${data.mobile_number_only.replace(/\D/g, '')}` : null,
         password: data.password, confirm_password: data.confirm_password,
         condo_name: data.condo_name.trim(), condo_address: data.condo_address.trim(),
         condo_city: data.condo_city.trim(), condo_state: data.condo_state.trim(),
@@ -361,13 +363,16 @@ export default function CondoOnboardingPage() {
                       {errors.email_id && <p className={err_cls}>{errors.email_id.message}</p>}
                     </div>
                     <div>
-                      <label className={lbl}>Mobile (US)</label>
-                      <div className="relative">
-                        <span className="absolute left-3 top-2 text-xs text-slate-400 font-mono">+1</span>
-                        <input type="text" maxLength={14} {...register('mobile_number_only', { validate: v => !v || v.replace(/\D/g,'').length === 10 || '10 digits required' })}
-                          onChange={e => setValue('mobile_number_only', formatPhoneAsYouType(e.target.value), { shouldValidate: true })}
-                          className={`${inp(!!errors.mobile_number_only)} pl-8 font-mono`} placeholder="(123) 456-7890" />
-                      </div>
+                      <label className={lbl}>Mobile Number (Optional)</label>
+                      <PhoneInputWithCountry
+                        value={watch('mobile_number_only') || ''}
+                        countryCode={phoneCountryCode}
+                        onCountryChange={(code) => setPhoneCountryCode(code)}
+                        onChange={(e, formatted) => setValue('mobile_number_only', formatted, { shouldValidate: true })}
+                        size="sm"
+                        error={!!errors.mobile_number_only}
+                        placeholder="(555) 000-0000"
+                      />
                       {errors.mobile_number_only && <p className={err_cls}>{errors.mobile_number_only.message}</p>}
                     </div>
                   </div>
@@ -377,7 +382,7 @@ export default function CondoOnboardingPage() {
                       <label className={lbl}>Password *</label>
                       <div className="relative">
                         <Lock className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" />
-                        <input type={showPassword ? 'text' : 'password'} {...register('password', { required: 'Required', validate: { len: v => v.length >= 8 || 'Min 8 chars', upper: v => /[A-Z]/.test(v) || 'Needs uppercase', digit: v => /\d/.test(v) || 'Needs a number' } })} className={`${inp(!!errors.password)} pl-9 pr-9`} placeholder="••••••••" />
+                        <input type={showPassword ? 'text' : 'password'} {...register('password', { required: 'Required', validate: { len: v => v.length >= 8 || 'Min 8 chars', upper: v => /[A-Z]/.test(v) || 'Needs uppercase', digit: v => /\d/.test(v) || 'Needs a number', special: v => /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?`~]/.test(v) || 'Needs special char' } })} className={`${inp(!!errors.password)} pl-9 pr-9`} placeholder="••••••••" />
                         <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 cursor-pointer">{showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}</button>
                       </div>
                       {errors.password && <p className={err_cls}>{errors.password.message}</p>}
@@ -394,8 +399,8 @@ export default function CondoOnboardingPage() {
                   </div>
 
                   {/* Compact password hints */}
-                  <div className="flex gap-3 text-[10px]">
-                    {[{ label: '8+ chars', ok: (password||'').length >= 8 }, { label: 'Uppercase', ok: /[A-Z]/.test(password||'') }, { label: 'Number', ok: /\d/.test(password||'') }].map((r, i) => (
+                  <div className="flex flex-wrap gap-3 text-[10px]">
+                    {[{ label: '8+ chars', ok: (password||'').length >= 8 }, { label: 'Uppercase', ok: /[A-Z]/.test(password||'') }, { label: 'Number', ok: /\d/.test(password||'') }, { label: 'Special char', ok: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?`~]/.test(password||'') }].map((r, i) => (
                       <span key={i} className={`flex items-center gap-1 ${r.ok ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'}`}>
                         <span className={`w-1.5 h-1.5 rounded-full inline-block ${r.ok ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-600'}`} /> {r.label}
                       </span>

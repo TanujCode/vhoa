@@ -409,11 +409,12 @@ def verify_condo_visitor_pass(
     db.commit()
     db.refresh(visitor_pass)
     
+    from app.utils.encryption import safe_decrypt_field
     return {
         "pass_id": visitor_pass.pass_id,
-        "guest_name": visitor_pass.guest_name,
-        "guest_phone": visitor_pass.guest_phone,
-        "vehicle_no": visitor_pass.vehicle_no,
+        "guest_name": safe_decrypt_field(visitor_pass.guest_name),
+        "guest_phone": safe_decrypt_field(visitor_pass.guest_phone),
+        "vehicle_no": safe_decrypt_field(visitor_pass.vehicle_no),
         "status": visitor_pass.status,
         "check_in_time": visitor_pass.check_in_time,
         "resident_name": visitor_pass.resident.full_name if visitor_pass.resident else "N/A",
@@ -453,7 +454,9 @@ def get_condo_visitor_passes(
     role_name = current_user.role.role_name if current_user.role else ""
     if role_name == "resident":
         query = query.filter(CondoVisitorPass.resident_id == current_user.user_id)
-    return query.order_by(CondoVisitorPass.created_date.desc()).all()
+    passes = query.order_by(CondoVisitorPass.created_date.desc()).all()
+    from app.utils.decryption_helpers import decrypt_condo_visitor
+    return [decrypt_condo_visitor(p) for p in passes]
 
 
 @router.post("/visitors")
@@ -470,19 +473,21 @@ def create_condo_visitor_pass(
     if not comm_id or not guest_name:
         raise HTTPException(status_code=400, detail="Community ID and Guest Name are required.")
 
+    from app.utils.encryption import encrypt_field
     new_pass = CondoVisitorPass(
         community_id=comm_id,
         resident_id=current_user.user_id,
-        guest_name=guest_name.strip(),
-        guest_phone=guest_phone,
-        vehicle_no=vehicle_no,
+        guest_name=encrypt_field(guest_name.strip()),
+        guest_phone=encrypt_field(guest_phone.strip()) if guest_phone else None,
+        vehicle_no=encrypt_field(vehicle_no.strip()) if vehicle_no else None,
         otp_code=generate_pass_otp(),
         status="ACTIVE"
     )
     db.add(new_pass)
     db.commit()
     db.refresh(new_pass)
-    return new_pass
+    from app.utils.decryption_helpers import decrypt_condo_visitor
+    return decrypt_condo_visitor(new_pass)
 
 
 @router.delete("/visitors/{pass_id}")

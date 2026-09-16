@@ -140,22 +140,28 @@ def get_my_logs(
 def _to_out(log) -> AuditLogOut:
     user_name = None
     if log.user:
-        parts = [log.user.first_name]
-        if log.user.middle_name:
-            parts.append(log.user.middle_name)
-        parts.append(log.user.last_name)
-        user_name = " ".join(parts)
+        user_name = getattr(log.user, 'full_name', None)
+        if not user_name:
+            from app.utils.encryption import safe_decrypt_field
+            fn = safe_decrypt_field(getattr(log.user, 'first_name', '')) or ''
+            ln = safe_decrypt_field(getattr(log.user, 'last_name', '')) or ''
+            user_name = f"{fn} {ln}".strip() or None
+
+    from app.utils.encryption import decrypt_text_tokens
+    desc = decrypt_text_tokens(log.description)
+    old_val = decrypt_text_tokens(log.old_value)
+    new_val = decrypt_text_tokens(log.new_value)
 
     return AuditLogOut(
         audit_id     = log.audit_id,
         user_id      = log.user_id,
         action       = log.action,
         module       = log.module,
-        description  = log.description,
+        description  = desc,
         community_id = log.community_id,
         ip_address   = log.ip_address,
-        old_value    = log.old_value,
-        new_value    = log.new_value,
+        old_value    = old_val,
+        new_value    = new_val,
         created_at   = log.created_at,
         user_name    = user_name,
     )

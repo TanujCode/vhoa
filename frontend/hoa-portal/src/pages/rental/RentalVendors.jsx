@@ -4,6 +4,7 @@ import API from "../../services/api";
 import ConfirmModal from "../../components/ConfirmModal";
 import { toast } from 'react-hot-toast';
 import { formatUsPhone, formatPhoneAsYouType } from '../../utils/phoneFormatter';
+import PhoneInputWithCountry from '../../components/common/PhoneInputWithCountry';
 
 const VENDOR_CATEGORIES = [
   { value: 'PLUMBING', label: 'Plumbing' },
@@ -20,6 +21,7 @@ export default function RentalVendors() {
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
 
+  const [phoneCountryCode, setPhoneCountryCode] = useState('+1');
   const [phoneOnly, setPhoneOnly] = useState('');
 
   // Form State - Backend Schema matching
@@ -81,6 +83,7 @@ export default function RentalVendors() {
       email: ''
     });
     setPhoneOnly('');
+    setPhoneCountryCode('+1');
     setErrors({});
   };
 
@@ -213,7 +216,7 @@ export default function RentalVendors() {
       const payload = {
         company_name: formData.company_name,
         contact_person: formData.contact_person,
-        phone: phoneOnly,
+        phone: `${phoneCountryCode}${phoneOnly.replace(/\D/g, '')}`,
         category: formData.category,
         email: formData.email,
         license_number: formData.license_number,
@@ -423,18 +426,18 @@ export default function RentalVendors() {
 
                 <div>
                   <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Phone *</label>
-                  <input
+                  <PhoneInputWithCountry
                     required
-                    type="text"
-                    maxLength={14}
-                    placeholder="(123) 456-7890"
-                    className={`w-full bg-slate-50 dark:bg-[#111c2a] border ${errors.phoneOnly ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/10 focus:border-blue-500'} rounded-lg px-3 py-2 text-sm font-sans text-slate-900 dark:text-white outline-none`}
                     value={phoneOnly}
-                    onChange={(e) => {
-                      const formatted = formatPhoneAsYouType(e.target.value);
+                    countryCode={phoneCountryCode}
+                    onCountryChange={(code) => setPhoneCountryCode(code)}
+                    onChange={(e, formatted) => {
                       setPhoneOnly(formatted);
                       validateField('phoneOnly', formatted);
                     }}
+                    size="sm"
+                    error={!!errors.phoneOnly}
+                    placeholder="(555) 000-0000"
                   />
                   {errors.phoneOnly && (
                     <p className="text-red-500 text-xs mt-1">{errors.phoneOnly}</p>

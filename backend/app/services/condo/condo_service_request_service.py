@@ -239,7 +239,7 @@ def update_condo_status(
 
     # 2. Build audit changes trail
     user = db.query(CondoUser).filter(CondoUser.user_id == user_id).first()
-    user_name = f"{user.first_name} {user.last_name}" if user else "Unknown User"
+    user_name = user.full_name if user else "Unknown User"
     
     changes = []
     if current_status != target_status:
@@ -335,7 +335,7 @@ def add_condo_note(
 
     # Log audit log
     user = db.query(CondoUser).filter(CondoUser.user_id == user_id).first()
-    user_name = f"{user.first_name} {user.last_name}" if user else "Unknown User"
+    user_name = user.full_name if user else "Unknown User"
     log_condo_action(
         db = db,
         action = "ADD_SERVICE_REQUEST_NOTE",
@@ -369,7 +369,7 @@ def update_condo_service_request(
             raise ValueError("Residents can only edit service requests that are in OPEN status.")
 
     user = db.query(CondoUser).filter(CondoUser.user_id == user_id).first()
-    user_name = f"{user.first_name} {user.last_name}" if user else "Unknown User"
+    user_name = user.full_name if user else "Unknown User"
 
     changes = []
     if data.title is not None:
@@ -483,7 +483,7 @@ def delete_condo_request(request_id: int, user_id: int, db: Session):
 
     # Log audit log
     user = db.query(CondoUser).filter(CondoUser.user_id == user_id).first()
-    user_name = f"{user.first_name} {user.last_name}" if user else "Unknown User"
+    user_name = user.full_name if user else "Unknown User"
     log_condo_action(
         db = db,
         action = "DELETE_SERVICE_REQUEST",

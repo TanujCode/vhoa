@@ -20,6 +20,7 @@ import {
   onlyZipKeyPress 
 } from '../../utils/fieldValidators';
 import { formatPhoneAsYouType } from '../../utils/phoneFormatter';
+import PhoneInputWithCountry from '../../components/common/PhoneInputWithCountry';
 
 export default function ClientOnboarding() {
   const navigate = useNavigate();
@@ -47,6 +48,8 @@ export default function ClientOnboarding() {
   const [countries, setCountries] = useState([]);
   const [states, setStates] = useState([]);
   const [selectedCountry, setSelectedCountry] = useState('');
+  const [mobilePhoneCountryCode, setMobilePhoneCountryCode] = useState('+1');
+  const [hoaPhoneCountryCode, setHoaPhoneCountryCode] = useState('+1');
   
   const mapboxToken = (import.meta.env.VITE_MAPBOX_ACCESS_TOKEN || '').replace(/['"]/g, "").trim();
   const [addressSuggestions, setAddressSuggestions] = useState([]);
@@ -925,7 +928,7 @@ export default function ClientOnboarding() {
         middle_name: data.middle_name || null,
         last_name: data.last_name,
         email_id: data.email_id,
-        mobile_number: data.mobile_number_only ? `+1${data.mobile_number_only.replace(/\D/g, '')}` : '',
+        mobile_number: data.mobile_number_only ? `${mobilePhoneCountryCode}${data.mobile_number_only.replace(/\D/g, '')}` : '',
         password: data.password,
         role_selected: data.role_selected,
         hoa_name: data.hoa_name,
@@ -934,7 +937,7 @@ export default function ClientOnboarding() {
         hoa_state_id: data.hoa_state_id ? parseInt(data.hoa_state_id, 10) : null,
         hoa_country_id: data.hoa_country_id ? parseInt(data.hoa_country_id, 10) : null,
         hoa_zip_code: data.hoa_zip_code || null,
-        hoa_contact_number: data.hoa_contact_number_only ? `+1${data.hoa_contact_number_only.replace(/\D/g, '')}` : null,
+        hoa_contact_number: data.hoa_contact_number_only ? `${hoaPhoneCountryCode}${data.hoa_contact_number_only.replace(/\D/g, '')}` : null,
         contract_code: data.contract_code.trim().toUpperCase(),
         captcha_token: captcha.token,
         captcha_answer: data.captcha_answer,
@@ -1136,29 +1139,15 @@ export default function ClientOnboarding() {
                     </div>
                     <div>
                       <label className="block text-xs font-medium text-gray-400 mb-1">Mobile Phone *</label>
-                      <div className="relative">
-                        <input
-                          type="text"
-                          maxLength={14}
-                          {...register('mobile_number_only', { 
-                            required: 'Mobile phone is required',
-                            validate: (val) => {
-                              if (!val) return 'Mobile phone is required';
-                              const digits = val.replace(/\D/g, '');
-                              if (digits.length !== 10) {
-                                return 'Phone must be exactly 10 digits';
-                              }
-                              return true;
-                            }
-                          })}
-                          onChange={(e) => {
-                            const formatted = formatPhoneAsYouType(e.target.value);
-                            setValue('mobile_number_only', formatted);
-                          }}
-                          placeholder="(123) 456-7890"
-                          className="w-full bg-[#1e2f41] border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-[#1D68DF]"
-                        />
-                      </div>
+                      <PhoneInputWithCountry
+                        value={watch('mobile_number_only') || ''}
+                        countryCode={mobilePhoneCountryCode}
+                        onCountryChange={(code) => setMobilePhoneCountryCode(code)}
+                        onChange={(e, formatted) => setValue('mobile_number_only', formatted, { shouldValidate: true })}
+                        size="sm"
+                        error={!!errors.mobile_number_only}
+                        placeholder="(555) 000-0000"
+                      />
                       {errors.mobile_number_only && <span className="text-xs text-red-400">{errors.mobile_number_only.message}</span>}
                     </div>
                   </div>
@@ -1467,28 +1456,15 @@ export default function ClientOnboarding() {
 
                   <div>
                     <label className="block text-xs font-medium text-gray-400 mb-1">HOA Contact Phone</label>
-                    <div className="relative">
-                      <input
-                        type="text"
-                        maxLength={14}
-                        {...register('hoa_contact_number_only', {
-                          validate: (val) => {
-                            if (!val) return true; // Optional field
-                            const digits = val.replace(/\D/g, '');
-                            if (digits.length !== 10) {
-                              return 'Phone must be exactly 10 digits';
-                            }
-                            return true;
-                          }
-                        })}
-                        onChange={(e) => {
-                          const formatted = formatPhoneAsYouType(e.target.value);
-                          setValue('hoa_contact_number_only', formatted);
-                        }}
-                        placeholder="(123) 456-7890"
-                        className="w-full bg-[#1e2f41] border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-[#1D68DF]"
-                      />
-                    </div>
+                    <PhoneInputWithCountry
+                      value={watch('hoa_contact_number_only') || ''}
+                      countryCode={hoaPhoneCountryCode}
+                      onCountryChange={(code) => setHoaPhoneCountryCode(code)}
+                      onChange={(e, formatted) => setValue('hoa_contact_number_only', formatted, { shouldValidate: true })}
+                      size="sm"
+                      error={!!errors.hoa_contact_number_only}
+                      placeholder="(555) 000-0000"
+                    />
                     {errors.hoa_contact_number_only && <span className="text-xs text-red-400">{errors.hoa_contact_number_only.message}</span>}
                   </div>
                 </div>

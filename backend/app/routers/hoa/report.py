@@ -351,7 +351,7 @@ def export_report(
             .all()
         )
         for v in violations:
-            resident_name = f"{v.client.first_name} {v.client.last_name}" if v.client else "N/A"
+            resident_name = v.client.full_name if v.client else "N/A"
             email = v.client.email_id if v.client else "N/A"
             
             unit = "N/A"
@@ -391,7 +391,7 @@ def export_report(
             .all()
         )
         for r in requests:
-            resident_name = f"{r.submitted_by.first_name} {r.submitted_by.last_name}" if r.submitted_by else "N/A"
+            resident_name = r.submitted_by.full_name if r.submitted_by else "N/A"
             category = r.service_type.type_name if r.service_type else "N/A"
             rows.append([
                 r.request_id,
@@ -414,7 +414,7 @@ def export_report(
             .all()
         )
         for p in payments:
-            payer_name = f"{p.user.first_name} {p.user.last_name}" if p.user else "N/A"
+            payer_name = p.user.full_name if p.user else "N/A"
             email = p.user.email_id if p.user else "N/A"
             rows.append([
                 p.payment_id,
@@ -438,7 +438,7 @@ def export_report(
         )
         for b in bookings:
             amenity_name = b.amenity.name if b.amenity else "N/A"
-            booked_by = f"{b.booked_by.first_name} {b.booked_by.last_name}" if b.booked_by else "N/A"
+            booked_by = b.booked_by.full_name if b.booked_by else "N/A"
             email = b.booked_by.email_id if b.booked_by else "N/A"
             slot_desc = f"Slot 1 (8am-2pm)" if b.slot_number == 1 else f"Slot 2 (2pm-8pm)"
             rows.append([

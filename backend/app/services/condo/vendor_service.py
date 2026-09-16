@@ -12,6 +12,9 @@ from app.schemas.condo_vendor import (
 )
 
 
+from app.utils.encryption import encrypt_field, safe_decrypt_field
+
+
 #  CODE GENERATORS
 def _generate_code(prefix: str, length: int = 8) -> str:
     """Generate a unique code — e.g. VAC-AB12CD34"""
@@ -24,16 +27,18 @@ def _generate_code(prefix: str, length: int = 8) -> str:
 def create_vendor(data: CondoVendorCreate, added_by_id: int, db: Session) -> CondoVendor:
     vendor = CondoVendor(
         community_id   = data.community_id,
-        company_name   = data.company_name,
-        contact_person = data.contact_person,
-        email          = data.email,
-        phone          = data.phone,
+        company_name   = encrypt_field(data.company_name) if data.company_name else None,
+        contact_person = encrypt_field(data.contact_person) if data.contact_person else None,
+        email          = encrypt_field(data.email) if data.email else None,
+        phone          = encrypt_field(data.phone) if data.phone else None,
         zip_code       = data.zip_code,
         category       = data.category,
-        license_number = data.license_number,
+        license_number = encrypt_field(data.license_number) if data.license_number else None,
         license_expiry = data.license_expiry,
-        insurance_number = data.insurance_number,
+        insurance_number = encrypt_field(data.insurance_number) if data.insurance_number else None,
         insurance_expiry = data.insurance_expiry,
+        license_doc_url = encrypt_field(data.license_doc_url) if data.license_doc_url else None,
+        insurance_doc_url = encrypt_field(data.insurance_doc_url) if data.insurance_doc_url else None,
         onboard_status = "ACTIVE",
         active_status  = True,
         added_by_id    = added_by_id,
@@ -77,15 +82,17 @@ def update_vendor(
 ) -> CondoVendor:
     vendor = get_vendor_by_id(vendor_id, db)
 
-    if data.company_name is not None:     vendor.company_name = data.company_name
-    if data.contact_person is not None:   vendor.contact_person = data.contact_person
-    if data.phone is not None:            vendor.phone = data.phone
+    if data.company_name is not None:     vendor.company_name = encrypt_field(data.company_name)
+    if data.contact_person is not None:   vendor.contact_person = encrypt_field(data.contact_person)
+    if data.phone is not None:            vendor.phone = encrypt_field(data.phone)
     if data.zip_code is not None:         vendor.zip_code = data.zip_code
     if data.category is not None:         vendor.category = data.category.upper()
-    if data.license_number is not None:   vendor.license_number = data.license_number
+    if data.license_number is not None:   vendor.license_number = encrypt_field(data.license_number)
     if data.license_expiry is not None:   vendor.license_expiry = data.license_expiry
-    if data.insurance_number is not None: vendor.insurance_number = data.insurance_number
+    if data.insurance_number is not None: vendor.insurance_number = encrypt_field(data.insurance_number)
     if data.insurance_expiry is not None: vendor.insurance_expiry = data.insurance_expiry
+    if data.license_doc_url is not None:  vendor.license_doc_url = encrypt_field(data.license_doc_url)
+    if data.insurance_doc_url is not None: vendor.insurance_doc_url = encrypt_field(data.insurance_doc_url)
     if data.onboard_status is not None:   vendor.onboard_status = data.onboard_status
     if data.active_status is not None:    vendor.active_status = data.active_status
 

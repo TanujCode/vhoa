@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, Date, ForeignKey, Double
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, Date, ForeignKey, Double, Text
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from app.database import Base
@@ -21,8 +21,8 @@ class Payment(Base):
     payment_method  = Column(String(50), nullable=True) # "PAYPAL" | "VISA_CHECKOUT" | "BANK_TRANSFER"
     gateway_token   = Column(String(255), nullable=True)
     
-    payer_bank_name = Column(String(255), nullable=True)
-    payer_account_no = Column(String(255), nullable=True)
+    payer_bank_name = Column(Text, nullable=True)
+    payer_account_no = Column(Text, nullable=True)
     
     escrow_flag     = Column(Boolean, default=True)
     recurring_flag  = Column(Boolean, default=False)
@@ -45,8 +45,8 @@ class RecurringPayment(Base):
     
     payment_method  = Column(String(50), nullable=True)
     gateway_token   = Column(String(255), nullable=True)
-    payer_bank_name = Column(String(255), nullable=True)
-    payer_account_no = Column(String(255), nullable=True)
+    payer_bank_name = Column(Text, nullable=True)
+    payer_account_no = Column(Text, nullable=True)
     
     active_status   = Column(Boolean, default=True)
     created_date    = Column(DateTime(timezone=True), server_default=func.now())

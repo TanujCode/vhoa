@@ -45,7 +45,7 @@ export default function ApartmentSolutionPage() {
   ];
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-tr from-[#f0f5fa] via-[#ebf2fa] to-[#f0f5fa] dark:bg-gradient-to-tr dark:from-[#040913] dark:via-[#07060f] dark:to-[#080b15] transition-colors duration-300 font-sans relative">
+    <div className="min-h-screen flex flex-col bg-[#F9FAFB] dark:bg-[#0f172a] transition-colors duration-300 font-sans relative">
       <Navbar />
 
       <div className="flex-1 overflow-x-hidden">
@@ -159,7 +159,7 @@ export default function ApartmentSolutionPage() {
         </section>
 
         {/* Premium Visual Gallery & Showcases */}
-        <section className="py-24 border-t border-slate-200/40 dark:border-white/[0.04] bg-slate-50/30 dark:bg-[#040913]/40 backdrop-blur-md relative overflow-hidden">
+        <section className="py-24 border-t border-slate-200/40 dark:border-slate-800 bg-slate-50/30 dark:bg-[#162032]/40 backdrop-blur-md relative overflow-hidden">
           <div className="absolute top-[10%] left-[-10%] w-[30vw] h-[30vw] bg-blue-500/[0.03] rounded-full blur-3xl pointer-events-none" />
           
           <div className="max-w-7xl mx-auto px-5 sm:px-8 w-full relative z-10">
@@ -262,7 +262,7 @@ export default function ApartmentSolutionPage() {
         </section>
 
         {/* ROI Statistics Section */}
-        <section className="py-24 border-t border-slate-200/40 dark:border-white/[0.04] bg-slate-50/10 dark:bg-[#07060f]/20">
+        <section className="py-24 border-t border-slate-200/40 dark:border-slate-800 bg-slate-50/10 dark:bg-[#162032]/20">
           <div className="max-w-7xl mx-auto px-5 sm:px-8 w-full text-center space-y-4 mb-20">
             <span className="text-blue-500 text-xs font-black uppercase tracking-wider">Metrics that Matter</span>
             <h2 className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight">
@@ -312,7 +312,7 @@ export default function ApartmentSolutionPage() {
 
         {/* Testimonial Section */}
         <section className="py-24 max-w-5xl mx-auto px-5 sm:px-8 w-full text-center relative z-10">
-          <div className="bg-white/50 dark:bg-[#040913]/45 backdrop-blur-xl border border-slate-200/70 dark:border-blue-500/20 p-8 sm:p-12 rounded-3xl space-y-6 relative overflow-hidden shadow-xl">
+          <div className="bg-white/50 dark:bg-[#1e293b]/80 backdrop-blur-xl border border-slate-200/70 dark:border-slate-700 p-8 sm:p-12 rounded-3xl space-y-6 relative overflow-hidden shadow-xl">
             <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/10 rounded-full blur-2xl pointer-events-none" />
             <div className="flex justify-center gap-1">
               {[...Array(5)].map((_, i) => <Star key={i} className="w-5 h-5 fill-amber-400 text-amber-400" />)}
@@ -343,7 +343,7 @@ export default function ApartmentSolutionPage() {
         </section>
 
         {/* Bottom CTA */}
-        <section className="py-20 bg-gradient-to-br from-blue-500/5 via-[#ebf2fa] to-indigo-500/10 dark:from-[#040913] dark:to-[#07060f] border-t border-slate-200/40 dark:border-white/[0.04] text-center relative overflow-hidden">
+        <section className="py-20 bg-gradient-to-br from-blue-500/5 via-[#ebf2fa] to-indigo-500/10 dark:from-[#162032] dark:to-[#0f172a] border-t border-slate-200/40 dark:border-slate-800 text-center relative overflow-hidden">
           <div className="max-w-2xl mx-auto space-y-6 px-5 relative z-10">
             <h2 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">
               Streamline Apartment Service Tickets

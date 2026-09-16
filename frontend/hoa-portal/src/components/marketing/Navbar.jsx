@@ -61,8 +61,8 @@ export default function Navbar() {
     <nav
       className={`sticky top-0 z-50 w-full transition-all duration-300 ${
         scrolled
-          ? 'bg-white/80 dark:bg-[#07060f]/85 backdrop-blur-xl border-b border-slate-200/50 dark:border-white/[0.06] shadow-[0_8px_30px_rgb(0,0,0,0.03)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.3)]'
-          : 'bg-white/50 dark:bg-[#07060f]/50 backdrop-blur-md border-b border-transparent'
+          ? 'bg-white/80 dark:bg-[#0f172a]/90 backdrop-blur-xl border-b border-slate-200/50 dark:border-white/[0.06] shadow-[0_8px_30px_rgb(0,0,0,0.03)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.3)]'
+          : 'bg-white/50 dark:bg-[#0f172a]/60 backdrop-blur-md border-b border-transparent'
       }`}
     >
       <div className="max-w-7xl mx-auto px-5 sm:px-8 relative">
@@ -137,7 +137,7 @@ export default function Navbar() {
 
       {/* Mobile Drawer */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-t border-slate-100 dark:border-white/[0.06] bg-white/95 dark:bg-[#07060f]/95 backdrop-blur-2xl">
+        <div className="md:hidden border-t border-slate-100 dark:border-slate-800 bg-white/95 dark:bg-[#0f172a]/95 backdrop-blur-2xl">
           <div className="px-5 py-4 space-y-1">
             {navLinks.map((link) => (
               <Link

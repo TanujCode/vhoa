@@ -171,7 +171,7 @@ def delete_faq_endpoint(
 def _news_to_out(n) -> NewsOut:
     created_by_name = None
     if n.created_by:
-        created_by_name = f"{n.created_by.first_name} {n.created_by.last_name}"
+        created_by_name = n.created_by.full_name or None
 
     return NewsOut(
         news_id          = n.news_id,

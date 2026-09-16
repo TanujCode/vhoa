@@ -92,6 +92,8 @@ class RentalRegisterRequest(BaseModel):
             raise ValueError("The password must contain an uppercase letter.")
         if not re.search(r"\d", v):
             raise ValueError("The password must contain a number.")
+        if not re.search(r"[!@#$%^&*()_+\-=\[\]{};':\"\\|,.<>\/?`~]", v):
+            raise ValueError("The password must contain at least one special character (!@#$%^&* etc.).")
         return v
 
     @field_validator("role")
@@ -194,7 +196,7 @@ def rental_register(
             "token_type": "bearer",
             "role": body.role,
             "user_id": user.user_id,
-            "full_name": f"{user.first_name or ''} {user.last_name or ''}".strip()
+            "full_name": user.full_name
         }
     except Exception as e:
         if isinstance(e, HTTPException):
@@ -535,7 +537,7 @@ def rental_google_auth(
             "token_type": "bearer",
             "role": rental_role_name,
             "user_id": user.user_id,
-            "full_name": f"{user.first_name or ''} {user.last_name or ''}".strip()
+            "full_name": user.full_name
         }
     except Exception as outer_err:
         traceback.print_exc()

@@ -43,7 +43,7 @@ export default function Footer() {
   };
 
   return (
-    <footer className="relative overflow-hidden bg-gradient-to-br from-[#120824] via-[#1a0c33] to-[#0a0414] text-slate-100 border-t border-white/[0.06] transition-colors duration-300">
+    <footer className="relative overflow-hidden bg-gradient-to-br from-[#0f172a] via-[#162032] to-[#0f172a] text-slate-100 border-t border-slate-800 transition-colors duration-300">
       
       {/* Multicolored premium border top line */}
       <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-violet-500/30 via-indigo-500/50 to-blue-500/30 z-10" />
@@ -92,7 +92,7 @@ export default function Footer() {
               <Link to="/portal-select" className="btn-glow w-full text-center py-3 text-sm font-semibold text-white rounded-xl flex items-center justify-center gap-1.5 group">
                 Free Trial <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
               </Link>
-              <Link to="/contact" className="w-full text-center py-3 text-sm font-bold text-slate-350 rounded-xl border border-white/[0.08] bg-[#1a102b]/40 hover:bg-white/[0.03] hover:border-violet-500/20 transition-all block">
+              <Link to="/contact" className="w-full text-center py-3 text-sm font-bold text-slate-350 rounded-xl border border-white/[0.08] bg-[#1e293b]/60 hover:bg-[#1e293b] hover:border-violet-500/30 transition-all block">
                 Book Demo
               </Link>
             </div>

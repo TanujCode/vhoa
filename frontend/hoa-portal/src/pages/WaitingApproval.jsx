@@ -15,8 +15,8 @@ export default function WaitingApproval() {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-slate-50 dark:bg-[#0D1B2A] p-4 font-sans">
-      <div className="max-w-md w-full bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-8 text-center shadow-lg">
+    <div className="flex items-center justify-center min-h-screen bg-slate-50 dark:bg-[#0f172a] p-4 font-sans">
+      <div className="max-w-md w-full bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1e293b] dark:to-[#162032] border border-slate-200/80 dark:border-slate-700 rounded-3xl p-8 text-center shadow-lg">
         <div className="w-16 h-16 bg-amber-500/10 text-amber-500 rounded-2xl flex items-center justify-center mx-auto mb-6">
           <Clock className="w-8 h-8 animate-pulse" />
         </div>
@@ -29,7 +29,7 @@ export default function WaitingApproval() {
           Your request to join the community has been submitted successfully. The Board Members are currently reviewing your address and identity proofs.
         </p>
 
-        <div className="mt-4 p-3 bg-slate-50 dark:bg-[#0d1622] rounded-xl text-xs font-mono text-gray-400">
+        <div className="mt-4 p-3 bg-slate-50 dark:bg-[#162032] rounded-xl text-xs font-mono text-gray-400">
           Status: <span className="text-amber-500 font-bold">PENDING_APPROVAL</span>
         </div>
 

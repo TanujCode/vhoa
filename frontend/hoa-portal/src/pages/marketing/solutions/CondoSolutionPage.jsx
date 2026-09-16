@@ -81,7 +81,7 @@ export default function CondoSolutionPage() {
   ];
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#F9FAFB] dark:bg-[#070e1c] transition-colors duration-300 font-sans text-slate-900 dark:text-slate-100 selection:bg-blue-600 selection:text-white">
+    <div className="min-h-screen flex flex-col bg-[#F9FAFB] dark:bg-[#0f172a] transition-colors duration-300 font-sans text-slate-900 dark:text-slate-100 selection:bg-blue-600 selection:text-white">
       {/* Top Navbar */}
       <Navbar />
 
@@ -141,7 +141,7 @@ export default function CondoSolutionPage() {
 
             {/* Right Card / Condo Committee Dashboard Preview */}
             <div className="lg:col-span-6 flex justify-center lg:justify-end">
-              <div className="relative w-full max-w-[480px] rounded-3xl bg-white dark:bg-[#0d182b]/90 border border-slate-200/80 dark:border-white/10 shadow-2xl p-5 sm:p-6 text-left space-y-4">
+              <div className="relative w-full max-w-[480px] rounded-3xl bg-white dark:bg-[#1e293b] border border-slate-200/80 dark:border-slate-700 shadow-2xl p-5 sm:p-6 text-left space-y-4">
                 
                 {/* Header bar */}
                 <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/5 pb-3">
@@ -241,7 +241,7 @@ export default function CondoSolutionPage() {
               return (
                 <div
                   key={idx}
-                  className="bg-white dark:bg-[#0d182b]/70 border border-slate-200/80 dark:border-white/10 rounded-2xl p-6 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.03)] hover:shadow-xl hover:-translate-y-1 transition-all duration-300 text-left space-y-3"
+                  className="bg-white dark:bg-[#1e293b] border border-slate-200/80 dark:border-slate-700 rounded-2xl p-6 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.03)] hover:shadow-xl hover:-translate-y-1 transition-all duration-300 text-left space-y-3"
                 >
                   <div className={`w-11 h-11 rounded-2xl flex items-center justify-center border ${item.color}`}>
                     <Icon className="w-5 h-5" />
@@ -279,7 +279,7 @@ export default function CondoSolutionPage() {
               {condoProblems.map((item, idx) => (
                 <div
                   key={idx}
-                  className="bg-white dark:bg-[#0d182b]/70 border border-slate-200/80 dark:border-white/10 rounded-2xl p-6 shadow-sm hover:shadow-lg transition-all space-y-4 flex flex-col justify-between"
+                  className="bg-white dark:bg-[#1e293b] border border-slate-200/80 dark:border-slate-700 rounded-2xl p-6 shadow-sm hover:shadow-lg transition-all space-y-4 flex flex-col justify-between"
                 >
                   <div className="space-y-2">
                     <p className="text-[10px] font-black uppercase tracking-wider text-rose-500">THE PROBLEM</p>

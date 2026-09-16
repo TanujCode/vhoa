@@ -120,12 +120,14 @@ export const validateUnitNo = (value) => {
 };
 
 // ─── Password ─────────────────────────────────────────────────────────────────
-/** Strong password – min 8 chars, at least 1 uppercase, 1 number */
+/** Strong password – min 8 chars, at least 1 uppercase, 1 number, at least 1 special character */
 export const validatePassword = (value) => {
   if (!value) return true;
   if (value.length < 8) return 'Password must be at least 8 characters.';
   if (!/[A-Z]/.test(value)) return 'Password must contain at least one uppercase letter.';
   if (!/[0-9]/.test(value)) return 'Password must contain at least one number.';
+  if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?`~]/.test(value))
+    return 'Password must contain at least one special character (!@#$%^&* etc.).';
   return true;
 };
 

@@ -26,16 +26,17 @@ def _to_audit_out(log) -> AuditLogOut:
         elif "lease" in act or "property" in act or "unit" in act:
             module_val = "community"
 
+    from app.utils.encryption import decrypt_text_tokens
     return AuditLogOut(
         audit_id     = log.audit_id,
         user_id      = log.user_id,
         action       = log.action,
         module       = module_val,
-        description  = log.description,
+        description  = decrypt_text_tokens(log.description),
         community_id = None,
         ip_address   = log.ip_address,
-        old_value    = log.old_value,
-        new_value    = log.new_value,
+        old_value    = decrypt_text_tokens(log.old_value),
+        new_value    = decrypt_text_tokens(log.new_value),
         created_at   = log.created_at,
         user_name    = user_name,
     )

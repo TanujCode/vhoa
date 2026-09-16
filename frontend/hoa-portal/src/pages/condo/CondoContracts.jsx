@@ -18,6 +18,7 @@ import {
 } from '../../utils/fieldValidators';
 import { formatPhoneAsYouType } from '../../utils/phoneFormatter';
 import ConfirmModal from '../../components/ConfirmModal';
+import PhoneInputWithCountry from '../../components/common/PhoneInputWithCountry';
 
 export default function CondoContracts() {
   const [contracts, setContracts] = useState([]);
@@ -28,6 +29,7 @@ export default function CondoContracts() {
   const [copiedCode, setCopiedCode] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [confirmConfig, setConfirmConfig] = useState({ isOpen: false });
+  const [clientPhoneCountryCode, setClientPhoneCountryCode] = useState('+1');
 
   // Address autocomplete states
   const [addressSuggestions, setAddressSuggestions] = useState([]);
@@ -290,7 +292,7 @@ export default function CondoContracts() {
         client_state: data.client_state || null,
         client_zip_code: data.client_zip_code || null,
         client_country: data.client_country || 'USA',
-        client_phone_number: data.client_phone_only ? `+1${data.client_phone_only.replace(/\D/g, '')}` : null,
+        client_phone_number: data.client_phone_only ? `${clientPhoneCountryCode}${data.client_phone_only.replace(/\D/g, '')}` : null,
         client_email_address: data.client_email_address || null,
         business_name: data.business_name || null,
         business_address: data.business_address || null,
@@ -669,28 +671,16 @@ export default function CondoContracts() {
                     {errors.client_email_address && <p className="text-rose-500 text-[10px] mt-1 font-bold">{errors.client_email_address.message}</p>}
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-slate-500 dark:text-gray-400 uppercase tracking-wider mb-2">Phone Number (US Only) *</label>
-                    <div className="relative">
-                      <span className="absolute left-4 top-3.5 text-sm text-slate-400 font-mono">+1</span>
-                      <input
-                        type="text"
-                        maxLength={14}
-                        {...register('client_phone_only', {
-                          required: 'Required',
-                          validate: (val) => {
-                            const digits = (val || '').replace(/\D/g, '');
-                            if (digits.length !== 10) return 'US number must be 10 digits';
-                            return true;
-                          }
-                        })}
-                        onChange={(e) => {
-                          const formatted = formatPhoneAsYouType(e.target.value);
-                          setValue('client_phone_only', formatted, { shouldValidate: true });
-                        }}
-                        className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl pl-10 pr-4 py-3 text-sm outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-slate-900 dark:text-white transition-all font-mono"
-                        placeholder="(123) 456-7890"
-                      />
-                    </div>
+                    <label className="block text-xs font-bold text-slate-500 dark:text-gray-400 uppercase tracking-wider mb-2">Phone Number *</label>
+                    <PhoneInputWithCountry
+                      value={watch('client_phone_only') || ''}
+                      countryCode={clientPhoneCountryCode}
+                      onCountryChange={(code) => setClientPhoneCountryCode(code)}
+                      onChange={(e, formatted) => setValue('client_phone_only', formatted, { shouldValidate: true })}
+                      size="sm"
+                      error={!!errors.client_phone_only}
+                      placeholder="(555) 000-0000"
+                    />
                     {errors.client_phone_only && <p className="text-rose-500 text-[10px] mt-1 font-bold">{errors.client_phone_only.message}</p>}
                   </div>
                 </div>

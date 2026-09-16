@@ -9,6 +9,7 @@ import { checkEmail } from '../../utils/emailValidation';
 import { validateName, validateUnitNo, onlyLettersKeyPress } from '../../utils/fieldValidators';
 import { formatPhoneAsYouType, formatUsPhone } from '../../utils/phoneFormatter';
 import ConfirmModal from '../../components/ConfirmModal';
+import PhoneInputWithCountry from '../../components/common/PhoneInputWithCountry';
 
 export default function CondoMembers({ community, user }) {
   const currentUserRole = (user?.role_name || user?.role || '').toLowerCase();
@@ -57,6 +58,7 @@ export default function CondoMembers({ community, user }) {
     role: 'Resident'
   });
   const [inviteErrors, setInviteErrors] = useState({});
+  const [invitePhoneCountryCode, setInvitePhoneCountryCode] = useState('+1');
   const [invitePhoneOnly, setInvitePhoneOnly] = useState('');
   const [inviting, setInviting] = useState(false);
 
@@ -86,6 +88,7 @@ export default function CondoMembers({ community, user }) {
   const [editFirst, setEditFirst] = useState('');
   const [editLast, setEditLast] = useState('');
   const [editEmail, setEditEmail] = useState('');
+  const [editPhoneCountryCode, setEditPhoneCountryCode] = useState('+1');
   const [editPhone, setEditPhone] = useState('');
   const [editUnit, setEditUnit] = useState('');
   const [editRole, setEditRole] = useState('');
@@ -158,7 +161,7 @@ export default function CondoMembers({ community, user }) {
         first_name: inviteForm.firstName.trim(),
         last_name: inviteForm.lastName.trim(),
         email_id: inviteForm.email.trim().toLowerCase(),
-        mobile_number: invitePhoneOnly ? `+1${invitePhoneOnly.replace(/\D/g, '')}` : null,
+        mobile_number: invitePhoneOnly ? `${invitePhoneCountryCode}${invitePhoneOnly.replace(/\D/g, '')}` : null,
         unit_no: inviteForm.role === 'Security Guard' ? null : (inviteForm.unit.trim() || null),
         role_name: mappedRole,
         community_id: commId
@@ -240,6 +243,7 @@ export default function CondoMembers({ community, user }) {
     let rawPhone = m.mobile_number || '';
     if (rawPhone.startsWith('+1')) {
       rawPhone = rawPhone.substring(2);
+      setEditPhoneCountryCode('+1');
     }
     setEditPhone(formatPhoneAsYouType(rawPhone));
     setEditUnit(m.unit_no || '');
@@ -281,7 +285,7 @@ export default function CondoMembers({ community, user }) {
         first_name: editFirst.trim(),
         last_name: editLast.trim(),
         email_id: editEmail.trim().toLowerCase(),
-        mobile_number: cleanPhone ? `+1${cleanPhone}` : null,
+        mobile_number: cleanPhone ? `${editPhoneCountryCode}${cleanPhone}` : null,
         unit_no: editUnit.trim() || null
       };
 
@@ -636,16 +640,13 @@ export default function CondoMembers({ community, user }) {
 
                 <div>
                   <label className="block text-xs text-slate-500 dark:text-gray-400 mb-1">Mobile Number (Optional)</label>
-                  <input
-                    type="text"
+                  <PhoneInputWithCountry
                     value={invitePhoneOnly}
-                    maxLength={14}
-                    placeholder="(123) 456 7890"
-                    onChange={e => {
-                      const formatted = formatPhoneAsYouType(e.target.value);
-                      setInvitePhoneOnly(formatted);
-                    }}
-                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl p-2.5 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-blue-500 placeholder-slate-400 dark:placeholder-gray-500"
+                    countryCode={invitePhoneCountryCode}
+                    onCountryChange={(code) => setInvitePhoneCountryCode(code)}
+                    onChange={(e, formatted) => setInvitePhoneOnly(formatted)}
+                    size="sm"
+                    placeholder="(555) 000-0000"
                   />
                 </div>
 
@@ -806,17 +807,14 @@ export default function CondoMembers({ community, user }) {
                 )}
                 <div className={editRole === 'security_guard' ? 'col-span-2' : ''}>
                   <label className="block text-[10px] font-bold text-slate-455 dark:text-gray-400 mb-2 uppercase">PHONE NUMBER</label>
-                  <div className="relative">
-                    <span className="absolute left-3 top-2.5 text-xs text-slate-400 font-mono">+1</span>
-                    <input
-                      type="text"
-                      maxLength={14}
-                      value={editPhone}
-                      onChange={(e) => setEditPhone(formatPhoneAsYouType(e.target.value))}
-                      className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl pl-8 pr-4 py-2.5 text-xs outline-none focus:border-indigo-505 text-slate-950 dark:text-white font-mono"
-                      placeholder="(123) 456-7890"
-                    />
-                  </div>
+                  <PhoneInputWithCountry
+                    value={editPhone}
+                    countryCode={editPhoneCountryCode}
+                    onCountryChange={(code) => setEditPhoneCountryCode(code)}
+                    onChange={(e, formatted) => setEditPhone(formatted)}
+                    size="sm"
+                    placeholder="(555) 000-0000"
+                  />
                 </div>
               </div>
 

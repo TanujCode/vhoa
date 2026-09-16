@@ -1,17 +1,17 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
 import { 
   Shield, ShieldCheck, Lock, Key, Server, Database, EyeOff, 
-  ArrowRight, Activity, ChevronDown, ChevronUp
+  ArrowRight, Activity, CheckCircle2
 } from 'lucide-react';
 import Navbar from '../../components/marketing/Navbar';
 import Footer from '../../components/marketing/Footer';
+import FaqSection from '../../components/marketing/FaqSection';
 import { useTheme } from '../../context/ThemeContext';
 
 export default function SecurityPage() {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
-  const [openFaq, setOpenFaq] = useState(null);
 
   const securityFeatures = [
     {
@@ -28,7 +28,7 @@ export default function SecurityPage() {
     },
     {
       title: "e-Voting Cryptographic Hashes",
-      desc: "Every vote, resolution signature, and amenity survey response is recorded with a unique SHA-256 verification hash. This prevents retro-active tamper or manipulation of board approvals.",
+      desc: "Every vote, resolution signature, and amenity survey response is recorded with a unique SHA-256 verification hash. This prevents retroactive tamper or manipulation of board approvals.",
       icon: Key,
       badge: "Tamper-Proof Ledger"
     },
@@ -61,59 +61,50 @@ export default function SecurityPage() {
     { name: "DDoS Mitigation Layer", status: "Active", desc: "Intelligent firewall tracking traffic nodes" }
   ];
 
-  const faqs = [
-    {
-      q: "Where is our community database hosted?",
-      a: "Our primary databases are hosted on AWS and Google Cloud nodes located in the United States. These servers are protected by industrial firewalls, physical security checkpoints, and continuous network packet auditing."
-    },
-    {
-      q: "Who can see our resident registry and accounting logs?",
-      a: "Only authenticated administrators assigned to your specific HOA or community can view registry lists and billing ledgers. Residents can only view their own personal profiles and unit payment receipts."
-    },
-    {
-      q: "How does NestBloq safeguard our board e-voting records?",
-      a: "Each ballot submitted is stamped with a digital fingerprint hash (SHA-256) matching the voter ID, meeting date, and approval selection. The system runs integrity checks to ensure no record has been altered post-ballot."
-    },
-    {
-      q: "What happens if there is a server outage?",
-      a: "Our infrastructure features auto-scaling replica instances. If one host node goes offline, traffic is dynamically rerouted to a hot-standby node within seconds, ensuring maximum uptime."
-    }
-  ];
-
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-[#090F16] transition-colors duration-250 font-sans text-slate-900 dark:text-white">
+    <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-[#0f172a] transition-colors duration-250 font-sans text-slate-900 dark:text-white">
       <Navbar />
 
-      <div className="flex-1 overflow-x-hidden pt-12">
+      <div className="flex-1 overflow-x-hidden">
+        
         {/* --- Hero Banner --- */}
-        <header className="relative w-full overflow-hidden py-20 border-b border-slate-200/50 dark:border-white/[0.04]">
+        <header className="relative w-full overflow-hidden pt-6 pb-6 sm:pt-8 sm:pb-8 border-b border-slate-200/50 dark:border-white/[0.04]">
           <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-500/[0.03] dark:bg-blue-500/[0.05] rounded-full blur-3xl pointer-events-none" />
           <div className="absolute bottom-0 right-1/4 w-80 h-80 bg-violet-500/[0.03] dark:bg-violet-500/[0.05] rounded-full blur-3xl pointer-events-none" />
 
-          <div className="relative z-10 max-w-5xl mx-auto px-5 sm:px-8 text-center space-y-6">
-            <div className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-600 dark:text-blue-400 text-[10px] font-extrabold tracking-widest uppercase">
-              Security & Compliance
+          <div className="relative z-10 max-w-4xl mx-auto px-5 sm:px-8 text-center space-y-3.5">
+            <div className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-violet-500/10 border border-violet-500/20 text-violet-600 dark:text-violet-400 text-[10px] sm:text-xs font-extrabold tracking-widest uppercase">
+              <Shield className="w-3.5 h-3.5" />
+              <span>Security & Compliance</span>
             </div>
-            <h1 className="font-display text-4xl sm:text-5xl font-black text-slate-900 dark:text-white tracking-tight leading-[1.08]">
+
+            <h1 className="font-display text-3xl sm:text-4xl md:text-5xl font-black text-slate-900 dark:text-white tracking-tight leading-[1.12]">
               Enterprise-grade security<br />
-              <span className="bg-gradient-to-r from-blue-600 to-violet-600 bg-clip-text text-transparent">for your community.</span>
+              <span className="bg-gradient-to-r from-violet-600 to-indigo-600 bg-clip-text text-transparent">
+                for your community.
+              </span>
             </h1>
-            <p className="text-slate-500 dark:text-slate-400 max-w-2xl mx-auto leading-relaxed text-sm">
+
+            <p className="text-slate-500 dark:text-slate-400 max-w-2xl mx-auto leading-relaxed text-xs sm:text-sm font-medium">
               At NestBloq, we understand that community governance holds private member records and financial accounts. We enforce strict encryption, real-time audit hashes, and robust credentials control.
             </p>
           </div>
         </header>
 
         {/* --- Interactive Status Check Widget --- */}
-        <section className="py-16 max-w-5xl mx-auto px-5 sm:px-8">
-          <div className="bg-gradient-to-br from-slate-100 to-slate-200/50 dark:from-[#111A24] dark:to-[#0D1620] border border-slate-200 dark:border-white/[0.08] rounded-3xl p-6 sm:p-8 shadow-xl">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
-              <div className="text-left">
+        <section className="py-10 sm:py-12 max-w-5xl mx-auto px-5 sm:px-8">
+          <div className="bg-white dark:bg-[#1e293b] border border-slate-200/80 dark:border-slate-700 rounded-[28px] p-6 sm:p-8 shadow-sm">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+              <div className="text-left space-y-1">
                 <div className="flex items-center gap-2">
-                  <Activity className="w-5 h-5 text-emerald-500 animate-pulse" />
-                  <h2 className="text-lg font-bold text-slate-900 dark:text-white">Live System Integrity Checklist</h2>
+                  <Activity className="w-4 h-4 text-emerald-500 animate-pulse" />
+                  <h2 className="font-display text-lg font-black text-slate-900 dark:text-white">
+                    Live System Integrity Checklist
+                  </h2>
                 </div>
-                <p className="text-xs text-slate-500 dark:text-gray-400 mt-1">Real-time verification of security shielding modules</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  Real-time verification of active security shielding modules
+                </p>
               </div>
               <div className="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 px-3 py-1.5 rounded-xl text-xs font-bold shrink-0">
                 <div className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
@@ -121,14 +112,17 @@ export default function SecurityPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
               {systemStatusChecks.map((item, idx) => (
-                <div key={idx} className="p-4 bg-white/60 dark:bg-white/[0.01] border border-slate-200/50 dark:border-white/[0.04] rounded-2xl flex items-center justify-between text-left shadow-sm">
-                  <div>
+                <div 
+                  key={idx} 
+                  className="p-3.5 sm:p-4 bg-slate-50/70 dark:bg-white/[0.02] border border-slate-200/60 dark:border-white/[0.05] rounded-2xl flex items-center justify-between text-left transition-all hover:border-violet-500/30"
+                >
+                  <div className="pr-3">
                     <h3 className="text-xs font-extrabold text-slate-800 dark:text-slate-200">{item.name}</h3>
-                    <p className="text-[10px] text-slate-400 mt-0.5">{item.desc}</p>
+                    <p className="text-[11px] text-slate-400 mt-0.5 leading-snug">{item.desc}</p>
                   </div>
-                  <span className="text-[9px] font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20 shrink-0">
+                  <span className="text-[9.5px] font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-lg border border-emerald-500/20 shrink-0">
                     {item.status}
                   </span>
                 </div>
@@ -138,27 +132,41 @@ export default function SecurityPage() {
         </section>
 
         {/* --- Pillars Grid --- */}
-        <section className="py-12 bg-slate-100/50 dark:bg-[#070D14]/40 border-y border-slate-200/40 dark:border-white/[0.04]">
-          <div className="max-w-6xl mx-auto px-5 sm:px-8 space-y-12">
-            <div className="text-center max-w-2xl mx-auto">
-              <h2 className="font-display text-3xl font-black text-slate-900 dark:text-white">Our Security Safeguards</h2>
-              <p className="text-xs text-slate-400 dark:text-gray-500 mt-1.5 uppercase tracking-wider font-extrabold">Active Protection Matrix</p>
+        <section className="py-10 sm:py-12 bg-slate-100/60 dark:bg-[#162032]/60 border-y border-slate-200/50 dark:border-slate-700/60">
+          <div className="max-w-5xl mx-auto px-5 sm:px-8 space-y-8">
+            <div className="text-center max-w-2xl mx-auto space-y-2">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-violet-500/10 text-violet-600 dark:text-violet-400 text-[10px] font-extrabold tracking-widest uppercase">
+                Active Protection Matrix
+              </div>
+              <h2 className="font-display text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+                Our Security Safeguards
+              </h2>
+              <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
+                End-to-end protective architecture designed to meet rigorous data compliance standards.
+              </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
               {securityFeatures.map((feat, idx) => {
                 const Icon = feat.icon;
                 return (
-                  <div key={idx} className="bg-white dark:bg-[#0D1620] border border-slate-200/60 dark:border-white/[0.06] rounded-3xl p-6 shadow-sm hover:shadow-lg transition flex flex-col justify-between text-left">
-                    <div className="space-y-4">
-                      <div className="w-10 h-10 rounded-xl bg-blue-500/10 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 flex items-center justify-center">
-                        <Icon size={20} />
+                  <div 
+                    key={idx} 
+                    className="bg-white dark:bg-[#1e293b] border border-slate-200/80 dark:border-slate-700 rounded-2xl p-5 sm:p-6 shadow-xs hover:shadow-md hover:border-violet-500/30 transition flex flex-col justify-between text-left"
+                  >
+                    <div className="space-y-3">
+                      <div className="w-9 h-9 rounded-xl bg-violet-500/10 dark:bg-violet-500/20 text-violet-600 dark:text-violet-400 flex items-center justify-center">
+                        <Icon size={18} />
                       </div>
-                      <h3 className="font-extrabold text-base text-slate-900 dark:text-white leading-snug">{feat.title}</h3>
-                      <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">{feat.desc}</p>
+                      <h3 className="font-display font-black text-sm sm:text-base text-slate-900 dark:text-white leading-snug">
+                        {feat.title}
+                      </h3>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed font-sans">
+                        {feat.desc}
+                      </p>
                     </div>
-                    <div className="pt-5 border-t border-slate-100 dark:border-white/5 mt-5">
-                      <span className="text-[9px] font-black uppercase tracking-wider text-slate-450 dark:text-slate-400 bg-slate-50 dark:bg-white/5 border border-slate-200/50 dark:border-white/5 px-2 py-0.5 rounded">
+                    <div className="pt-4 border-t border-slate-100 dark:border-white/5 mt-4">
+                      <span className="text-[9.5px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-white/5 border border-slate-200/60 dark:border-white/5 px-2 py-0.5 rounded-md">
                         {feat.badge}
                       </span>
                     </div>
@@ -170,26 +178,31 @@ export default function SecurityPage() {
         </section>
 
         {/* --- Compliance & Infrastructure Standards --- */}
-        <section className="py-20 max-w-5xl mx-auto px-5 sm:px-8 text-center space-y-12">
-          <div className="space-y-4">
-            <h2 className="font-display text-3xl font-black text-slate-900 dark:text-white">Compliance & Infrastructure</h2>
-            <p className="text-slate-500 dark:text-slate-400 max-w-xl mx-auto text-sm leading-relaxed">
+        <section className="py-10 sm:py-12 max-w-5xl mx-auto px-5 sm:px-8 text-center space-y-8">
+          <div className="space-y-2">
+            <h2 className="font-display text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+              Compliance & Infrastructure
+            </h2>
+            <p className="text-slate-500 dark:text-slate-400 max-w-xl mx-auto text-xs sm:text-sm leading-relaxed">
               We align our services with secure cloud hosting practices, verifying data pathways continuously.
             </p>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-5">
             {[
               { label: "SOC 2 Type II", desc: "Hosting Node Certs" },
               { label: "PCI-DSS Level 1", desc: "Secure Payments Tunnel" },
               { label: "GDPR Compliant", desc: "Data Registry Policies" },
               { label: "Hourly Snapshots", desc: "Database Backups" }
             ].map((std, i) => (
-              <div key={i} className="p-5 border border-slate-200 dark:border-white/[0.06] rounded-2xl bg-white/40 dark:bg-white/[0.005]">
-                <div className="w-10 h-10 mx-auto rounded-full bg-violet-500/10 text-violet-500 flex items-center justify-center mb-3">
+              <div 
+                key={i} 
+                className="p-4 sm:p-5 border border-slate-200/80 dark:border-slate-700 rounded-2xl bg-white dark:bg-[#1e293b] shadow-xs hover:border-violet-500/30 transition-all text-center"
+              >
+                <div className="w-9 h-9 mx-auto rounded-full bg-violet-500/10 text-violet-600 dark:text-violet-400 flex items-center justify-center mb-2.5">
                   <ShieldCheck size={18} />
                 </div>
-                <h4 className="font-extrabold text-sm text-slate-800 dark:text-slate-200">{std.label}</h4>
+                <h4 className="font-display font-black text-xs sm:text-sm text-slate-800 dark:text-slate-200">{std.label}</h4>
                 <p className="text-[10px] text-slate-400 mt-0.5">{std.desc}</p>
               </div>
             ))}
@@ -197,66 +210,50 @@ export default function SecurityPage() {
         </section>
 
         {/* --- FAQ Section --- */}
-        <section className="py-20 border-t border-slate-200/50 dark:border-white/[0.04] bg-slate-50 dark:bg-[#080E15]">
-          <div className="max-w-3xl mx-auto px-5 sm:px-8 space-y-12">
-            <div className="text-center space-y-3">
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-violet-500/10 text-violet-500 text-[10px] font-extrabold tracking-widest uppercase">
-                SECURITY Q&A
-              </div>
-              <h2 className="font-display text-3xl font-black text-slate-900 dark:text-white">Frequently Asked Questions</h2>
-              <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
-                Need details on compliance or infrastructure settings? Reach out to our IT audit team.
-              </p>
-            </div>
-
-            <div className="space-y-4">
-              {faqs.map((faq, idx) => {
-                const isOpen = openFaq === idx;
-                return (
-                  <div 
-                    key={idx} 
-                    className="border border-slate-200 dark:border-white/[0.06] rounded-2xl bg-white dark:bg-[#0D1620] overflow-hidden transition-all text-left shadow-sm"
-                  >
-                    <button
-                      onClick={() => setOpenFaq(isOpen ? null : idx)}
-                      className="w-full p-5 flex items-center justify-between text-slate-800 dark:text-white hover:bg-slate-50 dark:hover:bg-white/5 transition"
-                    >
-                      <span className="font-extrabold text-sm">{faq.q}</span>
-                      {isOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                    </button>
-                    {isOpen && (
-                      <div className="px-5 pb-5 pt-1 border-t border-slate-100 dark:border-white/5">
-                        <p className="text-xs text-slate-550 dark:text-slate-400 leading-relaxed pt-3">{faq.a}</p>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </section>
+        <FaqSection
+          id="security-faq"
+          badgeText="SECURITY Q&A"
+          title="Frequently Asked Questions"
+          subtitlePrefix="Need details on compliance or infrastructure settings?"
+          contactText="Reach out to our IT audit team."
+          contactLink="/contact"
+        />
 
         {/* --- Call to Action Banner --- */}
-        <section className="py-20 bg-gradient-to-r from-blue-600 to-violet-600 text-white relative overflow-hidden">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.08),transparent)]" />
-          <div className="relative z-10 max-w-4xl mx-auto px-5 sm:px-8 text-center space-y-6">
-            <h2 className="font-display text-3xl sm:text-4xl font-black tracking-tight leading-tight">
-              Have security compliance requirements?
+        <section className="py-10 pb-16 max-w-6xl mx-auto px-5 sm:px-8 w-full">
+          <div className="relative rounded-3xl bg-gradient-to-r from-[#4c1d95] via-[#5b21b6] to-[#311075] p-8 sm:p-12 md:p-14 text-center text-white shadow-2xl overflow-hidden space-y-5">
+            <div className="absolute top-0 right-0 w-80 h-80 bg-violet-400/20 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute bottom-0 left-0 w-80 h-80 bg-indigo-500/20 rounded-full blur-3xl pointer-events-none" />
+
+            <p className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-violet-300">
+              ENTERPRISE SECURITY & AUDIT
+            </p>
+
+            <h2 className="font-display text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight leading-tight max-w-2xl mx-auto">
+              Have Specific Security & Compliance Requirements?
             </h2>
-            <p className="text-blue-100 max-w-xl mx-auto text-xs sm:text-sm leading-relaxed">
+
+            <p className="text-xs sm:text-sm text-violet-200 max-w-lg mx-auto leading-relaxed">
               We gladly support enterprise HOA security questionnaires, database isolation preferences, and custom vendor agreements. Talk to our IT compliance specialists.
             </p>
-            <div className="pt-2">
+
+            <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
               <Link 
                 to="/contact" 
-                className="inline-flex items-center gap-2 bg-white text-blue-600 font-bold px-6 py-3 rounded-xl hover:bg-slate-50 transition shadow-lg"
+                className="px-8 py-3.5 bg-white text-[#4c1d95] font-extrabold text-xs sm:text-sm rounded-full shadow-lg hover:bg-slate-100 transition-all active:scale-95"
               >
                 Request Security Docs
-                <ArrowRight size={16} />
+              </Link>
+              <Link 
+                to="/contact" 
+                className="px-8 py-3.5 bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold text-xs sm:text-sm rounded-full transition-all active:scale-95"
+              >
+                Talk to Security Team
               </Link>
             </div>
           </div>
         </section>
+
       </div>
 
       <Footer />

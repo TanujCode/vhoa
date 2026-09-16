@@ -9,6 +9,7 @@ import { useGoogleLogin } from '@react-oauth/google';
 import { validateEmail } from '../../../utils/emailValidation';
 import { validateName, onlyLettersKeyPress } from '../../../utils/fieldValidators';
 import { formatPhoneAsYouType } from '../../../utils/phoneFormatter';
+import PhoneInputWithCountry from '../../../components/common/PhoneInputWithCountry';
 
 export default function RentalRegisterPage() {
   const [searchParams] = useSearchParams();
@@ -39,6 +40,7 @@ export default function RentalRegisterPage() {
   });
   
   const [selectedRole, setSelectedRole] = useState(roleFromUrl);
+  const [phoneCountryCode, setPhoneCountryCode] = useState('+1');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
@@ -125,7 +127,7 @@ export default function RentalRegisterPage() {
         password: data.password,
         confirm_password: data.confirmPassword,
         role: selectedRole,
-        mobile_number: data.mobileNumberOnly ? `+1${data.mobileNumberOnly.replace(/\D/g, '')}` : '',
+        mobile_number: data.mobileNumberOnly ? `${phoneCountryCode}${data.mobileNumberOnly.replace(/\D/g, '')}` : '',
         time_zone: 'America/New_York',
         captcha_token: captcha.token,
         captcha_answer: data.captchaAnswer,
@@ -314,8 +316,11 @@ export default function RentalRegisterPage() {
                     message: 'Password must be at least 8 characters',
                   },
                   validate: (v) => {
+                    if (v.length < 8) return 'Password must be at least 8 characters';
                     if (!/[A-Z]/.test(v)) return 'Password must contain at least one uppercase letter';
                     if (!/\d/.test(v)) return 'Password must contain at least one number';
+                    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?`~]/.test(v))
+                      return 'Password must contain at least one special character (!@#$%^&* etc.)';
                     return true;
                   }
                 })}
@@ -374,31 +379,15 @@ export default function RentalRegisterPage() {
           <label className="block text-xs font-bold text-gray-700 tracking-wider mb-1">
             MOBILE NUMBER (Optional)
           </label>
-          <div className="relative">
-            <input
-              type="text"
-              maxLength={14}
-              {...register('mobileNumberOnly', {
-                validate: (val) => {
-                  if (!val) return true;
-                  const digits = val.replace(/\D/g, '');
-                  if (digits.length !== 10) {
-                    return `Mobile number must be exactly 10 digits`;
-                  }
-                  return true;
-                }
-              })}
-              onChange={(e) => {
-                const formatted = formatPhoneAsYouType(e.target.value);
-                setValue('mobileNumberOnly', formatted);
-              }}
-              className={`w-full px-4 py-1.5 border rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none pl-10 text-sm text-gray-900 bg-white dark:text-gray-900 dark:bg-white ${
-                errors.mobileNumberOnly ? 'border-red-500' : 'border-gray-300'
-              }`}
-              placeholder="(123) 456-7890"
-            />
-            <Phone className="w-4 h-4 text-gray-400 absolute left-3 top-2.5" />
-          </div>
+          <PhoneInputWithCountry
+            value={watch('mobileNumberOnly') || ''}
+            countryCode={phoneCountryCode}
+            onCountryChange={(code) => setPhoneCountryCode(code)}
+            onChange={(e, formatted) => setValue('mobileNumberOnly', formatted, { shouldValidate: true })}
+            size="sm"
+            error={!!errors.mobileNumberOnly}
+            placeholder="(555) 000-0000"
+          />
           {errors.mobileNumberOnly && (
             <p className="text-red-500 text-xs mt-1">{errors.mobileNumberOnly.message}</p>
           )}

@@ -224,7 +224,7 @@ export default function FeaturesPage() {
   // ─── SANDBOX RENDERS ─── (each card has a unique color identity)
 
   const renderLedgerSandbox = () => (
-    <div ref={ledgerRef} className="w-full h-full flex flex-col rounded-2xl overflow-hidden border border-slate-200 dark:border-blue-500/20 bg-slate-100/60 dark:bg-[#060b18] shadow-xl shadow-slate-200/50 dark:shadow-blue-900/20">
+    <div ref={ledgerRef} className="w-full h-full flex flex-col rounded-2xl overflow-hidden border border-slate-200 dark:border-blue-500/30 bg-slate-100/60 dark:bg-[#1e293b] shadow-xl shadow-slate-200/50 dark:shadow-blue-900/20">
       {/* Header stripe */}
       <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-5 py-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
@@ -275,7 +275,7 @@ export default function FeaturesPage() {
   );
 
   const renderAssistantSandbox = () => (
-    <div ref={assistantRef} className="w-full h-full flex flex-col rounded-2xl overflow-hidden border border-slate-200 dark:border-violet-500/20 bg-slate-100/60 dark:bg-[#0f0618] shadow-xl shadow-slate-200/50 dark:shadow-violet-900/20">
+    <div ref={assistantRef} className="w-full h-full flex flex-col rounded-2xl overflow-hidden border border-slate-200 dark:border-violet-500/30 bg-slate-100/60 dark:bg-[#1e293b] shadow-xl shadow-slate-200/50 dark:shadow-violet-900/20">
       {/* Header */}
       <div className="bg-gradient-to-r from-violet-600 to-purple-600 px-5 py-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
@@ -310,7 +310,7 @@ export default function FeaturesPage() {
   );
 
   const renderKanbanSandbox = () => (
-    <div ref={kanbanRef} className="w-full h-full flex flex-col rounded-2xl overflow-hidden border border-slate-200 dark:border-indigo-500/20 bg-slate-100/60 dark:bg-[#080f1a] shadow-xl shadow-slate-200/50 dark:shadow-indigo-900/20">
+    <div ref={kanbanRef} className="w-full h-full flex flex-col rounded-2xl overflow-hidden border border-slate-200 dark:border-indigo-500/30 bg-slate-100/60 dark:bg-[#1e293b] shadow-xl shadow-slate-200/50 dark:shadow-indigo-900/20">
       <div className="bg-gradient-to-r from-indigo-600 to-blue-600 px-5 py-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Wrench className="w-4 h-4 text-white" />
@@ -348,7 +348,7 @@ export default function FeaturesPage() {
   );
 
   const renderAmenitiesSandbox = () => (
-    <div ref={amenitiesRef} className="w-full h-full flex flex-col rounded-2xl overflow-hidden border border-slate-200 dark:border-indigo-500/20 bg-slate-100/60 dark:bg-[#080f1a] shadow-xl shadow-slate-200/50 dark:shadow-indigo-900/20">
+    <div ref={amenitiesRef} className="w-full h-full flex flex-col rounded-2xl overflow-hidden border border-slate-200 dark:border-indigo-500/30 bg-slate-100/60 dark:bg-[#1e293b] shadow-xl shadow-slate-200/50 dark:shadow-indigo-900/20">
       <div className="bg-gradient-to-r from-indigo-600 to-blue-600 px-5 py-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Calendar className="w-4 h-4 text-white" />
@@ -379,7 +379,7 @@ export default function FeaturesPage() {
   );
 
   const renderRbacSandbox = () => (
-    <div ref={rbacRef} className="w-full h-full flex flex-col rounded-2xl overflow-hidden border border-slate-200 dark:border-violet-500/20 bg-slate-100/60 dark:bg-[#10071f] shadow-xl shadow-slate-200/50 dark:shadow-violet-900/20">
+    <div ref={rbacRef} className="w-full h-full flex flex-col rounded-2xl overflow-hidden border border-slate-200 dark:border-violet-500/30 bg-slate-100/60 dark:bg-[#1e293b] shadow-xl shadow-slate-200/50 dark:shadow-violet-900/20">
       <div className="bg-gradient-to-r from-violet-600 to-purple-700 px-5 py-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Shield className="w-4 h-4 text-white" />
@@ -449,7 +449,7 @@ export default function FeaturesPage() {
   );
 
   const renderViolationsSandbox = () => (
-    <div className="w-full h-full flex flex-col rounded-2xl overflow-hidden border border-slate-200 dark:border-indigo-500/20 bg-slate-100/60 dark:bg-[#0a081a] shadow-xl shadow-slate-200/50 dark:shadow-indigo-900/20">
+    <div className="w-full h-full flex flex-col rounded-2xl overflow-hidden border border-slate-200 dark:border-indigo-500/30 bg-slate-100/60 dark:bg-[#1e293b] shadow-xl shadow-slate-200/50 dark:shadow-indigo-900/20">
       <div className="bg-gradient-to-r from-indigo-600 to-violet-600 px-5 py-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Bell className="w-4 h-4 text-white" />
@@ -472,7 +472,7 @@ export default function FeaturesPage() {
   );
 
   const renderOtpGateSandbox = () => (
-    <div className="w-full h-full flex flex-col rounded-2xl overflow-hidden border border-slate-200 dark:border-blue-500/20 bg-slate-100/60 dark:bg-[#060b18] shadow-xl shadow-slate-200/50 dark:shadow-blue-900/20">
+    <div className="w-full h-full flex flex-col rounded-2xl overflow-hidden border border-slate-200 dark:border-blue-500/30 bg-slate-100/60 dark:bg-[#1e293b] shadow-xl shadow-slate-200/50 dark:shadow-blue-900/20">
       <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-5 py-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Lock className="w-4 h-4 text-white" />
@@ -503,7 +503,7 @@ export default function FeaturesPage() {
   );
 
   const renderVotingSandbox = () => (
-    <div className="w-full h-full flex flex-col rounded-2xl overflow-hidden border border-slate-200 dark:border-indigo-500/20 bg-slate-100/60 dark:bg-[#07091a] shadow-xl shadow-slate-200/50 dark:shadow-indigo-900/20">
+    <div className="w-full h-full flex flex-col rounded-2xl overflow-hidden border border-slate-200 dark:border-indigo-500/30 bg-slate-100/60 dark:bg-[#1e293b] shadow-xl shadow-slate-200/50 dark:shadow-indigo-900/20">
       <div className="bg-gradient-to-r from-indigo-600 to-violet-600 px-5 py-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Sliders className="w-4 h-4 text-white" />
@@ -540,7 +540,7 @@ export default function FeaturesPage() {
   );
 
   const renderAnnouncementsSandbox = () => (
-    <div className="w-full h-full flex flex-col rounded-2xl overflow-hidden border border-slate-200 dark:border-violet-500/20 bg-slate-100/60 dark:bg-[#0e0618] shadow-xl shadow-slate-200/50 dark:shadow-violet-900/20">
+    <div className="w-full h-full flex flex-col rounded-2xl overflow-hidden border border-slate-200 dark:border-violet-500/30 bg-slate-100/60 dark:bg-[#1e293b] shadow-xl shadow-slate-200/50 dark:shadow-violet-900/20">
       <div className="bg-gradient-to-r from-violet-600 to-purple-650 px-5 py-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Send className="w-4 h-4 text-white" />
@@ -567,7 +567,7 @@ export default function FeaturesPage() {
   );
 
   const renderAuditLogsSandbox = () => (
-    <div className="w-full h-full flex flex-col rounded-2xl overflow-hidden border border-slate-200 dark:border-blue-500/20 bg-slate-100/60 dark:bg-[#060b18] shadow-xl shadow-slate-200/50 dark:shadow-blue-900/20">
+    <div className="w-full h-full flex flex-col rounded-2xl overflow-hidden border border-slate-200 dark:border-blue-500/30 bg-slate-100/60 dark:bg-[#1e293b] shadow-xl shadow-slate-200/50 dark:shadow-blue-900/20">
       <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-5 py-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Activity className="w-4 h-4 text-white" />
@@ -594,7 +594,7 @@ export default function FeaturesPage() {
   );
 
   const renderRosterSandbox = () => (
-    <div className="w-full h-full flex flex-col rounded-2xl overflow-hidden border border-slate-200 dark:border-violet-500/20 bg-slate-100/60 dark:bg-[#0a071a] shadow-xl shadow-slate-200/50 dark:shadow-violet-900/20">
+    <div className="w-full h-full flex flex-col rounded-2xl overflow-hidden border border-slate-200 dark:border-violet-500/30 bg-slate-100/60 dark:bg-[#1e293b] shadow-xl shadow-slate-200/50 dark:shadow-violet-900/20">
       <div className="bg-gradient-to-r from-violet-600 to-indigo-700 px-5 py-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Users className="w-4 h-4 text-white" />
@@ -641,7 +641,7 @@ export default function FeaturesPage() {
   ];
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-[#0a0614] transition-colors duration-250 font-sans text-slate-900 dark:text-slate-100">
+    <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-[#0f172a] transition-colors duration-250 font-sans text-slate-900 dark:text-slate-100">
       <Navbar />
 
       <div className="flex-1 overflow-x-hidden">
@@ -701,7 +701,7 @@ export default function FeaturesPage() {
         ) : (
           <>
             {/* ─── HERO HEADER ─── */}
-            <header className="relative w-full overflow-hidden bg-slate-50 dark:bg-slate-950 border-b border-slate-200 dark:border-white/[0.06]" style={{ minHeight: '480px' }}>
+            <header className="relative w-full overflow-hidden bg-slate-50 dark:bg-[#0f172a] border-b border-slate-200 dark:border-slate-800" style={{ minHeight: '480px' }}>
               {/* Background image */}
               <img
                 src={featuresHero}
@@ -709,8 +709,8 @@ export default function FeaturesPage() {
                 className="absolute inset-0 w-full h-full object-cover object-center opacity-15 dark:opacity-20 blur-[5px] select-none pointer-events-none"
               />
               {/* Gradient overlays */}
-              <div className="absolute inset-0 bg-gradient-to-r from-slate-50/90 via-violet-50/30 to-slate-50/90 dark:from-slate-950/95 dark:via-violet-950/60 dark:to-slate-950/90" />
-              <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-slate-50 dark:to-slate-950/80" />
+              <div className="absolute inset-0 bg-gradient-to-r from-slate-50/90 via-violet-50/30 to-slate-50/90 dark:from-[#0f172a]/95 dark:via-violet-950/60 dark:to-[#0f172a]/90" />
+              <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-slate-50 dark:to-[#0f172a]/80" />
               {/* Ambient glow orbs */}
               <div className="absolute top-1/2 left-1/4 w-72 h-72 bg-violet-600/10 dark:bg-violet-600/20 rounded-full blur-[100px] pointer-events-none" />
               <div className="absolute bottom-0 right-1/4 w-64 h-64 bg-indigo-500/10 dark:bg-indigo-500/15 rounded-full blur-[100px] pointer-events-none" />

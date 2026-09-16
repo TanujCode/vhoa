@@ -146,7 +146,7 @@ def create(
         if client:
             send_violation_email(
                 to_email       = client.email_id,
-                resident_name  = f"{client.first_name} {client.last_name}",
+                resident_name  = client.full_name or "Resident",
                 violation_type = violation.violation_type.name if violation.violation_type else "Violation",
                 amount         = violation.amount,
                 due_date       = str(violation.violation_due_date),
@@ -380,11 +380,7 @@ def get_documents(
 def _to_out(v) -> ViolationOut:
     client_name = None
     if v.client:
-        parts = [v.client.first_name]
-        if v.client.middle_name:
-            parts.append(v.client.middle_name)
-        parts.append(v.client.last_name)
-        client_name = " ".join(parts)
+        client_name = v.client.full_name or None
 
     return ViolationOut(
         violation_id          = v.violation_id,

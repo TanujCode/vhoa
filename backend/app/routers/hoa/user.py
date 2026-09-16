@@ -53,27 +53,33 @@ Only the fields you send will be updated — the rest will remain unchanged.
     - last_name
     - mobile_number
     """
-    # Mobile duplicate check — koi aur same number use kar raha ho
     if body.mobile_number:
-        existing = db.query(User).filter(
-            User.mobile_number == body.mobile_number,
-            User.user_id != current_user.user_id   # apna hi number ignore karo
-        ).first()
-        if existing:
-            raise HTTPException(
-                status_code=400,
-                detail="This mobile number is already registered to someone else."
-            )
+        from app.utils.encryption import safe_decrypt_field
+        for u in db.query(User.user_id, User.mobile_number).filter(User.mobile_number.isnot(None)).all():
+            if u[0] != current_user.user_id and safe_decrypt_field(u[1]) == body.mobile_number.strip():
+                raise HTTPException(
+                    status_code=400,
+                    detail="This mobile number is already registered to someone else."
+                )
 
-    
+    from app.utils.encryption import encrypt_field
+    raw_first = None
+    raw_middle = None
+    raw_last = None
+    raw_mobile = None
+
     if "first_name" in body.model_fields_set:
-        current_user.first_name = body.first_name
+        raw_first = body.first_name
+        current_user.first_name = encrypt_field(body.first_name)
     if "middle_name" in body.model_fields_set:
-        current_user.middle_name = body.middle_name
+        raw_middle = body.middle_name
+        current_user.middle_name = encrypt_field(body.middle_name) if body.middle_name else None
     if "last_name" in body.model_fields_set:
-        current_user.last_name = body.last_name
+        raw_last = body.last_name
+        current_user.last_name = encrypt_field(body.last_name)
     if "mobile_number" in body.model_fields_set:
-        current_user.mobile_number = body.mobile_number
+        raw_mobile = body.mobile_number
+        current_user.mobile_number = encrypt_field(body.mobile_number.strip()) if body.mobile_number else None
     if "time_zone" in body.model_fields_set:
         current_user.time_zone = body.time_zone
     if "unit_no_2" in body.model_fields_set:
@@ -105,10 +111,10 @@ Only the fields you send will be updated — the rest will remain unchanged.
     sync_profile_update(
         db=db,
         email_id=current_user.email_id,
-        first_name=current_user.first_name,
-        middle_name=current_user.middle_name,
-        last_name=current_user.last_name,
-        mobile_number=current_user.mobile_number,
+        first_name=raw_first,
+        middle_name=raw_middle,
+        last_name=raw_last,
+        mobile_number=raw_mobile,
         time_zone=current_user.time_zone
     )
 
@@ -261,32 +267,33 @@ def _to_out(user: User, db: Session | None = None, community_id: int | None = No
         from app.models.hoa.user import UserCommunity
         assoc_ids = [r.community_id for r in db.query(UserCommunity).filter(UserCommunity.user_id == user.user_id).all()]
 
+    from app.utils.encryption import safe_decrypt_field
     return UserOut(
         user_id              = user.user_id,
         user_code            = user.user_code,
-        first_name           = user.first_name,
-        middle_name          = user.middle_name,
-        last_name            = user.last_name,
-        full_name            = full_name,
+        first_name           = safe_decrypt_field(user.first_name) or "",
+        middle_name          = safe_decrypt_field(user.middle_name),
+        last_name            = safe_decrypt_field(user.last_name) or "",
+        full_name            = user.full_name,
         email_id             = user.email_id,
-        mobile_number        = user.mobile_number,
+        mobile_number        = safe_decrypt_field(user.mobile_number),
         mobile_is_verified   = user.mobile_is_verified,
         email_id_is_verified = user.email_id_is_verified,
-        is_client            = user.is_client,
+        is_client            = False,
         active_status        = user.active_status,
         account_status       = user.account_status or "PENDING_VERIFICATION",
         time_zone            = user.time_zone or "America/New_York",
         role_id              = role_id,
         role_name            = role_name,
-        user_profile_url     = user.user_profile_url,
+        user_profile_url     = safe_decrypt_field(user.user_profile_url),
         created_date         = user.created_date,
         last_login           = user.last_login,
         community_id         = getattr(user, 'community_id', None),
         community_name       = None,
         unit_no              = unit_no,
         unit_no_2            = unit_no_2,
-        id_proof_url         = id_proof,
-        address_proof_url    = address_proof,
+        id_proof_url         = safe_decrypt_field(id_proof),
+        address_proof_url    = safe_decrypt_field(address_proof),
         associated_community_ids = assoc_ids,
     )
 
@@ -457,7 +464,7 @@ def invite_member(
         from app.services.hoa.email_service import send_association_email
         send_association_email(
             to_email=existing_user.email_id,
-            full_name=f"{existing_user.first_name} {existing_user.last_name}".strip(),
+            full_name=existing_user.full_name,
             community_name=community_name,
             role_name=body.role_name
         )
@@ -494,17 +501,17 @@ def invite_member(
     u_code = generate_user_code(db, body.first_name, body.last_name, body.community_id)
 
     # 4. Create the new user
+    from app.utils.encryption import encrypt_field
     new_user = User(
-        first_name=body.first_name.strip(),
-        last_name=body.last_name.strip(),
+        first_name=encrypt_field(body.first_name.strip()),
+        last_name=encrypt_field(body.last_name.strip()),
         user_code=u_code,
         email_id=body.email_id.lower().strip(),
-        mobile_number=body.mobile_number.strip() if body.mobile_number else None,
+        mobile_number=encrypt_field(body.mobile_number.strip()) if body.mobile_number else None,
         unit_no=body.unit_no.strip() if body.unit_no else None,
         password=hashed_pass,
         role_id=role.role_id,
         community_id=body.community_id,
-        is_client=True,
         active_status=True,
         account_status="ACTIVE",
         email_id_is_verified=True,
@@ -533,7 +540,7 @@ def invite_member(
     from app.services.hoa.email_service import send_invite_email
     send_invite_email(
         to_email=new_user.email_id,
-        full_name=f"{new_user.first_name} {new_user.last_name}".strip(),
+        full_name=new_user.full_name,
         temp_password=random_pass,
         community_name=community_name,
         role_name=body.role_name
@@ -934,10 +941,11 @@ def admin_update_user(
     # 3. Apply updates
     comm_context_id = current_user.community_id or target_user.community_id
 
+    from app.utils.encryption import encrypt_field
     if body.first_name is not None:
-        target_user.first_name = body.first_name.strip()
+        target_user.first_name = encrypt_field(body.first_name.strip())
     if body.last_name is not None:
-        target_user.last_name = body.last_name.strip()
+        target_user.last_name = encrypt_field(body.last_name.strip())
         
     if body.email_id is not None:
         new_email = body.email_id.lower().strip()
@@ -950,12 +958,7 @@ def admin_update_user(
             
     if body.mobile_number is not None:
         new_mobile = body.mobile_number.strip() if body.mobile_number else None
-        if new_mobile != target_user.mobile_number:
-            if new_mobile:
-                existing = db.query(User).filter(User.mobile_number == new_mobile).first()
-                if existing:
-                    raise HTTPException(status_code=400, detail="This mobile number is already registered.")
-            target_user.mobile_number = new_mobile
+        target_user.mobile_number = encrypt_field(new_mobile) if new_mobile else None
 
     if body.unit_no is not None:
         unit_no_val = body.unit_no.strip() if body.unit_no else None

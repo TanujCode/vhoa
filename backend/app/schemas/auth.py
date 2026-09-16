@@ -41,6 +41,8 @@ class RegisterRequest(BaseModel):
             raise ValueError("The password must contain an uppercase letter.")
         if not re.search(r"\d", v):
             raise ValueError("The password must contain a number.")
+        if not re.search(r"[!@#$%^&*()_+\-=\[\]{};':\"\\|,.<>\/?`~]", v):
+            raise ValueError("The password must contain at least one special character (!@#$%^&* etc.).")
         return v
 
     @field_validator("role")
@@ -86,7 +88,7 @@ class UserOut(BaseModel):
     mobile_number:        str | None
     mobile_is_verified:   bool
     email_id_is_verified: bool
-    is_client:            bool
+    is_client:            bool = False
     active_status:        bool
     account_status:       str        # ACTIVE | INACTIVE | PENDING_VERIFICATION | LOCKED
     time_zone:            str
@@ -176,6 +178,8 @@ class PasswordResetRequest(BaseModel):
             raise ValueError("The password must contain an uppercase letter.")
         if not re.search(r"\d", v):
             raise ValueError("The password must contain a number.")
+        if not re.search(r"[!@#$%^&*()_+\-=\[\]{};':\"\\|,.<>\/?`~]", v):
+            raise ValueError("The password must contain at least one special character (!@#$%^&* etc.).")
         return v
 
 

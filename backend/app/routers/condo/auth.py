@@ -69,15 +69,16 @@ def condo_user_to_out(user: CondoUser, db: Session) -> CondoUserOut:
         if comm:
             community_name = comm.name
 
+    from app.utils.encryption import safe_decrypt_field
     return CondoUserOut(
         user_id              = user.user_id,
         user_code            = user.user_code,
-        first_name           = user.first_name,
-        middle_name          = user.middle_name,
-        last_name            = user.last_name,
+        first_name           = safe_decrypt_field(user.first_name) or "",
+        middle_name          = safe_decrypt_field(user.middle_name),
+        last_name            = safe_decrypt_field(user.last_name) or "",
         full_name            = user.full_name,
         email_id             = user.email_id,
-        mobile_number        = user.mobile_number,
+        mobile_number        = safe_decrypt_field(user.mobile_number),
         mobile_is_verified   = user.mobile_is_verified,
         email_id_is_verified = user.email_id_is_verified,
         active_status        = user.active_status,
@@ -85,14 +86,14 @@ def condo_user_to_out(user: CondoUser, db: Session) -> CondoUserOut:
         time_zone            = user.time_zone,
         role_id              = user.role_id,
         role_name            = role_name,
-        user_profile_url     = user.user_profile_url,
+        user_profile_url     = safe_decrypt_field(user.user_profile_url),
         created_date         = user.created_date,
         last_login           = user.last_login,
         community_id         = user.community_id,
         unit_no              = user.unit_no,
         unit_no_2            = getattr(user, 'unit_no_2', None),
-        id_proof_url         = id_proof,
-        address_proof_url    = address_proof,
+        id_proof_url         = safe_decrypt_field(id_proof),
+        address_proof_url    = safe_decrypt_field(address_proof),
         community_name       = community_name,
         associated_community_ids = [user.community_id] if user.community_id else []
     )

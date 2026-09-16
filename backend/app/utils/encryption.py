@@ -158,3 +158,45 @@ def safe_decrypt_float(value: Optional[str], fallback: float = 0.0) -> float:
             return float(value)
         except Exception:
             return fallback
+
+
+def is_encrypted(value: Optional[str]) -> bool:
+    """Check if a string value is already encrypted with AES-256-GCM."""
+    if not value or not isinstance(value, str):
+        return False
+    try:
+        raw = base64.b64decode(value.encode("ascii"), validate=True)
+        if len(raw) < 28:  # 12 nonce + 16 tag minimum
+            return False
+        decrypt_field(value)
+        return True
+    except Exception:
+        return False
+
+
+def decrypt_text_tokens(text: Optional[str]) -> Optional[str]:
+    """
+    Scans a text string for base64 encrypted tokens (like in audit logs or descriptions)
+    and replaces them with decrypted text.
+    """
+    if not text or not isinstance(text, str):
+        return text
+    
+    import re
+    
+    def replace_token(match):
+        token = match.group(0)
+        try:
+            raw = base64.b64decode(token.encode("ascii"), validate=True)
+            if len(raw) >= 28:
+                dec = decrypt_field(token)
+                if dec is not None:
+                    return dec
+        except Exception:
+            pass
+        return token
+
+    pattern = r'[A-Za-z0-9+/]{20,}={0,2}'
+    return re.sub(pattern, replace_token, text)
+
+

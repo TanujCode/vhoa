@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, Numeric, ForeignKey
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, Numeric, ForeignKey, Text
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from app.database import Base
@@ -17,19 +17,19 @@ class Contract(Base):
     # Contract Status: DRAFT | ACTIVE | ONBOARDED
     status = Column(String(20), default="ACTIVE")
 
-    # Client Info (Section 3 in requirements)
-    client_first_name = Column(String(100), nullable=True)
-    client_middle_name = Column(String(100), nullable=True)
-    client_last_name = Column(String(100), nullable=True)
-    client_address = Column(String(255), nullable=True)
+    # Client Info (Encrypted AES-256-GCM)
+    client_first_name = Column(Text, nullable=True)
+    client_middle_name = Column(Text, nullable=True)
+    client_last_name = Column(Text, nullable=True)
+    client_address = Column(Text, nullable=True)
     client_city = Column(String(100), nullable=True)
     client_zip_code = Column(String(20), nullable=True)
     client_country = Column(String(100), nullable=True)
-    client_phone_number = Column(String(20), nullable=True)
-    client_email_address = Column(String(255), nullable=True)
-    business_name = Column(String(255), nullable=True)
-    business_address = Column(String(255), nullable=True)
-    business_phone_number = Column(String(20), nullable=True)
+    client_phone_number = Column(Text, nullable=True)
+    client_email_address = Column(Text, nullable=True)
+    business_name = Column(Text, nullable=True)
+    business_address = Column(Text, nullable=True)
+    business_phone_number = Column(Text, nullable=True)
     client_preferred_communication_channel = Column(String(50), nullable=True)
 
     # Plan / Subscription Parameters (Section 4 in requirements)
@@ -39,8 +39,8 @@ class Contract(Base):
     size_of_the_community = Column(Integer, nullable=True)
     renewal_cycle = Column(String(50), nullable=True)  # "monthly" | "Annual"
 
-    # Simulated Payment / Onboarding Details
-    payment_method_details = Column(String(255), nullable=True)
+    # Simulated Payment / Onboarding Details (Encrypted AES-256-GCM)
+    payment_method_details = Column(Text, nullable=True)
     onboarded_community_id = Column(Integer, ForeignKey("communities.community_id"), nullable=True)
     onboarded_user_id = Column(Integer, ForeignKey("users.user_id"), nullable=True)
 

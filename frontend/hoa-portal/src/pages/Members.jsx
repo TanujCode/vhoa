@@ -4,6 +4,7 @@ import API, { getBaseUrl } from '../services/api';
 import { checkEmail } from '../utils/emailValidation';
 import { validateName, validateUnitNo, onlyLettersKeyPress } from '../utils/fieldValidators';
 import { formatUsPhone, formatPhoneAsYouType } from '../utils/phoneFormatter';
+import PhoneInputWithCountry from '../components/common/PhoneInputWithCountry';
 
 const getPhoneValidationRule = (code) => {
   switch (code) {
@@ -157,7 +158,7 @@ const Members = ({ community, user }) => {
         first_name: inviteForm.firstName.trim(),
         last_name: inviteForm.lastName.trim(),
         email_id: inviteForm.email.trim(),
-        mobile_number: invitePhoneOnly ? `+1${invitePhoneOnly.replace(/\D/g, '')}` : null,
+        mobile_number: invitePhoneOnly ? `${invitePhoneCountryCode}${invitePhoneOnly.replace(/\D/g, '')}` : null,
         unit_no: inviteForm.unit.trim() || null,
         role_name: mappedRole,
         community_id: community.community_id
@@ -385,7 +386,7 @@ const Members = ({ community, user }) => {
         first_name: editForm.firstName.trim(),
         last_name: editForm.lastName.trim(),
         email_id: editForm.email.trim(),
-        mobile_number: editPhoneOnly ? `+1${editPhoneOnly.replace(/\D/g, '')}` : null,
+        mobile_number: editPhoneOnly ? `${editPhoneCountryCode}${editPhoneOnly.replace(/\D/g, '')}` : null,
         unit_no: editForm.unit.trim() || null,
         role_name: mappedRole
       });
@@ -700,16 +701,13 @@ const Members = ({ community, user }) => {
 
               <div>
                 <label className="block text-xs text-slate-500 dark:text-gray-400 mb-1">Mobile Number (Optional)</label>
-                <input
-                  type="text"
+                <PhoneInputWithCountry
                   value={invitePhoneOnly}
-                  maxLength={14}
-                  placeholder="(123) 456-7890"
-                  onChange={e => {
-                    const formatted = formatPhoneAsYouType(e.target.value);
-                    setInvitePhoneOnly(formatted);
-                  }}
-                  className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl p-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-blue-500 placeholder-slate-400 dark:placeholder-gray-500"
+                  countryCode={invitePhoneCountryCode}
+                  onCountryChange={(code) => setInvitePhoneCountryCode(code)}
+                  onChange={(e, formatted) => setInvitePhoneOnly(formatted)}
+                  size="sm"
+                  placeholder="(555) 000-0000"
                 />
               </div>
 
@@ -852,16 +850,13 @@ const Members = ({ community, user }) => {
 
               <div>
                 <label className="block text-xs text-slate-500 dark:text-gray-400 mb-1">Mobile Number (Optional)</label>
-                <input
-                  type="text"
+                <PhoneInputWithCountry
                   value={editPhoneOnly}
-                  maxLength={14}
-                  placeholder="(123) 456-7890"
-                  onChange={e => {
-                    const formatted = formatPhoneAsYouType(e.target.value);
-                    setEditPhoneOnly(formatted);
-                  }}
-                  className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-xl p-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-blue-500 placeholder-slate-400 dark:placeholder-gray-500"
+                  countryCode={editPhoneCountryCode}
+                  onCountryChange={(code) => setEditPhoneCountryCode(code)}
+                  onChange={(e, formatted) => setEditPhoneOnly(formatted)}
+                  size="sm"
+                  placeholder="(555) 000-0000"
                 />
               </div>
 

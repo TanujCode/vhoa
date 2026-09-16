@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import API, { getBaseUrl } from '../services/api';
 import { formatUsPhone, formatPhoneAsYouType } from '../utils/phoneFormatter';
+import PhoneInputWithCountry from '../components/common/PhoneInputWithCountry';
 
 const getPhoneValidationRule = (code) => {
   switch (code) {
@@ -239,7 +240,7 @@ const Profile = ({ user, setUser, viewRole }) => {
 
       const payload = {
         ...form,
-        mobile_number: phoneNumberOnly ? `+1${phoneNumberOnly.replace(/\D/g, '')}` : '',
+        mobile_number: phoneNumberOnly ? `${phoneCountryCode}${phoneNumberOnly.replace(/\D/g, '')}` : '',
         unit_no_2: finalUnits.join(', ')
       };
       const res = await API.put(isCondo ? '/condo/auth/profile' : '/user/profile', payload);
@@ -461,6 +462,26 @@ const Profile = ({ user, setUser, viewRole }) => {
 
   // ── Password Reset ────────────────────────
   const handlePasswordReset = async () => {
+    if (!pwdForm.otp_code) {
+      showMsg('error', 'Please enter the OTP sent to your email!');
+      return;
+    }
+    if (pwdForm.new_password.length < 8) {
+      showMsg('error', 'Password must be at least 8 characters long!');
+      return;
+    }
+    if (!/[A-Z]/.test(pwdForm.new_password)) {
+      showMsg('error', 'Password must contain at least one uppercase letter!');
+      return;
+    }
+    if (!/\d/.test(pwdForm.new_password)) {
+      showMsg('error', 'Password must contain at least one number!');
+      return;
+    }
+    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?`~]/.test(pwdForm.new_password)) {
+      showMsg('error', 'Password must contain at least one special character (!@#$%^&* etc.)!');
+      return;
+    }
     if (pwdForm.new_password !== pwdForm.confirm) {
       showMsg('error', 'Passwords do not match!');
       return;
@@ -708,17 +729,13 @@ const Profile = ({ user, setUser, viewRole }) => {
 
               <div>
                 <label className="text-xs text-slate-500 dark:text-gray-400 mb-1.5 block">Mobile Number</label>
-                <input
-                  type="text"
+                <PhoneInputWithCountry
                   value={phoneNumberOnly}
-                  maxLength={14}
-                  onChange={e => {
-                    const formatted = formatPhoneAsYouType(e.target.value);
-                    setPhoneNumberOnly(formatted);
-                  }}
+                  countryCode={phoneCountryCode}
+                  onCountryChange={(code) => setPhoneCountryCode(code)}
+                  onChange={(e, formatted) => setPhoneNumberOnly(formatted)}
                   disabled={!isEditing}
-                  placeholder={isEditing ? "(123) 456-7890" : "Not set"}
-                  className={`w-full border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500 transition-colors ${!isEditing ? 'bg-slate-100/50 dark:bg-white/5 cursor-not-allowed text-slate-500 dark:text-gray-400' : 'bg-slate-50 dark:bg-[#1E3248] text-slate-900 dark:text-white'}`}
+                  placeholder={isEditing ? "(555) 000-0000" : "Not set"}
                 />
               </div>
 
@@ -1014,7 +1031,7 @@ const Profile = ({ user, setUser, viewRole }) => {
                   <div>
                     <label className="text-xs text-slate-500 dark:text-gray-400 mb-1.5 block">New Password</label>
                     <div className="relative">
-                      <input type={showPwd ? 'text' : 'password'} placeholder="Min 8 chars, 1 uppercase, 1 number" value={pwdForm.new_password} onChange={e => setPwdForm({...pwdForm, new_password: e.target.value})} className="w-full bg-slate-50 dark:bg-[#1E3248] border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 pr-10 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-600 focus:outline-none focus:border-blue-500" />
+                      <input type={showPwd ? 'text' : 'password'} placeholder="Min 8 chars, 1 uppercase, 1 number, 1 special char" value={pwdForm.new_password} onChange={e => setPwdForm({...pwdForm, new_password: e.target.value})} className="w-full bg-slate-50 dark:bg-[#1E3248] border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 pr-10 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-600 focus:outline-none focus:border-blue-500" />
                       <button type="button" onClick={() => setShowPwd(!showPwd)} className="absolute right-3 top-3.5 text-slate-400 dark:text-gray-400">
                         {showPwd ? <EyeOff size={16} /> : <Eye size={16} />}
                       </button>

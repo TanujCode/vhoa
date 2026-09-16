@@ -120,6 +120,10 @@ const CondoForgotPassword = () => {
       showMsg('error', "The password must contain a number.");
       return;
     }
+    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?`~]/.test(newPassword)) {
+      showMsg('error', "The password must contain at least one special character (!@#$%^&* etc.).");
+      return;
+    }
     if (newPassword !== confirmPassword) {
       showMsg('error', "Passwords do not match!");
       return;

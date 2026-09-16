@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import API, { getBaseUrl } from '../../services/api';
 import ConfirmModal from '../../components/ConfirmModal';
+import PhoneInputWithCountry from '../../components/common/PhoneInputWithCountry';
 
 export default function CondoPropertyManagerDashboard({ user, setActivePage }) {
   const [requests, setRequests] = useState([]);
@@ -27,6 +28,7 @@ export default function CondoPropertyManagerDashboard({ user, setActivePage }) {
   const [inviteFirst, setInviteFirst] = useState('');
   const [inviteLast, setInviteLast] = useState('');
   const [inviteEmail, setInviteEmail] = useState('');
+  const [invitePhoneCountryCode, setInvitePhoneCountryCode] = useState('+1');
   const [invitePhone, setInvitePhone] = useState('');
   const [inviteUnit, setInviteUnit] = useState('');
   const [inviting, setInviting] = useState(false);
@@ -192,7 +194,7 @@ export default function CondoPropertyManagerDashboard({ user, setActivePage }) {
         first_name: inviteFirst.trim(),
         last_name: inviteLast.trim(),
         email_id: inviteEmail.trim().toLowerCase(),
-        mobile_number: invitePhone.trim() || null,
+        mobile_number: invitePhone.trim() ? `${invitePhoneCountryCode}${invitePhone.replace(/\D/g, '')}` : null,
         unit_no: inviteUnit.trim() || null,
         community_id: commId
       });
@@ -201,6 +203,7 @@ export default function CondoPropertyManagerDashboard({ user, setActivePage }) {
       setInviteFirst('');
       setInviteLast('');
       setInviteEmail('');
+      setInvitePhoneCountryCode('+1');
       setInvitePhone('');
       setInviteUnit('');
       setShowInviteModal(false);
@@ -713,12 +716,12 @@ export default function CondoPropertyManagerDashboard({ user, setActivePage }) {
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-slate-500 dark:text-gray-400 mb-2 uppercase">Phone Number</label>
-                  <input
-                    type="text"
-                    placeholder="(123) 456-7890"
+                  <PhoneInputWithCountry
                     value={invitePhone}
-                    onChange={(e) => setInvitePhone(e.target.value)}
-                    className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                    countryCode={invitePhoneCountryCode}
+                    onCountryChange={(code) => setInvitePhoneCountryCode(code)}
+                    onChange={(e, formatted) => setInvitePhone(formatted)}
+                    placeholder="(555) 000-0000"
                   />
                 </div>
               </div>

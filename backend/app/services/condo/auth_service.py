@@ -32,8 +32,10 @@ def register_condo_user(data: CondoRegisterRequest, db: Session) -> CondoUser:
         raise ValueError("This email is already registered.")
 
     if data.mobile_number:
-        if db.query(CondoUser).filter(CondoUser.mobile_number == data.mobile_number).first():
-            raise ValueError("This mobile number is already registered.")
+        from app.utils.encryption import safe_decrypt_field
+        for u in db.query(CondoUser.mobile_number).filter(CondoUser.mobile_number.isnot(None)).all():
+            if safe_decrypt_field(u[0]) == data.mobile_number.strip():
+                raise ValueError("This mobile number is already registered.")
 
     role = db.query(Role).filter(Role.role_name == data.role).first()
     if not role:
@@ -42,16 +44,17 @@ def register_condo_user(data: CondoRegisterRequest, db: Session) -> CondoUser:
     # In Condo, user_code format: CON + name prefix + date + sequential seqNo
     # Let's generate a user code (reuses HOA code generator, no community_id yet)
     from app.utils.user_code import generate_user_code
+    from app.utils.encryption import encrypt_field
     first_name, middle_name, last_name = split_full_name(data.full_name)
     u_code = generate_user_code(db, first_name, last_name)
 
     new_user = CondoUser(
-        first_name=first_name,
-        middle_name=middle_name,
-        last_name=last_name,
+        first_name=encrypt_field(first_name),
+        middle_name=encrypt_field(middle_name) if middle_name else None,
+        last_name=encrypt_field(last_name),
         user_code=u_code,
         email_id=data.email_id.lower().strip(),
-        mobile_number=data.mobile_number,
+        mobile_number=encrypt_field(data.mobile_number.strip()) if data.mobile_number else None,
         password=hash_password(data.password),
         role_id=role.role_id,
         active_status=True,
@@ -99,7 +102,7 @@ def verify_condo_otp(email_id: str, otp_code: str, purpose: str, db: Session) ->
     ).first()
 
     if not otp_record:
-        raise ValueError("The OTP is incorrect or already used.")
+        raise ValueError("The OTP is incorrect.")
 
     # Timezone-aware comparison
     expires_at = otp_record.expired_date
@@ -200,7 +203,7 @@ def reset_condo_password(email_id: str, otp_code: str, new_password: str, db: Se
     ).first()
 
     if not otp_record:
-        raise ValueError("The OTP is incorrect or already used.")
+        raise ValueError("The OTP is incorrect.")
 
     expires_at = otp_record.expired_date
     if expires_at.tzinfo is None:

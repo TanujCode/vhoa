@@ -38,6 +38,8 @@ class CondoRegisterRequest(BaseModel):
             raise ValueError("The password must contain an uppercase letter.")
         if not re.search(r"\d", v):
             raise ValueError("The password must contain a number.")
+        if not re.search(r"[!@#$%^&*()_+\-=\[\]{};':\"\\|,.<>\/?`~]", v):
+            raise ValueError("The password must contain at least one special character (!@#$%^&* etc.).")
         return v
 
     @field_validator("role")
@@ -111,6 +113,19 @@ class CondoResetPasswordRequest(BaseModel):
     otp_code:         str
     new_password:     str
     confirm_password: str
+
+    @field_validator("new_password")
+    @classmethod
+    def password_strong(cls, v):
+        if len(v) < 8:
+            raise ValueError("The password must be at least 8 characters long.")
+        if not re.search(r"[A-Z]", v):
+            raise ValueError("The password must contain an uppercase letter.")
+        if not re.search(r"\d", v):
+            raise ValueError("The password must contain a number.")
+        if not re.search(r"[!@#$%^&*()_+\-=\[\]{};':\"\\|,.<>\/?`~]", v):
+            raise ValueError("The password must contain at least one special character (!@#$%^&* etc.).")
+        return v
 
     @model_validator(mode="after")
     def passwords_match(self):

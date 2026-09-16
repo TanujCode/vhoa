@@ -281,11 +281,13 @@ def pay(
 def _get_name(user) -> str | None:
     if not user:
         return None
-    parts = [user.first_name]
-    if user.middle_name:
-        parts.append(user.middle_name)
-    parts.append(user.last_name)
-    return " ".join(parts)
+    if hasattr(user, 'full_name') and user.full_name:
+        return user.full_name
+    from app.utils.encryption import safe_decrypt_field
+    fn = safe_decrypt_field(getattr(user, 'first_name', '')) or ''
+    ln = safe_decrypt_field(getattr(user, 'last_name', '')) or ''
+    res = f"{fn} {ln}".strip()
+    return res if res else None
 
 
 def _to_out(a) -> AmenityOut:

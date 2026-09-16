@@ -15,7 +15,7 @@ export default function PortalSelect() {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen lg:h-screen bg-slate-50 dark:bg-[#07060f] text-slate-800 dark:text-slate-100 flex flex-col justify-between relative overflow-y-auto lg:overflow-hidden font-sans noise transition-colors duration-300">
+    <div className="min-h-screen lg:h-screen bg-slate-50 dark:bg-[#0f172a] text-slate-800 dark:text-slate-100 flex flex-col justify-between relative overflow-y-auto lg:overflow-hidden font-sans noise transition-colors duration-300">
       
       {/* Dynamic Glowing Spotlights for high-fidelity SaaS look */}
       <div className="absolute inset-0 pointer-events-none z-0">
@@ -55,7 +55,7 @@ export default function PortalSelect() {
           {/* Card 1: HOA Community Portal */}
           <div 
             onClick={() => navigate('/login')}
-            className="rounded-2xl p-5 sm:p-5.5 flex flex-col justify-between relative overflow-hidden group cursor-pointer border border-slate-200/90 dark:border-white/10 bg-white dark:bg-[#111C2A] shadow-sm hover:shadow-xl hover:border-violet-500 hover:-translate-y-1 transition-all duration-300"
+            className="rounded-2xl p-5 sm:p-5.5 flex flex-col justify-between relative overflow-hidden group cursor-pointer border border-slate-200/90 dark:border-slate-700 bg-white dark:bg-[#1e293b] shadow-sm hover:shadow-xl hover:border-violet-500 hover:-translate-y-1 transition-all duration-300"
           >
             {/* Soft Hover Glow inside card */}
             <div className="absolute top-0 right-0 w-28 h-28 bg-violet-600/5 dark:bg-violet-500/10 rounded-full blur-2xl group-hover:scale-150 transition-all duration-500" />
@@ -102,7 +102,7 @@ export default function PortalSelect() {
           {/* Card 2: Rental Property Portal */}
           <div 
             onClick={() => navigate('/rental/login')}
-            className="rounded-2xl p-5 sm:p-5.5 flex flex-col justify-between relative overflow-hidden group cursor-pointer border border-slate-200/90 dark:border-white/10 bg-white dark:bg-[#111C2A] shadow-sm hover:shadow-xl hover:border-teal-500 hover:-translate-y-1 transition-all duration-300"
+            className="rounded-2xl p-5 sm:p-5.5 flex flex-col justify-between relative overflow-hidden group cursor-pointer border border-slate-200/90 dark:border-slate-700 bg-white dark:bg-[#1e293b] shadow-sm hover:shadow-xl hover:border-teal-500 hover:-translate-y-1 transition-all duration-300"
           >
             {/* Soft Hover Glow inside card */}
             <div className="absolute top-0 right-0 w-28 h-28 bg-teal-650/5 dark:bg-teal-500/10 rounded-full blur-2xl group-hover:scale-150 transition-all duration-500" />
@@ -149,7 +149,7 @@ export default function PortalSelect() {
           {/* Card 3: Condo Management Portal */}
           <div 
             onClick={() => navigate('/condo/login')}
-            className="rounded-2xl p-5 sm:p-5.5 flex flex-col justify-between relative overflow-hidden group cursor-pointer border border-slate-200/90 dark:border-white/10 bg-white dark:bg-[#111C2A] shadow-sm hover:shadow-xl hover:border-amber-500 hover:-translate-y-1 transition-all duration-300"
+            className="rounded-2xl p-5 sm:p-5.5 flex flex-col justify-between relative overflow-hidden group cursor-pointer border border-slate-200/90 dark:border-slate-700 bg-white dark:bg-[#1e293b] shadow-sm hover:shadow-xl hover:border-amber-500 hover:-translate-y-1 transition-all duration-300"
           >
             {/* Soft Hover Glow inside card */}
             <div className="absolute top-0 right-0 w-28 h-28 bg-amber-650/5 dark:bg-amber-500/10 rounded-full blur-2xl group-hover:scale-150 transition-all duration-500" />

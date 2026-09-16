@@ -34,13 +34,13 @@ class User(Base):
 
     community_id = Column(Integer, ForeignKey("communities.community_id"), nullable=True, default=None)
 
-    #Name
-    first_name           = Column(String(100), nullable=False)
-    middle_name          = Column(String(100), nullable=True)
-    last_name            = Column(String(100), nullable=False)
+    #Name (Encrypted AES-256-GCM)
+    first_name           = Column(Text, nullable=False)
+    middle_name          = Column(Text, nullable=True)
+    last_name            = Column(Text, nullable=False)
 
-    #Contact
-    mobile_number        = Column(String(20), unique=True, nullable=True)
+    #Contact (Encrypted AES-256-GCM)
+    mobile_number        = Column(Text, nullable=True)
     mobile_is_verified   = Column(Boolean, default=False)
     email_id             = Column(String(255), unique=True, nullable=False, index=True)
     email_id_is_verified = Column(Boolean, default=False)
@@ -70,7 +70,6 @@ class User(Base):
     #Role & Type (HOA)
     role_id              = Column(Integer, ForeignKey("roles.role_id"), nullable=False)
     role                 = relationship("Role", back_populates="users", foreign_keys=[role_id])
-    is_client            = Column(Boolean, default=False)
     unit_no              = Column(String(50), nullable=True)
     unit_no_2            = Column(String(50), nullable=True)
 
@@ -84,7 +83,11 @@ class User(Base):
 
     @property
     def full_name(self) -> str:
-        parts = [self.first_name, self.middle_name, self.last_name]
+        from app.utils.encryption import safe_decrypt_field
+        first = safe_decrypt_field(self.first_name) or ""
+        middle = safe_decrypt_field(self.middle_name) or ""
+        last = safe_decrypt_field(self.last_name) or ""
+        parts = [first, middle, last]
         return " ".join([p for p in parts if p]).strip()
 
     # ── Timestamps ───────────────────────────

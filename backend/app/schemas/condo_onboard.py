@@ -42,6 +42,8 @@ class CondoClientOnboardRequest(BaseModel):
             raise ValueError("The password must contain at least one uppercase letter.")
         if not re.search(r"\d", v):
             raise ValueError("The password must contain at least one number.")
+        if not re.search(r"[!@#$%^&*()_+\-=\[\]{};':\"\\|,.<>\/?`~]", v):
+            raise ValueError("The password must contain at least one special character (!@#$%^&* etc.).")
         return v
 
     @model_validator(mode="after")

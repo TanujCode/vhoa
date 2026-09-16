@@ -14,19 +14,19 @@ class CondoVendor(Base):
     vendor_id    = Column(Integer, primary_key=True, index=True)
     community_id = Column(Integer, ForeignKey("condo_communities.community_id"), nullable=False)
 
-    # ── Basic Info ────────────────────────────
-    company_name   = Column(String(255), nullable=False)
-    contact_person = Column(String(255), nullable=False)
-    email          = Column(String(255), nullable=False)
-    phone          = Column(String(20), nullable=False)
+    # ── Basic Info (Encrypted AES-256-GCM) ───
+    company_name   = Column(Text, nullable=False)
+    contact_person = Column(Text, nullable=False)
+    email          = Column(Text, nullable=False)
+    phone          = Column(Text, nullable=False)
     zip_code       = Column(String(20), nullable=True)
     category       = Column(String(100), nullable=False)
     # "PLUMBING" | "ELECTRICAL" | "LANDSCAPING" | "SECURITY" | "CLEANING" | "OTHER"
 
-    # ── License & Insurance ───────────────────
-    license_number      = Column(String(100), nullable=True)
+    # ── License & Insurance (Encrypted AES-256-GCM) ──
+    license_number      = Column(Text, nullable=True)
     license_expiry      = Column(Date, nullable=True)
-    insurance_number    = Column(String(100), nullable=True)
+    insurance_number    = Column(Text, nullable=True)
     insurance_expiry    = Column(Date, nullable=True)
     license_doc_url     = Column(Text, nullable=True)
     insurance_doc_url   = Column(Text, nullable=True)

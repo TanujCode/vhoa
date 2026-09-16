@@ -57,7 +57,7 @@ def get_community_meetings(community_id: int, user_id: int, db: Session) -> list
     for m in meetings:
         # Fetch created_by user full name
         creator = db.query(User).filter(User.user_id == m.created_by_id).first()
-        creator_name = f"{creator.first_name or ''} {creator.last_name or ''}".strip() if creator else "System"
+        creator_name = creator.full_name if creator else "System"
 
         # Calculate RSVPs counts
         rsvps = db.query(MeetingRSVP).filter(MeetingRSVP.meeting_id == m.meeting_id).all()
@@ -182,7 +182,7 @@ def get_community_surveys(community_id: int, user_id: int, db: Session) -> list[
     for s in surveys:
         # Fetch creator details
         creator = db.query(User).filter(User.user_id == s.created_by_id).first()
-        creator_name = f"{creator.first_name or ''} {creator.last_name or ''}".strip() if creator else "System"
+        creator_name = creator.full_name if creator else "System"
 
         # Fetch option vote details
         options = db.query(SurveyOption).filter(SurveyOption.survey_id == s.survey_id).all()

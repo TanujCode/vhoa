@@ -82,8 +82,9 @@ def get_communities(
     db: Session = Depends(get_db),
     current_user: CondoUser = Depends(get_current_condo_user)
 ):
+    from app.utils.decryption_helpers import decrypt_condo_community
     communities = db.query(CondoCommunity).filter(CondoCommunity.active_status == True).all()
-    return communities
+    return [decrypt_condo_community(c) for c in communities]
 
 
 @router.post("/join-request", status_code=201)
@@ -289,14 +290,15 @@ def invite_resident(
 
     # Generate user code
     from app.utils.user_code import generate_user_code
+    from app.utils.encryption import encrypt_field
     u_code = generate_user_code(db, body.first_name, body.last_name)
 
     new_user = CondoUser(
-        first_name=body.first_name.strip(),
-        last_name=body.last_name.strip(),
+        first_name=encrypt_field(body.first_name.strip()),
+        last_name=encrypt_field(body.last_name.strip()),
         user_code=u_code,
         email_id=body.email_id.lower().strip(),
-        mobile_number=body.mobile_number.strip() if body.mobile_number else None,
+        mobile_number=encrypt_field(body.mobile_number.strip()) if body.mobile_number else None,
         unit_no=body.unit_no.strip() if body.unit_no else None,
         password=hashed_pass,
         role_id=role.role_id,
@@ -518,14 +520,15 @@ def update_community_member(
     unit_no = body.get("unit_no")
     new_role_name = body.get("role_name")
 
+    from app.utils.encryption import encrypt_field
     if first_name is not None:
-        u.first_name = first_name
+        u.first_name = encrypt_field(first_name.strip())
     if last_name is not None:
-        u.last_name = last_name
+        u.last_name = encrypt_field(last_name.strip())
     if email_id is not None:
-        u.email_id = email_id
+        u.email_id = email_id.lower().strip()
     if mobile_number is not None:
-        u.mobile_number = mobile_number
+        u.mobile_number = encrypt_field(mobile_number.strip()) if mobile_number else None
     if unit_no is not None:
         u.unit_no = unit_no
 
@@ -602,18 +605,19 @@ def get_community_members(
             id_proof = req.id_proof_url
             address_proof = req.address_proof_url
 
+        from app.utils.encryption import safe_decrypt_field
         out.append({
             "user_id": u.user_id,
             "full_name": u.full_name,
             "email_id": u.email_id,
-            "mobile_number": u.mobile_number,
+            "mobile_number": safe_decrypt_field(u.mobile_number),
             "role_name": u.role.role_name if u.role else "N/A",
             "active_status": u.active_status,
             "account_status": u.account_status,
             "user_code": u.user_code,
             "unit_no": u.unit_no,
-            "id_proof_url": id_proof,
-            "address_proof_url": address_proof
+            "id_proof_url": safe_decrypt_field(id_proof),
+            "address_proof_url": safe_decrypt_field(address_proof)
         })
     return out
 

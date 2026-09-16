@@ -84,8 +84,16 @@ export default function CaptchaBox({
                 message: 'Numbers only'
               }
             })}
-            onKeyPress={(e) => {
-              if (!/[0-9]/.test(e.key)) {
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                return; // Allow form submit on Enter key
+              }
+              if (
+                !/[0-9]/.test(e.key) &&
+                !['Backspace', 'Tab', 'Delete', 'ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key) &&
+                !e.ctrlKey &&
+                !e.metaKey
+              ) {
                 e.preventDefault();
               }
             }}

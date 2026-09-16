@@ -2,10 +2,8 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { 
   Check, 
-  X, 
   ShieldCheck, 
   ArrowRight, 
-  HelpCircle, 
   Headset, 
   TrendingUp, 
   Lock, 
@@ -14,264 +12,95 @@ import {
   FolderLock, 
   Mail, 
   MessageSquare,
-  Building,
   Building2,
   KeyRound,
   Shield,
   Sparkles,
-  CheckCircle2
+  CheckCircle2,
+  Phone
 } from 'lucide-react';
 import Navbar from '../../components/marketing/Navbar';
 import Footer from '../../components/marketing/Footer';
+import FaqSection from '../../components/marketing/FaqSection';
 import { useTheme } from '../../context/ThemeContext';
 
 export default function PricingPage() {
-  const [activePortal, setActivePortal] = useState('hoa'); // 'hoa', 'rental', 'condo'
   const [billingCycle, setBillingCycle] = useState('annual'); // 'monthly' or 'annual'
-  const [calcTier, setCalcTier] = useState('premium'); // 'basic' or 'premium'
-  const [calcUnits, setCalcUnits] = useState(125);
   const { theme } = useTheme();
   const isDark = theme === 'dark';
 
-  // Portals configuration: HOA -> Rental -> Condo
-  const portals = [
-    {
-      id: 'hoa',
-      name: 'HOA Communities',
-      icon: Building,
-      badge: 'Homeowners Association',
-      unitLabel: 'Homes / Units',
-      minUnits: 10,
-      maxUnits: 1000,
-      defaultCalc: 125,
-      heroSubtitle: 'No hidden fees, no complicated contracts. Just the tools you need to run your HOA efficiently, priced for your size.'
+  // 2 Pure Rental Pricing Plans (Basic & Premium)
+  const plans = {
+    basic: {
+      name: "Basic",
+      desc: "Everything you need to automate tenant rent collection and lease tracking.",
+      monthlyPrice: 49,
+      annualPrice: 39,
+      limitText: "Up to 15 Properties • Billed annually",
+      ctaText: "Get Started",
+      ctaLink: "/portal-select",
+      features: [
+        "Automated online rent collection (ACH/Stripe)",
+        "Digital lease vault & document storage",
+        "Direct tenant-to-landlord communication",
+        "Income & expense cashflow tracking",
+        "Maintenance repair ticket submissions",
+        "Standard email & chat support"
+      ]
     },
-    {
-      id: 'rental',
-      name: 'Rental Properties',
-      icon: KeyRound,
-      badge: 'Landlords & Property Managers',
-      unitLabel: 'Properties',
-      minUnits: 1,
-      maxUnits: 150,
-      defaultCalc: 20,
-      heroSubtitle: 'Automated rent collection, tenant screening, lease agreements, and maintenance work orders for landlords.'
-    },
-    {
-      id: 'condo',
-      name: 'Condos & High-Rise',
-      icon: Building2,
-      badge: 'Condo & Strata Management',
-      unitLabel: 'Condo Units',
-      minUnits: 10,
-      maxUnits: 800,
-      defaultCalc: 100,
-      heroSubtitle: 'Elevators, parking stalls, amenities, and resident governance packed into one simple modern package.'
-    }
-  ];
-
-  // Pricing plans for each portal (2 plans: Basic & Premium)
-  const portalPlans = {
-    hoa: {
-      basic: {
-        name: "Basic",
-        desc: "Essential tools for small communities and self-managed associations.",
-        monthlyPrice: 59,
-        annualPrice: 49,
-        limitText: "Up to 100 units • Billed annually",
-        ctaText: "Get Started",
-        ctaLink: "/register",
-        features: [
-          "Resident & owner roster directory",
-          "Expense tracking & monthly statements",
-          "Online dues collection (ACH/Card)",
-          "1 Amenity booking scheduler",
-          "Email notifications & bulletins",
-          "Standard email support"
-        ]
-      },
-      premium: {
-        name: "Premium",
-        badge: "MOST POPULAR",
-        desc: "Advanced features and automation for growing HOAs and active boards.",
-        monthlyPrice: 159,
-        annualPrice: 129,
-        limitText: "Up to 350 units • Billed annually",
-        ctaText: "Start Free Trial",
-        ctaLink: "/register",
-        featureHeader: "Everything in Basic, plus:",
-        features: [
-          "Maintenance ticket kanban board",
-          "Automated late fees & payment reminders",
-          "SMS alerts & broadcast system",
-          "Unlimited amenities & facilities",
-          "Digital assemblies & SHA-256 e-voting",
-          "Priority phone & chat support"
-        ]
-      }
-    },
-    rental: {
-      basic: {
-        name: "Basic",
-        desc: "Everything you need to automate tenant rent collection and lease tracking.",
-        monthlyPrice: 49,
-        annualPrice: 39,
-        limitText: "Up to 15 Properties • Billed annually",
-        ctaText: "Get Started",
-        ctaLink: "/rental/register",
-        features: [
-          "Automated online rent collection (ACH/Card)",
-          "Digital lease vault & document storage",
-          "Direct tenant-to-landlord messaging",
-          "Income & expense cashflow tracking",
-          "Maintenance ticket submissions",
-          "Standard email support"
-        ]
-      },
-      premium: {
-        name: "Premium",
-        badge: "MOST POPULAR",
-        desc: "Comprehensive suite for portfolio investors and multi-property managers.",
-        monthlyPrice: 139,
-        annualPrice: 109,
-        limitText: "Up to 60 Properties • Billed annually",
-        ctaText: "Start Free Trial",
-        ctaLink: "/rental/register",
-        featureHeader: "Everything in Basic, plus:",
-        features: [
-          "Online tenant credit & background screening",
-          "Automated late fee rules & lease renewal alerts",
-          "Vendor work order dispatch & invoices",
-          "Multi-owner payout statements",
-          "Property performance & tax reports",
-          "Priority support & dedicated onboarding"
-        ]
-      }
-    },
-    condo: {
-      basic: {
-        name: "Basic",
-        desc: "Essential management for single-building condos and boutique complexes.",
-        monthlyPrice: 69,
-        annualPrice: 59,
-        limitText: "Up to 75 units • Billed annually",
-        ctaText: "Get Started",
-        ctaLink: "/condo/register",
-        features: [
-          "Unit & floor resident directory",
-          "Maintenance ticket logger",
-          "Amenity & elevator scheduling",
-          "Digital announcements & notices",
-          "Bylaws document repository",
-          "Standard email support"
-        ]
-      },
-      premium: {
-        name: "Premium",
-        badge: "MOST POPULAR",
-        desc: "Full-scale building operations with visitor logs, packages, and contractors.",
-        monthlyPrice: 179,
-        annualPrice: 149,
-        limitText: "Up to 250 units • Billed annually",
-        ctaText: "Start Free Trial",
-        ctaLink: "/condo/register",
-        featureHeader: "Everything in Basic, plus:",
-        features: [
-          "Visitor registration & parking stall tracker",
-          "Concierge package & delivery logging",
-          "Automated violation fines & rules",
-          "Contractor dispatch with Kanban workflow",
-          "Emergency push broadcast notifications",
-          "Priority 24/7 dedicated support"
-        ]
-      }
+    premium: {
+      name: "Premium",
+      badge: "MOST POPULAR",
+      desc: "Comprehensive suite for portfolio investors and multi-property managers.",
+      monthlyPrice: 139,
+      annualPrice: 109,
+      limitText: "Up to 60 Properties • Billed annually",
+      ctaText: "Start Free Trial",
+      ctaLink: "/portal-select",
+      featureHeader: "Everything in Basic, plus:",
+      features: [
+        "Online tenant background & credit screening",
+        "Automated late fee rules & renewal alerts",
+        "Contractor & vendor work order dispatch",
+        "Multi-property cashflow statements",
+        "Comprehensive tax & financial reports",
+        "Priority 24/7 dedicated support & onboarding"
+      ]
     }
   };
-
-  const currentPortalData = portals.find(p => p.id === activePortal) || portals[0];
-  const currentPlans = portalPlans[activePortal];
-
-  // Calculator Price Computation
-  const calculateEstimate = () => {
-    const isBasic = calcTier === 'basic';
-    const basePlan = isBasic ? currentPlans.basic : currentPlans.premium;
-    const baseRate = billingCycle === 'annual' ? basePlan.annualPrice : basePlan.monthlyPrice;
-    
-    let estimatedMonthly = baseRate;
-    let isCustomQuote = false;
-
-    if (activePortal === 'rental') {
-      if (isBasic) {
-        if (calcUnits > 15) {
-          estimatedMonthly = Math.round(baseRate + (calcUnits - 15) * 1.5);
-        }
-      } else {
-        if (calcUnits > 60) {
-          if (calcUnits > 130) {
-            isCustomQuote = true;
-          } else {
-            estimatedMonthly = Math.round(baseRate + (calcUnits - 60) * 1.2);
-          }
-        }
-      }
-    } else {
-      if (isBasic) {
-        if (calcUnits > 100) {
-          estimatedMonthly = Math.round(baseRate + (calcUnits - 100) * 0.45);
-        }
-      } else {
-        if (calcUnits > 350) {
-          if (calcUnits > 900) {
-            isCustomQuote = true;
-          } else {
-            estimatedMonthly = Math.round(baseRate + (calcUnits - 350) * 0.35);
-          }
-        }
-      }
-    }
-
-    const totalAnnual = estimatedMonthly * 12;
-    return {
-      monthly: estimatedMonthly,
-      annualTotal: totalAnnual,
-      isCustom: isCustomQuote
-    };
-  };
-
-  const estimate = calculateEstimate();
 
   // Feature Comparison Table Data
   const compareFeatures = [
     { 
-      name: activePortal === 'rental' ? "Property Limits" : "Unit Limits", 
-      basic: activePortal === 'rental' ? "Up to 15 Properties" : "Up to 100 Units", 
-      premium: activePortal === 'rental' ? "Up to 60 Properties (Scalable)" : "Up to 350 Units (Scalable)" 
+      name: "Properties Limit", 
+      basic: "Up to 15 Properties", 
+      premium: "Up to 60 Properties (Scalable)" 
     },
     { name: "Admin & Manager Accounts", basic: "2 Users", premium: "Unlimited" },
     { 
-      name: activePortal === 'rental' ? "Lease & Document Storage" : "Amenity & Facility Booking", 
-      basic: activePortal === 'rental' ? "Standard Vault" : "1 Facility", 
-      premium: activePortal === 'rental' ? "Unlimited Leases & Vault" : "Unlimited Facilities" 
+      name: "Digital Lease Vault & Storage", 
+      basic: "Standard Vault", 
+      premium: "Unlimited Leases & Docs" 
     },
-    { name: "SMS Notification Alerts", basic: false, premium: true },
-    { name: "Automated Late Fees & Rules", basic: false, premium: true },
+    { name: "Online Rent Collection (Stripe/ACH)", basic: true, premium: true },
+    { name: "Automated Late Fees & Reminders", basic: false, premium: true },
     { 
-      name: activePortal === 'rental' ? "Tenant Credit & Background Screening" : "Electronic Voting & Ballots", 
+      name: "Tenant Background & Credit Screening", 
       basic: false, 
       premium: true 
     },
-    { name: "Maintenance Kanban Board", basic: false, premium: true },
-    { name: "NestBloq AI Resident Bot", basic: false, premium: true },
-    { name: "Priority Support & Phone Access", basic: false, premium: true }
+    { name: "Maintenance Kanban & Dispatch", basic: "Basic Logging", premium: "Interactive Kanban" },
+    { name: "NestBloq AI Rental Assistant", basic: false, premium: true },
+    { name: "Dedicated Onboarding & Priority Support", basic: false, premium: true }
   ];
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#fafaff] dark:bg-[#070614] transition-colors duration-200 font-sans text-slate-900 dark:text-slate-100">
+    <div className="min-h-screen flex flex-col bg-[#fafaff] dark:bg-[#0f172a] transition-colors duration-200 font-sans text-slate-900 dark:text-slate-100">
       <Navbar />
 
       <div className="flex-1 overflow-x-hidden">
 
-        {/* --- Top Hero Section (Matching Homepage Hero Typography) --- */}
+        {/* --- Top Hero Section --- */}
         <header className="relative w-full pt-6 pb-4 sm:pt-8 sm:pb-6 px-5 sm:px-8 text-center">
           {/* Subtle Ambient Background Glow */}
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[650px] h-[350px] bg-violet-600/10 dark:bg-violet-600/15 rounded-full blur-[110px] pointer-events-none -z-10" />
@@ -280,53 +109,26 @@ export default function PricingPage() {
             
             {/* Top Pill Badge */}
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-violet-500/10 border border-violet-500/20 text-violet-600 dark:text-violet-400">
-              <span className="text-[10px] font-bold tracking-widest uppercase">Transparent Pricing For Every Community</span>
+              <span className="text-[10px] font-bold tracking-widest uppercase">Transparent Rental Pricing</span>
             </div>
 
-            {/* Main Headline — Exact Home Page Display Typography */}
+            {/* Main Headline */}
             <h1 className="font-display text-4xl sm:text-5xl lg:text-[54px] font-black leading-[1.08] tracking-tight text-slate-900 dark:text-white">
-              Choose the plan that fits your community's needs
+              Simple, transparent pricing for your rental portfolio
             </h1>
 
             {/* Sub-headline */}
             <p className="text-sm sm:text-base text-slate-500 dark:text-slate-400 max-w-2xl mx-auto leading-relaxed font-normal">
-              {currentPortalData.heroSubtitle}
+              No hidden fees, no complicated contracts. Just the tools you need to manage your rental properties, leases, and tenants efficiently.
             </p>
 
-            {/* --- 3-Portal Switcher Tabs (HOA -> Rental -> Condo) --- */}
-            <div className="pt-1 flex justify-center">
-              <div className="inline-flex p-1.5 rounded-2xl bg-white dark:bg-[#120f30] border border-slate-200 dark:border-violet-900/40 shadow-sm gap-1">
-                {portals.map((p) => {
-                  const Icon = p.icon;
-                  const isActive = activePortal === p.id;
-                  return (
-                    <button
-                      key={p.id}
-                      onClick={() => {
-                        setActivePortal(p.id);
-                        setCalcUnits(p.defaultCalc);
-                      }}
-                      className={`flex items-center gap-1.5 px-3.5 sm:px-4 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 ${
-                        isActive
-                          ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-sm'
-                          : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5'
-                      }`}
-                    >
-                      <Icon className="w-3.5 h-3.5" />
-                      <span>{p.name}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
             {/* --- Monthly / Annual Billing Toggle Switch --- */}
-            <div className="flex items-center justify-center gap-2 pt-0.5">
-              <div className="inline-flex items-center p-0.5 rounded-full bg-slate-100 dark:bg-[#141033] border border-slate-200/80 dark:border-white/10 shadow-inner">
+            <div className="flex items-center justify-center gap-2 pt-3">
+              <div className="inline-flex items-center p-0.5 rounded-full bg-slate-100 dark:bg-[#1e293b] border border-slate-200/80 dark:border-white/10 shadow-inner">
                 <button
                   type="button"
                   onClick={() => setBillingCycle('monthly')}
-                  className={`px-3 py-1 rounded-full text-[11px] font-bold transition-all duration-200 ${
+                  className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all duration-200 ${
                     billingCycle === 'monthly'
                       ? 'bg-white dark:bg-violet-600 text-slate-900 dark:text-white shadow-xs'
                       : 'text-slate-500 dark:text-slate-400 hover:text-slate-800'
@@ -337,14 +139,14 @@ export default function PricingPage() {
                 <button
                   type="button"
                   onClick={() => setBillingCycle('annual')}
-                  className={`flex items-center gap-1 px-3 py-1 rounded-full text-[11px] font-bold transition-all duration-200 ${
+                  className={`flex items-center gap-1 px-3.5 py-1.5 rounded-full text-xs font-bold transition-all duration-200 ${
                     billingCycle === 'annual'
                       ? 'bg-white dark:bg-violet-600 text-slate-900 dark:text-white shadow-xs'
                       : 'text-slate-500 dark:text-slate-400 hover:text-slate-800'
                   }`}
                 >
                   <span>Annually</span>
-                  <span className="bg-gradient-to-r from-violet-600 to-indigo-600 text-white text-[8px] px-1.5 py-0.2 rounded-full font-extrabold uppercase">
+                  <span className="bg-gradient-to-r from-violet-600 to-indigo-600 text-white text-[8px] px-1.5 py-0.5 rounded-full font-extrabold uppercase">
                     Save 20%
                   </span>
                 </button>
@@ -355,20 +157,20 @@ export default function PricingPage() {
         </header>
 
         {/* --- 2 Pricing Cards (Compact Single View Layout) --- */}
-        <section className="py-2 pb-8 max-w-4xl mx-auto px-4 sm:px-6 w-full relative z-10">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 items-stretch">
+        <section className="py-4 pb-12 max-w-4xl mx-auto px-4 sm:px-6 w-full relative z-10">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
             
             {/* --- CARD 1: BASIC / STANDARD --- */}
-            <div className="relative flex flex-col justify-between p-5 sm:p-6 rounded-[24px] bg-white dark:bg-[#0f0c29] border border-slate-200/90 dark:border-white/[0.08] shadow-[0_4px_20px_rgba(0,0,0,0.03)] dark:shadow-[0_4px_20px_rgba(0,0,0,0.25)] transition-all duration-200 hover:shadow-lg">
+            <div className="relative flex flex-col justify-between p-6 sm:p-7 rounded-[24px] bg-white dark:bg-[#1e293b] border border-slate-200/90 dark:border-slate-700 shadow-[0_4px_20px_rgba(0,0,0,0.03)] dark:shadow-[0_4px_20px_rgba(0,0,0,0.25)] transition-all duration-200 hover:shadow-lg">
               
-              <div className="space-y-3.5 text-left">
+              <div className="space-y-4 text-left">
                 {/* Title & Description */}
                 <div>
                   <h3 className="text-xl font-black text-slate-900 dark:text-white tracking-tight">
-                    {currentPlans.basic.name}
+                    {plans.basic.name}
                   </h3>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 leading-snug">
-                    {currentPlans.basic.desc}
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
+                    {plans.basic.desc}
                   </p>
                 </div>
 
@@ -376,26 +178,26 @@ export default function PricingPage() {
                 <div>
                   <div className="flex items-baseline gap-1 text-slate-900 dark:text-white">
                     <span className="text-3xl sm:text-4xl font-black tracking-tight">
-                      ${billingCycle === 'annual' ? currentPlans.basic.annualPrice : currentPlans.basic.monthlyPrice}
+                      ${billingCycle === 'annual' ? plans.basic.annualPrice : plans.basic.monthlyPrice}
                     </span>
                     <span className="text-xs text-slate-500 dark:text-slate-400 font-semibold">/mo</span>
                   </div>
-                  <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5 font-medium">
-                    {currentPlans.basic.limitText}
+                  <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-1 font-medium">
+                    {plans.basic.limitText}
                   </p>
                 </div>
 
                 {/* CTA Button */}
                 <Link
-                  to={currentPlans.basic.ctaLink}
+                  to={plans.basic.ctaLink}
                   className="w-full py-2.5 px-4 rounded-xl bg-[#f1f5f9] dark:bg-white/10 hover:bg-slate-200 dark:hover:bg-white/15 text-slate-800 dark:text-white font-bold text-xs text-center block transition-all active:scale-[0.98]"
                 >
-                  {currentPlans.basic.ctaText}
+                  {plans.basic.ctaText}
                 </Link>
 
                 {/* Features List */}
-                <div className="pt-2.5 space-y-2 border-t border-slate-100 dark:border-white/[0.06]">
-                  {currentPlans.basic.features.map((feat, idx) => (
+                <div className="pt-3 space-y-2.5 border-t border-slate-100 dark:border-white/[0.06]">
+                  {plans.basic.features.map((feat, idx) => (
                     <div key={idx} className="flex items-start gap-2.5 text-xs text-slate-700 dark:text-slate-300">
                       <div className="w-4 h-4 rounded-full bg-violet-600 text-white flex items-center justify-center shrink-0 mt-0.5">
                         <Check className="w-2.5 h-2.5 stroke-[3]" />
@@ -410,23 +212,23 @@ export default function PricingPage() {
             </div>
 
             {/* --- CARD 2: PREMIUM (HERO CARD WITH VIOLET GRADIENT) --- */}
-            <div className="relative flex flex-col justify-between p-5 sm:p-6 rounded-[24px] bg-gradient-to-br from-[#7c3aed] via-[#6d28d9] to-[#4c1d95] text-white border border-violet-300/40 shadow-xl shadow-violet-950/30 transition-all duration-200 hover:shadow-2xl">
+            <div className="relative flex flex-col justify-between p-6 sm:p-7 rounded-[24px] bg-gradient-to-br from-[#7c3aed] via-[#6d28d9] to-[#4c1d95] text-white border border-violet-300/40 shadow-xl shadow-violet-950/30 transition-all duration-200 hover:shadow-2xl">
               
               {/* Floating "Most Popular" Pill */}
               <div className="absolute -top-3 right-6">
                 <span className="px-3 py-0.5 rounded-full bg-violet-950 text-white text-[10px] font-extrabold uppercase tracking-wider border border-violet-400/40 shadow-sm">
-                  {currentPlans.premium.badge}
+                  {plans.premium.badge}
                 </span>
               </div>
 
-              <div className="space-y-3.5 text-left">
+              <div className="space-y-4 text-left">
                 {/* Title & Description */}
                 <div>
                   <h3 className="text-xl font-black text-white tracking-tight">
-                    {currentPlans.premium.name}
+                    {plans.premium.name}
                   </h3>
-                  <p className="text-xs text-violet-100/90 mt-0.5 leading-snug">
-                    {currentPlans.premium.desc}
+                  <p className="text-xs text-violet-100/90 mt-1 leading-relaxed">
+                    {plans.premium.desc}
                   </p>
                 </div>
 
@@ -434,29 +236,29 @@ export default function PricingPage() {
                 <div>
                   <div className="flex items-baseline gap-1 text-white">
                     <span className="text-3xl sm:text-4xl font-black tracking-tight">
-                      ${billingCycle === 'annual' ? currentPlans.premium.annualPrice : currentPlans.premium.monthlyPrice}
+                      ${billingCycle === 'annual' ? plans.premium.annualPrice : plans.premium.monthlyPrice}
                     </span>
                     <span className="text-xs text-violet-200 font-semibold">/mo</span>
                   </div>
-                  <p className="text-[11px] text-violet-200/80 mt-0.5 font-medium">
-                    {currentPlans.premium.limitText}
+                  <p className="text-[11px] text-violet-200/80 mt-1 font-medium">
+                    {plans.premium.limitText}
                   </p>
                 </div>
 
                 {/* CTA Button */}
                 <Link
-                  to={currentPlans.premium.ctaLink}
+                  to={plans.premium.ctaLink}
                   className="w-full py-2.5 px-4 rounded-xl bg-white hover:bg-slate-100 text-[#5b21b6] font-extrabold text-xs text-center block transition-all shadow-md active:scale-[0.98]"
                 >
-                  {currentPlans.premium.ctaText}
+                  {plans.premium.ctaText}
                 </Link>
 
                 {/* Features List */}
-                <div className="pt-2.5 space-y-2 border-t border-white/15">
+                <div className="pt-3 space-y-2.5 border-t border-white/15">
                   <p className="text-[10px] font-extrabold text-violet-200 uppercase tracking-wider">
-                    {currentPlans.premium.featureHeader}
+                    {plans.premium.featureHeader}
                   </p>
-                  {currentPlans.premium.features.map((feat, idx) => (
+                  {plans.premium.features.map((feat, idx) => (
                     <div key={idx} className="flex items-start gap-2.5 text-xs text-violet-50">
                       <div className="w-4 h-4 rounded-full bg-white text-[#6d28d9] flex items-center justify-center shrink-0 mt-0.5 shadow-xs">
                         <Check className="w-2.5 h-2.5 stroke-[3]" />
@@ -473,124 +275,10 @@ export default function PricingPage() {
           </div>
         </section>
 
-        {/* --- Interactive Pricing Calculator ("Estimate Your Pricing") --- */}
-        <section className="py-8 max-w-5xl mx-auto px-5 sm:px-8 w-full relative z-10">
-          <div className="bg-white dark:bg-[#0f0c29] border border-slate-200/90 dark:border-white/[0.08] rounded-[32px] p-6 sm:p-10 shadow-lg">
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
-              
-              {/* Left Column: Sliders & Controls (7 Cols) */}
-              <div className="md:col-span-7 space-y-6 text-left">
-                <div>
-                  <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
-                    Estimate Your Pricing
-                  </h2>
-                  <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-                    See exactly what you'll pay based on your {activePortal === 'rental' ? 'portfolio' : 'community'} size and feature needs.
-                  </p>
-                </div>
-
-                {/* Select Plan Tier */}
-                <div className="space-y-2">
-                  <label className="text-[11px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                    SELECT PLAN TIER
-                  </label>
-                  <div className="flex gap-2 p-1 bg-slate-100 dark:bg-white/5 rounded-2xl border border-slate-200/70 dark:border-white/10 max-w-xs">
-                    <button
-                      type="button"
-                      onClick={() => setCalcTier('basic')}
-                      className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all ${
-                        calcTier === 'basic'
-                          ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-sm'
-                          : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
-                      }`}
-                    >
-                      Basic
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setCalcTier('premium')}
-                      className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all ${
-                        calcTier === 'premium'
-                          ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-sm'
-                          : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
-                      }`}
-                    >
-                      Premium
-                    </button>
-                  </div>
-                </div>
-
-                {/* Number of Properties / Units Slider */}
-                <div className="space-y-3 pt-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[11px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                      NUMBER OF {currentPortalData.unitLabel.toUpperCase()}
-                    </span>
-                    <span className="text-lg font-black font-mono text-violet-600 dark:text-violet-400">
-                      {calcUnits}
-                    </span>
-                  </div>
-
-                  {/* Slider Input */}
-                  <div className="relative flex items-center">
-                    <input
-                      type="range"
-                      min={currentPortalData.minUnits}
-                      max={currentPortalData.maxUnits}
-                      step={activePortal === 'rental' ? 1 : 5}
-                      value={calcUnits}
-                      onChange={(e) => setCalcUnits(parseInt(e.target.value, 10))}
-                      className="w-full h-2.5 bg-slate-200 dark:bg-white/10 rounded-lg appearance-none cursor-pointer accent-violet-600 focus:outline-none"
-                    />
-                  </div>
-
-                  <div className="flex justify-between text-[11px] font-semibold text-slate-400 dark:text-slate-500 font-mono">
-                    <span>{currentPortalData.minUnits} {currentPortalData.unitLabel}</span>
-                    <span>{currentPortalData.maxUnits}+ {currentPortalData.unitLabel}</span>
-                  </div>
-                </div>
-
-              </div>
-
-              {/* Right Column: Estimated Monthly Cost Card (5 Cols) */}
-              <div className="md:col-span-5 bg-gradient-to-br from-[#7c3aed] via-[#6d28d9] to-[#4c1d95] text-white rounded-[28px] p-8 text-center flex flex-col justify-between space-y-6 shadow-xl relative overflow-hidden">
-                <div className="space-y-2">
-                  <span className="text-[10px] font-extrabold text-violet-200 uppercase tracking-widest block">
-                    ESTIMATED MONTHLY COST
-                  </span>
-                  
-                  {estimate.isCustom ? (
-                    <div className="py-2">
-                      <span className="text-3xl font-black">Custom Quote</span>
-                    </div>
-                  ) : (
-                    <div>
-                      <div className="text-5xl font-black tracking-tight">
-                        ${estimate.monthly}
-                      </div>
-                      <p className="text-xs text-violet-200 mt-1 font-medium">
-                        {billingCycle === 'annual' ? `Billed $${estimate.annualTotal.toLocaleString()} annually` : 'Billed monthly'}
-                      </p>
-                    </div>
-                  )}
-                </div>
-
-                <Link
-                  to={estimate.isCustom ? "/contact" : currentPlans[calcTier].ctaLink}
-                  className="w-full py-3.5 px-4 rounded-xl bg-white text-[#5b21b6] hover:bg-slate-100 font-bold text-xs uppercase tracking-wider transition-all shadow-md active:scale-95 text-center"
-                >
-                  {estimate.isCustom ? "Contact Enterprise Sales" : "Start My Free Trial"}
-                </Link>
-              </div>
-
-            </div>
-          </div>
-        </section>
-
         {/* --- Built for Peace of Mind (Trust Pillars) --- */}
-        <section className="py-12 max-w-5xl mx-auto px-5 sm:px-8 w-full text-center">
-          <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight mb-10">
-            Built for Peace of Mind
+        <section className="py-10 max-w-5xl mx-auto px-5 sm:px-8 w-full text-center">
+          <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight mb-8">
+            Built for Landlords' Peace of Mind
           </h2>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
@@ -601,10 +289,10 @@ export default function PricingPage() {
                 <ShieldCheck className="w-6 h-6" />
               </div>
               <h3 className="font-bold text-slate-900 dark:text-white text-base">
-                Bank-Level Security
+                Bank-Grade Security
               </h3>
               <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed max-w-xs">
-                All resident data and payments are protected with AES-256 encryption and SOC2 compliant infrastructure.
+                All tenant payment data and lease documents are protected with AES-256 encryption and PCI-DSS compliant infrastructure.
               </p>
             </div>
 
@@ -617,7 +305,7 @@ export default function PricingPage() {
                 Dedicated Support
               </h3>
               <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed max-w-xs">
-                Our experts are available to help you navigate community and rental property challenges quickly.
+                Our property management experts are available to help you streamline tenant onboarding and leasing operations.
               </p>
             </div>
 
@@ -630,7 +318,7 @@ export default function PricingPage() {
                 White-Glove Migration
               </h3>
               <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed max-w-xs">
-                Moving from another platform? Our onboarding team will import your rosters, leases, and historical data for free.
+                Moving from spreadsheets or another system? Our onboarding team will import your property portfolios, active leases, and tenants for free.
               </p>
             </div>
 
@@ -638,7 +326,7 @@ export default function PricingPage() {
         </section>
 
         {/* --- What's Included in Every Plan --- */}
-        <section className="py-12 max-w-5xl mx-auto px-5 sm:px-8 w-full">
+        <section className="py-10 max-w-5xl mx-auto px-5 sm:px-8 w-full">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
             
             {/* Left Content */}
@@ -648,7 +336,7 @@ export default function PricingPage() {
                   What's included in every plan
                 </h2>
                 <p className="text-sm text-slate-500 dark:text-slate-400 mt-2 leading-relaxed">
-                  No matter which tier you choose, you get access to our robust foundational tools designed to modernize your property operations.
+                  No matter which tier you choose, you get access to our robust foundational tools designed to modernize your rental property operations.
                 </p>
               </div>
 
@@ -660,7 +348,7 @@ export default function PricingPage() {
                 </div>
                 <div className="flex items-center gap-2.5 text-xs font-semibold text-slate-800 dark:text-slate-200">
                   <Users className="w-4 h-4 text-violet-600 dark:text-violet-400 shrink-0" />
-                  <span>Resident & Tenant Rosters</span>
+                  <span>Tenant Directory</span>
                 </div>
                 <div className="flex items-center gap-2.5 text-xs font-semibold text-slate-800 dark:text-slate-200">
                   <Database className="w-4 h-4 text-violet-600 dark:text-violet-400 shrink-0" />
@@ -668,26 +356,26 @@ export default function PricingPage() {
                 </div>
                 <div className="flex items-center gap-2.5 text-xs font-semibold text-slate-800 dark:text-slate-200">
                   <FolderLock className="w-4 h-4 text-violet-600 dark:text-violet-400 shrink-0" />
-                  <span>Document Vault</span>
+                  <span>Digital Lease Vault</span>
                 </div>
                 <div className="flex items-center gap-2.5 text-xs font-semibold text-slate-800 dark:text-slate-200">
                   <Mail className="w-4 h-4 text-violet-600 dark:text-violet-400 shrink-0" />
-                  <span>Member & Tenant Invites</span>
+                  <span>Instant Tenant Invites</span>
                 </div>
                 <div className="flex items-center gap-2.5 text-xs font-semibold text-slate-800 dark:text-slate-200">
                   <MessageSquare className="w-4 h-4 text-violet-600 dark:text-violet-400 shrink-0" />
-                  <span>Message Board</span>
+                  <span>Maintenance Desk</span>
                 </div>
               </div>
 
             </div>
 
-            {/* Right Dashboard Mockup (Pure Code SaaS Interface - No Stock Images) */}
+            {/* Right Dashboard Mockup */}
             <div className="lg:col-span-6">
-              <div className="bg-[#f5f3ff] dark:bg-[#120f30] rounded-3xl p-4 sm:p-5 border border-violet-200/80 dark:border-white/10 shadow-xl relative overflow-hidden">
+              <div className="bg-[#f5f3ff] dark:bg-[#1e293b] rounded-3xl p-4 sm:p-5 border border-violet-200/80 dark:border-slate-700 shadow-xl relative overflow-hidden">
                 
                 {/* Browser Top Window Bar */}
-                <div className="flex items-center justify-between gap-3 mb-4 pb-3 border-b border-violet-200/60 dark:border-white/10">
+                <div className="flex items-center justify-between gap-3 mb-4 pb-3 border-b border-violet-200/60 dark:border-slate-700">
                   <div className="flex items-center gap-1.5">
                     <div className="w-2.5 h-2.5 rounded-full bg-rose-400" />
                     <div className="w-2.5 h-2.5 rounded-full bg-amber-400" />
@@ -695,13 +383,13 @@ export default function PricingPage() {
                   </div>
                   <div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-700 dark:text-slate-300">
                     <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                    <span>NestBloq Interactive Workspace</span>
+                    <span>NestBloq Rental Workspace</span>
                   </div>
                   <div className="w-8" />
                 </div>
 
                 {/* Dashboard Inner App Canvas */}
-                <div className="bg-white dark:bg-[#0b081d] rounded-2xl p-4 border border-slate-200/70 dark:border-white/5 shadow-inner space-y-3.5 text-left">
+                <div className="bg-white dark:bg-[#162032] rounded-2xl p-4 border border-slate-200/70 dark:border-slate-700/60 shadow-inner space-y-3.5 text-left">
                   
                   {/* Mini Portal Banner Header */}
                   <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-white/[0.06]">
@@ -711,15 +399,15 @@ export default function PricingPage() {
                       </div>
                       <div>
                         <h4 className="text-xs font-black text-slate-900 dark:text-white leading-tight">
-                          {activePortal === 'hoa' ? 'Oakridge Estates HOA' : activePortal === 'rental' ? 'Skyline Portfolio Management' : 'Marina High-Rise Tower'}
+                          Skyline Property Portfolio
                         </h4>
                         <p className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">
-                          {activePortal === 'hoa' ? '142 Active Homes • Board Portal' : activePortal === 'rental' ? '28 Properties • Real-Time Ledger' : '96 Condo Units • Concierge Desk'}
+                          3 Active Properties • Real-Time Ledger
                         </p>
                       </div>
                     </div>
                     <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-                      ● Operational
+                      ● Active
                     </span>
                   </div>
 
@@ -727,10 +415,10 @@ export default function PricingPage() {
                   <div className="grid grid-cols-3 gap-2">
                     <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-white/[0.03] border border-slate-100 dark:border-white/[0.05]">
                       <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase block truncate">
-                        {activePortal === 'rental' ? 'Rent Collected' : 'Dues Collected'}
+                        Rent Collected
                       </span>
                       <span className="text-sm sm:text-base font-black text-slate-900 dark:text-white block mt-0.5">
-                        {activePortal === 'rental' ? '$34,800' : '$48,250'}
+                        $23,350
                       </span>
                       <span className="text-[8px] font-extrabold text-emerald-600 dark:text-emerald-400 flex items-center gap-0.5 mt-0.5">
                         ↑ 98.4% on-time
@@ -739,10 +427,10 @@ export default function PricingPage() {
 
                     <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-white/[0.03] border border-slate-100 dark:border-white/[0.05]">
                       <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase block truncate">
-                        {activePortal === 'rental' ? 'Properties' : 'Total Units'}
+                        Properties
                       </span>
                       <span className="text-sm sm:text-base font-black text-slate-900 dark:text-white block mt-0.5">
-                        {activePortal === 'rental' ? '28 Active' : '142 Units'}
+                        3 Active
                       </span>
                       <span className="text-[8px] font-extrabold text-violet-600 dark:text-violet-400 flex items-center gap-0.5 mt-0.5">
                         ✓ 100% verified
@@ -751,10 +439,10 @@ export default function PricingPage() {
 
                     <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-white/[0.03] border border-slate-100 dark:border-white/[0.05]">
                       <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase block truncate">
-                        {activePortal === 'rental' ? 'Work Orders' : 'Active Tickets'}
+                        Work Orders
                       </span>
                       <span className="text-sm sm:text-base font-black text-slate-900 dark:text-white block mt-0.5">
-                        2 Pending
+                        2 Open
                       </span>
                       <span className="text-[8px] font-extrabold text-indigo-500 flex items-center gap-0.5 mt-0.5">
                         ⚡ Auto-assigned
@@ -773,7 +461,7 @@ export default function PricingPage() {
                         <div className="flex items-center gap-2">
                           <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                           <span className="text-slate-700 dark:text-slate-200 font-medium">
-                            {activePortal === 'rental' ? 'Auto-Rent received via ACH • Unit 3B' : 'Online Dues payment cleared • Home #104'}
+                            Auto-Rent received via Stripe • 742 Evergreen Terrace
                           </span>
                         </div>
                         <span className="text-[9px] text-slate-400 font-mono">2m ago</span>
@@ -783,7 +471,7 @@ export default function PricingPage() {
                         <div className="flex items-center gap-2">
                           <div className="w-1.5 h-1.5 rounded-full bg-violet-500" />
                           <span className="text-slate-700 dark:text-slate-200 font-medium">
-                            {activePortal === 'rental' ? 'Digital Lease Agreement signed by Tenant' : activePortal === 'hoa' ? 'Annual Assembly E-Voting Quorum reached (94%)' : 'Elevator reservation confirmed for Moving'}
+                            Digital Lease Agreement signed by Tenant • 128 Oakwood Blvd
                           </span>
                         </div>
                         <span className="text-[9px] text-slate-400 font-mono">14m ago</span>
@@ -805,7 +493,7 @@ export default function PricingPage() {
             Compare Features
           </h2>
 
-          <div className="rounded-[28px] overflow-hidden border border-slate-200 dark:border-white/10 shadow-md bg-white dark:bg-[#0f0c29]">
+          <div className="rounded-[28px] overflow-hidden border border-slate-200 dark:border-slate-700 shadow-md bg-white dark:bg-[#1e293b]">
             <table className="w-full text-left border-collapse text-xs sm:text-sm">
               <thead>
                 <tr className="bg-gradient-to-r from-violet-600 to-indigo-700 text-white font-bold">
@@ -845,23 +533,48 @@ export default function PricingPage() {
           </div>
         </section>
 
-        {/* --- Need a Custom Plan? Banner --- */}
-        <section className="py-8 pb-20 max-w-5xl mx-auto px-5 sm:px-8 w-full">
-          <div className="rounded-[28px] p-8 sm:p-10 bg-gradient-to-r from-[#7c3aed] via-[#6d28d9] to-[#4c1d95] text-white flex flex-col sm:flex-row items-center justify-between gap-6 shadow-xl shadow-violet-950/20">
-            <div className="space-y-1 text-center sm:text-left">
-              <h3 className="text-2xl font-black tracking-tight">
-                Need a custom plan?
-              </h3>
-              <p className="text-xs sm:text-sm text-violet-200">
-                For enterprise portfolios, multi-association managers, and custom integrations.
-              </p>
+        {/* --- Pricing FAQ Section --- */}
+        <FaqSection
+          id="pricing-faq"
+          badgeText="PRICING & BILLING FAQ"
+          title="Frequently Asked Questions"
+          subtitlePrefix="Have questions regarding subscriptions, billing tiers, or custom quotes?"
+          contactText="Contact our billing team →"
+          contactLink="/contact"
+        />
+
+        {/* --- Need a Custom Plan / Bottom CTA Banner --- */}
+        <section className="py-10 pb-16 max-w-6xl mx-auto px-5 sm:px-8 w-full">
+          <div className="relative rounded-3xl bg-gradient-to-r from-[#4c1d95] via-[#5b21b6] to-[#311075] p-8 sm:p-12 md:p-14 text-center text-white shadow-2xl overflow-hidden space-y-5">
+            <div className="absolute top-0 right-0 w-80 h-80 bg-violet-400/20 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute bottom-0 left-0 w-80 h-80 bg-indigo-500/20 rounded-full blur-3xl pointer-events-none" />
+
+            <p className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-violet-300">
+              ENTERPRISE & LARGE PORTFOLIOS
+            </p>
+
+            <h2 className="font-display text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight leading-tight max-w-2xl mx-auto">
+              Need a Custom Plan for Your Portfolio?
+            </h2>
+
+            <p className="text-xs sm:text-sm text-violet-200 max-w-lg mx-auto leading-relaxed">
+              We provide dedicated solutions, volume discounts, custom integrations, and white-glove onboarding for multi-property landlords and real estate firms.
+            </p>
+
+            <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+              <Link
+                to="/contact"
+                className="px-8 py-3.5 bg-white text-[#4c1d95] font-extrabold text-xs sm:text-sm rounded-full shadow-lg hover:bg-slate-100 transition-all active:scale-95"
+              >
+                Contact Sales
+              </Link>
+              <Link
+                to="/portal-select"
+                className="px-8 py-3.5 bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold text-xs sm:text-sm rounded-full transition-all active:scale-95"
+              >
+                Start 30-Day Free Trial
+              </Link>
             </div>
-            <Link
-              to="/contact"
-              className="px-6 py-3 rounded-full bg-white text-[#5b21b6] hover:bg-slate-100 font-bold text-xs uppercase tracking-wider shadow-md shrink-0 transition-all active:scale-95"
-            >
-              Contact Sales
-            </Link>
           </div>
         </section>
 

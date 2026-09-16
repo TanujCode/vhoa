@@ -35,7 +35,7 @@ def schedule_meeting(
     try:
         meeting = create_meeting(body, current_user.user_id, db)
         # Fetch the created_by name to return
-        creator_name = f"{current_user.first_name or ''} {current_user.last_name or ''}".strip()
+        creator_name = current_user.full_name or "System"
         
         # Build output structure
         return MeetingOut(
@@ -78,7 +78,7 @@ def submit_meeting_rsvp(
 ):
     try:
         rsvp = rsvp_meeting(meeting_id, body.status, current_user.user_id, db)
-        user_name = f"{current_user.first_name or ''} {current_user.last_name or ''}".strip()
+        user_name = current_user.full_name or "Resident"
         return MeetingRSVPOut(
             rsvp_id=rsvp.rsvp_id,
             meeting_id=rsvp.meeting_id,
@@ -125,7 +125,7 @@ def get_meeting_rsvps(
         rsvp_id = user_rsvp.rsvp_id if user_rsvp else None
         updated_at = user_rsvp.updated_at if user_rsvp else None
 
-        user_name = f"{m.first_name or ''} {m.last_name or ''}".strip() or m.email_id
+        user_name = m.full_name or m.email_id
         result.append({
             "rsvp_id": rsvp_id,
             "user_id": m.user_id,
@@ -162,7 +162,7 @@ def schedule_survey(
             SurveyOptionOut(option_id=o.option_id, option_text=o.option_text, vote_count=0)
             for o in survey.options
         ]
-        creator_name = f"{current_user.first_name or ''} {current_user.last_name or ''}".strip()
+        creator_name = current_user.full_name or "System"
 
         return SurveyOut(
             survey_id=survey.survey_id,
@@ -233,7 +233,7 @@ def modify_meeting(
     try:
         updated = update_meeting(meeting_id, body, current_user.user_id, db)
         creator = db.query(User).filter(User.user_id == updated.created_by_id).first()
-        creator_name = f"{creator.first_name or ''} {creator.last_name or ''}".strip() if creator else "System"
+        creator_name = creator.full_name if creator else "System"
 
         # Calculate RSVP counts
         from app.models.hoa.meeting_survey import MeetingRSVP
@@ -564,7 +564,8 @@ def generate_simulated_diarization(meeting, db: Session) -> str:
     names = []
     for m in members:
         role_label = m.role.role_name.replace("_", " ").title() if m.role else "Resident"
-        names.append(f"{m.first_name} {m.last_name} ({role_label})")
+        m_name = m.full_name or "Member"
+        names.append(f"{m_name} ({role_label})")
     
     # Fallback to defaults
     default_names = [
@@ -681,7 +682,7 @@ def diarize_meeting_audio(
 
     # Return the updated MeetingOut
     creator = db.query(User).filter(User.user_id == meeting.created_by_id).first()
-    creator_name = f"{creator.first_name or ''} {creator.last_name or ''}".strip() if creator else "System"
+    creator_name = creator.full_name if creator else "System"
 
     from app.models.hoa.meeting_survey import MeetingRSVP
     rsvps = db.query(MeetingRSVP).filter(MeetingRSVP.meeting_id == meeting_id).all()
@@ -756,7 +757,7 @@ def rename_speaker_in_transcript(
 
     # Return updated MeetingOut structure
     creator = db.query(User).filter(User.user_id == meeting.created_by_id).first()
-    creator_name = f"{creator.first_name or ''} {creator.last_name or ''}".strip() if creator else "System"
+    creator_name = creator.full_name if creator else "System"
 
     from app.models.hoa.meeting_survey import MeetingRSVP
     rsvps = db.query(MeetingRSVP).filter(MeetingRSVP.meeting_id == meeting_id).all()
@@ -837,7 +838,7 @@ def reprocess_meeting_audio(
 
     # Return updated MeetingOut
     creator = db.query(User).filter(User.user_id == meeting.created_by_id).first()
-    creator_name = f"{creator.first_name or ''} {creator.last_name or ''}".strip() if creator else "System"
+    creator_name = creator.full_name if creator else "System"
 
     from app.models.hoa.meeting_survey import MeetingRSVP
     rsvps = db.query(MeetingRSVP).filter(MeetingRSVP.meeting_id == meeting_id).all()

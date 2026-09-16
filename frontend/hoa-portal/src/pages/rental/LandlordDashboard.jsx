@@ -5,7 +5,7 @@ import {
   TrendingUp, Clock, AlertCircle, Sparkles, 
   CheckCircle2, Plus, Filter, Calendar, 
   ChevronDown, DollarSign, Wallet, Percent, Info,
-  Wrench, ShieldAlert, Car, PawPrint
+  Wrench, ShieldAlert, Car, PawPrint, Key, ArrowRight
 } from 'lucide-react';
 import API from '../../services/api';
 
@@ -393,7 +393,7 @@ export default function LandlordDashboard({
                   <Building2 className="w-5 h-5" />
                 </div>
                 <div className="space-y-1">
-                  <h4 className="text-sm font-black text-slate-900 dark:text-white">1. Add Properties & Units</h4>
+                  <h4 className="text-sm font-black text-slate-900 dark:text-white">1. Add Properties</h4>
                   <p className="text-[11px] text-slate-500 dark:text-gray-400 font-medium leading-relaxed font-sans">
                     Set up your real estate assets. Register and manage single-family rental properties.
                   </p>
@@ -489,6 +489,153 @@ export default function LandlordDashboard({
           </div>
         </div>
 
+      </div>
+    );
+  }
+
+  // When landlord has registered properties but hasn't created a lease yet
+  if (properties.length > 0 && leases.length === 0) {
+    const onboardingProperty = properties[0];
+    const leasesAwaitingApproval = (leases || []).filter(l => l.status === 'PENDING_LANDLORD_APPROVAL');
+    return (
+      <div className="space-y-6 text-left animate-fade-in pb-12 font-sans">
+        {/* Leases Awaiting Approval Alert */}
+        {leasesAwaitingApproval.length > 0 && (
+          <div className="bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/30 dark:border-amber-500/20 rounded-3xl p-5 sm:p-6 text-slate-800 dark:text-white shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4 animate-fade-in mb-6">
+            <div className="flex items-center gap-3.5 text-left">
+              <div className="p-3 bg-amber-500/20 text-amber-600 dark:text-amber-400 rounded-2xl flex items-center justify-center shrink-0">
+                <FileText className="w-6 h-6 animate-pulse" />
+              </div>
+              <div>
+                <h4 className="text-sm font-black text-amber-800 dark:text-amber-400">Lease Agreement Awaiting Your Review</h4>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                  {leasesAwaitingApproval.length === 1 
+                    ? `A tenant has signed the lease terms and submitted onboarding details. Please review and approve to activate.`
+                    : `${leasesAwaitingApproval.length} lease agreements have been signed by tenants and are awaiting your final approval.`
+                  }
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => setActivePage('leases_hub')}
+              className="w-full sm:w-auto px-5 py-2.5 bg-amber-600 hover:bg-amber-500 text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-amber-600/25 hover:shadow-amber-600/40 shrink-0 cursor-pointer text-center"
+            >
+              Review & Approve
+            </button>
+          </div>
+        )}
+
+        {/* Horizontal Onboarding Success Banner */}
+        <div className="w-full bg-white dark:bg-[#202d42] border border-slate-200/90 dark:border-slate-600/80 rounded-3xl p-8 sm:p-10 shadow-sm dark:shadow-xl dark:shadow-black/20 relative overflow-hidden text-slate-900 dark:text-white animate-scale-up">
+          <div className="absolute top-0 right-0 w-80 h-80 bg-blue-500/[0.06] dark:bg-blue-400/[0.1] rounded-full blur-3xl pointer-events-none" />
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center relative z-10">
+            {/* Left Column - Onboarding Messages */}
+            <div className="space-y-5 text-left">
+              <div className="space-y-2.5">
+                <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight leading-tight">
+                  Hello, {user?.first_name || user?.name?.split(' ')[0] || 'Landlord'}!
+                </h2>
+                <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-200 font-medium leading-relaxed max-w-md">
+                  Your new property has been successfully registered. To start managing tenants, rent collections, and logs, let's set up a lease agreement.
+                </p>
+              </div>
+
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 dark:bg-blue-500/20 text-blue-700 dark:text-blue-200 rounded-xl border border-blue-200 dark:border-blue-400/40 text-xs font-bold w-fit shadow-sm">
+                <Sparkles className="w-4 h-4 animate-pulse shrink-0 text-blue-600 dark:text-blue-300" />
+                <span>Let's create your lease</span>
+              </div>
+            </div>
+
+            {/* Right Column - Registered Property Details & Action */}
+            <div className="space-y-6 text-left md:border-l md:border-slate-200/80 md:dark:border-slate-600/70 md:pl-10">
+              <div className="space-y-1">
+                <span className="block text-[10px] font-black text-slate-500 dark:text-slate-300 uppercase tracking-widest font-sans">Registered Property</span>
+                <h3 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white leading-tight">
+                  {onboardingProperty?.name}
+                </h3>
+                <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-200 font-medium leading-relaxed">
+                  {onboardingProperty?.address}, {onboardingProperty?.city}, {onboardingProperty?.state} {onboardingProperty?.zip_code}
+                </p>
+              </div>
+
+              <div className="pt-2 flex justify-start">
+                <button
+                  type="button"
+                  onClick={() => {
+                    localStorage.setItem('open_create_lease_modal', 'true');
+                    if (setActivePage) {
+                      setActivePage('leases_hub');
+                    }
+                  }}
+                  className="bg-blue-600 hover:bg-blue-500 text-white rounded-xl px-6 py-2.5 text-xs font-bold transition shadow-md hover:shadow-lg shadow-blue-500/30 hover:shadow-blue-500/40 cursor-pointer text-center uppercase tracking-wider inline-flex items-center justify-center gap-2 border border-transparent"
+                >
+                  <FileText className="w-4 h-4" />
+                  Create Lease Agreement
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* ── Lease Creation Flow Guide ── */}
+        <div className="w-full bg-white dark:bg-[#202d42] border border-slate-200/90 dark:border-slate-600/80 rounded-3xl p-8 shadow-sm dark:shadow-xl dark:shadow-black/20">
+          <div className="mb-6">
+            <h3 className="text-base font-black text-slate-900 dark:text-white tracking-tight">How to Create a Lease — 4 Simple Steps</h3>
+            <p className="text-xs text-slate-500 dark:text-slate-200 mt-1 font-medium">Everything is handled from one screen. Takes about 2 minutes.</p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {[
+              {
+                step: 1, Icon: Building2, title: 'Select Apartment',
+                desc: 'Choose the property and specific apartment you want to lease out.',
+                bg: 'bg-blue-50/90 dark:bg-[#1a335a]', border: 'border-blue-200 dark:border-blue-400/50',
+                iconColor: 'text-blue-700 dark:text-blue-200', num: 'bg-blue-600 dark:bg-blue-500',
+              },
+              {
+                step: 2, Icon: Users, title: 'Add Tenant',
+                desc: 'Enter tenant name, contact details and ID documents.',
+                bg: 'bg-purple-50/90 dark:bg-[#342054]', border: 'border-purple-200 dark:border-purple-400/50',
+                iconColor: 'text-purple-700 dark:text-purple-200', num: 'bg-purple-600 dark:bg-purple-500',
+              },
+              {
+                step: 3, Icon: FileText, title: 'Set Lease Terms',
+                desc: 'Define rent amount, due date, lease duration and deposit.',
+                bg: 'bg-amber-50/90 dark:bg-[#483318]', border: 'border-amber-200 dark:border-amber-400/50',
+                iconColor: 'text-amber-700 dark:text-amber-200', num: 'bg-amber-500 dark:bg-amber-500',
+              },
+              {
+                step: 4, Icon: Key, title: 'Activate Lease',
+                desc: 'Review and confirm — unit is marked occupied instantly.',
+                bg: 'bg-emerald-50/90 dark:bg-[#144230]', border: 'border-emerald-200 dark:border-emerald-400/50',
+                iconColor: 'text-emerald-700 dark:text-emerald-200', num: 'bg-emerald-600 dark:bg-emerald-500',
+              },
+            ].map(({ step, Icon, title, desc, bg, border, iconColor, num }, i, arr) => (
+              <div key={step} className="relative flex flex-col">
+                {i < arr.length - 1 && (
+                  <div className="hidden lg:flex absolute top-9 left-full w-4 z-10 items-center justify-center">
+                    <ArrowRight size={12} className="text-slate-300 dark:text-slate-400" />
+                  </div>
+                )}
+                <div className={`${bg} ${border} border rounded-2xl p-5 flex-1 flex flex-col gap-3 hover:shadow-lg transition-all duration-200 shadow-sm`}>
+                  <div className="flex items-center gap-3">
+                    <div className={`w-6 h-6 rounded-full ${num} text-white text-[10px] font-black flex items-center justify-center shrink-0 shadow-md`}>
+                      {step}
+                    </div>
+                    <div className={`w-8 h-8 rounded-xl ${bg} ${border} border flex items-center justify-center`}>
+                      <Icon size={16} className={iconColor} />
+                    </div>
+                  </div>
+                  <div>
+                    <div className={`text-sm font-extrabold ${iconColor} mb-1 tracking-tight`}>{title}</div>
+                    <div className="text-[11px] text-slate-600 dark:text-slate-100 leading-relaxed font-normal">{desc}</div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     );
   }

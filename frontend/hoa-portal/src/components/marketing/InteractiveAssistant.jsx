@@ -429,7 +429,7 @@ export default function InteractiveAssistant() {
 
       {/* ── CLOSED STATE — only welcome bubble, NO floating chips ── */}
       {!isOpen && showWelcome && (
-        <div className="relative mb-3 p-4 bg-white dark:bg-[#11101d] border border-slate-200/80 dark:border-white/[0.08] rounded-2xl shadow-xl max-w-[260px] animate-fade-in-up flex gap-3 items-start pointer-events-auto">
+        <div className="relative mb-3 p-4 bg-white dark:bg-[#1e293b] border border-slate-200/80 dark:border-slate-700 rounded-2xl shadow-xl max-w-[260px] animate-fade-in-up flex gap-3 items-start pointer-events-auto">
           <button
             onClick={(e) => { e.stopPropagation(); setShowWelcome(false); }}
             className="absolute top-2 right-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
@@ -449,7 +449,7 @@ export default function InteractiveAssistant() {
 
       {/* ── CHAT PANEL ── */}
       {isOpen && (
-        <div className="w-[360px] max-w-[95vw] h-[540px] max-h-[85vh] bg-white dark:bg-[#11101d] rounded-3xl border border-slate-200/80 dark:border-white/[0.08] shadow-2xl flex flex-col overflow-hidden animate-fade-in-up mb-4 transition-colors duration-200">
+        <div className="w-[360px] max-w-[95vw] h-[540px] max-h-[85vh] bg-white dark:bg-[#1e293b] rounded-3xl border border-slate-200/80 dark:border-slate-700 shadow-2xl flex flex-col overflow-hidden animate-fade-in-up mb-4 transition-colors duration-200">
 
           {/* Header */}
           <div className="bg-gradient-to-r from-violet-600 via-[#5942be] to-indigo-600 p-4 flex items-center justify-between text-white shadow-md shrink-0">
@@ -498,7 +498,7 @@ export default function InteractiveAssistant() {
           )}
 
           {/* Messages */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar bg-slate-50/30 dark:bg-[#090812]">
+          <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar bg-slate-50/30 dark:bg-[#0f172a]">
             {messages.map((msg, i) => (
               <div
                 key={i}
@@ -548,7 +548,7 @@ export default function InteractiveAssistant() {
           {/* Input */}
           <form
             onSubmit={(e) => { e.preventDefault(); if (inputValue.trim()) handleSend(inputValue); }}
-            className="p-3 bg-white dark:bg-[#11101d] border-t border-slate-100 dark:border-white/[0.04] flex items-center gap-2 shrink-0"
+            className="p-3 bg-white dark:bg-[#1e293b] border-t border-slate-100 dark:border-slate-700 flex items-center gap-2 shrink-0"
           >
             <input
               type="text"

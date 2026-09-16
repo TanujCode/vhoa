@@ -37,8 +37,10 @@ def register_user(data: RegisterRequest, db: Session) -> User:
         raise ValueError("This email is already registered.")
 
     if data.mobile_number:
-        if db.query(User).filter(User.mobile_number == data.mobile_number).first():
-            raise ValueError("This mobile number already registered to another user.")
+        from app.utils.encryption import safe_decrypt_field
+        for u in db.query(User.mobile_number).filter(User.mobile_number.isnot(None)).all():
+            if safe_decrypt_field(u[0]) == data.mobile_number.strip():
+                raise ValueError("This mobile number already registered to another user.")
 
     role = db.query(Role).filter(
         Role.role_name == data.role,
@@ -48,19 +50,19 @@ def register_user(data: RegisterRequest, db: Session) -> User:
         raise ValueError(f"Role '{data.role}' does not exist.")
 
     from app.utils.user_code import generate_user_code
+    from app.utils.encryption import encrypt_field
     first_name, middle_name, last_name = split_full_name(data.full_name)
     u_code = generate_user_code(db, first_name, last_name)
 
     new_user = User(
-        first_name            = first_name,
-        middle_name           = middle_name,
-        last_name             = last_name,
+        first_name            = encrypt_field(first_name),
+        middle_name           = encrypt_field(middle_name) if middle_name else None,
+        last_name             = encrypt_field(last_name),
         user_code             = u_code,
         email_id              = data.email_id.lower().strip(),
-        mobile_number         = data.mobile_number,
+        mobile_number         = encrypt_field(data.mobile_number.strip()) if data.mobile_number else None,
         password              = hash_password(data.password),
         role_id               = role.role_id,
-        is_client             = data.role == "resident",
         active_status         = True,
         account_status        = "PENDING_VERIFICATION",
         email_id_is_verified  = False,
@@ -209,7 +211,7 @@ def verify_otp(email_id: str, otp_code: str, otp_type: str, db: Session) -> User
     ).first()
 
     if not otp_record:
-        raise ValueError("The OTP is incorrect or has already been used.")
+        raise ValueError("The OTP is incorrect.")
 
     if datetime.now(timezone.utc) > otp_record.expires_at:
         raise ValueError("The OTP has expired. Please request it again.")

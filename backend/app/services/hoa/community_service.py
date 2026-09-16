@@ -7,6 +7,7 @@ from app.models.hoa.user import User
 from app.models.hoa.contract import Contract
 from app.schemas.community import CommunityCreate, CommunityUpdate, AddressCreate
 from datetime import datetime, timezone
+from app.utils.encryption import encrypt_field
 
 # ══════════════════════════════════════════════
 #  ADDRESS — CREATE
@@ -73,14 +74,14 @@ def create_community(data: CommunityCreate, created_by_id: int, db: Session) -> 
 
         community_size          = data.community_size,
         total_owners            = data.total_owners,
-        contact_person          = data.contact_person,
+        contact_person          = encrypt_field(data.contact_person) if data.contact_person else None,
         time_zone               = data.time_zone,
 
         # HOA Escrow Bank Details
-        bank_name               = data.bank_name,
-        bank_account_no         = data.bank_account_no,
-        bank_routing_no         = data.bank_routing_no,
-        bank_account_name       = data.bank_account_name,
+        bank_name               = encrypt_field(data.bank_name) if data.bank_name else None,
+        bank_account_no         = encrypt_field(data.bank_account_no) if data.bank_account_no else None,
+        bank_routing_no         = encrypt_field(data.bank_routing_no) if data.bank_routing_no else None,
+        bank_account_name       = encrypt_field(data.bank_account_name) if data.bank_account_name else None,
 
         contract_id             = contract.contract_id,
         visible_tabs            = json.dumps(data.visible_tabs) if data.visible_tabs is not None else None,
@@ -162,7 +163,7 @@ def update_community(
     if data.name is not None:
         community.name = data.name.strip()
     if data.contact_person is not None:
-        community.contact_person = data.contact_person
+        community.contact_person = encrypt_field(data.contact_person)
     if data.community_size is not None:
         community.community_size = data.community_size
     if data.total_owners is not None:
@@ -187,13 +188,13 @@ def update_community(
 
     # HOA Escrow Bank Details
     if data.bank_name is not None:
-        community.bank_name = data.bank_name
+        community.bank_name = encrypt_field(data.bank_name)
     if data.bank_account_no is not None:
-        community.bank_account_no = data.bank_account_no
+        community.bank_account_no = encrypt_field(data.bank_account_no)
     if data.bank_routing_no is not None:
-        community.bank_routing_no = data.bank_routing_no
+        community.bank_routing_no = encrypt_field(data.bank_routing_no)
     if data.bank_account_name is not None:
-        community.bank_account_name = data.bank_account_name
+        community.bank_account_name = encrypt_field(data.bank_account_name)
 
     if data.visible_tabs is not None:
         import json
