@@ -139,7 +139,7 @@ export default function HoaSolutionPage() {
               {/* Action Buttons */}
               <div className="flex flex-wrap items-center gap-3 pt-1">
                 <Link
-                  to="/portal-select?type=hoa"
+                  to="/rental/register"
                   className="px-7 py-3 bg-gradient-to-r from-violet-600 via-indigo-600 to-purple-600 hover:from-violet-500 hover:via-indigo-500 hover:to-purple-500 text-white font-bold text-xs sm:text-sm rounded-full shadow-sm transition-all active:scale-95"
                 >
                   Start Free Trial
@@ -368,7 +368,7 @@ export default function HoaSolutionPage() {
 
             <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
               <Link
-                to="/portal-select?type=hoa"
+                to="/rental/register"
                 className="px-8 py-3 bg-white text-indigo-900 font-bold text-xs sm:text-sm rounded-full shadow-lg hover:bg-slate-100 transition-all active:scale-95"
               >
                 Start Free Trial

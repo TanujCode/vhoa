@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { FileText, Plus, CheckCircle, Clock, Send, Lock, PenTool, Sparkles, Trash2, ShieldAlert, Search, X, Eye, Calendar, DollarSign, Settings, Paperclip, User, CheckSquare, ArrowLeft, ArrowRight, AlertCircle, Info, Home, Mail, Phone, Edit3, ArrowUp, ArrowDown, Download } from 'lucide-react';
+import { FileText, Plus, CheckCircle, Clock, Send, Lock, PenTool, Sparkles, Trash2, ShieldAlert, Search, X, Eye, Calendar, DollarSign, Settings, Paperclip, User, CheckSquare, ArrowLeft, ArrowRight, AlertCircle, Info, Home, Mail, Phone, Edit3, ArrowUp, ArrowDown, Download, Building2 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import API from '../../services/api';
 import ConfirmModal from '../../components/ConfirmModal';
@@ -390,7 +390,7 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
     return isEntireProperty ? '1' : clean;
   };
 
-  const hasVacantUnits = filteredUnits.length === 0 || filteredUnits.some(u => u.status === 'VACANT');
+  const hasVacantUnits = filteredUnits.length > 0 && filteredUnits.some(u => u.status === 'VACANT' || !u.has_active_lease);
   const canSignAsPrimary = selectedLease && isLandlord && !selectedLease.landlord_signature && selectedLease.status === 'PENDING_LANDLORD_APPROVAL';
   const isUserPrimaryLandlord = selectedLease && selectedLease.landlord_signature && 
     (user?.name && (
@@ -3571,7 +3571,7 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
     );
   }
 
-  if (showCreateModal) {
+  if (showCreateModal && (editingLeaseId || hasVacantUnits)) {
     return (
       <div className="p-2 relative text-slate-900 dark:text-white text-left animate-fade-in">
         <div className="bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-600 rounded-2xl overflow-hidden shadow-xl flex flex-col h-[calc(100vh-220px)] lg:h-[calc(100vh-240px)] min-h-[420px]">
@@ -3701,18 +3701,18 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
 
   return (
     <div className="p-2 relative text-slate-900 dark:text-white text-left animate-fade-in">
-      <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-xl overflow-hidden shadow-sm">
+      <div className="bg-white dark:bg-[#28384E] border border-slate-200/80 dark:border-white/10 rounded-2xl overflow-hidden shadow-sm dark:shadow-md">
         
         {/* Header Section */}
         <div className="p-5 border-b border-slate-200 dark:border-white/10 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div className="flex items-center gap-3">
-            <div className="text-slate-800 dark:text-white font-medium text-sm flex items-center gap-2">
-              <FileText size={16} /> Lease Agreements Directory
+            <div className="text-slate-800 dark:text-white font-bold text-sm flex items-center gap-2">
+              <FileText size={16} className="text-blue-500" /> Lease Agreements Directory
             </div>
             {isLandlord && (
               <button 
-                onClick={() => { setShowCreateModal(true); setFormErrors({}); setErrorMsg(''); }}
-                className="bg-blue-600 hover:bg-blue-500 text-white px-3.5 py-1.5 rounded-xl flex items-center gap-1.5 text-xs font-semibold transition-all shadow-md shadow-blue-500/20 whitespace-nowrap cursor-pointer"
+                onClick={() => { resetWizardForm(); setShowCreateModal(true); setFormErrors({}); setErrorMsg(''); }}
+                className="bg-blue-600 hover:bg-blue-500 text-white px-3.5 py-1.5 rounded-xl flex items-center gap-1.5 text-xs font-semibold transition-all shadow-md shadow-blue-500/20 whitespace-nowrap cursor-pointer active:scale-95"
               >
                 <Plus className="w-4 h-4" /> Create Lease
               </button>
@@ -3721,13 +3721,13 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
           
           {/* Search Input */}
           <div className="relative w-full sm:w-72">
-            <Search className="absolute left-3 top-3.5 text-slate-400" size={16} />
+            <Search className="absolute left-3 top-3 text-slate-400" size={16} />
             <input
               type="text"
               placeholder="Search by tenant email or unit..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-slate-50 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/10 rounded-2xl pl-9 pr-9 py-2.5 text-sm text-slate-900 dark:text-white focus:border-blue-500 outline-none"
+              className="w-full bg-slate-50 dark:bg-[#1e293b] border border-slate-200 dark:border-white/10 rounded-xl pl-9 pr-9 py-2 text-xs text-slate-900 dark:text-white focus:border-blue-500 outline-none"
             />
             {searchQuery && (
               <button
@@ -3774,34 +3774,38 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
                       onClick={() => setSelectedLease(l)}
                       className="hover:bg-slate-50 dark:hover:bg-white/5 transition-colors group cursor-pointer"
                     >
-                      <td className="px-4 py-4 text-slate-600 dark:text-gray-400 font-medium">{l.tenant_email}</td>
+                      <td className="px-4 py-4 text-slate-900 dark:text-slate-100 font-medium">{l.tenant_email}</td>
                       <td className="px-4 py-4">
                         <div className="flex flex-col items-start gap-1">
                           {l.unit?.unit_number === 'Single Family' ? (
-                            <span className="bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-450 px-2.5 py-0.5 rounded text-[10px] font-bold border border-emerald-500/20 whitespace-nowrap inline-block animate-fade-in">
+                            <span className="bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-300 px-2.5 py-0.5 rounded text-[10px] font-bold border border-emerald-500/20 whitespace-nowrap inline-block animate-fade-in">
                               Single Family
                             </span>
                           ) : l.unit?.unit_number === 'Condo Unit' ? (
-                            <span className="bg-indigo-500/10 text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-400 px-2.5 py-0.5 rounded text-[10px] font-bold border border-indigo-500/20 whitespace-nowrap inline-block animate-fade-in">
+                            <span className="bg-indigo-500/10 text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-300 px-2.5 py-0.5 rounded text-[10px] font-bold border border-indigo-500/20 whitespace-nowrap inline-block animate-fade-in">
                               Condo
                             </span>
                           ) : (
-                            <span className="bg-blue-500/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400 px-2.5 py-0.5 rounded text-[10px] font-bold border border-blue-500/20 whitespace-nowrap inline-block animate-fade-in">
-                            {l.unit?.property_type === 'condo' ? 'Apt' : 'Unit'} {getCleanUnitNumber(l.unit?.unit_number)}
+                            <span className="bg-blue-500/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-300 px-2.5 py-0.5 rounded text-[10px] font-bold border border-blue-500/20 whitespace-nowrap inline-block animate-fade-in">
+                              {l.unit?.property_type === 'condo' ? 'Apt' : 'Unit'} {getCleanUnitNumber(l.unit?.unit_number)}
                             </span>
                           )}
                           {(l.property_name || l.unit?.property_name) && (
-                            <span className="text-[10px] text-slate-455 dark:text-slate-400 font-semibold tracking-wide truncate max-w-[150px]">
+                            <span className="text-[11px] text-slate-500 dark:text-slate-300 font-semibold tracking-wide truncate max-w-[150px]">
                               {l.property_name || l.unit?.property_name}
                             </span>
                           )}
                         </div>
                       </td>
-                      <td className="px-4 py-4 font-mono font-bold text-slate-900 dark:text-white font-semibold">
+                      <td className="px-4 py-4 font-mono font-bold text-slate-900 dark:text-white">
                         ${l.rent_amount}/mo
                       </td>
-                      <td className="px-4 py-4 text-slate-600 dark:text-gray-450 text-xs">
-                        {l.start_date} to {l.end_date}
+                      <td className="px-4 py-4 whitespace-nowrap">
+                        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-white/5 border border-slate-200/60 dark:border-white/10 font-mono text-xs text-slate-800 dark:text-slate-200 font-semibold">
+                          <span>{l.start_date}</span>
+                          <span className="text-slate-400 dark:text-slate-400 font-sans text-[10px] font-normal">to</span>
+                          <span>{l.end_date}</span>
+                        </div>
                       </td>
                       <td className="px-4 py-4 text-right whitespace-nowrap">
                         <span className={`px-2.5 py-0.5 rounded text-[10px] font-bold border ${
@@ -3811,7 +3815,7 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
                               ? 'text-orange-600 dark:text-orange-400 bg-orange-500/10 dark:bg-orange-500/20 border-orange-500/20 animate-pulse'
                               : l.status === 'PENDING_TENANT_REVIEW'
                                 ? 'text-amber-600 dark:text-amber-400 bg-amber-500/10 dark:bg-amber-500/20 border-amber-500/20'
-                                : 'text-slate-650 dark:text-slate-400 bg-slate-500/10 dark:bg-slate-500/20 border-slate-500/20'
+                                : 'text-slate-600 dark:text-slate-300 bg-slate-500/10 dark:bg-slate-500/20 border-slate-500/20'
                         }`}>
                           {l.status === 'PENDING_LANDLORD_APPROVAL' ? (isLandlord ? 'Ready to Review' : 'Sent for Review') : l.status === 'PENDING_TENANT_REVIEW' ? 'Awaiting Tenant' : l.status}
                         </span>
@@ -4300,6 +4304,44 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
         }}
         onCancel={() => setConfirmConfig(prev => ({ ...prev, isOpen: false }))}
       />
+
+      {/* No Vacant Property Confirmation Modal */}
+      {showCreateModal && !editingLeaseId && !hasVacantUnits && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[200] flex items-center justify-center p-4 animate-in fade-in zoom-in-95 duration-200">
+          <div className="bg-white dark:bg-gradient-to-br dark:from-[#28384E] dark:to-[#222f42] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 w-full max-w-sm text-center shadow-2xl text-slate-900 dark:text-white">
+            <div className="w-14 h-14 bg-amber-500/10 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 rounded-full flex items-center justify-center mx-auto mb-4 border border-amber-500/20">
+              <Building2 size={28} />
+            </div>
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">No Vacant Properties</h3>
+            <p className="text-xs text-slate-500 dark:text-gray-400 mb-6 leading-relaxed">
+              All properties and apartments currently have active leases with assigned tenants. Please add a new property first to create a new lease.
+            </p>
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowCreateModal(false);
+                  resetWizardForm();
+                }}
+                className="flex-1 py-3 px-4 rounded-2xl text-xs font-bold bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 text-slate-700 dark:text-gray-200 transition cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowCreateModal(false);
+                  localStorage.setItem('open_add_property_modal', 'true');
+                  window.location.href = '/rental/dashboard?tab=properties_hub';
+                }}
+                className="flex-1 py-3 px-4 rounded-2xl text-xs font-bold bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-500/25 transition cursor-pointer"
+              >
+                Add Property
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

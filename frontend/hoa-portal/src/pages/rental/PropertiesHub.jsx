@@ -138,18 +138,24 @@ export default function PropertiesHub({
     }
   };
 
-  useEffect(() => {
-    if ((properties || []).length === 0) {
-      setShowPropModal(true);
+  const handleOpenAddProperty = (overridePropsList = null) => {
+    const listToEvaluate = overridePropsList || properties || [];
+    const activePropertiesCount = listToEvaluate.filter(p => p.active_status !== false).length;
+    if (activePropertiesCount >= 2) {
+      setShowUpgradeModal(true);
+      return;
     }
-  }, [(properties || []).length]);
-
-  useEffect(() => {
-    if (localStorage.getItem('open_add_property_modal') === 'true') {
-      localStorage.removeItem('open_add_property_modal');
-      setShowPropModal(true);
-    }
-  }, []);
+    setErrorMsg('');
+    setPropName('');
+    setPropAddress('');
+    setPropCity('');
+    setPropState('');
+    setPropZip('');
+    setPropertyType('single');
+    setWizardUnits([{ unit_number: 'Single Family', rent_amount: '' }]);
+    setWizardStep(1);
+    setShowPropModal(true);
+  };
 
   useEffect(() => {
     const handleOutsideClick = () => {
@@ -513,12 +519,26 @@ export default function PropertiesHub({
   };
 
   useEffect(() => {
-    fetchProperties();
-    if (localStorage.getItem('open_add_property_modal') === 'true') {
-      localStorage.removeItem('open_add_property_modal');
-      setShowPropModal(true);
-      setWizardStep(1);
-    }
+    fetchProperties().then((propsList) => {
+      if (localStorage.getItem('open_add_property_modal') === 'true') {
+        localStorage.removeItem('open_add_property_modal');
+        const activeCount = (propsList || []).filter(p => p.active_status !== false).length;
+        if (activeCount >= 2) {
+          setShowUpgradeModal(true);
+        } else {
+          setErrorMsg('');
+          setPropName('');
+          setPropAddress('');
+          setPropCity('');
+          setPropState('');
+          setPropZip('');
+          setPropertyType('single');
+          setWizardUnits([{ unit_number: 'Single Family', rent_amount: '' }]);
+          setWizardStep(1);
+          setShowPropModal(true);
+        }
+      }
+    });
 
     const handleGlobalUpdate = () => {
       fetchProperties();
@@ -560,8 +580,10 @@ export default function PropertiesHub({
       } else {
         setSelectedProperty(null);
       }
+      return res.data;
     } catch (err) {
       console.error(err);
+      return [];
     } finally {
       setLoadingProps(false);
     }
@@ -954,17 +976,7 @@ export default function PropertiesHub({
               </button>
             )}
             <button 
-              onClick={() => { 
-                const activePropertiesCount = (properties || []).filter(p => p.active_status !== false).length;
-                if (activePropertiesCount >= 2) {
-                  setShowUpgradeModal(true);
-                  return;
-                }
-                setErrorMsg(''); 
-                setPropertyType('single'); 
-                setWizardUnits([{ unit_number: 'Single Family', rent_amount: '' }]); 
-                setShowPropModal(true); 
-              }}
+              onClick={() => handleOpenAddProperty()}
               className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2.5 rounded-xl flex items-center gap-1.5 text-xs font-bold transition-all shadow-md shadow-blue-500/20 whitespace-nowrap cursor-pointer"
             >
               <Plus className="w-4 h-4" /> Add Property
@@ -984,7 +996,7 @@ export default function PropertiesHub({
               Register your first rental property to initialize your portfolio and start managing units.
             </p>
             <button
-              onClick={() => setShowPropModal(true)}
+              onClick={() => handleOpenAddProperty()}
               className="mt-2 bg-blue-600 hover:bg-blue-500 text-white font-bold py-2.5 px-5 rounded-xl text-xs transition duration-200 inline-flex items-center gap-2 cursor-pointer shadow-md shadow-blue-500/15"
             >
               <Plus className="w-4 h-4" /> Add Property
@@ -1584,96 +1596,33 @@ export default function PropertiesHub({
       })()}
 
 
-      {/* Upgrade Subscription Modal */}
+      {/* Maximum Property Limit Confirmation Modal */}
       {showUpgradeModal && (
-        <div className="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
-          <div className="bg-gradient-to-b from-white to-slate-50 dark:from-[#1e2a3b] dark:to-[#121b26] border border-slate-200 dark:border-white/10 w-full max-w-lg rounded-3xl p-6 md:p-8 space-y-6 shadow-2xl animate-scale-up text-slate-900 dark:text-white text-center relative overflow-hidden">
-            {/* Background Light Glow */}
-            <div className="absolute -top-24 -left-24 w-48 h-48 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
-            <div className="absolute -top-24 -right-24 w-48 h-48 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
-
-            {/* Header */}
-            <div className="space-y-2 relative z-10 flex flex-col items-center">
-              <div className="p-3 bg-blue-600/10 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 rounded-2xl mb-2 flex items-center justify-center">
-                <Sparkles className="w-8 h-8 animate-pulse" />
-              </div>
-              <h3 className="text-xl md:text-2xl font-black tracking-tight text-slate-900 dark:text-white">
-                Portfolio Limit Reached
-              </h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm leading-relaxed">
-                You have reached your limit (maximum of 2 properties). Upgrade your plan to add more properties, expand your portfolio, and access premium tools.
-              </p>
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[200] flex items-center justify-center p-4 animate-in fade-in zoom-in-95 duration-200">
+          <div className="bg-white dark:bg-gradient-to-br dark:from-[#28384E] dark:to-[#222f42] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 w-full max-w-sm text-center shadow-2xl text-slate-900 dark:text-white">
+            <div className="w-14 h-14 bg-amber-500/10 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 rounded-full flex items-center justify-center mx-auto mb-4 border border-amber-500/20">
+              <Building2 size={28} />
             </div>
-
-            {/* Pricing Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 relative z-10 text-left">
-              {/* Standard Plan */}
-              <div className="p-5 rounded-2xl border border-slate-200 dark:border-white/5 bg-white/60 dark:bg-white/[0.02] hover:border-blue-500/30 dark:hover:border-blue-500/30 transition-all flex flex-col justify-between">
-                <div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Standard</span>
-                    <span className="text-xs font-black text-blue-600 dark:text-blue-400 bg-blue-600/10 dark:bg-blue-500/20 px-2 py-0.5 rounded">Popular</span>
-                  </div>
-                  <div className="mt-3">
-                    <span className="text-2xl font-black tracking-tight">$29</span>
-                    <span className="text-slate-400 text-[10px] font-semibold">/month</span>
-                  </div>
-                  <ul className="mt-4 space-y-2 text-[11px] font-medium text-slate-600 dark:text-slate-350">
-                    <li className="flex items-center gap-1.5">✓ Up to 25 properties maximum</li>
-                    <li className="flex items-center gap-1.5">✓ Automatic invoicing & reminders</li>
-                    <li className="flex items-center gap-1.5">✓ 24h email response support</li>
-                  </ul>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    alert("Thank you! Simulated payment completed. Standard Plan activated successfully.");
-                    setShowUpgradeModal(false);
-                  }}
-                  className="mt-6 w-full py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold transition shadow-md shadow-blue-500/10 cursor-pointer text-center"
-                >
-                  Buy Standard Plan
-                </button>
-              </div>
-
-              {/* Premium Plan */}
-              <div className="p-5 rounded-2xl border border-slate-200 dark:border-white/5 bg-white/60 dark:bg-white/[0.02] hover:border-indigo-500/30 dark:hover:border-indigo-500/30 transition-all flex flex-col justify-between">
-                <div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Premium</span>
-                    <span className="text-xs font-black text-indigo-600 dark:text-indigo-400 bg-indigo-600/10 dark:bg-indigo-500/20 px-2 py-0.5 rounded">Unlimited</span>
-                  </div>
-                  <div className="mt-3">
-                    <span className="text-2xl font-black tracking-tight">$59</span>
-                    <span className="text-slate-400 text-[10px] font-semibold">/month</span>
-                  </div>
-                  <ul className="mt-4 space-y-2 text-[11px] font-medium text-slate-600 dark:text-slate-350">
-                    <li className="flex items-center gap-1.5">✓ Unlimited properties</li>
-                    <li className="flex items-center gap-1.5">✓ Dedicated support manager</li>
-                    <li className="flex items-center gap-1.5">✓ Custom legal agreement clauses</li>
-                  </ul>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    alert("Thank you! Simulated payment completed. Premium Plan activated successfully.");
-                    setShowUpgradeModal(false);
-                  }}
-                  className="mt-6 w-full py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-xl text-xs font-bold transition shadow-md shadow-indigo-500/10 cursor-pointer text-center"
-                >
-                  Buy Premium Plan
-                </button>
-              </div>
-            </div>
-
-            {/* Close / Actions */}
-            <div className="pt-2 flex justify-center relative z-10">
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">Property Limit Reached</h3>
+            <p className="text-xs text-slate-500 dark:text-gray-400 mb-6 leading-relaxed">
+              You can only add a maximum of 2 properties under your current plan. To add more properties, please upgrade your subscription or manage your existing properties.
+            </p>
+            <div className="flex gap-3">
               <button
                 type="button"
                 onClick={() => setShowUpgradeModal(false)}
-                className="px-6 py-2 border border-slate-200 dark:border-white/10 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white rounded-xl text-xs font-bold cursor-pointer transition"
+                className="flex-1 py-3 px-4 rounded-2xl text-xs font-bold bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 text-slate-700 dark:text-gray-200 transition cursor-pointer"
               >
-                No Thanks, Cancel
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowUpgradeModal(false);
+                }}
+                className="flex-1 py-3 px-4 rounded-2xl text-xs font-bold bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-500/25 transition cursor-pointer"
+              >
+                Upgrade Plan
               </button>
             </div>
           </div>

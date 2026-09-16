@@ -437,7 +437,7 @@ export default function AboutPage() {
 
             <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
               <Link
-                to="/portal-select"
+                to="/rental/register"
                 className="px-8 py-3.5 bg-white text-[#4c1d95] font-extrabold text-xs sm:text-sm rounded-full shadow-lg hover:bg-slate-100 transition-all active:scale-95"
               >
                 Get Started Free

@@ -102,7 +102,7 @@ const RentalSidebar = ({ activePage, setActivePage, isOpen, setIsOpen, user, pro
         <div className="fixed inset-0 bg-black/70 z-40 lg:hidden" onClick={() => setIsOpen(false)} />
       )}
 
-      <aside className={`fixed lg:static inset-y-0 left-0 w-64 bg-[#E3F2FD] dark:bg-[#162535] border-r border-slate-200/60 dark:border-white/10 z-50 transform transition-transform duration-300 ${isOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 overflow-hidden flex flex-col shrink-0`}>
+      <aside className={`fixed lg:static inset-y-0 left-0 w-64 bg-[#E3F2FD] dark:bg-[#243044] border-r border-slate-200/60 dark:border-white/10 z-50 transform transition-transform duration-300 ${isOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 overflow-hidden flex flex-col shrink-0`}>
         
         {/* Logo */}
         <div className="h-16 flex items-center px-4 border-b border-slate-200/60 dark:border-white/10">
@@ -112,7 +112,7 @@ const RentalSidebar = ({ activePage, setActivePage, isOpen, setIsOpen, user, pro
         {/* Navigation */}
         <nav className="flex-1 overflow-y-auto p-4 space-y-6 custom-scrollbar">
           <div>
-            <div className="text-[10px] font-bold text-slate-500 dark:text-gray-500 tracking-widest px-3 mb-4 uppercase">
+            <div className="text-[10px] font-bold text-slate-500 dark:text-gray-400 tracking-widest px-3 mb-4 uppercase">
               Main Menu
             </div>
             <div className="space-y-1">
@@ -132,8 +132,10 @@ const RentalSidebar = ({ activePage, setActivePage, isOpen, setIsOpen, user, pro
             </div>
           </div>
 
-          <div>
-            <div className="text-[10px] font-bold text-slate-500 dark:text-gray-500 tracking-widest px-3 mb-4 uppercase">System</div>
+          <div className="pt-2 border-t border-slate-200/60 dark:border-white/10">
+            <div className="text-[10px] font-bold text-slate-500 dark:text-gray-400 tracking-widest px-3 mb-4 uppercase">
+              Account & Security
+            </div>
             <div className="space-y-1">
               <div
                 onClick={() => { setActivePage('profile'); setIsOpen(false); }}
@@ -156,7 +158,7 @@ const RentalSidebar = ({ activePage, setActivePage, isOpen, setIsOpen, user, pro
 
         {/* User Footer */}
         <div className="p-4 border-t border-slate-200/60 dark:border-white/10">
-          <div className="bg-white/60 dark:bg-[#1E3248] p-3 rounded-2xl flex items-center gap-3 cursor-pointer hover:bg-white/80 dark:hover:bg-white/10 transition-colors" onClick={() => setActivePage('profile')}>
+          <div className="bg-white/60 dark:bg-[#2d3d54] p-3 rounded-2xl flex items-center gap-3 cursor-pointer hover:bg-white/80 dark:hover:bg-white/10 transition-colors" onClick={() => setActivePage('profile')}>
             <div className="w-9 h-9 rounded-xl flex items-center justify-center font-bold text-white transition-all overflow-hidden border border-white/10 bg-gradient-to-br from-blue-500 to-blue-600 shadow-md flex-shrink-0">
               {user?.user_profile_url ? (
                 <img 

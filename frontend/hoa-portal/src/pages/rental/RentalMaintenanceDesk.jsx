@@ -518,7 +518,7 @@ export default function RentalMaintenanceDesk({ user, selectedPropertyFilterId =
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center py-20 bg-slate-50 dark:bg-[#0D1B2A] rounded-3xl">
+      <div className="flex justify-center items-center py-20 bg-slate-50 dark:bg-[#1e293b] rounded-3xl">
         <div className="text-center">
           <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-sm font-semibold text-gray-550 dark:text-gray-400 font-mono tracking-wider">LOADING TICKETS...</p>

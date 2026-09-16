@@ -148,7 +148,7 @@ export default function LandlordDashboard({
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center py-32 bg-slate-50 dark:bg-[#0D1B2A] rounded-3xl">
+      <div className="flex justify-center items-center py-32 bg-slate-50 dark:bg-[#1e293b] rounded-3xl">
         <div className="text-center">
           <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-sm font-semibold text-gray-500 dark:text-gray-400 font-mono tracking-wider">PREPARING PORTFOLIO...</p>
@@ -643,69 +643,70 @@ export default function LandlordDashboard({
   return (
     <div className="space-y-8 animate-fade-in text-left pb-16 font-sans">
       
-      {/* ── Page Header & Unified Layout Card matching HOA ── */}
-      <div className="bg-white dark:bg-[#1E2E42] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 sm:p-8 text-slate-800 dark:text-white shadow-sm dark:shadow-none relative overflow-visible flex flex-col lg:flex-row justify-between items-start lg:items-center gap-8 group animate-fade-in">
-        {/* Subtle premium light blue glow wrapper to prevent overflow clipping */}
-        <div className="absolute inset-0 rounded-3xl overflow-hidden pointer-events-none">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/[0.03] dark:bg-blue-500/[0.02] rounded-full blur-3xl" />
+      {/* ── Balanced Header Banner (Matching Metric Cards Height) ── */}
+      <div className="bg-white dark:bg-[#28384E] border border-slate-200/80 dark:border-white/10 rounded-2xl p-5 sm:p-6 text-slate-800 dark:text-white shadow-sm dark:shadow-md relative overflow-visible flex flex-col lg:flex-row justify-between items-stretch lg:items-center gap-5 sm:gap-6 animate-fade-in min-h-[140px]">
+        {/* Subtle premium light blue glow */}
+        <div className="absolute inset-0 rounded-2xl overflow-hidden pointer-events-none">
+          <div className="absolute top-0 right-0 w-64 h-32 bg-blue-500/[0.05] dark:bg-blue-400/[0.04] rounded-full blur-2xl" />
         </div>
 
-        {/* Left: Premium Welcome & Metadata */}
-        <div className="flex-1 min-w-0 relative z-10 space-y-4">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white leading-tight flex items-center gap-2">
-              Welcome back, {user?.name?.split(' ')[0] || 'Landlord'}! <Sparkles className="w-6 h-6 text-blue-550 dark:text-blue-400 animate-pulse shrink-0 animate-bounce-slow" />
+        {/* Left Column: 1-Line Welcome + Badges & Quick Controls */}
+        <div className="relative z-10 flex flex-col justify-between gap-3 flex-1">
+          {/* Top Row: Welcome & Badges */}
+          <div className="flex flex-wrap items-center gap-2.5 sm:gap-3">
+            <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-white whitespace-nowrap flex items-center gap-2 shrink-0">
+              <span>Welcome, {user?.name?.split(' ')[0] || 'Admin'}!</span>
+              <Sparkles className="w-5 h-5 text-blue-500 dark:text-blue-400 animate-pulse shrink-0" />
             </h1>
-            <p className="text-slate-500 dark:text-gray-455 text-xs mt-1 font-medium">
-              Rental Console • Real-Time Portfolio Summary
-            </p>
+
+            <div className="h-4 w-[1px] bg-slate-200 dark:bg-white/10 hidden sm:block" />
+
+            <div className="flex items-center gap-1.5 shrink-0">
+              <span className="inline-flex items-center text-[10px] font-bold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-white/10 px-2.5 py-0.5 rounded-lg border border-slate-200/50 dark:border-white/10 font-mono whitespace-nowrap">
+                Properties: {properties.length}
+              </span>
+              <span className="inline-flex items-center text-[10px] font-black text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-lg border border-emerald-500/20 whitespace-nowrap">
+                ACTIVE
+              </span>
+            </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3">
-            <span className="inline-flex items-center text-[10px] font-bold text-slate-600 dark:text-slate-350 bg-slate-100 dark:bg-white/5 px-2.5 py-1 rounded-xl border border-slate-200/50 dark:border-white/10 font-mono">
-              Properties: {properties.length}
-            </span>
-            <span className="inline-flex items-center text-[10px] font-black text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-xl border border-emerald-500/20">
-              ACTIVE
-            </span>
-          </div>
-
-          {/* Inline Controls (Period Filter & Action Button) */}
-          <div className="flex flex-wrap items-center gap-3 pt-2">
+          {/* Bottom Row: Controls (Period Filter & Action Button) */}
+          <div className="flex flex-wrap items-center gap-2.5">
             {/* Time Period Filter */}
             <div className="relative flex items-center">
-              <Calendar className="absolute left-3 w-4 h-4 text-slate-450 dark:text-slate-400 pointer-events-none" />
+              <Calendar className="absolute left-2.5 w-3.5 h-3.5 text-slate-400 dark:text-slate-400 pointer-events-none" />
               <select
                 value={selectedPeriod}
                 onChange={(e) => setSelectedPeriod(e.target.value)}
-                className="appearance-none bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-200 py-2 pl-9 pr-10 rounded-xl text-xs font-bold shadow-sm hover:border-blue-550 transition focus:outline-none cursor-pointer"
+                className="appearance-none bg-slate-50 dark:bg-[#1e293b] border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-200 py-1.5 pl-8 pr-7 rounded-xl text-xs font-bold shadow-sm hover:border-blue-500 transition focus:outline-none cursor-pointer"
               >
                 <option value="thismonth">This Month</option>
                 <option value="3months">Last 3 Months</option>
                 <option value="12months">Last 12 Months</option>
                 <option value="alltime">All Time</option>
               </select>
-              <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-450 dark:text-slate-400 pointer-events-none" />
+              <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 dark:text-slate-400 pointer-events-none" />
             </div>
 
             {/* Create New Action Button */}
             <div className="relative" onClick={(e) => e.stopPropagation()}>
               <button
                 onClick={() => setShowCreateDropdown(!showCreateDropdown)}
-                className="bg-blue-600 hover:bg-blue-500 text-white py-2 px-4 rounded-xl text-xs font-bold shadow-md shadow-blue-500/10 transition active:scale-95 flex items-center gap-2 cursor-pointer"
+                className="bg-blue-600 hover:bg-blue-500 text-white py-1.5 px-3.5 rounded-xl text-xs font-bold shadow-sm shadow-blue-500/10 transition active:scale-95 flex items-center gap-1.5 cursor-pointer whitespace-nowrap"
               >
-                <Plus className="w-4 h-4 stroke-[3]" /> Create new
+                <Plus className="w-3.5 h-3.5 stroke-[3]" /> Create new
               </button>
 
               {showCreateDropdown && (
-                <div className="absolute left-0 mt-2 w-48 bg-white dark:bg-[#1A2635] border border-slate-100 dark:border-white/10 rounded-2xl shadow-2xl z-30 py-2 text-slate-800 dark:text-slate-200 overflow-hidden animate-slide-up">
+                <div className="absolute left-0 mt-2 w-48 bg-white dark:bg-[#28384E] border border-slate-100 dark:border-white/10 rounded-2xl shadow-2xl z-30 py-2 text-slate-800 dark:text-slate-200 overflow-hidden animate-slide-up">
                   <button
                     onClick={() => { 
                       localStorage.setItem('open_add_property_modal', 'true');
                       setActivePage('properties_hub'); 
                       setShowCreateDropdown(false); 
                     }}
-                    className="w-full text-left px-4 py-2.5 text-xs font-bold hover:bg-slate-50 dark:hover:bg-white/5 transition flex items-center gap-2 cursor-pointer"
+                    className="w-full text-left px-4 py-2 text-xs font-bold hover:bg-slate-50 dark:hover:bg-white/10 transition flex items-center gap-2 cursor-pointer"
                   >
                     <Building2 className="w-4 h-4 text-blue-500" /> Add Property
                   </button>
@@ -715,7 +716,7 @@ export default function LandlordDashboard({
                       setActivePage('leases_hub'); 
                       setShowCreateDropdown(false); 
                     }}
-                    className="w-full text-left px-4 py-2.5 text-xs font-bold hover:bg-slate-50 dark:hover:bg-white/5 transition flex items-center gap-2 cursor-pointer"
+                    className="w-full text-left px-4 py-2 text-xs font-bold hover:bg-slate-50 dark:hover:bg-white/10 transition flex items-center gap-2 cursor-pointer"
                   >
                     <FileText className="w-4 h-4 text-purple-500" /> Draft Lease Agreement
                   </button>
@@ -725,7 +726,7 @@ export default function LandlordDashboard({
                       setActivePage('servicereq'); 
                       setShowCreateDropdown(false); 
                     }}
-                    className="w-full text-left px-4 py-2.5 text-xs font-bold hover:bg-slate-50 dark:hover:bg-white/5 transition flex items-center gap-2 cursor-pointer"
+                    className="w-full text-left px-4 py-2 text-xs font-bold hover:bg-slate-50 dark:hover:bg-white/10 transition flex items-center gap-2 cursor-pointer"
                   >
                     <Wrench className="w-4 h-4 text-amber-500" /> Log Maintenance Ticket
                   </button>
@@ -735,25 +736,88 @@ export default function LandlordDashboard({
           </div>
         </div>
 
-        {/* Right side stats block matching HOA layout */}
-        <div className="relative z-10 w-full lg:w-auto mt-5 lg:mt-0 pt-5 lg:pt-0 border-t border-slate-200/60 dark:border-white/5 lg:border-t-0">
-          <div className="grid grid-cols-2 sm:flex sm:flex-row sm:items-center sm:justify-around lg:justify-end gap-5 sm:gap-8 lg:gap-11 w-full">
-            <div className="text-center flex flex-col items-center min-w-[65px]">
-              <p className="text-3xl sm:text-4xl font-black text-blue-600 dark:text-blue-400 font-mono tracking-tight">{properties.length}</p>
-              <p className="text-[9px] sm:text-[10px] font-bold text-slate-500 dark:text-gray-455 uppercase tracking-widest mt-1">Properties</p>
+        {/* Right side status pods: Action Required & Tenant Requests */}
+        <div className="relative z-10 w-full lg:w-auto pt-3 lg:pt-0 border-t border-slate-200/60 dark:border-white/5 lg:border-t-0 shrink-0 flex items-center">
+          <div className="flex flex-row items-center justify-start lg:justify-end gap-6 sm:gap-8">
+            
+            {/* Action Required */}
+            <div 
+              onClick={() => {
+                if (leasesAwaitingApproval.length > 0) setActivePage('leases_hub');
+                else if (pendingScreening.length > 0) setActivePage('screening_hub');
+                else if (openMaint.length > 0) setActivePage('servicereq');
+                else setActivePage('leases_hub');
+              }}
+              className="cursor-pointer group flex items-center gap-3 transition-all text-left"
+            >
+              <div className={`p-3 rounded-2xl shrink-0 transition-transform group-hover:scale-110 ${
+                totalActionsCount > 0 
+                  ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400' 
+                  : 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400'
+              }`}>
+                {totalActionsCount > 0 ? <AlertCircle className="w-5 h-5 animate-pulse" /> : <CheckCircle2 className="w-5 h-5" />}
+              </div>
+
+              <div>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[11px] font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 whitespace-nowrap">
+                    Action Required
+                  </span>
+                  <span className={`text-[9px] font-extrabold px-2 py-0.5 rounded-full shrink-0 ${
+                    totalActionsCount > 0 
+                      ? 'bg-amber-500 text-white animate-pulse' 
+                      : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold'
+                  }`}>
+                    {totalActionsCount > 0 ? `${totalActionsCount} Pending` : 'All Caught Up'}
+                  </span>
+                </div>
+
+                <div className="flex items-baseline gap-2 mt-0.5">
+                  <span className={`text-xl sm:text-2xl font-black font-mono tracking-tight ${
+                    totalActionsCount > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400'
+                  }`}>
+                    {totalActionsCount}
+                  </span>
+                  <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400 group-hover:translate-x-0.5 transition-transform flex items-center gap-0.5 whitespace-nowrap">
+                    {totalActionsCount > 0 ? 'Review Now' : 'View Tasks'} <ArrowRight className="w-3 h-3" />
+                  </span>
+                </div>
+              </div>
             </div>
-            <div className="text-center flex flex-col items-center min-w-[65px]">
-              <p className="text-3xl sm:text-4xl font-black text-indigo-600 dark:text-indigo-400 font-mono tracking-tight">{totalUnitsCount}</p>
-              <p className="text-[9px] sm:text-[10px] font-bold text-slate-500 dark:text-gray-455 uppercase tracking-widest mt-1">Total Units</p>
+
+            {/* Subtle Vertical Divider */}
+            <div className="h-10 w-[1px] bg-slate-200/80 dark:bg-white/10" />
+
+            {/* Tenant Requests */}
+            <div 
+              onClick={() => setActivePage('servicereq')}
+              className="cursor-pointer group flex items-center gap-3 transition-all text-left"
+            >
+              <div className="p-3 rounded-2xl bg-blue-500/15 text-blue-600 dark:text-blue-400 shrink-0 transition-transform group-hover:scale-110">
+                <Wrench className="w-5 h-5" />
+              </div>
+
+              <div>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[11px] font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 whitespace-nowrap">
+                    Tenant Requests
+                  </span>
+                  <span className="text-[9px] font-extrabold px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 shrink-0">
+                    {filteredMaint.length} {filteredMaint.length === 1 ? 'Ticket' : 'Tickets'}
+                  </span>
+                </div>
+
+                <div className="flex items-baseline gap-2 mt-0.5">
+                  <span className="text-xl sm:text-2xl font-black font-mono tracking-tight text-blue-600 dark:text-blue-400">
+                    {filteredMaint.length}
+                  </span>
+                  <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400 group-hover:translate-x-0.5 transition-transform flex items-center gap-0.5 whitespace-nowrap">
+                    Manage Desk <ArrowRight className="w-3 h-3" />
+                  </span>
+                </div>
+              </div>
             </div>
-            <div className="text-center flex flex-col items-center min-w-[65px]">
-              <p className="text-3xl sm:text-4xl font-black text-blue-600 dark:text-blue-400 font-mono tracking-tight">{tenantsCount}</p>
-              <p className="text-[9px] sm:text-[10px] font-bold text-slate-500 dark:text-gray-455 uppercase tracking-widest mt-1">Tenants</p>
-            </div>
-            <div className="text-center flex flex-col items-center min-w-[65px]">
-              <p className="text-3xl sm:text-4xl font-black text-amber-600 dark:text-amber-500 font-mono tracking-tight">{upcomingExpensesCount}</p>
-              <p className="text-[9px] sm:text-[10px] font-bold text-slate-500 dark:text-gray-455 uppercase tracking-widest mt-1">Open Tickets</p>
-            </div>
+
           </div>
         </div>
       </div>
@@ -812,26 +876,29 @@ export default function LandlordDashboard({
         </div>
       )}
 
-      {/* --- Main 4-Metrics Row --- */}
+      {/* --- Main 4-Metrics Row (Interactive & Clickable) --- */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         
-        {/* Metric 1: Rent Received */}
-        <div className="p-6 rounded-2xl bg-white dark:bg-slate-900/60 dark:backdrop-blur-md border border-slate-200/60 dark:border-white/[0.05] hover:border-emerald-500/30 transition shadow-sm hover:shadow-md flex flex-col justify-between">
+        {/* Metric 1: Rent Received -> Opens Payments Hub */}
+        <div 
+          onClick={() => setActivePage('payments')}
+          className="p-6 rounded-2xl bg-white dark:bg-[#28384E] border border-slate-200/80 dark:border-white/10 hover:border-emerald-500/50 hover:shadow-xl transition-all duration-200 flex flex-col justify-between cursor-pointer group active:scale-[0.99] relative min-h-[140px] shadow-sm dark:shadow-md"
+        >
           <div className="flex justify-between items-start">
             <div>
-              <span className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest block">Rent received</span>
+              <span className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest block group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">Rent received</span>
               <span className="text-2xl font-black text-gray-950 dark:text-white mt-1 block">${rentPaid.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
             </div>
-            <div className="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+            <div className="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 group-hover:scale-110 group-hover:bg-emerald-500 group-hover:text-white transition-all shadow-sm">
               <CreditCard className="w-5 h-5" />
             </div>
           </div>
           <div className="mt-5 space-y-2">
-            <div className="flex justify-between items-center text-[10px] font-bold text-gray-400 dark:text-gray-500">
-              <span>Collection Rate</span>
-              <span className="text-emerald-500">{rentCollectedPercent}%</span>
+            <div className="flex justify-between items-center text-[10px] font-bold text-gray-400 dark:text-gray-400">
+              <span className="group-hover:text-slate-700 dark:group-hover:text-slate-200 transition-colors">Collection Rate</span>
+              <span className="text-emerald-500 flex items-center gap-0.5">{rentCollectedPercent}% <ArrowUpRight className="w-3 h-3 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" /></span>
             </div>
-            <div className="w-full bg-slate-100 dark:bg-white/5 h-2 rounded-full overflow-hidden">
+            <div className="w-full bg-slate-100 dark:bg-white/10 h-2 rounded-full overflow-hidden">
               <div 
                 className="bg-gradient-to-r from-emerald-500 to-teal-400 h-full rounded-full transition-all duration-700" 
                 style={{ width: `${rentCollectedPercent}%` }}
@@ -840,459 +907,255 @@ export default function LandlordDashboard({
           </div>
         </div>
 
-        {/* Metric 2: Unpaid Expenses */}
-        <div className="p-6 rounded-2xl bg-white dark:bg-slate-900/60 dark:backdrop-blur-md border border-slate-200/60 dark:border-white/[0.05] hover:border-rose-500/30 transition shadow-sm hover:shadow-md flex flex-col justify-between">
+        {/* Metric 2: Unpaid Expenses -> Opens Payments Hub */}
+        <div 
+          onClick={() => setActivePage('payments')}
+          className="p-6 rounded-2xl bg-white dark:bg-[#28384E] border border-slate-200/80 dark:border-white/10 hover:border-rose-500/50 hover:shadow-xl transition-all duration-200 flex flex-col justify-between cursor-pointer group active:scale-[0.99] relative min-h-[140px] shadow-sm dark:shadow-md"
+        >
           <div className="flex justify-between items-start">
             <div>
-              <span className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest block">Unpaid expenses</span>
+              <span className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest block group-hover:text-rose-600 dark:group-hover:text-rose-400 transition-colors">Unpaid expenses</span>
               <span className="text-2xl font-black text-gray-950 dark:text-white mt-1 block">${unpaidExpensesAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
             </div>
-            <div className="p-2.5 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400">
+            <div className="p-2.5 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400 group-hover:scale-110 group-hover:bg-rose-500 group-hover:text-white transition-all shadow-sm">
               <ArrowDownRight className="w-5 h-5" />
             </div>
           </div>
           <div className="mt-5 flex items-center justify-between text-xs font-bold">
-            <span className="text-gray-400 dark:text-gray-500">Active Invoices</span>
-            <span className="bg-rose-500/10 text-rose-600 dark:text-rose-400 px-2 py-0.5 rounded-md font-mono text-[10px]">
-              {unpaidExpensesCount} unpaid
+            <span className="text-gray-400 dark:text-gray-400 group-hover:text-slate-700 dark:group-hover:text-slate-200 transition-colors">Active Invoices</span>
+            <span className="bg-rose-500/10 text-rose-600 dark:text-rose-400 group-hover:bg-rose-500 group-hover:text-white px-2 py-0.5 rounded-md font-mono text-[10px] flex items-center gap-1 transition-colors">
+              {unpaidExpensesCount} unpaid <ArrowRight className="w-2.5 h-2.5" />
             </span>
           </div>
         </div>
 
-        {/* Metric 3: Overdue Rent */}
-        <div className="p-6 rounded-2xl bg-white dark:bg-slate-900/60 dark:backdrop-blur-md border border-slate-200/60 dark:border-white/[0.05] hover:border-amber-500/30 transition shadow-sm hover:shadow-md flex flex-col justify-between">
+        {/* Metric 3: Overdue Rent -> Opens Payments Hub */}
+        <div 
+          onClick={() => setActivePage('payments')}
+          className="p-6 rounded-2xl bg-white dark:bg-[#28384E] border border-slate-200/80 dark:border-white/10 hover:border-amber-500/50 hover:shadow-xl transition-all duration-200 flex flex-col justify-between cursor-pointer group active:scale-[0.99] relative min-h-[140px] shadow-sm dark:shadow-md"
+        >
           <div className="flex justify-between items-start">
             <div>
-              <span className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest block">Overdue rent</span>
-              <span className="text-2xl font-black text-gray-955 dark:text-white mt-1 block">${overdueRentAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+              <span className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest block group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">Overdue rent</span>
+              <span className="text-2xl font-black text-gray-950 dark:text-white mt-1 block">${overdueRentAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
             </div>
-            <div className="p-2.5 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400">
+            <div className="p-2.5 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 group-hover:scale-110 group-hover:bg-amber-500 group-hover:text-white transition-all shadow-sm">
               <Clock className="w-5 h-5" />
             </div>
           </div>
           <div className="mt-5 flex items-center justify-between text-xs font-bold">
-            <span className="text-gray-400 dark:text-gray-500">Overdue Invoices</span>
-            <span className="bg-amber-500/10 text-amber-600 dark:text-amber-450 dark:text-amber-400 px-2 py-0.5 rounded-md font-mono text-[10px]">
-              {overdueRentCount} overdue
+            <span className="text-gray-400 dark:text-gray-400 group-hover:text-slate-700 dark:group-hover:text-slate-200 transition-colors">Overdue Invoices</span>
+            <span className="bg-amber-500/10 text-amber-600 dark:text-amber-400 group-hover:bg-amber-500 group-hover:text-white px-2 py-0.5 rounded-md font-mono text-[10px] flex items-center gap-1 transition-colors">
+              {overdueRentCount} overdue <ArrowRight className="w-2.5 h-2.5" />
             </span>
           </div>
         </div>
 
-        {/* Metric 4: Upcoming Expenses */}
-        <div className="p-6 rounded-2xl bg-white dark:bg-slate-900/60 dark:backdrop-blur-md border border-slate-200/60 dark:border-white/[0.05] hover:border-blue-500/30 transition shadow-sm hover:shadow-md flex flex-col justify-between">
+        {/* Metric 4: Upcoming Expenses -> Opens Maintenance Desk */}
+        <div 
+          onClick={() => setActivePage('servicereq')}
+          className="p-6 rounded-2xl bg-white dark:bg-[#28384E] border border-slate-200/80 dark:border-white/10 hover:border-blue-500/50 hover:shadow-xl transition-all duration-200 flex flex-col justify-between cursor-pointer group active:scale-[0.99] relative min-h-[140px] shadow-sm dark:shadow-md"
+        >
           <div className="flex justify-between items-start">
             <div>
-              <span className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest block">Upcoming expenses</span>
+              <span className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest block group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">Upcoming expenses</span>
               <span className="text-2xl font-black text-gray-950 dark:text-white mt-1 block">${upcomingExpensesAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
             </div>
-            <div className="p-2.5 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400">
+            <div className="p-2.5 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 group-hover:scale-110 group-hover:bg-blue-500 group-hover:text-white transition-all shadow-sm">
               <Activity className="w-5 h-5" />
             </div>
           </div>
           <div className="mt-5 flex items-center justify-between text-xs font-bold">
-            <span className="text-gray-400 dark:text-gray-500">Open Tickets</span>
-            <span className="bg-blue-500/10 text-blue-600 dark:text-blue-400 px-2 py-0.5 rounded-md font-mono text-[10px]">
-              {upcomingExpensesCount} this month
+            <span className="text-gray-400 dark:text-gray-400 group-hover:text-slate-700 dark:group-hover:text-slate-200 transition-colors">Open Tickets</span>
+            <span className="bg-blue-500/10 text-blue-600 dark:text-blue-400 group-hover:bg-blue-500 group-hover:text-white px-2 py-0.5 rounded-md font-mono text-[10px] flex items-center gap-1 transition-colors">
+              {upcomingExpensesCount} this month <ArrowRight className="w-2.5 h-2.5" />
             </span>
           </div>
         </div>
       </div>
 
-      {/* --- Section: Cashflow & Tabbed Requests (Grid 8/4) --- */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        
-        {/* Left: Animated Custom Cashflow SVG Chart */}
-        <div className="lg:col-span-8 p-6 rounded-3xl bg-white dark:bg-slate-900/60 dark:backdrop-blur-md border border-slate-200/60 dark:border-white/[0.05] relative shadow-sm">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-            <div>
-              <h2 className="text-lg font-black text-gray-900 dark:text-white">Cashflow Summary</h2>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Real-time Income vs Expense comparison (6 Month Period)</p>
-            </div>
-            {/* Legend */}
-            <div className="flex flex-wrap sm:flex-nowrap items-center gap-x-4 gap-y-2 text-xs font-bold shrink-0 whitespace-nowrap">
-              <span className="flex items-center gap-1.5 text-gray-600 dark:text-gray-300">
-                <span className="w-3 h-3 rounded bg-emerald-500 block"></span> Income
-              </span>
-              <span className="flex items-center gap-1.5 text-gray-600 dark:text-gray-300">
-                <span className="w-3 h-3 rounded bg-rose-500 block"></span> Expenses
-              </span>
-              <span className="flex items-center gap-1.5 text-gray-600 dark:text-gray-300">
-                <span className="w-3 h-3 rounded bg-amber-500 block"></span> Overdue Rent
-              </span>
-              <span className="flex items-center gap-1.5 text-gray-600 dark:text-gray-300">
-                <span className="w-3 h-3 rounded bg-blue-500 block"></span> Upcoming Exp
-              </span>
-            </div>
+      {/* --- Section: Cashflow Summary (Full Width) --- */}
+      <div className="w-full p-6 sm:p-7 rounded-3xl bg-white dark:bg-[#28384E] border border-slate-200/80 dark:border-white/10 relative shadow-sm dark:shadow-md">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+          <div>
+            <h2 className="text-lg font-black text-gray-900 dark:text-white">Cashflow Summary</h2>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Real-time Income vs Expense comparison (6 Month Period)</p>
           </div>
-
-          {/* Interactive Chart Container */}
-          <div className="relative pt-2">
-            <svg viewBox="0 0 600 260" className="w-full h-auto overflow-visible select-none">
-              <defs>
-                <linearGradient id="incomeGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#10B981" />
-                  <stop offset="100%" stopColor="#059669" />
-                </linearGradient>
-                <linearGradient id="expenseGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#F43F5E" />
-                  <stop offset="100%" stopColor="#E11D48" />
-                </linearGradient>
-                <linearGradient id="overdueGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#F59E0B" />
-                  <stop offset="100%" stopColor="#D97706" />
-                </linearGradient>
-                <linearGradient id="upcomingGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#3B82F6" />
-                  <stop offset="100%" stopColor="#2563EB" />
-                </linearGradient>
-              </defs>
-
-              {/* Grid Lines */}
-              {[0, 0.25, 0.5, 0.75, 1].map((p, i) => {
-                const y = 30 + p * chartHeight;
-                return (
-                  <g key={i}>
-                    <line x1="40" y1={y} x2="580" y2={y} stroke="currentColor" className="text-slate-200 dark:text-white/5" strokeDasharray="4" />
-                    <text x="32" y={y + 4} textAnchor="end" className="fill-slate-400 dark:fill-gray-500 text-[10px] font-bold font-mono">
-                      ${Math.round(maxCashflowValue * (1 - p)).toLocaleString()}
-                    </text>
-                  </g>
-                );
-              })}
-
-              {/* Draw Monthly Bar Groups */}
-              {cashflowMonths.map((m, idx) => {
-                const groupX = 65 + idx * 85;
-                const incHeight = getBarHeight(m.income);
-                const expHeight = getBarHeight(m.expenses);
-                const ovdHeight = getBarHeight(m.overdue);
-                const upcHeight = getBarHeight(m.upcoming);
-
-                const incY = 30 + chartHeight - incHeight;
-                const expY = 30 + chartHeight - expHeight;
-                const ovdY = 30 + chartHeight - ovdHeight;
-                const upcY = 30 + chartHeight - upcHeight;
-
-                const barWidth = 11;
-                const gap = 2;
-
-                return (
-                  <g key={m.monthKey}>
-                    {/* Income Bar */}
-                    <rect
-                      x={groupX}
-                      y={incY}
-                      width={barWidth}
-                      height={incHeight}
-                      fill="url(#incomeGrad)"
-                      rx="2"
-                      className="transition-all duration-300 hover:opacity-85 cursor-pointer"
-                      onMouseEnter={(e) => setHoveredBar({
-                        month: m.label,
-                        type: 'Income',
-                        val: m.income,
-                        x: groupX + barWidth / 2,
-                        y: incY - 10
-                      })}
-                      onMouseLeave={() => setHoveredBar(null)}
-                    />
-
-                    {/* Expense Bar */}
-                    <rect
-                      x={groupX + barWidth + gap}
-                      y={expY}
-                      width={barWidth}
-                      height={expHeight}
-                      fill="url(#expenseGrad)"
-                      rx="2"
-                      className="transition-all duration-300 hover:opacity-85 cursor-pointer"
-                      onMouseEnter={(e) => setHoveredBar({
-                        month: m.label,
-                        type: 'Expense',
-                        val: m.expenses,
-                        x: groupX + barWidth + gap + barWidth / 2,
-                        y: expY - 10
-                      })}
-                      onMouseLeave={() => setHoveredBar(null)}
-                    />
-
-                    {/* Overdue Rent Bar */}
-                    <rect
-                      x={groupX + 2 * (barWidth + gap)}
-                      y={ovdY}
-                      width={barWidth}
-                      height={ovdHeight}
-                      fill="url(#overdueGrad)"
-                      rx="2"
-                      className="transition-all duration-300 hover:opacity-85 cursor-pointer"
-                      onMouseEnter={(e) => setHoveredBar({
-                        month: m.label,
-                        type: 'Overdue Rent',
-                        val: m.overdue,
-                        x: groupX + 2 * (barWidth + gap) + barWidth / 2,
-                        y: ovdY - 10
-                      })}
-                      onMouseLeave={() => setHoveredBar(null)}
-                    />
-
-                    {/* Upcoming Expense Bar */}
-                    <rect
-                      x={groupX + 3 * (barWidth + gap)}
-                      y={upcY}
-                      width={barWidth}
-                      height={upcHeight}
-                      fill="url(#upcomingGrad)"
-                      rx="2"
-                      className="transition-all duration-300 hover:opacity-85 cursor-pointer"
-                      onMouseEnter={(e) => setHoveredBar({
-                        month: m.label,
-                        type: 'Upcoming Exp',
-                        val: m.upcoming,
-                        x: groupX + 3 * (barWidth + gap) + barWidth / 2,
-                        y: upcY - 10
-                      })}
-                      onMouseLeave={() => setHoveredBar(null)}
-                    />
-
-                    {/* X-axis Label */}
-                    <text
-                      x={groupX + 2 * barWidth + 1.5 * gap}
-                      y={235}
-                      textAnchor="middle"
-                      className="fill-slate-600 dark:fill-gray-400 text-[11px] font-extrabold"
-                    >
-                      {m.label}
-                    </text>
-                  </g>
-                );
-              })}
-
-              {/* Base Line */}
-              <line x1="40" y1={30 + chartHeight} x2="580" y2={30 + chartHeight} stroke="currentColor" className="text-slate-300 dark:text-white/10" strokeWidth="1.5" />
-            </svg>
-
-            {/* Custom Tooltip */}
-            {hoveredBar && (
-              <div 
-                className="absolute bg-slate-950/95 dark:bg-slate-900/95 text-white p-2 rounded-xl shadow-xl text-[10px] font-bold border border-white/10 pointer-events-none transition-all duration-150 z-10"
-                style={{
-                  left: `${(hoveredBar.x / 600) * 100}%`,
-                  top: `${(hoveredBar.y / 260) * 100}%`,
-                  transform: 'translate(-50%, -100%)'
-                }}
-              >
-                <div className="text-slate-400 uppercase tracking-wider text-[9px] mb-0.5">{hoveredBar.month} {hoveredBar.type}</div>
-                <div className="text-xs font-black font-mono">${hoveredBar.val.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
-              </div>
-            )}
+          {/* Legend */}
+          <div className="flex flex-wrap sm:flex-nowrap items-center gap-x-4 gap-y-2 text-xs font-bold shrink-0 whitespace-nowrap">
+            <span className="flex items-center gap-1.5 text-gray-600 dark:text-gray-300">
+              <span className="w-3 h-3 rounded bg-emerald-500 block"></span> Income
+            </span>
+            <span className="flex items-center gap-1.5 text-gray-600 dark:text-gray-300">
+              <span className="w-3 h-3 rounded bg-rose-500 block"></span> Expenses
+            </span>
+            <span className="flex items-center gap-1.5 text-gray-600 dark:text-gray-300">
+              <span className="w-3 h-3 rounded bg-amber-500 block"></span> Overdue Rent
+            </span>
+            <span className="flex items-center gap-1.5 text-gray-600 dark:text-gray-300">
+              <span className="w-3 h-3 rounded bg-blue-500 block"></span> Upcoming Exp
+            </span>
           </div>
         </div>
 
-        {/* Right: Sidebar Panel (Tabs: Actions Required & Tenant Requests) */}
-        <div className="lg:col-span-4 p-6 rounded-3xl bg-white dark:bg-slate-900/60 dark:backdrop-blur-md border border-slate-200/60 dark:border-white/[0.05] shadow-sm flex flex-col justify-between min-h-[380px]">
-          <div>
-            {/* Tabs Header */}
-            <div className="flex border-b border-slate-100 dark:border-white/[0.06] mb-5">
-              <button
-                onClick={() => setActiveSidebarTab('actions')}
-                className={`pb-3 text-sm font-black transition relative flex items-center gap-2 cursor-pointer ${
-                  activeSidebarTab === 'actions'
-                    ? 'text-blue-500 dark:text-blue-400'
-                    : 'text-slate-400 dark:text-gray-500 hover:text-slate-650'
-                }`}
-              >
-                Action Required
-                {totalActionsCount > 0 && (
-                  <span className="bg-amber-500 text-white text-[9px] font-black px-1.5 py-0.5 rounded-full shrink-0 min-w-[16px] text-center">
-                    {totalActionsCount}
-                  </span>
-                )}
-                {activeSidebarTab === 'actions' && (
-                  <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-blue-500 dark:bg-blue-400 rounded-full" />
-                )}
-              </button>
-              
-              <button
-                onClick={() => setActiveSidebarTab('requests')}
-                className={`ml-6 pb-3 text-sm font-black transition relative flex items-center gap-2 cursor-pointer ${
-                  activeSidebarTab === 'requests'
-                    ? 'text-blue-500 dark:text-blue-400'
-                    : 'text-slate-400 dark:text-gray-500 hover:text-slate-650'
-                }`}
-              >
-                Tenant Requests
-                {filteredMaint.length > 0 && (
-                  <span className="bg-blue-500/10 text-blue-600 dark:text-blue-400 text-[9px] font-black px-1.5 py-0.5 rounded-full shrink-0 min-w-[16px] text-center">
-                    {filteredMaint.length}
-                  </span>
-                )}
-                {activeSidebarTab === 'requests' && (
-                  <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-blue-500 dark:bg-blue-400 rounded-full" />
-                )}
-              </button>
-            </div>
+        {/* Interactive Chart Container */}
+        <div className="relative pt-2">
+          <svg viewBox="0 0 600 260" className="w-full h-auto overflow-visible select-none">
+            <defs>
+              <linearGradient id="incomeGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#10B981" />
+                <stop offset="100%" stopColor="#059669" />
+              </linearGradient>
+              <linearGradient id="expenseGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#F43F5E" />
+                <stop offset="100%" stopColor="#E11D48" />
+              </linearGradient>
+              <linearGradient id="overdueGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#F59E0B" />
+                <stop offset="100%" stopColor="#D97706" />
+              </linearGradient>
+              <linearGradient id="upcomingGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#3B82F6" />
+                <stop offset="100%" stopColor="#2563EB" />
+              </linearGradient>
+            </defs>
 
-            {/* Tab Body */}
-            {activeSidebarTab === 'actions' ? (
-              <div className="space-y-3.5 max-h-[300px] overflow-y-auto pr-1 scrollbar-thin">
-                {totalActionsCount === 0 ? (
-                  <div className="py-12 text-center text-gray-400 dark:text-gray-500 flex flex-col items-center">
-                    <CheckCircle2 className="w-10 h-10 mb-2 text-emerald-500/60" />
-                    <p className="text-xs font-bold">All Caught Up!</p>
-                    <p className="text-[10px] text-gray-450 mt-1">No urgent actions require attention</p>
-                  </div>
-                ) : (
-                  <>
-                    {pendingScreening.map(app => (
-                      <div key={app.application_id} className="p-3.5 rounded-2xl bg-amber-500/[0.03] dark:bg-amber-500/[0.01] border border-amber-500/10 dark:border-amber-500/5 flex items-center justify-between gap-3 text-xs font-semibold shadow-sm hover:border-amber-500/30 transition text-left">
-                        <div className="min-w-0 space-y-0.5">
-                          <span className="text-[9px] text-amber-600 dark:text-amber-400 font-bold uppercase tracking-wider block">New Screening</span>
-                          <p className="text-xs text-slate-800 dark:text-white font-bold truncate">{app.full_name}</p>
-                          <p className="text-[10px] text-gray-500 dark:text-gray-400 font-normal truncate">Unit {app.unit?.unit_number} (FICO: {app.credit_score})</p>
-                        </div>
-                        <button 
-                          onClick={() => setActivePage('screening_hub')}
-                          className="bg-amber-500 hover:bg-amber-600 text-white px-2.5 py-1.5 rounded-lg text-[10px] font-bold transition whitespace-nowrap cursor-pointer shrink-0"
-                        >
-                          Review
-                        </button>
-                      </div>
-                    ))}
+            {/* Grid Lines */}
+            {[0, 0.25, 0.5, 0.75, 1].map((p, i) => {
+              const y = 30 + p * chartHeight;
+              return (
+                <g key={i}>
+                  <line x1="40" y1={y} x2="580" y2={y} stroke="currentColor" className="text-slate-200 dark:text-white/5" strokeDasharray="4" />
+                  <text x="32" y={y + 4} textAnchor="end" className="fill-slate-400 dark:fill-gray-500 text-[10px] font-bold font-mono">
+                    ${Math.round(maxCashflowValue * (1 - p)).toLocaleString()}
+                  </text>
+                </g>
+              );
+            })}
 
-                    {approvedScreeningNoLease.map(app => (
-                      <div key={app.application_id} className="p-3.5 rounded-2xl bg-blue-500/[0.03] dark:bg-blue-500/[0.01] border border-blue-500/10 dark:border-blue-500/5 flex items-center justify-between gap-3 text-xs font-semibold shadow-sm hover:border-blue-500/30 transition text-left">
-                        <div className="min-w-0 space-y-0.5">
-                          <span className="text-[9px] text-blue-600 dark:text-blue-400 font-bold uppercase tracking-wider block">Ready for Lease</span>
-                          <p className="text-xs text-slate-800 dark:text-white font-bold truncate">{app.full_name}</p>
-                          <p className="text-[10px] text-gray-500 dark:text-gray-400 font-normal truncate">Unit {app.unit?.unit_number}</p>
-                        </div>
-                        <button 
-                          onClick={() => {
-                            localStorage.setItem('prefill_lease_email', app.tenant_email);
-                            localStorage.setItem('prefill_lease_unit_id', app.unit_id.toString());
-                            setActivePage('leases_hub');
-                          }}
-                          className="bg-blue-600 hover:bg-blue-500 text-white px-2.5 py-1.5 rounded-lg text-[10px] font-bold transition whitespace-nowrap cursor-pointer shrink-0"
-                        >
-                          Draft
-                        </button>
-                      </div>
-                    ))}
+            {/* Draw Monthly Bar Groups */}
+            {cashflowMonths.map((m, idx) => {
+              const groupX = 65 + idx * 85;
+              const incHeight = getBarHeight(m.income);
+              const expHeight = getBarHeight(m.expenses);
+              const ovdHeight = getBarHeight(m.overdue);
+              const upcHeight = getBarHeight(m.upcoming);
 
-                    {leasesAwaitingApproval.map(lease => (
-                      <div key={lease.lease_id} className="p-3.5 rounded-2xl bg-orange-500/[0.03] dark:bg-orange-500/[0.01] border border-orange-500/10 dark:border-orange-500/5 flex items-center justify-between gap-3 text-xs font-semibold shadow-sm hover:border-orange-500/30 transition text-left animate-pulse">
-                        <div className="min-w-0 space-y-0.5">
-                          <span className="text-[9px] text-orange-600 dark:text-orange-400 font-bold uppercase tracking-wider block">Approval Needed</span>
-                          <p className="text-xs text-slate-800 dark:text-white font-bold truncate">Unit {lease.unit?.unit_number || 'N/A'}</p>
-                          <p className="text-[10px] text-gray-500 dark:text-gray-400 font-normal truncate">{lease.tenant_email}</p>
-                        </div>
-                        <button 
-                          onClick={() => {
-                            localStorage.setItem('pending_lease_id', lease.lease_id);
-                            setActivePage('leases_hub');
-                          }}
-                          className="bg-orange-500 hover:bg-orange-600 text-white px-2.5 py-1.5 rounded-lg text-[10px] font-bold transition whitespace-nowrap cursor-pointer shrink-0"
-                        >
-                          Review & Sign
-                        </button>
-                      </div>
-                    ))}
+              const incY = 30 + chartHeight - incHeight;
+              const expY = 30 + chartHeight - expHeight;
+              const ovdY = 30 + chartHeight - ovdHeight;
+              const upcY = 30 + chartHeight - upcHeight;
 
-                    {pendingSignatures.map(lease => (
-                      <div key={lease.lease_id} className="p-3.5 rounded-2xl bg-purple-500/[0.03] dark:bg-purple-500/[0.01] border border-purple-500/10 dark:border-purple-500/5 flex items-center justify-between gap-3 text-xs font-semibold shadow-sm hover:border-purple-500/30 transition text-left">
-                        <div className="min-w-0 space-y-0.5">
-                          <span className="text-[9px] text-purple-600 dark:text-purple-400 font-bold uppercase tracking-wider block">Pending Sign</span>
-                          <p className="text-xs text-slate-800 dark:text-white font-bold truncate">Unit {lease.unit?.unit_number || 'N/A'}</p>
-                          <p className="text-[10px] text-gray-500 dark:text-gray-400 font-normal truncate">{lease.tenant_email}</p>
-                        </div>
-                        <button 
-                          onClick={() => {
-                            localStorage.setItem('pending_lease_id', lease.lease_id);
-                            setActivePage('leases_hub');
-                          }}
-                          className="bg-purple-600 hover:bg-purple-500 text-white px-2.5 py-1.5 rounded-lg text-[10px] font-bold transition whitespace-nowrap cursor-pointer shrink-0"
-                        >
-                          Status
-                        </button>
-                      </div>
-                    ))}
+              const barWidth = 11;
+              const gap = 2;
 
-                    {openMaint.map(req => (
-                      <div key={req.request_id} className="p-3.5 rounded-2xl bg-rose-500/[0.03] dark:bg-rose-500/[0.01] border border-rose-500/10 dark:border-rose-500/5 flex items-center justify-between gap-3 text-xs font-semibold shadow-sm hover:border-rose-500/30 transition text-left">
-                        <div className="min-w-0 space-y-0.5">
-                          <span className="text-[9px] text-rose-600 dark:text-rose-500 font-bold uppercase tracking-wider block">New Ticket</span>
-                          <p className="text-xs text-slate-800 dark:text-white font-bold truncate">{req.title}</p>
-                          <p className="text-[10px] text-gray-500 dark:text-gray-400 font-normal truncate">Unit {req.unit_number} • Priority: {req.priority}</p>
-                        </div>
-                        <button 
-                          onClick={() => setActivePage('servicereq')}
-                          className="bg-rose-500 hover:bg-rose-600 text-white px-2.5 py-1.5 rounded-lg text-[10px] font-bold transition whitespace-nowrap cursor-pointer shrink-0"
-                        >
-                          Assign
-                        </button>
-                      </div>
-                    ))}
-                  </>
-                )}
-              </div>
-            ) : (
-              <div className="space-y-4 max-h-[300px] overflow-y-auto pr-1 scrollbar-thin">
-                {filteredMaint.length === 0 ? (
-                  <div className="py-12 text-center text-gray-400 dark:text-gray-500 flex flex-col items-center">
-                    <CheckCircle2 className="w-10 h-10 mb-2 text-emerald-500/60" />
-                    <p className="text-xs font-bold">No active requests</p>
-                    <p className="text-[10px] text-gray-450 mt-1">Tenant tickets will show up here</p>
-                  </div>
-                ) : (
-                  filteredMaint.slice(0, 4).map((req, idx) => (
-                    <div 
-                      key={req.request_id || idx}
-                      className="p-3.5 rounded-2xl bg-slate-50/50 dark:bg-white/[0.02] border border-slate-100 dark:border-white/[0.04] flex flex-col gap-2 hover:border-blue-500/20 transition cursor-pointer text-left"
-                      onClick={() => setActivePage('servicereq')}
-                    >
-                      <div className="flex justify-between items-start gap-2">
-                        <div className="min-w-0">
-                          <span className="text-xs font-black text-slate-800 dark:text-slate-200 block truncate">{req.title}</span>
-                          <span className="text-[10px] font-bold text-gray-455 block truncate mt-0.5">{req.property_name} • Unit {req.unit_number}</span>
-                        </div>
-                        <span className={`text-[9px] font-extrabold px-2 py-0.5 rounded-md uppercase tracking-wider shrink-0 ${
-                          req.priority === 'URGENT' || req.priority === 'HIGH'
-                            ? 'bg-rose-500/10 text-rose-500'
-                            : 'bg-slate-200 dark:bg-white/10 text-slate-700 dark:text-slate-400'
-                        }`}>
-                          {req.priority}
-                        </span>
-                      </div>
+              return (
+                <g key={m.monthKey}>
+                  {/* Income Bar */}
+                  <rect
+                    x={groupX}
+                    y={incY}
+                    width={barWidth}
+                    height={incHeight}
+                    fill="url(#incomeGrad)"
+                    rx="2"
+                    className="transition-all duration-300 hover:opacity-85 cursor-pointer"
+                    onMouseEnter={(e) => setHoveredBar({
+                      month: m.label,
+                      type: 'Income',
+                      val: m.income,
+                      x: groupX + barWidth / 2,
+                      y: incY - 10
+                    })}
+                    onMouseLeave={() => setHoveredBar(null)}
+                  />
 
-                      <div className="flex justify-between items-center text-[10px] font-bold border-t border-slate-100 dark:border-white/[0.03] pt-2">
-                        <span className="text-slate-400 dark:text-gray-500">
-                          {new Date(req.created_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
-                        </span>
-                        <span className={`px-2 py-0.5 rounded-full text-[9px] uppercase tracking-wide font-black ${
-                          req.status === 'COMPLETED'
-                            ? 'bg-emerald-500/10 text-emerald-500'
-                            : req.status === 'IN_PROGRESS' || req.status === 'VENDOR_ASSIGNED'
-                            ? 'bg-amber-500/10 text-amber-500'
-                            : 'bg-blue-500/10 text-blue-500'
-                        }`}>
-                          {req.status?.replace('_', ' ')}
-                        </span>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-            )}
-          </div>
+                  {/* Expense Bar */}
+                  <rect
+                    x={groupX + barWidth + gap}
+                    y={expY}
+                    width={barWidth}
+                    height={expHeight}
+                    fill="url(#expenseGrad)"
+                    rx="2"
+                    className="transition-all duration-300 hover:opacity-85 cursor-pointer"
+                    onMouseEnter={(e) => setHoveredBar({
+                      month: m.label,
+                      type: 'Expense',
+                      val: m.expenses,
+                      x: groupX + barWidth + gap + barWidth / 2,
+                      y: expY - 10
+                    })}
+                    onMouseLeave={() => setHoveredBar(null)}
+                  />
 
-          {activeSidebarTab === 'requests' && filteredMaint.length > 4 && (
-            <div className="pt-4 border-t border-slate-100 dark:border-white/[0.04] text-center">
-              <button 
-                onClick={() => setActivePage('servicereq')}
-                className="text-[10px] font-bold text-blue-500 hover:underline cursor-pointer font-sans"
-              >
-                +{filteredMaint.length - 4} more requests. View all
-              </button>
+                  {/* Overdue Rent Bar */}
+                  <rect
+                    x={groupX + 2 * (barWidth + gap)}
+                    y={ovdY}
+                    width={barWidth}
+                    height={ovdHeight}
+                    fill="url(#overdueGrad)"
+                    rx="2"
+                    className="transition-all duration-300 hover:opacity-85 cursor-pointer"
+                    onMouseEnter={(e) => setHoveredBar({
+                      month: m.label,
+                      type: 'Overdue Rent',
+                      val: m.overdue,
+                      x: groupX + 2 * (barWidth + gap) + barWidth / 2,
+                      y: ovdY - 10
+                    })}
+                    onMouseLeave={() => setHoveredBar(null)}
+                  />
+
+                  {/* Upcoming Expense Bar */}
+                  <rect
+                    x={groupX + 3 * (barWidth + gap)}
+                    y={upcY}
+                    width={barWidth}
+                    height={upcHeight}
+                    fill="url(#upcomingGrad)"
+                    rx="2"
+                    className="transition-all duration-300 hover:opacity-85 cursor-pointer"
+                    onMouseEnter={(e) => setHoveredBar({
+                      month: m.label,
+                      type: 'Upcoming Exp',
+                      val: m.upcoming,
+                      x: groupX + 3 * (barWidth + gap) + barWidth / 2,
+                      y: upcY - 10
+                    })}
+                    onMouseLeave={() => setHoveredBar(null)}
+                  />
+
+                  {/* X-axis Label */}
+                  <text
+                    x={groupX + 2 * barWidth + 1.5 * gap}
+                    y={235}
+                    textAnchor="middle"
+                    className="fill-slate-600 dark:fill-gray-400 text-[11px] font-extrabold"
+                  >
+                    {m.label}
+                  </text>
+                </g>
+              );
+            })}
+
+            {/* Base Line */}
+            <line x1="40" y1={30 + chartHeight} x2="580" y2={30 + chartHeight} stroke="currentColor" className="text-slate-300 dark:text-white/10" strokeWidth="1.5" />
+          </svg>
+
+          {/* Custom Tooltip */}
+          {hoveredBar && (
+            <div 
+              className="absolute bg-slate-950/95 dark:bg-slate-900/95 text-white p-2 rounded-xl shadow-xl text-[10px] font-bold border border-white/10 pointer-events-none transition-all duration-150 z-10"
+              style={{
+                left: `${(hoveredBar.x / 600) * 100}%`,
+                top: `${(hoveredBar.y / 260) * 100}%`,
+                transform: 'translate(-50%, -100%)'
+              }}
+            >
+              <div className="text-slate-400 uppercase tracking-wider text-[9px] mb-0.5">{hoveredBar.month} {hoveredBar.type}</div>
+              <div className="text-xs font-black font-mono">${hoveredBar.val.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
             </div>
           )}
         </div>
@@ -1302,10 +1165,10 @@ export default function LandlordDashboard({
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         
         {/* Analytics 1: Property Overview Donut Chart */}
-        <div className="p-6 rounded-3xl bg-white dark:bg-slate-900/60 dark:backdrop-blur-md border border-slate-200/60 dark:border-white/[0.05] shadow-sm flex flex-col justify-between">
+        <div className="p-6 rounded-3xl bg-white dark:bg-[#28384E] border border-slate-200/80 dark:border-white/10 shadow-sm dark:shadow-md flex flex-col justify-between">
           <div>
             <h3 className="text-base font-black text-gray-900 dark:text-white mb-1">Property Overview</h3>
-            <p className="text-[11px] text-gray-550 dark:text-gray-405">Portfolio breakdown by unit status</p>
+            <p className="text-[11px] text-gray-500 dark:text-gray-400">Portfolio breakdown by unit status</p>
           </div>
 
           <div className="flex items-center justify-around py-4 gap-4">
@@ -1389,7 +1252,7 @@ export default function LandlordDashboard({
         </div>
 
         {/* Analytics 2: Occupancy Rate Radial Gauge */}
-        <div className="p-6 rounded-3xl bg-white dark:bg-slate-900/60 dark:backdrop-blur-md border border-slate-200/60 dark:border-white/[0.05] shadow-sm flex flex-col justify-between">
+        <div className="p-6 rounded-3xl bg-white dark:bg-[#28384E] border border-slate-200/80 dark:border-white/10 shadow-sm dark:shadow-md flex flex-col justify-between">
           <div>
             <h3 className="text-base font-black text-gray-900 dark:text-white mb-1">Occupancy Rate</h3>
             <p className="text-[11px] text-gray-500 dark:text-gray-400">Target occupancy benchmark</p>
@@ -1425,7 +1288,7 @@ export default function LandlordDashboard({
         </div>
 
         {/* Analytics 3: Real Portfolio Valuation & Revenue Card */}
-        <div className="p-6 rounded-3xl bg-white dark:bg-slate-900/60 dark:backdrop-blur-md border border-slate-200/60 dark:border-white/[0.05] shadow-sm flex flex-col justify-between">
+        <div className="p-6 rounded-3xl bg-white dark:bg-[#28384E] border border-slate-200/80 dark:border-white/10 shadow-sm dark:shadow-md flex flex-col justify-between">
           <div>
             <div className="flex justify-between items-start">
               <div>
@@ -1454,7 +1317,7 @@ export default function LandlordDashboard({
                 <span>Contracted vs Potential</span>
                 <span>${activeLeasesAnnualRent.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} of ${annualGrossRent.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
               </div>
-              <div className="w-full bg-slate-100 dark:bg-white/5 h-2 rounded-full overflow-hidden">
+              <div className="w-full bg-slate-100 dark:bg-white/10 h-2 rounded-full overflow-hidden">
                 <div 
                   className="bg-blue-600 h-full rounded-full transition-all duration-700" 
                   style={{ width: `${annualGrossRent > 0 ? Math.min(100, (activeLeasesAnnualRent / annualGrossRent) * 100) : 0}%` }}
@@ -1471,7 +1334,7 @@ export default function LandlordDashboard({
       </div>
 
       {/* --- Recent Portfolio Activity Section --- */}
-      <div className="p-6 rounded-3xl bg-white dark:bg-slate-900/60 dark:backdrop-blur-md border border-slate-200/60 dark:border-white/[0.05] shadow-sm mt-6">
+      <div className="p-6 rounded-3xl bg-white dark:bg-[#28384E] border border-slate-200/80 dark:border-white/10 shadow-sm dark:shadow-md mt-6">
         <div className="flex justify-between items-center mb-5">
           <h2 className="text-lg font-black text-gray-900 dark:text-white flex items-center gap-2">
             <Activity className="w-5 h-5 text-blue-500" /> Recent Portfolio Activity

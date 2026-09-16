@@ -64,7 +64,7 @@ const RentalTopbar = ({
   };
 
   return (
-    <header className="h-16 bg-white dark:bg-[#162535] border-b border-slate-200 dark:border-white/10 flex items-center px-3 sm:px-4 lg:px-6 z-30 sticky top-0 shrink-0">
+    <header className="h-16 bg-white dark:bg-[#243044] border-b border-slate-200 dark:border-white/10 flex items-center px-3 sm:px-4 lg:px-6 z-30 sticky top-0 shrink-0">
       
       {/* Mobile Sidebar Button */}
       <button onClick={toggleSidebar} className="lg:hidden p-2 mr-1 sm:mr-2 text-gray-500 dark:text-gray-400">
@@ -134,7 +134,7 @@ const RentalTopbar = ({
         {isDropdownOpen && (user?.role === 'landlord' || user?.role === 'super_admin') && (
           <>
             <div className="fixed inset-0 z-40" onClick={() => setIsDropdownOpen(false)} />
-            <div className="fixed sm:absolute top-16 sm:top-[calc(100%+12px)] left-4 right-4 sm:left-0 sm:right-auto w-auto sm:w-80 bg-white dark:bg-[#1E3248] border border-slate-200 dark:border-white/20 rounded-3xl shadow-2xl z-50 py-3 overflow-hidden animate-in fade-in zoom-in-95 text-left">
+            <div className="fixed sm:absolute top-16 sm:top-[calc(100%+12px)] left-4 right-4 sm:left-0 sm:right-auto w-auto sm:w-80 bg-white dark:bg-[#28384E] border border-slate-200 dark:border-white/20 rounded-3xl shadow-2xl z-50 py-3 overflow-hidden animate-in fade-in zoom-in-95 text-left">
               {/* Search Bar inside popover */}
               <div className="px-3 relative">
                 <Search size={16} className="absolute left-7 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -143,7 +143,7 @@ const RentalTopbar = ({
                   placeholder="Search..."
                   value={dropdownSearch}
                   onChange={(e) => setDropdownSearch(e.target.value)}
-                  className="w-full bg-slate-100 dark:bg-[#0D1B2A] border border-slate-200 dark:border-white/20 rounded-2xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:border-blue-500 dark:text-white"
+                  className="w-full bg-slate-100 dark:bg-[#1e293b] border border-slate-200 dark:border-white/20 rounded-2xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:border-blue-500 dark:text-white"
                 />
               </div>
 
@@ -263,7 +263,7 @@ const RentalTopbar = ({
               {/* Screen overlay to close dropdown */}
               <div className="fixed inset-0 z-40" onClick={() => setIsUserDropdownOpen(false)} />
               
-              <div className="fixed sm:absolute top-16 sm:top-[calc(100%+12px)] left-4 right-4 sm:left-auto sm:right-0 w-auto sm:w-60 bg-white dark:bg-[#1E3248] border border-slate-200 dark:border-white/20 rounded-3xl shadow-2xl z-50 py-2 overflow-hidden animate-in fade-in slide-in-from-top-2">
+              <div className="fixed sm:absolute top-16 sm:top-[calc(100%+12px)] left-4 right-4 sm:left-auto sm:right-0 w-auto sm:w-60 bg-white dark:bg-[#28384E] border border-slate-200 dark:border-white/20 rounded-3xl shadow-2xl z-50 py-2 overflow-hidden animate-in fade-in slide-in-from-top-2">
                 <div className="px-4 py-4 border-b border-slate-100 dark:border-white/5 bg-slate-50/50 dark:bg-white/5">
                   <p className="font-bold text-gray-900 dark:text-white truncate">{user?.name || "User"}</p>
                   <p className="text-[10px] text-blue-500 font-mono uppercase font-black tracking-widest mt-0.5">
@@ -307,7 +307,7 @@ const RentalTopbar = ({
       {/* Confirmation Modal before Logging out */}
       {showLogoutConfirm && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[200] flex items-center justify-center p-4 animate-in fade-in zoom-in-95 duration-200">
-          <div className="bg-white dark:bg-gradient-to-br dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 w-full max-w-sm text-center shadow-2xl text-slate-900 dark:text-white">
+          <div className="bg-white dark:bg-gradient-to-br dark:from-[#28384E] dark:to-[#222f42] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 w-full max-w-sm text-center shadow-2xl text-slate-900 dark:text-white">
             <div className="w-14 h-14 bg-red-500/10 dark:bg-red-500/20 text-red-600 dark:text-red-400 rounded-full flex items-center justify-center mx-auto mb-4 border border-red-500/20">
               <LogOut size={28} />
             </div>

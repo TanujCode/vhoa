@@ -89,7 +89,7 @@ export default function Footer() {
           <div className="lg:col-span-2 space-y-4">
             <h5 className="text-xs font-black uppercase tracking-wider text-slate-200">Get Started</h5>
             <div className="space-y-2.5">
-              <Link to="/portal-select" className="btn-glow w-full text-center py-3 text-sm font-semibold text-white rounded-xl flex items-center justify-center gap-1.5 group">
+              <Link to="/rental/register" className="btn-glow w-full text-center py-3 text-sm font-semibold text-white rounded-xl flex items-center justify-center gap-1.5 group">
                 Free Trial <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
               </Link>
               <Link to="/contact" className="w-full text-center py-3 text-sm font-bold text-slate-350 rounded-xl border border-white/[0.08] bg-[#1e293b]/60 hover:bg-[#1e293b] hover:border-violet-500/30 transition-all block">

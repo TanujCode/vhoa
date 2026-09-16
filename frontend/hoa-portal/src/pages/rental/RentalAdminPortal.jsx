@@ -472,7 +472,7 @@ const RentalAdminPortal = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen bg-slate-50 dark:bg-[#0D1B2A]">
+      <div className="flex items-center justify-center h-screen bg-slate-50 dark:bg-[#1e293b]">
         <div className="text-center">
           <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="dark:text-gray-400 text-gray-500 font-mono">LOADING PORTAL...</p>
@@ -482,7 +482,7 @@ const RentalAdminPortal = () => {
   }
 
   return (
-    <div className="flex h-screen bg-white dark:bg-[#0f172a] text-gray-900 dark:text-white overflow-hidden font-sans">
+    <div className="flex h-screen bg-white dark:bg-[#1e293b] text-gray-900 dark:text-white overflow-hidden font-sans">
       <RentalSidebar
         activePage={activePage}
         setActivePage={setActivePage}
@@ -530,7 +530,7 @@ const RentalAdminPortal = () => {
           }}
         />
 
-        <main className="flex-1 overflow-auto p-5 lg:p-7 bg-slate-50 dark:bg-[#0f172a] custom-scrollbar">
+        <main className="flex-1 overflow-auto p-5 lg:p-7 bg-slate-50 dark:bg-[#1e293b] custom-scrollbar">
           <div className="max-w-[1600px] mx-auto">
             {renderPage()}
           </div>
@@ -550,7 +550,7 @@ const RentalAdminPortal = () => {
       {/* Confirmation Modal when exiting portal via Back navigation */}
       {showExitConfirm && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[200] flex items-center justify-center p-4 animate-in fade-in zoom-in-95 duration-200">
-          <div className="bg-white dark:bg-gradient-to-br dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 w-full max-w-sm text-center shadow-2xl text-slate-900 dark:text-white">
+          <div className="bg-white dark:bg-gradient-to-br dark:from-[#28384E] dark:to-[#222f42] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 w-full max-w-sm text-center shadow-2xl text-slate-900 dark:text-white">
             <div className="w-14 h-14 bg-red-500/10 dark:bg-red-500/20 text-red-600 dark:text-red-400 rounded-full flex items-center justify-center mx-auto mb-4 border border-red-500/20">
               <LogOut size={28} />
             </div>

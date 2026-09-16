@@ -117,7 +117,7 @@ export default function CondoSolutionPage() {
               {/* Action Buttons */}
               <div className="flex flex-wrap items-center gap-3 pt-1">
                 <Link
-                  to="/portal-select?type=condo"
+                  to="/rental/register"
                   className="px-7 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs sm:text-sm rounded-full shadow-sm transition-all active:scale-95"
                 >
                   Get Started Free
@@ -320,7 +320,7 @@ export default function CondoSolutionPage() {
 
             <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
               <Link
-                to="/portal-select?type=condo"
+                to="/rental/register"
                 className="px-8 py-3 bg-white text-blue-950 font-bold text-xs sm:text-sm rounded-full shadow-lg hover:bg-slate-100 transition-all active:scale-95"
               >
                 Start Free Trial

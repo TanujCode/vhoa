@@ -1428,7 +1428,7 @@ export default function LandingPage() {
 
           {/* CTA Buttons */}
           <div className="flex flex-wrap gap-4 justify-center">
-            <Link to="/portal-select" className="btn-glow px-8 py-3.5 text-sm font-semibold text-white rounded-xl flex items-center gap-2 group">
+            <Link to="/rental/register" className="btn-glow px-8 py-3.5 text-sm font-semibold text-white rounded-xl flex items-center gap-2 group">
               Start Free Trial
               <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
             </Link>
@@ -2004,7 +2004,7 @@ export default function LandingPage() {
                 Join 500+ landlords and property managers on NestBloq. Get your properties, leases, and tenants live in under 48 hours with full setup support.
               </p>
               <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
-                <Link to="/portal-select" className="px-7 py-3 bg-white text-violet-700 font-black text-xs sm:text-sm rounded-xl hover:bg-white/95 shadow-xl shadow-black/20 transition-all hover:-translate-y-0.5 flex items-center justify-center gap-2 group">
+                <Link to="/rental/register" className="px-7 py-3 bg-white text-violet-700 font-black text-xs sm:text-sm rounded-xl hover:bg-white/95 shadow-xl shadow-black/20 transition-all hover:-translate-y-0.5 flex items-center justify-center gap-2 group">
                   Get Started Free
                   <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
                 </Link>

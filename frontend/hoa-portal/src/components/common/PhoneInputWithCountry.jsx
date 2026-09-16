@@ -55,7 +55,8 @@ export default function PhoneInputWithCountry({
   name,
   className = '',
   showIcon = true,
-  size = 'md' // 'sm' | 'md' | 'lg'
+  size = 'md', // 'sm' | 'md' | 'lg'
+  forceLight = false
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -238,12 +239,16 @@ export default function PhoneInputWithCountry({
 
   return (
     <div className={`relative w-full ${className}`} ref={dropdownRef}>
-      <div className={`flex items-center rounded-xl border transition-all duration-200 bg-white dark:bg-[#253346] ${
+      <div className={`flex items-center rounded-lg border transition-all duration-200 ${
+        forceLight 
+          ? 'bg-white border-gray-300 focus-within:border-blue-600 focus-within:ring-2 focus-within:ring-blue-600/20 hover:border-gray-400' 
+          : 'bg-white dark:bg-[#253346] border-slate-200 dark:border-slate-600 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/20 hover:border-slate-300 dark:hover:border-slate-500'
+      } ${
         disabled 
-          ? 'opacity-75 bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 cursor-not-allowed' 
+          ? (forceLight ? 'opacity-75 bg-gray-100 border-gray-200 cursor-not-allowed' : 'opacity-75 bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 cursor-not-allowed') 
           : error 
             ? 'border-red-500 ring-2 ring-red-500/10 dark:border-red-500' 
-            : 'border-slate-200 dark:border-slate-600 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/20 hover:border-slate-300 dark:hover:border-slate-500'
+            : ''
       }`}>
         
         {/* Country Flag & Dial Code Trigger Button */}
@@ -256,21 +261,31 @@ export default function PhoneInputWithCountry({
               setSearchQuery('');
             }
           }}
-          className={`flex items-center gap-2 pl-3 pr-2.5 border-r border-slate-200 dark:border-slate-600/80 hover:bg-slate-50 dark:hover:bg-slate-700/40 rounded-l-xl transition-colors shrink-0 ${
+          className={`flex items-center gap-2 pl-3 pr-2.5 border-r ${
+            forceLight 
+              ? 'border-gray-300 hover:bg-gray-50 rounded-l-lg text-gray-700' 
+              : 'border-slate-200 dark:border-slate-600/80 hover:bg-slate-50 dark:hover:bg-slate-700/40 rounded-l-lg'
+          } transition-colors shrink-0 ${
             size === 'sm' ? 'py-1.5 text-xs' : size === 'lg' ? 'py-3.5 text-sm' : 'py-2.5 sm:py-3 text-xs sm:text-sm'
           } ${disabled ? 'cursor-not-allowed' : 'cursor-pointer'}`}
           title={`${activeCountry.name} (${activeCountry.dialCode})`}
         >
           <CountryFlag code={activeCountry.code} className="w-5 h-3.5" />
-          <span className="font-bold text-slate-700 dark:text-slate-200 tracking-tight font-mono text-xs sm:text-sm">
+          <span className={`font-bold tracking-tight font-mono text-xs sm:text-sm ${
+            forceLight ? 'text-gray-800' : 'text-slate-700 dark:text-slate-200'
+          }`}>
             {activeCountry.dialCode}
           </span>
-          <ChevronDown size={14} className={`text-slate-400 dark:text-slate-400 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+          <ChevronDown size={14} className={`transition-transform duration-200 ${
+            forceLight ? 'text-gray-400' : 'text-slate-400 dark:text-slate-400'
+          } ${isOpen ? 'rotate-180' : ''}`} />
         </button>
 
         {/* Optional Phone Icon inside field */}
         {showIcon && (
-          <Phone className="w-4 h-4 text-slate-400 dark:text-slate-400 ml-3 pointer-events-none shrink-0" />
+          <Phone className={`w-4 h-4 ml-3 pointer-events-none shrink-0 ${
+            forceLight ? 'text-gray-400' : 'text-slate-400 dark:text-slate-400'
+          }`} />
         )}
 
         {/* Strict Phone Number Input Field */}
@@ -288,7 +303,11 @@ export default function PhoneInputWithCountry({
           onPaste={handlePaste}
           placeholder={displayPlaceholder}
           maxLength={activeCountry.format ? activeCountry.format.length + 2 : 20}
-          className={`w-full bg-transparent text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-400 outline-none font-medium px-3.5 ${sizeClasses[size] || sizeClasses.md} ${
+          className={`w-full bg-transparent outline-none font-medium px-3.5 ${
+            forceLight 
+              ? 'text-gray-900 placeholder-gray-400' 
+              : 'text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-400'
+          } ${sizeClasses[size] || sizeClasses.md} ${
             disabled ? 'cursor-not-allowed' : ''
           }`}
         />
@@ -296,13 +315,21 @@ export default function PhoneInputWithCountry({
 
       {/* Upward-Opening Country Dropdown Menu (bottom-full mb-2) */}
       {isOpen && (
-        <div className="absolute left-0 bottom-full mb-2 w-72 sm:w-80 max-h-72 bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-700 rounded-2xl shadow-2xl z-50 overflow-hidden flex flex-col animate-in fade-in slide-in-from-bottom-2 duration-150">
+        <div className={`absolute left-0 bottom-full mb-2 w-72 sm:w-80 max-h-72 border rounded-2xl shadow-2xl z-50 overflow-hidden flex flex-col animate-in fade-in slide-in-from-bottom-2 duration-150 ${
+          forceLight 
+            ? 'bg-white border-gray-200' 
+            : 'bg-white dark:bg-[#1e293b] border-slate-200 dark:border-slate-700'
+        }`}>
           
           {/* Dynamic Floating Search Indicator when user types on keyboard */}
           {searchQuery && (
-            <div className="px-3 py-2 bg-blue-50/90 dark:bg-blue-950/60 border-b border-blue-100 dark:border-blue-900/50 flex items-center justify-between text-xs text-blue-700 dark:text-blue-300">
+            <div className={`px-3 py-2 border-b flex items-center justify-between text-xs ${
+              forceLight 
+                ? 'bg-blue-50/90 border-blue-100 text-blue-700' 
+                : 'bg-blue-50/90 dark:bg-blue-950/60 border-blue-100 dark:border-blue-900/50 text-blue-700 dark:text-blue-300'
+            }`}>
               <span className="truncate">
-                Searching: <strong className="font-semibold text-blue-900 dark:text-blue-100">"{searchQuery}"</strong>
+                Searching: <strong className={`font-semibold ${forceLight ? 'text-blue-900' : 'text-blue-900 dark:text-blue-100'}`}>"{searchQuery}"</strong>
               </span>
               <button
                 type="button"
@@ -318,7 +345,7 @@ export default function PhoneInputWithCountry({
           {/* Countries List */}
           <div ref={listRef} className="overflow-y-auto custom-scrollbar p-1.5 max-h-64 divide-y divide-slate-100/60 dark:divide-slate-800/60">
             {filteredCountries.length === 0 ? (
-              <div className="p-4 text-center text-xs text-slate-400 dark:text-slate-500">
+              <div className={`p-4 text-center text-xs ${forceLight ? 'text-gray-400' : 'text-slate-400 dark:text-slate-500'}`}>
                 No matching country found for "{searchQuery}"
               </div>
             ) : (
@@ -331,15 +358,17 @@ export default function PhoneInputWithCountry({
                     onClick={() => handleSelectCountry(c)}
                     className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-left text-xs transition-colors cursor-pointer ${
                       isSelected
-                        ? 'bg-blue-50 dark:bg-blue-600/20 text-blue-600 dark:text-blue-400 font-bold'
-                        : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/60'
+                        ? (forceLight ? 'bg-blue-50 text-blue-600 font-bold' : 'bg-blue-50 dark:bg-blue-600/20 text-blue-600 dark:text-blue-400 font-bold')
+                        : (forceLight ? 'text-gray-700 hover:bg-gray-100' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/60')
                     }`}
                   >
                     <div className="flex items-center gap-2.5 truncate">
                       <CountryFlag code={c.code} className="w-5 h-3.5" />
                       <span className="truncate">{c.name}</span>
                     </div>
-                    <span className="font-mono text-slate-400 dark:text-slate-400 text-xs shrink-0 ml-2 font-medium">
+                    <span className={`font-mono text-xs shrink-0 ml-2 font-medium ${
+                      forceLight ? 'text-gray-400' : 'text-slate-400 dark:text-slate-400'
+                    }`}>
                       {c.dialCode}
                     </span>
                   </button>

@@ -387,6 +387,7 @@ export default function RentalRegisterPage() {
             size="sm"
             error={!!errors.mobileNumberOnly}
             placeholder="(555) 000-0000"
+            forceLight={true}
           />
           {errors.mobileNumberOnly && (
             <p className="text-red-500 text-xs mt-1">{errors.mobileNumberOnly.message}</p>

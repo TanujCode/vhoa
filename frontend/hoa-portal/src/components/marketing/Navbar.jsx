@@ -105,7 +105,7 @@ export default function Navbar() {
 
             {/* Sign In */}
             <Link
-              to="/portal-select"
+              to="/rental/login"
               className="px-4 py-2 text-sm font-semibold text-slate-650 dark:text-slate-400 hover:text-slate-905 dark:hover:text-white transition-colors duration-200"
             >
               Sign in
@@ -113,7 +113,7 @@ export default function Navbar() {
 
             {/* Get Started Button */}
             <Link
-              to="/portal-select"
+              to="/rental/register"
               className="btn-glow px-5 py-2.5 text-sm font-semibold text-white rounded-xl transition-all duration-200"
             >
               Get Started
@@ -156,16 +156,16 @@ export default function Navbar() {
 
              <div className="pt-4 border-t border-slate-100 dark:border-white/[0.06] space-y-4 px-2">
               <Link
-                to="/portal-select"
+                to="/rental/login"
                 onClick={() => setMobileMenuOpen(false)}
                 className="w-full text-center py-2.5 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-350 border border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/5 transition-all block bg-slate-50/50 dark:bg-white/[0.02]"
               >
-                Sign in to Gateway
+                Sign in
               </Link>
               
               <div className="pt-2">
                 <Link
-                  to="/portal-select"
+                  to="/rental/register"
                   onClick={() => setMobileMenuOpen(false)}
                   className="btn-glow text-center py-2.5 rounded-xl text-xs font-bold text-white transition-all block"
                 >

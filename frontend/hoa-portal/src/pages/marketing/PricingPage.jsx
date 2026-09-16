@@ -38,7 +38,7 @@ export default function PricingPage() {
       annualPrice: 39,
       limitText: "Up to 15 Properties • Billed annually",
       ctaText: "Get Started",
-      ctaLink: "/portal-select",
+      ctaLink: "/rental/register",
       features: [
         "Automated online rent collection (ACH/Stripe)",
         "Digital lease vault & document storage",
@@ -56,7 +56,7 @@ export default function PricingPage() {
       annualPrice: 109,
       limitText: "Up to 60 Properties • Billed annually",
       ctaText: "Start Free Trial",
-      ctaLink: "/portal-select",
+      ctaLink: "/rental/register",
       featureHeader: "Everything in Basic, plus:",
       features: [
         "Online tenant background & credit screening",
@@ -569,7 +569,7 @@ export default function PricingPage() {
                 Contact Sales
               </Link>
               <Link
-                to="/portal-select"
+                to="/rental/register"
                 className="px-8 py-3.5 bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold text-xs sm:text-sm rounded-full transition-all active:scale-95"
               >
                 Start 30-Day Free Trial

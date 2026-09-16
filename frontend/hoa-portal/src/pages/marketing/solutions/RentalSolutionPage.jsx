@@ -148,7 +148,7 @@ export default function RentalSolutionPage() {
               {/* Action Buttons */}
               <div className="flex flex-wrap items-center gap-3 pt-1">
                 <Link
-                  to="/portal-select?type=rental"
+                  to="/rental/register"
                   className="px-7 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs sm:text-sm rounded-full shadow-sm transition-all active:scale-95"
                 >
                   Start Managing Free
@@ -381,7 +381,7 @@ export default function RentalSolutionPage() {
 
             <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
               <Link
-                to="/portal-select?type=rental"
+                to="/rental/register"
                 className="px-8 py-3 bg-white text-emerald-950 font-bold text-xs sm:text-sm rounded-full shadow-lg hover:bg-slate-100 transition-all active:scale-95"
               >
                 Start Free Trial

@@ -144,7 +144,7 @@ export default function App() {
         <Route path="/solutions/hoa" element={<HoaSolutionPage />} />
 
         {/* --- Public Routes --- */}
-        <Route path="/portal-select" element={<PortalSelect />} />
+        <Route path="/portal-select" element={<Navigate to="/rental/login" replace />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         

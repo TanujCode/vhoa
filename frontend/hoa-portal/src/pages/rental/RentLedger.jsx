@@ -418,7 +418,7 @@ export default function RentLedger({ user, selectedPropertyFilterId = 'all' }) {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center py-24 bg-slate-50 dark:bg-[#0D1B2A] rounded-3xl">
+      <div className="flex justify-center items-center py-24 bg-slate-50 dark:bg-[#1e293b] rounded-3xl">
         <div className="text-center">
           <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-sm font-semibold text-slate-500 dark:text-gray-400 font-mono tracking-wider">LOADING FINANCIAL DIRECTORY...</p>
@@ -470,7 +470,7 @@ export default function RentLedger({ user, selectedPropertyFilterId = 'all' }) {
       </div>
 
       {/* Pill-styled Sub-Tabs Navigation (Fits 100% width on 1 page without horizontal scroll) */}
-      <div className="w-full flex flex-wrap lg:flex-nowrap gap-1.5 sm:gap-2 p-1.5 bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-2xl shadow-sm">
+      <div className="w-full flex flex-wrap lg:flex-nowrap gap-1.5 sm:gap-2 p-1.5 bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1F2E44] dark:to-[#1B293C] border border-slate-200/80 dark:border-white/10 rounded-2xl shadow-sm">
         <button
           onClick={() => setActiveTab('rent')}
           className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all whitespace-nowrap cursor-pointer text-center ${
@@ -530,7 +530,7 @@ export default function RentLedger({ user, selectedPropertyFilterId = 'all' }) {
         <div className="space-y-6">
           {/* Summary KPI Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-2xl p-4 shadow-sm">
+            <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1F2E44] dark:to-[#1B293C] border border-slate-200/80 dark:border-white/10 rounded-2xl p-4 shadow-sm">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-gray-400">Total Invoiced</span>
                 <div className="p-2 bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-xl"><DollarSign size={16} /></div>
@@ -539,7 +539,7 @@ export default function RentLedger({ user, selectedPropertyFilterId = 'all' }) {
               <div className="text-[10px] text-slate-500 dark:text-gray-400 mt-1">Total contractually billed rent</div>
             </div>
 
-            <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-2xl p-4 shadow-sm">
+            <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1F2E44] dark:to-[#1B293C] border border-slate-200/80 dark:border-white/10 rounded-2xl p-4 shadow-sm">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">Outstanding Dues</span>
                 <div className="p-2 bg-amber-500/10 text-amber-600 dark:text-amber-400 rounded-xl"><Clock size={16} /></div>
@@ -548,7 +548,7 @@ export default function RentLedger({ user, selectedPropertyFilterId = 'all' }) {
               <div className="text-[10px] text-slate-500 dark:text-gray-400 mt-1">Pending tenant balance</div>
             </div>
 
-            <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-2xl p-4 shadow-sm">
+            <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1F2E44] dark:to-[#1B293C] border border-slate-200/80 dark:border-white/10 rounded-2xl p-4 shadow-sm">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Collected YTD</span>
                 <div className="p-2 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-xl"><CheckCircle2 size={16} /></div>
@@ -557,7 +557,7 @@ export default function RentLedger({ user, selectedPropertyFilterId = 'all' }) {
               <div className="text-[10px] text-slate-500 dark:text-gray-400 mt-1">Successfully cleared payments</div>
             </div>
 
-            <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-2xl p-4 shadow-sm">
+            <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1F2E44] dark:to-[#1B293C] border border-slate-200/80 dark:border-white/10 rounded-2xl p-4 shadow-sm">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold uppercase tracking-wider text-rose-600 dark:text-rose-400">Overdue Invoices</span>
                 <div className="p-2 bg-rose-500/10 text-rose-600 dark:text-rose-400 rounded-xl"><AlertTriangle size={16} /></div>
@@ -598,7 +598,7 @@ export default function RentLedger({ user, selectedPropertyFilterId = 'all' }) {
           </div>
 
           {/* Rent Invoices Directory Table */}
-          <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-2xl overflow-hidden shadow-sm">
+          <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1F2E44] dark:to-[#1B293C] border border-slate-200/80 dark:border-white/10 rounded-2xl overflow-hidden shadow-sm">
             <div className="p-4 sm:p-5 border-b border-slate-200 dark:border-white/10 flex items-center justify-between">
               <div className="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
                 <CreditCard size={16} className="text-blue-500" /> Payments Ledger Directory
@@ -790,7 +790,7 @@ export default function RentLedger({ user, selectedPropertyFilterId = 'all' }) {
         <div className="space-y-6">
           {/* Summary KPI Cards for Maintenance */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-2xl p-4 shadow-sm">
+            <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1F2E44] dark:to-[#1B293C] border border-slate-200/80 dark:border-white/10 rounded-2xl p-4 shadow-sm">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-gray-400">Total Repairs Invoiced</span>
                 <div className="p-2 bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-xl"><Wrench size={16} /></div>
@@ -799,7 +799,7 @@ export default function RentLedger({ user, selectedPropertyFilterId = 'all' }) {
               <div className="text-[10px] text-slate-500 dark:text-gray-400 mt-1">Total estimated repair costs</div>
             </div>
 
-            <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-2xl p-4 shadow-sm">
+            <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1F2E44] dark:to-[#1B293C] border border-slate-200/80 dark:border-white/10 rounded-2xl p-4 shadow-sm">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">Unpaid Repairs</span>
                 <div className="p-2 bg-amber-500/10 text-amber-600 dark:text-amber-400 rounded-xl"><Clock size={16} /></div>
@@ -808,7 +808,7 @@ export default function RentLedger({ user, selectedPropertyFilterId = 'all' }) {
               <div className="text-[10px] text-slate-500 dark:text-gray-400 mt-1">Pending maintenance payment</div>
             </div>
 
-            <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-2xl p-4 shadow-sm">
+            <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1F2E44] dark:to-[#1B293C] border border-slate-200/80 dark:border-white/10 rounded-2xl p-4 shadow-sm">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Paid Repairs</span>
                 <div className="p-2 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-xl"><CheckCircle2 size={16} /></div>
@@ -819,7 +819,7 @@ export default function RentLedger({ user, selectedPropertyFilterId = 'all' }) {
           </div>
 
           {/* Maintenance Table */}
-          <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-2xl overflow-hidden shadow-sm">
+          <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1F2E44] dark:to-[#1B293C] border border-slate-200/80 dark:border-white/10 rounded-2xl overflow-hidden shadow-sm">
             <div className="p-4 sm:p-5 border-b border-slate-200 dark:border-white/10 flex items-center justify-between">
               <div>
                 <h3 className="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
@@ -918,7 +918,7 @@ export default function RentLedger({ user, selectedPropertyFilterId = 'all' }) {
       {/* ========================================================================= */}
       {activeTab === 'history' && (
         <div className="space-y-6">
-          <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-2xl overflow-hidden shadow-sm">
+          <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1F2E44] dark:to-[#1B293C] border border-slate-200/80 dark:border-white/10 rounded-2xl overflow-hidden shadow-sm">
             
             {/* Header */}
             <div className="p-5 border-b border-slate-200 dark:border-white/10 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
@@ -1095,7 +1095,7 @@ export default function RentLedger({ user, selectedPropertyFilterId = 'all' }) {
       {/* ========================================================================= */}
       {activeTab === 'vendors' && isLandlord && (
         <div className="space-y-6">
-          <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-2xl p-6 shadow-sm">
+          <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1F2E44] dark:to-[#1B293C] border border-slate-200/80 dark:border-white/10 rounded-2xl p-6 shadow-sm">
             <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-1">
               Registered Contractors & Vendor Directory
             </h3>
@@ -1276,7 +1276,7 @@ export default function RentLedger({ user, selectedPropertyFilterId = 'all' }) {
               </div>
 
               <div className="pt-3 flex gap-3">
-                <button type="button" onClick={() => setShowMaintPayModal(false)} className="flex-1 py-2.5 rounded-xl text-sm font-semibold border border-slate-200 hover:bg-slate-100 cursor-pointer">Cancel</button>
+                <button type="button" onClick={() => setShowMaintPayModal(false)} className="flex-1 py-2.5 rounded-xl text-sm font-semibold border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/10 transition-colors cursor-pointer">Cancel</button>
                 <button type="submit" disabled={maintPayLoading} className="flex-1 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-semibold hover:bg-indigo-500 transition-all shadow-md shadow-indigo-500/25 cursor-pointer">
                   {maintPayLoading ? 'Processing...' : 'Confirm Payment'}
                 </button>
@@ -1542,7 +1542,7 @@ export default function RentLedger({ user, selectedPropertyFilterId = 'all' }) {
                 <p className="text-[10px] text-slate-400 dark:text-gray-500 mt-1">Enter 0 to remove late fee (reverts to UNPAID).</p>
               </div>
               <div className="pt-2 flex gap-3">
-                <button type="button" onClick={() => setShowEditFeeModal(false)} className="flex-1 py-2.5 rounded-xl text-sm font-semibold border border-slate-200 hover:bg-slate-100 cursor-pointer">Cancel</button>
+                <button type="button" onClick={() => setShowEditFeeModal(false)} className="flex-1 py-2.5 rounded-xl text-sm font-semibold border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/10 transition-colors cursor-pointer">Cancel</button>
                 <button type="submit" disabled={editFeeLoading} className="flex-1 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-semibold hover:bg-indigo-500 transition-all shadow-md shadow-indigo-500/25 disabled:opacity-60 cursor-pointer">
                   {editFeeLoading ? 'Saving...' : 'Save Fee'}
                 </button>
