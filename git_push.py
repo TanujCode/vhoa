@@ -76,7 +76,7 @@ res_status = subprocess.run([git_exe, "-C", dst, "status", "--short"], capture_o
 print("Git Status Output:\n", res_status.stdout)
 
 print("\n--- Running Git Commit ---")
-commit_msg = "fix: safe decrypt rent_amount float for superadmin landlords dashboard metrics"
+commit_msg = "feat: US physical address auto-fill, international phone country validation, optional maintenance description, and portal improvements"
 res_commit = subprocess.run([git_exe, "-C", dst, "commit", "-m", commit_msg], capture_output=True, text=True)
 print("Git Commit Output:\n", res_commit.stdout, res_commit.stderr)
 
@@ -87,4 +87,10 @@ print("Git Push Output:\n", res_push.stdout, res_push.stderr)
 if res_push.returncode == 0:
     print("\nSUCCESS: All changes successfully pushed to GitHub (origin/main)!")
 else:
-    print("\nPush finished with returncode:", res_push.returncode)
+    # Try default git push
+    res_push2 = subprocess.run([git_exe, "-C", dst, "push"], capture_output=True, text=True)
+    print("Fallback Git Push Output:\n", res_push2.stdout, res_push2.stderr)
+    if res_push2.returncode == 0:
+        print("\nSUCCESS: All changes successfully pushed to GitHub!")
+    else:
+        print("\nPush finished with returncode:", res_push.returncode)
