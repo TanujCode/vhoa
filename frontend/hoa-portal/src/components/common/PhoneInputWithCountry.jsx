@@ -293,8 +293,7 @@ export default function PhoneInputWithCountry({
           id={id}
           name={name}
           type="tel"
-          inputMode="numeric"
-          pattern="[0-9]*"
+          inputMode="tel"
           required={required}
           disabled={disabled}
           value={value}

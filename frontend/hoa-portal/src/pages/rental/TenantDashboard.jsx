@@ -2,10 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { 
   Home, FileText, CreditCard, Wrench, ShieldAlert, Sparkles, 
   Building2, ArrowRight, ArrowUpRight, CheckCircle2, Clock, Calendar,
-  Search, ChevronRight
+  Search, ChevronRight, BellRing, Mail
 } from 'lucide-react';
 import API from '../../services/api';
 import ScreeningHub from './ScreeningHub';
+import RentalCalendarWidget from '../../components/rental/RentalCalendarWidget';
 
 export default function TenantDashboard({ user, setUser, setActivePage }) {
   const [leases, setLeases] = useState([]);
@@ -373,10 +374,10 @@ export default function TenantDashboard({ user, setUser, setActivePage }) {
             {/* Card 1: Lease Residence */}
             <div 
               onClick={() => setActivePage('profile')} 
-              className="group p-5 rounded-3xl bg-white dark:bg-slate-900/60 dark:backdrop-blur-md border border-slate-200/60 dark:border-white/[0.05] shadow-sm hover:shadow-xl hover:border-blue-500/20 hover:-translate-y-1 transition-all duration-300 text-left cursor-pointer"
+              className="group p-5 rounded-3xl bg-white dark:bg-[#1E2E42] border border-slate-200/80 dark:border-white/10 shadow-sm hover:shadow-xl hover:border-blue-500/20 hover:-translate-y-1 transition-all duration-300 text-left cursor-pointer"
             >
-              <div className="flex justify-between items-center text-slate-450 dark:text-slate-500">
-                <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-gray-450">Residence</span>
+              <div className="flex justify-between items-center text-slate-450 dark:text-slate-400">
+                <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-400">Residence</span>
                 <div className="p-2.5 bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-2xl group-hover:scale-110 transition duration-300">
                   <Home className="w-5 h-5" />
                 </div>
@@ -391,7 +392,7 @@ export default function TenantDashboard({ user, setUser, setActivePage }) {
                     `${activeLease?.unit?.property_type === 'condo' ? 'Apt' : 'Unit'} ${getCleanUnitNumber(activeLease?.unit?.unit_number)}`
                   )}
                 </div>
-                <div className="text-xs text-slate-500 dark:text-gray-400 mt-1 font-semibold flex items-center gap-1">
+                <div className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-semibold flex items-center gap-1">
                   <Building2 size={12} className="text-slate-400" /> {activeLease?.property_name || 'Sunset Heights'}
                 </div>
               </div>
@@ -400,10 +401,10 @@ export default function TenantDashboard({ user, setUser, setActivePage }) {
             {/* Card 2: Monthly Rent */}
             <div 
               onClick={() => setActivePage('rent_ledger')} 
-              className="group p-5 rounded-3xl bg-white dark:bg-slate-900/60 dark:backdrop-blur-md border border-slate-200/60 dark:border-white/[0.05] shadow-sm hover:shadow-xl hover:border-emerald-500/20 hover:-translate-y-1 transition-all duration-300 text-left cursor-pointer"
+              className="group p-5 rounded-3xl bg-white dark:bg-[#1E2E42] border border-slate-200/80 dark:border-white/10 shadow-sm hover:shadow-xl hover:border-emerald-500/20 hover:-translate-y-1 transition-all duration-300 text-left cursor-pointer"
             >
-              <div className="flex justify-between items-center text-slate-450 dark:text-slate-500">
-                <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-gray-450">Monthly Rent</span>
+              <div className="flex justify-between items-center text-slate-450 dark:text-slate-400">
+                <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-400">Monthly Rent</span>
                 <div className="p-2.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-2xl group-hover:scale-110 transition duration-300">
                   <CreditCard className="w-5 h-5" />
                 </div>
@@ -412,7 +413,7 @@ export default function TenantDashboard({ user, setUser, setActivePage }) {
                 <div className="text-2xl font-black text-slate-900 dark:text-white">
                   {activeLease?.rent_amount ? `$${activeLease.rent_amount.toLocaleString()}` : '$0'}
                 </div>
-                <div className="text-xs text-slate-550 dark:text-gray-405 mt-1 font-semibold flex items-center gap-1">
+                <div className="text-xs text-slate-550 dark:text-slate-400 mt-1 font-semibold flex items-center gap-1">
                   <Calendar size={12} className="text-slate-400" /> Due on 1st of month
                 </div>
               </div>
@@ -421,10 +422,10 @@ export default function TenantDashboard({ user, setUser, setActivePage }) {
             {/* Card 3: Lease Status */}
             <div 
               onClick={() => setActivePage('leases_hub')} 
-              className="group p-5 rounded-3xl bg-white dark:bg-slate-900/60 dark:backdrop-blur-md border border-slate-200/60 dark:border-white/[0.05] shadow-sm hover:shadow-xl hover:border-violet-500/20 hover:-translate-y-1 transition-all duration-300 text-left cursor-pointer"
+              className="group p-5 rounded-3xl bg-white dark:bg-[#1E2E42] border border-slate-200/80 dark:border-white/10 shadow-sm hover:shadow-xl hover:border-violet-500/20 hover:-translate-y-1 transition-all duration-300 text-left cursor-pointer"
             >
-              <div className="flex justify-between items-center text-slate-450 dark:text-slate-500">
-                <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-gray-450">Lease Agreement</span>
+              <div className="flex justify-between items-center text-slate-450 dark:text-slate-400">
+                <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-400">Lease Agreement</span>
                 <div className="p-2.5 bg-violet-500/10 text-violet-600 dark:text-violet-400 rounded-2xl group-hover:scale-110 transition duration-300">
                   <FileText className="w-5 h-5" />
                 </div>
@@ -446,10 +447,10 @@ export default function TenantDashboard({ user, setUser, setActivePage }) {
             {/* Card 4: Balance Due */}
             <div 
               onClick={() => setActivePage('rent_ledger')} 
-              className="group p-5 rounded-3xl bg-white dark:bg-slate-900/60 dark:backdrop-blur-md border border-slate-200/60 dark:border-white/[0.05] shadow-sm hover:shadow-xl hover:border-rose-500/20 hover:-translate-y-1 transition-all duration-300 text-left cursor-pointer"
+              className="group p-5 rounded-3xl bg-white dark:bg-[#1E2E42] border border-slate-200/80 dark:border-white/10 shadow-sm hover:shadow-xl hover:border-rose-500/20 hover:-translate-y-1 transition-all duration-300 text-left cursor-pointer"
             >
-              <div className="flex justify-between items-center text-slate-450 dark:text-slate-500">
-                <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-gray-450">Balance Due</span>
+              <div className="flex justify-between items-center text-slate-450 dark:text-slate-400">
+                <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-400">Balance Due</span>
                 <div className="p-2.5 bg-rose-500/10 text-rose-600 dark:text-rose-400 rounded-2xl group-hover:scale-110 transition duration-300">
                   <ShieldAlert className="w-5 h-5" />
                 </div>
@@ -458,7 +459,7 @@ export default function TenantDashboard({ user, setUser, setActivePage }) {
                 <div className={`text-2xl font-black ${totalUnpaid > 0 ? 'text-rose-600 dark:text-rose-400' : 'text-slate-900 dark:text-white'}`}>
                   ${totalUnpaid.toLocaleString()}
                 </div>
-                <div className="text-xs text-slate-550 dark:text-gray-405 mt-1 font-semibold flex items-center gap-1">
+                <div className="text-xs text-slate-550 dark:text-slate-400 mt-1 font-semibold flex items-center gap-1">
                   {totalUnpaid > 0 ? 'Action required immediately' : 'Account fully paid'}
                 </div>
               </div>
@@ -466,128 +467,125 @@ export default function TenantDashboard({ user, setUser, setActivePage }) {
           </div>
 
           {/* Main Content Layout */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-            {/* Left Side: Recent Invoices */}
-            <div className="lg:col-span-8 p-6 rounded-3xl bg-white dark:bg-slate-900/60 dark:backdrop-blur-md border border-slate-200/60 dark:border-white/[0.05] shadow-sm space-y-5">
-              <div className="flex justify-between items-center pb-2 border-b border-slate-100 dark:border-white/5">
-                <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                  <FileText size={18} className="text-blue-500" /> Recent Rent Invoices
-                </h3>
-                <button 
-                  onClick={() => setActivePage('rent_ledger')} 
-                  className="text-xs text-slate-400 hover:text-blue-600 dark:text-gray-500 dark:hover:text-blue-400 font-semibold font-mono transition cursor-pointer"
-                >
-                  Ledger history &rarr;
-                </button>
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            {/* Left Side: Recent Invoices & Quick Tasks */}
+            <div className="lg:col-span-7 space-y-6">
+              {/* Recent Invoices Card */}
+              <div className="p-6 rounded-3xl bg-white dark:bg-[#1E2E42] border border-slate-200/80 dark:border-white/10 shadow-sm space-y-4 text-left">
+                <div className="flex justify-between items-center pb-2 border-b border-slate-100 dark:border-white/5">
+                  <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                    <FileText size={16} className="text-blue-500" /> Recent Rent Invoices
+                  </h3>
+                  <button 
+                    onClick={() => setActivePage('rent_ledger')} 
+                    className="text-xs text-slate-400 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 font-semibold font-mono transition cursor-pointer"
+                  >
+                    Ledger history &rarr;
+                  </button>
+                </div>
+
+                {invoices.length === 0 ? (
+                  <div className="py-8 text-center text-slate-400 text-xs font-semibold">No invoices generated for this lease yet.</div>
+                ) : (
+                  <div className="space-y-2.5">
+                    {invoices.map(inv => (
+                      <div 
+                        key={inv.invoice_id} 
+                        onClick={() => setActivePage('rent_ledger')}
+                        className="group p-3.5 rounded-2xl border border-slate-100 dark:border-white/5 hover:border-blue-500/20 bg-slate-50/70 hover:bg-slate-100/50 dark:bg-[#162535] dark:hover:bg-[#162535]/80 flex justify-between items-center text-xs transition-all duration-200 cursor-pointer"
+                      >
+                        <div className="flex items-center gap-2.5 text-left">
+                          <div className="p-2 bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-xl group-hover:scale-110 transition duration-200">
+                            <FileText size={15} />
+                          </div>
+                          <div>
+                            <span className="font-bold text-slate-900 dark:text-white font-mono">Invoice #{inv.seq_num || inv.invoice_id}</span>
+                            <p className="text-[11px] text-slate-450 dark:text-slate-400 mt-0.5 flex items-center gap-1 font-semibold">
+                              <Calendar size={11} className="text-slate-400" /> Due: {new Date(inv.due_date).toLocaleDateString('en-US', {month: 'short', day: 'numeric', year: 'numeric'})}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <span className="font-bold text-slate-900 dark:text-white font-mono text-sm">
+                            ${(inv.amount + (inv.late_fee_applied || 0)).toLocaleString()}
+                          </span>
+                          <span className={`text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider border ${
+                            inv.status === 'PAID' 
+                              ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20' 
+                              : 'bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 border-yellow-500/20'
+                          }`}>
+                            {inv.status}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
-              {invoices.length === 0 ? (
-                <div className="py-12 text-center text-slate-400 text-sm font-semibold">No invoices generated for this lease yet.</div>
-              ) : (
-                <div className="space-y-3">
-                  {invoices.map(inv => (
-                    <div 
-                      key={inv.invoice_id} 
-                      onClick={() => setActivePage('rent_ledger')}
-                      className="group p-4 rounded-2xl border border-slate-100 dark:border-white/5 hover:border-blue-500/20 bg-slate-50/50 hover:bg-slate-50 dark:bg-white/[0.01] dark:hover:bg-white/[0.03] flex justify-between items-center text-sm transition-all duration-200 cursor-pointer"
-                    >
-                      <div className="flex items-center gap-3 text-left">
-                        <div className="p-2.5 bg-blue-500/5 text-blue-600 dark:text-blue-400 rounded-xl group-hover:scale-110 transition duration-200">
-                          <FileText size={16} />
-                        </div>
-                        <div>
-                          <span className="font-bold text-slate-900 dark:text-white font-mono">Invoice #{inv.seq_num || inv.invoice_id}</span>
-                          <p className="text-xs text-slate-450 dark:text-slate-400 mt-0.5 flex items-center gap-1 font-semibold">
-                            <Calendar size={11} className="text-slate-400" /> Due Date: {new Date(inv.due_date).toLocaleDateString('en-US', {month: 'short', day: 'numeric', year: 'numeric'})}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-4">
-                        <span className="font-bold text-slate-900 dark:text-white font-mono text-base">
-                          ${(inv.amount + (inv.late_fee_applied || 0)).toLocaleString()}
-                        </span>
-                        <span className={`text-[9px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider border ${
-                          inv.status === 'PAID' 
-                            ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' 
-                            : 'bg-yellow-500/10 text-yellow-600 border-yellow-500/20'
-                        }`}>
-                          {inv.status}
-                        </span>
-                      </div>
+              {/* Quick Action Tasks */}
+              <div className="p-6 rounded-3xl bg-white dark:bg-[#1E2E42] border border-slate-200/80 dark:border-white/10 shadow-sm space-y-4 text-left">
+                <div className="pb-2 border-b border-slate-100 dark:border-white/5">
+                  <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                    <Sparkles size={16} className="text-amber-500" /> Quick Tasks
+                  </h3>
+                </div>
+                
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  {/* Task 1: View Lease */}
+                  <div 
+                    onClick={() => setActivePage('leases_hub')}
+                    className="group p-3.5 rounded-2xl border border-slate-150/80 dark:border-white/5 hover:border-blue-500/30 bg-slate-50/70 hover:bg-blue-500/10 dark:bg-[#162535] dark:hover:bg-blue-500/15 cursor-pointer text-left transition-all flex flex-col justify-between"
+                  >
+                    <div className="p-2 bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-xl w-fit">
+                      <FileText size={16} />
                     </div>
-                  ))}
-                </div>
-              )}
-            </div>
+                    <div className="mt-3">
+                      <h4 className="font-bold text-slate-900 dark:text-white text-xs">Lease Agreement</h4>
+                      <p className="text-[10px] text-slate-450 dark:text-slate-400 mt-0.5">Review terms</p>
+                    </div>
+                  </div>
 
-        {/* Right Side: Quick Action Buttons */}
-        <div className="lg:col-span-4 p-6 rounded-3xl bg-white dark:bg-slate-900/60 dark:backdrop-blur-md border border-slate-200/60 dark:border-white/[0.05] shadow-sm space-y-5">
-          <div className="pb-2 border-b border-slate-100 dark:border-white/5">
-            <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-              <Sparkles size={18} className="text-amber-500" /> Quick Tasks
-            </h3>
-          </div>
-          
-          <div className="space-y-3">
-             {/* Task 1: View/Sign Lease Contract */}
-             <div 
-               onClick={() => {
-                 const pendingLease = leases.find(l => l.status === 'PENDING_TENANT_REVIEW' || l.status === 'PENDING_SIGNATURE');
-                 if (pendingLease) {
-                   localStorage.setItem('pending_lease_id', pendingLease.lease_id);
-                 }
-                 setActivePage('leases_hub');
-               }}
-               className="group p-4 rounded-2xl border border-slate-150/80 dark:border-white/5 hover:border-blue-500/30 bg-slate-50/40 hover:bg-blue-500/5 dark:bg-white/[0.01] dark:hover:bg-blue-500/5 cursor-pointer text-left transition-all duration-350 flex justify-between items-center gap-3"
-             >
-              <div className="flex items-start gap-3">
-                <div className="p-2.5 bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-xl mt-0.5 group-hover:scale-110 transition duration-300">
-                  <FileText className="w-5 h-5" />
-                </div>
-                <div>
-                  <h4 className="font-bold text-slate-900 dark:text-white text-xs">Lease Agreement</h4>
-                  <p className="text-[10px] text-slate-450 dark:text-gray-400 mt-0.5 font-semibold">View or sign lease contracts.</p>
+                  {/* Task 2: Pay Outstanding Dues */}
+                  <div 
+                    onClick={() => setActivePage('rent_ledger')}
+                    className="group p-3.5 rounded-2xl border border-slate-150/80 dark:border-white/5 hover:border-emerald-500/30 bg-slate-50/70 hover:bg-emerald-500/10 dark:bg-[#162535] dark:hover:bg-emerald-500/15 cursor-pointer text-left transition-all flex flex-col justify-between"
+                  >
+                    <div className="p-2 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-xl w-fit">
+                      <CreditCard size={16} />
+                    </div>
+                    <div className="mt-3">
+                      <h4 className="font-bold text-slate-900 dark:text-white text-xs">Pay Rent</h4>
+                      <p className="text-[10px] text-slate-450 dark:text-slate-400 mt-0.5">Online payments</p>
+                    </div>
+                  </div>
+
+                  {/* Task 3: Maintenance Ticket */}
+                  <div 
+                    onClick={() => setActivePage('servicereq')}
+                    className="group p-3.5 rounded-2xl border border-slate-150/80 dark:border-white/5 hover:border-violet-500/30 bg-slate-50/70 hover:bg-violet-500/10 dark:bg-[#162535] dark:hover:bg-violet-500/15 cursor-pointer text-left transition-all flex flex-col justify-between"
+                  >
+                    <div className="p-2 bg-violet-500/10 text-violet-600 dark:text-violet-400 rounded-xl w-fit">
+                      <Wrench size={16} />
+                    </div>
+                    <div className="mt-3">
+                      <h4 className="font-bold text-slate-900 dark:text-white text-xs">Service Request</h4>
+                      <p className="text-[10px] text-slate-450 dark:text-slate-400 mt-0.5">Unit repairs</p>
+                    </div>
+                  </div>
                 </div>
               </div>
-              <ArrowUpRight size={16} className="text-slate-400 group-hover:text-blue-550 dark:group-hover:text-blue-400 transition" />
             </div>
 
-            {/* Task 2: Pay Outstanding Dues */}
-            <div 
-              onClick={() => setActivePage('rent_ledger')}
-              className="group p-4 rounded-2xl border border-slate-150/80 dark:border-white/5 hover:border-emerald-500/30 bg-slate-50/40 hover:bg-emerald-500/5 dark:bg-white/[0.01] dark:hover:bg-emerald-500/5 cursor-pointer text-left transition-all duration-350 flex justify-between items-center gap-3"
-            >
-              <div className="flex items-start gap-3">
-                <div className="p-2.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-xl mt-0.5 group-hover:scale-110 transition duration-300">
-                  <CreditCard className="w-5 h-5" />
-                </div>
-                <div>
-                  <h4 className="font-bold text-slate-900 dark:text-white text-xs">Pay Rent</h4>
-                  <p className="text-[10px] text-slate-450 dark:text-gray-400 mt-0.5 font-semibold">Make secure online rent payments.</p>
-                </div>
-              </div>
-              <ArrowUpRight size={16} className="text-slate-400 group-hover:text-emerald-550 dark:group-hover:text-emerald-400 transition" />
-            </div>
-
-            {/* Task 3: Submit Maintenance Ticket */}
-            <div 
-              onClick={() => setActivePage('servicereq')}
-              className="group p-4 rounded-2xl border border-slate-150/80 dark:border-white/5 hover:border-violet-500/30 bg-slate-50/40 hover:bg-violet-500/5 dark:bg-white/[0.01] dark:hover:bg-violet-500/5 cursor-pointer text-left transition-all duration-350 flex justify-between items-center gap-3"
-            >
-              <div className="flex items-start gap-3">
-                <div className="p-2.5 bg-violet-500/10 text-violet-600 dark:text-violet-400 rounded-xl mt-0.5 group-hover:scale-110 transition duration-300">
-                  <Wrench className="w-5 h-5" />
-                </div>
-                <div>
-                  <h4 className="font-bold text-slate-900 dark:text-white text-xs">Service Request</h4>
-                  <p className="text-[10px] text-slate-450 dark:text-gray-400 mt-0.5 font-semibold">Report maintanance or unit repairs.</p>
-                </div>
-              </div>
-              <ArrowUpRight size={16} className="text-slate-400 group-hover:text-violet-550 dark:group-hover:text-violet-400 transition" />
+            {/* Right Side: Compact Rent & Lease Schedule Calendar */}
+            <div className="lg:col-span-5">
+              <RentalCalendarWidget
+                userRole="tenant"
+                onNavigatePage={setActivePage}
+                onPayRent={() => setActivePage('rent_ledger')}
+              />
             </div>
           </div>
-        </div>
-      </div>
         </>
       )}
     </div>

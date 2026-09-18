@@ -20,6 +20,18 @@ const getThemeKey = () => {
 
 // Listeners setup to intercept login/logout in the same tab
 if (typeof window !== 'undefined') {
+  // Clear any persistent theme keys from localStorage so light mode is default
+  try {
+    localStorage.removeItem('theme');
+    Object.keys(localStorage).forEach(k => {
+      if (k.startsWith('theme_')) {
+        localStorage.removeItem(k);
+      }
+    });
+  } catch (e) {
+    // Silent catch
+  }
+
   const originalSetItem = localStorage.setItem;
   localStorage.setItem = function (key, value) {
     originalSetItem.apply(this, arguments);
@@ -40,18 +52,17 @@ if (typeof window !== 'undefined') {
 export function ThemeProvider({ children }) {
   const [theme, setTheme] = useState(() => {
     const key = getThemeKey();
-    return localStorage.getItem(key) || localStorage.getItem('theme') || 'dark';
+    return sessionStorage.getItem(key) || sessionStorage.getItem('theme') || 'light';
   });
 
   useEffect(() => {
     const handleStorageChange = () => {
       const key = getThemeKey();
-      const storedTheme = localStorage.getItem(key) || localStorage.getItem('theme') || 'dark';
+      const storedTheme = sessionStorage.getItem(key) || sessionStorage.getItem('theme') || 'light';
       setTheme(storedTheme);
     };
 
     window.addEventListener('localstorage-user-changed', handleStorageChange);
-    // Listen to storage event for multi-tab support
     window.addEventListener('storage', handleStorageChange);
 
     return () => {
@@ -70,9 +81,8 @@ export function ThemeProvider({ children }) {
       root.classList.add('dark');
     }
     const key = getThemeKey();
-    localStorage.setItem(key, theme);
-    // Sync with generic 'theme' too
-    localStorage.setItem('theme', theme);
+    sessionStorage.setItem(key, theme);
+    sessionStorage.setItem('theme', theme);
   }, [theme]);
 
   const toggleTheme = () =>

@@ -314,9 +314,11 @@ export default function RentalMaintenanceDesk({ user, selectedPropertyFilterId =
       newErrors.title = titleErr;
     }
 
-    const descErr = validateTicketDescription(description);
-    if (descErr !== true) {
-      newErrors.description = descErr;
+    if (description && description.trim()) {
+      const descErr = validateTicketDescription(description);
+      if (descErr !== true) {
+        newErrors.description = descErr;
+      }
     }
 
     if (isCondo && !scope) {
@@ -373,9 +375,11 @@ export default function RentalMaintenanceDesk({ user, selectedPropertyFilterId =
       newErrors.title = titleErr;
     }
 
-    const descErr = validateTicketDescription(tenantEditDesc);
-    if (descErr !== true) {
-      newErrors.description = descErr;
+    if (tenantEditDesc && tenantEditDesc.trim()) {
+      const descErr = validateTicketDescription(tenantEditDesc);
+      if (descErr !== true) {
+        newErrors.description = descErr;
+      }
     }
 
     if (Object.keys(newErrors).length > 0) {
@@ -475,11 +479,13 @@ export default function RentalMaintenanceDesk({ user, selectedPropertyFilterId =
       const params = {};
       if (statusVal) params.status = statusVal;
       
-      // Only set vendor_id and estimated_cost if assigning a vendor
-      if (statusVal === 'VENDOR_ASSIGNED') {
-        if (assignVendorId) params.vendor_id = parseInt(assignVendorId);
-        params.estimated_cost = parsedCost;
+      if (assignVendorId) {
+        params.vendor_id = parseInt(assignVendorId);
+      } else {
+        params.vendor_id = 0; // Clear vendor if unassigned
       }
+
+      params.estimated_cost = !isNaN(parsedCost) && parsedCost >= 0 ? parsedCost : 0;
 
       const queryParams = new URLSearchParams(params).toString();
       const res = await API.post(`/rental/maintenance/${selectedRequest.request_id}?${queryParams}`);
@@ -750,9 +756,9 @@ export default function RentalMaintenanceDesk({ user, selectedPropertyFilterId =
                         <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold border uppercase tracking-wider ${
                           req.payment_status === 'PAID' 
                             ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' 
-                            : 'bg-rose-500/10 text-rose-500 border-rose-500/20'
+                            : 'bg-blue-500/10 text-blue-500 border-blue-500/20'
                         }`}>
-                          {req.payment_status}
+                          {req.payment_status === 'PAID' ? 'Paid by Landlord' : (isLandlord ? 'UNPAID' : 'Landlord Covered')}
                         </span>
                       )}
                       <span className="hidden sm:inline">Date: <span className="text-slate-800 dark:text-gray-300 font-medium">
@@ -779,14 +785,24 @@ export default function RentalMaintenanceDesk({ user, selectedPropertyFilterId =
                     {/* Actions */}
                     <div className="flex flex-wrap items-center gap-2 mt-3.5">
                       {isLandlord ? (
-                        <button
-                          disabled={req.status === 'COMPLETED' || req.status === 'CANCELLED'}
-                          onClick={() => { setSelectedRequest(req); setErrors({}); setStatusVal(req.status); setEstCost(req.estimated_cost.toString()); setAssignVendorId(req.vendor_id || ''); setShowAssignModal(true); }}
-                          className="px-3 py-1.5 bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 rounded-xl text-xs font-medium transition flex items-center gap-1 shadow-sm active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-                        >
-                          <Edit size={12} />
-                          <span>Manage Request</span>
-                        </button>
+                        <>
+                          <button
+                            disabled={req.status === 'COMPLETED' || req.status === 'CANCELLED'}
+                            onClick={() => { setSelectedRequest(req); setErrors({}); setStatusVal(req.status); setEstCost(req.estimated_cost.toString()); setAssignVendorId(req.vendor_id || ''); setShowAssignModal(true); }}
+                            className="px-3 py-1.5 bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 rounded-xl text-xs font-medium transition flex items-center gap-1 shadow-sm active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                          >
+                            <Edit size={12} />
+                            <span>Manage Request</span>
+                          </button>
+                          {req.payment_status === 'UNPAID' && req.estimated_cost > 0 && (
+                            <button
+                              onClick={() => { setSelectedRequest(req); setPayMethod('ACH'); setShowPayModal(true); }}
+                              className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-medium transition flex items-center justify-center gap-1 shadow-sm cursor-pointer"
+                            >
+                              <DollarSign className="w-3.5 h-3.5" /> Settle / Pay Vendor
+                            </button>
+                          )}
+                        </>
                       ) : (
                         <>
                           {/* Direct Edit Button if OPEN */}
@@ -837,16 +853,6 @@ export default function RentalMaintenanceDesk({ user, selectedPropertyFilterId =
                             >
                               <MessageSquare size={13} />
                               <span>Add Note / Request Update</span>
-                            </button>
-                          )}
-
-                          {/* Pay Cost Button */}
-                          {req.payment_status === 'UNPAID' && req.estimated_cost > 0 && (
-                            <button
-                              onClick={() => { setSelectedRequest(req); setPayMethod('ACH'); setShowPayModal(true); }}
-                              className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-medium transition flex items-center justify-center gap-1 shadow-sm cursor-pointer"
-                            >
-                              <DollarSign className="w-3.5 h-3.5" /> Pay Cost
                             </button>
                           )}
 
@@ -964,16 +970,15 @@ export default function RentalMaintenanceDesk({ user, selectedPropertyFilterId =
               </div>
 
               <div>
-                <label className="text-xs text-slate-500 dark:text-gray-400 mb-1.5 block uppercase font-bold tracking-wider">Detailed Description *</label>
+                <label className="text-xs text-slate-500 dark:text-gray-400 mb-1.5 block uppercase font-bold tracking-wider">Detailed Description <span className="text-[10px] font-normal normal-case text-slate-400">(Optional)</span></label>
                 <textarea
-                  required
                   rows={4}
                   value={description}
                   onChange={e => {
                     setDescription(e.target.value);
                     if (errors.description) setErrors(prev => ({ ...prev, description: null }));
                   }}
-                  placeholder="Describe the problem in detail..."
+                  placeholder="Describe the problem in detail (optional)..."
                   className={`w-full bg-slate-50 dark:bg-[#0D1B2A] border ${errors.description ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/20'} rounded-2xl px-4 py-3 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 focus:outline-none focus:border-blue-500 resize-y`}
                 />
                 {errors.description && <p className="text-red-500 text-[10px] mt-1 font-bold">{errors.description}</p>}
@@ -1072,12 +1077,18 @@ export default function RentalMaintenanceDesk({ user, selectedPropertyFilterId =
                   ) : (
                     <select
                       value={statusVal}
-                      onChange={e=>setStatusVal(e.target.value)}
+                      onChange={e => {
+                        const nextVal = e.target.value;
+                        setStatusVal(nextVal);
+                        if (nextVal === 'VENDOR_ASSIGNED' && !assignVendorId && vendors.length > 0) {
+                          setAssignVendorId(vendors[0].vendor_id);
+                        }
+                      }}
                       className="w-full bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 focus:border-blue-500 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none appearance-none cursor-pointer"
                     >
                       <option value="OPEN">Open (Awaiting review)</option>
-                      <option value="IN_PROGRESS">In Progress (Reviewing contractors)</option>
                       <option value="VENDOR_ASSIGNED">Vendor Assigned</option>
+                      <option value="IN_PROGRESS">In Progress (Work ongoing by vendor)</option>
                       <option value="COMPLETED">Completed (Repairs done)</option>
                       <option value="CANCELLED">Cancelled</option>
                     </select>
@@ -1086,15 +1097,19 @@ export default function RentalMaintenanceDesk({ user, selectedPropertyFilterId =
                 </div>
               </div>
 
-              {statusVal === 'VENDOR_ASSIGNED' && (
+              {['VENDOR_ASSIGNED', 'IN_PROGRESS', 'OPEN'].includes(statusVal) && (
                 <>
                   <div>
-                    <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">ASSIGN APPROVED HOA VENDOR / CONTRACTOR</label>
+                    <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">ASSIGN APPROVED VENDOR / CONTRACTOR</label>
                     <div className="relative">
                       <select
                         value={assignVendorId}
                         onChange={e => {
-                          setAssignVendorId(e.target.value);
+                          const vId = e.target.value;
+                          setAssignVendorId(vId);
+                          if (vId && statusVal === 'OPEN') {
+                            setStatusVal('VENDOR_ASSIGNED');
+                          }
                           if (errors.vendor_id) setErrors(prev => ({ ...prev, vendor_id: null }));
                         }}
                         className={`w-full bg-slate-50 dark:bg-[#111c2a] border ${errors.vendor_id ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/10'} focus:border-blue-500 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none appearance-none cursor-pointer`}
@@ -1107,7 +1122,7 @@ export default function RentalMaintenanceDesk({ user, selectedPropertyFilterId =
                       <ChevronDown className="absolute right-3 top-3.5 w-4 h-4 text-gray-450 pointer-events-none" />
                     </div>
                     {errors.vendor_id && <p className="text-red-500 text-[10px] mt-1 font-bold">{errors.vendor_id}</p>}
-                    <p className="text-[10px] text-slate-400 dark:text-gray-500 mt-1.5">Select from the community network of certified professionals.</p>
+                    <p className="text-[10px] text-slate-400 dark:text-gray-500 mt-1.5">Select a certified contractor to dispatch for this maintenance ticket.</p>
                   </div>
 
                   <div>
@@ -1254,9 +1269,8 @@ export default function RentalMaintenanceDesk({ user, selectedPropertyFilterId =
               </div>
 
               <div>
-                <label className="text-xs text-slate-500 dark:text-gray-400 mb-1.5 block uppercase font-bold tracking-wider">Detailed Description *</label>
+                <label className="text-xs text-slate-500 dark:text-gray-400 mb-1.5 block uppercase font-bold tracking-wider">Detailed Description <span className="text-[10px] font-normal normal-case text-slate-400">(Optional)</span></label>
                 <textarea
-                  required
                   rows={4}
                   value={tenantEditDesc}
                   onChange={e => {
@@ -1264,7 +1278,7 @@ export default function RentalMaintenanceDesk({ user, selectedPropertyFilterId =
                     if (errors.description) setErrors(prev => ({ ...prev, description: null }));
                   }}
                   className={`w-full bg-slate-50 dark:bg-[#0D1B2A] border ${errors.description ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/20'} rounded-2xl px-4 py-3 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-550 focus:outline-none focus:border-blue-500 resize-y`}
-                  placeholder="Describe the issue in detail..."
+                  placeholder="Describe the issue in detail (optional)..."
                 />
                 {errors.description && <p className="text-red-500 text-[10px] mt-1 font-bold">{errors.description}</p>}
               </div>

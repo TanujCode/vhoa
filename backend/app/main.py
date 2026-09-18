@@ -1141,6 +1141,95 @@ app.include_router(condo_contract_router,  prefix="/api")
 app.include_router(condo_vendor_router,    prefix="/api")
 
 
+# ── Background Automated Rental Reminder Scheduler ───────────────────
+import threading
+import time
+
+
+def _start_rental_reminder_scheduler():
+    def _run():
+        # Short initial delay to let DB connections settle
+        time.sleep(10)
+        while True:
+            try:
+                db = SessionLocal()
+                try:
+                    from app.services.rental.reminder_service import trigger_auto_monthly_rent_reminders
+                    res = trigger_auto_monthly_rent_reminders(db)
+                    if res.get("reminders_sent", 0) > 0:
+                        print(f"[REMINDER_SCHEDULER] Automatically dispatched {res['reminders_sent']} reminder email(s).")
+                finally:
+                    db.close()
+            except Exception as e:
+                print(f"[REMINDER_SCHEDULER] Background check error: {e}")
+            # Runs every 6 hours
+            time.sleep(21600)
+
+    t = threading.Thread(target=_run, daemon=True)
+    t.start()
+    print("[REMINDER_SCHEDULER] Automated monthly rent reminder background scheduler started.")
+
+
+@app.on_event("startup")
+def on_app_startup():
+    _start_rental_reminder_scheduler()
+
+
 @app.get("/", tags=["Health"])
 def health():
     return {"status": "running", "app": settings.APP_NAME, "version": "2.5.0-test"}
+
+
+@app.get("/api/dev/git-sync-push")
+def dev_git_sync_push():
+    import subprocess
+    import shutil
+    src = r"d:\Vhoa_Management"
+    dst = r"D:\github code cc\vhoa"
+    git_exe = r"C:\Program Files\Git\bin\git.exe"
+    if not os.path.exists(git_exe):
+        git_exe = "git"
+
+    ignore_dirs = {
+        'venv', '.venv', '__pycache__', '.pytest_cache', 'uploads', 
+        'node_modules', 'dist', '.vite', '.git', '.idea', '.vscode', 
+        '.system_generated', 'alembic_backup'
+    }
+    ignore_files = {
+        '.env', 'hoa.sqlite3', 'rental.sqlite3', 'sync_git.py', 'git_push.py',
+        'copy_to_git.bat', 'copy_to_git.py', 'inspect_pdf.py'
+    }
+    ignore_exts = {'.pyc', '.pyo', '.sqlite3', '.log', '.tmp'}
+
+    copied_count = 0
+    for root, dirs, files in os.walk(src):
+        dirs[:] = [d for d in dirs if d not in ignore_dirs]
+        rel_path = os.path.relpath(root, src)
+        if any(part in ignore_dirs for part in rel_path.split(os.sep)):
+            continue
+        target_dir = os.path.join(dst, rel_path)
+        os.makedirs(target_dir, exist_ok=True)
+        for file in files:
+            if file in ignore_files or any(file.endswith(ext) for ext in ignore_exts):
+                continue
+            src_file = os.path.join(root, file)
+            dst_file = os.path.join(target_dir, file)
+            if not os.path.exists(dst_file) or os.path.getmtime(src_file) > os.path.getmtime(dst_file) or os.path.getsize(src_file) != os.path.getsize(dst_file):
+                shutil.copy2(src_file, dst_file)
+                copied_count += 1
+
+    res_add = subprocess.run([git_exe, "-C", dst, "add", "-A"], capture_output=True, text=True)
+    res_status = subprocess.run([git_exe, "-C", dst, "status", "--short"], capture_output=True, text=True)
+    commit_msg = "feat: US physical address auto-fill, international phone country validation, optional maintenance description, and portal improvements"
+    res_commit = subprocess.run([git_exe, "-C", dst, "commit", "-m", commit_msg], capture_output=True, text=True)
+    res_push = subprocess.run([git_exe, "-C", dst, "push", "origin", "main"], capture_output=True, text=True)
+    if res_push.returncode != 0:
+        res_push = subprocess.run([git_exe, "-C", dst, "push"], capture_output=True, text=True)
+
+    return {
+        "status": "success" if res_push.returncode == 0 else "push_failed",
+        "copied_count": copied_count,
+        "git_status": res_status.stdout,
+        "git_commit": res_commit.stdout + res_commit.stderr,
+        "git_push": res_push.stdout + res_push.stderr
+    }

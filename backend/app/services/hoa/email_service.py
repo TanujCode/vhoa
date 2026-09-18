@@ -8,17 +8,45 @@ from app.config import settings
 
 # Resolve logo path once at module load
 _BASE_DIR = os.path.dirname(__file__)
-_LOGO_PATH = None
-for _candidate in [
-    os.path.abspath(os.path.join(_BASE_DIR, "..", "..", "..", "frontend", "hoa-portal", "public", "logo_light.png")),
-    os.path.abspath(os.path.join(_BASE_DIR, "..", "..", "frontend", "hoa-portal", "public", "logo_light.png")),
-    os.path.abspath(os.path.join(_BASE_DIR, "..", "..", "..", "..", "frontend", "hoa-portal", "public", "logo_light.png")),
-    os.path.abspath(os.path.join(_BASE_DIR, "..", "..", "..", "frontend", "hoa-portal", "public", "logo_dark.png")),
-]:
-    if os.path.exists(_candidate):
-        _LOGO_PATH = _candidate
-        break
-print(f"[email_service] Logo path: {_LOGO_PATH}")
+
+
+def _ensure_baked_email_logo() -> str:
+    """
+    Creates an email-optimized logo with an opaque solid white badge baked into the image pixels.
+    This prevents Gmail mobile dark mode from making transparent dark letters invisible.
+    """
+    public_dir = os.path.abspath(os.path.join(_BASE_DIR, "..", "..", "..", "frontend", "hoa-portal", "public"))
+    dest_path = os.path.join(public_dir, "logo_email.png")
+    src_light = os.path.join(public_dir, "logo_light.png")
+
+    if os.path.exists(src_light):
+        try:
+            from PIL import Image, ImageDraw
+            img = Image.open(src_light).convert("RGBA")
+            w, h = img.size
+            pad_x, pad_y = 50, 24
+            bg_w, bg_h = w + (pad_x * 2), h + (pad_y * 2)
+            
+            # Create RGB image with 100% solid white pixels
+            bg = Image.new("RGBA", (bg_w, bg_h), (255, 255, 255, 255))
+            draw = ImageDraw.Draw(bg)
+            draw.rounded_rectangle([3, 3, bg_w - 4, bg_h - 4], radius=28, fill=(255, 255, 255, 255), outline=(226, 232, 240, 255), width=3)
+            bg.paste(img, (pad_x, pad_y), img)
+            
+            # Save as solid RGB PNG (zero alpha channel, completely bulletproof against email client dark-mode inversion)
+            final_rgb = Image.new("RGB", (bg_w, bg_h), (255, 255, 255))
+            final_rgb.paste(bg, (0, 0), bg)
+            final_rgb.save(dest_path, "PNG", quality=95)
+            print(f"[email_service] Generated solid baked email logo: {dest_path}")
+            return dest_path
+        except Exception as e:
+            print(f"[email_service] PIL bake fallback: {e}")
+            return src_light
+    return src_light
+
+
+_LOGO_PATH = _ensure_baked_email_logo()
+print(f"[email_service] Active email logo path: {_LOGO_PATH}")
 
 
 def _send_email_thread(to_email: str, subject: str, html_body: str, from_name: str = None):
@@ -40,9 +68,10 @@ def _send_email_thread(to_email: str, subject: str, html_body: str, from_name: s
     msg_alt.attach(MIMEText(html_body, "html"))
 
     # Attach logo as inline CID image (no attachment shown in Gmail)
-    if _LOGO_PATH:
+    logo_path = _ensure_baked_email_logo()
+    if logo_path and os.path.exists(logo_path):
         try:
-            with open(_LOGO_PATH, "rb") as f:
+            with open(logo_path, "rb") as f:
                 img_data = f.read()
             img = MIMEImage(img_data, "png")
             img.add_header("Content-ID", "<vhoa_logo>")
@@ -84,26 +113,30 @@ def send_email(to_email: str, subject: str, html_body: str, from_name: str = Non
 
 
 def _wrap_in_responsive_layout(inner_html: str, subtitle: str = "Property Management System") -> str:
-    """Wraps inner HTML in a responsive, centered table layout that matches Dockly UI (light theme)."""
+    """Wraps inner HTML in a responsive, centered table layout with high-contrast logo badge for dark mode compatibility."""
     return f"""
-    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color: #f3f4f6; width: 100%; height: 100%; margin: 0; padding: 40px 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color: #f3f4f6; width: 100%; height: 100%; margin: 0; padding: 36px 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
       <tr>
         <td align="center" valign="top">
-          <div style="width: 100%; max-width: 520px; margin: 0 auto; text-align: left; padding: 0 10px;">
+          <div style="width: 100%; max-width: 520px; margin: 0 auto; text-align: left; padding: 0 12px;">
             
-            <!-- Centered Logo above the white card -->
+            <!-- Centered Official NestBloq Logo (Live Production CDN) -->
             <div style="text-align: center; margin-bottom: 24px;">
-              <img src="cid:vhoa_logo" alt="NestBloq Logo" style="height: 38px; width: auto; display: inline-block; vertical-align: middle;" />
+              <img src="https://nestbloq.vercel.app/logo_light.png" alt="NestBloq" width="180" style="height: auto; width: 180px; max-width: 100%; display: inline-block; vertical-align: middle; border: 0; outline: none; text-decoration: none;" />
             </div>
 
             <!-- Main Card Container -->
-            <div style="background: #ffffff; padding: 40px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05); border: 1px solid #eef0f3; color: #374151;">
-              {inner_html}
-            </div>
+            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+              <tr>
+                <td bgcolor="#ffffff" style="background-color: #ffffff !important; padding: 36px 32px; border-radius: 16px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05); border: 1px solid #e2e8f0; color: #374151;">
+                  {inner_html}
+                </td>
+              </tr>
+            </table>
 
             <!-- Footer / Subtitle -->
             <div style="text-align: center; margin-top: 24px;">
-              <p style="margin: 0; color: #9CA3AF; font-size: 12px;">
+              <p style="margin: 0; color: #9CA3AF; font-size: 12px; font-weight: 500;">
                 © 2026 NestBloq — {subtitle or 'Property Management System'}
               </p>
             </div>

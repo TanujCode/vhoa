@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import {
-  ArrowRight, Play, CheckCircle, Zap,
+  ArrowRight, Play, CheckCircle, CheckCircle2, Zap,
   ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Star, UserPlus, Mail,
-  Wallet, Wrench, MessageSquare, Send,
+  Wallet, Wrench, MessageSquare, Send, Plus, RotateCw, Calendar, ArrowDownRight,
   Shield, Activity, Sparkles, TrendingUp, Globe, Clock,
   Phone, Map, Building, FileText, UserCheck,
   ClipboardSignature, Scale, CalendarRange, Users, ShieldCheck,
@@ -903,29 +903,29 @@ export default function LandingPage() {
   
   // Landlord Rental dashboard data
   const pd = {
-    managerName: 'James Mitchell',
+    managerName: 'Alexander Brooks',
     managerRole: 'LANDLORD',
-    managerInitials: 'JM',
-    managerColor: 'bg-teal-500',
-    contextLabel: 'MY PORTFOLIO',
+    managerInitials: 'A',
+    managerColor: 'bg-blue-600',
+    contextLabel: 'MANAGING',
     communityName: 'All Properties',
-    communityCode: '3 Props ▾',
-    welcomeMsg: 'Welcome back, James! 🔑',
+    communityCode: 'All ▾',
+    welcomeMsg: 'Welcome, Alexander! ✨',
     subMsg: 'Rental Portfolio Summary · Real-Time Property Overview',
-    badge1: 'Props Loan: 3',
+    badge1: 'Properties: 2',
     badge1color: isDark ? 'bg-white/5 text-slate-300 border-white/10' : 'bg-slate-100 text-slate-600 border-slate-200',
     badge2: 'ACTIVE',
-    badge2color: 'text-teal-700 dark:text-teal-400 bg-teal-500/10 border-teal-500/20',
+    badge2color: 'text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 border-emerald-500/20',
     address: '742 Evergreen Terrace, Portland, OR 97201',
     stats: [
-      { val: '3', label: 'Properties', color: 'text-teal-600 dark:text-teal-400' },
-      { val: '3', label: 'Active Leases', color: 'text-blue-600 dark:text-blue-400' },
+      { val: '2', label: 'Properties', color: 'text-blue-600 dark:text-blue-400' },
+      { val: '3', label: 'Active Leases', color: 'text-emerald-600 dark:text-emerald-400' },
       { val: '3', label: 'Tenants', color: 'text-violet-600 dark:text-violet-400' },
       { val: '2', label: 'Open Tickets', color: 'text-amber-600 dark:text-amber-400' },
     ],
     leftPanelTitle: 'Rent Overview',
     rightPanelTitle: 'Action Required',
-    rightPanelSub: 'Tenant Requests ●4',
+    rightPanelSub: 'Tenant Requests ●2',
   };
 
   const automationSlides = [
@@ -1476,38 +1476,36 @@ export default function LandingPage() {
 
               {/* Dashboard Layout */}
               <div
-                className="flex h-[520px] sm:h-[480px] overflow-hidden bg-slate-50 dark:bg-[#090F16]"
+                className="flex h-[540px] sm:h-[500px] overflow-hidden bg-slate-50 dark:bg-[#090F16]"
               >
                 {/* ── Sidebar ── */}
                 <aside className={`hidden sm:flex w-44 shrink-0 border-r flex flex-col transition-colors duration-300 ${
-                  isDark ? 'bg-[#0B132B] border-white/[0.06]' : 'bg-[#E8F1FC] border-slate-200/80'
+                  isDark ? 'bg-[#0B132B] border-white/[0.06]' : 'bg-[#EBF3FC] border-slate-200/80'
                 }`}>
-                  <div className={`p-4 border-b flex items-center shrink-0 ${isDark ? 'border-white/[0.06]' : 'border-slate-200/80'}`}>
+                  <div className={`p-3.5 border-b flex items-center shrink-0 ${isDark ? 'border-white/[0.06]' : 'border-slate-200/80'}`}>
                     <Logo className="h-5 w-auto" variant={isDark ? "white" : "default"} />
                   </div>
-                  <div className="p-2.5 shrink-0">
+                  <div className="p-2.5 pb-1.5 shrink-0">
                     <span className={`text-[7px] font-extrabold uppercase tracking-widest ${isDark ? 'text-slate-500' : 'text-slate-600'}`}>MAIN MENU</span>
                   </div>
-                  <nav className="flex-1 px-2 pb-2 space-y-0.5 text-[9px] font-medium overflow-y-auto custom-scrollbar">
+                  <nav className="flex-1 px-2 pb-2 space-y-1 text-[9px] font-medium overflow-y-auto custom-scrollbar">
                     {[
                       { label: 'Landlord Dashboard', icon: LayoutDashboard, active: true },
-                      { label: 'Properties & Units', icon: Building2, active: false },
-                      { label: 'Tenant Screening', icon: UserCheck, active: false },
+                      { label: 'Properties & Apartments', icon: Building2, active: false },
                       { label: 'Lease Agreements', icon: FileText, active: false },
                       { label: 'Tenants', icon: Users, active: false },
-                      { label: 'Payments Ledger', icon: Wallet, active: false },
+                      { label: 'Payments Hub', icon: CreditCard, active: false },
                       { label: 'Maintenance Desk', icon: Wrench, active: false },
                       { label: 'Contractors / Vendors', icon: Truck, active: false },
-                      { label: 'Reports', icon: TrendingUp, active: false },
                     ].map((item) => {
                       const Icon = item.icon;
                       return (
-                        <div key={item.label} className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg transition-colors ${
+                        <div key={item.label} className={`flex items-center gap-2 px-2.5 py-1.5 rounded-xl transition-colors ${
                           item.active
-                            ? isDark ? 'bg-teal-500/10 text-teal-400 font-semibold border-l-2 border-teal-500' : 'bg-white text-teal-600 font-semibold border-l-2 border-teal-600 shadow-sm'
+                            ? isDark ? 'bg-blue-600/15 text-blue-400 font-bold border-l-2 border-blue-500' : 'bg-white text-blue-600 font-bold border-l-2 border-blue-600 shadow-sm'
                             : isDark ? 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/20' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50'
                         }`}>
-                          <Icon size={11} className="shrink-0" />
+                          <Icon size={12} className="shrink-0" />
                           <span className="truncate">{item.label}</span>
                         </div>
                       );
@@ -1515,10 +1513,10 @@ export default function LandingPage() {
                   </nav>
                   <div className={`p-2.5 border-t shrink-0 ${isDark ? 'border-white/[0.06] bg-[#0A1128]/40' : 'border-slate-200/80 bg-slate-200/25'}`}>
                     <div className={`flex items-center gap-2 p-1.5 rounded-xl border ${isDark ? 'bg-slate-900/35 border-white/[0.04]' : 'bg-white border-slate-200/60 shadow-sm'}`}>
-                      <div className={`w-6 h-6 rounded-lg flex items-center justify-center text-[9px] font-black text-white ${pd.managerColor}`}>{pd.managerInitials}</div>
-                      <div className="min-w-0">
-                        <div className={`text-[8px] font-bold truncate ${isDark ? 'text-white' : 'text-slate-800'}`}>{pd.managerName}</div>
-                        <div className={`text-[6px] font-extrabold uppercase tracking-widest truncate ${isDark ? 'text-teal-400' : 'text-teal-600'}`}>{pd.managerRole}</div>
+                      <div className="w-6 h-6 rounded-lg bg-blue-600 flex items-center justify-center text-[9px] font-black text-white shrink-0 shadow-sm">A</div>
+                      <div className="min-w-0 text-left">
+                        <div className={`text-[8px] font-bold truncate ${isDark ? 'text-white' : 'text-slate-800'}`}>Alexander Brooks</div>
+                        <div className="text-[6px] font-black uppercase tracking-widest text-blue-600 dark:text-blue-400 truncate">LANDLORD</div>
                       </div>
                     </div>
                   </div>
@@ -1530,27 +1528,32 @@ export default function LandingPage() {
                   <div className={`px-3 sm:px-4 py-2 sm:py-2.5 flex items-center justify-between shrink-0 transition-colors duration-300 border-b gap-2 ${
                     isDark ? 'bg-[#0B132B] border-white/[0.06]' : 'bg-white border-slate-200/80 shadow-sm'
                   }`}>
-                    <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-                      <div className="w-6 h-6 rounded-lg bg-teal-100 dark:bg-teal-900/40 flex items-center justify-center text-teal-600 dark:text-teal-400 shrink-0"><Building size={12} /></div>
+                    <div className="flex items-center gap-2 min-w-0">
+                      <button className="text-slate-400 hover:text-slate-600 dark:hover:text-white p-0.5"><ChevronLeft size={14} /></button>
+                      <div className="w-6 h-6 rounded-lg bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400 shrink-0"><Building2 size={12} /></div>
                       <div className="text-left min-w-0">
-                        <span className="text-[6px] font-extrabold text-slate-400 uppercase tracking-widest block leading-none truncate">{pd.contextLabel}</span>
+                        <span className="text-[6px] font-extrabold text-slate-400 uppercase tracking-widest block leading-none truncate">MANAGING</span>
                         <div className="flex items-center gap-1 mt-0.5 min-w-0">
-                          <span className={`text-[11px] sm:text-xs font-black truncate max-w-[100px] sm:max-w-none ${isDark ? 'text-white' : 'text-slate-800'}`}>{pd.communityName}</span>
-                          <span className={`text-[7px] font-extrabold px-1.5 py-0.5 rounded font-mono border shrink-0 ${isDark ? 'bg-teal-500/10 text-teal-400 border-teal-500/20' : 'bg-teal-50 text-teal-600 border-teal-500/20'}`}>{pd.communityCode}</span>
+                          <span className={`text-[11px] sm:text-xs font-black truncate ${isDark ? 'text-white' : 'text-slate-800'}`}>All Properties</span>
+                          <ChevronDown size={10} className="text-slate-400" />
                         </div>
                       </div>
                     </div>
                     <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-                      <div className={`flex items-center gap-1.5 sm:gap-2 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                        <Sun size={12} />
-                        <div className="relative"><Bell size={12} /><span className={`absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-red-500 rounded-full border ${isDark ? 'border-[#0B132B]' : 'border-white'}`} /></div>
+                      <div className={`flex items-center gap-2 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                        <RotateCw size={12} className="cursor-pointer hover:rotate-180 transition-transform duration-500" />
+                        <Moon size={12} className="cursor-pointer" />
+                        <div className="relative">
+                          <Bell size={12} />
+                          <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 text-white rounded-full text-[6px] font-bold flex items-center justify-center">5</span>
+                        </div>
                       </div>
                       <div className={`flex items-center gap-2 pl-2 sm:pl-3 border-l ${isDark ? 'border-white/[0.06]' : 'border-slate-200'}`}>
                         <div className="hidden sm:block text-right">
-                          <p className={`text-[8px] font-bold leading-none ${isDark ? 'text-white' : 'text-slate-800'}`}>{pd.managerName}</p>
-                          <span className={`text-[6px] font-extrabold uppercase tracking-wider ${isDark ? 'text-teal-400' : 'text-teal-600'}`}>{pd.managerRole}</span>
+                          <p className={`text-[8px] font-bold leading-none ${isDark ? 'text-white' : 'text-slate-800'}`}>Alexander Brooks</p>
+                          <span className="text-[6px] font-extrabold uppercase tracking-wider text-blue-600 dark:text-blue-400">LANDLORD</span>
                         </div>
-                        <div className={`w-6 h-6 rounded-lg flex items-center justify-center text-[9px] font-black text-white shrink-0 ${pd.managerColor}`}>{pd.managerInitials}</div>
+                        <div className="w-6 h-6 rounded-full bg-blue-600 flex items-center justify-center text-[9px] font-black text-white shrink-0 shadow-sm">A</div>
                       </div>
                     </div>
                   </div>
@@ -1560,28 +1563,65 @@ export default function LandingPage() {
                     isDark ? 'bg-[#090F16]' : 'bg-slate-50'
                   }`}>
 
-                    {/* Welcome + Stats Header Card */}
+                    {/* Welcome Header Card */}
                     <div className={`rounded-2xl p-3 sm:p-4 border flex flex-col lg:flex-row justify-between items-start lg:items-center gap-3 sm:gap-4 ${
                       isDark ? 'bg-gradient-to-r from-[#1E2E42] via-[#162535] to-[#121B2A] border-white/[0.06]' : 'bg-white border-slate-200/80 shadow-sm'
                     }`}>
-                      <div className="flex-1 min-w-0 text-left w-full">
-                        <h2 className={`text-xs sm:text-sm font-black tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>{pd.welcomeMsg}</h2>
-                        <p className={`text-[8px] mt-0.5 font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{pd.subMsg}</p>
-                        <div className="flex flex-wrap items-center gap-1.5 mt-2">
-                          <span className={`inline-flex items-center text-[7px] font-bold px-2 py-0.5 rounded-lg border ${pd.badge1color}`}>{pd.badge1}</span>
-                          <span className={`inline-flex items-center text-[7px] font-black px-2 py-0.5 rounded-lg border ${pd.badge2color}`}>{pd.badge2}</span>
-                          <span className={`inline-flex items-center gap-1 text-[7px] font-semibold px-2 py-0.5 rounded-lg border truncate max-w-full ${isDark ? 'bg-white/[0.02] text-gray-300 border-white/5' : 'bg-slate-50 text-slate-600 border-slate-200/40'}`}>
-                            <MapPin size={8} className="shrink-0" /><span className="truncate">{pd.address}</span>
-                          </span>
+                      <div className="flex-1 min-w-0 text-left w-full space-y-2">
+                        <div className="flex items-center gap-2">
+                          <h2 className={`text-xs sm:text-base font-black tracking-tight flex items-center gap-1.5 ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                            Welcome, Alexander! <Sparkles size={14} className="text-blue-500 shrink-0" />
+                          </h2>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className={`inline-flex items-center text-[7.5px] font-bold px-2 py-0.5 rounded-lg border ${isDark ? 'bg-white/5 text-slate-300 border-white/10' : 'bg-slate-100 text-slate-600 border-slate-200'}`}>Properties: 2</span>
+                          <span className="inline-flex items-center text-[7.5px] font-black px-2 py-0.5 rounded-lg border text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 border-emerald-500/20">ACTIVE</span>
+                        </div>
+                        <div className="flex items-center gap-2 pt-1">
+                          <div className={`flex items-center gap-1 text-[8px] font-semibold px-2 py-1 rounded-xl border ${isDark ? 'bg-white/5 border-white/10 text-slate-300' : 'bg-slate-50 border-slate-200 text-slate-700'}`}>
+                            <Calendar size={10} className="text-slate-400" />
+                            <span>Last 12 Months</span>
+                            <ChevronDown size={9} className="text-slate-400 ml-0.5" />
+                          </div>
+                          <button className="flex items-center gap-1 text-[8px] font-bold px-2.5 py-1 rounded-xl bg-blue-600 hover:bg-blue-500 text-white shadow-sm shadow-blue-500/20">
+                            <Plus size={10} /> Create new
+                          </button>
                         </div>
                       </div>
-                      <div className="grid grid-cols-4 sm:flex sm:flex-row gap-2 sm:gap-6 lg:gap-8 w-full lg:w-auto pt-1 lg:pt-0 border-t lg:border-t-0 border-slate-200/50 dark:border-white/5">
-                        {pd.stats.map((s, i) => (
-                          <div key={i} className="text-center min-w-0 flex-1 sm:flex-initial">
-                            <p className={`text-xs sm:text-base font-black font-mono truncate ${s.color}`}>{s.val}</p>
-                            <p className={`text-[6px] font-extrabold uppercase tracking-wider mt-0.5 truncate ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{s.label}</p>
+
+                      {/* 2 Action Cards */}
+                      <div className="flex flex-row gap-2 w-full lg:w-auto pt-1 lg:pt-0">
+                        {/* Action Required Card */}
+                        <div className={`flex-1 sm:flex-initial p-2.5 rounded-xl border flex flex-col gap-1 min-w-[125px] ${isDark ? 'bg-[#111C2A]/60 border-emerald-500/20' : 'bg-emerald-50/40 border-emerald-100'}`}>
+                          <div className="flex items-center justify-between gap-1 text-left">
+                            <span className="text-[6.5px] font-extrabold uppercase tracking-wider text-slate-600 dark:text-slate-400">ACTION REQUIRED</span>
+                            <span className="text-[6px] font-bold px-1.5 py-0.2 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">All Caught Up</span>
                           </div>
-                        ))}
+                          <div className="flex items-center gap-1.5 mt-0.5 text-left">
+                            <div className="w-5 h-5 rounded-lg bg-emerald-500/10 text-emerald-500 flex items-center justify-center shrink-0">
+                              <CheckCircle2 size={12} />
+                            </div>
+                            <span className="text-[9px] font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-0.5">
+                              0 <span className="text-[7.5px] font-medium">View Tasks →</span>
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Tenant Requests Card */}
+                        <div className={`flex-1 sm:flex-initial p-2.5 rounded-xl border flex flex-col gap-1 min-w-[125px] ${isDark ? 'bg-[#111C2A]/60 border-blue-500/20' : 'bg-blue-50/40 border-blue-100'}`}>
+                          <div className="flex items-center justify-between gap-1 text-left">
+                            <span className="text-[6.5px] font-extrabold uppercase tracking-wider text-slate-600 dark:text-slate-400">TENANT REQUESTS</span>
+                            <span className="text-[6px] font-bold px-1.5 py-0.2 rounded-full bg-blue-500/15 text-blue-600 dark:text-blue-400 border border-blue-500/20">2 Tickets</span>
+                          </div>
+                          <div className="flex items-center gap-1.5 mt-0.5 text-left">
+                            <div className="w-5 h-5 rounded-lg bg-blue-500/10 text-blue-500 flex items-center justify-center shrink-0">
+                              <Wrench size={12} />
+                            </div>
+                            <span className="text-[9px] font-bold text-blue-600 dark:text-blue-400 flex items-center gap-0.5">
+                              2 <span className="text-[7.5px] font-medium">Manage Desk →</span>
+                            </span>
+                          </div>
+                        </div>
                       </div>
                     </div>
 
@@ -1589,78 +1629,114 @@ export default function LandingPage() {
                     <div className="space-y-3 sm:space-y-4">
                       {/* 4 Cards Grid */}
                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 text-left">
-                        <div className={`p-2 sm:p-3 rounded-xl border flex flex-col gap-0.5 sm:gap-1 shadow-sm min-w-0 ${isDark ? 'bg-[#111C2A]/60 border-white/5' : 'bg-white border-slate-200/80'}`}>
-                          <span className="text-[6.5px] sm:text-[7px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wider block truncate">RENT RECEIVED</span>
-                          <span className="text-xs sm:text-base font-black text-slate-900 dark:text-white font-mono truncate">$3,100.00</span>
-                          <span className="text-[5.5px] sm:text-[6px] text-emerald-600 dark:text-emerald-400 font-bold truncate">Collection Rate: 39%</span>
+                        {/* Rent Received */}
+                        <div className={`p-2.5 sm:p-3 rounded-2xl border flex flex-col justify-between gap-1 shadow-sm min-w-0 ${isDark ? 'bg-[#111C2A]/70 border-white/5' : 'bg-white border-slate-200/80'}`}>
+                          <div className="flex items-center justify-between">
+                            <span className="text-[6.5px] sm:text-[7px] font-extrabold text-slate-400 uppercase tracking-wider block truncate">RENT RECEIVED</span>
+                            <div className="w-5 h-5 rounded-lg bg-emerald-500/10 text-emerald-500 flex items-center justify-center shrink-0">
+                              <CreditCard size={11} />
+                            </div>
+                          </div>
+                          <span className="text-xs sm:text-base font-black text-slate-900 dark:text-white font-mono truncate">$5,125.00</span>
+                          <div>
+                            <div className="flex items-center justify-between text-[6px] font-bold text-slate-400 mb-1">
+                              <span>Collection Rate</span>
+                              <span className="text-emerald-500 font-extrabold">39% ↗</span>
+                            </div>
+                            <div className="w-full bg-slate-100 dark:bg-white/5 h-1 rounded-full overflow-hidden">
+                              <div className="bg-emerald-500 h-full rounded-full" style={{ width: '39%' }} />
+                            </div>
+                          </div>
                         </div>
-                        <div className={`p-2 sm:p-3 rounded-xl border flex flex-col gap-0.5 sm:gap-1 shadow-sm min-w-0 ${isDark ? 'bg-[#111C2A]/60 border-white/5' : 'bg-white border-slate-200/80'}`}>
-                          <span className="text-[6.5px] sm:text-[7px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wider block truncate">UNPAID EXPENSES</span>
-                          <span className="text-xs sm:text-base font-black text-slate-900 dark:text-white font-mono truncate">$100.00</span>
-                          <span className="text-[5.5px] sm:text-[6px] text-red-600 dark:text-red-400 font-bold truncate">Active Invoices</span>
+
+                        {/* Unpaid Expenses */}
+                        <div className={`p-2.5 sm:p-3 rounded-2xl border flex flex-col justify-between gap-1 shadow-sm min-w-0 ${isDark ? 'bg-[#111C2A]/70 border-white/5' : 'bg-white border-slate-200/80'}`}>
+                          <div className="flex items-center justify-between">
+                            <span className="text-[6.5px] sm:text-[7px] font-extrabold text-slate-400 uppercase tracking-wider block truncate">UNPAID EXPENSES</span>
+                            <div className="w-5 h-5 rounded-lg bg-rose-500/10 text-rose-500 flex items-center justify-center shrink-0">
+                              <ArrowDownRight size={11} />
+                            </div>
+                          </div>
+                          <span className="text-xs sm:text-base font-black text-slate-900 dark:text-white font-mono truncate">$500.00</span>
+                          <div className="flex items-center justify-between text-[6px]">
+                            <span className="text-slate-400 font-bold">Active Invoices</span>
+                            <span className="px-1.5 py-0.5 rounded-full bg-rose-500/10 text-rose-600 dark:text-rose-400 font-extrabold border border-rose-500/20">1 unpaid →</span>
+                          </div>
                         </div>
-                        <div className={`p-2 sm:p-3 rounded-xl border flex flex-col gap-0.5 sm:gap-1 shadow-sm min-w-0 ${isDark ? 'bg-[#111C2A]/60 border-white/5' : 'bg-white border-slate-200/80'}`}>
-                          <span className="text-[6.5px] sm:text-[7px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wider block truncate">OVERDUE RENT</span>
-                          <span className="text-xs sm:text-base font-black text-slate-955 dark:text-white font-mono truncate">$5,000.00</span>
-                          <span className="text-[5.5px] sm:text-[6px] text-amber-600 dark:text-amber-500 font-bold truncate">Overdue Invoices</span>
+
+                        {/* Overdue Rent */}
+                        <div className={`p-2.5 sm:p-3 rounded-2xl border flex flex-col justify-between gap-1 shadow-sm min-w-0 ${isDark ? 'bg-[#111C2A]/70 border-white/5' : 'bg-white border-slate-200/80'}`}>
+                          <div className="flex items-center justify-between">
+                            <span className="text-[6.5px] sm:text-[7px] font-extrabold text-slate-400 uppercase tracking-wider block truncate">OVERDUE RENT</span>
+                            <div className="w-5 h-5 rounded-lg bg-amber-500/10 text-amber-500 flex items-center justify-center shrink-0">
+                              <Clock size={11} />
+                            </div>
+                          </div>
+                          <span className="text-xs sm:text-base font-black text-slate-900 dark:text-white font-mono truncate">$8,000.00</span>
+                          <div className="flex items-center justify-between text-[6px]">
+                            <span className="text-slate-400 font-bold">Overdue Invoices</span>
+                            <span className="px-1.5 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-500 font-extrabold border border-amber-500/20">1 overdue →</span>
+                          </div>
                         </div>
-                        <div className={`p-2 sm:p-3 rounded-xl border flex flex-col gap-0.5 sm:gap-1 shadow-sm min-w-0 ${isDark ? 'bg-[#111C2A]/60 border-white/5' : 'bg-white border-slate-200/80'}`}>
-                          <span className="text-[6.5px] sm:text-[7px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wider block truncate">UPCOMING EXPENSES</span>
-                          <span className="text-xs sm:text-base font-black text-slate-900 dark:text-white font-mono truncate">$100.00</span>
-                          <span className="text-[5.5px] sm:text-[6px] text-blue-600 dark:text-blue-400 font-bold font-sans truncate">Open Tickets</span>
+
+                        {/* Upcoming Expenses */}
+                        <div className={`p-2.5 sm:p-3 rounded-2xl border flex flex-col justify-between gap-1 shadow-sm min-w-0 ${isDark ? 'bg-[#111C2A]/70 border-white/5' : 'bg-white border-slate-200/80'}`}>
+                          <div className="flex items-center justify-between">
+                            <span className="text-[6.5px] sm:text-[7px] font-extrabold text-slate-400 uppercase tracking-wider block truncate">UPCOMING EXPENSES</span>
+                            <div className="w-5 h-5 rounded-lg bg-blue-500/10 text-blue-500 flex items-center justify-center shrink-0">
+                              <Activity size={11} />
+                            </div>
+                          </div>
+                          <span className="text-xs sm:text-base font-black text-slate-900 dark:text-white font-mono truncate">$0.00</span>
+                          <div className="flex items-center justify-between text-[6px]">
+                            <span className="text-slate-400 font-bold">Open Tickets</span>
+                            <span className="text-blue-600 dark:text-blue-400 font-extrabold">0 this month →</span>
+                          </div>
                         </div>
                       </div>
 
-                      {/* Cashflow Summary & Action Required Grid */}
-                      <div className="grid grid-cols-1 md:grid-cols-12 gap-3 text-left">
-                        {/* Cashflow chart */}
-                        <div className={`md:col-span-7 border rounded-2xl p-3 flex flex-col gap-3 ${isDark ? 'bg-[#1E2E42] border-white/[0.06]' : 'bg-white border-slate-200/80 shadow-sm'}`}>
-                          <div className="flex justify-between items-center pb-2 border-b border-slate-200/40 dark:border-white/5">
-                            <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">Cashflow Summary</span>
-                            <span className="text-[6px] text-slate-500">Real-time Income vs Expense</span>
+                      {/* Cashflow Summary Card */}
+                      <div className={`border rounded-2xl p-3 sm:p-4 flex flex-col gap-3 text-left ${isDark ? 'bg-[#1E2E42] border-white/[0.06]' : 'bg-white border-slate-200/80 shadow-sm'}`}>
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-2 border-b border-slate-200/40 dark:border-white/5 gap-2">
+                          <div>
+                            <h3 className="text-[9px] sm:text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-wider">Cashflow Summary</h3>
+                            <p className="text-[6px] sm:text-[7px] text-slate-400 mt-0.5">Real-time Income vs Expense comparison (6 Month Period)</p>
                           </div>
-                          <div className="flex items-end justify-between h-20 sm:h-24 pt-3 sm:pt-4 px-2">
-                            {[
-                              { month: 'Mar', inc: 10, exp: 5 },
-                              { month: 'Apr', inc: 15, exp: 8 },
-                              { month: 'May', inc: 35, exp: 20 },
-                              { month: 'Jun', inc: 40, exp: 12 },
-                              { month: 'Jul', inc: 75, exp: 40 },
-                              { month: 'Aug', inc: 20, exp: 10 },
-                            ].map((d, idx) => (
-                              <div key={idx} className="flex flex-col items-center gap-1.5 flex-1">
-                                <div className="w-full flex items-end justify-center gap-1 h-12 sm:h-14">
-                                  <div className="w-1.5 bg-emerald-500 rounded-t-sm" style={{ height: `${d.inc}%` }} />
-                                  <div className="w-1.5 bg-amber-500 rounded-t-sm" style={{ height: `${d.exp}%` }} />
-                                </div>
-                                <span className="text-[7px] font-semibold text-slate-400">{d.month}</span>
-                              </div>
-                            ))}
+                          <div className="flex flex-wrap items-center gap-2 text-[6.5px] font-bold">
+                            <span className="flex items-center gap-1 text-slate-600 dark:text-slate-300">
+                              <span className="w-2 h-2 rounded-sm bg-emerald-500 inline-block" /> Income
+                            </span>
+                            <span className="flex items-center gap-1 text-slate-600 dark:text-slate-300">
+                              <span className="w-2 h-2 rounded-sm bg-rose-500 inline-block" /> Expenses
+                            </span>
+                            <span className="flex items-center gap-1 text-slate-600 dark:text-slate-300">
+                              <span className="w-2 h-2 rounded-sm bg-amber-500 inline-block" /> Overdue Rent
+                            </span>
+                            <span className="flex items-center gap-1 text-slate-600 dark:text-slate-300">
+                              <span className="w-2 h-2 rounded-sm bg-blue-500 inline-block" /> Upcoming Exp
+                            </span>
                           </div>
                         </div>
-
-                        {/* Action Required: Tenant requests */}
-                        <div className={`md:col-span-5 border rounded-2xl p-3 flex flex-col justify-between gap-2.5 ${isDark ? 'bg-[#1E2E42] border-white/[0.06]' : 'bg-white border-slate-200/80 shadow-sm'}`}>
-                          <div className="flex justify-between items-center pb-2 border-b border-slate-200/40 dark:border-white/5">
-                            <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">Action Required</span>
-                            <span className="text-[6px] text-blue-600 font-bold">Tenant Requests</span>
-                          </div>
-                          <div className="space-y-2 py-1 flex-1 flex flex-col justify-center">
-                            <div className={`p-2 border rounded-xl flex items-center justify-between gap-2 ${isDark ? 'bg-[#111C2A]/60 border-red-500/20' : 'bg-red-50/50 border-red-100'}`}>
-                              <div className="min-w-0 flex-1">
-                                <h4 className="text-[8px] font-bold text-slate-800 dark:text-red-300 truncate">Electrician</h4>
-                                <p className="text-[6px] text-slate-505 dark:text-slate-450 mt-0.5 truncate">Unit 102 — Priority: NORMAL</p>
+                        
+                        <div className="flex items-end justify-between h-24 sm:h-28 pt-2 px-2 gap-2">
+                          {[
+                            { month: 'Mar', inc: 35, exp: 12, ovd: 8, upc: 5 },
+                            { month: 'Apr', inc: 45, exp: 18, ovd: 15, upc: 0 },
+                            { month: 'May', inc: 60, exp: 22, ovd: 20, upc: 10 },
+                            { month: 'Jun', inc: 55, exp: 15, ovd: 12, upc: 5 },
+                            { month: 'Jul', inc: 85, exp: 30, ovd: 25, upc: 0 },
+                            { month: 'Aug', inc: 40, exp: 10, ovd: 18, upc: 0 },
+                          ].map((d, idx) => (
+                            <div key={idx} className="flex flex-col items-center gap-1.5 flex-1">
+                              <div className="w-full flex items-end justify-center gap-0.5 sm:gap-1 h-16 sm:h-20">
+                                <div className="w-1.5 sm:w-2 bg-emerald-500 rounded-t-sm transition-all" style={{ height: `${d.inc}%` }} title={`Income: ${d.inc}%`} />
+                                <div className="w-1.5 sm:w-2 bg-rose-500 rounded-t-sm transition-all" style={{ height: `${d.exp}%` }} title={`Expenses: ${d.exp}%`} />
+                                <div className="w-1.5 sm:w-2 bg-amber-500 rounded-t-sm transition-all" style={{ height: `${d.ovd}%` }} title={`Overdue: ${d.ovd}%`} />
+                                <div className="w-1.5 sm:w-2 bg-blue-500 rounded-t-sm transition-all" style={{ height: `${d.upc}%` }} title={`Upcoming: ${d.upc}%`} />
                               </div>
-                              <button className="bg-red-500 hover:bg-red-600 text-white font-bold text-[7px] px-2 py-1 rounded shrink-0 transition-colors shadow-sm">Assign</button>
+                              <span className="text-[7px] font-semibold text-slate-400">{d.month}</span>
                             </div>
-                            <div className={`p-2 border rounded-xl flex items-center justify-between gap-2 ${isDark ? 'bg-[#111C2A]/60 border-white/5' : 'bg-slate-50 border-slate-200/50'}`}>
-                              <div className="min-w-0 flex-1">
-                                <h4 className="text-[8px] font-bold text-slate-800 dark:text-slate-200 truncate">Plumber</h4>
-                                <p className="text-[6px] text-slate-505 dark:text-slate-450 mt-0.5 truncate">Unit 104 — Pipe Leak Report</p>
-                              </div>
-                              <button className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-[7px] px-2 py-1 rounded shrink-0 transition-colors shadow-sm">Assign</button>
-                            </div>
-                          </div>
+                          ))}
                         </div>
                       </div>
                     </div>

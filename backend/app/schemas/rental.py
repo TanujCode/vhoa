@@ -370,7 +370,7 @@ class RentalPaymentRequest(BaseModel):
 class RentalMaintenanceCreate(BaseModel):
     lease_id: int
     title: str
-    description: str
+    description: Optional[str] = ""
     priority: str = "NORMAL"  # LOW, NORMAL, HIGH, URGENT
     scope: str = "INTERNAL"  # INTERNAL, EXTERNAL_HOA
 
@@ -397,7 +397,7 @@ class RentalMaintenanceCreate(BaseModel):
 
 class RentalMaintenanceTenantUpdate(BaseModel):
     title: str
-    description: str
+    description: Optional[str] = ""
     priority: str = "NORMAL"
 
     @field_validator("title")

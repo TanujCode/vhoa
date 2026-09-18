@@ -8,7 +8,7 @@ import API from '../../services/api';
 import { useGoogleLogin } from '@react-oauth/google';
 import { validateEmail } from '../../utils/emailValidation';
 import { validateName, onlyLettersKeyPress } from '../../utils/fieldValidators';
-import { formatPhoneAsYouType } from '../../utils/phoneFormatter';
+import { validatePhoneByCountry } from '../../utils/countries';
 import PhoneInputWithCountry from '../../components/common/PhoneInputWithCountry';
 
 export default function RegisterPage() {
@@ -93,6 +93,14 @@ export default function RegisterPage() {
   const onSubmit = async (data) => {
     setErrorMsg('');
     setSuccessMsg('');
+
+    if (data.mobileNumberOnly && data.mobileNumberOnly.trim()) {
+      const phoneValidation = validatePhoneByCountry(data.mobileNumberOnly, phoneCountryCode);
+      if (!phoneValidation.isValid) {
+        setErrorMsg(phoneValidation.message);
+        return;
+      }
+    }
 
     try {
       const response = await API.post('/auth/register', {

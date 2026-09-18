@@ -54,12 +54,17 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
   const [leases, setLeases] = useState([]);
   const [units, setUnits] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadingUnits, setLoadingUnits] = useState(true);
   const [selectedLease, setSelectedLease] = useState(null);
   const [applications, setApplications] = useState([]);
 
   // Tenant Form States for Lease Onboarding
   const [tenantDob, setTenantDob] = useState('');
   const [tenantCurrentAddress, setTenantCurrentAddress] = useState('');
+  const [tenantStreet, setTenantStreet] = useState('');
+  const [tenantCity, setTenantCity] = useState('');
+  const [tenantState, setTenantState] = useState('');
+  const [tenantZip, setTenantZip] = useState('');
   const [tenantAddressSuggestions, setTenantAddressSuggestions] = useState([]);
   const [isTenantAddressSelected, setIsTenantAddressSelected] = useState(false);
   const [tenantEmergencyContact, setTenantEmergencyContact] = useState('');
@@ -277,7 +282,28 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
     setIsLessorAddressSelected(true);
   };
 
+  const US_STATES = [
+    { code: 'AL', name: 'Alabama' }, { code: 'AK', name: 'Alaska' }, { code: 'AZ', name: 'Arizona' },
+    { code: 'AR', name: 'Arkansas' }, { code: 'CA', name: 'California' }, { code: 'CO', name: 'Colorado' },
+    { code: 'CT', name: 'Connecticut' }, { code: 'DE', name: 'Delaware' }, { code: 'FL', name: 'Florida' },
+    { code: 'GA', name: 'Georgia' }, { code: 'HI', name: 'Hawaii' }, { code: 'ID', name: 'Idaho' },
+    { code: 'IL', name: 'Illinois' }, { code: 'IN', name: 'Indiana' }, { code: 'IA', name: 'Iowa' },
+    { code: 'KS', name: 'Kansas' }, { code: 'KY', name: 'Kentucky' }, { code: 'LA', name: 'Louisiana' },
+    { code: 'ME', name: 'Maine' }, { code: 'MD', name: 'Maryland' }, { code: 'MA', name: 'Massachusetts' },
+    { code: 'MI', name: 'Michigan' }, { code: 'MN', name: 'Minnesota' }, { code: 'MS', name: 'Mississippi' },
+    { code: 'MO', name: 'Missouri' }, { code: 'MT', name: 'Montana' }, { code: 'NE', name: 'Nebraska' },
+    { code: 'NV', name: 'Nevada' }, { code: 'NH', name: 'New Hampshire' }, { code: 'NJ', name: 'New Jersey' },
+    { code: 'NM', name: 'New Mexico' }, { code: 'NY', name: 'New York' }, { code: 'NC', name: 'North Carolina' },
+    { code: 'ND', name: 'North Dakota' }, { code: 'OH', name: 'Ohio' }, { code: 'OK', name: 'Oklahoma' },
+    { code: 'OR', name: 'Oregon' }, { code: 'PA', name: 'Pennsylvania' }, { code: 'RI', name: 'Rhode Island' },
+    { code: 'SC', name: 'South Carolina' }, { code: 'SD', name: 'South Dakota' }, { code: 'TN', name: 'Tennessee' },
+    { code: 'TX', name: 'Texas' }, { code: 'UT', name: 'Utah' }, { code: 'VT', name: 'Vermont' },
+    { code: 'VA', name: 'Virginia' }, { code: 'WA', name: 'Washington' }, { code: 'WV', name: 'West Virginia' },
+    { code: 'WI', name: 'Wisconsin' }, { code: 'WY', name: 'Wyoming' }
+  ];
+
   const handleTenantAddressChange = (value) => {
+    setTenantStreet(value);
     setTenantCurrentAddress(value);
     setIsTenantAddressSelected(false);
     
@@ -302,25 +328,25 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
           const data = await res.json();
           const mapped = data.map(item => {
             const addr = item.address || {};
-            const street = `${addr.house_number || ''} ${addr.road || ''}`.trim();
-            const city = addr.city || addr.town || addr.village || addr.hamlet || addr.suburb || '';
+            const street = `${addr.house_number || ''} ${addr.road || ''}`.trim() || item.display_name.split(',')[0].trim();
+            const city = addr.city || addr.town || addr.village || addr.hamlet || addr.suburb || addr.county || '';
             const state = addr.state || '';
             const zip = addr.postcode || '';
+            const stateAbbr = getAbbr(state);
             
             const parts = [];
             if (street) parts.push(street);
-            else parts.push(item.display_name.split(',')[0]);
-            
             if (city) parts.push(city);
-            
-            const stateAbbr = getAbbr(state);
             if (stateAbbr) parts.push(stateAbbr);
-            
             if (zip) parts.push(zip);
 
             return {
               display: item.display_name,
-              formatted: parts.join(', ')
+              formatted: parts.join(', '),
+              street,
+              city,
+              state: stateAbbr || state,
+              zip
             };
           });
           setTenantAddressSuggestions(mapped);
@@ -332,9 +358,47 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
   };
 
   const handleSelectTenantSuggestion = (suggestion) => {
-    setTenantCurrentAddress(suggestion.formatted);
+    const st = suggestion.street || suggestion.formatted;
+    const ct = suggestion.city || '';
+    const sta = suggestion.state || '';
+    const zp = suggestion.zip || '';
+    
+    setTenantStreet(st);
+    setTenantCity(ct);
+    setTenantState(sta);
+    setTenantZip(zp);
+    
+    const formattedFull = suggestion.formatted || [st, ct, sta, zp].filter(Boolean).join(', ');
+    setTenantCurrentAddress(formattedFull);
     setTenantAddressSuggestions([]);
     setIsTenantAddressSelected(true);
+  };
+
+  const handleTenantZipChange = async (val) => {
+    const cleanZip = val.replace(/\D/g, '').slice(0, 5);
+    setTenantZip(cleanZip);
+    
+    if (cleanZip.length === 5) {
+      try {
+        const res = await fetch(`https://api.zippopotam.us/us/${cleanZip}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.places && data.places.length > 0) {
+            const place = data.places[0];
+            const cityName = place['place name'] || '';
+            const stateCode = place['state abbreviation'] || '';
+            if (cityName) {
+              setTenantCity(cityName);
+            }
+            if (stateCode) {
+              setTenantState(stateCode);
+            }
+          }
+        }
+      } catch (e) {
+        console.warn("Zip auto-fill lookup failed:", e);
+      }
+    }
   };
 
   const [lessorPhone, setLessorPhone] = useState('');
@@ -359,7 +423,7 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
     const isThisProperty = selectedPropertyFilterId === 'all' || String(u.property_id) === String(selectedPropertyFilterId);
     if (!isThisProperty) return false;
     
-    const isVacant = u.status === 'VACANT';
+    const isVacant = !u.has_active_lease || u.status === 'VACANT' || u.status === 'AVAILABLE' || u.status !== 'OCCUPIED';
     const isSelected = String(u.unit_id) === String(selectedUnitId);
     return isVacant || isSelected;
   });
@@ -390,7 +454,7 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
     return isEntireProperty ? '1' : clean;
   };
 
-  const hasVacantUnits = filteredUnits.length > 0 && filteredUnits.some(u => u.status === 'VACANT' || !u.has_active_lease);
+  const hasVacantUnits = units.length > 0;
   const canSignAsPrimary = selectedLease && isLandlord && !selectedLease.landlord_signature && selectedLease.status === 'PENDING_LANDLORD_APPROVAL';
   const isUserPrimaryLandlord = selectedLease && selectedLease.landlord_signature && 
     (user?.name && (
@@ -1060,7 +1124,33 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
       if (isNewLease) {
         loadedLeaseIdRef.current = selectedLease.lease_id;
         setTenantDob(selectedLease.tenant_dob || '');
-        setTenantCurrentAddress(selectedLease.tenant_current_address || '');
+        const existingAddr = selectedLease.tenant_current_address || '';
+        setTenantCurrentAddress(existingAddr);
+        if (existingAddr) {
+          const parts = existingAddr.split(',').map(s => s.trim());
+          if (parts.length >= 3) {
+            setTenantStreet(parts[0] || '');
+            setTenantCity(parts[1] || '');
+            const stateZip = (parts[2] || '').split(/\s+/).filter(Boolean);
+            if (stateZip.length >= 2) {
+              setTenantState(stateZip[0]);
+              setTenantZip(stateZip[1]);
+            } else if (stateZip.length === 1) {
+              if (/^\d{5}$/.test(stateZip[0])) {
+                setTenantZip(stateZip[0]);
+              } else {
+                setTenantState(stateZip[0]);
+              }
+            }
+          } else {
+            setTenantStreet(existingAddr);
+          }
+        } else {
+          setTenantStreet('');
+          setTenantCity('');
+          setTenantState('');
+          setTenantZip('');
+        }
         setTenantEmergencyContact(selectedLease.tenant_emergency_contact || '');
         setTenantEmergencyPhone(selectedLease.tenant_emergency_phone || '');
         setTenantSignatureText(selectedLease.tenant_signature || '');
@@ -1161,6 +1251,7 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
 
   async function fetchUnits() {
     try {
+      setLoadingUnits(true);
       const prefillEmail = localStorage.getItem('prefill_lease_email');
       const prefillUnitId = localStorage.getItem('prefill_lease_unit_id');
 
@@ -1231,6 +1322,8 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
       }
     } catch (err) {
       console.error(err);
+    } finally {
+      setLoadingUnits(false);
     }
   }
 
@@ -1505,8 +1598,21 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
       return;
     }
 
-    if (!tenantCurrentAddress.trim() || tenantCurrentAddress.length < 10) {
-      showCenterAlert("Current Address Required", "Please enter a valid current physical address (min 10 characters).");
+    const fullTenantAddress = [tenantStreet, tenantCity, tenantState, tenantZip].filter(Boolean).join(', ') || tenantCurrentAddress;
+    if (!tenantStreet.trim() && !tenantCurrentAddress.trim()) {
+      showCenterAlert("Current Address Required", "Please enter your current street address.");
+      return;
+    }
+    if (!tenantCity.trim()) {
+      showCenterAlert("City Required", "Please enter your city.");
+      return;
+    }
+    if (!tenantState.trim()) {
+      showCenterAlert("State Required", "Please select your state.");
+      return;
+    }
+    if (!tenantZip.trim() || tenantZip.trim().length !== 5) {
+      showCenterAlert("ZIP Code Required", "Please enter a valid 5-digit US ZIP code.");
       return;
     }
 
@@ -1543,7 +1649,7 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
     try {
       const res = await API.post(`/rental/leases/${selectedLease.lease_id}/tenant-submit`, {
         tenant_dob: tenantDob,
-        tenant_current_address: tenantCurrentAddress,
+        tenant_current_address: fullTenantAddress,
         tenant_emergency_contact: tenantEmergencyContact,
         tenant_emergency_phone: tenantEmergencyPhone,
         signature_text: tenantSignatureText,
@@ -1652,85 +1758,146 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
             <h3 className="text-sm font-extrabold text-slate-800 dark:text-white uppercase tracking-wider">Step 1: Enter Details & Upload Identity Documents</h3>
             
             {/* Details Form */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">Your Date of Birth (must be 18+)</label>
-                <input
-                  type="date"
-                  value={tenantDob}
-                  onChange={e => setTenantDob(e.target.value)}
-                  className="w-full text-xs px-3.5 py-2.5 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none border-slate-200 dark:border-white/10 focus:ring-2 focus:ring-blue-500/20"
-                />
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">Your Date of Birth (must be 18+)</label>
+                  <input
+                    type="date"
+                    value={tenantDob}
+                    onChange={e => setTenantDob(e.target.value)}
+                    className="w-full text-xs px-3.5 py-2.5 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none border-slate-200 dark:border-white/10 focus:ring-2 focus:ring-blue-500/20"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">Emergency Contact Name</label>
+                  <input
+                    type="text"
+                    value={tenantEmergencyContact}
+                    onChange={e => setTenantEmergencyContact(e.target.value.replace(/[^a-zA-Z\s.-]/g, ''))}
+                    className="w-full text-xs px-3.5 py-2.5 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none border-slate-200 dark:border-white/10 focus:ring-2 focus:ring-blue-500/20"
+                    placeholder="Contact full name"
+                  />
+                </div>
               </div>
 
-              <div className="relative">
-                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">Current Physical Address</label>
-                <input
-                  type="text"
-                  value={tenantCurrentAddress}
-                  onChange={e => handleTenantAddressChange(e.target.value)}
-                  className="w-full text-xs px-3.5 py-2.5 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none border-slate-200 dark:border-white/10 focus:ring-2 focus:ring-blue-500/20"
-                  placeholder="Street, City, State, ZIP"
-                />
-                {tenantAddressSuggestions.length > 0 && (
-                  <div className="absolute left-0 right-0 top-full mt-1 bg-white dark:bg-[#1D2B3A] border border-slate-200 dark:border-white/10 rounded-xl shadow-xl z-50 max-h-48 overflow-y-auto custom-scrollbar text-left">
-                    {tenantAddressSuggestions.map((suggestion, idx) => (
-                      <div
-                        key={idx}
-                        onClick={() => handleSelectTenantSuggestion(suggestion)}
-                        className="px-4 py-3 hover:bg-slate-50 dark:hover:bg-white/5 cursor-pointer text-xs font-semibold border-b border-slate-100 dark:border-white/[0.03] last:border-none text-slate-700 dark:text-slate-350"
-                      >
-                        {suggestion.formatted}
-                      </div>
-                    ))}
+              {/* Physical Address Section */}
+              <div className="p-3.5 sm:p-4 rounded-2xl border border-slate-200/80 dark:border-white/10 bg-slate-50/50 dark:bg-white/[0.02] space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider">Current Physical Address (USA)</label>
+                  <span className="text-[10px] text-blue-500 dark:text-blue-400 font-semibold">Auto-fills City, State & ZIP</span>
+                </div>
+
+                {/* Street Address */}
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={tenantStreet || tenantCurrentAddress}
+                    onChange={e => {
+                      setTenantStreet(e.target.value);
+                      handleTenantAddressChange(e.target.value);
+                    }}
+                    className="w-full text-xs px-3.5 py-2.5 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none border-slate-200 dark:border-white/10 focus:ring-2 focus:ring-blue-500/20"
+                    placeholder="Street Address (e.g. 123 Main St)"
+                  />
+                  {tenantAddressSuggestions.length > 0 && (
+                    <div className="absolute left-0 right-0 top-full mt-1 bg-white dark:bg-[#1D2B3A] border border-slate-200 dark:border-white/10 rounded-xl shadow-xl z-50 max-h-48 overflow-y-auto custom-scrollbar text-left">
+                      {tenantAddressSuggestions.map((suggestion, idx) => (
+                        <div
+                          key={idx}
+                          onClick={() => handleSelectTenantSuggestion(suggestion)}
+                          className="px-4 py-3 hover:bg-slate-50 dark:hover:bg-white/5 cursor-pointer text-xs font-semibold border-b border-slate-100 dark:border-white/[0.03] last:border-none text-slate-700 dark:text-slate-350"
+                        >
+                          {suggestion.formatted}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* City, State, ZIP */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div>
+                    <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1">City</label>
+                    <input
+                      type="text"
+                      value={tenantCity}
+                      onChange={e => {
+                        setTenantCity(e.target.value);
+                        setTenantCurrentAddress([tenantStreet, e.target.value, tenantState, tenantZip].filter(Boolean).join(', '));
+                      }}
+                      className="w-full text-xs px-3 py-2 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none border-slate-200 dark:border-white/10 focus:ring-2 focus:ring-blue-500/20"
+                      placeholder="City"
+                    />
                   </div>
-                )}
+
+                  <div>
+                    <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1">State</label>
+                    <select
+                      value={tenantState}
+                      onChange={e => {
+                        setTenantState(e.target.value);
+                        setTenantCurrentAddress([tenantStreet, tenantCity, e.target.value, tenantZip].filter(Boolean).join(', '));
+                      }}
+                      className="w-full text-xs px-3 py-2 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none border-slate-200 dark:border-white/10 focus:ring-2 focus:ring-blue-500/20 cursor-pointer"
+                    >
+                      <option value="">Select State</option>
+                      {US_STATES.map(st => (
+                        <option key={st.code} value={st.code}>{st.name} ({st.code})</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1">ZIP Code</label>
+                    <input
+                      type="text"
+                      maxLength={5}
+                      value={tenantZip}
+                      onChange={e => handleTenantZipChange(e.target.value)}
+                      className="w-full text-xs px-3 py-2 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none border-slate-200 dark:border-white/10 focus:ring-2 focus:ring-blue-500/20"
+                      placeholder="5-digit ZIP"
+                    />
+                  </div>
+                </div>
               </div>
 
-              <div>
-                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">Emergency Contact Name</label>
-                <input
-                  type="text"
-                  value={tenantEmergencyContact}
-                  onChange={e => setTenantEmergencyContact(e.target.value.replace(/[^a-zA-Z\s.-]/g, ''))}
-                  className="w-full text-xs px-3.5 py-2.5 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none border-slate-200 dark:border-white/10 focus:ring-2 focus:ring-blue-500/20"
-                  placeholder="Contact full name"
-                />
-              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">Emergency Phone Number</label>
+                  <PhoneInputWithCountry
+                    value={tenantEmergencyPhone}
+                    onChange={(e, val) => setTenantEmergencyPhone(val)}
+                    placeholder="(555) 555-5555"
+                  />
+                </div>
 
-              <div>
-                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">Emergency Phone Number</label>
-                <PhoneInputWithCountry
-                  value={tenantEmergencyPhone}
-                  onChange={(e, val) => setTenantEmergencyPhone(val)}
-                  placeholder="(555) 555-5555"
-                />
-              </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">Number of Residents / People in Unit</label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="20"
+                    value={numOccupants}
+                    onChange={e => setNumOccupants(Math.min(20, Math.max(1, parseInt(e.target.value) || 1)))}
+                    className="w-full text-xs px-3.5 py-2.5 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none border-slate-200 dark:border-white/10 focus:ring-2 focus:ring-blue-500/20"
+                    placeholder="Number of occupants"
+                  />
+                </div>
 
-              <div>
-                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">Number of Residents / People in Unit</label>
-                <input
-                  type="number"
-                  min="1"
-                  max="20"
-                  value={numOccupants}
-                  onChange={e => setNumOccupants(Math.min(20, Math.max(1, parseInt(e.target.value) || 1)))}
-                  className="w-full text-xs px-3.5 py-2.5 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none border-slate-200 dark:border-white/10 focus:ring-2 focus:ring-blue-500/20"
-                  placeholder="Number of occupants"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">Total Number of Minors</label>
-                <input
-                  type="number"
-                  min="0"
-                  max="20"
-                  value={numMinors}
-                  onChange={e => setNumMinors(Math.min(20, Math.max(0, parseInt(e.target.value) || 0)))}
-                  className="w-full text-xs px-3.5 py-2.5 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none border-slate-200 dark:border-white/10 focus:ring-2 focus:ring-blue-500/20"
-                  placeholder="Number of minors"
-                />
+                <div>
+                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">Total Number of Minors</label>
+                  <input
+                    type="number"
+                    min="0"
+                    max="20"
+                    value={numMinors}
+                    onChange={e => setNumMinors(Math.min(20, Math.max(0, parseInt(e.target.value) || 0)))}
+                    className="w-full text-xs px-3.5 py-2.5 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none border-slate-200 dark:border-white/10 focus:ring-2 focus:ring-blue-500/20"
+                    placeholder="Number of minors"
+                  />
+                </div>
               </div>
             </div>
 
@@ -2051,8 +2218,21 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
                     showValidationAlert("Age Requirement (18+)", "You must be 18 years or older to sign a lease.");
                     return;
                   }
-                  if (!tenantCurrentAddress.trim() || tenantCurrentAddress.trim().length < 10) {
-                    showValidationAlert("Current Address Required", "Please enter a valid current physical address (min 10 characters).");
+                  const fullAddress = [tenantStreet, tenantCity, tenantState, tenantZip].filter(Boolean).join(', ') || tenantCurrentAddress;
+                  if (!tenantStreet.trim() && !tenantCurrentAddress.trim()) {
+                    showValidationAlert("Current Address Required", "Please enter your current street address.");
+                    return;
+                  }
+                  if (!tenantCity.trim()) {
+                    showValidationAlert("City Required", "Please enter your city.");
+                    return;
+                  }
+                  if (!tenantState.trim()) {
+                    showValidationAlert("State Required", "Please select your state.");
+                    return;
+                  }
+                  if (!tenantZip.trim() || tenantZip.trim().length !== 5) {
+                    showValidationAlert("ZIP Code Required", "Please enter a valid 5-digit US ZIP code.");
                     return;
                   }
                   if (!tenantEmergencyContact.trim() || !/^[a-zA-Z\s.-]{2,50}$/.test(tenantEmergencyContact.trim())) {
@@ -3563,7 +3743,7 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
     </div>
   );
 
-  if (loading) {
+  if (loading || (showCreateModal && loadingUnits)) {
     return (
       <div className="flex justify-center items-center py-20">
         <div className="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
@@ -3571,7 +3751,7 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
     );
   }
 
-  if (showCreateModal && (editingLeaseId || hasVacantUnits)) {
+  if (showCreateModal && !loadingUnits && (editingLeaseId || hasVacantUnits)) {
     return (
       <div className="p-2 relative text-slate-900 dark:text-white text-left animate-fade-in">
         <div className="bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-600 rounded-2xl overflow-hidden shadow-xl flex flex-col h-[calc(100vh-220px)] lg:h-[calc(100vh-240px)] min-h-[420px]">
@@ -4306,7 +4486,7 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
       />
 
       {/* No Vacant Property Confirmation Modal */}
-      {showCreateModal && !editingLeaseId && !hasVacantUnits && (
+      {showCreateModal && !editingLeaseId && !loadingUnits && !hasVacantUnits && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[200] flex items-center justify-center p-4 animate-in fade-in zoom-in-95 duration-200">
           <div className="bg-white dark:bg-gradient-to-br dark:from-[#28384E] dark:to-[#222f42] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 w-full max-w-sm text-center shadow-2xl text-slate-900 dark:text-white">
             <div className="w-14 h-14 bg-amber-500/10 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 rounded-full flex items-center justify-center mx-auto mb-4 border border-amber-500/20">

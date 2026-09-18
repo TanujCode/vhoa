@@ -1266,12 +1266,15 @@ def send_rent_pre_due_warning_email(lease: Lease, inv: RentalLedger, days_remain
     from app.utils.encryption import safe_decrypt_field
     from app.config import settings
     tenant_email = safe_decrypt_field(lease.tenant_email)
+    if not tenant_email and lease.tenant:
+        tenant_email = lease.tenant.email_id
     if not tenant_email:
         return False
         
+    tenant_name = (lease.tenant.full_name.strip() if (lease.tenant and lease.tenant.full_name) else "") or "Resident"
     prop_name = lease.unit.property.name if (lease.unit and lease.unit.property) else "Rental Property"
     unit_no = lease.unit.unit_number if lease.unit else "1"
-    unit_label = f"Apt {get_unit_display_number(unit_no)}" if unit_no not in ["Single Family", "Condo Unit"] else prop_name
+    unit_label = f"Unit {get_unit_display_number(unit_no)} ({prop_name})" if unit_no not in ["Single Family", "Condo Unit"] else prop_name
     
     total_amount = (inv.rent_charge or 0.0) + (inv.utilities_charge or 0.0) + (inv.parking_charge or 0.0) + (inv.pet_charge or 0.0)
     initial_fee = safe_decrypt_float(lease.late_fee_amount, 50.0) or 50.0
@@ -1282,8 +1285,8 @@ def send_rent_pre_due_warning_email(lease: Lease, inv: RentalLedger, days_remain
     body = f"""
     <div style="font-size: 15px; line-height: 1.6; color: #374151;">
       <h2 style="color: #1e3a8a; font-size: 20px; font-weight: bold; margin-top: 0; margin-bottom: 12px;">Rent Payment Reminder</h2>
-      <p style="margin: 0 0 12px;">Hello,</p>
-      <p style="margin: 0 0 16px;">This is a friendly reminder that your monthly rent payment for <strong>{unit_label} ({prop_name})</strong> is pending.</p>
+      <p style="margin: 0 0 12px;">Hello, {tenant_name}!</p>
+      <p style="margin: 0 0 16px;">This is a friendly reminder that your monthly rent payment for <strong>{unit_label}</strong> is pending.</p>
       
       <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; margin: 20px 0;">
         <table style="width: 100%; border-collapse: collapse;">
@@ -1306,10 +1309,10 @@ def send_rent_pre_due_warning_email(lease: Lease, inv: RentalLedger, days_remain
       <div style="text-align: center; margin: 24px 0;">
         <a href="{portal_url}" style="background-color: #2563eb; color: #ffffff; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-weight: bold; display: inline-block;">Pay Rent Online</a>
       </div>
-      <p style="font-size: 12px; color: #94a3b8; margin: 24px 0 0;">NestBloq Property Management Accounting</p>
+      <p style="font-size: 12px; color: #94a3b8; margin: 24px 0 0; text-align: center;">NestBloq Property Management Accounting</p>
     </div>
     """
-    wrapped = _wrap_in_responsive_layout(body, subtitle="Rental Property Management")
+    wrapped = _wrap_in_responsive_layout(body, subtitle="NestBloq Rental Management")
     return send_email(tenant_email, subject, wrapped)
 
 
@@ -1317,53 +1320,60 @@ def send_late_fee_assessed_email(lease: Lease, inv: RentalLedger, calc: dict) ->
     from app.utils.encryption import safe_decrypt_field
     from app.config import settings
     tenant_email = safe_decrypt_field(lease.tenant_email)
+    if not tenant_email and lease.tenant:
+        tenant_email = lease.tenant.email_id
     if not tenant_email:
         return False
         
+    tenant_name = (lease.tenant.full_name.strip() if (lease.tenant and lease.tenant.full_name) else "") or "Resident"
     prop_name = lease.unit.property.name if (lease.unit and lease.unit.property) else "Rental Property"
     unit_no = lease.unit.unit_number if lease.unit else "1"
-    unit_label = f"Apt {get_unit_display_number(unit_no)}" if unit_no not in ["Single Family", "Condo Unit"] else prop_name
+    unit_label = f"Unit {get_unit_display_number(unit_no)} ({prop_name})" if unit_no not in ["Single Family", "Condo Unit"] else prop_name
     
-    total_due = calc.get("total_amount_due", inv.amount + inv.late_fee_applied)
+    total_due = calc.get("total_amount_due", inv.amount + (inv.late_fee_applied or 0.0))
     initial_fee = calc.get("initial_late_fee", 50.0)
     recurring_fee = calc.get("recurring_late_fee", 0.0)
     portal_url = f"{settings.FRONTEND_URL}/rental/login?redirect=/rental/dashboard"
     
     recurring_row = f"<tr><td style='padding: 6px 0; color: #dc2626; font-size: 13px;'>Recurring Overdue Penalty:</td><td style='padding: 6px 0; font-weight: bold; color: #dc2626; text-align: right; font-size: 13px;'>+${recurring_fee:,.2f}</td></tr>" if recurring_fee > 0 else ""
 
-    subject = f"Notice of Late Fee Assessment: {unit_label}"
+    subject = f"Notice of Overdue Rent & Late Fee Assessment: {unit_label}"
     body = f"""
     <div style="font-size: 15px; line-height: 1.6; color: #374151;">
-      <h2 style="color: #b91c1c; font-size: 20px; font-weight: bold; margin-top: 0; margin-bottom: 12px;">Notice of Late Fee Assessment</h2>
-      <p style="margin: 0 0 12px;">Hello,</p>
-      <p style="margin: 0 0 16px;">The grace period for your rent payment for <strong>{unit_label} ({prop_name})</strong> has expired without receipt of payment. In accordance with your lease agreement, a late fee penalty has been assessed to your account.</p>
+      <div style="margin-bottom: 16px;">
+        <span style="background-color: #fee2e2; color: #991b1b; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; padding: 4px 10px; border-radius: 9999px;">
+          Overdue Rent Notice
+        </span>
+      </div>
+      <h2 style="color: #b91c1c; font-size: 20px; font-weight: bold; margin-top: 0; margin-bottom: 12px;">Hello, {tenant_name}!</h2>
+      <p style="margin: 0 0 16px;">The grace period for your rent payment for <strong>{unit_label}</strong> has expired without receipt of payment. In accordance with your lease agreement, a late fee penalty has been assessed to your account.</p>
       
-      <div style="background-color: #fef2f2; border: 1px solid #fecaca; border-radius: 12px; padding: 16px; margin: 20px 0;">
+      <div style="background-color: #fef2f2; border: 1px solid #fecaca; border-radius: 12px; padding: 18px; margin: 20px 0;">
         <table style="width: 100%; border-collapse: collapse;">
           <tr>
             <td style="padding: 6px 0; color: #64748b; font-size: 13px;">Base Rent & Charges:</td>
             <td style="padding: 6px 0; font-weight: bold; color: #0f172a; text-align: right; font-size: 13px;">${inv.amount:,.2f}</td>
           </tr>
           <tr>
-            <td style="padding: 6px 0; color: #dc2626; font-size: 13px;">Initial Flat Late Fee:</td>
+            <td style="padding: 6px 0; color: #dc2626; font-size: 13px;">Initial Late Fee:</td>
             <td style="padding: 6px 0; font-weight: bold; color: #dc2626; text-align: right; font-size: 13px;">+${initial_fee:,.2f}</td>
           </tr>
           {recurring_row}
           <tr style="border-top: 1px solid #fca5a5;">
             <td style="padding: 10px 0 4px; font-weight: bold; color: #991b1b; font-size: 14px;">Total Balance Due:</td>
-            <td style="padding: 10px 0 4px; font-weight: bold; color: #991b1b; text-align: right; font-size: 17px;">${total_due:,.2f}</td>
+            <td style="padding: 10px 0 4px; font-weight: bold; color: #991b1b; text-align: right; font-size: 18px;">${total_due:,.2f}</td>
           </tr>
         </table>
       </div>
 
-      <p style="margin: 0 0 24px;">Please submit payment immediately to avoid additional recurring overdue penalties.</p>
+      <p style="margin: 0 0 24px;">Please submit your overdue payment immediately to avoid additional recurring overdue penalties and maintain lease compliance.</p>
       <div style="text-align: center; margin: 24px 0;">
-        <a href="{portal_url}" style="background-color: #dc2626; color: #ffffff; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-weight: bold; display: inline-block;">Review & Pay Balance</a>
+        <a href="{portal_url}" style="background-color: #dc2626; color: #ffffff; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-weight: bold; display: inline-block; box-shadow: 0 4px 12px rgba(220, 38, 38, 0.25);">Review & Pay Balance &rarr;</a>
       </div>
-      <p style="font-size: 12px; color: #94a3b8; margin: 24px 0 0;">NestBloq Property Management Accounting</p>
+      <p style="font-size: 12px; color: #94a3b8; margin: 24px 0 0; text-align: center;">NestBloq Property Management Accounting</p>
     </div>
     """
-    wrapped = _wrap_in_responsive_layout(body, subtitle="Rental Property Management")
+    wrapped = _wrap_in_responsive_layout(body, subtitle="NestBloq Rental Management")
     return send_email(tenant_email, subject, wrapped)
 
 
@@ -1577,6 +1587,13 @@ def apply_late_fee_to_invoice(invoice_id: int, db: Session):
     
     db.commit()
     db.refresh(inv)
+
+    # Immediately dispatch overdue & late fee assessment notice email to tenant
+    try:
+        send_late_fee_assessed_email(lease, inv, calc)
+    except Exception as e:
+        print(f"[apply_late_fee_to_invoice] Email notification error: {e}")
+
     return inv
 
 
@@ -1652,8 +1669,227 @@ def edit_late_fee_on_invoice(invoice_id: int, amount: float, db: Session):
     
     db.commit()
     db.refresh(inv)
+
+    if amount > 0 and inv.lease:
+        try:
+            calc = {
+                "total_amount_due": (inv.rent_charge or 0.0) + (inv.utilities_charge or 0.0) + (inv.parking_charge or 0.0) + (inv.pet_charge or 0.0) + amount,
+                "initial_late_fee": amount,
+                "recurring_late_fee": 0.0
+            }
+            send_late_fee_assessed_email(inv.lease, inv, calc)
+        except Exception as e:
+            print(f"[edit_late_fee_on_invoice] Email notification error: {e}")
+
     return inv
 
+
+
+# --- RENTAL MAINTENANCE EMAIL NOTIFICATIONS ---
+def send_rental_maintenance_created_emails(req: RentalMaintenanceRequest, db: Session):
+    """Notify landlord of new maintenance ticket and send confirmation to tenant."""
+    try:
+        from app.utils.encryption import safe_decrypt_field
+        from app.config import settings
+        from app.services.hoa.email_service import send_email, _wrap_in_responsive_layout
+
+        lease = req.lease or db.query(Lease).filter(Lease.lease_id == req.lease_id).first()
+        if not lease:
+            return
+
+        landlord = lease.landlord
+        tenant = lease.tenant
+        
+        tenant_email = safe_decrypt_field(lease.tenant_email)
+        if not tenant_email and tenant:
+            tenant_email = tenant.email_id
+            
+        tenant_name = (tenant.full_name.strip() if (tenant and tenant.full_name) else "") or "Resident"
+        
+        landlord_email = landlord.email_id if landlord else None
+        landlord_name = (landlord.full_name.strip() if (landlord and landlord.full_name) else "") or "Property Manager"
+
+        prop_name = lease.unit.property.name if (lease.unit and lease.unit.property) else "Rental Property"
+        unit_no = lease.unit.unit_number if lease.unit else "1"
+        unit_label = f"Unit {get_unit_display_number(unit_no)} ({prop_name})" if unit_no not in ["Single Family", "Condo Unit"] else prop_name
+        portal_url = f"{settings.FRONTEND_URL}/rental/login?redirect=/rental/dashboard?tab=maintenance"
+
+        # 1. Email to Landlord
+        if landlord_email:
+            ll_subject = f"New Maintenance Request #{req.request_id}: {req.title} ({unit_label})"
+            ll_body = f"""
+            <div style="font-size: 15px; line-height: 1.6; color: #374151;">
+              <div style="margin-bottom: 16px;">
+                <span style="background-color: #dbeafe; color: #1e40af; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; padding: 4px 10px; border-radius: 9999px;">
+                  New Maintenance Ticket
+                </span>
+              </div>
+              <h2 style="color: #0f172a; font-size: 20px; font-weight: bold; margin-top: 0; margin-bottom: 12px;">Hello, {landlord_name}!</h2>
+              <p style="margin: 0 0 16px;">A new maintenance service request has been submitted by <strong>{tenant_name}</strong> for <strong>{unit_label}</strong>.</p>
+              
+              <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 18px; margin: 20px 0;">
+                <table style="width: 100%; border-collapse: collapse;">
+                  <tr>
+                    <td style="padding: 6px 0; color: #64748b; font-size: 13px;">Ticket ID:</td>
+                    <td style="padding: 6px 0; font-weight: bold; color: #0f172a; text-align: right; font-size: 13px;">#{req.request_id}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 6px 0; color: #64748b; font-size: 13px;">Issue Title:</td>
+                    <td style="padding: 6px 0; font-weight: bold; color: #0f172a; text-align: right; font-size: 13px;">{req.title}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 6px 0; color: #64748b; font-size: 13px;">Priority:</td>
+                    <td style="padding: 6px 0; font-weight: bold; color: {'#dc2626' if req.priority in ['HIGH', 'URGENT', 'EMERGENCY'] else '#2563eb'}; text-align: right; font-size: 13px;">{req.priority}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 6px 0; color: #64748b; font-size: 13px;">Scope:</td>
+                    <td style="padding: 6px 0; font-weight: bold; color: #0f172a; text-align: right; font-size: 13px;">{req.scope or 'INTERNAL'}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 6px 0; color: #64748b; font-size: 13px;">Tenant / Resident:</td>
+                    <td style="padding: 6px 0; font-weight: bold; color: #0f172a; text-align: right; font-size: 13px;">{tenant_name}</td>
+                  </tr>
+                </table>
+              </div>
+
+              <div style="background-color: #f1f5f9; border-left: 4px solid #3b82f6; border-radius: 8px; padding: 14px; margin: 16px 0;">
+                <p style="margin: 0 0 4px; font-size: 12px; font-weight: 700; color: #475569; text-transform: uppercase;">Issue Description:</p>
+                <p style="margin: 0; font-size: 14px; color: #1e293b;">{req.description}</p>
+              </div>
+
+              <div style="text-align: center; margin: 28px 0 16px;">
+                <a href="{portal_url}" style="background-color: #2563eb; color: #ffffff; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-weight: bold; display: inline-block; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);">Manage in Maintenance Desk &rarr;</a>
+              </div>
+            </div>
+            """
+            send_email(landlord_email, ll_subject, _wrap_in_responsive_layout(ll_body, subtitle="NestBloq Rental Management"))
+
+        # 2. Confirmation Email to Tenant
+        if tenant_email:
+            tn_subject = f"Maintenance Request Submitted #{req.request_id}: {req.title}"
+            tn_body = f"""
+            <div style="font-size: 15px; line-height: 1.6; color: #374151;">
+              <div style="margin-bottom: 16px;">
+                <span style="background-color: #d1fae5; color: #065f46; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; padding: 4px 10px; border-radius: 9999px;">
+                  Request Received
+                </span>
+              </div>
+              <h2 style="color: #0f172a; font-size: 20px; font-weight: bold; margin-top: 0; margin-bottom: 12px;">Hello, {tenant_name}!</h2>
+              <p style="margin: 0 0 16px;">Your maintenance request for <strong>{unit_label}</strong> has been received and forwarded to your property manager.</p>
+              
+              <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 18px; margin: 20px 0;">
+                <table style="width: 100%; border-collapse: collapse;">
+                  <tr>
+                    <td style="padding: 6px 0; color: #64748b; font-size: 13px;">Ticket ID:</td>
+                    <td style="padding: 6px 0; font-weight: bold; color: #0f172a; text-align: right; font-size: 13px;">#{req.request_id}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 6px 0; color: #64748b; font-size: 13px;">Title:</td>
+                    <td style="padding: 6px 0; font-weight: bold; color: #0f172a; text-align: right; font-size: 13px;">{req.title}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 6px 0; color: #64748b; font-size: 13px;">Priority:</td>
+                    <td style="padding: 6px 0; font-weight: bold; color: #0f172a; text-align: right; font-size: 13px;">{req.priority}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 6px 0; color: #64748b; font-size: 13px;">Status:</td>
+                    <td style="padding: 6px 0; font-weight: bold; color: #2563eb; text-align: right; font-size: 13px;">OPEN</td>
+                  </tr>
+                </table>
+              </div>
+
+              <p style="margin: 0 0 20px; font-size: 13px; color: #64748b;">You will receive email notifications as updates, vendor assignments, or status changes occur on this ticket.</p>
+
+              <div style="text-align: center; margin: 24px 0;">
+                <a href="{portal_url}" style="background-color: #0f172a; color: #ffffff; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-weight: bold; display: inline-block;">Track Request Status &rarr;</a>
+              </div>
+            </div>
+            """
+            send_email(tenant_email, tn_subject, _wrap_in_responsive_layout(tn_body, subtitle="NestBloq Rental Management"))
+    except Exception as e:
+        print(f"[send_rental_maintenance_created_emails] Error: {e}")
+
+
+def send_rental_maintenance_status_updated_email(req: RentalMaintenanceRequest, old_status: str, new_status: str, db: Session, vendor_name: str = None):
+    """Notify tenant whenever maintenance status, vendor, or cost changes."""
+    try:
+        from app.utils.encryption import safe_decrypt_field
+        from app.config import settings
+        from app.services.hoa.email_service import send_email, _wrap_in_responsive_layout
+
+        lease = req.lease or db.query(Lease).filter(Lease.lease_id == req.lease_id).first()
+        if not lease:
+            return
+
+        tenant = lease.tenant
+        tenant_email = safe_decrypt_field(lease.tenant_email)
+        if not tenant_email and tenant:
+            tenant_email = tenant.email_id
+            
+        if not tenant_email:
+            return
+
+        tenant_name = (tenant.full_name.strip() if (tenant and tenant.full_name) else "") or "Resident"
+        prop_name = lease.unit.property.name if (lease.unit and lease.unit.property) else "Rental Property"
+        unit_no = lease.unit.unit_number if lease.unit else "1"
+        unit_label = f"Unit {get_unit_display_number(unit_no)} ({prop_name})" if unit_no not in ["Single Family", "Condo Unit"] else prop_name
+        portal_url = f"{settings.FRONTEND_URL}/rental/login?redirect=/rental/dashboard?tab=maintenance"
+
+        # Badge colors
+        status_styles = {
+            "COMPLETED": {"bg": "#d1fae5", "color": "#065f46", "label": "Completed & Resolved"},
+            "IN_PROGRESS": {"bg": "#dbeafe", "color": "#1e40af", "label": "In Progress"},
+            "VENDOR_ASSIGNED": {"bg": "#f3e8ff", "color": "#6b21a8", "label": "Vendor Dispatched"},
+            "CANCELLED": {"bg": "#fee2e2", "color": "#991b1b", "label": "Cancelled"},
+            "OPEN": {"bg": "#f1f5f9", "color": "#475569", "label": "Open / Pending Review"},
+        }
+        st = status_styles.get(new_status, {"bg": "#f1f5f9", "color": "#334155", "label": new_status.replace('_', ' ').title()})
+
+        vendor_row = f"<tr><td style='padding: 6px 0; color: #64748b; font-size: 13px;'>Assigned Vendor:</td><td style='padding: 6px 0; font-weight: bold; color: #0f172a; text-align: right; font-size: 13px;'>{vendor_name}</td></tr>" if vendor_name else ""
+        cost_row = f"<tr><td style='padding: 6px 0; color: #64748b; font-size: 13px;'>Estimated Cost:</td><td style='padding: 6px 0; font-weight: bold; color: #059669; text-align: right; font-size: 13px;'>${req.estimated_cost:,.2f} ({req.payment_status or 'N/A'})</td></tr>" if (req.estimated_cost and req.estimated_cost > 0) else ""
+
+        subject = f"Maintenance Update #{req.request_id}: Status changed to {st['label']} ({unit_label})"
+        body = f"""
+        <div style="font-size: 15px; line-height: 1.6; color: #374151;">
+          <div style="margin-bottom: 16px;">
+            <span style="background-color: {st['bg']}; color: {st['color']}; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; padding: 4px 10px; border-radius: 9999px;">
+              Status: {st['label']}
+            </span>
+          </div>
+          <h2 style="color: #0f172a; font-size: 20px; font-weight: bold; margin-top: 0; margin-bottom: 12px;">Hello, {tenant_name}!</h2>
+          <p style="margin: 0 0 16px;">The status of your maintenance request <strong>#{req.request_id} ({req.title})</strong> for <strong>{unit_label}</strong> has been updated.</p>
+          
+          <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 18px; margin: 20px 0;">
+            <table style="width: 100%; border-collapse: collapse;">
+              <tr>
+                <td style="padding: 6px 0; color: #64748b; font-size: 13px;">Ticket ID:</td>
+                <td style="padding: 6px 0; font-weight: bold; color: #0f172a; text-align: right; font-size: 13px;">#{req.request_id}</td>
+              </tr>
+              <tr>
+                <td style="padding: 6px 0; color: #64748b; font-size: 13px;">Issue:</td>
+                <td style="padding: 6px 0; font-weight: bold; color: #0f172a; text-align: right; font-size: 13px;">{req.title}</td>
+              </tr>
+              <tr>
+                <td style="padding: 6px 0; color: #64748b; font-size: 13px;">Previous Status:</td>
+                <td style="padding: 6px 0; color: #94a3b8; text-decoration: line-through; text-align: right; font-size: 13px;">{old_status or 'OPEN'}</td>
+              </tr>
+              <tr>
+                <td style="padding: 6px 0; color: #64748b; font-size: 13px;">Current Status:</td>
+                <td style="padding: 6px 0; font-weight: bold; color: {st['color']}; text-align: right; font-size: 14px;">{st['label']}</td>
+              </tr>
+              {vendor_row}
+              {cost_row}
+            </table>
+          </div>
+
+          <div style="text-align: center; margin: 28px 0 16px;">
+            <a href="{portal_url}" style="background-color: #2563eb; color: #ffffff; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-weight: bold; display: inline-block; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);">View Ticket in Portal &rarr;</a>
+          </div>
+        </div>
+        """
+        send_email(tenant_email, subject, _wrap_in_responsive_layout(body, subtitle="NestBloq Rental Management"))
+    except Exception as e:
+        print(f"[send_rental_maintenance_status_updated_email] Error: {e}")
 
 
 # --- RENTAL MAINTENANCE SERVICE FUNCTIONS ---
@@ -1671,6 +1907,10 @@ def submit_maintenance_request(data: RentalMaintenanceCreate, db: Session) -> Re
     db.add(new_request)
     db.commit()
     db.refresh(new_request)
+
+    # Immediately dispatch email notifications to Landlord and Tenant
+    send_rental_maintenance_created_emails(new_request, db)
+
     return new_request
 
 
@@ -1689,15 +1929,24 @@ def update_maintenance_request(request_id: int, status: str, vendor_id: Optional
     if not requestObj:
         raise ValueError("Maintenance request not found.")
     
+    old_status = requestObj.status
+    vendor_name = None
+
     if vendor_id is not None:
         requestObj.vendor_id = vendor_id if vendor_id > 0 else None
-        if vendor_id > 0 and status not in ["COMPLETED", "CANCELLED"]:
-            requestObj.status = "VENDOR_ASSIGNED"
-        elif vendor_id <= 0 and status == "VENDOR_ASSIGNED":
-            requestObj.status = "OPEN"
+        if vendor_id > 0:
+            vendor = db.query(RentalVendor).filter(RentalVendor.vendor_id == vendor_id).first()
+            if vendor:
+                from app.utils.encryption import safe_decrypt_field
+                vendor_name = safe_decrypt_field(vendor.company_name) or "Assigned Service Vendor"
 
-    if status and (vendor_id is None or vendor_id <= 0 or status in ["COMPLETED", "CANCELLED"]):
+    if status:
         requestObj.status = status
+    elif vendor_id is not None:
+        if vendor_id > 0 and requestObj.status not in ["COMPLETED", "CANCELLED", "IN_PROGRESS"]:
+            requestObj.status = "VENDOR_ASSIGNED"
+        elif vendor_id <= 0 and requestObj.status == "VENDOR_ASSIGNED":
+            requestObj.status = "OPEN"
 
     if estimated_cost is not None:
         requestObj.estimated_cost = estimated_cost
@@ -1708,6 +1957,11 @@ def update_maintenance_request(request_id: int, status: str, vendor_id: Optional
 
     db.commit()
     db.refresh(requestObj)
+
+    # Immediately dispatch status update email if status or vendor or cost changed
+    if requestObj.status != old_status or vendor_name or estimated_cost is not None:
+        send_rental_maintenance_status_updated_email(requestObj, old_status, requestObj.status, db, vendor_name=vendor_name)
+
     return requestObj
 
 
@@ -1735,9 +1989,13 @@ def cancel_maintenance_request(request_id: int, user_id: int, db: Session) -> Re
     if (req.status or "").upper() in ["COMPLETED", "CANCELLED"]:
         raise ValueError(f"Cannot cancel a request that is already {req.status}.")
     
+    old_status = req.status
     req.status = "CANCELLED"
     db.commit()
     db.refresh(req)
+
+    send_rental_maintenance_status_updated_email(req, old_status, "CANCELLED", db)
+
     return req
 
 
@@ -1755,6 +2013,33 @@ def add_tenant_note_to_maintenance(request_id: int, note_text: str, user_id: int
     
     db.commit()
     db.refresh(req)
+
+    # Notify landlord of note
+    try:
+        from app.config import settings
+        from app.services.hoa.email_service import send_email, _wrap_in_responsive_layout
+        lease = req.lease
+        if lease and lease.landlord and lease.landlord.email_id:
+            tenant_name = (lease.tenant.full_name.strip() if (lease.tenant and lease.tenant.full_name) else "") or "Resident"
+            prop_name = lease.unit.property.name if (lease.unit and lease.unit.property) else "Rental Property"
+            portal_url = f"{settings.FRONTEND_URL}/rental/login?redirect=/rental/dashboard?tab=maintenance"
+            note_subject = f"New Note on Maintenance Ticket #{req.request_id}: {req.title}"
+            note_body = f"""
+            <div style="font-size: 15px; line-height: 1.6; color: #374151;">
+              <h2 style="color: #0f172a; font-size: 20px; font-weight: bold; margin: 0 0 12px;">New Note from {tenant_name}</h2>
+              <p style="margin: 0 0 16px;">Tenant <strong>{tenant_name}</strong> added a new note to maintenance ticket <strong>#{req.request_id} ({req.title})</strong>.</p>
+              <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-left: 4px solid #2563eb; border-radius: 8px; padding: 16px; margin: 16px 0;">
+                <p style="margin: 0; font-size: 14px; color: #1e293b;">{note_text.strip()}</p>
+              </div>
+              <div style="text-align: center; margin: 24px 0;">
+                <a href="{portal_url}" style="background-color: #2563eb; color: #ffffff; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-weight: bold; display: inline-block;">Reply in Maintenance Desk &rarr;</a>
+              </div>
+            </div>
+            """
+            send_email(lease.landlord.email_id, note_subject, _wrap_in_responsive_layout(note_body, subtitle="NestBloq Rental Management"))
+    except Exception as e:
+        print(f"[add_tenant_note_to_maintenance] Note email error: {e}")
+
     return req
 
 
@@ -1771,6 +2056,7 @@ def pay_maintenance_request(request_id: int, payment_method: str, db: Session) -
 
     import secrets
     
+    old_status = req.status
     txn_id = f"txn_{secrets.token_hex(8)}"
     req.payment_status = "PAID"
     req.payment_method = payment_method
@@ -1779,6 +2065,9 @@ def pay_maintenance_request(request_id: int, payment_method: str, db: Session) -
     
     db.commit()
     db.refresh(req)
+
+    send_rental_maintenance_status_updated_email(req, old_status, "COMPLETED", db)
+
     return req
 
 

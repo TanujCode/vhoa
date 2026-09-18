@@ -8,6 +8,7 @@ import {
   Wrench, ShieldAlert, Car, PawPrint, Key, ArrowRight
 } from 'lucide-react';
 import API from '../../services/api';
+import RentalCalendarWidget from '../../components/rental/RentalCalendarWidget';
 
 export default function LandlordDashboard({ 
   user, 
@@ -1331,6 +1332,14 @@ export default function LandlordDashboard({
             </div>
           </div>
         </div>
+      </div>
+
+      {/* --- Monthly Rent & Lease Schedule Calendar --- */}
+      <div className="mt-6">
+        <RentalCalendarWidget
+          userRole="landlord"
+          onNavigatePage={setActivePage}
+        />
       </div>
 
       {/* --- Recent Portfolio Activity Section --- */}

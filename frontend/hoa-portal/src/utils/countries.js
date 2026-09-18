@@ -104,3 +104,31 @@ export const formatPhoneByCountry = (rawValue, country = DEFAULT_COUNTRY) => {
   return formatted;
 };
 
+/**
+ * Validate phone digits according to the selected country rules
+ */
+export const validatePhoneByCountry = (rawValue, countryOrDialCode = DEFAULT_COUNTRY) => {
+  if (!rawValue) return { isValid: true, message: '' };
+  const digits = String(rawValue).replace(/\D/g, '');
+  if (digits.length === 0) return { isValid: true, message: '' };
+
+  let country = DEFAULT_COUNTRY;
+  if (typeof countryOrDialCode === 'string') {
+    country = findCountryByDialCode(countryOrDialCode) || findCountryByCode(countryOrDialCode) || DEFAULT_COUNTRY;
+  } else if (countryOrDialCode && countryOrDialCode.minDigits) {
+    country = countryOrDialCode;
+  }
+
+  const min = country.minDigits || 7;
+  const max = country.maxDigits || 15;
+  const isValid = digits.length >= min && digits.length <= max;
+
+  return {
+    isValid,
+    minDigits: min,
+    maxDigits: max,
+    countryName: country.name,
+    message: isValid ? '' : `Please enter a valid ${country.name} mobile number (${min}${min !== max ? `-${max}` : ''} digits).`
+  };
+};
+
