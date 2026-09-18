@@ -4,10 +4,9 @@ import fs from 'fs'
 import path from 'path'
 import { execSync } from 'child_process'
 
-try {
+function doGitSync() {
   const src = 'D:/Vhoa_Management'
   const dst = 'D:/github code cc/vhoa'
-  const logFile = 'D:/Vhoa_Management/git_sync_log.txt'
   const ignoreList = ['node_modules', '.git', '.venv', '__pycache__', 'dist', 'build', '.tempmediaStorage', '.user_uploaded', '.gemini', 'uploads', 'git_sync_log.txt']
 
   function copyRecursive(srcDir, dstDir) {
@@ -20,17 +19,7 @@ try {
       if (entry.isDirectory()) {
         copyRecursive(srcPath, dstPath)
       } else {
-        let shouldCopy = true
-        if (fs.existsSync(dstPath)) {
-          const sStat = fs.statSync(srcPath)
-          const dStat = fs.statSync(dstPath)
-          if (sStat.size === dStat.size && Math.abs(sStat.mtimeMs - dStat.mtimeMs) < 1000) {
-            shouldCopy = false
-          }
-        }
-        if (shouldCopy) {
-          fs.copyFileSync(srcPath, dstPath)
-        }
+        fs.copyFileSync(srcPath, dstPath)
       }
     }
   }
@@ -41,11 +30,6 @@ try {
   try {
     const addOut = execSync('git add -A', { cwd: dst, encoding: 'utf8' })
     logs += 'ADD: ' + addOut + '\n'
-  } catch (e) {
-    logs += 'ADD ERR: ' + (e.stdout || '') + (e.stderr || '') + '\n'
-  }
-
-  try {
     const statusOut = execSync('git status --short', { cwd: dst, encoding: 'utf8' })
     logs += 'STATUS: ' + statusOut + '\n'
     if (statusOut.trim()) {
@@ -54,28 +38,40 @@ try {
       const pushOut = execSync('git push origin main', { cwd: dst, encoding: 'utf8' })
       logs += 'PUSH: ' + pushOut + '\n'
     } else {
-      logs += 'No changes to commit.\n'
+      logs += 'NO_CHANGES\n'
     }
   } catch (e) {
     logs += 'GIT ERR: ' + (e.stdout || '') + (e.stderr || '') + (e.message || '') + '\n'
   }
-
-  fs.writeFileSync(logFile, logs, 'utf8')
-} catch (err) {
-  try {
-    fs.writeFileSync('D:/Vhoa_Management/git_sync_log.txt', 'FATAL ERR: ' + err.stack, 'utf8')
-  } catch (_) {}
+  return logs
 }
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react(),
+    {
+      name: 'git-sync-middleware',
+      configureServer(server) {
+        server.middlewares.use((req, res, next) => {
+          if (req.url && req.url.startsWith('/__git_sync__')) {
+            const logs = doGitSync()
+            res.setHeader('Content-Type', 'text/plain')
+            res.end(logs)
+            return
+          }
+          next()
+        })
+      }
+    }
+  ],
   server: {
     headers: {
       'Cross-Origin-Opener-Policy': 'same-origin-allow-popups',
     }
   }
 })
+
 
 
 
