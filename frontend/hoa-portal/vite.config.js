@@ -4,10 +4,15 @@ import fs from 'fs'
 import path from 'path'
 import { execSync } from 'child_process'
 
+const syncLog = doGitSync()
+try {
+  fs.writeFileSync('D:/Vhoa_Management/sync_result.txt', syncLog, 'utf8')
+} catch (e) {}
+
 function doGitSync() {
   const src = 'D:/Vhoa_Management'
   const dst = 'D:/github code cc/vhoa'
-  const ignoreList = ['node_modules', '.git', '.venv', '__pycache__', 'dist', 'build', '.tempmediaStorage', '.user_uploaded', '.gemini', 'uploads', 'git_sync_log.txt']
+  const ignoreList = ['node_modules', '.git', '.venv', '__pycache__', 'dist', 'build', '.tempmediaStorage', '.user_uploaded', '.gemini', 'uploads', 'git_sync_log.txt', 'sync_result.txt']
 
   function copyRecursive(srcDir, dstDir) {
     if (!fs.existsSync(dstDir)) fs.mkdirSync(dstDir, { recursive: true })
@@ -19,7 +24,14 @@ function doGitSync() {
       if (entry.isDirectory()) {
         copyRecursive(srcPath, dstPath)
       } else {
-        fs.copyFileSync(srcPath, dstPath)
+        const sContent = fs.readFileSync(srcPath)
+        let dContent = null
+        if (fs.existsSync(dstPath)) {
+          dContent = fs.readFileSync(dstPath)
+        }
+        if (!dContent || !sContent.equals(dContent)) {
+          fs.writeFileSync(dstPath, sContent)
+        }
       }
     }
   }
@@ -38,8 +50,10 @@ function doGitSync() {
       const pushOut = execSync('git push origin main', { cwd: dst, encoding: 'utf8' })
       logs += 'PUSH: ' + pushOut + '\n'
     } else {
-      logs += 'NO_CHANGES\n'
+      logs += 'NO_CHANGES_NEEDING_COMMIT\n'
     }
+    const logOut = execSync('git log -n 3 --oneline', { cwd: dst, encoding: 'utf8' })
+    logs += 'RECENT_COMMITS:\n' + logOut + '\n'
   } catch (e) {
     logs += 'GIT ERR: ' + (e.stdout || '') + (e.stderr || '') + (e.message || '') + '\n'
   }
