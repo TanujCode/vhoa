@@ -14,7 +14,7 @@ from app.models.rental.rental_otp import RentalOtpToken
 from app.models.rental.rental_vendor import RentalVendor
 from app.models.rental.tenant_document import TenantDocument
 from app.models.rental.rental_audit_log import RentalAuditLog
-from app.models.hoa.user import Role
+from app.models.rental.role import Role
 from app.services.rental.audit_service import log_rental_action
 from app.routers.rental.dependencies import require_rental_role
 from app.utils.encryption import safe_decrypt_field, safe_decrypt_float

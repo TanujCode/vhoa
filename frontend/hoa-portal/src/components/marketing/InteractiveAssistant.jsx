@@ -65,8 +65,8 @@ const localGeneralAnswers = {
   'who founded google': 'Google was founded by Larry Page and Sergey Brin on September 4, 1998, while they were PhD students at Stanford University.',
   'who created google': 'Google was founded by Larry Page and Sergey Brin in 1998.',
 
-  'nestbloq': 'NestBloq is an all-in-one community management platform designed for HOAs, condos, and rental properties.',
-  'who developed nestbloq': 'NestBloq was developed by **Crestcode Technology** to serve as a comprehensive operating system for community and property management.',
+  'nestbloq': 'NestBloq is an all-in-one rental property management platform designed for landlords, property managers, and tenants.',
+  'who developed nestbloq': 'NestBloq was developed by **Crestcode Technology** to serve as a comprehensive operating system for rental and property management.',
   'who founded nestbloq': 'NestBloq was founded and developed by **Crestcode Technology**.',
   'who created nestbloq': 'NestBloq was created by **Crestcode Technology**.'
 };
@@ -77,7 +77,7 @@ export default function InteractiveAssistant() {
   const [messages, setMessages] = useState([
     {
       sender: 'ai',
-      text: "Hello!  I'm your NestBloq AI Assistant.\n\nAsk me anything about our plans, security, features, billing, or community management workflows!",
+      text: "Hello! I am your NestBloq AI Assistant.\n\nAsk me anything about our rental property management platform, pricing plans, security, tenant screening, or digital leases.",
       time: 'Just now'
     }
   ]);
@@ -87,24 +87,24 @@ export default function InteractiveAssistant() {
 
   const presetQuestions = [
     {
-      q: " What are the pricing plans?",
-      a: "NestBloq offers three tiers:\n\n• **Basic** — $1.50/unit/month\n  Essential dues, roster & assembly tools\n• **Pro** — $3.00/unit/month\n  Adds Bylaws AI Copilot, Kanban boards & SMS alerts\n• **Enterprise** — Custom pricing\n  Dedicated server + SHA-256 voting audits\n\n All plans: **14-day free trial**, no credit card needed!"
+      q: "What are the pricing plans?",
+      a: "NestBloq offers three tiers for rental management:\n\n• Basic — $1.50/unit/month (Essential rent invoicing, leases, and tenant portals)\n• Pro — $3.00/unit/month (Adds Kanban maintenance desk, digital e-signatures, and auto late fees)\n• Enterprise — Custom pricing (Dedicated server, multi-portfolio management, custom API access)\n\nAll plans include a 14-day free trial with no credit card required."
     },
     {
-      q: " Is my community data secure?",
-      a: "Absolutely! Security is our top priority:\n\n **Stripe & Plaid** — zero card data stored on our servers\n **Bank-grade SSL** encryption on all communications\n **SHA-256 audit logs** for every vote & resolution\n **GDPR & SOC 2** compliant infrastructure\n\nYour data is in safe hands!"
+      q: "Is tenant and financial data secure?",
+      a: "Security and privacy are our top priorities:\n\n• Bank-grade SSL encryption on all transactions\n• Zero sensitive financial card data stored on our servers\n• Immutable audit logs for all lease and financial events\n• GDPR and SOC 2 compliant infrastructure"
     },
     {
-      q: " How does the Bylaws AI work?",
-      a: "The Bylaws AI Copilot reads your community rulebook & documents. It:\n\n• Answers resident queries 24/7 (parking, pets, noise rules)\n• Auto-drafts meeting agendas\n• Reduces admin workload by up to **80%**\n• Available on **Pro** and **Enterprise** plans"
+      q: "How does digital lease signing work?",
+      a: "Digital lease management is fully built-in:\n\n• Generate standard state-compliant residential lease agreements\n• Tenants sign electronically via their tenant portal\n• Landlords counter-sign with automated activation\n• PDF agreements are stored securely and accessible 24/7"
     },
     {
-      q: " How do I get started?",
-      a: "Super easy to get started!\n\n1️⃣ Click **'Get Started'** in the navbar\n2️⃣ Create your free account (no card needed)\n3️⃣ Explore with demo data\n4️⃣ Or **Book a Demo** for a live walkthrough\n\nOur team helps you go live in under 24 hours!"
+      q: "How do I get started?",
+      a: "Getting started takes less than 2 minutes:\n\n1. Click 'Get Started' in the navigation bar\n2. Create your landlord account\n3. Register your property and units\n4. Invite tenants or draft your first lease contract"
     }
   ];
 
-  // ─── AI BRAIN: Intent-based response engine ──────────────────────────────
+  // AI BRAIN: Intent-based response engine
   const generateResponse = async (text) => {
     const q = text.toLowerCase().trim();
 
@@ -115,68 +115,42 @@ export default function InteractiveAssistant() {
       } catch { return q.includes(term); }
     });
 
-    if (q.includes('community') && w('create', 'add', 'make', 'new', 'register', 'setup', 'set up')) {
-      return `Here are the steps to **Create a Community** in NestBloq:\n\n1️⃣ **Register/Sign Up** — Click **'Start Free Trial'** on the homepage to create your admin account.\n2️⃣ **Add Community** — In your Admin Dashboard, click the **'Add Community'** or **'Create Community'** button.\n3️⃣ **Enter Details** — Fill in the community details (Name, Address, Zip, and Type: HOA, Condo, or Rental).\n4️⃣ **Get Community Code** — A unique code (e.g., \`VIK071\`) will be generated. You can share this code with residents to invite them to join!`;
+    if (q.includes('property') && w('create', 'add', 'make', 'new', 'register', 'setup', 'set up')) {
+      return `Steps to add a property in NestBloq:\n\n1. Sign in to your Landlord Dashboard\n2. Navigate to Properties in the sidebar\n3. Click 'Add Property' and enter the address and property type (Single Family, Multi-Unit, Condo)\n4. Add units and set monthly target rents`;
     }
 
-    if (w('add member', 'invite member', 'add resident', 'invite resident', 'add homeowner', 'invite homeowner', 'add user', 'invite user') ||
-      ((q.includes('member') || q.includes('resident') || q.includes('homeowner') || q.includes('user')) && w('add', 'invite', 'register'))) {
-      return `Here is how to **Add/Invite Members** to your community:\n\n1️⃣ **Generate Invite Link** — Go to the **Members** page in your dashboard and click **'Invite Member'**.\n2️⃣ **Role Selection** — Select the role (Homeowner, Board Member, Auditor, or Manager).\n3️⃣ **Share Code/Link** — Copy the unique invitation link or your **Community Code** (e.g., \`VIK071\`) and send it to them via email, text, or WhatsApp.\n4️⃣ **Resident Join** — Residents register using your link, and they will automatically join your specific community workspace.`;
+    if (w('add tenant', 'invite tenant', 'add resident', 'invite resident', 'onboard tenant')) {
+      return `Steps to invite a tenant:\n\n1. Go to Lease Agreements in your Landlord Dashboard\n2. Click 'Create Lease' and select the property and unit\n3. Enter the tenant email, lease term, and rent amount\n4. Send the invitation for digital review and signature`;
     }
 
-    if (w('create service request', 'log service request', 'new service request', 'report issue', 'create work order', 'log complaint') ||
-      ((q.includes('service') || q.includes('request') || q.includes('maintenance')) && w('create', 'add', 'log', 'report'))) {
-      return `Here is how to **Create a Service Request** (Maintenance Ticket):\n\n• **For Residents**: Log in to your Resident Portal, go to **Service Requests**, click **'New Request'**, describe the issue, upload photos, and click submit.\n• **For Admins**: Go to the **Kanban Maintenance Board**, click **'Create Work Order'**, fill in the details, and assign a Vendor/Contractor directly.`;
+    if (w('create service request', 'log service request', 'new service request', 'report issue', 'create work order', 'maintenance ticket')) {
+      return `Creating a maintenance request:\n\n• For Tenants: Log in to your Tenant Portal, open Maintenance Request, describe the issue, and attach photos.\n• For Landlords: Open the Maintenance Desk to dispatch work orders directly to assigned vendors.`;
     }
 
-    if (w('book amenity', 'book facility', 'reserve amenity', 'reserve facility', 'book pool', 'book clubhouse', 'book gym') ||
-      ((q.includes('amenity') || q.includes('facility') || q.includes('pool') || q.includes('gym') || q.includes('clubhouse')) && w('book', 'reserve'))) {
-      return `Here is how to **Book an Amenity** (e.g. pool, clubhouse, gym):\n\n1️⃣ **Select Amenity** — Go to the **Amenity Booking** tab in the sidebar.\n2️⃣ **Choose Slot** — Open the live calendar, select your desired date and time slot.\n3️⃣ **Submit Request** — Click **'Book Slot'**. Depending on community rules, it will either be instantly confirmed or sent to the board/admin for approval.`;
-    }
-
-    if (w('log violation', 'report violation', 'create violation', 'add violation', 'file violation') ||
-      ((q.includes('violation') || q.includes('infraction')) && w('log', 'report', 'add', 'create', 'file'))) {
-      return `Here is how to **Log a Community Violation**:\n\n1️⃣ **Create Ticket** — Go to the **Violations** tab in the admin sidebar and click **'Log Violation'**.\n2️⃣ **Specify Rules** — Select the resident/unit, choose the violated rule category (parking, trash, lawn, etc.), write notes, and upload photos.\n3️⃣ **Send Warning** — Click **'Submit'**. The system automatically generates a warning notification letter/email with a **30-day dispute window** and late fee details.`;
-    }
-
-    if (w('pay dues', 'collect dues', 'collect fees', 'how to pay', 'payment method', 'pay invoice') ||
-      ((q.includes('dues') || q.includes('invoice') || q.includes('fee')) && w('pay', 'collect'))) {
-      return `Here is how to **Pay or Collect Dues**:\n\n• **For Residents**: Log in to the Resident Portal, link your bank securely via Plaid (or enter a credit card), and pay outstanding invoices under the **Payments** section.\n• **For Admins**: Set up automated billing schedules in **Finances & Dues** to automatically send monthly/annual invoices, track payments on your ledger, and send automated late reminders.`;
-    }
-
-    if (w('cast vote', 'how to vote', 'submit vote', 'cast ballot', 'start vote', 'create vote', 'create election') ||
-      (q.includes('vote') && w('cast', 'how to', 'submit', 'start', 'create', 'how do i'))) {
-      return `Here is how to use the **E-Voting System**:\n\n• **For Admins**: Go to the **E-Voting** section, click **'New Resolution/Election'**, specify options/candidates, upload docs, set quorum criteria, and launch.\n• **For Residents**: You will receive a secure email notification. Log in, click **'Cast Vote'**, select your choice. Your vote gets securely sealed with a cryptographic SHA-256 hash audit trail.`;
+    if (w('pay rent', 'collect rent', 'rent payment', 'payment method', 'pay invoice', 'rent ledger')) {
+      return `Rent Collection & Payments:\n\n• For Tenants: Log in to the Tenant Portal, view active invoices under Payments & Ledger, and pay online.\n• For Landlords: Automated invoicing generates monthly rent bills with real-time payment tracking and audit logs.`;
     }
 
     if (
       (q.includes('nestbloq') && (w('what', 'explain', 'about', 'is', 'platform', 'software', 'app', 'product'))) ||
       w('what is nestbloq', 'about nestbloq', 'nestbloq platform', 'nestbloq software', 'tell me about nestbloq', 'explain nestbloq')
     ) {
-      return `**NestBloq** is a modern all-in-one **community management platform**! ️\n\nIt brings together everything a property community needs:\n\n **Dues Collection** — Automated billing via ACH & card\n **Maintenance Kanban** — Work orders & contractor dispatch\n️ **E-Voting** — SHA-256 secure online voting & resolutions\n **Bylaws AI Copilot** — 24/7 automated resident Q&A\n **Amenity Booking** — Real-time pool, gym & clubhouse booking\n **Financial Ledger** — Auto accounting & reporting\n\n Built for **HOAs, Condos & Rental** communities.\n\nWant to know more about any feature?`;
+      return `NestBloq is an all-in-one Rental Property Management platform built for landlords, property managers, and tenants.\n\nKey capabilities:\n• Online Rent Collection & Invoicing\n• State-Compliant Digital Leases & E-Signatures\n• Tenant Background & Document Screening\n• Kanban Maintenance Desk & Vendor Dispatch\n• Real-Time Financial Ledger & Tax Reports`;
     }
 
-    if (w('subscription renew', 'credit renew', 'credits renew', 'credit also renew', 'subscription renewal', 'plan renew', 'auto renew', 'automatic renewal')) {
-      return `Yes, absolutely! \n\nWhen your **subscription renews**:\n\n All **credits reset automatically** with the new cycle\n Secure payment processed via Stripe\n Invoice emailed to your registered address\n\nTrack everything at **Dashboard → Settings → Billing**.`;
-    }
-
-    if (w('subscription', 'billing', 'invoice', 'billing cycle') && !w('credit')) {
-      return `NestBloq subscriptions renew **monthly or annually**. \n\nPlans:\n• **Basic**: $1.50/unit/month\n• **Pro**: $3.00/unit/month\n• **Enterprise**: Custom pricing\n\nCredits auto-refresh with every billing cycle renewal.\n\nManage at **Dashboard → Settings → Billing**.`;
-    }
-
-    if (w('credit', 'credits') && !w('credit card')) {
-      return `NestBloq **credits** power your platform usage — AI queries, SMS alerts, etc. \n\nThey **automatically reset** with every subscription renewal.\n\nRunning low? Top up anytime from your **Dashboard**.`;
+    if (w('subscription renew', 'credit renew', 'subscription renewal', 'plan renew', 'auto renew')) {
+      return `Subscriptions renew automatically on a monthly or annual basis via Stripe. Invoices and receipts are automatically sent to your registered billing email.`;
     }
 
     if (w('plan', 'price', 'pricing', 'cost', 'package', 'how much', 'charges', 'annual plan', 'free trial', 'rate', 'rates')) {
       return presetQuestions[0].a;
     }
 
-    if (w('secure', 'security', 'privacy', 'private', 'encrypt', 'hack', 'data breach', 'gdpr', 'soc', 'ssl', 'sha-256', 'data safe', 'safe', 'protected')) {
+    if (w('secure', 'security', 'privacy', 'private', 'encrypt', 'data safe', 'safe', 'protected')) {
       return presetQuestions[1].a;
     }
 
-    if (w('bylaw', 'bylaws', 'copilot', 'ai copilot', 'rulebook', 'bylaws ai', 'artificial intelligence', 'document ai', 'rules ai')) {
+    if (w('lease', 'agreement', 'esign', 'digital signature', 'contract', 'signature')) {
       return presetQuestions[2].a;
     }
 
@@ -184,28 +158,12 @@ export default function InteractiveAssistant() {
       return presetQuestions[3].a;
     }
 
-    if (w('maintenance', 'repair', 'leak', 'plumbing', 'work order', 'kanban', 'contractor', 'dispatch', 'complain', 'complaint', 'breakdown')) {
-      return `NestBloq has a smart **Kanban Maintenance Board**! \n\n• Residents submit issues with photos & notes\n• Managers dispatch contractors in one click\n• Residents get automatic SMS status updates\n• Real-time progress tracking\n\nAll from one dashboard — zero manual coordination!`;
+    if (w('maintenance', 'repair', 'leak', 'plumbing', 'work order', 'kanban', 'contractor', 'dispatch', 'complain', 'complaint')) {
+      return `NestBloq includes a Kanban Maintenance Desk:\n\n• Tenants log repair tickets with photos\n• Landlords assign contractors with one click\n• Status updates track progress from triage to completion\n• Real-time email notifications keep all parties updated`;
     }
 
-    if (w('amenity', 'amenities', 'pool', 'gym', 'clubhouse', 'book amenity', 'facility booking', 'reserve facility', 'court booking', 'hall booking')) {
-      return `NestBloq lets residents **book amenities in real-time**! \n\n• Pool, gym, clubhouse, banquet halls — all online\n• Automatic double-booking prevention\n• Instant booking confirmation\n• Live availability calendar`;
-    }
-
-    if (w('vote', 'voting', 'election', 'meeting', 'assembly', 'quorum', 'resolution', 'ballot')) {
-      return `NestBloq's **E-Voting system** is secure & fully auditable! ️\n\n• Every vote has a **SHA-256 cryptographic audit trail**\n• Run online general assemblies easily\n• Automatic quorum tracking\n• Auto-generated meeting minutes\n• Legal-grade tamper-proof records`;
-    }
-
-    if (w('dues', 'payment', 'collect payment', 'ach payment', 'plaid', 'outstanding balance', 'ledger', 'pending payment', 'rent collection', 'hoa fee', 'maintenance fee')) {
-      return `NestBloq makes dues collection **100% automated**! \n\n• Residents securely connect bank via **Plaid**\n• Pay by credit card or ACH bank transfer\n• Outstanding balances auto-tracked\n• Automatic late payment reminders\n• Digital ledger entries generated instantly`;
-    }
-
-    if (w('integration', 'integrate', 'zapier', 'quickbooks', 'twilio', 'open api', 'rest api', 'third party', 'connect with', 'api access')) {
-      return `NestBloq integrates with your favorite tools! \n\n• **Stripe & Plaid** — Secure payment processing\n• **Twilio** — SMS & WhatsApp notifications\n• **QuickBooks** — Accounting sync\n• **Zapier** — 5,000+ app connections\n• **Open REST API** — Custom integrations\n\nAll available on Pro & Enterprise plans.`;
-    }
-
-    if (w('hoa', 'homeowner association', 'condominium', 'condo association', 'rental property', 'community type', 'property type', 'residential community')) {
-      return `NestBloq is purpose-built for **all community types**! ️\n\n• **HOA** — Homeowner Association management\n• **Condos** — Condominium association tools\n• **Rentals** — Rental portfolio management\n\nEach module is tailored to the workflows of that community type!`;
+    if (w('property type', 'rental property', 'residential', 'single family', 'apartment', 'multi unit')) {
+      return `NestBloq supports all residential rental types:\n\n• Single Family Homes\n• Multi-Family Residential Buildings & Apartments\n• Condominium Rental Units`;
     }
 
     if (w('who are you', 'what are you', 'your name', 'yourself') || (w('name') && q.split(' ').length <= 5)) {
@@ -219,22 +177,21 @@ export default function InteractiveAssistant() {
     const greetPatterns = ['hi', 'hello', 'hey', 'yo', 'namaste', 'namaskar', 'hola', 'howdy', 'hii', 'hiii', 'hiiii', 'heyyy', 'hello there', 'hey there'];
     const isJustGreeting = greetPatterns.some(g => q === g || q.startsWith(g + ' ') || q.startsWith(g + ',') || q.startsWith(g + '!'));
     if (isJustGreeting) {
-      return `Hello there!  I'm your NestBloq AI Assistant.\n\nAsk me anything — NestBloq plans, features, security, billing, or just have a chat! What's on your mind?`;
+      return `Hello there! I am your NestBloq AI Assistant.\n\nAsk me anything — NestBloq plans, rental features, security, billing, or tenant management. What is on your mind?`;
     }
 
     if (w('what can you do', 'help me', 'capabilities', 'features', 'help')) {
-      return `Here's what I can help with! \n\n️ **NestBloq Plans & Pricing**\n **Security & Privacy**\n **Bylaws AI Copilot**\n **Billing & Credits**\n **Maintenance & Work Orders**\n **Amenity Booking**\n️ **E-Voting & Meetings**\n **General chat too!**\n\nWhat would you like to explore?`;
+      return `Here is what I can help with:\n\n• NestBloq Plans & Pricing\n• Security & Privacy\n• Digital Leases & E-Signatures\n• Rent Collection & Invoicing\n• Maintenance & Vendor Dispatch\n• Tenant Screening\n\nWhat would you like to explore?`;
     }
 
     if (w('thank', 'thanks', 'tysm', 'helpful', 'great answer', 'good job')) {
-      return `You're very welcome!  Happy to help!\n\nFeel free to ask anything else about NestBloq anytime!`;
+      return `You are very welcome! Happy to help.\n\nFeel free to ask anything else about NestBloq anytime.`;
     }
 
     if (w('joke', 'funny', 'laugh', 'comedy', 'humor')) {
       const jokes = [
-        `Why did the property manager carry a ladder? 🪜\nBecause the **rent was going up!** \n\nWith NestBloq, at least the management part is stress-free!`,
-        `Why do HOA managers love NestBloq?\nBecause it finally **fixes the "no response" bug** in community life! `,
-        `Resident: "It has been 3 days since my maintenance request, no response!"\nNestBloq user: "Ours gets resolved within 2 hours!" `
+        `Why did the property manager carry a ladder?\nBecause the rent was going up!\n\nWith NestBloq, at least the management part is stress-free.`,
+        `Why do landlords love NestBloq?\nBecause it automates rent collection and lease renewals!`
       ];
       return jokes[Math.floor(Math.random() * jokes.length)];
     }
@@ -243,11 +200,11 @@ export default function InteractiveAssistant() {
       const now = new Date();
       const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
       const dateStr = now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-      return `Current time: **${timeStr}** ⏰\nToday: **${dateStr}**\n\nAnything else I can help you with?`;
+      return `Current time: ${timeStr}\nToday: ${dateStr}\n\nAnything else I can help you with?`;
     }
 
     if (w('weather', 'temperature', 'rain', 'sunny')) {
-      return `I don't have real-time weather data (I'm not connected to the internet). Check Google or weather.com! ️\n\nFun fact: NestBloq's amenity booking lets residents book outdoor spaces like pools & parks in real-time!`;
+      return `I do not have real-time weather data. Please check Google or weather.com.`;
     }
 
     if (/\d+\s*[\+\-\*\/]\s*\d+/.test(q)) {
@@ -255,29 +212,29 @@ export default function InteractiveAssistant() {
         const sanitized = q.replace(/[^0-9+\-*/().\s]/g, '').trim();
         const result = Function(`"use strict"; return (${sanitized})`)();
         if (!isNaN(result) && isFinite(result)) {
-          return `**${text.trim()}** = **${result}** \n\nSpeaking of numbers — NestBloq's ROI Calculator shows how much time & money your community saves!`;
+          return `${text.trim()} = ${result}\n\nSpeaking of numbers, NestBloq helps calculate automated rent totals and property yields!`;
         }
       } catch { /* fall through */ }
     }
 
     if (w('vs', 'versus', 'compare', 'better than', 'buildium', 'appfolio', 'yardi', 'propertyware', 'alternative to', 'other platform')) {
-      return `NestBloq vs the competition \n\n**vs Buildium / AppFolio / Yardi:**\n•  More affordable — $1.50/unit vs $2–4/unit\n•  Built-in **Bylaws AI Copilot** (unique to NestBloq)\n•  **SHA-256 e-voting** audit trails\n•  Go live in **under 24 hours**\n•  Dedicated onboarding specialist\n\nWant a personalized demo to see the difference?`;
+      return `NestBloq vs the competition:\n\n• More affordable — $1.50/unit vs $2–4/unit\n• Fast setup — Go live in under 24 hours\n• Streamlined digital leases and e-signatures\n• Dedicated onboarding support\n\nWant a live walkthrough?`;
     }
 
     if (w('support', 'contact', 'email support', 'phone support', 'help center', 'customer service', 'helpdesk', 'customer support')) {
-      return `NestBloq support is **available 24/7**! \n\n• **Email**: support@nestbloq.com\n• **Live Chat**: In-dashboard support\n• **Phone**: Dedicated for Enterprise customers\n• **Docs**: docs.nestbloq.com\n\nWe're always here to help!`;
+      return `NestBloq support is available 24/7:\n\n• Email: support@nestbloq.com\n• Live Chat: In-dashboard support\n• Phone: Dedicated for Enterprise customers\n\nWe are always here to help.`;
     }
 
     if (w('roi', 'savings', 'save money', 'save time', 'worth it', 'benefit')) {
-      return `Communities on NestBloq typically see:\n\n **80% reduction** in admin time\n **$500+/month saved** vs manual methods\n **Near-zero late dues** with auto-reminders\n\nTry our **ROI Calculator** to see your projected savings! `;
+      return `Landlords and managers on NestBloq typically see:\n\n• 80% reduction in manual paperwork\n• Automated on-time rent collection\n• Instant contractor work order dispatch`;
     }
 
     if (w('cloud', 'saas', 'mobile app', 'android', 'ios app', 'web app', 'browser support', 'offline mode', 'technology')) {
-      return `NestBloq is a modern **cloud-based SaaS platform**! \n\n• Works in any web browser\n• **Android & iOS** native apps\n• Real-time data sync\n• 99.9% uptime guarantee`;
+      return `NestBloq is a modern cloud-based SaaS platform:\n\n• Fully responsive for mobile and desktop browsers\n• Real-time data sync\n• 99.9% uptime guarantee`;
     }
 
     if (w('demo', 'free trial', 'try nestbloq', 'test nestbloq', 'trial period', 'evaluation')) {
-      return `NestBloq offers a **14-day free trial** — no credit card required! \n\nOr book a **live demo** where our team personally walks you through the platform.\n\n Click **"Get Started"** or **"Book a Demo"** in the top navbar!`;
+      return `NestBloq offers a 14-day free trial with no credit card required.\n\nClick 'Get Started' in the top navigation bar to begin.`;
     }
 
     const cleanQuery = q.replace(/[?.,\/#!$%\^&\*;:{}=\-_`~()]/g, "").trim().toLowerCase();
@@ -287,48 +244,40 @@ export default function InteractiveAssistant() {
 
     const knowledgeBase = [
       {
-        keywords: ['user roles', 'user permissions', 'role isolation', 'rbac', 'access control', 'board member role', 'property manager role', 'resident role', 'homeowner role', 'board president role'],
-        answer: `NestBloq features comprehensive **Role-Based Access Control (RBAC)**:\n\n• **Super Admin / Property Manager** — Full control over settings, billing, dues, violations, and vendor management.\n• **Board Members** — Access to financial ledgers, voting audits, and community oversight.\n• **Homeowners / Residents** — Personal portal to pay dues, book amenities, log requests, and cast votes.\n• **Vendors / Contractors** — Access to specific work orders assigned to them.`
+        keywords: ['user roles', 'user permissions', 'role isolation', 'rbac', 'access control', 'landlord role', 'tenant role', 'super admin role'],
+        answer: `NestBloq features Role-Based Access Control (RBAC):\n\n• Super Admin — Full system oversight and platform analytics.\n• Landlord / Property Owner — Manages properties, creates digital leases, dispatches maintenance, and tracks rental income.\n• Tenant — Views active lease agreements, pays rent online, and submits service requests.\n• Contractors / Vendors — Receives and updates assigned repair tickets.`
       },
       {
         keywords: ['pricing plan', 'pricing plans', 'nestbloq pricing', 'nestbloq cost', 'nestbloq price', 'nestbloq plans', 'subscription cost', 'subscription plan', 'basic plan', 'pro plan', 'enterprise plan'],
-        answer: `NestBloq offers three simple subscription tiers:\n\n• **Basic Plan** ($1.50/unit/month) — Core financial tools, digital ledger, rosters, and basic member invites.\n• **Pro Plan** ($3.00/unit/month) — Includes Bylaws AI Copilot, Kanban maintenance desk, SMS alerts, QuickBooks integration, and SHA-256 secure e-voting.\n• **Enterprise Plan** (Custom Pricing) — Dedicated server, custom REST API, custom integrations, and priority 24/7 phone support.\n\n **Free Trial**: Every account starts with a 14-day free trial (no credit card required!).`
+        answer: `NestBloq offers three simple subscription tiers:\n\n• Basic Plan ($1.50/unit/month) — Core rent invoicing, leases, and tenant portals.\n• Pro Plan ($3.00/unit/month) — Includes Kanban maintenance desk, digital e-signatures, and auto late fees.\n• Enterprise Plan (Custom Pricing) — Dedicated server, custom REST API, and priority 24/7 phone support.\n\nFree Trial: Every account starts with a 14-day free trial.`
       },
       {
-        keywords: ['pay dues', 'collect dues', 'hoa dues', 'hoa fees', 'nestbloq payment', 'stripe payment', 'plaid integration', 'ach transfer', 'automated dues', 'payment reminders'],
-        answer: `NestBloq automates **Dues & Payments** fully:\n\n• **ACH & Credit Cards** — Residents pay directly online through Stripe and Plaid integrations.\n• **Autopay & Reminders** — Residents can enable auto-payments. Admins can schedule automatic email/SMS reminders for past-due balances.\n• **Accounting Ledger** — Payments automatically reconcile and post to the digital ledger.`
+        keywords: ['pay rent', 'collect rent', 'rental dues', 'nestbloq payment', 'stripe payment', 'plaid integration', 'ach transfer', 'automated rent', 'payment reminders'],
+        answer: `NestBloq automates Rent Collection & Payments:\n\n• ACH & Credit Cards — Tenants pay directly online through secure integrations.\n• Automated Invoices & Reminders — Automated monthly rent rolls with past-due reminders.\n• Digital Ledger — Payments automatically reconcile and post to the property ledger.`
       },
       {
         keywords: ['maintenance request', 'maintenance ticket', 'work order', 'workorders', 'kanban board', 'kanban maintenance', 'report leak', 'dispatch contractor', 'dispatch vendor', 'property repair'],
-        answer: `Our **Kanban Maintenance Desk** coordinates repairs from start to finish:\n\n1️⃣ **Resident Logs Issue** — Residents submit requests via their portal with photos and descriptions.\n2️⃣ **Admin Dispatches** — Property managers assign work orders to contractors in one click.\n3️⃣ **Vendor Updates** — Contractors mark items as 'In Progress' or 'Completed'.\n4️⃣ **Auto Alerts** — The system automatically alerts the resident upon resolution via SMS/email.`
+        answer: `Our Kanban Maintenance Desk coordinates repairs from start to finish:\n\n1. Tenant Logs Issue — Tenants submit requests via their portal with photos and descriptions.\n2. Landlord Dispatches — Property managers assign work orders to contractors in one click.\n3. Vendor Updates — Contractors mark items as 'In Progress' or 'Completed'.\n4. Notifications — Real-time email notifications keep everyone informed.`
       },
       {
-        keywords: ['e-voting', 'cast vote', 'nestbloq voting', 'tamper-proof voting', 'voting audit', 'quorum tracking', 'community election', 'community voting', 'board resolution', 'sha-256 voting', 'online voting'],
-        answer: `NestBloq provides a secure, legal-grade **E-Voting System**:\n\n• **Quorum Tracking** — Automatically computes quorum requirements based on community bylaws.\n• **SHA-256 Encryption** — Every vote is cryptographically sealed and logged.\n• **Online Assemblies** — Launch elections and board resolutions online with instant resident notifications.`
-      },
-      {
-        keywords: ['amenity booking', 'amenity bookings', 'reserve amenity', 'book pool', 'book gym', 'book clubhouse', 'book tennis court', 'book facility', 'amenity scheduler'],
-        answer: `The **Amenity Scheduler** makes facility bookings simple:\n\n• **Live Calendar** — Residents view real-time availability for pools, clubhouses, tennis courts, and gym slots.\n• **Double-Booking Protection** — Auto-locks slots to prevent race conditions.\n• **Custom Rules** — Admins set time limits, guest policies, and automated approval requirements per amenity.`
-      },
-      {
-        keywords: ['bylaws', 'bylaw', 'bylaws ai', 'copilot ai', 'ai copilot', 'nestbloq bylaws', 'rulebook ai', 'rules ai', 'bylaws assistant'],
-        answer: `The **Bylaws AI Copilot** is a 24/7 intelligent resident assistant:\n\n• **Automatic Answers** — Reads your community's official rulebooks and bylaws to answer resident questions instantly.\n• **Reduced Admin Load** — Deflects up to 80% of repetitive daily email/phone queries, freeing up board members and managers.`
+        keywords: ['lease agreement', 'digital lease', 'esignature', 'tenant signature', 'landlord signature', 'lease template', 'contract'],
+        answer: `Digital Lease Management in NestBloq:\n\n• Create state-compliant standard residential leases\n• Tenant review and digital e-signature via tenant portal\n• Landlord signature and one-click lease activation\n• Secure document storage for pay stubs and ID proofs`
       },
       {
         keywords: ['nestbloq integration', 'nestbloq integrations', 'integrate with', 'quickbooks sync', 'twilio sms', 'zapier integration', 'nestbloq api', 'api integration'],
-        answer: `NestBloq connects with your existing tech stack:\n\n• **Stripe & Plaid** — Automated online payments.\n• **Twilio** — Real-time SMS and WhatsApp alerts.\n• **QuickBooks** — Sync dues ledger with your bookkeeping.\n• **Zapier & Open REST API** — Connects NestBloq to over 5,000+ third-party tools.`
+        answer: `NestBloq connects with modern tools:\n\n• Stripe & Plaid — Automated online payments\n• Twilio — Real-time SMS and email alerts\n• Open REST API — Custom integrations for enterprise portfolios`
       },
       {
-        keywords: ['who developed you', 'who built you', 'who created you', 'who is your developer', 'who founded you', 'who made you', 'who developed nestbloq', 'who founded nestbloq', 'who created nestbloq', 'crestcode', 'crestcode technology', 'tanuj', 'tongse'],
-        answer: `NestBloq was founded and developed by **Crestcode Technology** to serve as a comprehensive operating system for community and property management.`
+        keywords: ['who developed you', 'who built you', 'who created you', 'who is your developer', 'who founded you', 'who made you', 'who developed nestbloq', 'who founded nestbloq', 'who created nestbloq', 'crestcode', 'crestcode technology'],
+        answer: `NestBloq is engineered by Crestcode Technology as a comprehensive operating system for modern rental property management.`
       },
       {
         keywords: ['nestbloq tech', 'nestbloq technology', 'nestbloq stack', 'tech stack', 'technology stack', 'what is nestbloq built with'],
-        answer: `NestBloq leverages a state-of-the-art technology stack:\n\n• **Frontend**: React.js with Tailwind CSS\n• **Backend**: Python (FastAPI framework)\n• **Database**: PostgreSQL with isolated schema containers\n• **Integrations**: Stripe, Plaid, Twilio, and QuickBooks Sync.`
+        answer: `NestBloq leverages a modern technology stack:\n\n• Frontend: React.js with Tailwind CSS\n• Backend: Python (FastAPI framework)\n• Database: PostgreSQL\n• Integrations: Stripe, Plaid, Twilio`
       },
       {
         keywords: ['where is nestbloq', 'nestbloq location', 'nestbloq office', 'nestbloq hq', 'nestbloq headquarters', 'nestbloq address'],
-        answer: `NestBloq is a cloud-based SaaS platform operated globally, with core product development spearheaded by **Crestcode Technology**. For inquiries, connect with us at **contact@nestbloq.com**.`
+        answer: `NestBloq is a cloud-based SaaS platform operated globally. For inquiries, connect with us at contact@nestbloq.com.`
       }
     ];
 

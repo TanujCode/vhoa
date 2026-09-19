@@ -354,11 +354,11 @@ export default function LandlordOnboardingScreen({ user, onPropertyCreated }) {
                   <div className="text-[10px] font-semibold font-sans pt-0.5">
                     {propCity && propState && /^\d{5}(-\d{4})?$/.test(propZip) ? (
                       <span className="text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
-                        ✓ Address verified (United States)
+                        Address verified (United States)
                       </span>
                     ) : (
                       <span className="text-red-500 dark:text-red-400 flex items-center gap-1">
-                        ⚠️ Invalid US Address. Please select from autocomplete suggestions.
+                        Invalid US Address. Please select from autocomplete suggestions.
                       </span>
                     )}
                   </div>

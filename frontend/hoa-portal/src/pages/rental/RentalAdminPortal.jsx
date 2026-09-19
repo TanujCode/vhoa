@@ -530,7 +530,7 @@ const RentalAdminPortal = () => {
           }}
         />
 
-        <main className="flex-1 overflow-auto p-5 lg:p-7 bg-slate-50 dark:bg-[#1e293b] custom-scrollbar">
+        <main className="flex-1 overflow-auto p-3 sm:p-5 lg:p-7 bg-slate-50 dark:bg-[#1e293b] custom-scrollbar">
           <div className="max-w-[1600px] mx-auto">
             {renderPage()}
           </div>

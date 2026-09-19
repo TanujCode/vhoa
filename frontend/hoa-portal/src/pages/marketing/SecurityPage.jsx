@@ -234,7 +234,7 @@ export default function SecurityPage() {
             </h2>
 
             <p className="text-xs sm:text-sm text-violet-200 max-w-lg mx-auto leading-relaxed">
-              We gladly support enterprise HOA security questionnaires, database isolation preferences, and custom vendor agreements. Talk to our IT compliance specialists.
+              We gladly support enterprise property management security questionnaires, database isolation preferences, and custom vendor agreements. Talk to our IT compliance specialists.
             </p>
 
             <div className="flex flex-wrap items-center justify-center gap-3 pt-2">

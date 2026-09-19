@@ -11,7 +11,7 @@ from app.models.rental.rental_maintenance import RentalMaintenanceRequest
 from app.models.rental.rental_vendor import RentalVendor
 from app.models.rental.rental_user import RentalUser
 from app.schemas.rental import PropertyCreate, UnitCreate, LeaseCreate, RentalApplicationCreate, RentalMaintenanceCreate, RentalVendorCreate, RentalApplicationInvite, RentalApplicationComplete, TenantInfoSubmit
-from app.services.hoa.email_service import send_email, _wrap_in_responsive_layout
+from app.services.email_service import send_email, _wrap_in_responsive_layout
 from app.utils.encryption import safe_decrypt_float
 
 
@@ -247,6 +247,7 @@ def decrypt_lease_obj(l: Lease) -> dict:
         "parking_fee": safe_decrypt_float(l.parking_fee),
         "pet_fee": safe_decrypt_float(l.pet_fee),
         "tenant_email": safe_decrypt_field(l.tenant_email),
+        "maintenance_payer": getattr(l, "maintenance_payer", "LANDLORD") or "LANDLORD",
         
         "tenant_dob": safe_decrypt_field(l.tenant_dob),
         "tenant_current_address": safe_decrypt_field(l.tenant_current_address),
@@ -417,6 +418,7 @@ def create_lease_and_invite(landlord_id: int, data: LeaseCreate, db: Session) ->
         late_fee_amount=enc_late_fee,
         recurring_late_fee_amount=enc_recurring_late_fee,
         recurring_late_fee_frequency=data.recurring_late_fee_frequency or "WEEKLY",
+        maintenance_payer=data.maintenance_payer or "LANDLORD",
         status="PENDING_TENANT_REVIEW",
         lease_agreement_text=enc_lease_text,
         co_landlord_name=enc_co_landlord
@@ -523,6 +525,7 @@ def update_lease(lease_id: int, landlord_id: int, data: LeaseCreate, db: Session
     lease.late_fee_amount = encrypt_float(data.late_fee_amount)
     lease.recurring_late_fee_amount = encrypt_float(data.recurring_late_fee_amount or 0.0)
     lease.recurring_late_fee_frequency = data.recurring_late_fee_frequency or "WEEKLY"
+    lease.maintenance_payer = data.maintenance_payer or "LANDLORD"
     lease.co_landlord_name = encrypt_field(data.co_landlord_name)
     if data.lease_agreement_text:
         lease.lease_agreement_text = encrypt_field(data.lease_agreement_text)
@@ -1691,7 +1694,7 @@ def send_rental_maintenance_created_emails(req: RentalMaintenanceRequest, db: Se
     try:
         from app.utils.encryption import safe_decrypt_field
         from app.config import settings
-        from app.services.hoa.email_service import send_email, _wrap_in_responsive_layout
+        from app.services.email_service import send_email, _wrap_in_responsive_layout
 
         lease = req.lease or db.query(Lease).filter(Lease.lease_id == req.lease_id).first()
         if not lease:
@@ -1815,7 +1818,7 @@ def send_rental_maintenance_status_updated_email(req: RentalMaintenanceRequest, 
     try:
         from app.utils.encryption import safe_decrypt_field
         from app.config import settings
-        from app.services.hoa.email_service import send_email, _wrap_in_responsive_layout
+        from app.services.email_service import send_email, _wrap_in_responsive_layout
 
         lease = req.lease or db.query(Lease).filter(Lease.lease_id == req.lease_id).first()
         if not lease:
@@ -1894,12 +1897,21 @@ def send_rental_maintenance_status_updated_email(req: RentalMaintenanceRequest, 
 
 # --- RENTAL MAINTENANCE SERVICE FUNCTIONS ---
 def submit_maintenance_request(data: RentalMaintenanceCreate, db: Session) -> RentalMaintenanceRequest:
+    resp_party = getattr(data, 'responsible_party', None)
+    if not resp_party:
+        lease = db.query(Lease).filter(Lease.lease_id == data.lease_id).first()
+        if lease and getattr(lease, 'maintenance_payer', None):
+            resp_party = lease.maintenance_payer
+    if not resp_party:
+        resp_party = "LANDLORD"
+
     new_request = RentalMaintenanceRequest(
         lease_id=data.lease_id,
         title=data.title,
         description=data.description,
         priority=data.priority,
         scope=data.scope,
+        responsible_party=resp_party,
         status="OPEN",
         estimated_cost=0.0,
         payment_status="N/A"
@@ -1924,13 +1936,16 @@ def get_maintenance_requests_by_landlord(landlord_id: int, db: Session, is_super
     return db.query(RentalMaintenanceRequest).join(Lease).filter(Lease.landlord_id == landlord_id).all()
 
 
-def update_maintenance_request(request_id: int, status: str, vendor_id: Optional[int], estimated_cost: Optional[float], db: Session) -> RentalMaintenanceRequest:
+def update_maintenance_request(request_id: int, status: str, vendor_id: Optional[int], estimated_cost: Optional[float], db: Session, responsible_party: Optional[str] = None) -> RentalMaintenanceRequest:
     requestObj = db.query(RentalMaintenanceRequest).filter(RentalMaintenanceRequest.request_id == request_id).first()
     if not requestObj:
         raise ValueError("Maintenance request not found.")
     
     old_status = requestObj.status
     vendor_name = None
+
+    if responsible_party:
+        requestObj.responsible_party = responsible_party
 
     if vendor_id is not None:
         requestObj.vendor_id = vendor_id if vendor_id > 0 else None
@@ -2017,7 +2032,7 @@ def add_tenant_note_to_maintenance(request_id: int, note_text: str, user_id: int
     # Notify landlord of note
     try:
         from app.config import settings
-        from app.services.hoa.email_service import send_email, _wrap_in_responsive_layout
+        from app.services.email_service import send_email, _wrap_in_responsive_layout
         lease = req.lease
         if lease and lease.landlord and lease.landlord.email_id:
             tenant_name = (lease.tenant.full_name.strip() if (lease.tenant and lease.tenant.full_name) else "") or "Resident"

@@ -18,6 +18,7 @@ class Lease(Base):
     grace_period_days = Column(Integer, default=5)
     late_fee_type = Column(String(20), default="FLAT")          # FLAT
     recurring_late_fee_frequency = Column(String(20), default="WEEKLY")  # WEEKLY | DAILY | NONE
+    maintenance_payer = Column(String(30), default="LANDLORD")  # LANDLORD | TENANT
     status = Column(String(30), default="PENDING_TENANT_REVIEW")
     # Statuses: PENDING_TENANT_REVIEW | PENDING_LANDLORD_APPROVAL | ACTIVE | EXPIRED | TERMINATED
     created_date = Column(DateTime(timezone=True), server_default=func.now())

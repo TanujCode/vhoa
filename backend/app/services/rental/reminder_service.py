@@ -9,7 +9,7 @@ from app.models.rental.rental_user import RentalUser
 from app.models.rental.unit import Unit
 from app.models.rental.property import Property
 from app.utils.encryption import safe_decrypt_field, safe_decrypt_float
-from app.services.hoa.email_service import send_email, _wrap_in_responsive_layout
+from app.services.email_service import send_email, _wrap_in_responsive_layout
 from app.config import settings
 
 

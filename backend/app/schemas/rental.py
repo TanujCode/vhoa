@@ -198,6 +198,26 @@ class TenantInfoSubmit(BaseModel):
     num_occupants: Optional[int] = 1
     num_minors: Optional[int] = 0
 
+    @field_validator("tenant_dob")
+    @classmethod
+    def validate_dob(cls, v):
+        if not v or not v.strip():
+            raise ValueError("Date of birth is required.")
+        from datetime import datetime, date
+        try:
+            birth_date = datetime.strptime(v.strip(), "%Y-%m-%d").date()
+        except ValueError:
+            raise ValueError("Date of birth must be in YYYY-MM-DD format.")
+        today = date.today()
+        if birth_date > today:
+            raise ValueError("Date of birth cannot be in the future.")
+        age = today.year - birth_date.year - ((today.month, today.day) < (birth_date.month, birth_date.day))
+        if age < 18:
+            raise ValueError("Tenant must be at least 18 years old to sign a legally binding lease.")
+        if age > 115:
+            raise ValueError("Please enter a valid date of birth.")
+        return v.strip()
+
 
 
 class LeaseCreate(BaseModel):
@@ -218,6 +238,7 @@ class LeaseCreate(BaseModel):
     parking_fee: float = 0.0
     pet_fee: float = 0.0
     co_landlord_name: Optional[str] = None
+    maintenance_payer: Optional[str] = "LANDLORD"
 
 
 class LeaseOut(BaseModel):
@@ -234,6 +255,7 @@ class LeaseOut(BaseModel):
     late_fee_amount: float
     recurring_late_fee_amount: Optional[float] = 0.0
     recurring_late_fee_frequency: Optional[str] = "WEEKLY"
+    maintenance_payer: Optional[str] = "LANDLORD"
     status: str
     lease_agreement_text: Optional[str] = None
     landlord_signature: Optional[str] = None
@@ -373,6 +395,7 @@ class RentalMaintenanceCreate(BaseModel):
     description: Optional[str] = ""
     priority: str = "NORMAL"  # LOW, NORMAL, HIGH, URGENT
     scope: str = "INTERNAL"  # INTERNAL, EXTERNAL_HOA
+    responsible_party: Optional[str] = "LANDLORD"  # LANDLORD, TENANT
 
     @field_validator("title")
     @classmethod
@@ -433,6 +456,7 @@ class RentalMaintenanceOut(BaseModel):
     priority: str
     status: str
     scope: str
+    responsible_party: Optional[str] = "LANDLORD"
     vendor_id: Optional[int] = None
     estimated_cost: float
     payment_status: str
@@ -524,5 +548,31 @@ class RentalVendorOut(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class ProfileUpdateRequest(BaseModel):
+    first_name: Optional[str] = None
+    middle_name: Optional[str] = None
+    last_name: Optional[str] = None
+    mobile_number: Optional[str] = None
+    time_zone: Optional[str] = None
+
+
+class AuditLogOut(BaseModel):
+    audit_id: int
+    user_id: Optional[int] = None
+    action: str
+    module: str
+    description: Optional[str] = None
+    community_id: Optional[int] = None
+    ip_address: Optional[str] = None
+    old_value: Optional[str] = None
+    new_value: Optional[str] = None
+    created_at: datetime
+    user_name: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
 
 

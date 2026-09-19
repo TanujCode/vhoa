@@ -48,9 +48,9 @@ class RegisterRequest(BaseModel):
     @field_validator("role")
     @classmethod
     def role_valid(cls, v):
-        allowed = {"resident", "landlord", "tenant"}
+        allowed = {"landlord", "tenant"}
         if v not in allowed:
-            raise ValueError("Only resident, landlord, and tenant roles are allowed to sign up.")
+            raise ValueError("Only landlord and tenant roles are allowed to sign up.")
         return v
 
     @field_validator("mobile_number")

@@ -1,0 +1,15 @@
+ADD: 
+STATUS: M  backend/app/config.py
+M  backend/app/main.py
+M  backend/app/schemas/meeting_survey.py
+A  backend/app/test_write.py
+A  fix_main.py
+M  frontend/hoa-portal/vite.config.js
+M  git_push.py
+
+COMMIT: [main c749299] Fix backend main.py startup, CORS origins config, and sync all recent updates
+ 7 files changed, 260 insertions(+), 1237 deletions(-)
+ create mode 100644 backend/app/test_write.py
+ create mode 100644 fix_main.py
+
+PUSH: 

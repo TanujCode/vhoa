@@ -1,1 +1,1 @@
-# Package
+# HOA model removed

@@ -2,10 +2,11 @@ from app.utils.encryption import safe_decrypt_field, safe_decrypt_float
 
 
 # ══════════════════════════════════════════════
-#  RENTAL DECRYPTION HELPERS
+#  RENTAL DECRYPTION HELPERS (AES-256-GCM)
 # ══════════════════════════════════════════════
 
 def decrypt_user_obj(u) -> dict:
+    """Decrypts encrypted fields of a RentalUser model instance."""
     if not u:
         return None
     return {
@@ -31,6 +32,7 @@ def decrypt_user_obj(u) -> dict:
     }
 
 def decrypt_application_obj(a) -> dict:
+    """Decrypts encrypted fields of a RentalApplication model instance."""
     if not a:
         return None
     
@@ -66,6 +68,7 @@ def decrypt_application_obj(a) -> dict:
     }
 
 def decrypt_vendor_obj(v) -> dict:
+    """Decrypts encrypted fields of a RentalVendor model instance."""
     if not v:
         return None
     return {
@@ -84,246 +87,4 @@ def decrypt_vendor_obj(v) -> dict:
         "active_status": v.active_status,
         "created_date": v.created_date,
         "landlord": v.landlord
-    }
-
-
-# ══════════════════════════════════════════════
-#  HOA DECRYPTION HELPERS
-# ══════════════════════════════════════════════
-
-def decrypt_hoa_user(u) -> dict:
-    if not u:
-        return None
-    return {
-        "user_id": u.user_id,
-        "user_code": u.user_code,
-        "first_name": safe_decrypt_field(u.first_name) or "",
-        "middle_name": safe_decrypt_field(u.middle_name),
-        "last_name": safe_decrypt_field(u.last_name) or "",
-        "full_name": f"{safe_decrypt_field(u.first_name) or ''} {safe_decrypt_field(u.last_name) or ''}".strip(),
-        "mobile_number": safe_decrypt_field(u.mobile_number),
-        "mobile_is_verified": u.mobile_is_verified,
-        "email_id": u.email_id,
-        "email_id_is_verified": u.email_id_is_verified,
-        "account_status": u.account_status,
-        "time_zone": u.time_zone,
-        "role_id": u.role_id,
-        "unit_no": u.unit_no,
-        "unit_no_2": u.unit_no_2,
-        "active_status": u.active_status,
-        "user_profile_url": safe_decrypt_field(u.user_profile_url),
-        "id_proof_url": safe_decrypt_field(u.id_proof_url),
-        "address_proof_url": safe_decrypt_field(u.address_proof_url),
-        "created_date": u.created_date,
-        "last_login": u.last_login
-    }
-
-def decrypt_hoa_community(c) -> dict:
-    if not c:
-        return None
-    return {
-        "community_id": c.community_id,
-        "name": c.name,
-        "community_code": c.community_code,
-        "contact_person": safe_decrypt_field(c.contact_person),
-        "bank_name": safe_decrypt_field(c.bank_name),
-        "bank_account_no": safe_decrypt_field(c.bank_account_no),
-        "bank_routing_no": safe_decrypt_field(c.bank_routing_no),
-        "bank_account_name": safe_decrypt_field(c.bank_account_name),
-        "time_zone": c.time_zone,
-        "active_status": c.active_status,
-    }
-
-def decrypt_hoa_vendor(v) -> dict:
-    if not v:
-        return None
-    return {
-        "vendor_id": v.vendor_id,
-        "community_id": v.community_id,
-        "company_name": safe_decrypt_field(v.company_name) or "",
-        "contact_person": safe_decrypt_field(v.contact_person) or "",
-        "email": safe_decrypt_field(v.email) or "",
-        "phone": safe_decrypt_field(v.phone) or "",
-        "zip_code": v.zip_code,
-        "category": v.category,
-        "license_number": safe_decrypt_field(v.license_number),
-        "license_expiry": v.license_expiry,
-        "insurance_number": safe_decrypt_field(v.insurance_number),
-        "insurance_expiry": v.insurance_expiry,
-        "license_doc_url": safe_decrypt_field(v.license_doc_url),
-        "insurance_doc_url": safe_decrypt_field(v.insurance_doc_url),
-        "vendor_access_code": v.vendor_access_code,
-        "access_code_used": v.access_code_used,
-        "contract_code": v.contract_code,
-        "active_status": v.active_status,
-        "onboard_status": v.onboard_status,
-        "created_date": v.created_date
-    }
-
-def decrypt_hoa_contract(c) -> dict:
-    if not c:
-        return None
-    return {
-        "contract_id": c.contract_id,
-        "contract_code": c.contract_code,
-        "sales_agent_id": c.sales_agent_id,
-        "sales_agent_name": c.sales_agent_name,
-        "status": c.status,
-        "client_first_name": safe_decrypt_field(c.client_first_name),
-        "client_middle_name": safe_decrypt_field(c.client_middle_name),
-        "client_last_name": safe_decrypt_field(c.client_last_name),
-        "client_address": safe_decrypt_field(c.client_address),
-        "client_city": c.client_city,
-        "client_zip_code": c.client_zip_code,
-        "client_country": c.client_country,
-        "client_phone_number": safe_decrypt_field(c.client_phone_number),
-        "client_email_address": safe_decrypt_field(c.client_email_address),
-        "business_name": safe_decrypt_field(c.business_name),
-        "business_address": safe_decrypt_field(c.business_address),
-        "business_phone_number": safe_decrypt_field(c.business_phone_number),
-        "client_preferred_communication_channel": c.client_preferred_communication_channel,
-        "plan_selected": c.plan_selected,
-        "annual_renewal_fee": c.annual_renewal_fee,
-        "one_time_set_up": c.one_time_set_up,
-        "size_of_the_community": c.size_of_the_community,
-        "renewal_cycle": c.renewal_cycle,
-        "payment_method_details": safe_decrypt_field(c.payment_method_details),
-        "onboarded_community_id": c.onboarded_community_id,
-        "onboarded_user_id": c.onboarded_user_id,
-        "created_date": c.created_date,
-        "created_by_id": c.created_by_id,
-        "last_updated": c.last_updated,
-        "last_updated_by_id": c.last_updated_by_id,
-    }
-
-
-# ══════════════════════════════════════════════
-#  CONDO DECRYPTION HELPERS
-# ══════════════════════════════════════════════
-
-def decrypt_condo_user(u) -> dict:
-    if not u:
-        return None
-    return {
-        "user_id": u.user_id,
-        "user_code": u.user_code,
-        "first_name": safe_decrypt_field(u.first_name) or "",
-        "middle_name": safe_decrypt_field(u.middle_name),
-        "last_name": safe_decrypt_field(u.last_name) or "",
-        "full_name": f"{safe_decrypt_field(u.first_name) or ''} {safe_decrypt_field(u.last_name) or ''}".strip(),
-        "mobile_number": safe_decrypt_field(u.mobile_number),
-        "mobile_is_verified": u.mobile_is_verified,
-        "email_id": u.email_id,
-        "email_id_is_verified": u.email_id_is_verified,
-        "account_status": u.account_status,
-        "time_zone": u.time_zone,
-        "role_id": u.role_id,
-        "community_id": u.community_id,
-        "unit_no": u.unit_no,
-        "unit_no_2": u.unit_no_2,
-        "active_status": u.active_status,
-        "user_profile_url": safe_decrypt_field(u.user_profile_url),
-        "id_proof_url": safe_decrypt_field(u.id_proof_url),
-        "address_proof_url": safe_decrypt_field(u.address_proof_url),
-        "created_date": u.created_date,
-        "last_login": u.last_login
-    }
-
-def decrypt_condo_community(c) -> dict:
-    if not c:
-        return None
-    return {
-        "community_id": c.community_id,
-        "name": c.name,
-        "community_code": c.community_code,
-        "address_line": c.address_line,
-        "city": c.city,
-        "state": c.state,
-        "zip_code": c.zip_code,
-        "bank_name": safe_decrypt_field(c.bank_name),
-        "bank_account_no": safe_decrypt_field(c.bank_account_no),
-        "bank_routing_no": safe_decrypt_field(c.bank_routing_no),
-        "bank_account_name": safe_decrypt_field(c.bank_account_name),
-        "time_zone": c.time_zone,
-        "active_status": c.active_status,
-    }
-
-def decrypt_condo_vendor(v) -> dict:
-    if not v:
-        return None
-    return {
-        "vendor_id": v.vendor_id,
-        "community_id": v.community_id,
-        "company_name": safe_decrypt_field(v.company_name) or "",
-        "contact_person": safe_decrypt_field(v.contact_person) or "",
-        "email": safe_decrypt_field(v.email) or "",
-        "phone": safe_decrypt_field(v.phone) or "",
-        "zip_code": v.zip_code,
-        "category": v.category,
-        "license_number": safe_decrypt_field(v.license_number),
-        "license_expiry": v.license_expiry,
-        "insurance_number": safe_decrypt_field(v.insurance_number),
-        "insurance_expiry": v.insurance_expiry,
-        "license_doc_url": safe_decrypt_field(v.license_doc_url),
-        "insurance_doc_url": safe_decrypt_field(v.insurance_doc_url),
-        "vendor_access_code": v.vendor_access_code,
-        "access_code_used": v.access_code_used,
-        "contract_code": v.contract_code,
-        "active_status": v.active_status,
-        "onboard_status": v.onboard_status,
-        "created_date": v.created_date
-    }
-
-def decrypt_condo_contract(c) -> dict:
-    if not c:
-        return None
-    return {
-        "contract_id": c.contract_id,
-        "contract_code": c.contract_code,
-        "sales_agent_id": c.sales_agent_id,
-        "sales_agent_name": c.sales_agent_name,
-        "status": c.status,
-        "client_first_name": safe_decrypt_field(c.client_first_name),
-        "client_middle_name": safe_decrypt_field(c.client_middle_name),
-        "client_last_name": safe_decrypt_field(c.client_last_name),
-        "client_address": safe_decrypt_field(c.client_address),
-        "client_city": c.client_city,
-        "client_zip_code": c.client_zip_code,
-        "client_country": c.client_country,
-        "client_phone_number": safe_decrypt_field(c.client_phone_number),
-        "client_email_address": safe_decrypt_field(c.client_email_address),
-        "business_name": safe_decrypt_field(c.business_name),
-        "business_address": safe_decrypt_field(c.business_address),
-        "business_phone_number": safe_decrypt_field(c.business_phone_number),
-        "client_preferred_communication_channel": c.client_preferred_communication_channel,
-        "plan_selected": c.plan_selected,
-        "annual_renewal_fee": c.annual_renewal_fee,
-        "one_time_set_up": c.one_time_set_up,
-        "size_of_the_building": c.size_of_the_building,
-        "renewal_cycle": c.renewal_cycle,
-        "payment_method_details": safe_decrypt_field(c.payment_method_details),
-        "onboarded_community_id": c.onboarded_community_id,
-        "onboarded_user_id": c.onboarded_user_id,
-        "created_date": c.created_date,
-        "created_by_id": c.created_by_id,
-        "last_updated": c.last_updated,
-        "last_updated_by_id": c.last_updated_by_id,
-    }
-
-def decrypt_condo_visitor(v) -> dict:
-    if not v:
-        return None
-    return {
-        "pass_id": v.pass_id,
-        "community_id": v.community_id,
-        "resident_id": v.resident_id,
-        "guest_name": safe_decrypt_field(v.guest_name) or "",
-        "guest_phone": safe_decrypt_field(v.guest_phone) or "",
-        "otp_code": v.otp_code,
-        "vehicle_no": safe_decrypt_field(v.vehicle_no) or "",
-        "status": v.status,
-        "check_in_time": v.check_in_time,
-        "check_out_time": v.check_out_time,
-        "created_date": v.created_date,
-        "resident": v.resident
     }

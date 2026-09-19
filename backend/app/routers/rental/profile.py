@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from sqlalchemy.orm import Session
 from app.database import get_rental_db
 from app.models.rental.rental_user import RentalUser
-from app.schemas.user import ProfileUpdateRequest
+from app.schemas.rental import ProfileUpdateRequest
 from app.utils.file_service import delete_profile_picture, save_document
 from app.routers.rental.dependencies import get_current_rental_user
 from app.routers.rental.auth import rental_get_me
@@ -209,7 +209,7 @@ def update_vehicle_pet_info(
 
         # Send Email notification to Landlord
         try:
-            from app.services.hoa.email_service import send_email, _wrap_in_responsive_layout
+            from app.services.email_service import send_email, _wrap_in_responsive_layout
             from app.utils.encryption import safe_decrypt_field
             
             landlord = lease.landlord or db.query(RentalUser).filter(RentalUser.user_id == lease.landlord_id).first()

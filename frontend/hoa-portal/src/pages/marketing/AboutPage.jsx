@@ -443,7 +443,7 @@ export default function AboutPage() {
                 Get Started Free
               </Link>
               <Link
-                to="/features"
+                to="/#features"
                 className="px-8 py-3.5 bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold text-xs sm:text-sm rounded-full transition-all active:scale-95"
               >
                 Explore Features

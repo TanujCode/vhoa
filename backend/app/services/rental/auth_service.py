@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 
 from app.models.rental.rental_user import RentalUser
 from app.models.rental.rental_otp import RentalOtpToken
-from app.services.hoa.token_service import hash_password
+from app.services.token_service import hash_password
 
 
 # ══════════════════════════════════════════════
@@ -156,7 +156,7 @@ def login_rental_user(email_id: str, password: str, db: Session) -> dict:
     if not user.active_status or user.account_status == "INACTIVE":
         raise ValueError("Account is inactive. Contact support.")
 
-    from app.services.hoa.token_service import verify_password
+    from app.services.token_service import verify_password
     if not verify_password(password, user.password):
         user.login_attempts = (user.login_attempts or 0) + 1
 
@@ -183,7 +183,7 @@ def login_rental_user(email_id: str, password: str, db: Session) -> dict:
     role_name = user.role.role_name if user.role else None
     email_verified = user.email_id_is_verified
 
-    from app.services.hoa.token_service import create_access_token, create_session_token
+    from app.services.token_service import create_access_token, create_session_token
     from app.config import settings
     from app.utils.decryption_helpers import decrypt_user_obj
     return {

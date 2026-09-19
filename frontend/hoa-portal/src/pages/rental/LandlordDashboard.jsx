@@ -645,28 +645,28 @@ export default function LandlordDashboard({
     <div className="space-y-8 animate-fade-in text-left pb-16 font-sans">
       
       {/* ── Balanced Header Banner (Matching Metric Cards Height) ── */}
-      <div className="bg-white dark:bg-[#28384E] border border-slate-200/80 dark:border-white/10 rounded-2xl p-5 sm:p-6 text-slate-800 dark:text-white shadow-sm dark:shadow-md relative overflow-visible flex flex-col lg:flex-row justify-between items-stretch lg:items-center gap-5 sm:gap-6 animate-fade-in min-h-[140px]">
+      <div className="bg-white dark:bg-[#28384E] border border-slate-200/80 dark:border-white/10 rounded-2xl p-4 sm:p-6 text-slate-800 dark:text-white shadow-sm dark:shadow-md relative overflow-visible flex flex-col lg:flex-row justify-between items-stretch lg:items-center gap-4 sm:gap-6 animate-fade-in min-h-0 lg:min-h-[140px]">
         {/* Subtle premium light blue glow */}
         <div className="absolute inset-0 rounded-2xl overflow-hidden pointer-events-none">
           <div className="absolute top-0 right-0 w-64 h-32 bg-blue-500/[0.05] dark:bg-blue-400/[0.04] rounded-full blur-2xl" />
         </div>
 
         {/* Left Column: 1-Line Welcome + Badges & Quick Controls */}
-        <div className="relative z-10 flex flex-col justify-between gap-3 flex-1">
+        <div className="relative z-10 flex flex-col justify-between gap-3 flex-1 min-w-0">
           {/* Top Row: Welcome & Badges */}
-          <div className="flex flex-wrap items-center gap-2.5 sm:gap-3">
-            <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-white whitespace-nowrap flex items-center gap-2 shrink-0">
-              <span>Welcome, {user?.name?.split(' ')[0] || 'Admin'}!</span>
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+            <h1 className="text-lg sm:text-2xl font-black tracking-tight text-slate-900 dark:text-white flex items-center gap-1.5 sm:gap-2 flex-wrap min-w-0">
+              <span className="truncate">Welcome, {user?.name?.split(' ')[0] || 'Admin'}!</span>
               <Sparkles className="w-5 h-5 text-blue-500 dark:text-blue-400 animate-pulse shrink-0" />
             </h1>
 
             <div className="h-4 w-[1px] bg-slate-200 dark:bg-white/10 hidden sm:block" />
 
-            <div className="flex items-center gap-1.5 shrink-0">
-              <span className="inline-flex items-center text-[10px] font-bold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-white/10 px-2.5 py-0.5 rounded-lg border border-slate-200/50 dark:border-white/10 font-mono whitespace-nowrap">
+            <div className="flex items-center gap-1.5 shrink-0 flex-wrap">
+              <span className="inline-flex items-center text-[10px] font-bold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-white/10 px-2 sm:px-2.5 py-0.5 rounded-lg border border-slate-200/50 dark:border-white/10 font-mono whitespace-nowrap">
                 Properties: {properties.length}
               </span>
-              <span className="inline-flex items-center text-[10px] font-black text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-lg border border-emerald-500/20 whitespace-nowrap">
+              <span className="inline-flex items-center text-[10px] font-black text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 px-2 sm:px-2.5 py-0.5 rounded-lg border border-emerald-500/20 whitespace-nowrap">
                 ACTIVE
               </span>
             </div>
@@ -739,7 +739,7 @@ export default function LandlordDashboard({
 
         {/* Right side status pods: Action Required & Tenant Requests */}
         <div className="relative z-10 w-full lg:w-auto pt-3 lg:pt-0 border-t border-slate-200/60 dark:border-white/5 lg:border-t-0 shrink-0 flex items-center">
-          <div className="flex flex-row items-center justify-start lg:justify-end gap-6 sm:gap-8">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-start lg:justify-end gap-3 sm:gap-8 w-full sm:w-auto">
             
             {/* Action Required */}
             <div 
@@ -749,9 +749,9 @@ export default function LandlordDashboard({
                 else if (openMaint.length > 0) setActivePage('servicereq');
                 else setActivePage('leases_hub');
               }}
-              className="cursor-pointer group flex items-center gap-3 transition-all text-left"
+              className="cursor-pointer group flex items-center gap-3 transition-all text-left p-2 sm:p-0 rounded-xl hover:bg-slate-50 dark:hover:bg-white/5 sm:hover:bg-transparent"
             >
-              <div className={`p-3 rounded-2xl shrink-0 transition-transform group-hover:scale-110 ${
+              <div className={`p-2.5 sm:p-3 rounded-2xl shrink-0 transition-transform group-hover:scale-110 ${
                 totalActionsCount > 0 
                   ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400' 
                   : 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400'
@@ -759,7 +759,7 @@ export default function LandlordDashboard({
                 {totalActionsCount > 0 ? <AlertCircle className="w-5 h-5 animate-pulse" /> : <CheckCircle2 className="w-5 h-5" />}
               </div>
 
-              <div>
+              <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-1.5">
                   <span className="text-[11px] font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 whitespace-nowrap">
                     Action Required
@@ -787,18 +787,18 @@ export default function LandlordDashboard({
             </div>
 
             {/* Subtle Vertical Divider */}
-            <div className="h-10 w-[1px] bg-slate-200/80 dark:bg-white/10" />
+            <div className="h-10 w-[1px] bg-slate-200/80 dark:bg-white/10 hidden sm:block" />
 
             {/* Tenant Requests */}
             <div 
               onClick={() => setActivePage('servicereq')}
-              className="cursor-pointer group flex items-center gap-3 transition-all text-left"
+              className="cursor-pointer group flex items-center gap-3 transition-all text-left p-2 sm:p-0 rounded-xl hover:bg-slate-50 dark:hover:bg-white/5 sm:hover:bg-transparent"
             >
-              <div className="p-3 rounded-2xl bg-blue-500/15 text-blue-600 dark:text-blue-400 shrink-0 transition-transform group-hover:scale-110">
+              <div className="p-2.5 sm:p-3 rounded-2xl bg-blue-500/15 text-blue-600 dark:text-blue-400 shrink-0 transition-transform group-hover:scale-110">
                 <Wrench className="w-5 h-5" />
               </div>
 
-              <div>
+              <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-1.5">
                   <span className="text-[11px] font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 whitespace-nowrap">
                     Tenant Requests
@@ -878,23 +878,23 @@ export default function LandlordDashboard({
       )}
 
       {/* --- Main 4-Metrics Row (Interactive & Clickable) --- */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-6">
         
         {/* Metric 1: Rent Received -> Opens Payments Hub */}
         <div 
           onClick={() => setActivePage('payments')}
-          className="p-6 rounded-2xl bg-white dark:bg-[#28384E] border border-slate-200/80 dark:border-white/10 hover:border-emerald-500/50 hover:shadow-xl transition-all duration-200 flex flex-col justify-between cursor-pointer group active:scale-[0.99] relative min-h-[140px] shadow-sm dark:shadow-md"
+          className="p-4 sm:p-6 rounded-2xl bg-white dark:bg-[#28384E] border border-slate-200/80 dark:border-white/10 hover:border-emerald-500/50 hover:shadow-xl transition-all duration-200 flex flex-col justify-between cursor-pointer group active:scale-[0.99] relative min-h-[130px] sm:min-h-[140px] shadow-sm dark:shadow-md"
         >
           <div className="flex justify-between items-start">
             <div>
               <span className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest block group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">Rent received</span>
-              <span className="text-2xl font-black text-gray-950 dark:text-white mt-1 block">${rentPaid.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+              <span className="text-xl sm:text-2xl font-black text-gray-950 dark:text-white mt-1 block">${rentPaid.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
             </div>
-            <div className="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 group-hover:scale-110 group-hover:bg-emerald-500 group-hover:text-white transition-all shadow-sm">
+            <div className="p-2 sm:p-2.5 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 group-hover:scale-110 group-hover:bg-emerald-500 group-hover:text-white transition-all shadow-sm">
               <CreditCard className="w-5 h-5" />
             </div>
           </div>
-          <div className="mt-5 space-y-2">
+          <div className="mt-4 sm:mt-5 space-y-2">
             <div className="flex justify-between items-center text-[10px] font-bold text-gray-400 dark:text-gray-400">
               <span className="group-hover:text-slate-700 dark:group-hover:text-slate-200 transition-colors">Collection Rate</span>
               <span className="text-emerald-500 flex items-center gap-0.5">{rentCollectedPercent}% <ArrowUpRight className="w-3 h-3 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" /></span>
@@ -911,18 +911,18 @@ export default function LandlordDashboard({
         {/* Metric 2: Unpaid Expenses -> Opens Payments Hub */}
         <div 
           onClick={() => setActivePage('payments')}
-          className="p-6 rounded-2xl bg-white dark:bg-[#28384E] border border-slate-200/80 dark:border-white/10 hover:border-rose-500/50 hover:shadow-xl transition-all duration-200 flex flex-col justify-between cursor-pointer group active:scale-[0.99] relative min-h-[140px] shadow-sm dark:shadow-md"
+          className="p-4 sm:p-6 rounded-2xl bg-white dark:bg-[#28384E] border border-slate-200/80 dark:border-white/10 hover:border-rose-500/50 hover:shadow-xl transition-all duration-200 flex flex-col justify-between cursor-pointer group active:scale-[0.99] relative min-h-[130px] sm:min-h-[140px] shadow-sm dark:shadow-md"
         >
           <div className="flex justify-between items-start">
             <div>
               <span className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest block group-hover:text-rose-600 dark:group-hover:text-rose-400 transition-colors">Unpaid expenses</span>
-              <span className="text-2xl font-black text-gray-950 dark:text-white mt-1 block">${unpaidExpensesAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+              <span className="text-xl sm:text-2xl font-black text-gray-950 dark:text-white mt-1 block">${unpaidExpensesAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
             </div>
-            <div className="p-2.5 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400 group-hover:scale-110 group-hover:bg-rose-500 group-hover:text-white transition-all shadow-sm">
+            <div className="p-2 sm:p-2.5 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400 group-hover:scale-110 group-hover:bg-rose-500 group-hover:text-white transition-all shadow-sm">
               <ArrowDownRight className="w-5 h-5" />
             </div>
           </div>
-          <div className="mt-5 flex items-center justify-between text-xs font-bold">
+          <div className="mt-4 sm:mt-5 flex items-center justify-between text-xs font-bold">
             <span className="text-gray-400 dark:text-gray-400 group-hover:text-slate-700 dark:group-hover:text-slate-200 transition-colors">Active Invoices</span>
             <span className="bg-rose-500/10 text-rose-600 dark:text-rose-400 group-hover:bg-rose-500 group-hover:text-white px-2 py-0.5 rounded-md font-mono text-[10px] flex items-center gap-1 transition-colors">
               {unpaidExpensesCount} unpaid <ArrowRight className="w-2.5 h-2.5" />
@@ -933,18 +933,18 @@ export default function LandlordDashboard({
         {/* Metric 3: Overdue Rent -> Opens Payments Hub */}
         <div 
           onClick={() => setActivePage('payments')}
-          className="p-6 rounded-2xl bg-white dark:bg-[#28384E] border border-slate-200/80 dark:border-white/10 hover:border-amber-500/50 hover:shadow-xl transition-all duration-200 flex flex-col justify-between cursor-pointer group active:scale-[0.99] relative min-h-[140px] shadow-sm dark:shadow-md"
+          className="p-4 sm:p-6 rounded-2xl bg-white dark:bg-[#28384E] border border-slate-200/80 dark:border-white/10 hover:border-amber-500/50 hover:shadow-xl transition-all duration-200 flex flex-col justify-between cursor-pointer group active:scale-[0.99] relative min-h-[130px] sm:min-h-[140px] shadow-sm dark:shadow-md"
         >
           <div className="flex justify-between items-start">
             <div>
               <span className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest block group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">Overdue rent</span>
-              <span className="text-2xl font-black text-gray-950 dark:text-white mt-1 block">${overdueRentAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+              <span className="text-xl sm:text-2xl font-black text-gray-950 dark:text-white mt-1 block">${overdueRentAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
             </div>
             <div className="p-2.5 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 group-hover:scale-110 group-hover:bg-amber-500 group-hover:text-white transition-all shadow-sm">
               <Clock className="w-5 h-5" />
             </div>
           </div>
-          <div className="mt-5 flex items-center justify-between text-xs font-bold">
+          <div className="mt-4 sm:mt-5 flex items-center justify-between text-xs font-bold">
             <span className="text-gray-400 dark:text-gray-400 group-hover:text-slate-700 dark:group-hover:text-slate-200 transition-colors">Overdue Invoices</span>
             <span className="bg-amber-500/10 text-amber-600 dark:text-amber-400 group-hover:bg-amber-500 group-hover:text-white px-2 py-0.5 rounded-md font-mono text-[10px] flex items-center gap-1 transition-colors">
               {overdueRentCount} overdue <ArrowRight className="w-2.5 h-2.5" />
@@ -955,18 +955,18 @@ export default function LandlordDashboard({
         {/* Metric 4: Upcoming Expenses -> Opens Maintenance Desk */}
         <div 
           onClick={() => setActivePage('servicereq')}
-          className="p-6 rounded-2xl bg-white dark:bg-[#28384E] border border-slate-200/80 dark:border-white/10 hover:border-blue-500/50 hover:shadow-xl transition-all duration-200 flex flex-col justify-between cursor-pointer group active:scale-[0.99] relative min-h-[140px] shadow-sm dark:shadow-md"
+          className="p-4 sm:p-6 rounded-2xl bg-white dark:bg-[#28384E] border border-slate-200/80 dark:border-white/10 hover:border-blue-500/50 hover:shadow-xl transition-all duration-200 flex flex-col justify-between cursor-pointer group active:scale-[0.99] relative min-h-[130px] sm:min-h-[140px] shadow-sm dark:shadow-md"
         >
           <div className="flex justify-between items-start">
             <div>
               <span className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest block group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">Upcoming expenses</span>
-              <span className="text-2xl font-black text-gray-950 dark:text-white mt-1 block">${upcomingExpensesAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+              <span className="text-xl sm:text-2xl font-black text-gray-950 dark:text-white mt-1 block">${upcomingExpensesAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
             </div>
-            <div className="p-2.5 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 group-hover:scale-110 group-hover:bg-blue-500 group-hover:text-white transition-all shadow-sm">
+            <div className="p-2 sm:p-2.5 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 group-hover:scale-110 group-hover:bg-blue-500 group-hover:text-white transition-all shadow-sm">
               <Activity className="w-5 h-5" />
             </div>
           </div>
-          <div className="mt-5 flex items-center justify-between text-xs font-bold">
+          <div className="mt-4 sm:mt-5 flex items-center justify-between text-xs font-bold">
             <span className="text-gray-400 dark:text-gray-400 group-hover:text-slate-700 dark:group-hover:text-slate-200 transition-colors">Open Tickets</span>
             <span className="bg-blue-500/10 text-blue-600 dark:text-blue-400 group-hover:bg-blue-500 group-hover:text-white px-2 py-0.5 rounded-md font-mono text-[10px] flex items-center gap-1 transition-colors">
               {upcomingExpensesCount} this month <ArrowRight className="w-2.5 h-2.5" />
@@ -976,25 +976,25 @@ export default function LandlordDashboard({
       </div>
 
       {/* --- Section: Cashflow Summary (Full Width) --- */}
-      <div className="w-full p-6 sm:p-7 rounded-3xl bg-white dark:bg-[#28384E] border border-slate-200/80 dark:border-white/10 relative shadow-sm dark:shadow-md">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+      <div className="w-full p-4 sm:p-7 rounded-3xl bg-white dark:bg-[#28384E] border border-slate-200/80 dark:border-white/10 relative shadow-sm dark:shadow-md">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 mb-5 sm:mb-6">
           <div>
-            <h2 className="text-lg font-black text-gray-900 dark:text-white">Cashflow Summary</h2>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Real-time Income vs Expense comparison (6 Month Period)</p>
+            <h2 className="text-base sm:text-lg font-black text-gray-900 dark:text-white">Cashflow Summary</h2>
+            <p className="text-[11px] sm:text-xs text-gray-500 dark:text-gray-400 mt-0.5">Real-time Income vs Expense comparison (6 Month Period)</p>
           </div>
           {/* Legend */}
-          <div className="flex flex-wrap sm:flex-nowrap items-center gap-x-4 gap-y-2 text-xs font-bold shrink-0 whitespace-nowrap">
+          <div className="flex flex-wrap items-center gap-x-3 sm:gap-x-4 gap-y-1.5 text-[11px] sm:text-xs font-bold shrink-0">
             <span className="flex items-center gap-1.5 text-gray-600 dark:text-gray-300">
-              <span className="w-3 h-3 rounded bg-emerald-500 block"></span> Income
+              <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded bg-emerald-500 block"></span> Income
             </span>
             <span className="flex items-center gap-1.5 text-gray-600 dark:text-gray-300">
-              <span className="w-3 h-3 rounded bg-rose-500 block"></span> Expenses
+              <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded bg-rose-500 block"></span> Expenses
             </span>
             <span className="flex items-center gap-1.5 text-gray-600 dark:text-gray-300">
-              <span className="w-3 h-3 rounded bg-amber-500 block"></span> Overdue Rent
+              <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded bg-amber-500 block"></span> Overdue
             </span>
             <span className="flex items-center gap-1.5 text-gray-600 dark:text-gray-300">
-              <span className="w-3 h-3 rounded bg-blue-500 block"></span> Upcoming Exp
+              <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded bg-blue-500 block"></span> Upcoming
             </span>
           </div>
         </div>
@@ -1163,10 +1163,10 @@ export default function LandlordDashboard({
       </div>
 
       {/* --- Portfolio Analytics Row (Donut, Radial, Valuation) --- */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         
         {/* Analytics 1: Property Overview Donut Chart */}
-        <div className="p-6 rounded-3xl bg-white dark:bg-[#28384E] border border-slate-200/80 dark:border-white/10 shadow-sm dark:shadow-md flex flex-col justify-between">
+        <div className="p-4 sm:p-6 rounded-3xl bg-white dark:bg-[#28384E] border border-slate-200/80 dark:border-white/10 shadow-sm dark:shadow-md flex flex-col justify-between">
           <div>
             <h3 className="text-base font-black text-gray-900 dark:text-white mb-1">Property Overview</h3>
             <p className="text-[11px] text-gray-500 dark:text-gray-400">Portfolio breakdown by unit status</p>
@@ -1253,7 +1253,7 @@ export default function LandlordDashboard({
         </div>
 
         {/* Analytics 2: Occupancy Rate Radial Gauge */}
-        <div className="p-6 rounded-3xl bg-white dark:bg-[#28384E] border border-slate-200/80 dark:border-white/10 shadow-sm dark:shadow-md flex flex-col justify-between">
+        <div className="p-4 sm:p-6 rounded-3xl bg-white dark:bg-[#28384E] border border-slate-200/80 dark:border-white/10 shadow-sm dark:shadow-md flex flex-col justify-between">
           <div>
             <h3 className="text-base font-black text-gray-900 dark:text-white mb-1">Occupancy Rate</h3>
             <p className="text-[11px] text-gray-500 dark:text-gray-400">Target occupancy benchmark</p>
@@ -1289,7 +1289,7 @@ export default function LandlordDashboard({
         </div>
 
         {/* Analytics 3: Real Portfolio Valuation & Revenue Card */}
-        <div className="p-6 rounded-3xl bg-white dark:bg-[#28384E] border border-slate-200/80 dark:border-white/10 shadow-sm dark:shadow-md flex flex-col justify-between">
+        <div className="p-4 sm:p-6 rounded-3xl bg-white dark:bg-[#28384E] border border-slate-200/80 dark:border-white/10 shadow-sm dark:shadow-md flex flex-col justify-between">
           <div>
             <div className="flex justify-between items-start">
               <div>

@@ -19,6 +19,8 @@ import Footer from '../../components/marketing/Footer';
 import InteractiveAssistant from '../../components/marketing/InteractiveAssistant';
 import { useTheme } from '../../context/ThemeContext';
 import PhoneInputWithCountry from '../../components/common/PhoneInputWithCountry';
+import API from '../../services/api';
+import toast from 'react-hot-toast';
 
 export default function ContactPage() {
   const { theme } = useTheme();
@@ -36,15 +38,68 @@ export default function ContactPage() {
   });
 
   const [errors, setErrors] = useState({});
+  const [touched, setTouched] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [submittedData, setSubmittedData] = useState(null);
+
+  const validateSingleField = (name, value) => {
+    let errorMsg = '';
+    const nameRegex = /^[a-zA-Z\s\-']+$/;
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    const val = typeof value === 'string' ? value.trim() : '';
+
+    if (name === 'firstName') {
+      if (!val) errorMsg = 'First name is required.';
+      else if (val.length < 2) errorMsg = 'First name must be at least 2 characters.';
+      else if (val.length > 50) errorMsg = 'First name cannot exceed 50 characters.';
+      else if (!nameRegex.test(val)) errorMsg = 'Only letters, spaces, and hyphens are allowed.';
+    } else if (name === 'lastName') {
+      if (!val) errorMsg = 'Last name is required.';
+      else if (val.length < 2) errorMsg = 'Last name must be at least 2 characters.';
+      else if (val.length > 50) errorMsg = 'Last name cannot exceed 50 characters.';
+      else if (!nameRegex.test(val)) errorMsg = 'Only letters, spaces, and hyphens are allowed.';
+    } else if (name === 'workEmail') {
+      if (!val) errorMsg = 'Work email is required.';
+      else if (!emailRegex.test(val)) errorMsg = 'Please enter a valid email address (e.g. name@company.com).';
+    } else if (name === 'phone') {
+      if (val) {
+        const digits = val.replace(/[^\d]/g, '');
+        if (digits.length > 0 && digits.length < 7) errorMsg = 'Phone number must have at least 7 digits.';
+        else if (digits.length > 15) errorMsg = 'Phone number is too long (max 15 digits).';
+      }
+    } else if (name === 'companyName') {
+      if (val.length > 150) errorMsg = 'Company name cannot exceed 150 characters.';
+    } else if (name === 'subject') {
+      if (!val) errorMsg = 'Please select a subject.';
+    } else if (name === 'message') {
+      if (!val) errorMsg = 'Please write your message.';
+      else if (val.length < 10) errorMsg = `Message is too short (${val.length}/10 min characters).`;
+      else if (val.length > 3000) errorMsg = 'Message cannot exceed 3000 characters.';
+    }
+
+    setErrors(prev => ({ ...prev, [name]: errorMsg }));
+    return errorMsg;
+  };
 
   const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-    if (errors[name]) {
-      setErrors(prev => ({ ...prev, [name]: '' }));
+    let { name, value } = e.target;
+
+    // Keystroke sanitizer: strictly block numbers and special symbols on name fields as they type
+    if (name === 'firstName' || name === 'lastName') {
+      value = value.replace(/[^a-zA-Z\s\-']/g, '');
     }
+
+    setFormData(prev => ({ ...prev, [name]: value }));
+    if (touched[name]) {
+      validateSingleField(name, value);
+    }
+  };
+
+  const handleBlur = (e) => {
+    const { name, value } = e.target;
+    setTouched(prev => ({ ...prev, [name]: true }));
+    validateSingleField(name, value);
   };
 
   const scrollToForm = () => {
@@ -58,41 +113,77 @@ export default function ContactPage() {
     scrollToForm();
   };
 
-  const validate = () => {
+  const validateAll = () => {
     let temp = {};
-    if (!formData.firstName.trim()) temp.firstName = "First name is required";
-    if (!formData.lastName.trim()) temp.lastName = "Last name is required";
-    if (!formData.workEmail.trim()) {
-      temp.workEmail = "Work email is required";
-    } else if (!/\S+@\S+\.\S+/.test(formData.workEmail)) {
-      temp.workEmail = "Invalid email format";
-    }
-    if (!formData.message.trim()) temp.message = "Please write your message";
+    const fields = ['firstName', 'lastName', 'workEmail', 'phone', 'companyName', 'subject', 'message'];
+    let allTouched = {};
+    let isValid = true;
 
+    fields.forEach(f => {
+      allTouched[f] = true;
+      const err = validateSingleField(f, formData[f]);
+      if (err) {
+        temp[f] = err;
+        isValid = false;
+      }
+    });
+
+    setTouched(allTouched);
     setErrors(temp);
-    return Object.keys(temp).length === 0;
+    return isValid;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (validate()) {
-      setIsSubmitting(true);
-      setTimeout(() => {
-        setIsSubmitting(false);
-        setSubmitted(true);
-        setTimeout(() => {
-          setSubmitted(false);
-          setFormData({
-            firstName: '',
-            lastName: '',
-            workEmail: '',
-            phone: '',
-            communityName: '',
-            subject: 'Technical Support',
-            message: ''
-          });
-        }, 4000);
-      }, 1000);
+    if (!validateAll()) {
+      toast.error("Please fix the highlighted errors before submitting.");
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const payload = {
+        first_name: formData.firstName.trim(),
+        last_name: formData.lastName.trim(),
+        work_email: formData.workEmail.trim().toLowerCase(),
+        phone: formData.phone?.trim() || null,
+        company_name: formData.communityName?.trim() || null,
+        subject: formData.subject.trim(),
+        message: formData.message.trim()
+      };
+
+      const res = await API.post('/contact/submit', payload);
+      
+      setSubmittedData({
+        email: payload.work_email,
+        refId: res.data?.id ? String(res.data.id).slice(0, 8).toUpperCase() : 'PENDING'
+      });
+      setSubmitted(true);
+      toast.success("Thank you! Your inquiry has been sent and a confirmation email has been dispatched.");
+
+      setFormData({
+        firstName: '',
+        lastName: '',
+        workEmail: '',
+        phone: '',
+        communityName: '',
+        subject: 'Technical Support',
+        message: ''
+      });
+      setErrors({});
+      setTouched({});
+    } catch (err) {
+      console.error("Contact submission error:", err);
+      const detail = err.response?.data?.detail;
+      if (typeof detail === 'string') {
+        toast.error(detail);
+      } else if (Array.isArray(detail)) {
+        toast.error(detail.map(d => d.msg || d).join(', '));
+      } else {
+        toast.error("Failed to send message. Please try again or email us directly at support@nestbloq.com.");
+      }
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -299,14 +390,30 @@ export default function ContactPage() {
               </h2>
 
               {submitted ? (
-                <div className="py-12 flex flex-col items-center text-center space-y-3">
-                  <div className="w-14 h-14 rounded-full bg-emerald-100 dark:bg-emerald-950/60 border border-emerald-300 text-emerald-600 dark:text-emerald-400 flex items-center justify-center animate-bounce">
-                    <Check className="w-7 h-7" />
+                <div className="py-10 flex flex-col items-center text-center space-y-4 animate-scale-up">
+                  <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-500 text-white flex items-center justify-center shadow-lg shadow-emerald-500/25">
+                    <Check className="w-8 h-8 stroke-[2.5]" />
                   </div>
-                  <h3 className="text-xl font-bold text-slate-900 dark:text-white">Message Sent Successfully!</h3>
-                  <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-sm">
-                    Thank you for reaching out. Our team will review your inquiry and get back to you within 2 hours.
+                  <div>
+                    <span className="inline-block px-3 py-1 rounded-full text-[11px] font-mono font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 mb-2">
+                      REF ID: #NB-{submittedData?.refId || 'INQ-SUCCESS'}
+                    </span>
+                    <h3 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
+                      Message Sent Successfully!
+                    </h3>
+                  </div>
+                  <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 max-w-md leading-relaxed">
+                    Thank you for reaching out! We have dispatched a confirmation email to <strong className="text-slate-900 dark:text-white">{submittedData?.email}</strong>. Our support team will review your inquiry and get back to you shortly.
                   </p>
+                  <div className="pt-2">
+                    <button
+                      type="button"
+                      onClick={() => setSubmitted(false)}
+                      className="px-6 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/15 text-slate-800 dark:text-white text-xs font-bold rounded-xl transition-all cursor-pointer"
+                    >
+                      Send Another Message
+                    </button>
+                  </div>
                 </div>
               ) : (
                 <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
@@ -315,38 +422,54 @@ export default function ContactPage() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label htmlFor="firstName" className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-                        First Name
+                        First Name <span className="text-rose-500">*</span>
                       </label>
                       <input
                         id="firstName"
                         type="text"
                         name="firstName"
+                        maxLength={40}
                         value={formData.firstName}
                         onChange={handleInputChange}
+                        onBlur={handleBlur}
                         placeholder="Jane"
-                        className={`w-full px-4 py-2.5 text-xs sm:text-sm rounded-xl border bg-slate-50/50 dark:bg-white/[0.02] text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all ${
-                          errors.firstName ? 'border-rose-400 dark:border-rose-500' : 'border-slate-200 dark:border-white/10'
+                        className={`w-full px-4 py-2.5 text-xs sm:text-sm rounded-xl border bg-slate-50/50 dark:bg-white/[0.02] text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 transition-all ${
+                          errors.firstName && touched.firstName
+                            ? 'border-rose-500 ring-2 ring-rose-500/20'
+                            : 'border-slate-200 dark:border-white/10 focus:ring-indigo-500/20 focus:border-indigo-500'
                         }`}
                       />
-                      {errors.firstName && <span className="text-[11px] text-rose-500 mt-1 block">{errors.firstName}</span>}
+                      {errors.firstName && touched.firstName && (
+                        <span className="text-[11px] font-medium text-rose-500 mt-1 block animate-fade-in flex items-center gap-1">
+                          {errors.firstName}
+                        </span>
+                      )}
                     </div>
 
                     <div>
                       <label htmlFor="lastName" className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-                        Last Name
+                        Last Name <span className="text-rose-500">*</span>
                       </label>
                       <input
                         id="lastName"
                         type="text"
                         name="lastName"
+                        maxLength={40}
                         value={formData.lastName}
                         onChange={handleInputChange}
+                        onBlur={handleBlur}
                         placeholder="Doe"
-                        className={`w-full px-4 py-2.5 text-xs sm:text-sm rounded-xl border bg-slate-50/50 dark:bg-white/[0.02] text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all ${
-                          errors.lastName ? 'border-rose-400 dark:border-rose-500' : 'border-slate-200 dark:border-white/10'
+                        className={`w-full px-4 py-2.5 text-xs sm:text-sm rounded-xl border bg-slate-50/50 dark:bg-white/[0.02] text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 transition-all ${
+                          errors.lastName && touched.lastName
+                            ? 'border-rose-500 ring-2 ring-rose-500/20'
+                            : 'border-slate-200 dark:border-white/10 focus:ring-indigo-500/20 focus:border-indigo-500'
                         }`}
                       />
-                      {errors.lastName && <span className="text-[11px] text-rose-500 mt-1 block">{errors.lastName}</span>}
+                      {errors.lastName && touched.lastName && (
+                        <span className="text-[11px] font-medium text-rose-500 mt-1 block animate-fade-in flex items-center gap-1">
+                          {errors.lastName}
+                        </span>
+                      )}
                     </div>
                   </div>
 
@@ -354,20 +477,28 @@ export default function ContactPage() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label htmlFor="workEmail" className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-                        Work Email
+                        Work Email <span className="text-rose-500">*</span>
                       </label>
                       <input
                         id="workEmail"
                         type="email"
                         name="workEmail"
+                        maxLength={100}
                         value={formData.workEmail}
                         onChange={handleInputChange}
-                        placeholder="jane@community.com"
-                        className={`w-full px-4 py-2.5 text-xs sm:text-sm rounded-xl border bg-slate-50/50 dark:bg-white/[0.02] text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all ${
-                          errors.workEmail ? 'border-rose-400 dark:border-rose-500' : 'border-slate-200 dark:border-white/10'
+                        onBlur={handleBlur}
+                        placeholder="jane@company.com"
+                        className={`w-full px-4 py-2.5 text-xs sm:text-sm rounded-xl border bg-slate-50/50 dark:bg-white/[0.02] text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 transition-all ${
+                          errors.workEmail && touched.workEmail
+                            ? 'border-rose-500 ring-2 ring-rose-500/20'
+                            : 'border-slate-200 dark:border-white/10 focus:ring-indigo-500/20 focus:border-indigo-500'
                         }`}
                       />
-                      {errors.workEmail && <span className="text-[11px] text-rose-500 mt-1 block">{errors.workEmail}</span>}
+                      {errors.workEmail && touched.workEmail && (
+                        <span className="text-[11px] font-medium text-rose-500 mt-1 block animate-fade-in flex items-center gap-1">
+                          {errors.workEmail}
+                        </span>
+                      )}
                     </div>
 
                     <div>
@@ -378,33 +509,49 @@ export default function ContactPage() {
                         id="phone"
                         name="phone"
                         value={formData.phone}
-                        onChange={(e, formatted) => setFormData(prev => ({ ...prev, phone: formatted }))}
+                        onChange={(e, formatted) => {
+                          setFormData(prev => ({ ...prev, phone: formatted }));
+                          setTouched(prev => ({ ...prev, phone: true }));
+                          validateSingleField('phone', formatted);
+                        }}
                         size="sm"
                         placeholder="(555) 000-0000"
                       />
+                      {errors.phone && touched.phone && (
+                        <span className="text-[11px] font-medium text-rose-500 mt-1 block animate-fade-in flex items-center gap-1">
+                          {errors.phone}
+                        </span>
+                      )}
                     </div>
                   </div>
 
                   {/* Row 3: Community / Company Name */}
                   <div>
                     <label htmlFor="communityName" className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-                      Community / Company Name
+                      Company / Property Portfolio Name
                     </label>
                     <input
                       id="communityName"
                       type="text"
                       name="communityName"
+                      maxLength={150}
                       value={formData.communityName}
                       onChange={handleInputChange}
-                      placeholder="Oakwood Estates HOA"
+                      onBlur={handleBlur}
+                      placeholder="Skyline Rentals / Property Portfolio LLC"
                       className="w-full px-4 py-2.5 text-xs sm:text-sm rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50/50 dark:bg-white/[0.02] text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
                     />
+                    {errors.communityName && touched.communityName && (
+                      <span className="text-[11px] font-medium text-rose-500 mt-1 block animate-fade-in flex items-center gap-1">
+                        {errors.communityName}
+                      </span>
+                    )}
                   </div>
 
                   {/* Row 4: Subject Dropdown */}
                   <div>
                     <label htmlFor="subject" className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-                      Subject
+                      Subject <span className="text-rose-500">*</span>
                     </label>
                     <div className="relative">
                       <select
@@ -412,35 +559,59 @@ export default function ContactPage() {
                         name="subject"
                         value={formData.subject}
                         onChange={handleInputChange}
-                        className="w-full px-4 py-2.5 text-xs sm:text-sm rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50/50 dark:bg-[#180d2e] text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 appearance-none pr-10 cursor-pointer transition-all"
+                        onBlur={handleBlur}
+                        className={`w-full px-4 py-2.5 text-xs sm:text-sm rounded-xl border bg-slate-50/50 dark:bg-[#1E293B] text-slate-900 dark:text-white focus:outline-none focus:ring-2 transition-all appearance-none cursor-pointer ${
+                          errors.subject && touched.subject
+                            ? 'border-rose-500 ring-2 ring-rose-500/20'
+                            : 'border-slate-200 dark:border-white/10 focus:ring-indigo-500/20 focus:border-indigo-500'
+                        }`}
                       >
-                        <option value="Technical Support">Technical Support</option>
-                        <option value="Sales & Demo">Sales & Demo</option>
-                        <option value="Billing & Invoices">Billing & Invoices</option>
-                        <option value="General Inquiry">General Inquiry</option>
-                        <option value="Partnership">Partnership</option>
+                        <option value="" disabled className="dark:bg-slate-900">Select inquiry reason...</option>
+                        {SUBJECT_OPTIONS.map((opt) => (
+                          <option key={opt.value} value={opt.value} className="dark:bg-slate-900">
+                            {opt.label}
+                          </option>
+                        ))}
                       </select>
-                      <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                      <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
                     </div>
+                    {errors.subject && touched.subject && (
+                      <span className="text-[11px] font-medium text-rose-500 mt-1 block animate-fade-in flex items-center gap-1">
+                        {errors.subject}
+                      </span>
+                    )}
                   </div>
 
-                  {/* Row 5: Message Textarea */}
+                  {/* Row 5: Message */}
                   <div>
-                    <label htmlFor="message" className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-                      Message
-                    </label>
+                    <div className="flex justify-between items-center mb-1.5">
+                      <label htmlFor="message" className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
+                        Message / Details <span className="text-rose-500">*</span>
+                      </label>
+                      <span className="text-[10px] text-slate-400">
+                        {formData.message.length}/2000
+                      </span>
+                    </div>
                     <textarea
                       id="message"
                       name="message"
                       rows={4}
+                      maxLength={2000}
                       value={formData.message}
                       onChange={handleInputChange}
-                      placeholder="How can we help you today?"
-                      className={`w-full px-4 py-2.5 text-xs sm:text-sm rounded-xl border bg-slate-50/50 dark:bg-white/[0.02] text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all resize-none ${
-                        errors.message ? 'border-rose-400 dark:border-rose-500' : 'border-slate-200 dark:border-white/10'
+                      onBlur={handleBlur}
+                      placeholder="Tell us about your rental portfolio size, specific requirements, or any questions..."
+                      className={`w-full px-4 py-2.5 text-xs sm:text-sm rounded-xl border bg-slate-50/50 dark:bg-white/[0.02] text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 transition-all resize-y ${
+                        errors.message && touched.message
+                          ? 'border-rose-500 ring-2 ring-rose-500/20'
+                          : 'border-slate-200 dark:border-white/10 focus:ring-indigo-500/20 focus:border-indigo-500'
                       }`}
                     />
-                    {errors.message && <span className="text-[11px] text-rose-500 mt-1 block">{errors.message}</span>}
+                    {errors.message && touched.message && (
+                      <span className="text-[11px] font-medium text-rose-500 mt-1 block animate-fade-in flex items-center gap-1">
+                        {errors.message}
+                      </span>
+                    )}
                   </div>
 
                   {/* Submit Button */}

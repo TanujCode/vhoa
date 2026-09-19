@@ -611,8 +611,8 @@ export default function RentLedger({ user, selectedPropertyFilterId = 'all' }) {
                 No rent invoice records matching your filters.
               </div>
             ) : (
-              <div className="w-full overflow-hidden">
-                <table className="w-full text-left border-collapse text-xs">
+              <div className="w-full overflow-x-auto custom-scrollbar">
+                <table className="w-full text-left border-collapse text-xs min-w-[720px]">
                   <thead className="bg-slate-50 dark:bg-white/5 border-b border-slate-200 dark:border-white/10 uppercase text-[10px] tracking-wider font-bold text-slate-500 dark:text-gray-400">
                     <tr>
                       <th className="px-3 py-3 w-[10%]">Invoice ID</th>
@@ -837,8 +837,8 @@ export default function RentLedger({ user, selectedPropertyFilterId = 'all' }) {
                 No maintenance billing records found.
               </div>
             ) : (
-              <div className="w-full overflow-hidden">
-                <table className="w-full text-left border-collapse text-xs">
+              <div className="w-full overflow-x-auto custom-scrollbar">
+                <table className="w-full text-left border-collapse text-xs min-w-[720px]">
                   <thead>
                     <tr className="bg-slate-50 dark:bg-white/5 border-b border-slate-200 dark:border-white/10 text-[10px] text-slate-500 dark:text-gray-400 font-bold uppercase tracking-wider">
                       <th className="px-3 py-3 w-[12%]">Request ID</th>
@@ -992,8 +992,8 @@ export default function RentLedger({ user, selectedPropertyFilterId = 'all' }) {
                 No payment transactions recorded in the history log.
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse text-xs">
+              <div className="w-full overflow-x-auto custom-scrollbar">
+                <table className="w-full text-left border-collapse text-xs min-w-[750px]">
                   <thead className="bg-slate-50 dark:bg-white/5 text-[11px] text-slate-500 dark:text-gray-400 font-bold uppercase tracking-wider border-b border-slate-200 dark:border-white/10">
                     <tr>
                       <th className="px-3 py-3.5 whitespace-nowrap">TRANSACTION ID</th>

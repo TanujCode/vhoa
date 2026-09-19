@@ -11,10 +11,10 @@ from pydantic import BaseModel, EmailStr, field_validator, model_validator
 from app.config import settings
 from app.database import get_rental_db
 from app.models.rental.rental_user import RentalUser
-from app.models.hoa.user import Role
+from app.models.rental.role import Role
 from app.models.rental.lease import Lease
 from app.schemas.auth import SendOtpRequest, PasswordResetRequest, VerifyOtpRequest, RefreshRequest, Login2FARequest
-from app.services.hoa.auth_service import split_full_name
+from app.services.auth_helpers import split_full_name
 from app.services.rental.auth_service import (
     send_rental_otp_for_password_reset,
     reset_rental_password,
@@ -24,8 +24,8 @@ from app.services.rental.auth_service import (
     MAX_LOGIN_ATTEMPTS,
     LOCK_DURATION_MINUTES,
 )
-from app.services.hoa.email_service import send_otp_email
-from app.services.hoa.token_service import decode_access_token, decode_session_token, create_access_token, create_session_token, hash_password, verify_password
+from app.services.email_service import send_otp_email
+from app.services.token_service import decode_access_token, decode_session_token, create_access_token, create_session_token, hash_password, verify_password
 from app.utils.user_code import generate_user_code
 from app.services.rental.audit_service import log_rental_action
 from app.routers.rental.dependencies import get_current_rental_user
@@ -214,38 +214,12 @@ def rental_login(
         _verify_captcha(body.captcha_token, body.captcha_answer)
         user = db.query(RentalUser).filter(RentalUser.email_id == body.email_id.lower().strip()).first()
         if not user:
-            # Check if they exist in HOA users table as super_admin
-            from app.models.hoa.user import User
-            hoa_user = db.query(User).filter(User.email_id == body.email_id.lower().strip()).first()
-            if hoa_user and hoa_user.role and hoa_user.role.role_name == "super_admin":
-                from sqlalchemy import text
-                user = RentalUser(
-                    user_id=hoa_user.user_id,
-                    user_code=hoa_user.user_code,
-                    first_name=hoa_user.first_name,  # Copy same details
-                    middle_name=hoa_user.middle_name,
-                    last_name=hoa_user.last_name,
-                    email_id=hoa_user.email_id,
-                    email_id_is_verified=True,
-                    password=hoa_user.password,  # Copy same password hash
-                    role_id=1,  # super_admin
-                    account_status="ACTIVE",
-                    active_status=True
-                )
-                db.add(user)
-                db.commit()
-                db.refresh(user)
-                # Update sequence to prevent conflicts
-                db.execute(text("SELECT setval('rental_users_user_id_seq', COALESCE((SELECT MAX(user_id) FROM rental_users), 1) + 1, false)"))
-                db.commit()
-
-        if not user:
             raise HTTPException(status_code=401, detail="Invalid email or password")
 
         # Check role_id on RentalUser
         rental_role_name = user.role.role_name if user.role else ""
         if rental_role_name not in ["landlord", "tenant", "super_admin"]:
-            raise HTTPException(status_code=401, detail="This login page is for Rental users. Please use the HOA portal login or register for a rental account first.")
+            raise HTTPException(status_code=401, detail="This account does not have access to the Rental platform.")
 
         # Credentials check
         from datetime import datetime, timezone, timedelta
@@ -300,7 +274,7 @@ def rental_login(
     return {
         "requires_2fa": True,
         "email_id": user.email_id,
-        "message": "Two-Factor Verification Code sent to email."
+        "message": "Verification Code sent to email."
     }
 
 
@@ -445,32 +419,7 @@ def rental_google_auth(
 
         email = email.lower().strip()
         user = db.query(RentalUser).filter(RentalUser.email_id == email).first()
-        if not user:
-            # Check if they exist in HOA users table as super_admin
-            from app.models.hoa.user import User
-            hoa_user = db.query(User).filter(User.email_id == email).first()
-            if hoa_user and hoa_user.role and hoa_user.role.role_name == "super_admin":
-                from sqlalchemy import text
-                user = RentalUser(
-                    user_id=hoa_user.user_id,
-                    user_code=hoa_user.user_code,
-                    first_name=hoa_user.first_name,
-                    middle_name=hoa_user.middle_name,
-                    last_name=hoa_user.last_name,
-                    email_id=hoa_user.email_id,
-                    email_id_is_verified=True,
-                    password=hoa_user.password,  # Copy same password hash
-                    role_id=1,  # super_admin
-                    account_status="ACTIVE",
-                    active_status=True
-                )
-                db.add(user)
-                db.commit()
-                db.refresh(user)
-                # Update sequence to prevent conflicts
-                db.execute(text("SELECT setval('rental_users_user_id_seq', COALESCE((SELECT MAX(user_id) FROM rental_users), 1) + 1, false)"))
-                db.commit()
-        
+
         if user:
             if body.flow == "register":
                 # Rental user trying to register for rental - just add rental role

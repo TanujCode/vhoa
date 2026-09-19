@@ -910,7 +910,7 @@ export default function LandingPage() {
     contextLabel: 'MANAGING',
     communityName: 'All Properties',
     communityCode: 'All ▾',
-    welcomeMsg: 'Welcome, Alexander! ✨',
+    welcomeMsg: 'Welcome, Alexander!',
     subMsg: 'Rental Portfolio Summary · Real-Time Property Overview',
     badge1: 'Properties: 2',
     badge1color: isDark ? 'bg-white/5 text-slate-300 border-white/10' : 'bg-slate-100 text-slate-600 border-slate-200',
@@ -930,76 +930,76 @@ export default function LandingPage() {
 
   const automationSlides = [
     {
-      tabLabel: "🔧 Maintenance Kanban",
+      tabLabel: "Maintenance Kanban",
       badge: "Work Orders & Repairs",
       title: "Interactive Kanban Desk",
       subtitle: "for rental maintenance dispatches.",
       desc: "Coordinate rental repairs and tenant service requests. Track issues in real-time, dispatch jobs directly to certified contractors, and manage task statuses from an intuitive board.",
       points: [
-        { icon: '🔧', text: 'Drag-and-drop repair ticket triage & status updates' },
-        { icon: '👷', text: 'Assign work orders directly to verified vendors' },
-        { icon: '📝', text: 'Attach repair photos and landlord internal notes' },
-        { icon: '⚡', text: 'Real-time tenant status updates upon job completion' }
+        { icon: '•', text: 'Drag-and-drop repair ticket triage & status updates' },
+        { icon: '•', text: 'Assign work orders directly to verified vendors' },
+        { icon: '•', text: 'Attach repair photos and landlord internal notes' },
+        { icon: '•', text: 'Real-time tenant status updates upon job completion' }
       ],
       linkText: "Explore Maintenance Features",
-      linkTo: "/features",
+      linkTo: "#features",
       badgeColor: "bg-emerald-500/10 border-emerald-500/25 text-emerald-650 dark:text-emerald-400",
       btnColor: "bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-500/25",
       image: featureMaintenance,
       component: <MaintenanceOperationsConsole />
     },
     {
-      tabLabel: "📄 Lease Agreements",
+      tabLabel: "Lease Agreements",
       badge: "Digital Leases & Contracts",
       title: "Active Lease Tracking",
       subtitle: "and automated renewals.",
       desc: "Create, monitor, and organize digital tenant leases. Keep track of start and end dates, security deposit balances, monthly rent terms, and renewal timelines.",
       points: [
-        { icon: '📄', text: 'Store 12-month and custom residential lease agreements' },
-        { icon: '💰', text: 'Record security deposits, monthly rent and fee terms' },
-        { icon: '👤', text: 'Centralized tenant directory linked to individual properties' },
-        { icon: '🔔', text: 'Automated 30-day and 60-day lease expiration alerts' }
+        { icon: '•', text: 'Store 12-month and custom residential lease agreements' },
+        { icon: '•', text: 'Record security deposits, monthly rent and fee terms' },
+        { icon: '•', text: 'Centralized tenant directory linked to individual properties' },
+        { icon: '•', text: 'Automated 30-day and 60-day lease expiration alerts' }
       ],
       linkText: "Explore Leases",
-      linkTo: "/features",
+      linkTo: "#features",
       badgeColor: "bg-indigo-500/10 border-indigo-500/25 text-indigo-600 dark:text-indigo-400",
       btnColor: "bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-500/25",
       image: featureSecurity,
       component: <LeaseOperationsConsole />
     },
     {
-      tabLabel: "🏠 Property Portfolio",
+      tabLabel: "Property Portfolio",
       badge: "Properties & Addresses",
       title: "Property Portfolio Hub",
       subtitle: "with live occupancy tracking.",
       desc: "Organize your residential rental properties and homes in a single workspace. Monitor real-time rental rates, tenant occupancy, and property addresses.",
       points: [
-        { icon: '🏠', text: 'Residential rental properties & addresses management' },
-        { icon: '📊', text: 'Live occupancy & vacancy tracking across all properties' },
-        { icon: '📍', text: 'Complete property location and tenant mapping' },
-        { icon: '🏷️', text: 'Monthly rental pricing and security deposit records' }
+        { icon: '•', text: 'Residential rental properties & addresses management' },
+        { icon: '•', text: 'Live occupancy & vacancy tracking across all properties' },
+        { icon: '•', text: 'Complete property location and tenant mapping' },
+        { icon: '•', text: 'Monthly rental pricing and security deposit records' }
       ],
       linkText: "Explore Properties",
-      linkTo: "/features",
+      linkTo: "#features",
       badgeColor: "bg-blue-500/10 border-blue-500/25 text-blue-600 dark:text-blue-400",
       btnColor: "bg-blue-600 hover:bg-blue-700 text-white shadow-blue-500/25",
       image: featureCopilot,
       component: <PropertiesOperationsConsole />
     },
     {
-      tabLabel: "💼 Rent Ledger",
+      tabLabel: "Rent Ledger",
       badge: "Rent Collection & Accounting",
       title: "Rent Collection Ledger",
       subtitle: "and cashflow accounting.",
       desc: "Track monthly tenant rental payments on a centralized accounting ledger. Issue invoices, record bank payments, manage deposits, and generate income reports.",
       points: [
-        { icon: '💳', text: 'Real-time record of paid, pending, and overdue rent' },
-        { icon: '📈', text: 'Automated cashflow metrics tracking net rental income' },
-        { icon: '🏦', text: 'Direct logging of digital transfers, cash, and checks' },
-        { icon: '📋', text: 'Clean financial audit trails linked to each unit' }
+        { icon: '•', text: 'Real-time record of paid, pending, and overdue rent' },
+        { icon: '•', text: 'Automated cashflow metrics tracking net rental income' },
+        { icon: '•', text: 'Direct logging of digital transfers, cash, and checks' },
+        { icon: '•', text: 'Clean financial audit trails linked to each unit' }
       ],
       linkText: "Explore Rent Ledger",
-      linkTo: "/features",
+      linkTo: "#features",
       badgeColor: "bg-teal-500/10 border-teal-500/25 text-teal-650 dark:text-teal-400",
       btnColor: "bg-teal-600 hover:bg-teal-700 text-white shadow-teal-500/25",
       image: featureFinance,
@@ -1028,27 +1028,17 @@ export default function LandingPage() {
   }, [typedText]);
 
   const location = useLocation();
-  const solutionsSectionRef = useRef(null);
-  const [activeSolution, setActiveSolution] = useState('rental');
 
-  // Parse URL search query for solutions tab
+  // Handle hash scrolling on page load/change (e.g. #features, #ai, #security)
   useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    const type = params.get('type');
-    const validTypes = ['rental', 'condo', 'hoa'];
-    if (type && validTypes.includes(type)) {
-      setActiveSolution(type);
-      setTimeout(() => {
-        if (solutionsSectionRef.current) {
-          solutionsSectionRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
-      }, 150);
-    } else if (location.hash === '#solutions') {
-      setTimeout(() => {
-        if (solutionsSectionRef.current) {
-          solutionsSectionRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
-      }, 150);
+    if (location.hash) {
+      const targetId = location.hash.replace('#', '');
+      const element = document.getElementById(targetId);
+      if (element) {
+        setTimeout(() => {
+          element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 120);
+      }
     }
   }, [location]);
 
@@ -1476,41 +1466,43 @@ export default function LandingPage() {
 
               {/* Dashboard Layout */}
               <div
-                className="flex h-[540px] sm:h-[500px] overflow-hidden bg-slate-50 dark:bg-[#090F16]"
+                className="flex overflow-hidden bg-slate-50 dark:bg-[#090F16]"
               >
                 {/* ── Sidebar ── */}
-                <aside className={`hidden sm:flex w-44 shrink-0 border-r flex flex-col transition-colors duration-300 ${
+                <aside className={`hidden sm:flex w-44 shrink-0 border-r flex flex-col justify-between transition-colors duration-300 ${
                   isDark ? 'bg-[#0B132B] border-white/[0.06]' : 'bg-[#EBF3FC] border-slate-200/80'
                 }`}>
-                  <div className={`p-3.5 border-b flex items-center shrink-0 ${isDark ? 'border-white/[0.06]' : 'border-slate-200/80'}`}>
-                    <Logo className="h-5 w-auto" variant={isDark ? "white" : "default"} />
+                  <div className="flex flex-col">
+                    <div className={`p-3.5 border-b flex items-center shrink-0 ${isDark ? 'border-white/[0.06]' : 'border-slate-200/80'}`}>
+                      <Logo className="h-5 w-auto" variant={isDark ? "white" : "default"} />
+                    </div>
+                    <div className="p-2.5 pb-1.5 shrink-0">
+                      <span className={`text-[7px] font-extrabold uppercase tracking-widest ${isDark ? 'text-slate-500' : 'text-slate-600'}`}>MAIN MENU</span>
+                    </div>
+                    <nav className="px-2 pb-2 space-y-1 text-[9px] font-medium">
+                      {[
+                        { label: 'Landlord Dashboard', icon: LayoutDashboard, active: true },
+                        { label: 'Properties', icon: Building2, active: false },
+                        { label: 'Lease Agreements', icon: FileText, active: false },
+                        { label: 'Tenants', icon: Users, active: false },
+                        { label: 'Payments Hub', icon: CreditCard, active: false },
+                        { label: 'Maintenance Desk', icon: Wrench, active: false },
+                        { label: 'Contractors / Vendors', icon: Truck, active: false },
+                      ].map((item) => {
+                        const Icon = item.icon;
+                        return (
+                          <div key={item.label} className={`flex items-center gap-2 px-2.5 py-1.5 rounded-xl transition-colors ${
+                            item.active
+                              ? isDark ? 'bg-blue-600/15 text-blue-400 font-bold border-l-2 border-blue-500' : 'bg-white text-blue-600 font-bold border-l-2 border-blue-600 shadow-sm'
+                              : isDark ? 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/20' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50'
+                          }`}>
+                            <Icon size={12} className="shrink-0" />
+                            <span className="truncate">{item.label}</span>
+                          </div>
+                        );
+                      })}
+                    </nav>
                   </div>
-                  <div className="p-2.5 pb-1.5 shrink-0">
-                    <span className={`text-[7px] font-extrabold uppercase tracking-widest ${isDark ? 'text-slate-500' : 'text-slate-600'}`}>MAIN MENU</span>
-                  </div>
-                  <nav className="flex-1 px-2 pb-2 space-y-1 text-[9px] font-medium overflow-y-auto custom-scrollbar">
-                    {[
-                      { label: 'Landlord Dashboard', icon: LayoutDashboard, active: true },
-                      { label: 'Properties & Apartments', icon: Building2, active: false },
-                      { label: 'Lease Agreements', icon: FileText, active: false },
-                      { label: 'Tenants', icon: Users, active: false },
-                      { label: 'Payments Hub', icon: CreditCard, active: false },
-                      { label: 'Maintenance Desk', icon: Wrench, active: false },
-                      { label: 'Contractors / Vendors', icon: Truck, active: false },
-                    ].map((item) => {
-                      const Icon = item.icon;
-                      return (
-                        <div key={item.label} className={`flex items-center gap-2 px-2.5 py-1.5 rounded-xl transition-colors ${
-                          item.active
-                            ? isDark ? 'bg-blue-600/15 text-blue-400 font-bold border-l-2 border-blue-500' : 'bg-white text-blue-600 font-bold border-l-2 border-blue-600 shadow-sm'
-                            : isDark ? 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/20' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50'
-                        }`}>
-                          <Icon size={12} className="shrink-0" />
-                          <span className="truncate">{item.label}</span>
-                        </div>
-                      );
-                    })}
-                  </nav>
                   <div className={`p-2.5 border-t shrink-0 ${isDark ? 'border-white/[0.06] bg-[#0A1128]/40' : 'border-slate-200/80 bg-slate-200/25'}`}>
                     <div className={`flex items-center gap-2 p-1.5 rounded-xl border ${isDark ? 'bg-slate-900/35 border-white/[0.04]' : 'bg-white border-slate-200/60 shadow-sm'}`}>
                       <div className="w-6 h-6 rounded-lg bg-blue-600 flex items-center justify-center text-[9px] font-black text-white shrink-0 shadow-sm">A</div>
@@ -1559,7 +1551,7 @@ export default function LandingPage() {
                   </div>
 
                   {/* Dashboard body */}
-                  <div className={`flex-1 overflow-y-auto p-2.5 sm:p-4 space-y-3 sm:space-y-4 custom-scrollbar transition-colors duration-300 ${
+                  <div className={`flex-1 p-2.5 sm:p-4 space-y-3 sm:space-y-4 transition-colors duration-300 ${
                     isDark ? 'bg-[#090F16]' : 'bg-slate-50'
                   }`}>
 
@@ -1754,106 +1746,6 @@ export default function LandingPage() {
       </section>
 
 
-      {/* ═══════════════════════════════════════════════════════
-          SOLUTIONS SECTION (Interactive Use Cases & Simulators)
-      ═══════════════════════════════════════════════════════ */}
-      <section 
-        id="solutions" 
-        ref={solutionsSectionRef}
-        className="scroll-mt-16 sm:scroll-mt-20 relative py-8 sm:py-10 px-5 sm:px-8 border-t border-slate-200/40 dark:border-white/[0.06] overflow-hidden bg-white dark:bg-[#0f172a]"
-      >
-        {/* Background glow effects */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[600px] bg-gradient-radial from-violet-500/[0.03] dark:from-violet-500/[0.06] to-transparent rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute -right-32 top-1/4 w-96 h-96 bg-indigo-500/[0.03] dark:bg-indigo-500/[0.05] rounded-full blur-3xl pointer-events-none" />
-
-        <div className="max-w-7xl mx-auto relative z-10">
-          {/* Header */}
-          <div className="text-center max-w-3xl mx-auto mb-6 sm:mb-8 space-y-2">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[10px] sm:text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">
-              <Sparkles className="w-3.5 h-3.5 animate-pulse" />
-              Purpose-Built Rental Solutions
-            </div>
-            <h2 className="text-2xl sm:text-3xl lg:text-[32px] font-black text-slate-900 dark:text-white tracking-tight leading-tight">
-              Complete Control for <span className="gradient-text">Your Rental Portfolio.</span>
-            </h2>
-            <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-normal leading-relaxed max-w-2xl mx-auto">
-              Manage properties, active lease agreements, rent payments ledger, and maintenance work orders in one unified landlord & tenant portal.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 sm:gap-6">
-            {[
-              {
-                title: 'Rental Properties Hub',
-                tagline: 'Properties & Addresses',
-                desc: 'Add and organize your rental properties and residential homes. Track occupancy status, monthly rental rates, and property addresses seamlessly.',
-                icon: Building2,
-                colorClass: 'text-teal-600 dark:text-teal-400 bg-teal-500/10 dark:bg-teal-500/20 border-teal-500/20',
-                cardBg: 'hover:border-teal-500/40 dark:hover:border-teal-500/35 hover:shadow-teal-500/5',
-                textColor: 'text-teal-600 dark:text-teal-400',
-                link: '/solutions/rental'
-              },
-              {
-                title: 'Lease Agreements & Tenants',
-                tagline: 'Leases & Tenant Registry',
-                desc: 'Create structured lease agreements, set monthly rent amounts and deposits, track lease validity dates, and maintain verified tenant directories.',
-                icon: FileText,
-                colorClass: 'text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 dark:bg-emerald-500/20 border-emerald-500/20',
-                cardBg: 'hover:border-emerald-500/40 dark:hover:border-emerald-500/35 hover:shadow-emerald-500/5',
-                textColor: 'text-emerald-600 dark:text-emerald-400',
-                link: '/solutions/rental'
-              },
-              {
-                title: 'Rent Ledger & Maintenance Desk',
-                tagline: 'Payments & Work Orders',
-                desc: 'Monitor real-time paid, pending, and overdue rent. Receive repair requests with photo attachments and assign tickets to contractors.',
-                icon: Wallet,
-                colorClass: 'text-blue-600 dark:text-blue-400 bg-blue-500/10 dark:bg-blue-500/20 border-blue-500/20',
-                cardBg: 'hover:border-blue-500/40 dark:hover:border-blue-500/35 hover:shadow-blue-500/5',
-                textColor: 'text-blue-600 dark:text-blue-400',
-                link: '/solutions/rental'
-              }
-            ].map((solution, i) => {
-              const IconComponent = solution.icon;
-              return (
-                <div
-                  key={i}
-                  className={`group relative overflow-hidden rounded-3xl border border-slate-200/80 dark:border-white/[0.07] bg-white/60 dark:bg-white/[0.01] p-5 sm:p-6 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 backdrop-blur-sm flex flex-col justify-between text-left ${solution.cardBg}`}
-                >
-                  <div className="space-y-3.5">
-                    {/* Icon */}
-                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border ${solution.colorClass}`}>
-                      <IconComponent className="w-4.5 h-4.5" />
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <div className="flex items-center gap-2">
-                        <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500">{solution.tagline}</span>
-                      </div>
-                      <h3 className="font-display font-black text-base sm:text-lg text-slate-900 dark:text-white leading-snug group-hover:text-emerald-500 dark:group-hover:text-emerald-400 transition-colors">
-                        {solution.title}
-                      </h3>
-                      <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed pt-1 font-normal">
-                        {solution.desc}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="pt-4 border-t border-slate-100 dark:border-white/5 mt-4 flex items-center justify-between">
-                    <Link
-                      to={solution.link}
-                      className={`inline-flex items-center gap-1.5 text-xs font-bold transition-all uppercase tracking-wider ${solution.textColor}`}
-                    >
-                      Explore Portal
-                      <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
-                    </Link>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </section>
 
       {/* ═══════════════════════════════════════════════════════
           CORE CAPABILITIES (3D Tilt & Flip Showcase)

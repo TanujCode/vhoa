@@ -3,7 +3,7 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 from app.database import get_rental_db
 from app.models.rental.rental_user import RentalUser
-from app.services.hoa.token_service import decode_access_token
+from app.services.token_service import decode_access_token
 
 bearer_scheme = HTTPBearer()
 
@@ -20,63 +20,19 @@ def get_current_rental_user(
             detail="Rental session token may be invalid or expired.",
             headers={"WWW-Authenticate": "Bearer"},
         )
+    
+    user_id = payload.get("sub")
     email = payload.get("email")
-    role_name = payload.get("role")
     user = None
 
-    if role_name == "super_admin" and email:
-        from app.models.hoa.user import User
-        hoa_user = db.query(User).filter(User.email_id == email.lower().strip()).first()
-        
-        user = db.query(RentalUser).filter(RentalUser.email_id == email.lower().strip()).first()
-        if hoa_user:
-            if not user:
-                from sqlalchemy import text
-                user = RentalUser(
-                    user_id=hoa_user.user_id,
-                    user_code=hoa_user.user_code,
-                    first_name=hoa_user.first_name,
-                    middle_name=hoa_user.middle_name,
-                    last_name=hoa_user.last_name,
-                    email_id=hoa_user.email_id,
-                    email_id_is_verified=True,
-                    password=hoa_user.password,
-                    role_id=1, # super_admin
-                    account_status="ACTIVE",
-                    active_status=True,
-                    user_profile_url=hoa_user.user_profile_url
-                )
-                db.add(user)
-                db.commit()
-                db.refresh(user)
-                # Update sequence to prevent conflicts
-                db.execute(text("SELECT setval('rental_users_user_id_seq', COALESCE((SELECT MAX(user_id) FROM rental_users), 1) + 1, false)"))
-                db.commit()
-            else:
-                # Sync details from HOA user to RentalUser so they always match
-                dirty = False
-                if user.user_code != hoa_user.user_code:
-                    user.user_code = hoa_user.user_code
-                    dirty = True
-                if user.first_name != hoa_user.first_name:
-                    user.first_name = hoa_user.first_name
-                    dirty = True
-                if user.middle_name != hoa_user.middle_name:
-                    user.middle_name = hoa_user.middle_name
-                    dirty = True
-                if user.last_name != hoa_user.last_name:
-                    user.last_name = hoa_user.last_name
-                    dirty = True
-                if user.user_profile_url != hoa_user.user_profile_url:
-                    user.user_profile_url = hoa_user.user_profile_url
-                    dirty = True
-                if dirty:
-                    db.commit()
-                    db.refresh(user)
+    if user_id:
+        try:
+            user = db.query(RentalUser).filter(RentalUser.user_id == int(user_id)).first()
+        except (ValueError, TypeError):
+            user = None
 
-    if not user:
-        user_id = int(payload.get("sub"))
-        user = db.query(RentalUser).filter(RentalUser.user_id == user_id).first()
+    if not user and email:
+        user = db.query(RentalUser).filter(RentalUser.email_id == email.lower().strip()).first()
 
     if not user:
         raise HTTPException(status_code=404, detail="User not found.")
@@ -99,7 +55,6 @@ def require_rental_role(*allowed_roles: str):
         current_user: RentalUser = Depends(get_verified_rental_user),
         db: Session = Depends(get_rental_db)
     ) -> RentalUser:
-        # Use role (not rental_role)
         rental_role_name = current_user.role.role_name if current_user.role else ""
         if rental_role_name not in allowed_roles:
             raise HTTPException(status_code=403, detail="Access denied for this rental user role.")

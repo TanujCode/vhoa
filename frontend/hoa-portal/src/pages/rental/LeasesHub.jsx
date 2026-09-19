@@ -22,7 +22,7 @@ Unit {{UNIT_NUMBER}} subject to the rules and regulations of the Condominium Ass
 - Monthly Rent: \${{RENT_AMOUNT}}
 - Security Deposit: \${{DEPOSIT_AMOUNT}}
 - Lease Term: {{START_DATE}} to {{END_DATE}}
-- Association Dues: Paid by Landlord. Tenant agrees to comply with all HOA Bylaws, community declarations, and trash schedules. Late payment past {{GRACE_PERIOD}} days will incur late fee charges of \${{LATE_FEE}}.`,
+- Association Dues: Paid by Landlord. Tenant agrees to comply with all building bylaws, community declarations, and trash schedules. Late payment past {{GRACE_PERIOD}} days will incur late fee charges of \${{LATE_FEE}}.`,
 
   guaranty: `CO-SIGNER GUARANTY ANNEX
 
@@ -44,8 +44,7 @@ const INITIAL_ATTACHMENTS = [];
 
 const DOC_TYPE_LABELS = {
   PAY_SLIP: "Pay Slip / Income Proof",
-  DRIVING_LICENSE: "Driving License / National ID",
-  ADDRESS_PROOF: "Notice/Payment Address Proof"
+  DRIVING_LICENSE: "Driving License / National ID"
 };
 
 export default function LeasesHub({ user, selectedPropertyFilterId = 'all', initialShowCreate = false, onLeaseCreated }) {
@@ -123,6 +122,7 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
   const [utilFee, setUtilFee] = useState('0');
   const [parkingFee, setParkingFee] = useState('0');
   const [petFee, setPetFee] = useState('0');
+  const [maintenancePayer, setMaintenancePayer] = useState('LANDLORD'); // 'LANDLORD' | 'TENANT'
   const [editingLeaseId, setEditingLeaseId] = useState(null);
 
   
@@ -843,17 +843,13 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
     }
     compiled += `\n\n`;
     
-    compiled += `5. UTILITIES RESPONSIBILITY:\n`;
+    compiled += `5. UTILITIES & MAINTENANCE RESPONSIBILITY:\n`;
     compiled += `   - Electricity: Paid by ${electricityPayee === 'landlord' ? 'Landlord' : 'Tenant'}\n`;
     compiled += `   - Water: Paid by ${waterPayee === 'landlord' ? 'Landlord' : 'Tenant'}\n`;
     compiled += `   - Gas: Paid by ${gasPayee === 'landlord' ? 'Landlord' : 'Tenant'}\n`;
     compiled += `   - Internet: Paid by ${internetPayee === 'landlord' ? 'Landlord' : 'Tenant'}\n`;
     compiled += `   - Trash Removal: Paid by ${trashPayee === 'landlord' ? 'Landlord' : 'Tenant'}\n`;
-    const isAnyOwnerUtil = electricityPayee === 'landlord' || waterPayee === 'landlord' || gasPayee === 'landlord' || internetPayee === 'landlord' || trashPayee === 'landlord';
-    if (isAnyOwnerUtil && parseFloat(utilFee || 0) > 0) {
-      compiled += `   - Flat Utility Fee Charged by Landlord: \$${utilFee}/month (Covering: ${ownerPaidUtils.join(', ')})\n`;
-    }
-    compiled += `\n`;
+    compiled += `   - Maintenance & Repairs: Paid by ${maintenancePayer === 'TENANT' ? 'Tenant (Tenant Billable / Responsible)' : 'Landlord (Landlord Covered)'}\n\n`;
     
     compiled += `6. ADDITIONAL CHARGES:\n`;
     if (hasParkingFee && parseFloat(parkingFeePerCar) > 0) {
@@ -879,7 +875,11 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
       compiled += `   - COMMUNITY QUIET HOURS: Tenant agrees to respect quiet hours from 10:00 PM to 8:00 AM daily.\n`;
     }
     if (clauseMaintenance) {
-      compiled += `   - MAINTENANCE & REPAIRS: Tenant shall keep the premises in clean condition and report any defects immediately.\n`;
+      if (maintenancePayer === 'TENANT') {
+        compiled += `   - MAINTENANCE & REPAIRS: Tenant is responsible for repair work orders and maintenance costs for the unit. Costs will be billed directly to the tenant ledger.\n`;
+      } else {
+        compiled += `   - MAINTENANCE & REPAIRS: Landlord / Property Owner covers major maintenance and habitability repairs. Landlord pays service vendors directly.\n`;
+      }
     }
     if (clauseCustomText && clauseCustomText.trim()) {
       compiled += `   - ADDITIONAL CUSTOM CLAUSE: ${clauseCustomText.trim()}\n`;
@@ -1027,6 +1027,7 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
     lessorAddress,
     lessorPhone,
     lessorEmail,
+    maintenancePayer,
     coLandlordName
   ]);
 
@@ -1387,6 +1388,7 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
         utilities_fee: calculatedUtilFee,
         parking_fee: calculatedParkingFee,
         pet_fee: calculatedPetFee,
+        maintenance_payer: maintenancePayer || 'LANDLORD',
         co_landlord_name: coLandlordName.trim() || null
       };
 
@@ -1588,13 +1590,28 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
       return;
     }
     
-    // 18+ check
+    // Future date & 18+ check
     const birthDate = new Date(tenantDob);
-    const ageDiffMs = Date.now() - birthDate.getTime();
-    const ageDate = new Date(ageDiffMs);
-    const age = Math.abs(ageDate.getUTCFullYear() - 1970);
-    if (age < 18) {
-      showCenterAlert("Age Requirement (18+)", "You must be 18 years or older to sign a lease.");
+    const today = new Date();
+    if (isNaN(birthDate.getTime())) {
+      showCenterAlert("Invalid Date of Birth", "Please enter a valid date of birth.");
+      return;
+    }
+    if (birthDate > today) {
+      showCenterAlert("Invalid Date of Birth", "Date of birth cannot be in the future.");
+      return;
+    }
+    let calculatedAge = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      calculatedAge--;
+    }
+    if (calculatedAge < 18) {
+      showCenterAlert("Age Requirement (18+)", "You must be at least 18 years old to sign a legally binding lease agreement.");
+      return;
+    }
+    if (calculatedAge > 115) {
+      showCenterAlert("Invalid Date of Birth", "Please enter a valid date of birth.");
       return;
     }
 
@@ -1628,7 +1645,7 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
     }
 
     // Documents check
-    const requiredTypes = ["PAY_SLIP", "DRIVING_LICENSE", "ADDRESS_PROOF"];
+    const requiredTypes = ["PAY_SLIP", "DRIVING_LICENSE"];
     const missing = requiredTypes.filter(type => !uploadedDocs.some(d => d.doc_type === type));
     if (missing.length > 0) {
       showCenterAlert("Required Documents Missing", `Please upload required documents: ${missing.map(m => DOC_TYPE_LABELS[m] || m).join(", ")}`);
@@ -1765,6 +1782,8 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
                   <input
                     type="date"
                     value={tenantDob}
+                    max={new Date(new Date().getFullYear() - 18, new Date().getMonth(), new Date().getDate()).toISOString().split('T')[0]}
+                    min={new Date(new Date().getFullYear() - 115, new Date().getMonth(), new Date().getDate()).toISOString().split('T')[0]}
                     onChange={e => setTenantDob(e.target.value)}
                     className="w-full text-xs px-3.5 py-2.5 border rounded-xl bg-white dark:bg-[#132030] text-slate-900 dark:text-white outline-none border-slate-200 dark:border-white/10 focus:ring-2 focus:ring-blue-500/20"
                   />
@@ -2108,10 +2127,6 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
                           >
                             <option value="Dog">Dog</option>
                             <option value="Cat">Cat</option>
-                            <option value="Bird">Bird</option>
-                            <option value="Fish">Fish</option>
-                            <option value="Rabbit">Rabbit</option>
-                            <option value="Reptile">Reptile</option>
                             <option value="Other">Other</option>
                           </select>
                         </div>
@@ -2130,19 +2145,20 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">Required Documents (PDF / JPG / PNG / WEBP)</span>
               {docUploadError && (
                 <div className="mb-2 px-3 py-2 bg-red-500/10 border border-red-500/20 rounded-xl text-[11px] font-semibold text-red-600 dark:text-red-400 flex items-center gap-2">
-                  <span>⚠️</span> {docUploadError}
+                  <AlertCircle size={14} className="shrink-0 text-red-500" />
+                  <span>{docUploadError}</span>
                 </div>
               )}
-              {["PAY_SLIP", "DRIVING_LICENSE", "ADDRESS_PROOF"].map(type => {
+              {["PAY_SLIP", "DRIVING_LICENSE"].map(type => {
                 const existing = uploadedDocs.find(d => d.doc_type === type);
                 return (
                   <div key={type} className="p-3.5 border border-slate-200 dark:border-white/5 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50/20 dark:bg-white/[0.01]">
                     <div className="text-left min-w-0 flex-1">
                       <span className="text-xs font-bold text-slate-800 dark:text-white block">{DOC_TYPE_LABELS[type] || type}</span>
                       {existing ? (
-                        <span className="text-[10px] text-emerald-500 font-semibold block truncate">✓ Uploaded: {existing.original_name}</span>
+                        <span className="text-[10px] text-emerald-500 font-semibold block truncate">Uploaded: {existing.original_name}</span>
                       ) : (
-                        <span className="text-[10px] text-red-500 block">⚠️ Upload Required (max 10MB)</span>
+                        <span className="text-[10px] text-red-500 block">Upload Required (max 10MB)</span>
                       )}
                     </div>
                     <div className="flex items-center gap-2 shrink-0 flex-wrap">
@@ -2211,11 +2227,26 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
                     return;
                   }
                   const birthDate = new Date(tenantDob);
-                  const ageDiffMs = Date.now() - birthDate.getTime();
-                  const ageDate = new Date(ageDiffMs);
-                  const age = Math.abs(ageDate.getUTCFullYear() - 1970);
-                  if (age < 18) {
-                    showValidationAlert("Age Requirement (18+)", "You must be 18 years or older to sign a lease.");
+                  const today = new Date();
+                  if (isNaN(birthDate.getTime())) {
+                    showValidationAlert("Invalid Date of Birth", "Please enter a valid date of birth.");
+                    return;
+                  }
+                  if (birthDate > today) {
+                    showValidationAlert("Invalid Date of Birth", "Date of birth cannot be in the future.");
+                    return;
+                  }
+                  let calculatedAge = today.getFullYear() - birthDate.getFullYear();
+                  const monthDiff = today.getMonth() - birthDate.getMonth();
+                  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+                    calculatedAge--;
+                  }
+                  if (calculatedAge < 18) {
+                    showValidationAlert("Age Requirement (18+)", "You must be at least 18 years old to sign a legally binding lease agreement.");
+                    return;
+                  }
+                  if (calculatedAge > 115) {
+                    showValidationAlert("Invalid Date of Birth", "Please enter a valid date of birth.");
                     return;
                   }
                   const fullAddress = [tenantStreet, tenantCity, tenantState, tenantZip].filter(Boolean).join(', ') || tenantCurrentAddress;
@@ -2260,7 +2291,7 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
                       }
                     }
                   }
-                  const requiredTypes = ["PAY_SLIP", "DRIVING_LICENSE", "ADDRESS_PROOF"];
+                  const requiredTypes = ["PAY_SLIP", "DRIVING_LICENSE"];
                   const missing = requiredTypes.filter(type => !uploadedDocs.some(d => d.doc_type === type));
                   if (missing.length > 0) {
                     showValidationAlert("Required Documents Missing", `Please upload required documents: ${missing.map(m => DOC_TYPE_LABELS[m] || m).join(", ")}`);
@@ -2363,7 +2394,7 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
   };
 
   const renderLandlordApprovalPanel = () => {
-    const docLabels = { PAY_SLIP: "Pay Slip / Income Proof", DRIVING_LICENSE: "Driving License / ID", ADDRESS_PROOF: "Address Proof" };
+    const docLabels = { PAY_SLIP: "Pay Slip / Income Proof", DRIVING_LICENSE: "Driving License / ID" };
     return (
       <div className="space-y-6 text-left border-t dark:border-white/5 pt-6 animate-fade-in">
         <div>
@@ -2402,16 +2433,16 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
         {/* Verification Documents List */}
         <div className="space-y-3">
           <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">Tenant Identity & Income Verification Files</span>
-          {["PAY_SLIP", "DRIVING_LICENSE", "ADDRESS_PROOF"].map(type => {
+          {["PAY_SLIP", "DRIVING_LICENSE"].map(type => {
             const doc = uploadedDocs.find(d => d.doc_type === type);
             return (
               <div key={type} className="p-3.5 border border-slate-200/5 rounded-xl flex items-center justify-between gap-4 bg-slate-50/20 dark:bg-white/[0.01]">
                 <div className="text-left">
                   <span className="text-xs font-bold text-slate-800 dark:text-white block">{docLabels[type]}</span>
                   {doc ? (
-                    <span className="text-[10px] text-emerald-500 font-semibold block">✓ Uploaded</span>
+                    <span className="text-[10px] text-emerald-500 font-semibold block">Uploaded</span>
                   ) : (
-                    <span className="text-[10px] text-red-500 block">⚠️ Missing Document</span>
+                    <span className="text-[10px] text-red-500 block">Missing Document</span>
                   )}
                 </div>
                 
@@ -2517,11 +2548,11 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-3 border-t dark:border-white/5">
           {!selectedLease.landlord_signature ? (
             <span className="text-xs text-red-500 font-semibold text-left">
-              ⚠️ You must type your legal name and sign the lease contract above before you can approve and activate it.
+              You must type your legal name and sign the lease contract above before you can approve and activate it.
             </span>
           ) : (
             <span className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold text-left">
-              ✓ Contract signed. You are ready to approve and activate the lease.
+              Contract signed. You are ready to approve and activate the lease.
             </span>
           )}
           <div className="flex items-center gap-3 shrink-0 ml-auto">
@@ -2946,7 +2977,7 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
           <div className="flex items-center gap-2 border-b border-slate-100 dark:border-white/5 pb-1.5">
             <div className="h-3.5 w-1 bg-blue-600 rounded-full"></div>
             <h5 className="text-[10px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-widest">
-              Grace Days & Late Fee Guidelines (USA Standard)
+              Grace Days & Late Fee Guidelines
             </h5>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -3079,53 +3110,66 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
           </div>
         </div>
 
-        {showUtilityFeeOption && (
-          <div className="p-4 border rounded-2xl bg-blue-50/60 dark:bg-[#253346]/50 border-blue-200/80 dark:border-slate-600 transition-all text-left animate-fade-in space-y-3">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+        {/* Maintenance & Repair Cost Responsibility */}
+        <div className="space-y-3 pt-2 text-left">
+          <div className="flex items-center gap-2 border-b border-slate-100 dark:border-white/5 pb-1.5">
+            <div className="h-3.5 w-1 bg-blue-600 rounded-full"></div>
+            <h5 className="text-[10px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-widest">
+              Maintenance & Repair Cost Responsibility
+            </h5>
+          </div>
+          
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div 
+              onClick={() => setMaintenancePayer('LANDLORD')}
+              className={`p-4 rounded-2xl border transition-all cursor-pointer flex items-start gap-3 ${
+                maintenancePayer === 'LANDLORD'
+                  ? 'bg-blue-500/10 border-blue-500 ring-2 ring-blue-500/20 dark:bg-blue-500/20'
+                  : 'bg-slate-50/50 dark:bg-white/[0.01] border-slate-200/80 dark:border-white/10 hover:border-slate-300'
+              }`}
+            >
+              <div className={`w-4 h-4 rounded-full border flex items-center justify-center mt-0.5 shrink-0 ${
+                maintenancePayer === 'LANDLORD' ? 'border-blue-600 bg-blue-600' : 'border-slate-400'
+              }`}>
+                {maintenancePayer === 'LANDLORD' && <div className="w-1.5 h-1.5 rounded-full bg-white"></div>}
+              </div>
               <div>
-                <span className="text-xs font-bold text-slate-900 dark:text-white block">
-                  Owner-Paid Utilities Monthly Fee
+                <span className="text-xs font-bold text-slate-900 dark:text-white block flex items-center gap-1.5">
+                  🏢 Landlord Covered
                 </span>
-                <span className="text-[11px] text-slate-500 dark:text-slate-300">
-                  Direct monthly utility cost added to tenant ledger for owner-managed utilities.
+                <span className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 block leading-relaxed">
+                  Property owner covers maintenance & repair costs. Landlord pays service vendors directly.
                 </span>
               </div>
-              {ownerPaidUtils.length > 0 && (
-                <span className="text-[10px] bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300 font-bold px-2.5 py-1 rounded-lg border border-blue-200 dark:border-blue-700/50 shrink-0">
-                  Covering: {ownerPaidUtils.join(', ')}
-                </span>
-              )}
             </div>
 
-            <div className="w-full md:w-1/2 pt-1">
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-200 tracking-wider mb-1.5 uppercase">
-                Utility Fee Amount ($)
-              </label>
-              <div className="relative">
-                <DollarSign className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
-                <input 
-                  type="number" 
-                  min="0"
-                  value={utilFee} 
-                  onChange={e => {
-                    setUtilFee(e.target.value);
-                    if (formErrors.utilFee) {
-                      setFormErrors(prev => ({ ...prev, utilFee: '' }));
-                    }
-                  }} 
-                  className={`w-full text-sm pl-10 pr-3.5 py-2.5 border rounded-xl bg-white dark:bg-[#1e293b] text-slate-900 dark:text-white outline-none transition focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 border-slate-200 dark:border-slate-600 ${formErrors.utilFee ? 'border-red-500 ring-2 ring-red-500/10' : ''}`} 
-                  placeholder="0 (if included in rent for free)" 
-                />
+            <div 
+              onClick={() => setMaintenancePayer('TENANT')}
+              className={`p-4 rounded-2xl border transition-all cursor-pointer flex items-start gap-3 ${
+                maintenancePayer === 'TENANT'
+                  ? 'bg-amber-500/10 border-amber-500 ring-2 ring-amber-500/20 dark:bg-amber-500/20'
+                  : 'bg-slate-50/50 dark:bg-white/[0.01] border-slate-200/80 dark:border-white/10 hover:border-slate-300'
+              }`}
+            >
+              <div className={`w-4 h-4 rounded-full border flex items-center justify-center mt-0.5 shrink-0 ${
+                maintenancePayer === 'TENANT' ? 'border-amber-600 bg-amber-600' : 'border-slate-400'
+              }`}>
+                {maintenancePayer === 'TENANT' && <div className="w-1.5 h-1.5 rounded-full bg-white"></div>}
               </div>
-              {formErrors.utilFee && <p className="text-xs text-red-500 mt-1 flex items-center gap-1"><AlertCircle size={12}/>{formErrors.utilFee}</p>}
+              <div>
+                <span className="text-xs font-bold text-slate-900 dark:text-white block flex items-center gap-1.5">
+                  👤 Tenant Billable / Responsible
+                </span>
+                <span className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 block leading-relaxed">
+                  Tenant is billed directly for maintenance work orders through their resident portal.
+                </span>
+              </div>
             </div>
           </div>
-        )}
-
-
+        </div>
 
       <div>
-        <label className="block text-xs font-bold text-slate-600 dark:text-gray-400 tracking-wider mb-2">KEY EXCHANGE & ENTRY INSTRUCTIONS (OPTIONAL)</label>
+        <label className="block text-xs font-bold text-slate-600 dark:text-gray-400 tracking-wider mb-2 text-left">KEY EXCHANGE & ENTRY INSTRUCTIONS (OPTIONAL)</label>
         <textarea 
           value={keyExchangeNotes} 
           onChange={e => setKeyExchangeNotes(e.target.value)} 
@@ -3935,8 +3979,8 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
           }
 
           return (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm text-left">
+            <div className="overflow-x-auto custom-scrollbar">
+              <table className="w-full text-sm text-left min-w-[640px]">
                 <thead className="bg-slate-50 dark:bg-white/5 border-b border-slate-200 dark:border-white/10 uppercase text-[10px] tracking-wider font-bold text-slate-500 dark:text-gray-400">
                   <tr>
                     <th className="px-4 py-4">Tenant Email</th>
@@ -4062,7 +4106,7 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
 
               {isLandlord && selectedLease.unit_change_requested && (
                 <div className="p-3.5 bg-orange-500/10 border border-orange-500/20 text-orange-600 dark:text-orange-400 rounded-xl text-xs font-semibold text-left flex flex-col gap-1.5">
-                  <span className="font-bold flex items-center gap-1">⚠️ Tenant requested a unit change:</span>
+                  <span className="font-bold flex items-center gap-1">Tenant requested a unit change:</span>
                   <span className="bg-white/40 dark:bg-black/25 p-2.5 rounded-lg italic text-xs">
                     "{selectedLease.unit_change_request_notes}"
                   </span>

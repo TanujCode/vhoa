@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 from app.database import get_rental_db
 from app.models.rental.rental_user import RentalUser
-from app.schemas.audit_log import AuditLogOut
+from app.schemas.rental import AuditLogOut
 from app.routers.rental.dependencies import get_current_rental_user
 
 router = APIRouter(prefix="/rental", tags=["Rental - Audit Logs"])

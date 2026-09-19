@@ -950,7 +950,7 @@ export default function PropertiesHub({
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">
-            {selectedProperty ? `${selectedProperty.name} Details` : 'Properties & Apartments'}
+            {selectedProperty ? `${selectedProperty.name} Details` : 'Properties'}
           </h1>
           <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
             {selectedProperty 
@@ -1381,7 +1381,7 @@ export default function PropertiesHub({
                     )}
                   </div>
 
-                  <div className="grid grid-cols-4 gap-3">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                     <div>
                       <label className="block text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 font-sans">City</label>
                       <input 
@@ -1421,8 +1421,7 @@ export default function PropertiesHub({
                         readOnly 
                         type="text" 
                         value="USA" 
-                        className="w-full bg-slate-100 dark:bg-[#111c2a]/40 border border-slate-200 dark:border-white/10 rounded-lg px-3.5 py-2.5 text-xs text-slate-500 dark:text-slate-400 outline-none cursor-not-allowed font-bold" 
-                        placeholder="Country" 
+                        className="w-full bg-slate-100 dark:bg-[#111c2a]/40 border border-slate-200 dark:border-white/10 rounded-lg px-3.5 py-2.5 text-xs text-slate-500 dark:text-slate-400 outline-none cursor-not-allowed font-medium" 
                       />
                     </div>
                   </div>
@@ -1431,35 +1430,31 @@ export default function PropertiesHub({
                     <div className="text-[10px] font-semibold font-sans">
                       {propCity && propState && /^\d{5}(-\d{4})?$/.test(propZip) ? (
                         <span className="text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
-                          ✓ Address verified (United States)
+                          Address verified (United States)
                         </span>
                       ) : (
                         <span className="text-red-500 dark:text-red-400 flex items-center gap-1">
-                          ⚠️ Invalid US Address. Please select a valid US address from the suggestions or type a fully formatted address.
+                          Invalid US Address. Please select a valid US address from the suggestions or type a fully formatted address.
                         </span>
                       )}
                     </div>
                   )}
                 </div>
 
-                <div className="pt-4 flex gap-3 border-t dark:border-white/5">
+                <div className="pt-2 flex justify-end gap-3 border-t border-slate-200 dark:border-white/10">
                   <button 
                     type="button" 
                     onClick={handleClosePropModal} 
-                    className="flex-1 bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-800 dark:text-white font-bold py-3 rounded-xl text-xs transition duration-200 cursor-pointer flex items-center justify-center gap-1 font-sans"
+                    className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-white/10 text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 transition duration-200 cursor-pointer"
                   >
                     Cancel
                   </button>
                   <button 
-                    type="submit"
-                    disabled={!(propName.trim() && propCity && propState && /^\d{5}(-\d{4})?$/.test(propZip))}
-                    className={`flex-1 font-bold py-3 rounded-xl text-xs transition duration-200 flex items-center justify-center gap-1.5 font-sans ${
-                      propName.trim() && propCity && propState && /^\d{5}(-\d{4})?$/.test(propZip)
-                        ? 'bg-blue-600 hover:bg-blue-500 text-white cursor-pointer shadow-md shadow-blue-500/10'
-                        : 'bg-slate-200 dark:bg-white/5 text-slate-400 dark:text-slate-600 cursor-not-allowed'
-                    }`}
+                    type="submit" 
+                    disabled={isSubmitting}
+                    className="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white rounded-xl text-xs font-bold transition duration-200 shadow-md shadow-blue-500/20 cursor-pointer"
                   >
-                    Create Property <Check className="w-4 h-4" />
+                    {isSubmitting ? 'Creating...' : 'Create Property'}
                   </button>
                 </div>
 
@@ -1489,7 +1484,7 @@ export default function PropertiesHub({
                 <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">Street Address</label>
                 <input required type="text" value={editAddress} onChange={e=>setEditAddress(e.target.value)} className="w-full bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 focus:border-blue-500 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none" placeholder="e.g. 100 Main St" />
               </div>
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
                   <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">City</label>
                   <input required type="text" value={editCity} onChange={e=>setEditCity(e.target.value)} onBlur={() => {

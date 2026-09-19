@@ -1,1 +1,1 @@
-# Package
+# HOA service removed

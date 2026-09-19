@@ -54,6 +54,7 @@ def populate_maintenance_extra_fields(r, db: Session):
     else:
         r.submitted_by_name = "Unknown"
 
+    r.responsible_party = getattr(r, 'responsible_party', 'LANDLORD') or 'LANDLORD'
     r.tenant_notes = getattr(r, 'tenant_notes', None)
     return r
 
@@ -152,11 +153,12 @@ def update_maintenance(
     status: str | None = None,
     vendor_id: int | None = None,
     estimated_cost: float | None = None,
+    responsible_party: str | None = None,
     db: Session = Depends(get_rental_db),
     current_user: RentalUser = Depends(require_rental_role("super_admin", "landlord"))
 ):
     try:
-        req = rental_service.update_maintenance_request(request_id, status, vendor_id, estimated_cost, db)
+        req = rental_service.update_maintenance_request(request_id, status, vendor_id, estimated_cost, db, responsible_party=responsible_party)
         log_rental_action(db, "UPDATE_MAINTENANCE", "rental", f"Maintenance request {request_id} updated.", current_user.user_id)
         return populate_maintenance_extra_fields(req, db)
     except ValueError as e:
@@ -168,7 +170,7 @@ def pay_maintenance(
     request_id: int,
     body: RentalPaymentRequest,
     db: Session = Depends(get_rental_db),
-    current_user: RentalUser = Depends(require_rental_role("super_admin", "tenant"))
+    current_user: RentalUser = Depends(require_rental_role("super_admin", "landlord", "tenant"))
 ):
     try:
         req = rental_service.pay_maintenance_request(request_id, body.payment_method, db)

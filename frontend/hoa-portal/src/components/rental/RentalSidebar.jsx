@@ -27,7 +27,7 @@ const RentalSidebar = ({ activePage, setActivePage, isOpen, setIsOpen, user, pro
   // Super Admin Menu
   const superAdminNavItems = [
     { id: 'dashboard', label: 'Dashboard', icon: Layout },
-    { id: 'properties_hub', label: 'All Properties & Apartments', icon: Globe },
+    { id: 'properties_hub', label: 'All Properties', icon: Globe },
     { id: 'leases_hub', label: 'Lease Agreements', icon: FileText },
     { id: 'tenants_hub', label: 'Tenants Directory', icon: Users },
     { id: 'rent_ledger', label: 'Payments Hub', icon: CreditCard },
@@ -39,7 +39,7 @@ const RentalSidebar = ({ activePage, setActivePage, isOpen, setIsOpen, user, pro
   // Landlord Menu
   const landlordNavItems = [
     { id: 'dashboard', label: 'Landlord Dashboard', icon: Layout },
-    { id: 'properties_hub', label: 'Properties & Apartments', icon: Globe },
+    { id: 'properties_hub', label: 'Properties', icon: Globe },
     { id: 'leases_hub', label: 'Lease Agreements', icon: FileText },
     { id: 'tenants_hub', label: 'Tenants', icon: Users },
 
@@ -66,14 +66,14 @@ const RentalSidebar = ({ activePage, setActivePage, isOpen, setIsOpen, user, pro
         // When landlord has registered properties, unlock Lease Agreements too
         navItems = [
           { id: 'dashboard', label: 'Landlord Dashboard', icon: Layout },
-          { id: 'properties_hub', label: 'Properties & Apartments', icon: Globe },
+          { id: 'properties_hub', label: 'Properties', icon: Globe },
           { id: 'leases_hub', label: 'Lease Agreements', icon: FileText },
         ];
       } else {
         // When landlord has no properties yet
         navItems = [
           { id: 'dashboard', label: 'Landlord Dashboard', icon: Layout },
-          { id: 'properties_hub', label: 'Properties & Apartments', icon: Globe },
+          { id: 'properties_hub', label: 'Properties', icon: Globe },
         ];
       }
     } else {

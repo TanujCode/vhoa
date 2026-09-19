@@ -4,7 +4,7 @@ from typing import Optional
 from pydantic import BaseModel
 from app.database import get_rental_db
 from app.models.rental.rental_user import RentalUser
-from app.models.hoa.user import Role
+from app.models.rental.role import Role
 from app.services.rental.audit_service import log_rental_action
 from app.routers.rental.dependencies import require_rental_role
 

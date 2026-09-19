@@ -168,3 +168,66 @@ export const validateTicketDescription = (desc) => {
 
   return true;
 };
+
+/**
+ * US Property Management / Housing Habitability Auto-Priority Classifier
+ * Classifies priority into URGENT, HIGH, NORMAL, LOW based on problem type, title, and description.
+ */
+export const autoDetectPriority = (type = '', title = '', description = '') => {
+  const combined = `${type} ${title} ${description}`.toLowerCase();
+
+  // 1. Emergency / Life Safety / Severe Property Damage -> URGENT
+  const urgentKeywords = [
+    'gas leak', 'smell gas', 'gas odor', 'fire', 'sparks', 'sparking', 'smoke',
+    'flooding', 'flood', 'burst pipe', 'pipe burst', 'major leak', 'ceiling collapse',
+    'no water', 'sewer backup', 'sewage', 'raw sewage', 'carbon monoxide'
+  ];
+  if (urgentKeywords.some(kw => combined.includes(kw))) {
+    return {
+      priority: 'URGENT',
+      reason: 'Emergency Safety / Severe Hazard'
+    };
+  }
+
+  // 2. High Habitability / Essential Utilities / Security -> HIGH
+  const highKeywords = [
+    'water leak', 'leak', 'leaking', 'sink leak', 'toilet overflow', 'toilet broken',
+    'no heat', 'heater broken', 'furnace', 'heating failure', 'no ac', 'ac broken',
+    'air conditioner', 'power outage', 'breaker trip', 'electrical issue', 'exposed wire',
+    'door lock broken', 'broken lock', 'broken window', 'security issue', 'window broken',
+    'refrigerator broken', 'fridge not cooling'
+  ];
+  if (highKeywords.some(kw => combined.includes(kw))) {
+    return {
+      priority: 'HIGH',
+      reason: 'US Habitability Standard / Essential Utility'
+    };
+  }
+
+  // If request type is Security or Plumbing or Electrical, defaults to HIGH
+  const typeLower = (type || '').toLowerCase();
+  if (typeLower.includes('security') || typeLower.includes('plumb') || typeLower.includes('elect')) {
+    return {
+      priority: 'HIGH',
+      reason: 'Standard Utility / Security Work Order'
+    };
+  }
+
+  // 3. Cosmetic / Non-urgent -> LOW
+  const lowKeywords = [
+    'paint', 'painting', 'landscaping', 'lawn', 'garden', 'grass', 'leaf', 'tree trimming',
+    'cosmetic', 'touch up', 'cabinet hinge', 'decor', 'curtain'
+  ];
+  if (lowKeywords.some(kw => combined.includes(kw))) {
+    return {
+      priority: 'LOW',
+      reason: 'Routine / Cosmetic Maintenance'
+    };
+  }
+
+  // 4. Default Standard -> NORMAL
+  return {
+    priority: 'NORMAL',
+    reason: 'Standard Maintenance'
+  };
+};

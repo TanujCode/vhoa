@@ -1,0 +1,12 @@
+ADD: 
+STATUS: M  frontend/hoa-portal/vite.config.js
+
+COMMIT: [main 6133880] Fix backend main.py startup, CORS origins config, and sync all recent updates
+ 1 file changed, 17 insertions(+), 3 deletions(-)
+
+PUSH: 
+RECENT_COMMITS:
+6133880 Fix backend main.py startup, CORS origins config, and sync all recent updates
+171cc18 Fix backend main.py startup, CORS origins config, and sync all recent updates
+c749299 Fix backend main.py startup, CORS origins config, and sync all recent updates
+

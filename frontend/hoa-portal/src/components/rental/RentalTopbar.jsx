@@ -4,7 +4,7 @@ import {
 } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 import { getBaseUrl } from '../../services/api';
-import SystemSelectorDropdown from '../layout/SystemSelectorDropdown';
+
 
 const RentalTopbar = ({
   toggleSidebar,
@@ -64,10 +64,10 @@ const RentalTopbar = ({
   };
 
   return (
-    <header className="h-16 bg-white dark:bg-[#243044] border-b border-slate-200 dark:border-white/10 flex items-center px-3 sm:px-4 lg:px-6 z-30 sticky top-0 shrink-0">
+    <header className="h-16 bg-white dark:bg-[#243044] border-b border-slate-200 dark:border-white/10 flex items-center px-2.5 sm:px-4 lg:px-6 z-30 sticky top-0 shrink-0">
       
       {/* Mobile Sidebar Button */}
-      <button onClick={toggleSidebar} className="lg:hidden p-2 mr-1 sm:mr-2 text-gray-500 dark:text-gray-400">
+      <button onClick={toggleSidebar} className="lg:hidden p-1.5 sm:p-2 mr-1 text-gray-500 dark:text-gray-400">
         <Menu size={20} />
       </button>
 
@@ -75,10 +75,10 @@ const RentalTopbar = ({
       {canGoBack && (
         <button 
           onClick={onBack}
-          className="p-2 mr-2 text-slate-600 dark:text-gray-400 hover:bg-slate-100 dark:hover:bg-white/5 rounded-xl transition duration-150 flex items-center justify-center group shrink-0"
+          className="p-1.5 sm:p-2 mr-1 sm:mr-2 text-slate-600 dark:text-gray-400 hover:bg-slate-100 dark:hover:bg-white/5 rounded-xl transition duration-150 flex items-center justify-center group shrink-0"
           title="Go Back"
         >
-          <ArrowLeft size={20} className="transition-transform group-hover:-translate-x-0.5" />
+          <ArrowLeft size={19} className="transition-transform group-hover:-translate-x-0.5" />
         </button>
       )}
 
@@ -87,26 +87,26 @@ const RentalTopbar = ({
         {(user?.role === 'landlord' || user?.role === 'super_admin') && properties.length > 0 ? (
           <div 
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-            className="flex items-center gap-1.5 sm:gap-3 max-w-[150px] xs:max-w-[200px] sm:max-w-[420px] lg:max-w-none select-none cursor-pointer group"
+            className="flex items-center gap-1.5 sm:gap-3 max-w-[130px] xs:max-w-[190px] sm:max-w-[420px] lg:max-w-none select-none cursor-pointer group"
           >
             <Building2 className="hidden sm:block text-[#6366F1] dark:text-[#818CF8] flex-shrink-0" size={18} />
             <div className="min-w-0 text-left">
               <p className="text-[9px] sm:text-[10px] text-slate-400 dark:text-gray-400 font-semibold uppercase tracking-widest leading-normal mb-0.5 truncate">
                 MANAGING
               </p>
-              <div className="flex items-center gap-1.5 min-w-0">
-                <span className="text-[14px] xs:text-[16px] sm:text-lg font-black text-slate-900 dark:text-white leading-tight truncate group-hover:text-blue-600 dark:group-hover:text-[#5BA4F5] transition-colors">
+              <div className="flex items-center gap-1 min-w-0">
+                <span className="text-[13px] xs:text-[15px] sm:text-lg font-black text-slate-900 dark:text-white leading-tight truncate group-hover:text-blue-600 dark:group-hover:text-[#5BA4F5] transition-colors">
                   {selectedPropertyFilterId === 'all' 
                     ? 'All Properties' 
                     : (properties.find(p => String(p.property_id) === String(selectedPropertyFilterId))?.name || 'All Properties')
                   }
                 </span>
-                <ChevronDown size={16} className={`text-slate-800 dark:text-slate-200 group-hover:text-blue-600 dark:group-hover:text-[#5BA4F5] transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} />
+                <ChevronDown size={15} className={`text-slate-800 dark:text-slate-200 group-hover:text-blue-600 dark:group-hover:text-[#5BA4F5] transition-transform duration-200 shrink-0 ${isDropdownOpen ? 'rotate-180' : ''}`} />
               </div>
             </div>
           </div>
         ) : (
-          <div className="flex items-center gap-1.5 sm:gap-3 max-w-[150px] xs:max-w-[200px] sm:max-w-[420px] lg:max-w-none select-none">
+          <div className="flex items-center gap-1.5 sm:gap-3 max-w-[130px] xs:max-w-[190px] sm:max-w-[420px] lg:max-w-none select-none">
             <Building2 className="hidden sm:block text-[#6366F1] dark:text-[#818CF8] flex-shrink-0" size={18} />
             <div className="min-w-0 text-left">
               <p className="text-[9px] sm:text-[10px] text-slate-400 dark:text-gray-400 font-semibold uppercase tracking-widest leading-normal mb-0.5 truncate">
@@ -198,9 +198,7 @@ const RentalTopbar = ({
 
       {/* Right Side Actions */}
       <div className="ml-auto flex items-center gap-1 sm:gap-2 lg:gap-4 flex-shrink-0">
-        {user?.role === 'super_admin' && (
-          <SystemSelectorDropdown currentSystem="rental" />
-        )}
+
         
         <button
           onClick={() => window.location.reload()}

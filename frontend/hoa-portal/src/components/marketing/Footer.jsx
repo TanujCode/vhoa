@@ -24,15 +24,10 @@ export default function Footer() {
 
   const links = {
     Platform: [
-      { name: 'Features', path: '/features' },
+      { name: 'Features', path: '/#features' },
       { name: 'Pricing', path: '/pricing' },
       { name: 'Security', path: '/security' },
-      { name: 'Integrations', path: '#' },
-    ],
-    Products: [
-      { name: 'HOA Governance', path: '/solutions/hoa' },
-      { name: 'Rental Property Management', path: '/solutions/rental' },
-      { name: 'Condo Management', path: '/solutions/condo' },
+      { name: 'Rental Portal', path: '/rental/login' },
     ],
     Company: [
       { name: 'About Us', path: '/about' },
@@ -40,6 +35,18 @@ export default function Footer() {
       { name: 'Careers', path: '#' },
       { name: 'Press', path: '#' },
     ]
+  };
+
+  const handleLinkClick = (e, path) => {
+    if (path.startsWith('#') || path.startsWith('/#')) {
+      const targetId = path.replace('/#', '').replace('#', '');
+      const element = document.getElementById(targetId);
+      if (element) {
+        e.preventDefault();
+        element.scrollIntoView({ behavior: 'smooth' });
+        window.history.pushState(null, '', `/#${targetId}`);
+      }
+    }
   };
 
   return (
@@ -53,16 +60,16 @@ export default function Footer() {
       <div className="absolute -bottom-24 right-1/4 w-[350px] h-[250px] bg-gradient-radial from-indigo-500/[0.06] to-transparent rounded-full blur-3xl pointer-events-none z-0" />
 
       <div className="relative max-w-7xl mx-auto px-5 sm:px-8 pt-12 pb-8 z-10">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-12 text-left">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-10 sm:gap-12 text-left">
 
           {/* Brand column */}
-          <div className="lg:col-span-4 space-y-4">
+          <div className="lg:col-span-5 space-y-4">
             <Link to="/" className="flex items-center group w-fit">
               <Logo className="h-8" forceWhite={true} />
             </Link>
 
-            <p className="text-sm text-slate-400 leading-relaxed max-w-xs font-normal">
-              NestBloq helps property managers and HOA boards unify operations, automate dues, and build better community experiences.
+            <p className="text-sm text-slate-400 leading-relaxed max-w-sm font-normal">
+              NestBloq helps modern landlords and property managers automate rent collection, manage tenant leases, and streamline maintenance operations.
             </p>
           </div>
 
@@ -75,7 +82,8 @@ export default function Footer() {
                   <li key={i}>
                     <Link 
                       to={item.path} 
-                      className="inline-block text-sm text-slate-400 hover:text-violet-400 hover:translate-x-1 transition-all duration-200"
+                      onClick={(e) => handleLinkClick(e, item.path)}
+                      className="inline-block text-sm text-slate-400 hover:text-violet-400 hover:translate-x-1 transition-all duration-200 cursor-pointer"
                     >
                       {item.name}
                     </Link>
@@ -86,7 +94,7 @@ export default function Footer() {
           ))}
 
           {/* CTA column */}
-          <div className="lg:col-span-2 space-y-4">
+          <div className="lg:col-span-3 space-y-4">
             <h5 className="text-xs font-black uppercase tracking-wider text-slate-200">Get Started</h5>
             <div className="space-y-2.5">
               <Link to="/rental/register" className="btn-glow w-full text-center py-3 text-sm font-semibold text-white rounded-xl flex items-center justify-center gap-1.5 group">

@@ -8,7 +8,7 @@ import {
 import { toast } from 'react-hot-toast';
 import API from '../../services/api';
 import ConfirmModal from '../../components/ConfirmModal';
-import { validateTicketTitle, validateTicketDescription } from '../../utils/fieldValidators';
+import { validateTicketTitle, validateTicketDescription, autoDetectPriority } from '../../utils/fieldValidators';
 
 const REQUEST_TYPES = [
   "Plumbing Issue",
@@ -71,15 +71,22 @@ const PriorityBadge = ({ priority }) => {
   );
 };
 
-const ScopeBadge = ({ scope }) => {
-  const config = {
-    INTERNAL: { label: 'Landlord Responsibility', color: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20' },
-    EXTERNAL_HOA: { label: 'HOA/COA Responsibility', color: 'bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-500/20' }
-  };
-  const item = config[scope] || { label: 'Landlord Responsibility', color: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20' };
+const ResponsibilityBadge = ({ party, scope }) => {
+  if (scope === 'EXTERNAL_HOA') {
+    return (
+      <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-500/20">
+        Building / Common Area
+      </span>
+    );
+  }
+  const isLandlord = (party || 'LANDLORD').toUpperCase() === 'LANDLORD';
   return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${item.color}`}>
-      {item.label}
+    <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
+      isLandlord 
+        ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20' 
+        : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20'
+    }`}>
+      {isLandlord ? 'Landlord Responsibility' : 'Tenant Responsibility'}
     </span>
   );
 };
@@ -179,6 +186,8 @@ export default function RentalMaintenanceDesk({ user, selectedPropertyFilterId =
   const [assignVendorId, setAssignVendorId] = useState('');
   const [estCost, setEstCost] = useState('0');
   const [statusVal, setStatusVal] = useState('OPEN');
+  const [editResponsibleParty, setEditResponsibleParty] = useState('LANDLORD');
+  const [autoDetectedReason, setAutoDetectedReason] = useState('');
   // Payment states
   const [showPayModal, setShowPayModal] = useState(false);
   const [payMethod, setPayMethod] = useState('ACH');
@@ -478,6 +487,7 @@ export default function RentalMaintenanceDesk({ user, selectedPropertyFilterId =
     try {
       const params = {};
       if (statusVal) params.status = statusVal;
+      if (editResponsibleParty) params.responsible_party = editResponsibleParty;
       
       if (assignVendorId) {
         params.vendor_id = parseInt(assignVendorId);
@@ -578,11 +588,11 @@ export default function RentalMaintenanceDesk({ user, selectedPropertyFilterId =
   });
 
   return (
-    <div className="space-y-8 text-left animate-fade-in font-sans">
-      <div className="flex justify-between items-center">
+    <div className="space-y-6 sm:space-y-8 text-left animate-fade-in font-sans">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <div>
-          <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">Maintenance Desk</h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Submit, schedule, and track work orders and repairs.</p>
+          <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">Maintenance Desk</h1>
+          <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1">Submit, schedule, and track work orders and repairs.</p>
         </div>
 
         {!isLandlord && (
@@ -596,8 +606,8 @@ export default function RentalMaintenanceDesk({ user, selectedPropertyFilterId =
       </div>
 
       {/* Stats Cards Row */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-white dark:bg-[#1E2E42] border border-slate-200/80 dark:border-white/10 p-5 rounded-2xl flex items-center gap-4 shadow-sm hover:shadow-md transition">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-6">
+        <div className="bg-white dark:bg-[#1E2E42] border border-slate-200/80 dark:border-white/10 p-4 sm:p-5 rounded-2xl flex items-center gap-4 shadow-sm hover:shadow-md transition">
           <div className="p-3 bg-blue-500/10 text-blue-500 rounded-xl">
             <Wrench className="w-6 h-6" />
           </div>
@@ -607,7 +617,7 @@ export default function RentalMaintenanceDesk({ user, selectedPropertyFilterId =
           </div>
         </div>
 
-        <div className="bg-white dark:bg-[#1E2E42] border border-slate-200/80 dark:border-white/10 p-5 rounded-2xl flex items-center gap-4 shadow-sm hover:shadow-md transition">
+        <div className="bg-white dark:bg-[#1E2E42] border border-slate-200/80 dark:border-white/10 p-4 sm:p-5 rounded-2xl flex items-center gap-4 shadow-sm hover:shadow-md transition">
           <div className="p-3 bg-amber-500/10 text-amber-500 rounded-xl">
             <Clock className="w-6 h-6" />
           </div>
@@ -617,7 +627,7 @@ export default function RentalMaintenanceDesk({ user, selectedPropertyFilterId =
           </div>
         </div>
 
-        <div className="bg-white dark:bg-[#1E2E42] border border-slate-200/80 dark:border-white/10 p-5 rounded-2xl flex items-center gap-4 shadow-sm hover:shadow-md transition">
+        <div className="bg-white dark:bg-[#1E2E42] border border-slate-200/80 dark:border-white/10 p-4 sm:p-5 rounded-2xl flex items-center gap-4 shadow-sm hover:shadow-md transition">
           <div className="p-3 bg-[#A855F7]/10 text-[#A855F7] rounded-xl">
             <UserCheck className="w-6 h-6" />
           </div>
@@ -627,7 +637,7 @@ export default function RentalMaintenanceDesk({ user, selectedPropertyFilterId =
           </div>
         </div>
 
-        <div className="bg-white dark:bg-[#1E2E42] border border-slate-200/80 dark:border-white/10 p-5 rounded-2xl flex items-center gap-4 shadow-sm hover:shadow-md transition">
+        <div className="bg-white dark:bg-[#1E2E42] border border-slate-200/80 dark:border-white/10 p-4 sm:p-5 rounded-2xl flex items-center gap-4 shadow-sm hover:shadow-md transition">
           <div className="p-3 bg-emerald-500/10 text-emerald-500 rounded-xl">
             <CheckCircle2 className="w-6 h-6" />
           </div>
@@ -642,12 +652,12 @@ export default function RentalMaintenanceDesk({ user, selectedPropertyFilterId =
       <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-[#1E2E42] dark:to-[#162535] border border-slate-200/80 dark:border-white/10 rounded-xl overflow-hidden shadow-sm">
         
         {/* Header Section */}
-        <div className="p-6 border-b border-slate-200 dark:border-white/10 flex flex-col lg:flex-row gap-4 lg:items-center justify-between">
+        <div className="p-4 sm:p-6 border-b border-slate-200 dark:border-white/10 flex flex-col lg:flex-row gap-4 lg:items-center justify-between">
           <h2 className="font-bold text-slate-900 dark:text-white text-sm flex items-center gap-2 flex-shrink-0">
             <Wrench size={16} /> Active Maintenance Tickets
           </h2>
           
-          <div className="flex flex-col sm:flex-row sm:flex-nowrap items-center gap-2 w-full lg:w-auto lg:justify-end">
+          <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-2 w-full lg:w-auto lg:justify-end">
             {/* Search Bar */}
             <div className="relative w-full sm:w-48 flex-shrink-0">
               <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-gray-500 pointer-events-none" />
@@ -671,8 +681,8 @@ export default function RentalMaintenanceDesk({ user, selectedPropertyFilterId =
                 <option value="OPEN" className="text-slate-900 dark:text-white">Open</option>
                 <option value="VENDOR_ASSIGNED" className="text-slate-900 dark:text-white">Vendor Assigned</option>
                 <option value="IN_PROGRESS" className="text-slate-900 dark:text-white">In Progress</option>
-                <option value="FORWARDED_TO_HOA" className="text-slate-900 dark:text-white">Forwarded to HOA/COA</option>
-                <option value="HOA_IN_PROGRESS" className="text-slate-900 dark:text-white">HOA Work in Progress</option>
+                <option value="FORWARDED_TO_HOA" className="text-slate-900 dark:text-white">Building Maintenance Escalated</option>
+                <option value="HOA_IN_PROGRESS" className="text-slate-900 dark:text-white">Building Work in Progress</option>
                 <option value="COMPLETED" className="text-slate-900 dark:text-white">Completed</option>
                 <option value="CANCELLED" className="text-slate-900 dark:text-white">Cancelled</option>
               </select>
@@ -756,9 +766,11 @@ export default function RentalMaintenanceDesk({ user, selectedPropertyFilterId =
                         <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold border uppercase tracking-wider ${
                           req.payment_status === 'PAID' 
                             ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' 
-                            : 'bg-blue-500/10 text-blue-500 border-blue-500/20'
+                            : (req.responsible_party === 'TENANT' ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20' : 'bg-blue-500/10 text-blue-500 border-blue-500/20')
                         }`}>
-                          {req.payment_status === 'PAID' ? 'Paid by Landlord' : (isLandlord ? 'UNPAID' : 'Landlord Covered')}
+                          {req.payment_status === 'PAID' 
+                            ? (req.responsible_party === 'TENANT' ? 'Paid by Tenant' : 'Paid by Landlord') 
+                            : (req.responsible_party === 'TENANT' ? 'Billed to Tenant (Unpaid)' : (isLandlord ? 'UNPAID' : 'Covered by Landlord'))}
                         </span>
                       )}
                       <span className="hidden sm:inline">Date: <span className="text-slate-800 dark:text-gray-300 font-medium">
@@ -767,7 +779,7 @@ export default function RentalMaintenanceDesk({ user, selectedPropertyFilterId =
                         })}
                       </span></span>
                       <PriorityBadge priority={req.priority} />
-                      <ScopeBadge scope={req.scope} />
+                      <ResponsibilityBadge party={req.responsible_party} scope={req.scope} />
                     </div>
 
                     {/* Tenant Notes / Change Requests Display */}
@@ -788,13 +800,21 @@ export default function RentalMaintenanceDesk({ user, selectedPropertyFilterId =
                         <>
                           <button
                             disabled={req.status === 'COMPLETED' || req.status === 'CANCELLED'}
-                            onClick={() => { setSelectedRequest(req); setErrors({}); setStatusVal(req.status); setEstCost(req.estimated_cost.toString()); setAssignVendorId(req.vendor_id || ''); setShowAssignModal(true); }}
+                            onClick={() => { 
+                              setSelectedRequest(req); 
+                              setErrors({}); 
+                              setStatusVal(req.status); 
+                              setEstCost(req.estimated_cost.toString()); 
+                              setAssignVendorId(req.vendor_id || ''); 
+                              setEditResponsibleParty(req.responsible_party || 'LANDLORD');
+                              setShowAssignModal(true); 
+                            }}
                             className="px-3 py-1.5 bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 rounded-xl text-xs font-medium transition flex items-center gap-1 shadow-sm active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                           >
                             <Edit size={12} />
                             <span>Manage Request</span>
                           </button>
-                          {req.payment_status === 'UNPAID' && req.estimated_cost > 0 && (
+                          {req.payment_status === 'UNPAID' && req.estimated_cost > 0 && req.responsible_party !== 'TENANT' && (
                             <button
                               onClick={() => { setSelectedRequest(req); setPayMethod('ACH'); setShowPayModal(true); }}
                               className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-medium transition flex items-center justify-center gap-1 shadow-sm cursor-pointer"
@@ -805,6 +825,16 @@ export default function RentalMaintenanceDesk({ user, selectedPropertyFilterId =
                         </>
                       ) : (
                         <>
+                          {/* Tenant Pay Maintenance Bill Button */}
+                          {req.payment_status === 'UNPAID' && req.estimated_cost > 0 && req.responsible_party === 'TENANT' && (
+                            <button
+                              onClick={() => { setSelectedRequest(req); setPayMethod('ACH'); setShowPayModal(true); }}
+                              className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-md shadow-emerald-500/20 cursor-pointer animate-pulse"
+                            >
+                              <DollarSign className="w-3.5 h-3.5" /> Settle / Pay Maintenance Bill (${req.estimated_cost.toFixed(2)})
+                            </button>
+                          )}
+
                           {/* Direct Edit Button if OPEN */}
                           {req.status === 'OPEN' ? (
                             <button
@@ -922,8 +952,8 @@ export default function RentalMaintenanceDesk({ user, selectedPropertyFilterId =
                       }}
                       className={`w-full bg-slate-50 dark:bg-[#0D1B2A] border ${errors.scope ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/20'} rounded-2xl pl-4 pr-10 py-3 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-blue-500 appearance-none cursor-pointer`}
                     >
-                      <option value="INTERNAL">Inside Apartment (Landlord Responsibility)</option>
-                      <option value="EXTERNAL_HOA">Outside Apartment / Common Area (HOA/COA Responsibility)</option>
+                      <option value="INTERNAL">Inside Unit (Landlord Responsibility)</option>
+                      <option value="EXTERNAL_HOA">Outside Unit / Common Building Area</option>
                     </select>
                     <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-gray-500 pointer-events-none" size={18} />
                   </div>
@@ -937,8 +967,14 @@ export default function RentalMaintenanceDesk({ user, selectedPropertyFilterId =
                   <select
                     value={requestType}
                     onChange={e => {
-                      setRequestType(e.target.value);
+                      const nextType = e.target.value;
+                      setRequestType(nextType);
                       if (errors.requestType) setErrors(prev => ({ ...prev, requestType: null }));
+                      const detected = autoDetectPriority(nextType, title, description);
+                      if (detected && detected.priority) {
+                        setPriority(detected.priority);
+                        setAutoDetectedReason(detected.reason);
+                      }
                     }}
                     className={`w-full bg-slate-50 dark:bg-[#0D1B2A] border ${errors.requestType ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/20'} rounded-2xl pl-4 pr-10 py-3 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-blue-500 appearance-none cursor-pointer`}
                   >
@@ -962,8 +998,13 @@ export default function RentalMaintenanceDesk({ user, selectedPropertyFilterId =
                     const cleaned = e.target.value.replace(/[^A-Za-z\s]/g, '');
                     setTitle(cleaned);
                     if (errors.title) setErrors(prev => ({ ...prev, title: null }));
+                    const detected = autoDetectPriority(requestType, cleaned, description);
+                    if (detected && detected.priority) {
+                      setPriority(detected.priority);
+                      setAutoDetectedReason(detected.reason);
+                    }
                   }}
-                  placeholder="Brief title of the issue..."
+                  placeholder="Brief title of the issue (e.g. Water leakage in kitchen)..."
                   className={`w-full bg-slate-50 dark:bg-[#0D1B2A] border ${errors.title ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/20'} rounded-2xl px-4 py-3 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-550 focus:outline-none focus:border-blue-500`}
                 />
                 {errors.title && <p className="text-red-500 text-[10px] mt-1 font-bold">{errors.title}</p>}
@@ -975,14 +1016,27 @@ export default function RentalMaintenanceDesk({ user, selectedPropertyFilterId =
                   rows={4}
                   value={description}
                   onChange={e => {
-                    setDescription(e.target.value);
+                    const nextDesc = e.target.value;
+                    setDescription(nextDesc);
                     if (errors.description) setErrors(prev => ({ ...prev, description: null }));
+                    const detected = autoDetectPriority(requestType, title, nextDesc);
+                    if (detected && detected.priority) {
+                      setPriority(detected.priority);
+                      setAutoDetectedReason(detected.reason);
+                    }
                   }}
                   placeholder="Describe the problem in detail (optional)..."
                   className={`w-full bg-slate-50 dark:bg-[#0D1B2A] border ${errors.description ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/20'} rounded-2xl px-4 py-3 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 focus:outline-none focus:border-blue-500 resize-y`}
                 />
                 {errors.description && <p className="text-red-500 text-[10px] mt-1 font-bold">{errors.description}</p>}
               </div>
+
+              {autoDetectedReason && (
+                <div className="flex items-center gap-1.5 text-xs font-semibold text-blue-600 dark:text-blue-400 bg-blue-500/10 dark:bg-blue-500/20 border border-blue-500/20 px-3.5 py-2 rounded-xl animate-fade-in">
+                  <Sparkles size={14} className="shrink-0 text-blue-500" />
+                  <span>Auto-detected Priority: <strong>{priority}</strong></span>
+                </div>
+              )}
 
               <div>
                 <label className="text-xs text-slate-500 dark:text-gray-400 mb-2 block uppercase font-bold tracking-wider">Priority</label>
@@ -1054,7 +1108,7 @@ export default function RentalMaintenanceDesk({ user, selectedPropertyFilterId =
                 <div className="p-3 bg-orange-500/10 border border-orange-500/20 text-orange-700 dark:text-orange-400 text-xs font-semibold rounded-xl flex items-start gap-2">
                   <Info size={16} className="shrink-0 mt-0.5" />
                   <div>
-                    <strong>HOA/COA Responsibility:</strong> This issue is in a common area. The association is responsible for this repair. You do not need to dispatch a private vendor or pay for it.
+                    <strong>Building Maintenance Responsibility:</strong> This issue is in a common area. You do not need to dispatch a private contractor.
                   </div>
                 </div>
               )}
@@ -1069,9 +1123,9 @@ export default function RentalMaintenanceDesk({ user, selectedPropertyFilterId =
                       className="w-full bg-slate-50 dark:bg-[#111c2a] border border-slate-200 dark:border-white/10 focus:border-blue-500 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white outline-none appearance-none cursor-pointer"
                     >
                       <option value="OPEN">Open (Awaiting review)</option>
-                      <option value="FORWARDED_TO_HOA">Forwarded to HOA/COA</option>
-                      <option value="HOA_IN_PROGRESS">HOA Work in Progress</option>
-                      <option value="COMPLETED">Completed (HOA Repairs done)</option>
+                      <option value="FORWARDED_TO_HOA">Forwarded to Building Maintenance</option>
+                      <option value="HOA_IN_PROGRESS">Building Work in Progress</option>
+                      <option value="COMPLETED">Completed (Repairs done)</option>
                       <option value="CANCELLED">Cancelled</option>
                     </select>
                   ) : (
@@ -1141,6 +1195,42 @@ export default function RentalMaintenanceDesk({ user, selectedPropertyFilterId =
                       />
                     </div>
                     {errors.est_cost && <p className="text-red-500 text-[10px] mt-1 font-bold">{errors.est_cost}</p>}
+                  </div>
+
+                  {/* Expense Responsibility / Billable Party Selector */}
+                  <div>
+                    <label className="block text-[11px] text-slate-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">
+                      EXPENSE RESPONSIBILITY / BILLABLE PARTY *
+                    </label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setEditResponsibleParty('LANDLORD')}
+                        className={`p-2.5 rounded-xl border text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
+                          editResponsibleParty === 'LANDLORD'
+                            ? 'bg-blue-500/10 border-blue-500 text-blue-600 dark:text-blue-400 ring-1 ring-blue-500'
+                            : 'border-slate-200 dark:border-white/10 text-slate-600 dark:text-gray-400 hover:bg-slate-50 dark:hover:bg-white/5'
+                        }`}
+                      >
+                        🏢 Landlord Expense
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setEditResponsibleParty('TENANT')}
+                        className={`p-2.5 rounded-xl border text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
+                          editResponsibleParty === 'TENANT'
+                            ? 'bg-amber-500/10 border-amber-500 text-amber-600 dark:text-amber-400 ring-1 ring-amber-500'
+                            : 'border-slate-200 dark:border-white/10 text-slate-600 dark:text-gray-400 hover:bg-slate-50 dark:hover:bg-white/5'
+                        }`}
+                      >
+                        👤 Tenant Billable
+                      </button>
+                    </div>
+                    <p className="text-[10px] text-slate-400 dark:text-gray-500 mt-1">
+                      {editResponsibleParty === 'LANDLORD' 
+                        ? 'Property owner covers cost & settles directly with contractor.' 
+                        : 'Tenant is billed and receives the payment button on their resident portal.'}
+                    </p>
                   </div>
                 </>
               )}

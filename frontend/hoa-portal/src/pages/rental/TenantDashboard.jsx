@@ -467,11 +467,11 @@ export default function TenantDashboard({ user, setUser, setActivePage }) {
           </div>
 
           {/* Main Content Layout */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
             {/* Left Side: Recent Invoices & Quick Tasks */}
-            <div className="lg:col-span-7 space-y-6">
+            <div className="lg:col-span-7 flex flex-col justify-between gap-6">
               {/* Recent Invoices Card */}
-              <div className="p-6 rounded-3xl bg-white dark:bg-[#1E2E42] border border-slate-200/80 dark:border-white/10 shadow-sm space-y-4 text-left">
+              <div className="p-6 rounded-3xl bg-white dark:bg-[#1E2E42] border border-slate-200/80 dark:border-white/10 shadow-sm space-y-4 text-left flex-1 flex flex-col justify-between">
                 <div className="flex justify-between items-center pb-2 border-b border-slate-100 dark:border-white/5">
                   <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
                     <FileText size={16} className="text-blue-500" /> Recent Rent Invoices
@@ -485,9 +485,9 @@ export default function TenantDashboard({ user, setUser, setActivePage }) {
                 </div>
 
                 {invoices.length === 0 ? (
-                  <div className="py-8 text-center text-slate-400 text-xs font-semibold">No invoices generated for this lease yet.</div>
+                  <div className="flex-1 flex items-center justify-center py-6 text-center text-slate-400 text-xs font-semibold">No invoices generated for this lease yet.</div>
                 ) : (
-                  <div className="space-y-2.5">
+                  <div className="space-y-2.5 flex-1 flex flex-col justify-start">
                     {invoices.map(inv => (
                       <div 
                         key={inv.invoice_id} 
@@ -578,11 +578,12 @@ export default function TenantDashboard({ user, setUser, setActivePage }) {
             </div>
 
             {/* Right Side: Compact Rent & Lease Schedule Calendar */}
-            <div className="lg:col-span-5">
+            <div className="lg:col-span-5 flex flex-col">
               <RentalCalendarWidget
                 userRole="tenant"
                 onNavigatePage={setActivePage}
                 onPayRent={() => setActivePage('rent_ledger')}
+                className="h-full"
               />
             </div>
           </div>
