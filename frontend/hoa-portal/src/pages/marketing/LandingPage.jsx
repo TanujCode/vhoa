@@ -1392,7 +1392,7 @@ export default function LandingPage() {
         <div className="absolute top-1/3 -left-40 w-80 h-80 bg-violet-500/8 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute top-1/3 -right-40 w-80 h-80 bg-indigo-500/8 rounded-full blur-3xl pointer-events-none" />
 
-        <div className="max-w-5xl mx-auto w-full text-center space-y-6 animate-fade-in-up">
+        <div className="max-w-5xl mx-auto w-full text-center space-y-7 sm:space-y-8 animate-fade-in-up">
 
           {/* Badge pill */}
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-violet-500/10 border border-violet-500/20 text-violet-600 dark:text-violet-400">
@@ -1400,24 +1400,24 @@ export default function LandingPage() {
           </div>
 
           {/* Hero headline — matching client PNG */}
-          <div className="space-y-3.5">
-            <h1 className="font-display text-4xl sm:text-5xl lg:text-[58px] font-black leading-[1.05] tracking-tight text-slate-900 dark:text-white">
+          <div className="space-y-4 sm:space-y-5">
+            <h1 className="font-display text-4xl sm:text-5xl lg:text-[58px] font-black leading-[1.2] sm:leading-[1.18] lg:leading-[1.2] tracking-tight text-slate-900 dark:text-white pb-1">
               The operating system<br />
               <span className="gradient-text">for every property</span>{' '}
               <span className="text-slate-900 dark:text-white">you own.</span>
             </h1>
-            <div className="text-lg sm:text-xl md:text-2xl font-extrabold text-slate-650 dark:text-slate-400 select-none">
+            <div className="text-lg sm:text-xl md:text-2xl font-extrabold text-slate-650 dark:text-slate-400 select-none pt-1">
               Built for <span className="gradient-text">{typedText}</span>
               <span className="text-violet-500 dark:text-violet-400 font-light animate-pulse ml-1">|</span>
             </div>
-            <p className="text-sm sm:text-base text-slate-500 dark:text-slate-450 leading-relaxed max-w-2xl mx-auto font-normal">
+            <p className="text-sm sm:text-base md:text-[17px] text-slate-500 dark:text-slate-450 leading-relaxed max-w-2xl mx-auto font-normal pt-1">
               Manage homes, rentals, communities, and investments with AI-powered tools
               that save time, reduce costs, and keep everything under control.
             </p>
           </div>
 
           {/* CTA Buttons */}
-          <div className="flex flex-wrap gap-4 justify-center">
+          <div className="flex flex-wrap gap-4 justify-center pt-1">
             <Link to="/rental/register" className="btn-glow px-8 py-3.5 text-sm font-semibold text-white rounded-xl flex items-center gap-2 group">
               Start Free Trial
               <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />

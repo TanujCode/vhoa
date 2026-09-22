@@ -27,13 +27,11 @@ export default function Footer() {
       { name: 'Features', path: '/#features' },
       { name: 'Pricing', path: '/pricing' },
       { name: 'Security', path: '/security' },
-      { name: 'Rental Portal', path: '/rental/login' },
     ],
     Company: [
       { name: 'About Us', path: '/about' },
       { name: 'Contact Sales', path: '/contact' },
-      { name: 'Careers', path: '#' },
-      { name: 'Press', path: '#' },
+      { name: 'Rental Portal', path: '/rental/login' },
     ]
   };
 

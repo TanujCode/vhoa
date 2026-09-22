@@ -168,6 +168,7 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
   const [showCancelReasonModal, setShowCancelReasonModal] = useState(false);
   const [cancelReasonText, setCancelReasonText] = useState('');
   const [isSubmittingCancel, setIsSubmittingCancel] = useState(false);
+  const [isApprovingLease, setIsApprovingLease] = useState(false);
 
   const handleUploadClick = () => {
     if (fileInputRef.current) {
@@ -1713,16 +1714,7 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
     }
   }
 
-  async function handleLandlordApproveLease() {
-    try {
-      const res = await API.post(`/rental/leases/${selectedLease.lease_id}/approve`);
-      toast.success("Lease approved and activated! The unit is now occupied.");
-      setLeases(prev => prev.map(l => l.lease_id === selectedLease.lease_id ? res.data : l));
-      setSelectedLease(res.data);
-    } catch (err) {
-      toast.error(err.response?.data?.detail || "Failed to approve lease.");
-    }
-  }
+
   const renderTenantOnboardingFlow = () => {
     const docLabels = { PAY_SLIP: "Pay Slip / Income Proof", DRIVING_LICENSE: "Driving License / National ID", ADDRESS_PROOF: "Notice/Payment Address Proof" };
     return (
@@ -2545,16 +2537,18 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
         </div>
 
         {/* Action Controls */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-3 border-t dark:border-white/5">
-          {!selectedLease.landlord_signature ? (
-            <span className="text-xs text-red-500 font-semibold text-left">
-              You must type your legal name and sign the lease contract above before you can approve and activate it.
-            </span>
-          ) : (
-            <span className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold text-left">
-              Contract signed. You are ready to approve and activate the lease.
-            </span>
-          )}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-4 border-t dark:border-white/10">
+          <div className="text-left text-xs max-w-md">
+            {selectedLease.landlord_signature ? (
+              <span className="text-emerald-500 font-bold flex items-center gap-1.5">
+                <CheckCircle2 className="w-4 h-4" /> Contract signed. Ready to activate lease.
+              </span>
+            ) : (
+              <span className="text-slate-400 dark:text-slate-300 font-medium">
+                Clicking Approve will sign with your legal name (<strong className="text-gray-900 dark:text-white font-bold">{signature || selectedLease.landlord_name || user?.full_name || 'Landlord'}</strong>) and activate the lease.
+              </span>
+            )}
+          </div>
           <div className="flex items-center gap-3 shrink-0 ml-auto">
             <button
               type="button"
@@ -2568,15 +2562,18 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
             </button>
             <button
               type="button"
-              disabled={!selectedLease.landlord_signature}
+              disabled={isApprovingLease}
               onClick={handleLandlordApproveLease}
-              className={`px-6 py-3 rounded-xl text-xs font-extrabold transition shadow-lg cursor-pointer shrink-0 ${
-                selectedLease.landlord_signature 
-                  ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-500/20' 
-                  : 'bg-slate-200 dark:bg-white/5 text-slate-405 dark:text-slate-500 cursor-not-allowed shadow-none'
-              }`}
+              className="px-6 py-3 rounded-xl text-xs font-extrabold transition shadow-lg bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white shadow-emerald-500/25 cursor-pointer shrink-0 flex items-center gap-2 disabled:opacity-75"
             >
-              ✓ Approve Submission & Activate Lease
+              {isApprovingLease ? (
+                <>
+                  <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  <span>Activating Lease...</span>
+                </>
+              ) : (
+                <span>✓ Approve Submission & Activate Lease</span>
+              )}
             </button>
           </div>
         </div>
@@ -2585,14 +2582,39 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
   };
 
   async function handleLandlordApproveLease() {
-    if (!selectedLease) return;
+    if (!selectedLease || isApprovingLease) return;
     try {
+      setIsApprovingLease(true);
+      
+      // If landlord has not signed explicitly, auto-sign using the entered/default legal name
+      if (!selectedLease.landlord_signature) {
+        const signText = signature?.trim() || selectedLease.landlord_name || user?.full_name || '';
+        if (!signText) {
+          toast.error("Please enter your legal name/signature before approving the lease.");
+          setIsApprovingLease(false);
+          return;
+        }
+        try {
+          const signRes = await API.post(`/rental/leases/${selectedLease.lease_id}/sign`, {
+            signature_text: signText,
+            signing_as: 'landlord'
+          });
+          if (signRes.data) {
+            setSelectedLease(signRes.data);
+          }
+        } catch (signErr) {
+          console.warn("Direct sign endpoint call before approve:", signErr);
+        }
+      }
+
       const res = await API.post(`/rental/leases/${selectedLease.lease_id}/approve`);
       setLeases(prev => prev.map(l => l.lease_id === selectedLease.lease_id ? res.data : l));
       setSelectedLease(res.data);
-      toast.success('Lease approved and activated successfully!');
+      toast.success('Lease approved and activated successfully! Unit is now Occupied.');
     } catch (err) {
       toast.error(err.response?.data?.detail || "Failed to approve lease.");
+    } finally {
+      setIsApprovingLease(false);
     }
   }
 

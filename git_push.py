@@ -76,7 +76,7 @@ res_status = subprocess.run([git_exe, "-C", dst, "status", "--short"], capture_o
 print("Git Status Output:\n", res_status.stdout)
 
 print("\n--- Running Git Commit ---")
-commit_msg = "feat: US physical address auto-fill, international phone country validation, optional maintenance description, and portal improvements"
+commit_msg = "feat: complete rental portal cleanup, responsive UI fixes, and pre-deployment optimizations"
 res_commit = subprocess.run([git_exe, "-C", dst, "commit", "-m", commit_msg], capture_output=True, text=True)
 print("Git Commit Output:\n", res_commit.stdout, res_commit.stderr)
 

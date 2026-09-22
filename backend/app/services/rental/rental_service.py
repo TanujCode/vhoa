@@ -712,6 +712,7 @@ def tenant_submit_lease(lease_id: int, tenant_id: int, data: TenantInfoSubmit, d
     # Send landlord notification email
     landlord_user = lease.landlord
     if landlord_user and landlord_user.email_id:
+        from app.config import settings
         from app.utils.encryption import safe_decrypt_field
         landlord_first_name = safe_decrypt_field(landlord_user.first_name) or "Landlord"
         if lease.unit.unit_number == 'Single Family':
@@ -722,12 +723,25 @@ def tenant_submit_lease(lease_id: int, tenant_id: int, data: TenantInfoSubmit, d
             unit_label = get_unit_display_number(lease.unit.unit_number)
             property_desc = f"<strong>Apt {unit_label}</strong> at {lease.unit.property.name}"
 
+        login_url = f"{settings.FRONTEND_URL.rstrip('/')}/rental/login?email={landlord_user.email_id}&redirect=/rental/dashboard?tab=leases_hub"
+
         email_body = f"""
         <div style="font-size: 15px; line-height: 1.6; color: #374151;">
           <h2 style="color: #111827; font-size: 20px; font-weight: bold; margin-top: 0; margin-bottom: 16px;">Lease Signed by Tenant</h2>
           <p style="margin: 0 0 12px;">Hello {landlord_first_name},</p>
           <p style="margin: 0 0 12px;">The tenant has submitted their personal details, documents, and signed the lease agreement for {property_desc}.</p>
-          <p style="margin: 0;">Please log in to your dashboard to review their submission and approve the lease.</p>
+          <p style="margin: 0 0 24px;">Please log in to your dashboard to review their submission and approve the lease.</p>
+          
+          <div style="text-align: center; margin: 28px 0;">
+            <a href="{login_url}" style="background-color: #2563eb; color: #ffffff; padding: 12px 32px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 15px; display: inline-block;">
+              Login
+            </a>
+          </div>
+
+          <p style="font-size: 12px; color: #6b7280; margin: 24px 0 0; text-align: center;">
+            If you cannot click the button, copy and paste this URL into your browser:<br/>
+            <span style="color: #2563eb; word-break: break-all;">{login_url}</span>
+          </p>
         </div>
         """
         wrapped_html = _wrap_in_responsive_layout(email_body, subtitle="Rental Property Management")

@@ -1,8 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { 
   Mail, 
-  Phone, 
-  MapPin, 
   CheckCircle, 
   Sparkles, 
   Zap, 
@@ -10,9 +8,10 @@ import {
   UserCheck, 
   Share2, 
   Globe, 
-  Send,
-  Check,
-  ChevronDown
+  Send, 
+  Check, 
+  ChevronDown,
+  Copy
 } from 'lucide-react';
 import Navbar from '../../components/marketing/Navbar';
 import Footer from '../../components/marketing/Footer';
@@ -21,6 +20,14 @@ import { useTheme } from '../../context/ThemeContext';
 import PhoneInputWithCountry from '../../components/common/PhoneInputWithCountry';
 import API from '../../services/api';
 import toast from 'react-hot-toast';
+
+const SUBJECT_OPTIONS = [
+  { value: 'Technical Support', label: 'Technical & Platform Support' },
+  { value: 'Sales & Demo', label: 'Sales & Product Demo' },
+  { value: 'Billing & Plans', label: 'Billing, Pricing & Plans' },
+  { value: 'Partnership Inquiry', label: 'Partnership & Integration Inquiry' },
+  { value: 'General Question', label: 'General Inquiry / Other' },
+];
 
 export default function ContactPage() {
   const { theme } = useTheme();
@@ -68,7 +75,7 @@ export default function ContactPage() {
         if (digits.length > 0 && digits.length < 7) errorMsg = 'Phone number must have at least 7 digits.';
         else if (digits.length > 15) errorMsg = 'Phone number is too long (max 15 digits).';
       }
-    } else if (name === 'companyName') {
+    } else if (name === 'communityName') {
       if (val.length > 150) errorMsg = 'Company name cannot exceed 150 characters.';
     } else if (name === 'subject') {
       if (!val) errorMsg = 'Please select a subject.';
@@ -115,7 +122,7 @@ export default function ContactPage() {
 
   const validateAll = () => {
     let temp = {};
-    const fields = ['firstName', 'lastName', 'workEmail', 'phone', 'companyName', 'subject', 'message'];
+    const fields = ['firstName', 'lastName', 'workEmail', 'phone', 'communityName', 'subject', 'message'];
     let allTouched = {};
     let isValid = true;
 
@@ -286,108 +293,20 @@ export default function ContactPage() {
         </section>
 
 
-        {/* ─── SECTION 3: CONTACT INFO & SEND US A MESSAGE FORM ─── */}
-        <section ref={formRef} className="max-w-5xl mx-auto px-5 sm:px-8 pb-16 sm:pb-20">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-start">
+        {/* ─── SECTION 3: SEND US A MESSAGE FORM & DIRECT EMAIL BANNER ─── */}
+        <section ref={formRef} className="max-w-4xl mx-auto px-5 sm:px-8 pb-16 sm:pb-20">
+          
+          {/* Main Form Card */}
+          <div className="bg-white dark:bg-[#1e293b] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 sm:p-10 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-none text-left">
             
-            {/* Left Column: Direct Contact Details */}
-            <div className="lg:col-span-4 space-y-6 text-left pt-2">
-              
-              {/* Item 1: Email Us */}
-              <div className="space-y-1.5">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200/50 dark:border-indigo-500/20 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shrink-0">
-                    <Mail className="w-4.5 h-4.5" />
-                  </div>
-                  <div>
-                    <h4 className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                      Email Us
-                    </h4>
-                    <a href="mailto:support@nestbloq.com" className="text-sm font-bold text-slate-900 dark:text-white hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
-                      support@nestbloq.com
-                    </a>
-                  </div>
-                </div>
-                <p className="text-xs text-slate-500 dark:text-slate-400 pl-13 font-normal">
-                  For general inquiries and support requests.
-                </p>
-              </div>
-
-              {/* Item 2: Call Us */}
-              <div className="space-y-1.5">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200/50 dark:border-indigo-500/20 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shrink-0">
-                    <Phone className="w-4.5 h-4.5" />
-                  </div>
-                  <div>
-                    <h4 className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                      Call Us
-                    </h4>
-                    <a href="tel:+18001234567" className="text-sm font-bold text-slate-900 dark:text-white hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
-                      +1 (800) 123-4567
-                    </a>
-                  </div>
-                </div>
-                <p className="text-xs text-slate-500 dark:text-slate-400 pl-13 font-normal">
-                  Available Mon–Fri, 9AM–6PM IST.
-                </p>
-              </div>
-
-              {/* Item 3: Headquarters */}
-              <div className="space-y-1.5">
-                <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200/50 dark:border-indigo-500/20 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shrink-0 mt-0.5">
-                    <MapPin className="w-4.5 h-4.5" />
-                  </div>
-                  <div>
-                    <h4 className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                      Headquarters
-                    </h4>
-                    <p className="text-sm font-bold text-slate-900 dark:text-white leading-snug">
-                      123 Innovation Drive, Tech Park<br />
-                      Bengaluru, KA 560001<br />
-                      India
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Bottom Social / Web Icons */}
-              <div className="flex items-center gap-2.5 pt-4">
-                <button
-                  type="button"
-                  title="Share"
-                  onClick={() => {
-                    if (navigator.share) {
-                      navigator.share({ title: 'NestBloq', url: window.location.href });
-                    } else {
-                      navigator.clipboard.writeText(window.location.href);
-                      alert('Link copied to clipboard!');
-                    }
-                  }}
-                  className="w-9 h-9 rounded-full bg-white dark:bg-white/[0.04] border border-slate-200/80 dark:border-white/10 flex items-center justify-center text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:border-indigo-300 dark:hover:border-indigo-500/40 shadow-sm transition-all cursor-pointer"
-                >
-                  <Share2 className="w-4 h-4" />
-                </button>
-                <a
-                  href="https://nestbloq.com"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  title="Website"
-                  className="w-9 h-9 rounded-full bg-white dark:bg-white/[0.04] border border-slate-200/80 dark:border-white/10 flex items-center justify-center text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:border-indigo-300 dark:hover:border-indigo-500/40 shadow-sm transition-all cursor-pointer"
-                >
-                  <Globe className="w-4 h-4" />
-                </a>
-              </div>
-
-            </div>
-
-            {/* Right Column: Send Us A Message Form */}
-            <div className="lg:col-span-8 bg-white dark:bg-[#1e293b] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 sm:p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-none text-left">
-              
-              <h2 className="font-display text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight mb-6">
+            <div className="mb-6 sm:mb-8">
+              <h2 className="font-display text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
                 Send us a message
               </h2>
+              <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
+                Fill out the form below and our team will get back to you within 2 hours.
+              </p>
+            </div>
 
               {submitted ? (
                 <div className="py-10 flex flex-col items-center text-center space-y-4 animate-scale-up">
@@ -615,11 +534,11 @@ export default function ContactPage() {
                   </div>
 
                   {/* Submit Button */}
-                  <div className="pt-2">
+                  <div className="pt-2 flex justify-center">
                     <button
                       type="submit"
                       disabled={isSubmitting}
-                      className="w-full py-3.5 bg-gradient-to-r from-violet-600 via-indigo-600 to-purple-600 hover:from-violet-500 hover:via-indigo-500 hover:to-purple-500 text-white font-bold text-xs uppercase tracking-widest rounded-xl shadow-sm transition-all active:scale-[0.99] flex items-center justify-center gap-2 cursor-pointer disabled:opacity-70"
+                      className="px-8 py-3 bg-gradient-to-r from-violet-600 via-indigo-600 to-purple-600 hover:from-violet-500 hover:via-indigo-500 hover:to-purple-500 text-white font-bold text-xs uppercase tracking-widest rounded-xl shadow-md shadow-indigo-600/20 transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer disabled:opacity-70"
                     >
                       {isSubmitting ? (
                         <>
@@ -627,7 +546,10 @@ export default function ContactPage() {
                           <span>SENDING...</span>
                         </>
                       ) : (
-                        <span>SEND MESSAGE</span>
+                        <>
+                          <Send className="w-3.5 h-3.5" />
+                          <span>SEND MESSAGE</span>
+                        </>
                       )}
                     </button>
                   </div>
@@ -648,9 +570,62 @@ export default function ContactPage() {
                 </form>
               )}
 
-            </div>
-
           </div>
+
+          {/* ─── EMAIL SUPPORT BANNER BELOW FORM ─── */}
+          <div className="mt-8 relative overflow-hidden rounded-2xl sm:rounded-3xl border border-indigo-500/20 dark:border-indigo-500/30 bg-gradient-to-br from-indigo-500/[0.06] via-purple-500/[0.04] to-violet-500/[0.08] dark:from-indigo-950/40 dark:via-[#1e293b] dark:to-purple-950/30 p-6 sm:p-8 backdrop-blur-sm shadow-sm">
+            
+            {/* Ambient subtle glow */}
+            <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none -z-10" />
+
+            <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+              
+              {/* Left: Text & Badge */}
+              <div className="flex items-center gap-4 text-left w-full md:w-auto">
+                <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-indigo-600 text-white flex items-center justify-center shadow-lg shadow-indigo-600/25 shrink-0">
+                  <Mail className="w-6 h-6 sm:w-7 sm:h-7" />
+                </div>
+                <div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h3 className="font-display font-bold text-base sm:text-lg text-slate-900 dark:text-white">
+                      Prefer direct email?
+                    </h3>
+                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                      24/7 Support Desk
+                    </span>
+                  </div>
+                  <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">
+                    For enterprise inquiries, partnerships, or support questions, write directly to us.
+                  </p>
+                </div>
+              </div>
+
+              {/* Right: Email Action & Copy button */}
+              <div className="flex flex-wrap items-center gap-3 shrink-0 w-full md:w-auto justify-start md:justify-end">
+                <a
+                  href="mailto:support@nestbloq.com"
+                  className="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-semibold flex items-center gap-2 shadow-md shadow-indigo-600/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                >
+                  <Send className="w-4 h-4" />
+                  support@nestbloq.com
+                </a>
+                <button
+                  type="button"
+                  onClick={() => {
+                    navigator.clipboard.writeText('support@nestbloq.com');
+                    toast.success('Email copied to clipboard!');
+                  }}
+                  className="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 hover:bg-slate-50 dark:hover:bg-white/10 text-slate-700 dark:text-slate-300 text-xs sm:text-sm font-medium transition-all cursor-pointer flex items-center gap-1.5"
+                  title="Copy email address"
+                >
+                  <Copy className="w-4 h-4 text-slate-400" />
+                  Copy
+                </button>
+              </div>
+
+            </div>
+          </div>
+
         </section>
 
       </main>

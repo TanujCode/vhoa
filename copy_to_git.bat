@@ -56,10 +56,13 @@ copy /Y "d:\Vhoa_Management\backend\requirements.txt" "D:\github code cc\vhoa\ba
 copy /Y "d:\Vhoa_Management\backend\app\routers\report.py" "D:\github code cc\vhoa\backend\app\routers\report.py"
 copy /Y "d:\Vhoa_Management\frontend\hoa-portal\src\pages\Dashboard.jsx" "D:\github code cc\vhoa\frontend\hoa-portal\src\pages\Dashboard.jsx"
 copy /Y "d:\Vhoa_Management\backend\app\routers\location.py" "D:\github code cc\vhoa\backend\app\routers\location.py"
-copy /Y "d:\Vhoa_Management\frontend\hoa-portal\src\components\AddCommunityModal.jsx" "D:\github code cc\vhoa\frontend\hoa-portal\src\components\AddCommunityModal.jsx"
+copy /Y "d:\Vhoa_Management\backend\app\services\rental\rental_service.py" "D:\github code cc\vhoa\backend\app\services\rental\rental_service.py"
+copy /Y "d:\Vhoa_Management\frontend\hoa-portal\src\pages\rental\LeasesHub.jsx" "D:\github code cc\vhoa\frontend\hoa-portal\src\pages\rental\LeasesHub.jsx"
 xcopy /Y /E /I "d:\Vhoa_Management\frontend\hoa-portal\src\pages\marketing" "D:\github code cc\vhoa\frontend\hoa-portal\src\pages\marketing"
 xcopy /Y /E /I "d:\Vhoa_Management\frontend\hoa-portal\src\components\marketing" "D:\github code cc\vhoa\frontend\hoa-portal\src\components\marketing"
 xcopy /Y /E /I "d:\Vhoa_Management\frontend\hoa-portal\src\assets" "D:\github code cc\vhoa\frontend\hoa-portal\src\assets"
+xcopy /Y /E /I "d:\Vhoa_Management\frontend\hoa-portal\src\pages\rental" "D:\github code cc\vhoa\frontend\hoa-portal\src\pages\rental"
+xcopy /Y /E /I "d:\Vhoa_Management\backend\app\services\rental" "D:\github code cc\vhoa\backend\app\services\rental"
 echo Done!
 
 
