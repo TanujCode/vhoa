@@ -1499,29 +1499,53 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
     }
   }
 
-  async function handleDownloadDoc(docId, originalName) {
+  const handleClosePreview = () => {
+    if (previewDoc?.url) {
+      try {
+        window.URL.revokeObjectURL(previewDoc.url);
+      } catch (e) {}
+    }
+    setPreviewDoc(null);
+  };
+
+  async function handleDownloadDoc(docId, originalName = "document") {
+    if (!selectedLease?.lease_id || !docId) {
+      toast.error("Document information missing.");
+      return;
+    }
     try {
+      const fileName = originalName || "document";
       const res = await API.get(`/rental/leases/${selectedLease.lease_id}/documents/${docId}/download`, { responseType: 'blob' });
-      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const blob = new Blob([res.data], { type: res.headers['content-type'] || 'application/octet-stream' });
+      const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.setAttribute('download', originalName);
+      link.setAttribute('download', fileName);
       document.body.appendChild(link);
       link.click();
-      link.parentNode.removeChild(link);
-      window.URL.revokeObjectURL(url);
+      setTimeout(() => {
+        if (link.parentNode) link.parentNode.removeChild(link);
+        window.URL.revokeObjectURL(url);
+      }, 200);
     } catch (err) {
-      toast.error("Failed to download or decrypt document.");
+      console.error("Download document error:", err);
+      toast.error(err.response?.data?.detail || "Failed to download or decrypt document.");
     }
   }
 
-  async function handleViewDoc(docId, originalName, docTitle = "Document") {
+  async function handleViewDoc(docId, originalName = "Document", docTitle = "Document") {
+    if (!selectedLease?.lease_id || !docId) {
+      toast.error("Document information missing.");
+      return;
+    }
     try {
+      const fileName = originalName || "document";
       const res = await API.get(`/rental/leases/${selectedLease.lease_id}/documents/${docId}/download?preview=true`, { responseType: 'blob' });
-      let contentType = 'application/octet-stream';
-      const ext = originalName.split('.').pop().toLowerCase();
-      const isPdf = ext === 'pdf';
-      const isImage = ['jpg', 'jpeg', 'png', 'webp'].includes(ext);
+      const serverType = res.headers?.['content-type'];
+      let contentType = serverType || 'application/octet-stream';
+      const ext = (fileName.split('.').pop() || '').toLowerCase();
+      const isPdf = ext === 'pdf' || (serverType && serverType.includes('pdf'));
+      const isImage = ['jpg', 'jpeg', 'png', 'webp', 'gif', 'svg'].includes(ext) || (serverType && serverType.includes('image'));
 
       if (isPdf) {
         contentType = 'application/pdf';
@@ -1535,9 +1559,10 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
       
       const file = new Blob([res.data], { type: contentType });
       const url = window.URL.createObjectURL(file);
-      setPreviewDoc({ url, title: docTitle, originalName, isPdf, isImage });
+      setPreviewDoc({ url, title: docTitle || "Document Preview", originalName: fileName, isPdf, isImage });
     } catch (err) {
-      toast.error("Failed to preview document.");
+      console.error("Preview document error:", err);
+      toast.error(err.response?.data?.detail || "Failed to preview document.");
     }
   }
 
@@ -4464,7 +4489,7 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
 
       {/* In-App Document Preview Modal */}
       {previewDoc && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-[60] flex items-center justify-center p-4 animate-fade-in">
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-[100] flex items-center justify-center p-4 animate-fade-in">
           <div className="bg-white dark:bg-[#152332] border border-slate-200 dark:border-white/10 w-full max-w-4xl rounded-2xl shadow-2xl overflow-hidden animate-scale-up flex flex-col max-h-[92vh]">
             {/* Header */}
             <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-[#0f1a26]">

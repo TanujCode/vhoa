@@ -375,8 +375,8 @@ export default function LandlordOnboardingScreen({ user, onPropertyCreated }) {
                       : 'bg-slate-200 dark:bg-white/5 text-slate-400 dark:text-slate-600 cursor-not-allowed'
                   }`}
                 >
-                  {submitting ? 'Creating Property...' : (
-                    <>Create Property <Check className="w-4 h-4" /></>
+                  {submitting ? 'Adding Property...' : (
+                    <>Add Property <Check className="w-4 h-4" /></>
                   )}
                 </button>
               </div>

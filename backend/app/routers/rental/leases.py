@@ -286,26 +286,44 @@ def download_tenant_document(
 
     # Authorization check
     role_name = (current_user.role.role_name if current_user.role else "").lower()
+    from app.utils.encryption import safe_decrypt_field, decrypt_file_bytes
+    decrypted_tenant_email = safe_decrypt_field(doc.lease.tenant_email) if doc.lease and doc.lease.tenant_email else ""
+    user_email = (current_user.email_id or "").strip().lower()
+
     is_authorized = (
         role_name in ["super_admin", "landlord"] or
         doc.tenant_id == current_user.user_id or
+        (doc.lease and doc.lease.landlord_id == current_user.user_id) or
         (doc.lease and doc.lease.tenant_id == current_user.user_id) or
-        (doc.lease and doc.lease.tenant_email and current_user.email and doc.lease.tenant_email.lower() == current_user.email.lower())
+        (decrypted_tenant_email and user_email and decrypted_tenant_email.strip().lower() == user_email)
     )
     if not is_authorized:
         raise HTTPException(status_code=403, detail="Unauthorized to access this document.")
 
     # Decrypt file_url to locate on disk
-    decrypted_url = decrypt_field(doc.file_url)
+    decrypted_url = safe_decrypt_field(doc.file_url) or doc.file_url or ""
     if not decrypted_url:
-        raise HTTPException(status_code=500, detail="Failed to decrypt file path.")
+        raise HTTPException(status_code=500, detail="Failed to locate file path.")
 
-    # Map relative path to absolute
-    filename = decrypted_url.split("/")[-1]
-    filepath = os.path.join(BASE_UPLOAD_DIR, "tenant_documents", filename)
+    # Locate file on disk
+    filename = decrypted_url.split("/")[-1].split("\\")[-1]
+    possible_paths = [
+        os.path.join(BASE_UPLOAD_DIR, "tenant_documents", filename),
+        os.path.join(BASE_UPLOAD_DIR, filename),
+        os.path.join(BASE_UPLOAD_DIR, decrypted_url.lstrip("/").replace("uploads/", "")),
+        os.path.join(BASE_UPLOAD_DIR, "income_proofs", filename),
+        os.path.join(BASE_UPLOAD_DIR, "identity_proofs", filename),
+        os.path.join(BASE_UPLOAD_DIR, "address_proofs", filename),
+    ]
 
-    if not os.path.exists(filepath):
-        raise HTTPException(status_code=404, detail="Encrypted file not found on disk.")
+    filepath = None
+    for p in possible_paths:
+        if os.path.exists(p):
+            filepath = p
+            break
+
+    if not filepath:
+        raise HTTPException(status_code=404, detail="Document file not found on disk.")
 
     # Read and decrypt file content
     with open(filepath, "rb") as f:
@@ -314,10 +332,11 @@ def download_tenant_document(
     try:
         decrypted_contents = decrypt_file_bytes(enc_contents)
     except Exception:
-        raise HTTPException(status_code=500, detail="Failed to decrypt file content.")
+        # Fallback if raw unencrypted file bytes
+        decrypted_contents = enc_contents
 
     # Decrypt original name
-    original_name = decrypt_field(doc.original_name) or "document.bin"
+    original_name = safe_decrypt_field(doc.original_name) or doc.original_name or "document.bin"
     disp = "inline" if preview else "attachment"
 
     return StreamingResponse(

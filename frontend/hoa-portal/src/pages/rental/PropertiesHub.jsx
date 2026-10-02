@@ -121,6 +121,7 @@ export default function PropertiesHub({
   const [condoUnitNo, setCondoUnitNo] = useState('');
   const [onboardDropdownOpen, setOnboardDropdownOpen] = useState(false);
   const [modalDropdownOpen, setModalDropdownOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
 
   const handleClosePropModal = () => {
@@ -682,6 +683,7 @@ export default function PropertiesHub({
       });
     }
 
+    setIsSubmitting(true);
     try {
       const res = await API.post('/rental/properties-with-units', {
         name,
@@ -715,6 +717,8 @@ export default function PropertiesHub({
       setWizardUnits([{ unit_number: 'Single Family', rent_amount: '' }]);
     } catch (err) {
       alert(err.response?.data?.detail || "Failed to create property with units.");
+    } finally {
+      setIsSubmitting(false);
     }
 
   }
@@ -1454,7 +1458,7 @@ export default function PropertiesHub({
                     disabled={isSubmitting}
                     className="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white rounded-xl text-xs font-bold transition duration-200 shadow-md shadow-blue-500/20 cursor-pointer"
                   >
-                    {isSubmitting ? 'Creating...' : 'Create Property'}
+                    {isSubmitting ? 'Adding...' : 'Add Property'}
                   </button>
                 </div>
 

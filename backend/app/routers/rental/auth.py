@@ -581,12 +581,25 @@ def rental_verify_otp(request: Request, body: VerifyOtpRequest, db: Session = De
     )
     
     from app.utils.encryption import safe_decrypt_field
+    first_name = safe_decrypt_field(user.first_name) or ""
+    last_name = safe_decrypt_field(user.last_name) or ""
+    full_name = f"{first_name} {last_name}".strip()
+    role_name = user.role.role_name if user.role else ""
+
+    access_token = create_access_token(user.user_id, user.email_id, role_name, user.email_id_is_verified)
+    session_token = create_session_token(user.user_id, user.email_id, role_name, user.email_id_is_verified)
+
     return {
+        "access_token": access_token,
+        "session_token": session_token,
+        "token_type": "bearer",
         "user_id": user.user_id,
         "email_id": user.email_id,
-        "first_name": safe_decrypt_field(user.first_name),
-        "last_name": safe_decrypt_field(user.last_name),
-        "role": user.role.role_name if user.role else "",
+        "first_name": first_name,
+        "last_name": last_name,
+        "full_name": full_name,
+        "role": role_name,
+        "role_name": role_name,
         "role_id": user.role_id,
         "mobile_is_verified": user.mobile_is_verified
     }

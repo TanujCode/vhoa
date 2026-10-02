@@ -26,14 +26,30 @@ const RentalVerifyOtpPage = () => {
     setErrorMsg('');
     
     try {
-      await API.post('/rental/auth/otp/verify', {
+      const res = await API.post('/rental/auth/otp/verify', {
         email_id: email,
         otp_code: otpCode,
         otp_type: 'email_verify'
       });
 
-      setSuccessMsg("Email Successfully Verified!");
-      setTimeout(() => navigate('/rental/login'), 2500);
+      if (res.data && res.data.access_token) {
+        localStorage.setItem('rental_token', res.data.access_token);
+        if (res.data.session_token) {
+          localStorage.setItem('rental_session_token', res.data.session_token);
+        }
+        localStorage.setItem('rental_user', JSON.stringify({
+          user_id: res.data.user_id,
+          role: res.data.role || res.data.role_name,
+          role_name: res.data.role || res.data.role_name,
+          full_name: res.data.full_name || `${res.data.first_name || ''} ${res.data.last_name || ''}`.trim()
+        }));
+        sessionStorage.removeItem('rental_token');
+        sessionStorage.removeItem('rental_session_token');
+        sessionStorage.removeItem('rental_user');
+      }
+
+      setSuccessMsg("Email Successfully Verified! Redirecting to your dashboard...");
+      setTimeout(() => navigate('/rental/dashboard', { replace: true }), 1000);
 
     } catch (err) {
       setErrorMsg(err.response?.data?.detail || "Invalid OTP.");

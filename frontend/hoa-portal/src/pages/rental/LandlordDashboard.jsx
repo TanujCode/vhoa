@@ -370,7 +370,7 @@ export default function LandlordDashboard({
                 }}
                 className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white font-extrabold px-6 py-3.5 rounded-2xl shadow-lg shadow-blue-550/15 hover:shadow-blue-550/30 hover:-translate-y-0.5 active:translate-y-0 active:scale-98 transition duration-200 flex items-center gap-2 cursor-pointer text-sm"
               >
-                <Plus className="w-4.5 h-4.5 stroke-[2.5]" /> Create Property
+                <Plus className="w-4.5 h-4.5 stroke-[2.5]" /> Add Property
               </button>
             </div>
           </div>

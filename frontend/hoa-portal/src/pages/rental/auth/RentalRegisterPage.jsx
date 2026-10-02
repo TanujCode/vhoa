@@ -86,15 +86,11 @@ export default function RentalRegisterPage() {
 
   useEffect(() => {
     const token = localStorage.getItem('rental_token') || sessionStorage.getItem('rental_token');
-    if (token) {
-      localStorage.removeItem('rental_token');
-      localStorage.removeItem('rental_session_token');
-      localStorage.removeItem('rental_user');
-      sessionStorage.removeItem('rental_token');
-      sessionStorage.removeItem('rental_session_token');
-      sessionStorage.removeItem('rental_user');
+    const user = localStorage.getItem('rental_user') || sessionStorage.getItem('rental_user');
+    if (token && user) {
+      navigate('/rental/dashboard', { replace: true });
     }
-  }, []);
+  }, [navigate]);
 
   useEffect(() => {
     if (emailFromUrl) {
@@ -129,7 +125,7 @@ export default function RentalRegisterPage() {
     }
 
     try {
-      await API.post('/rental/auth/register', {
+      const regRes = await API.post('/rental/auth/register', {
         full_name: data.fullName,
         email_id: data.email,
         password: data.password,
@@ -140,6 +136,19 @@ export default function RentalRegisterPage() {
         captcha_token: captcha.token,
         captcha_answer: data.captchaAnswer,
       });
+
+      if (regRes.data && regRes.data.access_token) {
+        localStorage.setItem('rental_token', regRes.data.access_token);
+        if (regRes.data.session_token) {
+          localStorage.setItem('rental_session_token', regRes.data.session_token);
+        }
+        localStorage.setItem('rental_user', JSON.stringify({
+          user_id: regRes.data.user_id,
+          role: regRes.data.role,
+          role_name: regRes.data.role,
+          full_name: regRes.data.full_name
+        }));
+      }
 
       // Auto-trigger OTP send for email verification
       try {
@@ -155,7 +164,7 @@ export default function RentalRegisterPage() {
       setSuccessMsg(`${roleStr} Registration successful! Sending verification code to your email...`);
       setTimeout(() => {
         navigate('/rental/verify-otp', { state: { email: data.email, isRental: true } });
-      }, 2000);
+      }, 1500);
     } catch (err) {
       console.error('API Error:', err);
       let errorMessage = 'Failed to register. Please check your inputs.';

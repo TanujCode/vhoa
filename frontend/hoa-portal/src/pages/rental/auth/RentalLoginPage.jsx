@@ -77,6 +77,14 @@ export default function RentalLoginPage() {
   }, []);
 
   useEffect(() => {
+    const token = localStorage.getItem('rental_token') || sessionStorage.getItem('rental_token');
+    const user = localStorage.getItem('rental_user') || sessionStorage.getItem('rental_user');
+    if (token && user) {
+      navigate('/rental/dashboard', { replace: true });
+    }
+  }, [navigate]);
+
+  useEffect(() => {
     if (emailFromUrl) {
       setValue('email', emailFromUrl);
     }

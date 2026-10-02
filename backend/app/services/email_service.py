@@ -1,51 +1,8 @@
 import smtplib
 import threading
-import os
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-from email.mime.image import MIMEImage
 from app.config import settings
-
-# Resolve logo path once at module load
-_BASE_DIR = os.path.dirname(__file__)
-
-
-def _ensure_baked_email_logo() -> str:
-    """
-    Creates an email-optimized logo with an opaque solid white badge baked into the image pixels.
-    This prevents Gmail mobile dark mode from making transparent dark letters invisible.
-    """
-    public_dir = os.path.abspath(os.path.join(_BASE_DIR, "..", "..", "..", "frontend", "hoa-portal", "public"))
-    dest_path = os.path.join(public_dir, "logo_email.png")
-    src_light = os.path.join(public_dir, "logo_light.png")
-
-    if os.path.exists(src_light):
-        try:
-            from PIL import Image, ImageDraw
-            img = Image.open(src_light).convert("RGBA")
-            w, h = img.size
-            pad_x, pad_y = 50, 24
-            bg_w, bg_h = w + (pad_x * 2), h + (pad_y * 2)
-            
-            # Create RGB image with 100% solid white pixels
-            bg = Image.new("RGBA", (bg_w, bg_h), (255, 255, 255, 255))
-            draw = ImageDraw.Draw(bg)
-            draw.rounded_rectangle([3, 3, bg_w - 4, bg_h - 4], radius=28, fill=(255, 255, 255, 255), outline=(226, 232, 240, 255), width=3)
-            bg.paste(img, (pad_x, pad_y), img)
-            
-            # Save as solid RGB PNG (zero alpha channel, completely bulletproof against email client dark-mode inversion)
-            final_rgb = Image.new("RGB", (bg_w, bg_h), (255, 255, 255))
-            final_rgb.paste(bg, (0, 0), bg)
-            final_rgb.save(dest_path, "PNG", quality=95)
-            print(f"[email_service] Generated solid baked email logo: {dest_path}")
-            return dest_path
-        except Exception as e:
-            print(f"[email_service] PIL bake fallback: {e}")
-            return src_light
-    return src_light
-
-
-_LOGO_PATH = _ensure_baked_email_logo()
 
 
 def _send_email_thread(to_email: str, subject: str, html_body: str, from_name: str = None):
@@ -55,29 +12,13 @@ def _send_email_thread(to_email: str, subject: str, html_body: str, from_name: s
     if not from_name:
         from_name = settings.MAIL_FROM_NAME.strip('"').strip("'")
 
-    # Build multipart/related so inline CID image works in Gmail
-    msg = MIMEMultipart("related")
+    # Clean lightweight HTML email without binary file attachments
+    msg = MIMEMultipart("alternative")
     msg["Subject"] = subject
     msg["From"]    = f"{from_name} <{mail_from}>"
     msg["To"]      = to_email
 
-    # Wrap HTML in alternative part (text/html)
-    msg_alt = MIMEMultipart("alternative")
-    msg.attach(msg_alt)
-    msg_alt.attach(MIMEText(html_body, "html"))
-
-    # Attach logo as inline CID image (no attachment shown in Gmail)
-    logo_path = _ensure_baked_email_logo()
-    if logo_path and os.path.exists(logo_path):
-        try:
-            with open(logo_path, "rb") as f:
-                img_data = f.read()
-            img = MIMEImage(img_data, "png")
-            img.add_header("Content-ID", "<vhoa_logo>")
-            img.add_header("Content-Disposition", "inline")
-            msg.attach(img)
-        except Exception as e:
-            print(f"[email_service] Failed to attach logo: {e}")
+    msg.attach(MIMEText(html_body, "html", "utf-8"))
 
     def _send(server):
         server.sendmail(mail_from, to_email, msg.as_string())
