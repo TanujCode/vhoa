@@ -1522,7 +1522,17 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
       }, 200);
     } catch (err) {
       console.error("Download document error:", err);
-      toast.error(err.response?.data?.detail || "Failed to download or decrypt document.");
+      let errMsg = "Failed to download document.";
+      if (err.response?.data instanceof Blob) {
+        try {
+          const text = await err.response.data.text();
+          const json = JSON.parse(text);
+          if (json.detail) errMsg = json.detail;
+        } catch (e) {}
+      } else if (err.response?.data?.detail) {
+        errMsg = err.response.data.detail;
+      }
+      toast.error(errMsg);
     }
   }
 
@@ -1555,7 +1565,17 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
       setPreviewDoc({ url, title: docTitle || "Document Preview", originalName: fileName, isPdf, isImage });
     } catch (err) {
       console.error("Preview document error:", err);
-      toast.error(err.response?.data?.detail || "Failed to preview document.");
+      let errMsg = "Failed to preview document.";
+      if (err.response?.data instanceof Blob) {
+        try {
+          const text = await err.response.data.text();
+          const json = JSON.parse(text);
+          if (json.detail) errMsg = json.detail;
+        } catch (e) {}
+      } else if (err.response?.data?.detail) {
+        errMsg = err.response.data.detail;
+      }
+      toast.error(errMsg);
     }
   }
 

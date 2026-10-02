@@ -238,19 +238,24 @@ async def upload_tenant_document(
 
     # Encrypt file bytes
     from app.utils.encryption import encrypt_file_bytes, encrypt_field
+    import base64
     encrypted_bytes = encrypt_file_bytes(contents)
 
-    # Save to disk
+    # Save to disk as cache
     folder = os.path.join(BASE_UPLOAD_DIR, "tenant_documents")
     os.makedirs(folder, exist_ok=True)
     filename = f"{uuid.uuid4().hex}.enc"
     filepath = os.path.join(folder, filename)
 
-    with open(filepath, "wb") as f:
-        f.write(encrypted_bytes)
+    try:
+        with open(filepath, "wb") as f:
+            f.write(encrypted_bytes)
+    except Exception as e:
+        print(f"[upload] Local disk write warning: {e}")
 
-    # Store encrypted info in database
-    db_file_url = f"/uploads/tenant_documents/{filename}"
+    # Store encrypted payload in database (embeds encrypted base64 so it never gets lost on ephemeral cloud disks)
+    b64_payload = base64.b64encode(encrypted_bytes).decode('ascii')
+    db_file_url = f"b64enc:{b64_payload}"
     enc_file_url = encrypt_field(db_file_url)
     enc_original_name = encrypt_field(file.filename)
 
@@ -287,6 +292,7 @@ def download_tenant_document(
     # Authorization check
     role_name = (current_user.role.role_name if current_user.role else "").lower()
     from app.utils.encryption import safe_decrypt_field, decrypt_file_bytes
+    import base64
     decrypted_tenant_email = safe_decrypt_field(doc.lease.tenant_email) if doc.lease and doc.lease.tenant_email else ""
     user_email = (current_user.email_id or "").strip().lower()
 
@@ -300,35 +306,56 @@ def download_tenant_document(
     if not is_authorized:
         raise HTTPException(status_code=403, detail="Unauthorized to access this document.")
 
-    # Decrypt file_url to locate on disk
+    # Decrypt file_url
     decrypted_url = safe_decrypt_field(doc.file_url) or doc.file_url or ""
     if not decrypted_url:
-        raise HTTPException(status_code=500, detail="Failed to locate file path.")
+        raise HTTPException(status_code=500, detail="Document path record is empty.")
 
-    # Locate file on disk
-    filename = decrypted_url.split("/")[-1].split("\\")[-1]
-    possible_paths = [
-        os.path.join(BASE_UPLOAD_DIR, "tenant_documents", filename),
-        os.path.join(BASE_UPLOAD_DIR, filename),
-        os.path.join(BASE_UPLOAD_DIR, decrypted_url.lstrip("/").replace("uploads/", "")),
-        os.path.join(BASE_UPLOAD_DIR, "income_proofs", filename),
-        os.path.join(BASE_UPLOAD_DIR, "identity_proofs", filename),
-        os.path.join(BASE_UPLOAD_DIR, "address_proofs", filename),
-    ]
+    enc_contents = None
 
-    filepath = None
-    for p in possible_paths:
-        if os.path.exists(p):
-            filepath = p
-            break
+    # 1. Check if stored directly in DB as embedded base64
+    if decrypted_url.startswith("b64enc:"):
+        raw_b64 = decrypted_url[len("b64enc:"):]
+        try:
+            enc_contents = base64.b64decode(raw_b64)
+        except Exception:
+            raise HTTPException(status_code=500, detail="Failed to decode embedded document payload.")
+    elif decrypted_url.startswith("data:"):
+        # Legacy raw data URL
+        try:
+            header, encoded = decrypted_url.split(",", 1)
+            enc_contents = base64.b64decode(encoded)
+        except Exception:
+            raise HTTPException(status_code=500, detail="Failed to decode data URL.")
+    else:
+        # 2. Check disk locations
+        filename = decrypted_url.split("/")[-1].split("\\")[-1]
+        possible_paths = [
+            os.path.join(BASE_UPLOAD_DIR, "tenant_documents", filename),
+            os.path.join(BASE_UPLOAD_DIR, filename),
+            os.path.join(BASE_UPLOAD_DIR, decrypted_url.lstrip("/").replace("uploads/", "")),
+            os.path.join(BASE_UPLOAD_DIR, "income_proofs", filename),
+            os.path.join(BASE_UPLOAD_DIR, "identity_proofs", filename),
+            os.path.join(BASE_UPLOAD_DIR, "address_proofs", filename),
+        ]
 
-    if not filepath:
-        raise HTTPException(status_code=404, detail="Document file not found on disk.")
+        filepath = None
+        for p in possible_paths:
+            if os.path.exists(p):
+                filepath = p
+                break
+
+        if filepath:
+            with open(filepath, "rb") as f:
+                enc_contents = f.read()
+
+    if not enc_contents:
+        raise HTTPException(
+            status_code=404, 
+            detail="Document file was removed during a previous server restart. Please re-upload this document."
+        )
 
     # Read and decrypt file content
-    with open(filepath, "rb") as f:
-        enc_contents = f.read()
-
     try:
         decrypted_contents = decrypt_file_bytes(enc_contents)
     except Exception:
