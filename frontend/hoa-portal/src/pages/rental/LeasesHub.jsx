@@ -1431,13 +1431,6 @@ export default function LeasesHub({ user, selectedPropertyFilterId = 'all', init
   }
 
   // --- NEW WORKFLOW API HANDLERS ---
-  const handleClosePreview = () => {
-    if (previewDoc?.url) {
-      window.URL.revokeObjectURL(previewDoc.url);
-    }
-    setPreviewDoc(null);
-  };
-
   async function handleTenantDocUpload(e, docType) {
     if (e) {
       e.preventDefault();
